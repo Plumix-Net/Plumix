@@ -67,7 +67,7 @@ public abstract class RenderShiftedBox : RenderBox, IRenderObjectSingleChildCont
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null)
         {
@@ -1058,5 +1058,311 @@ public sealed class RenderFractionallySizedOverflowBox : RenderAligningShiftedBo
         {
             throw new AssertionError($"{parameterName} must be null or non-negative.");
         }
+    }
+}
+
+// (RenderConstraintsTransformBox)
+public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
+{
+    private BoxConstraintsTransform _constraintsTransform;
+    private Clip _clipBehavior;
+    private BoxConstraints? _childConstraints;
+    private Rect _overflowContainerRect;
+    private Rect _overflowChildRect;
+    private bool _isOverflowing;
+
+    // Dart mixes `DebugOverflowIndicatorMixin` in; C# has no mixins, so its state lives here.
+    private readonly DebugOverflowIndicator _debugOverflowIndicator = new();
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    public RenderConstraintsTransformBox(
+        AlignmentGeometry alignment,
+        TextDirection? textDirection,
+        BoxConstraintsTransform constraintsTransform,
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.None) : base(alignment, textDirection, child)
+    {
+        _constraintsTransform = constraintsTransform
+            ?? throw new ArgumentNullException(nameof(constraintsTransform));
+        _clipBehavior = clipBehavior;
+    }
+
+    /// <inheritdoc />
+    public override void Reassemble()
+    {
+        base.Reassemble();
+        _debugOverflowIndicator.Reassemble();
+    }
+
+    public BoxConstraintsTransform ConstraintsTransform
+    {
+        get => _constraintsTransform;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_constraintsTransform, value))
+            {
+                return;
+            }
+
+            _constraintsTransform = value;
+            // The render object only needs layout if the new transform maps the current
+            // constraints to a different value, or it has never been laid out before.
+            bool needsLayout = _childConstraints is null
+                || !HasBoxConstraints
+                || !_childConstraints.Value.Equals(TransformConstraints(CurrentBoxConstraints));
+            if (needsLayout)
+            {
+                MarkNeedsLayout();
+            }
+        }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public bool IsOverflowing => _isOverflowing;
+
+    public BoxConstraints? ChildConstraints => _childConstraints;
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        base.ComputeMinIntrinsicHeight(TransformConstraints(new BoxConstraints(MaxWidth: width)).MaxWidth);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        base.ComputeMaxIntrinsicHeight(TransformConstraints(new BoxConstraints(MaxWidth: width)).MaxWidth);
+
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        base.ComputeMinIntrinsicWidth(TransformConstraints(new BoxConstraints(MaxHeight: height)).MaxHeight);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        base.ComputeMaxIntrinsicWidth(TransformConstraints(new BoxConstraints(MaxHeight: height)).MaxHeight);
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        Size? childSize = Child?.GetDryLayout(TransformConstraints(constraints));
+        return childSize is null ? constraints.Smallest : constraints.Constrain(childSize.Value);
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        if (child is null)
+        {
+            return null;
+        }
+
+        BoxConstraints childConstraints = TransformConstraints(constraints);
+        double? result = child.GetDryBaseline(childConstraints, baseline);
+        if (result is null)
+        {
+            return null;
+        }
+
+        Size childSize = child.GetDryLayout(childConstraints);
+        Size size = constraints.Constrain(childSize);
+        return result + ResolvedAlignment.AlongOffset(size, childSize).Y;
+    }
+
+    protected override void PerformLayout()
+    {
+        BoxConstraints constraints = Constraints;
+        RenderBox? child = Child;
+        if (child != null)
+        {
+            BoxConstraints childConstraints = TransformConstraints(constraints);
+            _childConstraints = childConstraints;
+            child.Layout(childConstraints, parentUsesSize: true);
+            Size = constraints.Constrain(child.Size);
+            AlignChild();
+            var childParentData = (BoxParentData)child.parentData!;
+            _overflowContainerRect = new Rect(default, Size);
+            _overflowChildRect = new Rect(childParentData.offset, child.Size);
+        }
+        else
+        {
+            Size = constraints.Smallest;
+            _childConstraints = null;
+            _overflowContainerRect = default;
+            _overflowChildRect = default;
+        }
+
+        _isOverflowing = HasOverflow(_overflowContainerRect, _overflowChildRect);
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child == null)
+        {
+            return;
+        }
+
+        if (!_isOverflowing)
+        {
+            base.Paint(context, offset);
+            return;
+        }
+
+        // We have overflow. Clip it (a `Clip.None` behavior draws through unclipped).
+        _clipRectLayer.Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(default, Size),
+            base.Paint,
+            _clipBehavior,
+            _clipRectLayer.Layer);
+
+#if DEBUG
+        if (Size.Width > 0 && Size.Height > 0 && _clipBehavior == Clip.None)
+        {
+            _debugOverflowIndicator.PaintOverflowIndicator(
+                this,
+                context,
+                offset,
+                _overflowContainerRect,
+                _overflowChildRect);
+        }
+#endif
+    }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
+    {
+        return _clipBehavior == Clip.None || !_isOverflowing
+            ? null
+            : new Rect(default, Size);
+    }
+
+    private BoxConstraints TransformConstraints(BoxConstraints constraints)
+    {
+        BoxConstraints transformed = _constraintsTransform(constraints);
+        if (!transformed.IsNormalized)
+        {
+            throw new InvalidOperationException(
+                $"ConstraintsTransformBox returned non-normalized constraints: {transformed}.");
+        }
+
+        return transformed;
+    }
+
+    private static bool HasOverflow(Rect container, Rect child)
+    {
+        const double tolerance = Constants.PrecisionErrorTolerance;
+        return child.Left < container.Left - tolerance
+            || child.Top < container.Top - tolerance
+            || child.Right > container.Right + tolerance
+            || child.Bottom > container.Bottom + tolerance;
+    }
+
+    /// <inheritdoc />
+    public override string ToStringShort()
+    {
+        string header = base.ToStringShort();
+        if (_isOverflowing)
+        {
+            header += " OVERFLOWING";
+        }
+
+        return header;
+    }
+}
+
+// Retained as a compatibility surface for direct render-object consumers.
+// New UnconstrainedBox widgets compose RenderConstraintsTransformBox, matching Flutter.
+public sealed class RenderUnconstrainedBox : RenderShiftedBox
+{
+    private Alignment _alignment;
+    private Axis? _constrainedAxis;
+
+    public RenderUnconstrainedBox(
+        Alignment alignment = default,
+        Axis? constrainedAxis = null,
+        RenderBox? child = null) : base(child)
+    {
+        _alignment = alignment;
+        _constrainedAxis = constrainedAxis;
+    }
+
+    public Alignment Alignment
+    {
+        get => _alignment;
+        set
+        {
+            if (_alignment == value)
+            {
+                return;
+            }
+
+            _alignment = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public Axis? ConstrainedAxis
+    {
+        get => _constrainedAxis;
+        set
+        {
+            if (_constrainedAxis == value)
+            {
+                return;
+            }
+
+            _constrainedAxis = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    protected override void PerformLayout()
+    {
+        if (Child == null)
+        {
+            Size = Constraints.Constrain(new Size());
+            return;
+        }
+
+        var childConstraints = _constrainedAxis switch
+        {
+            Axis.Horizontal => new BoxConstraints(
+                MinWidth: Constraints.MinWidth,
+                MaxWidth: Constraints.MaxWidth,
+                MinHeight: 0,
+                MaxHeight: double.PositiveInfinity),
+            Axis.Vertical => new BoxConstraints(
+                MinWidth: 0,
+                MaxWidth: double.PositiveInfinity,
+                MinHeight: Constraints.MinHeight,
+                MaxHeight: Constraints.MaxHeight),
+            null => new BoxConstraints(
+                MinWidth: 0,
+                MaxWidth: double.PositiveInfinity,
+                MinHeight: 0,
+                MaxHeight: double.PositiveInfinity),
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        Child.Layout(childConstraints, parentUsesSize: true);
+        Size = Constraints.Constrain(Child.Size);
+        ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
     }
 }

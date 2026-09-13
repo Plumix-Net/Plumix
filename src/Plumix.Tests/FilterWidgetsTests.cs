@@ -145,7 +145,9 @@ public sealed class FilterWidgetsTests
         var renderObject = FindElementRenderObject<RenderBackdropFilter>(root.ChildElement);
         Assert.NotNull(renderObject);
         Assert.Same(initialKey, renderObject!.BackdropKey);
+#pragma warning disable CS0618 // Dart's deprecated `filter` getter is still exercised here.
         Assert.Same(initialFilter, renderObject.Filter);
+#pragma warning restore CS0618
         Assert.True(renderObject.Enabled);
         Assert.Equal(BlendMode.SourceOver, renderObject.BlendMode);
 
@@ -418,7 +420,7 @@ public sealed class FilterWidgetsTests
             backgroundChild);
         var filteredChild = new PaintProbeRenderBox();
         var backdrop = new RenderBackdropFilter(
-            new ImageFilterConfig(new ImageFilter.Blur(2.0, 2.0)),
+            filterConfig: new ImageFilterConfig(new ImageFilter.Blur(2.0, 2.0)),
             child: filteredChild);
         var stack = new RenderStack([background, backdrop], textDirection: TextDirection.Ltr);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = stack };
@@ -443,7 +445,9 @@ public sealed class FilterWidgetsTests
         Assert.Null(layer.Backdrop);
 
         var updatedFilter = new ImageFilter.Dilate(1.0, 1.0);
+#pragma warning disable CS0618 // Dart's deprecated `filter` setter is still exercised here.
         backdrop.Filter = updatedFilter;
+#pragma warning restore CS0618
         backdrop.BlendMode = BlendMode.Source;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
@@ -472,11 +476,11 @@ public sealed class FilterWidgetsTests
     {
         var sharedKey = new BackdropKey();
         var first = new RenderBackdropFilter(
-            new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
+            filterConfig: new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
             child: new PaintProbeRenderBox(),
             backdropKey: sharedKey);
         var second = new RenderBackdropFilter(
-            new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
+            filterConfig: new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
             child: new PaintProbeRenderBox(),
             backdropKey: sharedKey);
         var stack = new RenderStack(

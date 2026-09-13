@@ -119,7 +119,7 @@ public sealed class PaintTransformTests
     public void ApplyPaintTransform_FractionalTranslation_ShiftsByAFractionOfItsSize()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(40, 20)));
-        var translated = new RenderFractionalTranslation(new Vector(0.5, -1.0)) { Child = child };
+        var translated = new RenderFractionalTranslation(new Point(0.5, -1.0)) { Child = child };
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = translated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);

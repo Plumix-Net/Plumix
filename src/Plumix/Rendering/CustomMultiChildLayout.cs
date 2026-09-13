@@ -266,7 +266,7 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {

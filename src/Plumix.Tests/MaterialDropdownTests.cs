@@ -877,7 +877,7 @@ public sealed class MaterialDropdownTests : IDisposable
         themed.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(themed.RenderView),
-            box => box.Decoration.Color == themeBackground);
+            box => box.AsBoxDecoration.Color == themeBackground);
         Assert.Equal(
             Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "File")!.Foreground).Color);
@@ -911,7 +911,7 @@ public sealed class MaterialDropdownTests : IDisposable
         local.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(local.RenderView),
-            box => box.Decoration.Color == localBackground);
+            box => box.AsBoxDecoration.Color == localBackground);
         Assert.Equal(
             Colors.MediumVioletRed,
             Assert.IsType<SolidColorBrush>(FindParagraph(local.RenderView, "Edit")!.Foreground).Color);
@@ -926,7 +926,7 @@ public sealed class MaterialDropdownTests : IDisposable
         widget.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(widget.RenderView),
-            box => box.Decoration.Color == widgetBackground);
+            box => box.AsBoxDecoration.Color == widgetBackground);
         Assert.Equal(
             Colors.OrangeRed,
             Assert.IsType<SolidColorBrush>(FindParagraph(widget.RenderView, "View")!.Foreground).Color);
@@ -954,7 +954,7 @@ public sealed class MaterialDropdownTests : IDisposable
         global.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(global.RenderView),
-            box => box.Decoration.Color == globalBackground);
+            box => box.AsBoxDecoration.Color == globalBackground);
 
         var localController = new MenuController();
         using var local = new WidgetRenderHarness(Wrap(new MenuTheme(
@@ -969,7 +969,7 @@ public sealed class MaterialDropdownTests : IDisposable
         local.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(local.RenderView),
-            box => box.Decoration.Color == localBackground);
+            box => box.AsBoxDecoration.Color == localBackground);
 
         var widgetController = new MenuController();
         using var widget = new WidgetRenderHarness(Wrap(new MenuTheme(
@@ -986,7 +986,7 @@ public sealed class MaterialDropdownTests : IDisposable
         widget.Pump(new Size(500, 180));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(widget.RenderView),
-            box => box.Decoration.Color == widgetBackground);
+            box => box.AsBoxDecoration.Color == widgetBackground);
     }
 
     [Fact]
@@ -1606,11 +1606,11 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(2, opened.Count);
         foreach (RenderDecoratedBox panel in opened)
         {
-            Assert.Equal(theme.ColorScheme.SurfaceContainer, panel.Decoration.Color);
-            Assert.Equal(4.0, panel.Decoration.EffectiveBorderRadius.Radius);
+            Assert.Equal(theme.ColorScheme.SurfaceContainer, panel.AsBoxDecoration.Color);
+            Assert.Equal(4.0, panel.AsBoxDecoration.EffectiveBorderRadius.Radius);
 
             // elevation 3.0 draws its key and ambient shadows from the scheme's shadow role.
-            Assert.All(panel.Decoration.BoxShadows!, shadow =>
+            Assert.All(panel.AsBoxDecoration.BoxShadows!, shadow =>
             {
                 Assert.Equal(theme.ColorScheme.Shadow.R, shadow.Color.R);
                 Assert.Equal(theme.ColorScheme.Shadow.G, shadow.Color.G);
@@ -1671,10 +1671,10 @@ public sealed class MaterialDropdownTests : IDisposable
         // so the fold shows up as an outline box carrying the default 4px radius.
         RenderDecoratedBox outline = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Border is not null && box.Decoration.Color is null);
-        Assert.Equal(4.0, outline.Decoration.EffectiveBorderRadius.Radius);
-        Assert.Equal(outlineColor, outline.Decoration.Border!.Top.Color);
-        Assert.Equal(3.0, outline.Decoration.Border.Top.Width);
+            box => box.AsBoxDecoration.Border is not null && box.AsBoxDecoration.Color is null);
+        Assert.Equal(4.0, outline.AsBoxDecoration.EffectiveBorderRadius.Radius);
+        Assert.Equal(outlineColor, outline.AsBoxDecoration.Border!.Top.Color);
+        Assert.Equal(3.0, outline.AsBoxDecoration.Border!.Top.Width);
     }
 
     [Fact]
@@ -1752,7 +1752,7 @@ public sealed class MaterialDropdownTests : IDisposable
     /// <summary>The decorated boxes a menu panel's `Material` paints, in tree order.</summary>
     private static List<RenderDecoratedBox> MenuPanels(WidgetRenderHarness harness) =>
         FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.Decoration.BoxShadows is { Count: > 0 })
+            .Where(box => box.AsBoxDecoration.BoxShadows is { Count: > 0 })
             .ToList();
 
     private static Widget Wrap(

@@ -163,7 +163,7 @@ public sealed class RenderEditable : RenderBox
         set => _toolbarLeader.Link = value;
     }
 
-    protected override bool AlwaysNeedsCompositing => true;
+    public override bool AlwaysNeedsCompositing => true;
 
     protected override void PerformLayout()
     {

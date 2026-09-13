@@ -1,3 +1,6 @@
+// These tests read Dart-deprecated members (`ignoringSemantics`, `filter`) on purpose.
+#pragma warning disable CS0618
+
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -83,8 +86,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
             && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(7));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.CardColor
-            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(7));
+            box.AsBoxDecoration.Color == ThemeData.Light.CardColor
+            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(7));
     }
 
     [Fact]
@@ -262,8 +265,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
             && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(22));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == Colors.White
-            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(22));
+            box.AsBoxDecoration.Color == Colors.White
+            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(22));
     }
 
     [Fact]

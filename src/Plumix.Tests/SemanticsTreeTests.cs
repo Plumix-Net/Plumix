@@ -1,3 +1,6 @@
+// These tests read Dart-deprecated members (`ignoringSemantics`, `filter`) on purpose.
+#pragma warning disable CS0618
+
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
@@ -638,7 +641,7 @@ public sealed class SemanticsTreeTests
     public void RenderTransform_AppliesTranslationToSemanticsRect()
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), child: leaf);
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
@@ -660,7 +663,7 @@ public sealed class SemanticsTreeTests
     public void RenderTransform_ChangingTransform_UpdatesSemanticsWithoutLayout()
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), child: leaf);
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
@@ -692,7 +695,7 @@ public sealed class SemanticsTreeTests
     public void RenderClipRect_ExcludesSemanticsOutsideClip()
     {
         var leaf = new FixedSemanticBox("Hidden", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), child: leaf);
         var clip = new RenderClipRect(transform, clipper: new FixedRectClipper(new Rect(0, 0, 20, 20)));
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
@@ -715,7 +718,7 @@ public sealed class SemanticsTreeTests
     public void RenderClipRect_ChangingClip_UpdatesSemanticsWithoutLayout()
     {
         var leaf = new FixedSemanticBox("Clipped", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(20, 0, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(20, 0, 0.0), child: leaf);
         var clipper = new FixedRectClipper(new Rect(0, 0, 64, 32));
         var clip = new RenderClipRect(transform, clipper: clipper);
 
@@ -746,7 +749,7 @@ public sealed class SemanticsTreeTests
     public void DistinctSemanticsClip_OutsidePaintClip_NodeStaysAsHidden()
     {
         var leaf = new FixedSemanticBox("HiddenByPaint", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), child: leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 20, 20),
@@ -775,7 +778,7 @@ public sealed class SemanticsTreeTests
     public void DistinctSemanticsClip_OutsideSemanticsClip_DropsNode()
     {
         var leaf = new FixedSemanticBox("DroppedBySemanticsClip", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(80, 0, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(80, 0, 0.0), child: leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 20, 20),
@@ -802,7 +805,7 @@ public sealed class SemanticsTreeTests
     public void SemanticsParentDataDirty_BoundaryStaysClean_NonBoundaryCanBecomeDirty()
     {
         var leaf = new FixedSemanticBox("State", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.Identity(), leaf);
+        var transform = new RenderTransform(Matrix4.Identity(), child: leaf);
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
@@ -835,7 +838,9 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void MarkNeedsSemanticsUpdate_WhenAncestorAlreadyQueued_DoesNotGrowPendingQueue()
     {
-        var descendant = new RenderTransform(Matrix4.Identity(), new FixedSemanticBox("Leaf", new Size(12, 8)));
+        var descendant = new RenderTransform(
+            Matrix4.Identity(),
+            child: new FixedSemanticBox("Leaf", new Size(12, 8)));
         var ancestor = new MutableSemanticBoundaryRenderBox("Ancestor", descendant);
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -1125,7 +1130,7 @@ public sealed class SemanticsTreeTests
                 new List<SemanticsConfiguration>(),
                 new List<List<SemanticsConfiguration>> { group });
         });
-        var transform = new RenderTransform(Matrix4.Identity(), delegated);
+        var transform = new RenderTransform(Matrix4.Identity(), child: delegated);
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -1204,7 +1209,7 @@ public sealed class SemanticsTreeTests
         var delegated = new MutableSyntheticMergeUpConflictRenderBox(
             child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10)),
             parentTapConflict: false);
-        var transform = new RenderTransform(Matrix4.Identity(), delegated);
+        var transform = new RenderTransform(Matrix4.Identity(), child: delegated);
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -1245,7 +1250,7 @@ public sealed class SemanticsTreeTests
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
             new MergingSemanticBox("Synthetic Geo", new Size(10, 8)));
-        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), delegated);
+        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), child: delegated);
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
@@ -1280,7 +1285,7 @@ public sealed class SemanticsTreeTests
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
             new MergingSemanticBox("Synthetic Clip", new Size(12, 8)));
-        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), delegated);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), child: delegated);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 120, 40),
@@ -1783,7 +1788,7 @@ public sealed class SemanticsTreeTests
             Child = child;
         }
 
-        internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+        public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
         {
         }
     }
@@ -2038,7 +2043,7 @@ public sealed class SemanticsTreeTests
             }
         }
 
-        internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+        public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
         {
             var firstChild = FirstChild;
             if (firstChild == null)

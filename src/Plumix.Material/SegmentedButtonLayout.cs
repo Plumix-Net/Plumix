@@ -382,7 +382,7 @@ internal sealed class RenderSegmentedButton : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         foreach (RenderBox child in Children())
         {

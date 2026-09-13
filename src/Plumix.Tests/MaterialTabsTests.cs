@@ -1214,11 +1214,11 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(100, 100));
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Shape == BoxShape.Circle);
-        Assert.Equal(Colors.Red, decoration.Decoration.Color);
+            box => box.AsBoxDecoration.Shape == BoxShape.Circle);
+        Assert.Equal(Colors.Red, decoration.AsBoxDecoration.Color);
         Assert.Equal(
             Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.Blue)),
-            decoration.Decoration.Border);
+            decoration.AsBoxDecoration.Border);
         Assert.Equal(new Size(16, 16), decoration.Size);
         Assert.Equal(new Size(24, 24), harness.RenderView.Child!.Size);
 
@@ -1232,7 +1232,7 @@ public sealed class MaterialTabsTests
             Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.Blue, style: BorderStyle.None)),
             Assert.Single(
                 FindDescendants<RenderDecoratedBox>(borderless.RenderView),
-                box => box.Decoration.Shape == BoxShape.Circle).Decoration.Border);
+                box => box.AsBoxDecoration.Shape == BoxShape.Circle).AsBoxDecoration.Border);
     }
 
     [Fact]
@@ -1248,15 +1248,15 @@ public sealed class MaterialTabsTests
         using var harness = new WidgetRenderHarness(Wrap(selector));
         harness.Pump(new Size(200, 60));
         IReadOnlyList<RenderDecoratedBox> circles = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.Decoration.Shape == BoxShape.Circle)
+            .Where(box => box.AsBoxDecoration.Shape == BoxShape.Circle)
             .ToList();
         Assert.Equal(3, circles.Count);
         Assert.Equal(
             [MaterialColors.Transparent, ThemeData.Light.ColorScheme.Secondary, MaterialColors.Transparent],
-            circles.Select(circle => circle.Decoration.Color!.Value).ToArray());
+            circles.Select(circle => circle.AsBoxDecoration.Color!.Value).ToArray());
         Assert.All(circles, circle => Assert.Equal(
             Plumix.Rendering.Border.FromBorderSide(new BorderSide(ThemeData.Light.ColorScheme.Secondary)),
-            circle.Decoration.Border));
+            circle.AsBoxDecoration.Border));
         Assert.Equal(new Size(60, 20), harness.RenderView.Child!.Size);
     }
 
@@ -1360,7 +1360,7 @@ public sealed class MaterialTabsTests
         Assert.NotNull(FindDescendant<RenderSliverFillViewport>(harness.RenderView));
         Assert.NotNull(FindIndicatorPainter(harness.RenderView));
         Assert.Equal(4, FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Count(box => box.Decoration.Shape == BoxShape.Circle));
+            .Count(box => box.AsBoxDecoration.Shape == BoxShape.Circle));
     }
 
     // ------------------------------------------------------------- helpers
@@ -1518,8 +1518,8 @@ public sealed class MaterialTabsTests
     private static int[] SelectorAlphas(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .Where(box => box.Decoration.Shape == BoxShape.Circle)
-            .Select(box => (int)box.Decoration.Color!.Value.A)
+            .Where(box => box.AsBoxDecoration.Shape == BoxShape.Circle)
+            .Select(box => (int)box.AsBoxDecoration.Color!.Value.A)
             .ToArray();
     }
 

@@ -111,7 +111,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             color: Color.Parse("#FFE7EDF6"),
                             child: new Center(
                                 new FractionalTranslation(
-                                    translation: new Vector(_fractionalShift, 0),
+                                    translation: new Point(_fractionalShift, 0),
                                     child: new Container(
                                         width: 56,
                                         height: 32,

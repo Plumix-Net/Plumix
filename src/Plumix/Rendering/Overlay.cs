@@ -327,7 +327,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
     /// <remarks>Flutter's <c>_RenderTheater.visitChildrenForSemantics</c>: the same walk, starting at
     /// the first onstage entry so entries hidden behind an opaque one - and their overlay children -
     /// contribute nothing.</remarks>
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstOnstageChild; child is not null; child = ChildAfter(child))
         {

@@ -54,7 +54,7 @@ public sealed partial class RenderParagraph
         }
     }
 
-    protected override bool AlwaysNeedsCompositing => _lastSelectableFragments?.Count > 0;
+    public override bool AlwaysNeedsCompositing => _lastSelectableFragments?.Count > 0;
 
     /// Whether the given selectable is one of this paragraph's fragments.
     public bool SelectableBelongsToParagraph(ISelectable selectable)

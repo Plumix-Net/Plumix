@@ -44,7 +44,7 @@ public sealed class Opacity : SingleChildRenderObjectWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderOpacity(Value, AlwaysIncludeSemantics);
+        return new RenderOpacity(opacity: Value, alwaysIncludeSemantics: AlwaysIncludeSemantics);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -296,13 +296,12 @@ public sealed class Transform : SingleChildRenderObjectWidget
     public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderTransform(
-            Matrix,
-            Alignment,
-            child: null,
-            FilterQuality,
-            Origin,
-            TransformHitTests,
-            Directionality.MaybeOf(context));
+            transform: Matrix,
+            origin: Origin,
+            alignment: Alignment,
+            textDirection: Directionality.MaybeOf(context),
+            transformHitTests: TransformHitTests,
+            filterQuality: FilterQuality);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -423,7 +422,7 @@ public sealed class FittedBox : SingleChildRenderObjectWidget
 public sealed class FractionalTranslation : SingleChildRenderObjectWidget
 {
     public FractionalTranslation(
-        Vector translation,
+        Point translation,
         Widget? child = null,
         bool transformHitTests = true,
         Key? key = null) : base(child, key)
@@ -433,14 +432,14 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
     }
 
     /// <summary>The translation to apply, as a fraction of this box's size.</summary>
-    public Vector Translation { get; }
+    public Point Translation { get; }
 
     /// <summary>Whether to apply the translation when performing hit tests.</summary>
     public bool TransformHitTests { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderFractionalTranslation(Translation, TransformHitTests);
+        return new RenderFractionalTranslation(translation: Translation, transformHitTests: TransformHitTests);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -1754,6 +1753,9 @@ public sealed class Wrap : MultiChildRenderObjectWidget
     }
 }
 
+// The widgets below still forward Dart's deprecated `ignoringSemantics` to their render objects.
+#pragma warning disable CS0618
+
 /// <summary>A widget that is invisible during hit testing.</summary>
 public sealed class IgnorePointer : SingleChildRenderObjectWidget
 {
@@ -1771,6 +1773,9 @@ public sealed class IgnorePointer : SingleChildRenderObjectWidget
     public bool Ignoring { get; }
 
     /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
+    [Obsolete(
+        "Use ExcludeSemantics or create a custom ignore pointer widget instead. "
+        + "This feature was deprecated after v3.8.0-12.0.pre.")]
     public bool? IgnoringSemantics { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
@@ -1817,6 +1822,9 @@ public sealed class AbsorbPointer : SingleChildRenderObjectWidget
     public bool Absorbing { get; }
 
     /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
+    [Obsolete(
+        "Use ExcludeSemantics or create a custom absorb pointer widget instead. "
+        + "This feature was deprecated after v3.8.0-12.0.pre.")]
     public bool? IgnoringSemantics { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
@@ -1845,3 +1853,5 @@ public sealed class AbsorbPointer : SingleChildRenderObjectWidget
             defaultValue: null));
     }
 }
+
+#pragma warning restore CS0618

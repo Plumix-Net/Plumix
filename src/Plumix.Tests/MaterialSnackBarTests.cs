@@ -200,13 +200,13 @@ public sealed class MaterialSnackBarTests : IDisposable
             light.ColorScheme.Surface);
         using var harness = Show(light, Bar());
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == expected);
+            box.AsBoxDecoration.Color == expected);
 
         // Dark M2 takes `colorScheme.onSurface` straight through.
         var dark = ThemeData.Dark with { UseMaterial3 = false };
         using var darkHarness = Show(dark, Bar());
         Assert.Contains(FindDescendants<RenderDecoratedBox>(darkHarness.RenderView), box =>
-            box.Decoration.Color == dark.ColorScheme.OnSurface);
+            box.AsBoxDecoration.Color == dark.ColorScheme.OnSurface);
     }
 
     private static Color WithOpacity(Color color, double opacity) =>
@@ -228,7 +228,7 @@ public sealed class MaterialSnackBarTests : IDisposable
     {
         using var material3 = Show(ThemeData.Light, Bar(action: Action()));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(material3.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.ColorScheme.InverseSurface);
+            box.AsBoxDecoration.Color == ThemeData.Light.ColorScheme.InverseSurface);
         Assert.Equal(
             ThemeData.Light.ColorScheme.OnInverseSurface,
             Assert.IsType<SolidColorBrush>(FindParagraph(material3.RenderView, "Message")!.Foreground).Color);
@@ -239,7 +239,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         var material2Dark = ThemeData.Dark with { UseMaterial3 = false };
         using var material2 = Show(material2Dark, Bar(action: Action()));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(material2.RenderView), box =>
-            box.Decoration.Color == material2Dark.ColorScheme.OnSurface);
+            box.AsBoxDecoration.Color == material2Dark.ColorScheme.OnSurface);
         // M2 dark inverts to a light theme, so the action takes `colorScheme.primary`.
         Assert.Equal(
             material2Dark.ColorScheme.Primary,
@@ -297,7 +297,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         using var fromTheme = Show(themed, Bar(action: Action()));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(fromTheme.RenderView), box =>
-            box.Decoration.Color == Colors.Purple);
+            box.AsBoxDecoration.Color == Colors.Purple);
         RenderParagraph content = FindParagraph(fromTheme.RenderView, "Message")!;
         Assert.Equal(18, content.FontSize);
         Assert.Equal(Colors.Orange, Assert.IsType<SolidColorBrush>(content.Foreground).Color);
@@ -308,7 +308,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         using var widgetWins = Show(themed, Bar(backgroundColor: Colors.Green, elevation: 12));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(widgetWins.RenderView), box =>
-            box.Decoration.Color == Colors.Green);
+            box.AsBoxDecoration.Color == Colors.Green);
         Assert.Contains(FindWidgets<MaterialWidget>(widgetWins), material => material.Elevation == 12);
     }
 
@@ -324,7 +324,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             Bar(),
             wrap: child => new SnackBarTheme(new SnackBarThemeData(backgroundColor: Colors.Teal), child));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == Colors.Teal);
+            box.AsBoxDecoration.Color == Colors.Teal);
     }
 
     [Fact]

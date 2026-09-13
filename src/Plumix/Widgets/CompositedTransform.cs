@@ -33,7 +33,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
         LayerLink link,
         Widget? child = null,
         bool showWhenUnlinked = true,
-        Vector offset = default,
+        Point offset = default,
         Alignment? targetAnchor = null,
         Alignment? followerAnchor = null,
         Key? key = null) : base(child, key)
@@ -49,7 +49,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
 
     public bool ShowWhenUnlinked { get; }
 
-    public Vector Offset { get; }
+    public Point Offset { get; }
 
     public Alignment TargetAnchor { get; }
 
@@ -58,11 +58,11 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
     public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFollowerLayer(
-            Link,
-            ShowWhenUnlinked,
-            Offset,
-            TargetAnchor,
-            FollowerAnchor);
+            link: Link,
+            showWhenUnlinked: ShowWhenUnlinked,
+            offset: Offset,
+            leaderAnchor: TargetAnchor,
+            followerAnchor: FollowerAnchor);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)

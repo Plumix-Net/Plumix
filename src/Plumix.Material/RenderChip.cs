@@ -457,7 +457,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         Visit(_deleteIcon, visitor);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         VisitForSemantics(_avatar, visitor);
         VisitForSemantics(_label, visitor);

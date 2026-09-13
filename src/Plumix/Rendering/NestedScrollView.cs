@@ -199,7 +199,7 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
         return _child != null && _child.HitTest(result, position);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null)
         {

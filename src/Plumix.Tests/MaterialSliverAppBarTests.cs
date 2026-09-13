@@ -1,3 +1,6 @@
+// These tests read Dart-deprecated members (`ignoringSemantics`, `filter`) on purpose.
+#pragma warning disable CS0618
+
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -105,7 +108,7 @@ public sealed class MaterialSliverAppBarTests
 
         var transform = Assert.Single(FindDescendants<RenderTransform>(expanded.RenderView));
         Assert.Equal(Alignment.BottomLeft, transform.Alignment);
-        Assert.Equal(1.5, transform.Transform[0], precision: 3);
+        Assert.Equal(1.5, transform.DebugTransformMatrix()[0], precision: 3);
         Assert.Contains(FindDescendants<RenderOpacity>(expanded.RenderView), value => Math.Abs(value.Opacity - 1) < 0.001);
 
         using var collapsed = new WidgetRenderHarness(Wrap(new FlexibleSpaceBarSettings(
@@ -407,13 +410,13 @@ public sealed class MaterialSliverAppBarTests
         // The header now composes a real AppBar, so its Material owns the surface: the widget's
         // background and shape win over the theme's, tinted at the theme's scrolled-under elevation.
         var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(BorderRadius.Circular(8), surface.Decoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(8), surface.AsBoxDecoration.EffectiveBorderRadius);
         Assert.Equal(
             ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 5),
-            surface.Decoration.Color);
+            surface.AsBoxDecoration.Color);
         Assert.NotEqual(
             ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 0),
-            surface.Decoration.Color);
+            surface.AsBoxDecoration.Color);
     }
 
     [Fact]
@@ -441,8 +444,8 @@ public sealed class MaterialSliverAppBarTests
         harness.Pump(new Size(360, 320));
 
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), value =>
-            value.Decoration.Color == Colors.CadetBlue
-            && value.Decoration.EffectiveBorderRadius == BorderRadius.Circular(12));
+            value.AsBoxDecoration.Color == Colors.CadetBlue
+            && value.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(12));
     }
 
     [Fact]
@@ -455,7 +458,7 @@ public sealed class MaterialSliverAppBarTests
         harness.Pump(new Size(100, 40));
         var transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.Equal(Alignment.BottomRight, transform.Alignment);
-        Assert.NotEqual(transform.Transform, transform.EffectiveTransform);
+        Assert.NotEqual(transform.DebugTransformMatrix(), transform.DebugEffectiveTransform());
     }
 
     private static Widget Wrap(

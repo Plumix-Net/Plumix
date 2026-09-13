@@ -1130,7 +1130,7 @@ public sealed class TableRowInkWell : InkResponse
         Matrix4 transform = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
         if (parent is RenderTransform renderTransform)
         {
-            transform.Multiply(renderTransform.Transform);
+            renderTransform.ApplyPaintTransform(child, transform);
         }
 
         return transform;

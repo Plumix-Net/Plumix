@@ -51,7 +51,7 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.87),
             Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Two")!.Foreground).Color);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(enabled.RenderView),
-            box => box.Decoration.Color == NavigationSurfaceUtilities.WithOpacity(Colors.DarkGreen, 0.12));
+            box => box.AsBoxDecoration.Color == NavigationSurfaceUtilities.WithOpacity(Colors.DarkGreen, 0.12));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(enabled.RenderView),
             box => box.AdditionalConstraints.MinWidth == 48
                    && box.AdditionalConstraints.MinHeight == 48);
@@ -95,7 +95,7 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Equal(Colors.Gold,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.DarkGreen);
+            box => box.AsBoxDecoration.Color == Colors.DarkGreen);
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
         var checkedNode = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
@@ -130,9 +130,9 @@ public sealed class MaterialSegmentedButtonsTests
         enabled.Pump(new Size(360, 120));
 
         Assert.Contains(FindDescendants<RenderDecoratedBox>(enabled.RenderView),
-            box => box.Decoration.Color == Colors.DarkGreen);
+            box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(enabled.RenderView),
-            box => box.Decoration.Color == Colors.SteelBlue);
+            box => box.AsBoxDecoration.Color == Colors.SteelBlue);
         var borders = FindDescendants<RenderBox>(enabled.RenderView)
             .Where(renderBox => renderBox.GetType().Name == "RenderSelectToggleButton")
             .ToList();
@@ -148,7 +148,7 @@ public sealed class MaterialSegmentedButtonsTests
                 isSelected: [true])));
         disabled.Pump(new Size(200, 80));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(disabled.RenderView),
-            box => box.Decoration.Color == Colors.Orange);
+            box => box.AsBoxDecoration.Color == Colors.Orange);
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public sealed class MaterialSegmentedButtonsTests
         harness.Pump(new Size(360, 120));
 
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.DarkGreen);
+            box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Equal(Colors.Gold,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "One")!.Foreground).Color);
         Assert.Equal(NavigationSurfaceUtilities.WithOpacity(Colors.DarkSlateBlue, 0.38),

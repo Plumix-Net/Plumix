@@ -83,7 +83,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
         Assert.Single(FindAll<RenderBackdropFilter>(lightHarness.RenderView));
         RenderDecoratedBox lightDecoration = Assert.Single(FindAll<RenderDecoratedBox>(lightHarness.RenderView));
-        var lightBox = Assert.IsType<BoxDecoration>(lightDecoration.DecorationValue);
+        var lightBox = Assert.IsType<BoxDecoration>(lightDecoration.Decoration);
         Assert.Equal(0xF0F9F9F9u, lightBox.Color!.Value.ToUInt32());
         Assert.Equal(0x4D000000u, Assert.IsType<Border>(lightBox.Border).Top.Color.ToUInt32());
         Assert.Null(FindParagraph(lightHarness.RenderView, "inactive-two"));
@@ -97,7 +97,7 @@ public sealed class CupertinoTabBarTests : IDisposable
             brightness: PlatformBrightness.Dark));
         darkHarness.Pump(ViewSize);
         RenderDecoratedBox darkDecoration = Assert.Single(FindAll<RenderDecoratedBox>(darkHarness.RenderView));
-        var darkBox = Assert.IsType<BoxDecoration>(darkDecoration.DecorationValue);
+        var darkBox = Assert.IsType<BoxDecoration>(darkDecoration.Decoration);
         Assert.Equal(0xF01D1D1Du, darkBox.Color!.Value.ToUInt32());
         Assert.Equal(0x29000000u, Assert.IsType<Border>(darkBox.Border).Top.Color.ToUInt32());
         Assert.Equal(0xFF765432u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToUInt32());
@@ -116,7 +116,7 @@ public sealed class CupertinoTabBarTests : IDisposable
         borderlessHarness.Pump(ViewSize);
         RenderDecoratedBox borderlessDecoration =
             Assert.Single(FindAll<RenderDecoratedBox>(borderlessHarness.RenderView));
-        Assert.Null(Assert.IsType<BoxDecoration>(borderlessDecoration.DecorationValue).Border);
+        Assert.Null(Assert.IsType<BoxDecoration>(borderlessDecoration.Decoration).Border);
     }
 
     [Fact]

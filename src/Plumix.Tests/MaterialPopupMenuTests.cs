@@ -90,10 +90,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         var line = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
-        BorderSide side = ((Plumix.Rendering.Border)line.Decoration.Border!).Bottom;
+            box => box.AsBoxDecoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
+        BorderSide side = ((Plumix.Rendering.Border)line.AsBoxDecoration.Border!).Bottom;
         Assert.Equal(5, side.Width);
-        Assert.Equal(radius, line.Decoration.BorderRadius);
+        Assert.Equal(radius, line.AsBoxDecoration.BorderRadius);
         Assert.Equal(Colors.Orange, side.Color);
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
@@ -214,9 +214,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(40, ((BoxParentData)layout.Child!.parentData!).offset.X, precision: 3);
         Assert.Equal(30, ((BoxParentData)layout.Child.parentData!).offset.Y, precision: 3);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.ColorScheme.SurfaceContainer
-            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(4)
-            && box.Decoration.BoxShadows is not null);
+            box.AsBoxDecoration.Color == ThemeData.Light.ColorScheme.SurfaceContainer
+            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(4)
+            && box.AsBoxDecoration.BoxShadows is not null);
         var viewport = Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         Assert.True(viewport.Size.Height < 360);
         Assert.NotNull(FindSemantics(semantics, node =>
@@ -309,9 +309,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
         harness.Pump(new Size(500, 360));
 
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == Colors.Orange
-            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(3)
-            && box.Decoration.BoxShadows is null);
+            box.AsBoxDecoration.Color == Colors.Orange
+            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(3)
+            && box.AsBoxDecoration.BoxShadows is null);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
             padding.Padding == new Thickness(7));
     }
@@ -513,7 +513,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         PumpAnimation();
         localHarness.Pump(new Size(500, 360));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(localHarness.RenderView), box =>
-            box.Decoration.Color == Colors.Purple);
+            box.AsBoxDecoration.Color == Colors.Purple);
 
         BuildContext globalContext = null!;
         Widget BuildRoot(Color color) => Wrap(
@@ -533,12 +533,12 @@ public sealed class MaterialPopupMenuTests : IDisposable
         PumpAnimation();
         globalHarness.Pump(new Size(500, 360));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
-            box.Decoration.Color == Colors.Green);
+            box.AsBoxDecoration.Color == Colors.Green);
 
         globalHarness.UpdateRoot(BuildRoot(Colors.Orange));
         globalHarness.Pump(new Size(500, 360));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
-            box.Decoration.Color == Colors.Orange);
+            box.AsBoxDecoration.Color == Colors.Orange);
     }
 
     [Fact]

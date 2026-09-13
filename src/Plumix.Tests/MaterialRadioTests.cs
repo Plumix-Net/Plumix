@@ -602,17 +602,17 @@ public sealed class MaterialRadioTests
     private static RenderDecoratedBox? FindOuterDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box => box.Decoration.Border is not null);
+            .FirstOrDefault(box => box.AsBoxDecoration.Border is not null);
     }
 
     private static RenderDecoratedBox? FindInnerDotDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .FirstOrDefault(box =>
-                box.Decoration.Border is null
-                && box.Decoration.Color.HasValue
-                && box.Decoration.Color.Value.A > 0
-                && box.Decoration.Color.Value != MaterialColors.Transparent);
+                box.AsBoxDecoration.Border is null
+                && box.AsBoxDecoration.Color.HasValue
+                && box.AsBoxDecoration.Color!.Value.A > 0
+                && box.AsBoxDecoration.Color!.Value != MaterialColors.Transparent);
     }
 
     private static RadioPainter FindRadioPainter(RenderObject root)

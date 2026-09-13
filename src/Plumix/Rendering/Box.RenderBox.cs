@@ -439,10 +439,7 @@ public abstract class RenderBox : RenderObject
 
         try
         {
-            result = GetCachedBaseline(
-                Constraints,
-                baseline,
-                () => ComputeDistanceToActualBaseline(baseline));
+            result = GetDistanceToActualBaseline(baseline);
         }
         finally
         {
@@ -462,6 +459,19 @@ public abstract class RenderBox : RenderObject
     /// This function must only be called from [getDistanceToBaseline] and
     /// [computeDistanceToActualBaseline]. Do not call this function directly from
     /// outside those two methods.
+    ///
+    /// Dart's `@protected RenderBox.getDistanceToActualBaseline`; C# has no `@protected` that a
+    /// sibling render box (a proxy forwarding to its child) could call, so it is public.
+    public double? GetDistanceToActualBaseline(TextBaseline baseline)
+    {
+        return GetCachedBaseline(
+            Constraints,
+            baseline,
+            () => ComputeDistanceToActualBaseline(baseline));
+    }
+
+    /// Returns the distance from the y-coordinate of the position of the box to the y-coordinate of
+    /// the first given baseline in the box's contents, if any, or null otherwise.
     protected virtual double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
         // Debug.Assert(

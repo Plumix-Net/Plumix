@@ -98,15 +98,15 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
         harness.Pump(ViewSize);
         RenderTransform icon = Assert.Single(FindAll<RenderTransform>(harness.RenderView));
-        Assert.InRange(icon.Transform[0], 0.70, 0.72);
-        Assert.InRange(icon.Transform[1], 0.70, 0.72);
+        Assert.InRange(icon.DebugTransformMatrix()[0], 0.70, 0.72);
+        Assert.InRange(icon.DebugTransformMatrix()[1], 0.70, 0.72);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(ViewSize);
         Assert.Single(FindParagraphs(harness.RenderView, "Content"));
         Assert.False(Assert.Single(FindAll<RenderOffstage>(harness.RenderView)).Offstage);
-        Assert.InRange(icon.Transform[0], -0.01, 0.01);
-        Assert.InRange(icon.Transform[1], 0.99, 1.01);
+        Assert.InRange(icon.DebugTransformMatrix()[0], -0.01, 0.01);
+        Assert.InRange(icon.DebugTransformMatrix()[1], 0.99, 1.01);
     }
 
     [Fact]

@@ -250,7 +250,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             onDateChanged: _ => { })));
         dayHarness.Pump(new Size(420, 500));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(dayHarness.RenderView), box =>
-            box.Decoration.Color == localDay && box.Decoration.Shape == BoxShape.Circle);
+            box.AsBoxDecoration.Color == localDay && box.AsBoxDecoration.Shape == BoxShape.Circle);
 
         using var yearHarness = CreateHarness(new DatePickerTheme(localTheme, new YearPicker(
             firstDate: new DateTime(2024, 1, 1),
@@ -260,7 +260,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             onChanged: _ => { })));
         yearHarness.Pump(new Size(420, 320));
         Assert.Contains(FindDescendants<RenderDecoratedBox>(yearHarness.RenderView), box =>
-            box.Decoration.Color == localYear);
+            box.AsBoxDecoration.Color == localYear);
     }
 
     [Fact]
@@ -581,7 +581,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.Null(FindSemantics(semantics, node =>
             node.Label is "Switch to input" or "Switch to calendar"));
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box => box.Color == Colors.Orange);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box => box.Decoration.Color == Colors.Purple);
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.AsBoxDecoration.Color == Colors.Purple);
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.PlainText == "Choose birthday");

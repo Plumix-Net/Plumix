@@ -972,19 +972,19 @@ public sealed class MaterialSwitchTests
     private static RenderDecoratedBox? FindTrackDecoration(RenderObject root)
     {
         var boxes = FindDescendants<RenderDecoratedBox>(root);
-        return boxes.FirstOrDefault(box => box.Decoration.Border is not null)
+        return boxes.FirstOrDefault(box => box.AsBoxDecoration.Border is not null)
                ?? boxes.FirstOrDefault(box =>
-                   box.Decoration.Color.HasValue
-                   && box.Decoration.Color.Value.A > 0);
+                   box.AsBoxDecoration.Color.HasValue
+                   && box.AsBoxDecoration.Color!.Value.A > 0);
     }
 
     private static RenderDecoratedBox? FindThumbDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .LastOrDefault(box =>
-                box.Decoration.Color.HasValue
-                && box.Decoration.Color.Value.A > 0
-                && box.Decoration.Border is null);
+                box.AsBoxDecoration.Color.HasValue
+                && box.AsBoxDecoration.Color!.Value.A > 0
+                && box.AsBoxDecoration.Border is null);
     }
 
     private static RenderDecoratedBox? FindDecoratedBoxBySize(

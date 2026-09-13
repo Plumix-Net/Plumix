@@ -155,10 +155,10 @@ public sealed class MaterialScaffoldTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.CadetBlue, decorated!.Decoration.Color);
-        Assert.NotNull(decorated.Decoration.BoxShadows);
+        Assert.Equal(Colors.CadetBlue, decorated!.AsBoxDecoration.Color);
+        Assert.NotNull(decorated.AsBoxDecoration.BoxShadows);
 
-        var shadows = decorated.Decoration.BoxShadows!;
+        var shadows = decorated.AsBoxDecoration.BoxShadows!;
         Assert.True(shadows.Count > 0);
         for (int i = 0; i < shadows.Count; i++)
         {
@@ -207,10 +207,10 @@ public sealed class MaterialScaffoldTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Crimson, decorated!.Decoration.Color);
-        Assert.NotNull(decorated.Decoration.BoxShadows);
+        Assert.Equal(Colors.Crimson, decorated!.AsBoxDecoration.Color);
+        Assert.NotNull(decorated.AsBoxDecoration.BoxShadows);
 
-        var shadows = decorated.Decoration.BoxShadows!;
+        var shadows = decorated.AsBoxDecoration.BoxShadows!;
         Assert.True(shadows.Count > 0);
         for (int i = 0; i < shadows.Count; i++)
         {
@@ -3951,7 +3951,7 @@ public sealed class MaterialScaffoldTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(BorderRadius.Circular(18), decorated!.Decoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(18), decorated!.AsBoxDecoration.EffectiveBorderRadius);
     }
 
     [Fact]

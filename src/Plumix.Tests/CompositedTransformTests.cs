@@ -61,7 +61,7 @@ public sealed class CompositedTransformTests
         root.Update(new CompositedTransformFollower(
             secondLink,
             showWhenUnlinked: false,
-            offset: new Vector(7, -3),
+            offset: new Point(7, -3),
             targetAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: new SizedBox(width: 20, height: 10)));
@@ -71,7 +71,7 @@ public sealed class CompositedTransformTests
         Assert.Same(follower, updated);
         Assert.Same(secondLink, updated.Link);
         Assert.False(updated.ShowWhenUnlinked);
-        Assert.Equal(new Vector(7, -3), updated.Offset);
+        Assert.Equal(new Point(7, -3), updated.Offset);
         Assert.Equal(Alignment.BottomRight, updated.LeaderAnchor);
         Assert.Equal(Alignment.Center, updated.FollowerAnchor);
     }
@@ -84,7 +84,7 @@ public sealed class CompositedTransformTests
         var followerChild = new HitTestRenderBox(new Size(20, 10), hitTestSelf: true);
         var follower = new RenderFollowerLayer(
             link,
-            offset: new Vector(5, 7),
+            offset: new Point(5, 7),
             leaderAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: followerChild);
@@ -149,18 +149,18 @@ public sealed class CompositedTransformTests
         var target = new RenderLeaderLayer(link, new HitTestRenderBox(new Size(40, 20)));
         var transformedTarget = new RenderTransform(
             Matrix4.Diagonal3Values(1.5, 2, 1.0),
-            Alignment.TopLeft,
-            target);
+            alignment: Alignment.TopLeft,
+            child: target);
         var follower = new RenderFollowerLayer(
             link,
-            offset: new Vector(5, 7),
+            offset: new Point(5, 7),
             leaderAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: new HitTestRenderBox(new Size(20, 10)));
         var transformedFollower = new RenderTransform(
             Matrix4.Diagonal3Values(0.5, 0.75, 1.0),
-            Alignment.TopLeft,
-            follower);
+            alignment: Alignment.TopLeft,
+            child: follower);
         var stack = new RenderStack(
             [transformedTarget, transformedFollower],
             clipBehavior: Clip.None,

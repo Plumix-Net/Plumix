@@ -332,7 +332,7 @@ public sealed class LayerV2Tests
     /// <summary>A leaf that always needs compositing, so its ancestors take the layer branch.</summary>
     private sealed class TestCompositingRenderBox : RenderBox
     {
-        protected override bool AlwaysNeedsCompositing => true;
+        public override bool AlwaysNeedsCompositing => true;
 
         protected override void PerformLayout()
         {

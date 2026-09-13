@@ -5,14 +5,13 @@ using Plumix.Foundation;
 namespace Plumix.Rendering;
 
 /// <summary>Creates a separate composited display list for its child.</summary>
-public sealed class RenderRepaintBoundary : RenderProxyBox
+public class RenderRepaintBoundary : RenderProxyBox
 {
     private int _debugSymmetricPaintCount;
     private int _debugAsymmetricPaintCount;
 
-    public RenderRepaintBoundary(RenderBox? child = null)
+    public RenderRepaintBoundary(RenderBox? child = null) : base(child)
     {
-        Child = child;
     }
 
     public override bool IsRepaintBoundary => true;

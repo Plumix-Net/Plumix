@@ -143,7 +143,7 @@ public sealed class MaterialGridTileTests
                 == new Thickness(8, 0, 8, 0));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == background);
+            box => box.AsBoxDecoration.Color == background);
 
         var title = FindParagraph(harness.RenderView, "Title");
         var subtitle = FindParagraph(harness.RenderView, "Subtitle");

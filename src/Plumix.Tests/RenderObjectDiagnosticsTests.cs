@@ -253,7 +253,7 @@ public sealed class RenderObjectDiagnosticsTests
             .ToStringDeep(minLevel: DiagnosticLevel.Info);
 
         Assert.Contains("ignoring: true", dump, StringComparison.Ordinal);
-        Assert.Contains("ignoringSemantics: implicitly True", dump, StringComparison.Ordinal);
+        Assert.Contains("ignoringSemantics: implicitly true", dump, StringComparison.Ordinal);
     }
 
     [DebugOnlyFact]

@@ -367,11 +367,13 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             MarkNeedsSemanticsUpdate();
         }
 
-        OnAttach();
-
         // Dart recurses from each child-holding mixin's `attach` override. C# centralizes the same
         // parent-first walk through `VisitChildren`, but preserves Dart's strict attachment assertions.
         VisitChildren(child => child.Attach(owner));
+
+        // A Dart `attach` override runs its own work after `super.attach(owner)`, which has already
+        // attached the children; `OnAttach` is that work.
+        OnAttach();
     }
 
     /// <summary>
@@ -896,7 +898,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         Owner?.RequestCompositingBitsUpdateFor(this);
     }
 
-    public void MarkNeedsSemanticsUpdate()
+    public virtual void MarkNeedsSemanticsUpdate()
     {
         EnsureNotDisposedMutation();
         Debug.Assert(!Attached || Owner?.DebugDoingSemantics != true);
@@ -1024,7 +1026,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _semantics.Clear();
     }
 
-    protected virtual bool AlwaysNeedsCompositing => false;
+    public virtual bool AlwaysNeedsCompositing => false;
 
     protected virtual Rect SemanticBounds => new Rect();
 
@@ -1039,7 +1041,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// through <see cref="ApplyPaintTransform"/>, exactly as Flutter does, so an override only has to
     /// decide which children participate.
     /// </remarks>
-    internal virtual void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public virtual void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         VisitChildren(visitor);
     }

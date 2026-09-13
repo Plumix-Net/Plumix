@@ -421,7 +421,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/ImageFilterConfig.cs`
   - `src/Plumix/Rendering/Filter.RenderBox.cs`
   - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
-  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+  - `src/Plumix/Rendering/Proxy.DecoratedBox.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ImageProviderDecorationTests.cs`
   - `src/Plumix.Tests/ImageWidgetTests.cs`
@@ -554,7 +554,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/SemanticsConfigurationProvider.cs`
   - `src/Plumix/Widgets/Semantics.cs`
   - `src/Plumix/Widgets/MetaData.cs`
-  - `src/Plumix/Rendering/Proxy.RenderBox.cs`
+  - `src/Plumix/Rendering/Proxy.Semantics.cs`
   - `src/Plumix/Widgets/ModalBarrier.cs`
 - Primary Tests:
   - `src/Plumix.Tests/SemanticsTreeTests.cs`

@@ -105,7 +105,7 @@ public sealed class MaterialDividerTests
         harness.Pump(new Size(220, 80));
 
         RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
-        BorderSide side = ((Plumix.Rendering.Border)line.Decoration.Border!).Bottom;
+        BorderSide side = ((Plumix.Rendering.Border)line.AsBoxDecoration.Border!).Bottom;
         Assert.Equal(Colors.CadetBlue, side.Color);
         Assert.Equal(1.0, side.Width, 3);
         Assert.Equal(200.0, line.Size.Width, 3);
@@ -135,7 +135,7 @@ public sealed class MaterialDividerTests
         harness.Pump(new Size(220, 80));
 
         RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
-        BorderSide side = ((Plumix.Rendering.Border)line.Decoration.Border!).Bottom;
+        BorderSide side = ((Plumix.Rendering.Border)line.AsBoxDecoration.Border!).Bottom;
         Assert.Equal(Colors.CadetBlue, side.Color);
         Assert.Equal(0.0, side.Width, 3);
         Assert.Equal(0.0, line.Size.Height, 3);
@@ -164,8 +164,8 @@ public sealed class MaterialDividerTests
 
         RenderDecoratedBox m3Line = FindDividerBox(m3Harness.RenderView, Axis.Vertical);
         RenderDecoratedBox m2Line = FindDividerBox(m2Harness.RenderView, Axis.Vertical);
-        BorderSide m3Side = ((Plumix.Rendering.Border)m3Line.Decoration.Border!).Left;
-        BorderSide m2Side = ((Plumix.Rendering.Border)m2Line.Decoration.Border!).Left;
+        BorderSide m3Side = ((Plumix.Rendering.Border)m3Line.AsBoxDecoration.Border!).Left;
+        BorderSide m2Side = ((Plumix.Rendering.Border)m2Line.AsBoxDecoration.Border!).Left;
         Assert.Equal(Colors.DarkCyan, m3Side.Color);
         Assert.Equal(1.0, m3Side.Width);
         Assert.Equal(1.0, m3Line.Size.Width);
@@ -197,7 +197,7 @@ public sealed class MaterialDividerTests
         themeHarness.Pump(new Size(260, 90));
 
         RenderDecoratedBox themedLine = FindDividerBox(themeHarness.RenderView, Axis.Horizontal);
-        BorderSide themedSide = ((Plumix.Rendering.Border)themedLine.Decoration.Border!).Bottom;
+        BorderSide themedSide = ((Plumix.Rendering.Border)themedLine.AsBoxDecoration.Border!).Bottom;
         Assert.Equal(Colors.DarkGreen, themedSide.Color);
         Assert.Equal(3.0, themedSide.Width, 3);
         Assert.Equal(196.0, themedLine.Size.Width, 3);
@@ -228,11 +228,11 @@ public sealed class MaterialDividerTests
         widgetHarness.Pump(new Size(260, 90));
 
         RenderDecoratedBox widgetLine = FindDividerBox(widgetHarness.RenderView, Axis.Horizontal);
-        BorderSide widgetSide = ((Plumix.Rendering.Border)widgetLine.Decoration.Border!).Bottom;
+        BorderSide widgetSide = ((Plumix.Rendering.Border)widgetLine.AsBoxDecoration.Border!).Bottom;
         Assert.Equal(Colors.Crimson, widgetSide.Color);
         Assert.Equal(5.0, widgetSide.Width, 3);
         Assert.Equal(204.0, widgetLine.Size.Width, 3);
-        Assert.Equal(widgetRadius, widgetLine.Decoration.BorderRadius);
+        Assert.Equal(widgetRadius, widgetLine.AsBoxDecoration.BorderRadius);
         Assert.NotNull(FindConstrainedBox(
             widgetHarness.RenderView,
             constraints => Math.Abs(constraints.MinHeight - 36.0) < 0.001
@@ -263,14 +263,14 @@ public sealed class MaterialDividerTests
         harness.Pump(new Size(120, 160));
 
         RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Vertical);
-        BorderSide side = ((Plumix.Rendering.Border)line.Decoration.Border!).Left;
+        BorderSide side = ((Plumix.Rendering.Border)line.AsBoxDecoration.Border!).Left;
         Assert.Equal(Colors.Purple, side.Color);
         Assert.Equal(2.0, side.Width, 3);
         Assert.Equal(2.0, line.Size.Width, 3);
         Assert.Equal(104.0, line.Size.Height, 3);
         Assert.Equal(
             theme.DividerTheme.Radius!.Value.Resolve(TextDirection.Ltr),
-            line.Decoration.BorderRadius);
+            line.AsBoxDecoration.BorderRadius);
         Assert.NotNull(FindConstrainedBox(
             harness.RenderView,
             constraints => Math.Abs(constraints.MinWidth - 24.0) < 0.001
@@ -304,7 +304,7 @@ public sealed class MaterialDividerTests
             padding => padding.Padding == new Thickness(20.0, 0.0, 10.0, 0.0));
         RenderDecoratedBox line = FindDividerBox(harness.RenderView, Axis.Horizontal);
         Assert.Equal(70.0, line.Size.Width, 3);
-        Assert.Equal(BorderRadius.Only(4, 1, 6, 2), line.Decoration.BorderRadius);
+        Assert.Equal(BorderRadius.Only(4, 1, 6, 2), line.AsBoxDecoration.BorderRadius);
     }
 
     [Fact]
@@ -337,8 +337,8 @@ public sealed class MaterialDividerTests
         return Assert.Single(
             FindDescendants<RenderDecoratedBox>(root),
             box => axis == Axis.Horizontal
-                ? box.Decoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid }
-                : box.Decoration.Border is Plumix.Rendering.Border { Left.Style: BorderStyle.Solid });
+                ? box.AsBoxDecoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid }
+                : box.AsBoxDecoration.Border is Plumix.Rendering.Border { Left.Style: BorderStyle.Solid });
     }
 
     private static RenderConstrainedBox? FindConstrainedBox(

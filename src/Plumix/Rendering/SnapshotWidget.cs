@@ -102,7 +102,7 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
 
     public override bool IsRepaintBoundary => Child != null;
 
-    protected override bool AlwaysNeedsCompositing => Child != null;
+    public override bool AlwaysNeedsCompositing => Child != null;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {

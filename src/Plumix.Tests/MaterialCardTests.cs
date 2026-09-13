@@ -33,9 +33,9 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(theme.ColorScheme.SurfaceContainerLow, material!.Decoration.Color);
-        Assert.Equal(12, material.Decoration.EffectiveBorderRadius.Radius);
-        Assert.NotNull(material.Decoration.BoxShadows);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerLow, material!.AsBoxDecoration.Color);
+        Assert.Equal(12, material.AsBoxDecoration.EffectiveBorderRadius.Radius);
+        Assert.NotNull(material.AsBoxDecoration.BoxShadows);
         Assert.Equal(172, material.Size.Width, 3);
         Assert.Equal(88, material.Size.Height, 3);
 
@@ -54,8 +54,8 @@ public sealed class MaterialCardTests
 
         var filled = FindMaterialDecoration(filledHarness.RenderView);
         Assert.NotNull(filled);
-        Assert.Equal(theme.ColorScheme.SurfaceContainerHighest, filled!.Decoration.Color);
-        Assert.Null(filled.Decoration.BoxShadows);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerHighest, filled!.AsBoxDecoration.Color);
+        Assert.Null(filled.AsBoxDecoration.BoxShadows);
 
         using var outlinedHarness = new WidgetRenderHarness(
             BuildThemedCard(Card.Outlined(child: new SizedBox(width: 80, height: 32)), theme));
@@ -63,16 +63,16 @@ public sealed class MaterialCardTests
 
         var outlinedBackground = FindMaterialDecoration(outlinedHarness.RenderView);
         var outlinedBorder = FindDescendants<RenderDecoratedBox>(outlinedHarness.RenderView)
-            .FirstOrDefault(box => box.Decoration.Border is not null);
+            .FirstOrDefault(box => box.AsBoxDecoration.Border is not null);
 
         Assert.NotNull(outlinedBackground);
-        Assert.Equal(theme.ColorScheme.Surface, outlinedBackground!.Decoration.Color);
-        Assert.Null(outlinedBackground.Decoration.BoxShadows);
+        Assert.Equal(theme.ColorScheme.Surface, outlinedBackground!.AsBoxDecoration.Color);
+        Assert.Null(outlinedBackground.AsBoxDecoration.BoxShadows);
         Assert.NotNull(outlinedBorder);
         Assert.Equal(
             theme.ColorScheme.OutlineVariant,
-            ((Plumix.Rendering.Border)outlinedBorder!.Decoration.Border!).Top.Color);
-        Assert.Equal(12, outlinedBorder.Decoration.EffectiveBorderRadius.Radius);
+            ((Plumix.Rendering.Border)outlinedBorder!.AsBoxDecoration.Border!).Top.Color);
+        Assert.Equal(12, outlinedBorder.AsBoxDecoration.EffectiveBorderRadius.Radius);
     }
 
     [Fact]
@@ -100,22 +100,22 @@ public sealed class MaterialCardTests
         elevatedHarness.Pump(new Size(220, 140));
         var elevatedSurface = FindMaterialDecoration(elevatedHarness.RenderView);
         Assert.NotNull(elevatedSurface);
-        Assert.Equal(elevated, elevatedSurface!.Decoration.Color);
+        Assert.Equal(elevated, elevatedSurface!.AsBoxDecoration.Color);
         AssertShadowUsesColor(elevatedSurface, shadow);
 
         using var filledHarness = new WidgetRenderHarness(
             BuildThemedCard(Card.Filled(child: new SizedBox(width: 80, height: 32)), theme));
         filledHarness.Pump(new Size(220, 140));
-        Assert.Equal(filled, FindMaterialDecoration(filledHarness.RenderView)!.Decoration.Color);
+        Assert.Equal(filled, FindMaterialDecoration(filledHarness.RenderView)!.AsBoxDecoration.Color);
 
         using var outlinedHarness = new WidgetRenderHarness(
             BuildThemedCard(Card.Outlined(child: new SizedBox(width: 80, height: 32)), theme));
         outlinedHarness.Pump(new Size(220, 140));
         var outlinedSurface = FindMaterialDecoration(outlinedHarness.RenderView);
         var outlinedBorder = FindDescendants<RenderDecoratedBox>(outlinedHarness.RenderView)
-            .Single(box => box.Decoration.Border is not null);
-        Assert.Equal(outlined, outlinedSurface!.Decoration.Color);
-        Assert.Equal(outline, ((Plumix.Rendering.Border)outlinedBorder.Decoration.Border!).Top.Color);
+            .Single(box => box.AsBoxDecoration.Border is not null);
+        Assert.Equal(outlined, outlinedSurface!.AsBoxDecoration.Color);
+        Assert.Equal(outline, ((Plumix.Rendering.Border)outlinedBorder.AsBoxDecoration.Border!).Top.Color);
     }
 
     [Fact]
@@ -136,10 +136,10 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(cardColor, material!.Decoration.Color);
-        Assert.Equal(4, material.Decoration.EffectiveBorderRadius.Radius);
-        Assert.False(material.Decoration.Border is not null);
-        Assert.NotNull(material.Decoration.BoxShadows);
+        Assert.Equal(cardColor, material!.AsBoxDecoration.Color);
+        Assert.Equal(4, material.AsBoxDecoration.EffectiveBorderRadius.Radius);
+        Assert.False(material.AsBoxDecoration.Border is not null);
+        Assert.NotNull(material.AsBoxDecoration.BoxShadows);
     }
 
     [Fact]
@@ -164,9 +164,9 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(themeColor, material!.Decoration.Color);
-        Assert.Equal(18, material.Decoration.EffectiveBorderRadius.Radius);
-        Assert.NotNull(material.Decoration.BoxShadows);
+        Assert.Equal(themeColor, material!.AsBoxDecoration.Color);
+        Assert.Equal(18, material.AsBoxDecoration.EffectiveBorderRadius.Radius);
+        Assert.NotNull(material.AsBoxDecoration.BoxShadows);
 
         var margin = FindDescendant<RenderPadding>(harness.RenderView);
         Assert.NotNull(margin);
@@ -204,8 +204,8 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(widgetColor, material!.Decoration.Color);
-        Assert.Equal(6, material.Decoration.EffectiveBorderRadius.Radius);
+        Assert.Equal(widgetColor, material!.AsBoxDecoration.Color);
+        Assert.Equal(6, material.AsBoxDecoration.EffectiveBorderRadius.Radius);
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(ApplySurfaceTint(baseColor, tint, 3), material!.Decoration.Color);
+        Assert.Equal(ApplySurfaceTint(baseColor, tint, 3), material!.AsBoxDecoration.Color);
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public sealed class MaterialCardTests
         foregroundHarness.Pump(new Size(220, 140));
 
         var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
-            .Where(box => box.Decoration.Border is not null)
+            .Where(box => box.AsBoxDecoration.Border is not null)
             .ToArray();
         Assert.Single(foregroundBorders);
         Assert.Equal(DecorationPosition.Foreground, foregroundBorders[0].Position);
@@ -363,7 +363,7 @@ public sealed class MaterialCardTests
         backgroundHarness.Pump(new Size(220, 140));
 
         var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
-            .Where(box => box.Decoration.Border is not null)
+            .Where(box => box.AsBoxDecoration.Border is not null)
             .ToArray();
         Assert.Single(backgroundBorders);
         Assert.Equal(DecorationPosition.Background, backgroundBorders[0].Position);
@@ -406,8 +406,8 @@ public sealed class MaterialCardTests
 
         var canvas = FindMaterialDecoration(canvasHarness.RenderView);
         Assert.NotNull(canvas);
-        Assert.Equal(theme.CanvasColor, canvas!.Decoration.Color);
-        Assert.Equal(0, canvas.Decoration.EffectiveBorderRadius.Radius);
+        Assert.Equal(theme.CanvasColor, canvas!.AsBoxDecoration.Color);
+        Assert.Equal(0, canvas.AsBoxDecoration.EffectiveBorderRadius.Radius);
 
         using var cardHarness = new WidgetRenderHarness(
             BuildThemedCard(new MaterialSurface(
@@ -419,9 +419,9 @@ public sealed class MaterialCardTests
 
         var card = FindMaterialDecoration(cardHarness.RenderView);
         Assert.NotNull(card);
-        Assert.Equal(2, card!.Decoration.EffectiveBorderRadius.Radius);
-        Assert.NotNull(card.Decoration.BoxShadows);
-        Assert.Equal(ApplySurfaceTint(theme.CardColor, Colors.Red, 3), card.Decoration.Color);
+        Assert.Equal(2, card!.AsBoxDecoration.EffectiveBorderRadius.Radius);
+        Assert.NotNull(card.AsBoxDecoration.BoxShadows);
+        Assert.Equal(ApplySurfaceTint(theme.CardColor, Colors.Red, 3), card.AsBoxDecoration.Color);
     }
 
     [Fact]
@@ -438,7 +438,7 @@ public sealed class MaterialCardTests
 
         Assert.NotNull(FindDescendant<RenderClipPath>(foregroundHarness.RenderView));
         var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
-            .Where(box => box.Decoration.Border is not null)
+            .Where(box => box.AsBoxDecoration.Border is not null)
             .ToArray();
         Assert.Single(foregroundBorders);
         Assert.Equal(DecorationPosition.Foreground, foregroundBorders[0].Position);
@@ -451,7 +451,7 @@ public sealed class MaterialCardTests
         backgroundHarness.Pump(new Size(220, 140));
 
         var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
-            .Where(box => box.Decoration.Border is not null)
+            .Where(box => box.AsBoxDecoration.Border is not null)
             .ToArray();
         Assert.Single(backgroundBorders);
     }
@@ -486,14 +486,14 @@ public sealed class MaterialCardTests
         Assert.Equal(3, body.ChildCount);
 
         var surfaces = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.Decoration.Color is { } color
+            .Where(box => box.AsBoxDecoration.Color is { } color
                           && (color == Colors.LightBlue || color == Colors.LightGreen))
             .ToArray();
         Assert.Equal(2, surfaces.Length);
-        Assert.All(surfaces, surface => Assert.Equal(2, surface.Decoration.EffectiveBorderRadius.Radius));
+        Assert.All(surfaces, surface => Assert.Equal(2, surface.AsBoxDecoration.EffectiveBorderRadius.Radius));
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BoxShadows is not null);
+            box => box.AsBoxDecoration.BoxShadows is not null);
     }
 
     [Fact]
@@ -533,7 +533,7 @@ public sealed class MaterialCardTests
     private static RenderDecoratedBox? FindMaterialDecoration(RenderObject? root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box => box.Decoration.Color.HasValue);
+            .FirstOrDefault(box => box.AsBoxDecoration.Color.HasValue);
     }
 
     private static IEnumerable<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
@@ -570,8 +570,8 @@ public sealed class MaterialCardTests
 
     private static void AssertShadowUsesColor(RenderDecoratedBox surface, Color shadowColor)
     {
-        Assert.NotNull(surface.Decoration.BoxShadows);
-        var shadows = surface.Decoration.BoxShadows!;
+        Assert.NotNull(surface.AsBoxDecoration.BoxShadows);
+        var shadows = surface.AsBoxDecoration.BoxShadows!;
         Assert.Equal(shadowColor.R, shadows[0].Color.R);
         Assert.Equal(shadowColor.G, shadows[0].Color.G);
         Assert.Equal(shadowColor.B, shadows[0].Color.B);

@@ -719,8 +719,8 @@ public sealed class MaterialAutocompleteTests : IDisposable
         harness.Pump(new Size(480, 320));
 
         RenderDecoratedBox surface = FindOptionsSurface(harness.RenderView);
-        Assert.Equal(expectedColor, surface.Decoration.Color);
-        var shadows = surface.Decoration.BoxShadows!;
+        Assert.Equal(expectedColor, surface.AsBoxDecoration.Color);
+        var shadows = surface.AsBoxDecoration.BoxShadows!;
         for (int index = 0; index < shadows.Count; index += 1)
         {
             var shadow = shadows[index];
@@ -741,8 +741,8 @@ public sealed class MaterialAutocompleteTests : IDisposable
     {
         return Assert.Single(
             FindDescendants<RenderDecoratedBox>(root),
-            decorated => decorated.Decoration.BoxShadows is not null
-                         && decorated.Decoration.BoxShadows!.Count > 0);
+            decorated => decorated.AsBoxDecoration.BoxShadows is not null
+                         && decorated.AsBoxDecoration.BoxShadows!.Count > 0);
     }
 
     private static double VerticalCenter(RenderBox renderBox) => GlobalRect(renderBox).Center.Y;

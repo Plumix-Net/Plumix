@@ -49,10 +49,10 @@ public sealed class DecoratedBoxTests
         owner.FlushBuild();
 
         var renderDecorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
-        Assert.Equal(Colors.CadetBlue, renderDecorated.Decoration.Color);
+        Assert.Equal(Colors.CadetBlue, renderDecorated.AsBoxDecoration.Color);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
-            new BorderSide(Colors.Black, 1)), renderDecorated.Decoration.Border);
-        Assert.Equal(BorderRadius.Circular(6), renderDecorated.Decoration.EffectiveBorderRadius);
+            new BorderSide(Colors.Black, 1)), renderDecorated.AsBoxDecoration.Border);
+        Assert.Equal(BorderRadius.Circular(6), renderDecorated.AsBoxDecoration.EffectiveBorderRadius);
 
         root.Update(new DecoratedBox(
             decoration: new BoxDecoration(
@@ -64,10 +64,10 @@ public sealed class DecoratedBoxTests
 
         var updated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
         Assert.True(ReferenceEquals(renderDecorated, updated));
-        Assert.Equal(Colors.OrangeRed, updated.Decoration.Color);
+        Assert.Equal(Colors.OrangeRed, updated.AsBoxDecoration.Color);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
-            new BorderSide(Colors.White, 3)), updated.Decoration.Border);
-        Assert.Equal(BorderRadius.Circular(12), updated.Decoration.EffectiveBorderRadius);
+            new BorderSide(Colors.White, 3)), updated.AsBoxDecoration.Border);
+        Assert.Equal(BorderRadius.Circular(12), updated.AsBoxDecoration.EffectiveBorderRadius);
     }
 
     /// <summary>Dart asserts `color == null || decoration == null`: the color argument is only a
@@ -95,7 +95,7 @@ public sealed class DecoratedBoxTests
         owner.FlushBuild();
 
         var decorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
-        Assert.Equal(Colors.Red, decorated.Decoration.Color);
+        Assert.Equal(Colors.Red, decorated.AsBoxDecoration.Color);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

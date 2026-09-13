@@ -1163,7 +1163,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
                             child: new CompositedTransformFollower(
                                 link: CurrentWidget.LayerLink,
                                 showWhenUnlinked: false,
-                                offset: new Vector(CurrentWidget.Offset.X, CurrentWidget.Offset.Y),
+                                offset: new Point(CurrentWidget.Offset.X, CurrentWidget.Offset.Y),
                                 child: CurrentWidget.Child)))));
         }
 
@@ -1293,7 +1293,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
             return new CompositedTransformFollower(
                 link: widget.HandleLayerLink,
-                offset: new Vector(-handleAnchor.X - padding.Left, -handleAnchor.Y - padding.Top),
+                offset: new Point(-handleAnchor.X - padding.Left, -handleAnchor.Y - padding.Top),
                 showWhenUnlinked: false,
                 child: new FadeTransition(
                     opacity: _controller!,

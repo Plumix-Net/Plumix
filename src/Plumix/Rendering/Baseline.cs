@@ -4,9 +4,7 @@ using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
-// Dart parity sources:
-// flutter/packages/flutter/lib/src/rendering/shifted_box.dart (RenderBaseline)
-// flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderIgnoreBaseline)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/shifted_box.dart
 
 public sealed class RenderBaseline : RenderShiftedBox
 {
@@ -106,14 +104,3 @@ public sealed class RenderBaseline : RenderShiftedBox
     }
 }
 
-public sealed class RenderIgnoreBaseline : RenderProxyBox
-{
-    public RenderIgnoreBaseline(RenderBox? child = null)
-    {
-        Child = child;
-    }
-
-    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => null;
-
-    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
-}

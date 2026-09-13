@@ -217,7 +217,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
         return false;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
@@ -446,7 +446,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
         return false;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {

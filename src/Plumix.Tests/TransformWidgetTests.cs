@@ -87,7 +87,7 @@ public sealed class TransformWidgetTests
     public void EffectiveTransform_ConjugatesByOriginThenAlignment()
     {
         RenderTransform plain = Laid(Matrix4.Diagonal3Values(0.5, 0.5, 1.0));
-        Assert.Equal(Matrix4.Diagonal3Values(0.5, 0.5, 1.0), plain.EffectiveTransform);
+        Assert.Equal(Matrix4.Diagonal3Values(0.5, 0.5, 1.0), plain.DebugEffectiveTransform());
 
         RenderTransform withOrigin = Laid(
             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
@@ -95,20 +95,20 @@ public sealed class TransformWidgetTests
         Matrix4 expectedOrigin = Matrix4.TranslationValues(100.0, 50.0, 0.0);
         expectedOrigin.ScaleByDouble(0.5, 0.5, 1.0, 1);
         expectedOrigin.TranslateByDouble(-100.0, -50.0, 0, 1);
-        Assert.Equal(expectedOrigin, withOrigin.EffectiveTransform);
+        Assert.Equal(expectedOrigin, withOrigin.DebugEffectiveTransform());
 
         // `Alignment.centerRight` on a 100x100 box resolves to the same anchor as origin (100, 50).
         RenderTransform withAlignment = Laid(
             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
             alignment: Alignment.CenterRight);
-        Assert.Equal(expectedOrigin, withAlignment.EffectiveTransform);
+        Assert.Equal(expectedOrigin, withAlignment.DebugEffectiveTransform());
 
         // Both together: `origin(100, 0)` plus `centerLeft` is again the anchor (100, 50).
         RenderTransform both = Laid(
             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
             origin: new Point(100.0, 0.0),
             alignment: Alignment.CenterLeft);
-        Assert.Equal(expectedOrigin, both.EffectiveTransform);
+        Assert.Equal(expectedOrigin, both.DebugEffectiveTransform());
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public sealed class TransformWidgetTests
 
         transform.ApplyPaintTransform(transform.Child!, accumulated);
 
-        Assert.Equal(transform.EffectiveTransform, accumulated);
+        Assert.Equal(transform.DebugEffectiveTransform(), accumulated);
         Assert.Equal(new Point(50.0, 25.0), MatrixUtils.TransformPoint(accumulated, new Point(0.0, 0.0)));
     }
 
@@ -193,18 +193,18 @@ public sealed class TransformWidgetTests
         RenderTransform transform = Laid(Matrix4.Identity());
 
         transform.Translate(10.0, 20.0);
-        Assert.Equal(new Point(10.0, 20.0), MatrixUtils.GetAsTranslation(transform.Transform));
+        Assert.Equal(new Point(10.0, 20.0), MatrixUtils.GetAsTranslation(transform.DebugTransformMatrix()));
 
         transform.Scale(2.0);
         Matrix4 expected = Matrix4.TranslationValues(10.0, 20.0, 0.0);
         expected.ScaleByDouble(2.0, 2.0, 2.0, 1);
-        Assert.Equal(expected, transform.Transform);
+        Assert.Equal(expected, transform.DebugTransformMatrix());
 
         transform.SetIdentity();
-        Assert.True(transform.Transform.IsIdentity());
+        Assert.True(transform.DebugTransformMatrix().IsIdentity());
 
         transform.RotateZ(0.4);
-        Assert.Equal(Matrix4.RotationZ(0.4), transform.Transform);
+        Assert.Equal(Matrix4.RotationZ(0.4), transform.DebugTransformMatrix());
     }
 
     [Fact]
@@ -215,7 +215,7 @@ public sealed class TransformWidgetTests
 
         source.TranslateByDouble(100.0, 0.0, 0.0, 1);
 
-        Assert.True(transform.Transform.IsIdentity());
+        Assert.True(transform.DebugTransformMatrix().IsIdentity());
     }
 
     private static RenderTransform Laid(Matrix4 matrix, Point? origin = null, Alignment? alignment = null)
@@ -223,10 +223,9 @@ public sealed class TransformWidgetTests
         var child = new HitTestBox();
         var transform = new RenderTransform(
             matrix,
-            alignment,
-            child,
-            filterQuality: null,
-            origin: origin);
+            origin: origin,
+            alignment: alignment,
+            child: child);
         transform.Layout(BoxConstraints.Tight(new Size(100, 100)));
         return transform;
     }

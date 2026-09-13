@@ -425,7 +425,7 @@ public sealed class ExcludeSemantics : SingleChildRenderObjectWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderExcludeSemantics(Excluding);
+        return new RenderExcludeSemantics(excluding: Excluding);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -449,7 +449,7 @@ public sealed class BlockSemantics : SingleChildRenderObjectWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderBlockSemantics(Blocking);
+        return new RenderBlockSemantics(blocking: Blocking);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)

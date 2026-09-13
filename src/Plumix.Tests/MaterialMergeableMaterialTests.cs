@@ -52,7 +52,7 @@ public sealed class MaterialMergeableMaterialTests
         Assert.All(SliceDecorations(harness), decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Radius));
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BoxShadows is not null);
+            box => box.AsBoxDecoration.BoxShadows is not null);
 
         harness.Update(Build([Slice("A", 100, FirstColor)], elevation: 0));
         harness.Pump(ViewSize);
@@ -208,7 +208,7 @@ public sealed class MaterialMergeableMaterialTests
         Assert.Contains(sliceDecorations, decoration => decoration.Color == ThemeData.Light.CardColor);
 
         BoxBorder[] borders = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Select(box => box.Decoration.Border)
+            .Select(box => box.AsBoxDecoration.Border)
             .OfType<BoxBorder>()
             .ToArray();
         Assert.Equal(3, borders.Length);
@@ -279,7 +279,7 @@ public sealed class MaterialMergeableMaterialTests
     private static BoxDecoration[] SliceDecorations(WidgetRenderHarness harness)
     {
         return FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Select(box => box.Decoration)
+            .Select(box => box.AsBoxDecoration)
             .Where(decoration => decoration.Color is { } color && color != MaterialColors.Transparent)
             .ToArray();
     }

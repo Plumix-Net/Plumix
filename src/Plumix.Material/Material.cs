@@ -628,7 +628,7 @@ internal static class InkFeatureTransform
             Matrix4 step = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
             if (parent is RenderTransform renderTransform)
             {
-                step.Multiply(renderTransform.Transform);
+                renderTransform.ApplyPaintTransform(current, step);
             }
 
             MatrixUtils.MultiplyInPlace(step, transform);

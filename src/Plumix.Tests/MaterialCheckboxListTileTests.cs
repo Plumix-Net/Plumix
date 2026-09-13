@@ -291,7 +291,7 @@ public sealed class MaterialCheckboxListTileTests
 
         RenderTransform transform = Assert.IsType<RenderTransform>(
             ListTileControlHarness.Find<RenderTransform>(harness.RenderView));
-        Assert.Equal(Matrix4.Diagonal3Values(scaleFactor, scaleFactor, 1.0), transform.Transform);
+        Assert.Equal(Matrix4.Diagonal3Values(scaleFactor, scaleFactor, 1.0), transform.DebugTransformMatrix());
         Assert.Equal(Alignment.Center, transform.Alignment);
     }
 

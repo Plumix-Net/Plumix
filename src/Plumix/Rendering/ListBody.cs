@@ -137,7 +137,7 @@ public class RenderListBody : RenderBox,
         for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {

@@ -205,7 +205,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
         Matrix4 expected = Matrix4.Diagonal3Values(scaleFactor, scaleFactor, 1.0);
-        Assert.Equal(expected, transform!.Transform);
+        Assert.Equal(expected, transform!.DebugTransformMatrix());
         Assert.Equal(Alignment.Center, transform.Alignment);
     }
 
@@ -329,7 +329,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Controller body"));
         var arrowTransform = FindDescendants<RenderTransform>(harness.RenderView).FirstOrDefault();
         Assert.NotNull(arrowTransform);
-        Assert.InRange(arrowTransform!.Transform[0], -1.01, -0.99);
+        Assert.InRange(arrowTransform!.DebugTransformMatrix()[0], -1.01, -0.99);
     }
 
     [Fact]
@@ -545,7 +545,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         {
             harness.Pump(new Size(360, 160));
             ShapeDecoration decoration = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-                .Select(box => box.DecorationValue)
+                .Select(box => box.Decoration)
                 .OfType<ShapeDecoration>()
                 .First(value => value.Shape is Plumix.Rendering.Border);
             Assert.Equal(divider, ((Plumix.Rendering.Border)decoration.Shape).Top.Color);
@@ -798,7 +798,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
     private static Color? DecorationColor(RenderDecoratedBox box)
     {
-        return box.DecorationValue switch
+        return box.Decoration switch
         {
             BoxDecoration decoration => decoration.Color,
             ShapeDecoration decoration => decoration.Color,

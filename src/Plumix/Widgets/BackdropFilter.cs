@@ -106,7 +106,7 @@ public sealed class BackdropFilter : SingleChildRenderObjectWidget
     public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderBackdropFilter(
-            EffectiveFilterConfig,
+            filterConfig: EffectiveFilterConfig,
             blendMode: BlendMode,
             enabled: Enabled,
             backdropKey: GetBackdropGroupKey(context));

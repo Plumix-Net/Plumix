@@ -56,7 +56,7 @@ public sealed class MaterialInkResponseTests : IDisposable
         harness.Pump(new Size(160, 100));
 
         var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(Color.Parse("#FFEADDFF"), decoration.Decoration.Color);
+        Assert.Equal(Color.Parse("#FFEADDFF"), decoration.AsBoxDecoration.Color);
         Assert.Equal(100, decoration.Size.Width, 3);
         Assert.Equal(56, decoration.Size.Height, 3);
         Assert.Contains(

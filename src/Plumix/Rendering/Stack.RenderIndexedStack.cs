@@ -95,7 +95,7 @@ public sealed class RenderIndexedStack : RenderStack
         context.PaintChild(child, childParentData.offset + offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         RenderBox? child = ChildAtIndex();
         if (child is not null)

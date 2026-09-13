@@ -13,7 +13,8 @@ namespace Plumix.Rendering;
 /// <remarks>
 /// Flutter's <c>RenderSemanticsGestureHandler</c>. The configuration is not a semantics boundary, so
 /// these actions merge into the nearest node-forming ancestor — for a scrollable, the node
-/// <c>_RenderScrollSemantics</c> forms.
+/// <c>_RenderScrollSemantics</c> forms. Dart's <c>Set&lt;SemanticsAction&gt;? validActions</c> is the
+/// <see cref="SemanticsActions"/> flags enum, the repository's only action-set type.
 /// </remarks>
 public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
 {
@@ -22,15 +23,21 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     private Action? _onLongPress;
     private Action<DragUpdateDetails>? _onHorizontalDragUpdate;
     private Action<DragUpdateDetails>? _onVerticalDragUpdate;
-    private double _scrollFactor = DefaultScrollFactor;
-
-    /// <summary>The fraction of the viewport a single semantic scroll action moves.</summary>
-    public const double DefaultScrollFactor = 0.8;
 
     public RenderSemanticsGestureHandler(
         RenderBox? child = null,
-        HitTestBehavior behavior = HitTestBehavior.DeferToChild) : base(behavior, child)
+        Action? onTap = null,
+        Action? onLongPress = null,
+        Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
+        Action<DragUpdateDetails>? onVerticalDragUpdate = null,
+        double scrollFactor = 0.8,
+        HitTestBehavior behavior = HitTestBehavior.DeferToChild) : base(behavior: behavior, child: child)
     {
+        _onTap = onTap;
+        _onLongPress = onLongPress;
+        _onHorizontalDragUpdate = onHorizontalDragUpdate;
+        _onVerticalDragUpdate = onVerticalDragUpdate;
+        ScrollFactor = scrollFactor;
     }
 
     /// <summary>
@@ -56,25 +63,77 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     public Action? OnTap
     {
         get => _onTap;
-        set => SetGestureCallback(ref _onTap, value);
+        set
+        {
+            if (_onTap == value)
+            {
+                return;
+            }
+
+            bool hadHandler = _onTap != null;
+            _onTap = value;
+            if ((value != null) != hadHandler)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
     }
 
     public Action? OnLongPress
     {
         get => _onLongPress;
-        set => SetGestureCallback(ref _onLongPress, value);
+        set
+        {
+            if (_onLongPress == value)
+            {
+                return;
+            }
+
+            bool hadHandler = _onLongPress != null;
+            _onLongPress = value;
+            if ((value != null) != hadHandler)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
     }
 
     public Action<DragUpdateDetails>? OnHorizontalDragUpdate
     {
         get => _onHorizontalDragUpdate;
-        set => SetGestureCallback(ref _onHorizontalDragUpdate, value);
+        set
+        {
+            if (_onHorizontalDragUpdate == value)
+            {
+                return;
+            }
+
+            bool hadHandler = _onHorizontalDragUpdate != null;
+            _onHorizontalDragUpdate = value;
+            if ((value != null) != hadHandler)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
     }
 
     public Action<DragUpdateDetails>? OnVerticalDragUpdate
     {
         get => _onVerticalDragUpdate;
-        set => SetGestureCallback(ref _onVerticalDragUpdate, value);
+        set
+        {
+            if (_onVerticalDragUpdate == value)
+            {
+                return;
+            }
+
+            bool hadHandler = _onVerticalDragUpdate != null;
+            _onVerticalDragUpdate = value;
+            if ((value != null) != hadHandler)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
     }
 
     /// <summary>The fraction of the render object a semantic scroll action moves.</summary>
@@ -82,37 +141,23 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     /// Flutter's <c>scrollFactor</c> is a plain mutable field: assigning it schedules no semantics
     /// update, because the value is only read when an action fires.
     /// </remarks>
-    public double ScrollFactor
-    {
-        get => _scrollFactor;
-        set => _scrollFactor = value;
-    }
-
-    private void SetGestureCallback<T>(ref T? field, T? value) where T : class
-    {
-        bool hadHandler = field != null;
-        field = value;
-        if (hadHandler != (value != null))
-        {
-            MarkNeedsSemanticsUpdate();
-        }
-    }
+    public double ScrollFactor { get; set; }
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         base.DescribeSemanticsConfiguration(configuration);
 
-        if (_onTap is { } tap && IsValidAction(SemanticsActions.Tap))
+        if (OnTap is { } onTap && IsValidAction(SemanticsActions.Tap))
         {
-            configuration.AddActionHandler(SemanticsActions.Tap, tap);
+            configuration.OnTap = onTap;
         }
 
-        if (_onLongPress is { } longPress && IsValidAction(SemanticsActions.LongPress))
+        if (OnLongPress is { } onLongPress && IsValidAction(SemanticsActions.LongPress))
         {
-            configuration.AddActionHandler(SemanticsActions.LongPress, longPress);
+            configuration.OnLongPress = onLongPress;
         }
 
-        if (_onHorizontalDragUpdate != null)
+        if (OnHorizontalDragUpdate != null)
         {
             if (IsValidAction(SemanticsActions.ScrollRight))
             {
@@ -125,7 +170,7 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
             }
         }
 
-        if (_onVerticalDragUpdate != null)
+        if (OnVerticalDragUpdate != null)
         {
             if (IsValidAction(SemanticsActions.ScrollUp))
             {
@@ -141,47 +186,57 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
 
     private bool IsValidAction(SemanticsActions action)
     {
-        return _validActions is not { } valid || (valid & action) != SemanticsActions.None;
+        return ValidActions is not { } valid || (valid & action) != SemanticsActions.None;
     }
 
-    private void PerformSemanticScrollLeft() => PerformHorizontalScroll(Size.Width * -_scrollFactor);
-
-    private void PerformSemanticScrollRight() => PerformHorizontalScroll(Size.Width * _scrollFactor);
-
-    private void PerformSemanticScrollUp() => PerformVerticalScroll(Size.Height * -_scrollFactor);
-
-    private void PerformSemanticScrollDown() => PerformVerticalScroll(Size.Height * _scrollFactor);
-
-    private void PerformHorizontalScroll(double primaryDelta)
+    private void PerformSemanticScrollLeft()
     {
-        if (_onHorizontalDragUpdate is not { } drag)
+        if (OnHorizontalDragUpdate != null)
         {
-            return;
+            double primaryDelta = Size.Width * -ScrollFactor;
+            OnHorizontalDragUpdate(CreateScrollDetails(new Point(primaryDelta, 0.0), primaryDelta));
         }
-
-        var localCenter = new Point(Size.Width / 2.0, Size.Height / 2.0);
-        Point globalPosition = LocalToGlobal(localCenter);
-        drag(new DragUpdateDetails(
-            GlobalPosition: globalPosition,
-            LocalPosition: globalPosition,
-            Delta: new Point(primaryDelta, 0.0),
-            PrimaryDelta: primaryDelta));
     }
 
-    private void PerformVerticalScroll(double primaryDelta)
+    private void PerformSemanticScrollRight()
     {
-        if (_onVerticalDragUpdate is not { } drag)
+        if (OnHorizontalDragUpdate != null)
         {
-            return;
+            double primaryDelta = Size.Width * ScrollFactor;
+            OnHorizontalDragUpdate(CreateScrollDetails(new Point(primaryDelta, 0.0), primaryDelta));
         }
+    }
 
-        var localCenter = new Point(Size.Width / 2.0, Size.Height / 2.0);
-        Point globalPosition = LocalToGlobal(localCenter);
-        drag(new DragUpdateDetails(
+    private void PerformSemanticScrollUp()
+    {
+        if (OnVerticalDragUpdate != null)
+        {
+            double primaryDelta = Size.Height * -ScrollFactor;
+            OnVerticalDragUpdate(CreateScrollDetails(new Point(0.0, primaryDelta), primaryDelta));
+        }
+    }
+
+    private void PerformSemanticScrollDown()
+    {
+        if (OnVerticalDragUpdate != null)
+        {
+            double primaryDelta = Size.Height * ScrollFactor;
+            OnVerticalDragUpdate(CreateScrollDetails(new Point(0.0, primaryDelta), primaryDelta));
+        }
+    }
+
+    /// <remarks>
+    /// Dart's <c>DragUpdateDetails(delta:, primaryDelta:, globalPosition: localToGlobal(size.center(Offset.zero)))</c>;
+    /// its <c>localPosition</c> defaults to <c>globalPosition</c>.
+    /// </remarks>
+    private DragUpdateDetails CreateScrollDetails(Point delta, double primaryDelta)
+    {
+        Point globalPosition = LocalToGlobal(new Point(Size.Width / 2.0, Size.Height / 2.0));
+        return new DragUpdateDetails(
             GlobalPosition: globalPosition,
             LocalPosition: globalPosition,
-            Delta: new Point(0.0, primaryDelta),
-            PrimaryDelta: primaryDelta));
+            Delta: delta,
+            PrimaryDelta: primaryDelta);
     }
 
     /// <inheritdoc />
@@ -189,22 +244,22 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     {
         base.DebugFillProperties(properties);
         var gestures = new List<string>();
-        if (OnTap is not null)
+        if (OnTap != null)
         {
             gestures.Add("tap");
         }
 
-        if (OnLongPress is not null)
+        if (OnLongPress != null)
         {
             gestures.Add("long press");
         }
 
-        if (OnHorizontalDragUpdate is not null)
+        if (OnHorizontalDragUpdate != null)
         {
             gestures.Add("horizontal scroll");
         }
 
-        if (OnVerticalDragUpdate is not null)
+        if (OnVerticalDragUpdate != null)
         {
             gestures.Add("vertical scroll");
         }

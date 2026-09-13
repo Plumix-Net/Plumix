@@ -159,7 +159,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
             (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null && Geometry.Visible)
         {

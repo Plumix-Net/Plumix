@@ -398,9 +398,14 @@ public readonly record struct BorderRadiusGeometry
 
     public BorderRadiusDirectional Directional { get; }
 
-    public BorderRadius Resolve(TextDirection direction)
+    /// <remarks>
+    /// Dart's <c>BorderRadiusGeometry.resolve(TextDirection?)</c>: a purely physical radius ignores the
+    /// direction, while a directional (or mixed) radius asserts that it is non-null.
+    /// </remarks>
+    public BorderRadius Resolve(TextDirection? direction)
     {
-        return direction == TextDirection.Ltr
+        System.Diagnostics.Debug.Assert(Directional == default || direction is not null);
+        return direction is null or TextDirection.Ltr
             ? new BorderRadius(
                 Add(Physical.TopLeftRadius, Directional.TopStart),
                 Add(Physical.TopRightRadius, Directional.TopEnd),

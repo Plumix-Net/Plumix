@@ -313,14 +313,13 @@ public sealed class CompositingLayerTests
     }
 
     [Fact]
-    public void RenderTransform_ReusesItsTransformLayer_AcrossPaints()
+    public void RenderTransform_ReusesItsFilterLayer_AcrossPaints()
     {
         var leaf = new CompositingLeafRenderBox();
         var transform = new RenderTransform(
             Matrix4.TranslationValues(8, 4, 0.0),
-            alignment: null,
-            child: leaf,
-            filterQuality: FilterQuality.Low);
+            filterQuality: FilterQuality.Low,
+            child: leaf);
         var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
@@ -334,22 +333,23 @@ public sealed class CompositingLayerTests
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        var transformLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(Matrix4.TranslationValues(8, 4, 0.0), transformLayer.Transform);
-        Assert.Equal(FilterQuality.Low, transformLayer.FilterQuality);
+        var filterLayer = Assert.IsType<ImageFilterLayer>(Assert.Single(pipeline.RootLayer.Children));
+        var matrix = Assert.IsType<ImageFilter.Matrix>(filterLayer.ImageFilter);
+        Assert.Equal(Matrix4.TranslationValues(8, 4, 0.0).Storage, matrix.Values);
+        Assert.Equal(FilterQuality.Low, matrix.FilterQuality);
 
         transform.Transform = Matrix4.TranslationValues(21, 13, 0.0);
         transform.FilterQuality = FilterQuality.High;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        // Dart's `pushTransform` hands the previous layer back in through `oldLayer`, so the layer
-        // instance survives; the subtree repaints because the transform is not a repaint boundary.
-        var updatedLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Same(transformLayer, updatedLayer);
+        // Dart reuses the `ImageFilterLayer` and swaps its `imageFilter`; the subtree repaints because
+        // the transform is not a repaint boundary.
+        Assert.Same(filterLayer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(2, leaf.PaintCount);
-        Assert.Equal(Matrix4.TranslationValues(21, 13, 0.0), transformLayer.Transform);
-        Assert.Equal(FilterQuality.High, transformLayer.FilterQuality);
+        matrix = Assert.IsType<ImageFilter.Matrix>(filterLayer.ImageFilter);
+        Assert.Equal(Matrix4.TranslationValues(21, 13, 0.0).Storage, matrix.Values);
+        Assert.Equal(FilterQuality.High, matrix.FilterQuality);
     }
 
     [Fact]
@@ -371,11 +371,11 @@ public sealed class CompositingLayerTests
 
         Assert.Equal(new Size(32, 32), transform.Size);
         var center = new Point(16, 16);
-        Point mappedCenter = MatrixUtils.TransformPoint(transform.EffectiveTransform, center);
+        Point mappedCenter = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), center);
         Assert.Equal(center.X, mappedCenter.X, 6);
         Assert.Equal(center.Y, mappedCenter.Y, 6);
 
-        Point mappedTopLeft = MatrixUtils.TransformPoint(transform.EffectiveTransform, new Point(0, 0));
+        Point mappedTopLeft = MatrixUtils.TransformPoint(transform.DebugEffectiveTransform(), new Point(0, 0));
         Assert.Equal(32.0, mappedTopLeft.X, 6);
         Assert.Equal(0.0, mappedTopLeft.Y, 6);
     }
@@ -561,7 +561,7 @@ public sealed class CompositingLayerTests
     {
         public int PaintCount { get; private set; }
 
-        protected override bool AlwaysNeedsCompositing => true;
+        public override bool AlwaysNeedsCompositing => true;
 
         protected override void PerformLayout()
         {
@@ -577,7 +577,7 @@ public sealed class CompositingLayerTests
 
     private sealed class AlwaysCompositingRenderBox : RenderBox
     {
-        protected override bool AlwaysNeedsCompositing => true;
+        public override bool AlwaysNeedsCompositing => true;
 
         protected override void PerformLayout()
         {

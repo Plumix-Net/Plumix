@@ -50,6 +50,16 @@ public sealed partial class Canvas
         });
     }
 
+    // Dart parity source: dart:ui Canvas.drawPaint.
+    /// <summary>Fills the canvas's current clip with the given brush. Avalonia exposes no clip-bounds
+    /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
+    public void DrawPaint(IBrush brush)
+    {
+        AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
+    }
+
+    private static readonly Rect DrawPaintBounds = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+
     // Dart parity source: dart:ui Canvas.drawRRect.
     public void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
     {

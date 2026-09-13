@@ -40,7 +40,7 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var decoratedBox = (RenderDecoratedBox)renderObject;
-        decoratedBox.DecorationValue = Decoration;
+        decoratedBox.Decoration = Decoration;
         decoratedBox.Configuration = ImageConfigurationUtils.CreateLocalImageConfiguration(context);
         decoratedBox.Position = Position;
     }

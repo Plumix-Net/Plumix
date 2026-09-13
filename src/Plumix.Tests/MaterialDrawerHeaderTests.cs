@@ -36,7 +36,7 @@ public sealed class MaterialDrawerHeaderTests
             padding => padding.Padding == new Thickness(16, 40, 16, 8));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Border is Plumix.Rendering.Border sideBottom
+            box => box.AsBoxDecoration.Border is Plumix.Rendering.Border sideBottom
                    && sideBottom.Bottom.Color == Colors.Crimson);
         Assert.Equal(19, FindParagraph(harness.RenderView, "Header")!.FontSize);
     }
@@ -142,10 +142,10 @@ public sealed class MaterialDrawerHeaderTests
 
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == schemePrimary);
+            box => box.AsBoxDecoration.Color == schemePrimary);
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == theme.PrimaryColor);
+            box => box.AsBoxDecoration.Color == theme.PrimaryColor);
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints == BoxConstraints.TightFor(width: 72, height: 72));
@@ -201,7 +201,7 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform[0], -1.000001, -0.999999);
+        Assert.InRange(transform.DebugTransformMatrix()[0], -1.000001, -0.999999);
 
         semantics = harness.PumpAndGetSemantics(new Size(304, 260));
         button = FindSemantics(
@@ -216,7 +216,7 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform[0], 0.999999, 1.000001);
+        Assert.InRange(transform.DebugTransformMatrix()[0], 0.999999, 1.000001);
         Assert.Equal(2, detailsPressed);
     }
 
@@ -305,7 +305,7 @@ public sealed class MaterialDrawerHeaderTests
         harness.Pump(new Size(304, 260));
 
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.Equal(Matrix4.Identity(), transform.Transform);
+        Assert.Equal(Matrix4.Identity(), transform.DebugTransformMatrix());
     }
 
     [Fact]
@@ -325,7 +325,8 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
         harness.Pump(new Size(304, 260));
-        double openingM11 = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView)).Transform[0];
+        double openingM11 = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView))
+            .DebugTransformMatrix()[0];
         Assert.InRange(openingM11, -0.999, 0.999);
 
         TapDetails(harness);
@@ -339,7 +340,7 @@ public sealed class MaterialDrawerHeaderTests
 
         Assert.Equal(4, detailsPressed);
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform[0], 0.999999, 1.000001);
+        Assert.InRange(transform.DebugTransformMatrix()[0], 0.999999, 1.000001);
     }
 
     [Theory]

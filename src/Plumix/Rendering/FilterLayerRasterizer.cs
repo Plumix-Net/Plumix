@@ -946,12 +946,16 @@ internal static class FilterLayerRasterizer
             return new RasterFrame([], 0, 0, default);
         }
 
+        // The matrix is expressed in layer coordinates, like Dart's `ImageFilter.matrix`; the frame's
+        // pixels start at its bounds' origin within the layer.
+        double frameX = frame.Bounds.X;
+        double frameY = frame.Bounds.Y;
         Point[] corners =
         [
-            transform.Transform(default),
-            transform.Transform(new Point(frame.Width, 0.0)),
-            transform.Transform(new Point(0.0, frame.Height)),
-            transform.Transform(new Point(frame.Width, frame.Height)),
+            transform.Transform(new Point(frameX, frameY)),
+            transform.Transform(new Point(frameX + frame.Width, frameY)),
+            transform.Transform(new Point(frameX, frameY + frame.Height)),
+            transform.Transform(new Point(frameX + frame.Width, frameY + frame.Height)),
         ];
         double minimumX = corners.Min(static point => point.X);
         double minimumY = corners.Min(static point => point.Y);
@@ -967,13 +971,15 @@ internal static class FilterLayerRasterizer
             {
                 Point source = inverse.Transform(new Point(x + minimumX + 0.5, y + minimumY + 0.5));
                 int outputIndex = ((y * width) + x) * 4;
+                double sourceX = source.X - frameX - 0.5;
+                double sourceY = source.Y - frameY - 0.5;
                 if (interpolate)
                 {
-                    SampleBilinear(frame, source.X - 0.5, source.Y - 0.5, output, outputIndex);
+                    SampleBilinear(frame, sourceX, sourceY, output, outputIndex);
                 }
                 else
                 {
-                    SampleNearest(frame, source.X - 0.5, source.Y - 0.5, output, outputIndex);
+                    SampleNearest(frame, sourceX, sourceY, output, outputIndex);
                 }
             }
         }
@@ -982,11 +988,7 @@ internal static class FilterLayerRasterizer
             output,
             width,
             height,
-            new Rect(
-                frame.Bounds.X + minimumX,
-                frame.Bounds.Y + minimumY,
-                width,
-                height));
+            new Rect(minimumX, minimumY, width, height));
     }
 
     private static void SampleNearest(

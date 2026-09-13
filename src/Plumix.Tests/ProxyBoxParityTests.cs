@@ -149,7 +149,7 @@ public sealed class ProxyBoxParityTests
     public void RenderOpacity_UsesTheRoundedAlphaEverywhere()
     {
         var child = new DesiredSizeBox(new Size(10, 10));
-        var opacity = new RenderOpacity(1.0, child);
+        var opacity = new RenderOpacity(opacity: 1.0, child: child);
         LayoutRoot(opacity, new Size(10, 10));
 
         Assert.Equal(1.0, opacity.Opacity);
@@ -170,7 +170,7 @@ public sealed class ProxyBoxParityTests
     public void RenderOpacity_PaintsNothingWhenFullyTransparent()
     {
         var child = new PaintCountingBox(new Size(10, 10));
-        var opacity = new RenderOpacity(0.0, child);
+        var opacity = new RenderOpacity(opacity: 0.0, child: child);
         LayoutRoot(opacity, new Size(10, 10));
 
         opacity.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));

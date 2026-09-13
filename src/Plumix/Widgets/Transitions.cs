@@ -130,7 +130,7 @@ public sealed class SlideTransition : AnimatedWidget
         }
 
         return new FractionalTranslation(
-            translation: offset,
+            translation: new Point(offset.X, offset.Y),
             transformHitTests: TransformHitTests,
             child: Child);
     }

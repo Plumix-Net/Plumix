@@ -50,6 +50,46 @@ public sealed record ImageConfiguration(
             Size: size ?? Size,
             Platform: platform ?? Platform);
     }
+
+    /// <remarks>
+    /// Dart's <c>ImageConfiguration.toString</c> (painting/image_provider.dart): only the non-null fields,
+    /// e.g. <c>ImageConfiguration()</c> for <see cref="Empty"/>.
+    /// </remarks>
+    public override string ToString()
+    {
+        var parts = new List<string>();
+        if (Bundle is not null)
+        {
+            parts.Add($"bundle: {Bundle}");
+        }
+
+        if (DevicePixelRatio is { } ratio)
+        {
+            parts.Add($"devicePixelRatio: {DartFormat.Fixed(ratio)}");
+        }
+
+        if (Locale is not null)
+        {
+            parts.Add($"locale: {Locale.Name.Replace('-', '_')}");
+        }
+
+        if (TextDirection is { } textDirection)
+        {
+            parts.Add($"textDirection: TextDirection.{Plumix.Foundation.Diagnostics.EnumName(textDirection)}");
+        }
+
+        if (Size is { } size)
+        {
+            parts.Add($"size: {DartFormat.SizeOf(size)}");
+        }
+
+        if (Platform is { } platform)
+        {
+            parts.Add($"platform: {Plumix.Foundation.Diagnostics.EnumName(platform)}");
+        }
+
+        return $"ImageConfiguration({string.Join(", ", parts)})";
+    }
 }
 
 public abstract class AssetBundle

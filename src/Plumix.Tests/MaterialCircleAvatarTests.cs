@@ -54,8 +54,8 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         harness.Pump(new Size(100, 100));
 
         var avatarBox = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(BoxShape.Circle, avatarBox.Decoration.Shape);
-        Assert.Equal(Colors.CornflowerBlue, avatarBox.Decoration.Color);
+        Assert.Equal(BoxShape.Circle, avatarBox.AsBoxDecoration.Shape);
+        Assert.Equal(Colors.CornflowerBlue, avatarBox.AsBoxDecoration.Color);
         Assert.Equal(DecorationPosition.Background, avatarBox.Position);
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),
@@ -108,14 +108,14 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         Assert.Equal(2, decorations.Count);
         var foregroundBox = Assert.Single(decorations, box => box.Position == DecorationPosition.Foreground);
         var backgroundBox = Assert.Single(decorations, box => box.Position == DecorationPosition.Background);
-        Assert.Equal(BoxShape.Circle, foregroundBox.Decoration.Shape);
-        Assert.Equal(BoxShape.Circle, backgroundBox.Decoration.Shape);
-        Assert.Equal(BoxFit.Cover, foregroundBox.Decoration.Image!.Fit);
-        Assert.Equal(BoxFit.Cover, backgroundBox.Decoration.Image!.Fit);
-        Assert.Same(foreground, foregroundBox.Decoration.Image.Image);
-        Assert.Same(background, backgroundBox.Decoration.Image.Image);
-        Assert.Same(foregroundError, foregroundBox.Decoration.Image.OnError);
-        Assert.Same(backgroundError, backgroundBox.Decoration.Image.OnError);
+        Assert.Equal(BoxShape.Circle, foregroundBox.AsBoxDecoration.Shape);
+        Assert.Equal(BoxShape.Circle, backgroundBox.AsBoxDecoration.Shape);
+        Assert.Equal(BoxFit.Cover, foregroundBox.AsBoxDecoration.Image!.Fit);
+        Assert.Equal(BoxFit.Cover, backgroundBox.AsBoxDecoration.Image!.Fit);
+        Assert.Same(foreground, foregroundBox.AsBoxDecoration.Image!.Image);
+        Assert.Same(background, backgroundBox.AsBoxDecoration.Image!.Image);
+        Assert.Same(foregroundError, foregroundBox.AsBoxDecoration.Image!.OnError);
+        Assert.Same(backgroundError, backgroundBox.AsBoxDecoration.Image!.OnError);
         Assert.NotNull(FindDescendants<RenderParagraph>(harness.RenderView)
             .SingleOrDefault(paragraph => paragraph.PlainText == "fallback"));
     }
@@ -138,7 +138,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         harness.Pump(new Size(100, 100));
 
         var decorations = FindDescendants<RenderDecoratedBox>(harness.RenderView);
-        Assert.Contains(decorations, box => ReferenceEquals(box.Decoration.Image?.Image, background));
+        Assert.Contains(decorations, box => ReferenceEquals(box.AsBoxDecoration.Image?.Image, background));
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.PlainText == "initials");
@@ -161,7 +161,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         defaultHarness.Pump(new Size(100, 100));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(defaultHarness.RenderView),
-            box => box.Decoration.Color == Colors.Navy);
+            box => box.AsBoxDecoration.Color == Colors.Navy);
         var defaultParagraph = FindDescendants<RenderParagraph>(defaultHarness.RenderView)
             .Single(value => value.PlainText == "default");
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(defaultParagraph.Foreground).Color);
@@ -188,7 +188,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         foregroundHarness.Pump(new Size(100, 100));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView),
-            box => box.Decoration.Color == Colors.Navy);
+            box => box.AsBoxDecoration.Color == Colors.Navy);
     }
 
     [Fact]
@@ -209,8 +209,8 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         harness.Pump(new Size(120, 120));
 
         var midDecoration = FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Single(box => box.Decoration.Shape == BoxShape.Circle)
-            .Decoration;
+            .Single(box => box.AsBoxDecoration.Shape == BoxShape.Circle)
+            .AsBoxDecoration;
         var midConstraints = FindDescendants<RenderConstrainedBox>(harness.RenderView)
             .Single(box => box.AdditionalConstraints.MinWidth is > 40 and < 80)
             .AdditionalConstraints;
@@ -225,7 +225,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             box => box.AdditionalConstraints == BoxConstraints.Tight(new Size(80, 80)));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.Blue);
+            box => box.AsBoxDecoration.Color == Colors.Blue);
     }
 
     private static Widget BuildRoot(ThemeData theme, Widget child)

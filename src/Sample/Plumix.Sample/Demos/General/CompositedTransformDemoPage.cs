@@ -88,7 +88,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                 child: new CompositedTransformFollower(
                     _link,
                     showWhenUnlinked: _showWhenUnlinked,
-                    offset: new Vector(0, 12),
+                    offset: new Point(0, 12),
                     targetAnchor: Alignment.BottomCenter,
                     followerAnchor: Alignment.TopCenter,
                     child: new AnnotatedRegion<string>(

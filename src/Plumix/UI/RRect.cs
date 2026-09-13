@@ -138,6 +138,70 @@ public readonly record struct RRect
             Radius.Elliptical(BottomLeft.X * scale, BottomLeft.Y * scale));
     }
 
+    /// <summary>Whether the point specified by the given offset lies inside the rounded rectangle.</summary>
+    /// <remarks>
+    /// Dart's <c>RRect.contains</c>: the bounding box is half-open (the right and bottom edges are outside),
+    /// and a point in a corner area must lie inside the corner's ellipse after <see cref="ScaleRadii"/>.
+    /// </remarks>
+    public bool Contains(Point point)
+    {
+        if (point.X < Left || point.X >= Right || point.Y < Top || point.Y >= Bottom)
+        {
+            return false;
+        } // outside bounding box
+
+        RRect scaled = ScaleRadii();
+
+        double x;
+        double y;
+        double radiusX;
+        double radiusY;
+        // check whether point is in one of the rounded corner areas
+        // x, y -> translate to ellipse center
+        if (point.X < Left + scaled.TopLeft.X && point.Y < Top + scaled.TopLeft.Y)
+        {
+            x = point.X - Left - scaled.TopLeft.X;
+            y = point.Y - Top - scaled.TopLeft.Y;
+            radiusX = scaled.TopLeft.X;
+            radiusY = scaled.TopLeft.Y;
+        }
+        else if (point.X > Right - scaled.TopRight.X && point.Y < Top + scaled.TopRight.Y)
+        {
+            x = point.X - Right + scaled.TopRight.X;
+            y = point.Y - Top - scaled.TopRight.Y;
+            radiusX = scaled.TopRight.X;
+            radiusY = scaled.TopRight.Y;
+        }
+        else if (point.X > Right - scaled.BottomRight.X && point.Y > Bottom - scaled.BottomRight.Y)
+        {
+            x = point.X - Right + scaled.BottomRight.X;
+            y = point.Y - Bottom + scaled.BottomRight.Y;
+            radiusX = scaled.BottomRight.X;
+            radiusY = scaled.BottomRight.Y;
+        }
+        else if (point.X < Left + scaled.BottomLeft.X && point.Y > Bottom - scaled.BottomLeft.Y)
+        {
+            x = point.X - Left - scaled.BottomLeft.X;
+            y = point.Y - Bottom + scaled.BottomLeft.Y;
+            radiusX = scaled.BottomLeft.X;
+            radiusY = scaled.BottomLeft.Y;
+        }
+        else
+        {
+            return true; // inside and not within the rounded corner area
+        }
+
+        x = x / radiusX;
+        y = y / radiusY;
+        // check if the point is outside the unit circle
+        if ((x * x) + (y * y) > 1.0)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     /// Builds the closed outline of this rounded rectangle, corner arcs included.
     public Path ToPath()
     {

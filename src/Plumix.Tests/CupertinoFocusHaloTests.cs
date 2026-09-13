@@ -176,7 +176,7 @@ public sealed class CupertinoFocusHaloTests : IDisposable
     private static IReadOnlyList<ShapeDecoration> FindHaloDecorations(RenderObject root)
     {
         return FindAll<RenderDecoratedBox>(root)
-            .Select(box => box.DecorationValue)
+            .Select(box => box.Decoration)
             .OfType<ShapeDecoration>()
             .ToArray();
     }

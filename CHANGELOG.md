@@ -8,6 +8,30 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: proxy_box.dart is a strict port split across `Proxy.*.cs`; its render objects are no longer sealed.
+- Breaking: `RenderProxyBox` is concrete with a child constructor; its `Child` setter matches Dart's (proxy_box.dart).
+- Breaking: `AlwaysNeedsCompositing`, `VisitChildrenForSemantics`, `ComputeSizeForNoChild` are public (object.dart).
+- Breaking: `RenderObject.OnAttach` runs after the children attach, like a Dart `attach` override (object.dart).
+- `MarkNeedsSemanticsUpdate` is virtual; `Canvas.DrawPaint`, `Rect.ContainsHalfOpen` and `RRect.Contains` land.
+- Breaking: `RenderIntrinsicWidth`/`RenderIntrinsicHeight` move to the `Plumix.Rendering` namespace (proxy_box.dart).
+- Breaking: `RenderOpacity` has one Dart-shaped constructor; `RenderLimitedBox` takes `(child, maxWidth, maxHeight)`.
+- Breaking: `RenderAspectRatio` checks unbounded before tight and throws Dart's `FlutterError` (proxy_box.dart).
+- Breaking: `RenderConstrainedBox` intrinsics skip the child on tight axes; proxy asserts follow Dart (proxy_box.dart).
+- `RenderBox.GetDistanceToActualBaseline` lands; proxy boxes forward baselines through it (box.dart).
+- Breaking: `RenderDecoratedBox.Decoration` is a `Decoration`; `DecorationValue` and the box projection are gone.
+- Breaking: `RenderBackdropFilter` takes Dart's `filter`/`filterConfig` pair; `Filter` is `[Obsolete]` (proxy_box.dart).
+- Breaking: clips debug-paint through `TextPainter` and Dart's draw calls; `RenderCustomClipDebug` is gone.
+- Breaking: `RenderClipRect` hit-tests half-open; physical models fill with `drawRRect`/`drawPaint` (proxy_box.dart).
+- `BorderRadiusGeometry.Resolve(TextDirection?)` asserts like Dart; `ImageConfiguration.ToString` matches Dart.
+- Breaking: `RenderTransform` takes Dart's constructor; its `Transform` getter and `EffectiveTransform` are gone.
+- Breaking: `RenderTransform` with `filterQuality` pushes an `ImageFilterLayer`; `TransformLayer.FilterQuality` is gone.
+- `Material` and `InkWell` map ink through `RenderTransform.ApplyPaintTransform`, honoring origin and alignment.
+- Breaking: `FractionalTranslation.Translation` is a `Point`; `RenderFittedBox.HasVisualOverflow` is gone.
+- Breaking: `Listener`/`RenderPointerListener` take Dart's `Pointer*EventListener` delegates in Dart's order.
+- Breaking: `RenderIgnorePointer`, `RenderAbsorbPointer` and the semantics proxies take Dart's parameter order.
+- Breaking: `RenderSemanticsGestureHandler` takes Dart's callbacks and `scrollFactor`; `DefaultScrollFactor` is gone.
+- Breaking: `RenderAnnotatedRegion` requires `sized`; `IgnoringSemantics` is `[Obsolete]` as in Dart (proxy_box.dart).
+- Breaking: `CompositedTransformFollower.Offset` is a `Point`; `LayerLink.ToString` matches Dart (layer.dart).
 - Breaking: `TextPainter` is a strict port; `RenderParagraph` lays out and paints through it (text_painter.dart).
 - Breaking: text lays out through a dart:ui-shaped `Paragraph` over Avalonia or a headless engine (paragraph.dart).
 - Breaking: headless text uses Flutter's `FlutterTest` font metrics instead of the 0.6 em estimate.

@@ -542,15 +542,34 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
             return;
         }
 
+        IPen debugPaint = _debugPaint ??= new Pen(
+            new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(0.0, 0.0, RelativeUnit.Absolute),
+                EndPoint = new RelativePoint(10.0, 10.0, RelativeUnit.Absolute),
+                SpreadMethod = GradientSpreadMethod.Repeat,
+                GradientStops =
+                [
+                    new GradientStop(Color.FromUInt32(0x00000000), 0.25),
+                    new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.25),
+                    new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.75),
+                    new GradientStop(Color.FromUInt32(0x00000000), 0.75),
+                ],
+            },
+            2.0);
+
         var childParentData = (BoxParentData)Child.parentData!;
         Plumix.UI.Path clipPath = ClipPath(Child, ShapeRRect(Child));
         Point shift = offset + childParentData.offset;
         context.Canvas.DrawGeometry(
             null,
-            RenderCustomClipDebug.DebugPen,
+            debugPaint,
             clipPath.ToGeometry(),
             geometryOffset: shift);
     }
+
+    /// <remarks>Flutter's <c>_RenderCupertinoTextSelectionToolbarShape._debugPaint</c>.</remarks>
+    private IPen? _debugPaint;
 
     /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
     internal Plumix.UI.RRect ShapeRRect(RenderBox child)
@@ -1027,7 +1046,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         VisitChildren(child =>
         {

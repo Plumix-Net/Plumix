@@ -119,7 +119,7 @@ public sealed class ContainerTests
         owner.FlushBuild();
 
         var transform = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(Matrix4.TranslationValues(12, 0, 0.0), transform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(12, 0, 0.0), transform.DebugTransformMatrix());
         var marginPadding = Assert.IsType<RenderPadding>(transform.Child);
         Assert.Equal(new Thickness(5), marginPadding.Padding);
     }

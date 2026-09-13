@@ -15,22 +15,22 @@ public sealed class Listener : SingleChildRenderObjectWidget
 {
     public Listener(
         Widget? child = null,
-        Action<PointerDownEvent>? onPointerDown = null,
-        Action<PointerMoveEvent>? onPointerMove = null,
-        Action<PointerHoverEvent>? onPointerHover = null,
-        Action<PointerUpEvent>? onPointerUp = null,
-        Action<PointerCancelEvent>? onPointerCancel = null,
-        Action<PointerPanZoomStartEvent>? onPointerPanZoomStart = null,
-        Action<PointerPanZoomUpdateEvent>? onPointerPanZoomUpdate = null,
-        Action<PointerPanZoomEndEvent>? onPointerPanZoomEnd = null,
-        Action<PointerSignalEvent>? onPointerSignal = null,
+        PointerDownEventListener? onPointerDown = null,
+        PointerMoveEventListener? onPointerMove = null,
+        PointerUpEventListener? onPointerUp = null,
+        PointerHoverEventListener? onPointerHover = null,
+        PointerCancelEventListener? onPointerCancel = null,
+        PointerPanZoomStartEventListener? onPointerPanZoomStart = null,
+        PointerPanZoomUpdateEventListener? onPointerPanZoomUpdate = null,
+        PointerPanZoomEndEventListener? onPointerPanZoomEnd = null,
+        PointerSignalEventListener? onPointerSignal = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
         Key? key = null) : base(child, key)
     {
         OnPointerDown = onPointerDown;
         OnPointerMove = onPointerMove;
-        OnPointerHover = onPointerHover;
         OnPointerUp = onPointerUp;
+        OnPointerHover = onPointerHover;
         OnPointerCancel = onPointerCancel;
         OnPointerPanZoomStart = onPointerPanZoomStart;
         OnPointerPanZoomUpdate = onPointerPanZoomUpdate;
@@ -39,26 +39,26 @@ public sealed class Listener : SingleChildRenderObjectWidget
         Behavior = behavior;
     }
 
-    public Action<PointerDownEvent>? OnPointerDown { get; }
+    public PointerDownEventListener? OnPointerDown { get; }
 
-    public Action<PointerMoveEvent>? OnPointerMove { get; }
+    public PointerMoveEventListener? OnPointerMove { get; }
 
-    public Action<PointerHoverEvent>? OnPointerHover { get; }
+    public PointerUpEventListener? OnPointerUp { get; }
 
-    public Action<PointerUpEvent>? OnPointerUp { get; }
+    public PointerHoverEventListener? OnPointerHover { get; }
 
-    public Action<PointerCancelEvent>? OnPointerCancel { get; }
+    public PointerCancelEventListener? OnPointerCancel { get; }
 
     /// <summary>Called when a trackpad pan/zoom gesture starts over this widget.</summary>
-    public Action<PointerPanZoomStartEvent>? OnPointerPanZoomStart { get; }
+    public PointerPanZoomStartEventListener? OnPointerPanZoomStart { get; }
 
     /// <summary>Called when the trackpad pan/zoom gesture in progress reports new values.</summary>
-    public Action<PointerPanZoomUpdateEvent>? OnPointerPanZoomUpdate { get; }
+    public PointerPanZoomUpdateEventListener? OnPointerPanZoomUpdate { get; }
 
     /// <summary>Called when the trackpad pan/zoom gesture in progress ends.</summary>
-    public Action<PointerPanZoomEndEvent>? OnPointerPanZoomEnd { get; }
+    public PointerPanZoomEndEventListener? OnPointerPanZoomEnd { get; }
 
-    public Action<PointerSignalEvent>? OnPointerSignal { get; }
+    public PointerSignalEventListener? OnPointerSignal { get; }
 
     public HitTestBehavior Behavior { get; }
 
@@ -67,8 +67,8 @@ public sealed class Listener : SingleChildRenderObjectWidget
         return new RenderPointerListener(
             onPointerDown: OnPointerDown,
             onPointerMove: OnPointerMove,
-            onPointerHover: OnPointerHover,
             onPointerUp: OnPointerUp,
+            onPointerHover: OnPointerHover,
             onPointerCancel: OnPointerCancel,
             onPointerPanZoomStart: OnPointerPanZoomStart,
             onPointerPanZoomUpdate: OnPointerPanZoomUpdate,
@@ -82,8 +82,8 @@ public sealed class Listener : SingleChildRenderObjectWidget
         var listener = (RenderPointerListener)renderObject;
         listener.OnPointerDown = OnPointerDown;
         listener.OnPointerMove = OnPointerMove;
-        listener.OnPointerHover = OnPointerHover;
         listener.OnPointerUp = OnPointerUp;
+        listener.OnPointerHover = OnPointerHover;
         listener.OnPointerCancel = OnPointerCancel;
         listener.OnPointerPanZoomStart = OnPointerPanZoomStart;
         listener.OnPointerPanZoomUpdate = OnPointerPanZoomUpdate;

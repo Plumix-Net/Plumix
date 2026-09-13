@@ -1469,7 +1469,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
             (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child == null)
         {
@@ -1580,7 +1580,7 @@ public sealed class RenderSliverSemanticsAnnotations : RenderProxySliver
     }
 
     /// <inheritdoc />
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_annotations.ExcludeSemantics)
         {
@@ -1650,7 +1650,7 @@ public sealed class RenderSliverIgnorePointer : RenderProxySliver
         return !_ignoring && base.HitTest(result, position);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_ignoringSemantics != true)
         {
@@ -1713,7 +1713,7 @@ public sealed class RenderSliverOffstage : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (!_offstage)
         {
@@ -1795,7 +1795,7 @@ internal sealed class RenderSliverVisibility : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_maintainSemantics || _visible)
         {
@@ -1870,7 +1870,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
 
     public override bool IsRepaintBoundary => Child != null && _opacity > 0.0;
 
-    protected override bool AlwaysNeedsCompositing => Child != null && _opacity > 0.0;
+    public override bool AlwaysNeedsCompositing => Child != null && _opacity > 0.0;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
@@ -1895,7 +1895,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_opacity > 0.0 || _alwaysIncludeSemantics)
         {
@@ -1981,13 +1981,13 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
         base.OnDetach();
     }
 
-    public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild();
+    public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild(child);
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_animatedOpacity.IncludesChildInSemantics())
         {
-            base.VisitChildrenForSemantics(visitor);
+            visitor(Child!);
         }
     }
 
@@ -2107,7 +2107,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
             (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child == null)
         {
@@ -2280,7 +2280,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child == null)
         {
@@ -2836,7 +2836,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         this.ApplyPaintTransformForBoxChild((RenderBox)child, transform);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (var child = FirstChild; child != null; child = ChildAfter(child))
         {

@@ -104,7 +104,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         var render = (RenderTransform)harness.FindRenderObject<Plumix.Widgets.Transform>();
         Assert.Equal(
             -CupertinoMagnifier.MagnifierAboveFocalPoint * 0.5,
-            render.Transform.GetTranslation().Y,
+            render.DebugTransformMatrix().GetTranslation().Y,
             3);
     }
 

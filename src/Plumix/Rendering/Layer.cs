@@ -651,6 +651,10 @@ public sealed class LayerLink
             _renderLeader = null;
         }
     }
+
+    /// <summary>Dart's <c>LayerLink.toString</c>.</summary>
+    public override string ToString() =>
+        $"{Diagnostics.DescribeIdentity(this)}({(_leader != null ? "<linked>" : "<dangling>")})";
 }
 
 /// <summary>
@@ -659,11 +663,12 @@ public sealed class LayerLink
 public sealed class LeaderLayer : ContainerLayer
 {
     private LayerLink _link;
+    private Point _offset;
 
     public LeaderLayer(LayerLink link, Point offset = default)
     {
-        _link = link ?? throw new ArgumentNullException(nameof(link));
-        Offset = offset;
+        _link = link;
+        _offset = offset;
     }
 
     public LayerLink Link
@@ -671,7 +676,6 @@ public sealed class LeaderLayer : ContainerLayer
         get => _link;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
             if (ReferenceEquals(_link, value))
             {
                 return;
@@ -687,7 +691,39 @@ public sealed class LeaderLayer : ContainerLayer
         }
     }
 
-    public Point Offset { get; set; }
+    /// <remarks>
+    /// Dart's setter also calls <c>markNeedsAddToScene</c>; Plumix re-adds the whole layer tree to the
+    /// scene every composite, so there is no retained-scene flag to clear.
+    /// </remarks>
+    public Point Offset
+    {
+        get => _offset;
+        set
+        {
+            if (value == _offset)
+            {
+                return;
+            }
+
+            _offset = value;
+        }
+    }
+
+    /// <summary>
+    /// Applies the translation by <see cref="Offset"/> this layer gives its children to
+    /// <paramref name="transform"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>LeaderLayer.applyTransform</c> override. Plumix's <see cref="ContainerLayer"/> has no
+    /// <c>applyTransform</c> yet, so this is not virtual.
+    /// </remarks>
+    public void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        if (Offset != default)
+        {
+            transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+        }
+    }
 
     public override void Attach(object owner)
     {
@@ -1603,26 +1639,8 @@ public sealed class TransformLayer : ContainerLayer
 {
     public Matrix4 Transform { get; set; } = Matrix4.Identity();
 
-    /// <summary>
-    /// Plumix-only: the sampling quality Dart applies through <c>ImageFilter.matrix</c> in
-    /// <c>RenderTransform</c>'s filter-quality branch, which Avalonia has no image filter for.
-    /// </summary>
-    public FilterQuality? FilterQuality { get; set; }
-
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        using IDisposable? renderOptions = FilterQuality.HasValue
-            ? context.PushRenderOptions(new RenderOptions
-            {
-                BitmapInterpolationMode = FilterQuality.Value switch
-                {
-                    Rendering.FilterQuality.None => BitmapInterpolationMode.None,
-                    Rendering.FilterQuality.Low => BitmapInterpolationMode.LowQuality,
-                    Rendering.FilterQuality.High => BitmapInterpolationMode.HighQuality,
-                    _ => BitmapInterpolationMode.MediumQuality,
-                },
-            })
-            : null;
         using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
         using (context.PushTransform(Transform.ToAvaloniaMatrix()))
         {

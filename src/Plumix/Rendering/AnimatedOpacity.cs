@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -36,12 +37,20 @@ internal sealed class RenderAnimatedOpacityMixin
     /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.isRepaintBoundary</c>.</remarks>
     internal bool IsRepaintBoundary => _hasChild() && _currentlyIsRepaintBoundary!.Value;
 
+    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.updateCompositedLayer</c>; the cast fails for a
+    /// non-<see cref="OpacityLayer"/> like Dart's covariant parameter.</remarks>
+    internal OffsetLayer UpdateCompositedLayer(OffsetLayer? oldLayer)
+    {
+        OpacityLayer updatedLayer = (OpacityLayer?)oldLayer ?? new OpacityLayer();
+        updatedLayer.Alpha = _alpha;
+        return updatedLayer;
+    }
+
     internal Animation<double> Opacity
     {
         get => _opacity!;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
             if (ReferenceEquals(_opacity, value))
             {
                 return;
@@ -49,13 +58,13 @@ internal sealed class RenderAnimatedOpacityMixin
 
             if (_owner.Attached && _opacity is not null)
             {
-                _opacity.RemoveListener(UpdateOpacity);
+                Opacity.RemoveListener(UpdateOpacity);
             }
 
             _opacity = value;
             if (_owner.Attached)
             {
-                _opacity.AddListener(UpdateOpacity);
+                Opacity.AddListener(UpdateOpacity);
             }
 
             UpdateOpacity();
@@ -67,7 +76,7 @@ internal sealed class RenderAnimatedOpacityMixin
         get => _alwaysIncludeSemantics!.Value;
         set
         {
-            if (_alwaysIncludeSemantics == value)
+            if (value == _alwaysIncludeSemantics)
             {
                 return;
             }
@@ -77,53 +86,47 @@ internal sealed class RenderAnimatedOpacityMixin
         }
     }
 
-    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.attach</c>.</remarks>
+    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.attach</c>, run after the child attached.</remarks>
     internal void OnAttach()
     {
         Opacity.AddListener(UpdateOpacity);
-        UpdateOpacity();
+        UpdateOpacity(); // in case it changed while we weren't listening
     }
 
-    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.detach</c>.</remarks>
+    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.detach</c>, run before the child detaches.</remarks>
     internal void OnDetach() => Opacity.RemoveListener(UpdateOpacity);
-
-    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.updateCompositedLayer</c>.</remarks>
-    internal OffsetLayer UpdateCompositedLayer(OffsetLayer? oldLayer)
-    {
-        OpacityLayer updatedLayer = oldLayer as OpacityLayer ?? new OpacityLayer();
-        updatedLayer.Alpha = _alpha;
-        return updatedLayer;
-    }
-
-    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.paintsChild</c>: reads the animation, not the alpha.</remarks>
-    internal bool PaintsChild() => Opacity.Value > 0.0;
-
-    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.visitChildrenForSemantics</c>.</remarks>
-    internal bool IncludesChildInSemantics() => _alpha != 0 || AlwaysIncludeSemantics;
 
     /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin._updateOpacity</c>.</remarks>
     private void UpdateOpacity()
     {
         int? oldAlpha = _alpha;
         _alpha = ColorUtilities.GetAlphaFromOpacity(Opacity.Value);
-        if (oldAlpha == _alpha)
+        if (oldAlpha != _alpha)
         {
-            return;
-        }
+            bool? wasRepaintBoundary = _currentlyIsRepaintBoundary;
+            _currentlyIsRepaintBoundary = _alpha!.Value > 0;
+            if (_hasChild() && wasRepaintBoundary != _currentlyIsRepaintBoundary)
+            {
+                _owner.MarkNeedsCompositingBitsUpdate();
+            }
 
-        bool? wasRepaintBoundary = _currentlyIsRepaintBoundary;
-        _currentlyIsRepaintBoundary = _alpha > 0;
-        if (_hasChild() && wasRepaintBoundary != _currentlyIsRepaintBoundary)
-        {
-            _owner.MarkNeedsCompositingBitsUpdate();
-        }
-
-        _owner.MarkNeedsCompositedLayerUpdate();
-        if (oldAlpha == 0 || _alpha == 0)
-        {
-            _owner.MarkNeedsSemanticsUpdate();
+            _owner.MarkNeedsCompositedLayerUpdate();
+            if (oldAlpha == 0 || _alpha == 0)
+            {
+                _owner.MarkNeedsSemanticsUpdate();
+            }
         }
     }
+
+    /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.paintsChild</c>: reads the animation, not the alpha.</remarks>
+    internal bool PaintsChild(RenderObject child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, _owner));
+        return Opacity.Value > 0;
+    }
+
+    /// <remarks>The condition of Flutter's <c>RenderAnimatedOpacityMixin.visitChildrenForSemantics</c>.</remarks>
+    internal bool IncludesChildInSemantics() => _hasChild() && (_alpha != 0 || AlwaysIncludeSemantics);
 
     /// <remarks>Flutter's <c>RenderAnimatedOpacityMixin.debugFillProperties</c>.</remarks>
     internal void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -131,27 +134,37 @@ internal sealed class RenderAnimatedOpacityMixin
         properties.Add(new DiagnosticsProperty<Animation<double>>("opacity", Opacity));
         properties.Add(new FlagProperty(
             "alwaysIncludeSemantics",
-            AlwaysIncludeSemantics,
+            value: AlwaysIncludeSemantics,
             ifTrue: "alwaysIncludeSemantics"));
     }
 }
 
 /// <summary>Makes its child partially transparent, driven by an animation.</summary>
 /// <remarks>Flutter's <c>RenderAnimatedOpacity</c>.</remarks>
-public sealed class RenderAnimatedOpacity : RenderProxyBox
+public class RenderAnimatedOpacity : RenderProxyBox
 {
     private readonly RenderAnimatedOpacityMixin _animatedOpacity;
 
     public RenderAnimatedOpacity(
         Animation<double> opacity,
         bool alwaysIncludeSemantics = false,
-        RenderBox? child = null)
+        RenderBox? child = null) : base(child)
     {
         _animatedOpacity = new RenderAnimatedOpacityMixin(this, () => Child != null);
-        Child = child;
         Opacity = opacity;
         AlwaysIncludeSemantics = alwaysIncludeSemantics;
     }
+
+    /// <inheritdoc />
+    public override bool IsRepaintBoundary => _animatedOpacity.IsRepaintBoundary;
+
+    /// <inheritdoc />
+    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer) =>
+        _animatedOpacity.UpdateCompositedLayer(oldLayer);
+
+    /// <inheritdoc />
+    protected override void UpdateCompositedLayer(OffsetLayer layer) =>
+        _animatedOpacity.UpdateCompositedLayer(layer);
 
     /// <summary>The animation driving this render object's opacity.</summary>
     public Animation<double> Opacity
@@ -168,17 +181,6 @@ public sealed class RenderAnimatedOpacity : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override bool IsRepaintBoundary => _animatedOpacity.IsRepaintBoundary;
-
-    /// <inheritdoc />
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer) =>
-        _animatedOpacity.UpdateCompositedLayer(oldLayer);
-
-    /// <inheritdoc />
-    protected override void UpdateCompositedLayer(OffsetLayer layer) =>
-        _animatedOpacity.UpdateCompositedLayer(layer);
-
-    /// <inheritdoc />
     protected override void OnAttach()
     {
         base.OnAttach();
@@ -193,25 +195,25 @@ public sealed class RenderAnimatedOpacity : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild();
+    public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild(child);
 
     /// <inheritdoc />
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext context, Point offset)
     {
         if (_animatedOpacity.Alpha == 0)
         {
             return;
         }
 
-        base.Paint(ctx, offset);
+        base.Paint(context, offset);
     }
 
     /// <inheritdoc />
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_animatedOpacity.IncludesChildInSemantics())
         {
-            base.VisitChildrenForSemantics(visitor);
+            visitor(Child!);
         }
     }
 

@@ -658,7 +658,7 @@ public sealed class ClipWidgetsTests
     /// <summary>A painted leaf that forces its ancestors onto the composited-layer branch.</summary>
     private sealed class CompositingPaintBox : RenderBox
     {
-        protected override bool AlwaysNeedsCompositing => true;
+        public override bool AlwaysNeedsCompositing => true;
 
         protected override void PerformLayout()
         {

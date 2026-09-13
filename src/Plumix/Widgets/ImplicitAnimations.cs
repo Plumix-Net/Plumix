@@ -322,8 +322,9 @@ public sealed class AnimatedSlide : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            Vector translation = Evaluate(_controller!.Evaluate());
             return new FractionalTranslation(
-                translation: Evaluate(_controller!.Evaluate()),
+                translation: new Point(translation.X, translation.Y),
                 child: CurrentWidget.Child);
         }
 

@@ -16,7 +16,7 @@ public sealed class SemanticsTraversalTests
     public void SemanticsNode_RectIsLocalAndTransformMapsIntoTheParentNode()
     {
         var leaf = new LabelBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), child: leaf);
         SemanticsNode root = Compile(transform, new Size(220, 120));
 
         SemanticsNode moved = Assert.Single(root.Children);

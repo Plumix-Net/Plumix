@@ -1,3 +1,6 @@
+// These tests read Dart-deprecated members (`ignoringSemantics`, `filter`) on purpose.
+#pragma warning disable CS0618
+
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -74,7 +77,7 @@ public sealed class BasicWidgetProxyTests
         owner.FlushBuild();
 
         var renderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(Matrix4.TranslationValues(12, 6, 0.0), renderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(12, 6, 0.0), renderTransform.DebugTransformMatrix());
         Assert.Equal(Alignment.TopLeft, renderTransform.Alignment);
         Assert.Equal(FilterQuality.Low, renderTransform.FilterQuality);
 
@@ -87,7 +90,7 @@ public sealed class BasicWidgetProxyTests
 
         var updatedRenderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Same(renderTransform, updatedRenderTransform);
-        Assert.Equal(Matrix4.TranslationValues(30, 18, 0.0), updatedRenderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(30, 18, 0.0), updatedRenderTransform.DebugTransformMatrix());
         Assert.Equal(Alignment.BottomRight, updatedRenderTransform.Alignment);
         Assert.Equal(FilterQuality.High, updatedRenderTransform.FilterQuality);
     }
@@ -98,7 +101,7 @@ public sealed class BasicWidgetProxyTests
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new FractionalTranslation(
-                translation: new Vector(0.25, -0.5),
+                translation: new Point(0.25, -0.5),
                 child: new SizedBox(width: 20, height: 12)));
 
         root.Attach(owner);
@@ -106,18 +109,18 @@ public sealed class BasicWidgetProxyTests
         owner.FlushBuild();
 
         var translation = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
-        Assert.Equal(new Vector(0.25, -0.5), translation.Translation);
+        Assert.Equal(new Point(0.25, -0.5), translation.Translation);
         Assert.True(translation.TransformHitTests);
 
         root.Update(new FractionalTranslation(
-            translation: new Vector(double.PositiveInfinity, 0.75),
+            translation: new Point(double.PositiveInfinity, 0.75),
             transformHitTests: false,
             child: new SizedBox(width: 20, height: 12)));
         owner.FlushBuild();
 
         var updated = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.Same(translation, updated);
-        Assert.Equal(new Vector(double.PositiveInfinity, 0.75), updated.Translation);
+        Assert.Equal(new Point(double.PositiveInfinity, 0.75), updated.Translation);
         Assert.False(updated.TransformHitTests);
     }
 
@@ -126,7 +129,7 @@ public sealed class BasicWidgetProxyTests
     {
         var child = new RegionHitTestRenderBox(new Size(20, 10), new Rect(0, 0, 20, 10));
         var translation = new RenderFractionalTranslation(
-            translation: new Vector(1, 0),
+            translation: new Point(1, 0),
             transformHitTests: true,
             child: child);
 

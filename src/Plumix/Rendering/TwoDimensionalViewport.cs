@@ -582,7 +582,7 @@ public abstract class RenderTwoDimensionalViewport : RenderBox, IRenderAbstractV
 
     /// <inheritdoc />
     /// <remarks>Kept-alive children are offscreen, so they contribute no semantics.</remarks>
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         RenderBox? child = _firstChild;
         while (child != null)

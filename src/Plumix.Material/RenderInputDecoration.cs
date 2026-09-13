@@ -368,7 +368,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         void Visit(RenderBox? child)
         {

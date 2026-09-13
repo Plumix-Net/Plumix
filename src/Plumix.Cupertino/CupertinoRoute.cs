@@ -681,7 +681,7 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
         return new Align(
             alignment: Alignment.BottomCenter,
             child: new FractionalTranslation(
-                translation: OffsetTween.Transform(animation.Value),
+                translation: (Point)OffsetTween.Transform(animation.Value),
                 child: child));
     }
 

@@ -430,6 +430,24 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     {
         foreach (var render in FindDescendants(root))
         {
+            if (render is RenderDecoratedBox decoratedBox)
+            {
+                // `RenderDecoratedBox.Decoration` is Dart's untyped `Decoration`; a circle may be painted
+                // through a `ShapeDecoration`, so read it through the BoxDecoration projection.
+                try
+                {
+                    if (decoratedBox.AsBoxDecoration is { Shape: BoxShape.Circle } projected)
+                    {
+                        return projected.Color;
+                    }
+                }
+                catch (InvalidOperationException)
+                {
+                }
+
+                continue;
+            }
+
             var property = render.GetType().GetProperty("Decoration", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (property?.GetValue(render) is BoxDecoration { Shape: BoxShape.Circle } decoration)
             {

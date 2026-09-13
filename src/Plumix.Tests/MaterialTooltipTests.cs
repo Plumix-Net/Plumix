@@ -174,7 +174,7 @@ public sealed class MaterialTooltipTests
 
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.DecorationValue is ShapeDecoration
+            box => box.Decoration is ShapeDecoration
             {
                 Color: var color,
                 Shape: StadiumBorder,
@@ -323,7 +323,7 @@ public sealed class MaterialTooltipTests
                 box => box.AdditionalConstraints.MinHeight == 24);
             Assert.Contains(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView),
-                box => box.Decoration.Color == Color.FromArgb(0xE6, 0x61, 0x61, 0x61));
+                box => box.AsBoxDecoration.Color == Color.FromArgb(0xE6, 0x61, 0x61, 0x61));
         }
         finally
         {
@@ -372,7 +372,7 @@ public sealed class MaterialTooltipTests
                 box => box.AdditionalConstraints.MinHeight == 34);
             Assert.Contains(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView),
-                box => box.Decoration.Color == Colors.Navy);
+                box => box.AsBoxDecoration.Color == Colors.Navy);
         }
         finally
         {

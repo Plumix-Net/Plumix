@@ -9,15 +9,22 @@ namespace Plumix.Rendering;
 // - flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderLeaderLayer, RenderFollowerLayer)
 // - flutter/packages/flutter/lib/src/rendering/layer.dart (LayerLink, LeaderLayer, FollowerLayer)
 
-public sealed class RenderLeaderLayer : RenderProxyBox
+/// <remarks>
+/// Flutter's <c>RenderLeaderLayer</c>. The attach/detach registration with
+/// <see cref="LayerLink"/> is Plumix-only: the follower resolves the leader's transform at paint time
+/// from the leader render object instead of at composition time (see docs/ai/DIVERGENCES.md).
+/// </remarks>
+public class RenderLeaderLayer : RenderProxyBox
 {
     private LayerLink _link;
+
+    // The latest size of this render box, computed during the previous layout pass. It should always
+    // be equal to Size, but can be read even when no layout or resize is in progress.
     private Size? _previousLayoutSize;
 
-    public RenderLeaderLayer(LayerLink link, RenderBox? child = null)
+    public RenderLeaderLayer(LayerLink link, RenderBox? child = null) : base(child)
     {
-        _link = link ?? throw new ArgumentNullException(nameof(link));
-        Child = child;
+        _link = link;
     }
 
     public LayerLink Link
@@ -25,8 +32,7 @@ public sealed class RenderLeaderLayer : RenderProxyBox
         get => _link;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
-            if (ReferenceEquals(_link, value))
+            if (_link == value)
             {
                 return;
             }
@@ -39,7 +45,7 @@ public sealed class RenderLeaderLayer : RenderProxyBox
             }
 
             _link = value;
-            if (_previousLayoutSize.HasValue)
+            if (_previousLayoutSize != null)
             {
                 _link.LeaderSize = _previousLayoutSize;
             }
@@ -48,7 +54,7 @@ public sealed class RenderLeaderLayer : RenderProxyBox
         }
     }
 
-    protected override bool AlwaysNeedsCompositing => true;
+    public override bool AlwaysNeedsCompositing => true;
 
     protected override void OnAttach()
     {
@@ -66,23 +72,29 @@ public sealed class RenderLeaderLayer : RenderProxyBox
     {
         base.PerformLayout();
         _previousLayoutSize = Size;
-        _link.LeaderSize = Size;
+        Link.LeaderSize = Size;
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext context, Point offset)
     {
-        if (_layer is not LeaderLayer leaderLayer)
+        LeaderLayer leaderLayer;
+        if (Layer == null)
         {
-            leaderLayer = new LeaderLayer(_link, offset);
-            _layer = leaderLayer;
+            leaderLayer = new LeaderLayer(link: Link, offset: offset);
+            Layer = leaderLayer;
         }
         else
         {
-            leaderLayer.Link = _link;
+            leaderLayer = (LeaderLayer)Layer;
+            leaderLayer.Link = Link;
             leaderLayer.Offset = offset;
         }
 
-        ctx.PushLayer(leaderLayer, base.Paint, new Point(0, 0));
+        context.PushLayer(leaderLayer, base.Paint, default);
+        if (Constants.KDebugMode)
+        {
+            leaderLayer.DebugCreator = DebugCreator;
+        }
     }
 
     /// <inheritdoc />
@@ -93,28 +105,34 @@ public sealed class RenderLeaderLayer : RenderProxyBox
     }
 }
 
-public sealed class RenderFollowerLayer : RenderProxyBox
+/// <remarks>
+/// Flutter's <c>RenderFollowerLayer</c>. Dart hands <see cref="FollowerLayer"/> a linked offset and the
+/// layer derives the transform while compositing; Plumix computes the same transform here at paint
+/// time from the linked leader render object and stores it in <see cref="FollowerLayer.LinkedTransform"/>
+/// (see docs/ai/DIVERGENCES.md). Dart's non-null <c>Alignment.topLeft</c> anchor defaults are
+/// <c>null</c> parameters because <see cref="Alignment"/> is a struct with no constant top-left value.
+/// </remarks>
+public class RenderFollowerLayer : RenderProxyBox
 {
     private LayerLink _link;
     private bool _showWhenUnlinked;
-    private Vector _offset;
+    private Point _offset;
     private Alignment _leaderAnchor;
     private Alignment _followerAnchor;
 
     public RenderFollowerLayer(
         LayerLink link,
         bool showWhenUnlinked = true,
-        Vector offset = default,
+        Point offset = default,
         Alignment? leaderAnchor = null,
         Alignment? followerAnchor = null,
-        RenderBox? child = null)
+        RenderBox? child = null) : base(child)
     {
-        _link = link ?? throw new ArgumentNullException(nameof(link));
+        _link = link;
         _showWhenUnlinked = showWhenUnlinked;
         _offset = offset;
         _leaderAnchor = leaderAnchor ?? Alignment.TopLeft;
         _followerAnchor = followerAnchor ?? Alignment.TopLeft;
-        Child = child;
     }
 
     public LayerLink Link
@@ -122,14 +140,13 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         get => _link;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
-            if (ReferenceEquals(_link, value))
+            if (_link == value)
             {
                 return;
             }
 
             _link = value;
-            MarkTransformDirty();
+            MarkNeedsPaint();
         }
     }
 
@@ -144,11 +161,11 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             }
 
             _showWhenUnlinked = value;
-            MarkTransformDirty();
+            MarkNeedsPaint();
         }
     }
 
-    public Vector Offset
+    public Point Offset
     {
         get => _offset;
         set
@@ -159,7 +176,7 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             }
 
             _offset = value;
-            MarkTransformDirty();
+            MarkNeedsPaint();
         }
     }
 
@@ -174,7 +191,7 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             }
 
             _leaderAnchor = value;
-            MarkTransformDirty();
+            MarkNeedsPaint();
         }
     }
 
@@ -189,30 +206,42 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             }
 
             _followerAnchor = value;
-            MarkTransformDirty();
+            MarkNeedsPaint();
         }
+    }
+
+    /// <remarks>Dart's <c>detach()</c> override: <c>layer = null; super.detach()</c>.</remarks>
+    protected override void OnDetach()
+    {
+        Layer = null;
+        base.OnDetach();
+    }
+
+    public override bool AlwaysNeedsCompositing => true;
+
+    /// <summary>The follower layer this render object painted into, if any.</summary>
+    /// <remarks>Dart's <c>FollowerLayer? get layer</c> override.</remarks>
+    protected internal new FollowerLayer? Layer
+    {
+        get => (FollowerLayer?)base.Layer;
+        set => base.Layer = value;
     }
 
     public Matrix4 GetCurrentTransform()
     {
-        return (_layer as FollowerLayer)?.GetLastTransform() ?? Matrix4.Identity();
-    }
-
-    protected override bool AlwaysNeedsCompositing => true;
-
-    protected override void OnDetach()
-    {
-        _layer = null;
-        base.OnDetach();
+        return Layer?.GetLastTransform() ?? Matrix4.Identity();
     }
 
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        if (_link.Leader == null && !_showWhenUnlinked)
+        // Disables the hit testing if this render object is hidden.
+        if (Link.Leader == null && !ShowWhenUnlinked)
         {
             return false;
         }
 
+        // RenderFollowerLayer objects don't check if they are themselves hit, because it's confusing
+        // to think about how the untransformed size and the child's transformed position interact.
         return HitTestChildren(result, position);
     }
 
@@ -224,45 +253,63 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             (hitResult, transformed) => base.HitTestChildren(hitResult, transformed));
     }
 
-    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    public override void Paint(PaintingContext context, Point offset)
     {
-        transform.Multiply(GetCurrentTransform());
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        Matrix4? linkedTransform = ComputeLinkedTransform();
-        if (_layer is not FollowerLayer followerLayer)
+        Size? leaderSize = Link.LeaderSize;
+        if (Constants.KDebugMode
+            && !(Link.LeaderSize != null || Link.Leader == null || LeaderAnchor == Alignment.TopLeft))
         {
-            followerLayer = new FollowerLayer(
-                _link,
-                _showWhenUnlinked,
-                offset,
-                linkedTransform);
-            _layer = followerLayer;
+            throw new AssertionError(
+                $"{Link}: layer is linked to {Link.Leader} but a valid leaderSize is not set. "
+                + "leaderSize is required when leaderAnchor is not Alignment.topLeft "
+                + $"(current value is {LeaderAnchor}).");
+        }
+
+        Point effectiveLinkedOffset = leaderSize == null
+            ? Offset
+            : LeaderAnchor.AlongSize(leaderSize.Value) - FollowerAnchor.AlongSize(Size) + Offset;
+        Matrix4? linkedTransform = ComputeLinkedTransform(effectiveLinkedOffset);
+        FollowerLayer? layer = Layer;
+        if (layer == null)
+        {
+            layer = new FollowerLayer(
+                link: Link,
+                showWhenUnlinked: ShowWhenUnlinked,
+                unlinkedOffset: offset,
+                linkedTransform: linkedTransform);
+            Layer = layer;
         }
         else
         {
-            followerLayer.Link = _link;
-            followerLayer.ShowWhenUnlinked = _showWhenUnlinked;
-            followerLayer.UnlinkedOffset = offset;
-            followerLayer.LinkedTransform = linkedTransform;
+            layer.Link = Link;
+            layer.ShowWhenUnlinked = ShowWhenUnlinked;
+            layer.LinkedTransform = linkedTransform;
+            layer.UnlinkedOffset = offset;
         }
 
-        ctx.PushLayer(
-            followerLayer,
+        context.PushLayer(
+            layer,
             base.Paint,
-            new Point(0, 0),
-            new Rect(
+            default,
+            childPaintBounds: new Rect(
+                // We don't know where we'll end up, so we have no idea what our cull rect should be.
                 new Point(double.NegativeInfinity, double.NegativeInfinity),
                 new Point(double.PositiveInfinity, double.PositiveInfinity)));
+        if (Constants.KDebugMode)
+        {
+            layer.DebugCreator = DebugCreator;
+        }
     }
 
-    private Matrix4? ComputeLinkedTransform()
+    /// <summary>
+    /// Plumix-only: the transform Dart's <c>FollowerLayer._establishTransform</c> derives from the layer
+    /// tree, computed from the render tree instead. It maps this box's coordinates to the leader's,
+    /// translated by <paramref name="linkedOffset"/>.
+    /// </summary>
+    private Matrix4? ComputeLinkedTransform(Point linkedOffset)
     {
-        RenderLeaderLayer? leader = _link.RenderLeader;
+        RenderLeaderLayer? leader = Link.RenderLeader;
         if (leader == null
-            || !_link.LeaderSize.HasValue
             || !leader.TryGetTransformFromRoot(out Matrix4 leaderToRoot)
             || !TryGetTransformFromRoot(out Matrix4 followerToRoot))
         {
@@ -272,21 +319,18 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         Matrix4 result = Matrix4.Copy(followerToRoot);
         if (result.Invert() == 0.0)
         {
+            // We are in a degenerate transform, so there's not much we can do.
             return null;
         }
 
-        Point leaderPoint = _leaderAnchor.AlongSize(_link.LeaderSize.Value) + _offset;
-        Point followerPoint = _followerAnchor.AlongSize(Size);
         result.Multiply(leaderToRoot);
-        result.TranslateByDouble(leaderPoint.X, leaderPoint.Y, 0, 1);
-        result.TranslateByDouble(-followerPoint.X, -followerPoint.Y, 0, 1);
+        result.TranslateByDouble(linkedOffset.X, linkedOffset.Y, 0, 1);
         return result;
     }
 
-    /// <remarks>Flutter's follower setters call <c>markNeedsPaint()</c> only.</remarks>
-    private void MarkTransformDirty()
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        MarkNeedsPaint();
+        transform.Multiply(GetCurrentTransform());
     }
 
     /// <inheritdoc />
@@ -295,7 +339,7 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
         properties.Add(new DiagnosticsProperty<bool>("showWhenUnlinked", ShowWhenUnlinked));
-        properties.Add(new DiagnosticsProperty<Vector>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
         properties.Add(new TransformProperty("current transform matrix", GetCurrentTransform()));
     }
 }

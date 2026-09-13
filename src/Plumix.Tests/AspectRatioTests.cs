@@ -43,7 +43,8 @@ public sealed class AspectRatioTests
 
         if (Constants.KDebugMode)
         {
-            Assert.IsType<AssertionError>(error);
+            // Dart throws a `FlutterError` naming the runtime type, not a bare assertion.
+            Assert.IsType<FlutterError>(error);
         }
         else
         {

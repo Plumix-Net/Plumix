@@ -40,7 +40,7 @@ public sealed class MaterialFloatingActionButtonTests
         var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
 
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Moccasin, decorated!.Decoration.Color);
+        Assert.Equal(Colors.Moccasin, decorated!.AsBoxDecoration.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.MediumBlue, capturedIconTheme!.Color);
         Assert.Equal(24, capturedIconTheme.Size);
@@ -115,7 +115,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(56, constrainedBox.AdditionalConstraints.MaxHeight);
 
         Assert.NotNull(decorated);
-        Assert.Equal(BorderRadius.Circular(16), decorated!.Decoration.BorderRadius);
+        Assert.Equal(BorderRadius.Circular(16), decorated!.AsBoxDecoration.BorderRadius);
     }
 
     [Fact]
@@ -578,7 +578,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(60, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(60, constrainedBox.AdditionalConstraints.MaxWidth);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Orange, decorated!.Decoration.Color);
+        Assert.Equal(Colors.Orange, decorated!.AsBoxDecoration.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.White, capturedIconTheme!.Color);
     }
@@ -704,7 +704,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Purple, decorated!.Decoration.Color);
+        Assert.Equal(Colors.Purple, decorated!.AsBoxDecoration.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.Yellow, capturedIconTheme!.Color);
     }
@@ -1105,7 +1105,7 @@ public sealed class MaterialFloatingActionButtonTests
 
     private static Plumix.Rendering.BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
     {
-        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated.Decoration.BoxShadows;
+        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated.AsBoxDecoration.BoxShadows;
         Assert.NotNull(shadows);
         Assert.True(shadows.Count > 0);
         return shadows[0];

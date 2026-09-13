@@ -120,9 +120,9 @@ public sealed class MaterialBannerTests
         local.Pump(new Size(360, 180));
         var localBackground = Assert.Single(
             FindDescendants<RenderDecoratedBox>(local.RenderView),
-            box => box.Decoration.Color.HasValue);
-        Assert.Equal(Colors.DarkCyan, localBackground.Decoration.Color);
-        Assert.NotNull(localBackground.Decoration.BoxShadows);
+            box => box.AsBoxDecoration.Color.HasValue);
+        Assert.Equal(Colors.DarkCyan, localBackground.AsBoxDecoration.Color);
+        Assert.NotNull(localBackground.AsBoxDecoration.BoxShadows);
     }
 
     [Fact]
@@ -141,13 +141,13 @@ public sealed class MaterialBannerTests
 
         var m3Background = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
-            box => box.Decoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color.HasValue);
         var m3Divider = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
-            box => box.Decoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
-        Assert.Equal(m3Surface, m3Background.Decoration.Color);
-        Assert.Equal(m3Outline, ((Plumix.Rendering.Border)m3Divider.Decoration.Border!).Bottom.Color);
-        Assert.Null(m3Background.Decoration.BoxShadows);
+            box => box.AsBoxDecoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
+        Assert.Equal(m3Surface, m3Background.AsBoxDecoration.Color);
+        Assert.Equal(m3Outline, ((Plumix.Rendering.Border)m3Divider.AsBoxDecoration.Border!).Bottom.Color);
+        Assert.Null(m3Background.AsBoxDecoration.BoxShadows);
 
         Color m2Surface = Color.Parse("#FF708090");
         var m2Theme = ThemeData.Light with
@@ -160,9 +160,9 @@ public sealed class MaterialBannerTests
 
         var m2Background = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m2.RenderView),
-            box => box.Decoration.Color.HasValue);
-        Assert.Equal(m2Surface, m2Background.Decoration.Color);
-        Assert.Null(m2Background.Decoration.BoxShadows);
+            box => box.AsBoxDecoration.Color.HasValue);
+        Assert.Equal(m2Surface, m2Background.AsBoxDecoration.Color);
+        Assert.Null(m2Background.AsBoxDecoration.BoxShadows);
     }
 
     [Fact]
@@ -173,9 +173,9 @@ public sealed class MaterialBannerTests
 
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color.HasValue);
-        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.Decoration.Color);
-        Assert.Null(decoration.Decoration.BoxShadows);
+            box => box.AsBoxDecoration.Color.HasValue);
+        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.AsBoxDecoration.Color);
+        Assert.Null(decoration.AsBoxDecoration.BoxShadows);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding == new Thickness(16, 2, 0, 0));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
@@ -260,9 +260,9 @@ public sealed class MaterialBannerTests
 
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(themed.RenderView),
-            box => box.Decoration.Color.HasValue);
-        Assert.Equal(Colors.Purple, decoration.Decoration.Color);
-        Assert.NotNull(decoration.Decoration.BoxShadows);
+            box => box.AsBoxDecoration.Color.HasValue);
+        Assert.Equal(Colors.Purple, decoration.AsBoxDecoration.Color);
+        Assert.NotNull(decoration.AsBoxDecoration.BoxShadows);
         Assert.Equal(Colors.Orange,
             Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "Content")!.Foreground).Color);
         Assert.Equal(18, FindParagraph(themed.RenderView, "Content")!.FontSize);
@@ -278,7 +278,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(Colors.Green,
             Assert.Single(
                 FindDescendants<RenderDecoratedBox>(explicitColor.RenderView),
-                box => box.Decoration.Color.HasValue).Decoration.Color);
+                box => box.AsBoxDecoration.Color.HasValue).AsBoxDecoration.Color);
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 180));
 
         Assert.Contains(FindDescendants<RenderFractionalTranslation>(harness.RenderView),
-            translation => translation.Translation == new Vector(0, 0));
+            translation => translation.Translation == new Point(0, 0));
         Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => align.HeightFactor.HasValue
                      && Math.Abs(align.HeightFactor.Value - Curves.FastOutSlowIn(0.5)) < 0.001);

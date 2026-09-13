@@ -4,21 +4,17 @@ using Avalonia;
 
 namespace Plumix.Rendering;
 
-public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
+public class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
 {
     private T _value;
     private bool _sized;
-    private readonly LayerHandle<AnnotatedRegionLayer<T>> _layerHandle = new();
+    private readonly LayerHandle<AnnotatedRegionLayer<T>> _layerHandle;
 
-    public RenderAnnotatedRegion(
-        T value,
-        bool sized = true,
-        RenderBox? child = null)
+    public RenderAnnotatedRegion(T value, bool sized, RenderBox? child = null) : base(child)
     {
-        ArgumentNullException.ThrowIfNull(value);
         _value = value;
         _sized = sized;
-        Child = child;
+        _layerHandle = new LayerHandle<AnnotatedRegionLayer<T>>();
     }
 
     public T Value
@@ -26,8 +22,7 @@ public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
         get => _value;
         set
         {
-            ArgumentNullException.ThrowIfNull(value);
-            if (Equals(_value, value))
+            if (EqualityComparer<T>.Default.Equals(_value, value))
             {
                 return;
             }
@@ -52,15 +47,15 @@ public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
         }
     }
 
-    protected override bool AlwaysNeedsCompositing => true;
+    public override bool AlwaysNeedsCompositing => true;
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        ArgumentNullException.ThrowIfNull(context);
+        // Annotated region layers are not retained because they do not create engine layers.
         var layer = new AnnotatedRegionLayer<T>(
-            value: _value,
-            size: _sized ? Size : null,
-            offset: _sized ? offset : null);
+            Value,
+            size: Sized ? Size : null,
+            offset: Sized ? offset : null);
         _layerHandle.Layer = layer;
         context.PushLayer(layer, base.Paint, offset);
     }

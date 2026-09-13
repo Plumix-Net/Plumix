@@ -425,7 +425,7 @@ public sealed class TextWidgetTests
         Assert.NotNull(transform);
         Matrix4 expected = Matrix4.TranslationValues(24, 0, 0.0);
         expected.ScaleByDouble(-1.0, 1.0, 1.0, 1);
-        Assert.Equal(expected, transform!.Transform);
+        Assert.Equal(expected, transform!.DebugTransformMatrix());
     }
 
     [Fact]

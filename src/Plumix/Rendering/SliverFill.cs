@@ -55,7 +55,7 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_allowImplicitScrolling)
         {

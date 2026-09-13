@@ -789,7 +789,7 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor) => VisitChildren(visitor);
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor) => VisitChildren(visitor);
 
     public void Insert(RenderBox child, RenderBox? after = null) => _children.Insert(child, after);
 

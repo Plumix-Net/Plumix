@@ -246,7 +246,7 @@ public sealed class HitTestResultTests
     {
         var leaf = new FixedHitTestBox(new Size(20, 20));
         var padded = new RenderPadding(new Thickness(10, 10, 0, 0), leaf);
-        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), padded);
+        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), child: padded);
         PipelineOwner pipeline = BuildPipeline(transform);
 
         var result = new BoxHitTestResult();
@@ -277,7 +277,7 @@ public sealed class HitTestResultTests
             },
             child: new FixedHitTestBox(new Size(40, 40)));
         var padded = new RenderPadding(new Thickness(10, 20, 0, 0), listener);
-        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), padded);
+        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), child: padded);
         PipelineOwner pipeline = BuildPipeline(transform);
 
         binding.HandlePointerEvent(
@@ -331,7 +331,7 @@ public sealed class HitTestResultTests
             behavior: HitTestBehavior.Opaque,
             onPointerDown: recognizer.AddPointer,
             child: new FixedHitTestBox(new Size(100, 100)));
-        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), listener);
+        var transform = new RenderTransform(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), child: listener);
         PipelineOwner pipeline = BuildPipeline(transform);
 
         DateTime start = DateTime.UtcNow;

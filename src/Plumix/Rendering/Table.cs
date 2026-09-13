@@ -908,7 +908,7 @@ public sealed class RenderTable : RenderBox
 
     private readonly record struct CellIndex(int Y, int X);
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         foreach (RenderBox? child in _children)
         {

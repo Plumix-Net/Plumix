@@ -4,7 +4,7 @@ using Avalonia.Media.TextFormatting;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/proxy_box.dart (custom adaptation)
+// C#-only infrastructure: an early hand-written demo render object with no Dart counterpart.
 
 namespace Plumix;
 

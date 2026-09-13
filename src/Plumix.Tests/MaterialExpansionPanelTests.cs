@@ -255,7 +255,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == background);
+            box => box.AsBoxDecoration.Color == background);
         var iconGlyph = FindParagraphByText(harness.RenderView, char.ConvertFromUtf32(Icons.ExpandMore.CodePoint));
         Assert.NotNull(iconGlyph);
         Assert.Equal(icon, Assert.IsType<SolidColorBrush>(iconGlyph!.Foreground).Color);

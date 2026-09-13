@@ -1137,7 +1137,7 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         // Only the text field contributes semantics; the measurement-only copies never do.
         if (FirstChild is not null) visitor(FirstChild);
