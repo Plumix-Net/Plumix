@@ -1034,8 +1034,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.debugPainting,
-      title: 'Placeholder + GridPaper',
-      subtitle: 'unbounded fallback sizing + foreground layout grid',
+      title: 'Placeholder + GridPaper + ErrorWidget',
+      subtitle: 'fallback sizing + foreground grid + error paragraph padding',
       builder: () => const DebugPaintingDemoPage(),
     ),
     SampleRouteDefinition(

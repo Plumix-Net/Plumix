@@ -277,11 +277,21 @@ public sealed class ScrollInfrastructureTests
                     handle,
                     () => dispatched = true)));
 
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        try
+        {
+            root.Attach(owner);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+            owner.FlushBuild();
 
-        Assert.True(dispatched);
+            Assert.True(dispatched);
+        }
+        finally
+        {
+            // The first notification schedules a post-frame parent-data update. Unmount before
+            // another test drives that frame, so the callback cannot report into its error handler.
+            root.UnmountRoot();
+            handle.Dispose();
+        }
     }
 
     [Fact]

@@ -17,6 +17,7 @@ internal sealed class DebugPaintingDemoPageState : State
 {
     private bool _showPlaceholderChild;
     private bool _customGrid;
+    private bool _showErrors;
 
     public override Widget Build(BuildContext context)
     {
@@ -25,15 +26,19 @@ internal sealed class DebugPaintingDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Placeholder + GridPaper", fontSize: 20, color: Colors.Black),
+                new Text("Placeholder + GridPaper + ErrorWidget", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Placeholder uses fallback dimensions only in unbounded space; GridPaper paints over its child.",
                     fontSize: 14,
                     color: Colors.DimGray),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
+                        BuildButton(
+                            _showErrors ? "Show grid" : "Show errors",
+                            () => SetState(() => _showErrors = !_showErrors)),
                         BuildButton(
                             _showPlaceholderChild ? "Remove child" : "Add child",
                             () => SetState(() => _showPlaceholderChild = !_showPlaceholderChild)),
@@ -42,7 +47,7 @@ internal sealed class DebugPaintingDemoPageState : State
                             () => SetState(() => _customGrid = !_customGrid)),
                     ]),
                 new Expanded(
-                    child: new Row(
+                    child: _showErrors ? BuildErrorProbe() : new Row(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 16,
                         children:
@@ -50,6 +55,28 @@ internal sealed class DebugPaintingDemoPageState : State
                             new Expanded(child: BuildPlaceholderProbe()),
                             new Expanded(child: BuildGridPaperProbe()),
                         ])),
+            ]);
+    }
+
+    private static Widget BuildErrorProbe()
+    {
+        return new Row(
+            crossAxisAlignment: CrossAxisAlignment.Stretch,
+            spacing: 16,
+            children:
+            [
+                new Expanded(
+                    child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                        spacing: 12,
+                        children:
+                        [
+                            new Expanded(child: ErrorWidget.WithDetails("Wide box: padding when space permits.")),
+                            new SizedBox(
+                                height: 100,
+                                child: ErrorWidget.WithDetails("Short box: no top padding.")),
+                        ])),
+                new SizedBox(width: 100, child: ErrorWidget.WithDetails("Narrow box: no left padding.")),
             ]);
     }
 

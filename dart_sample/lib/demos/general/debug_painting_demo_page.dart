@@ -12,6 +12,7 @@ class DebugPaintingDemoPage extends StatefulWidget {
 class _DebugPaintingDemoPageState extends State<DebugPaintingDemoPage> {
   bool _showPlaceholderChild = false;
   bool _customGrid = false;
+  bool _showErrors = false;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +21,7 @@ class _DebugPaintingDemoPageState extends State<DebugPaintingDemoPage> {
       spacing: 12,
       children: <Widget>[
         const Text(
-          'Placeholder + GridPaper',
+          'Placeholder + GridPaper + ErrorWidget',
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
@@ -28,9 +29,18 @@ class _DebugPaintingDemoPageState extends State<DebugPaintingDemoPage> {
           'GridPaper paints over its child.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
-        Row(
+        Wrap(
           spacing: 8,
+          runSpacing: 8,
           children: <Widget>[
+            _buildButton(
+              label: _showErrors ? 'Show grid' : 'Show errors',
+              onTap: () {
+                setState(() {
+                  _showErrors = !_showErrors;
+                });
+              },
+            ),
             _buildButton(
               label: _showPlaceholderChild ? 'Remove child' : 'Add child',
               onTap: () {
@@ -50,13 +60,49 @@ class _DebugPaintingDemoPageState extends State<DebugPaintingDemoPage> {
           ],
         ),
         Expanded(
-          child: Row(
+          child: _showErrors
+              ? _buildErrorProbe()
+              : Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 16,
+                  children: <Widget>[
+                    Expanded(child: _buildPlaceholderProbe()),
+                    Expanded(child: _buildGridPaperProbe()),
+                  ],
+                ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildErrorProbe() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      spacing: 16,
+      children: <Widget>[
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            spacing: 16,
+            spacing: 12,
             children: <Widget>[
-              Expanded(child: _buildPlaceholderProbe()),
-              Expanded(child: _buildGridPaperProbe()),
+              Expanded(
+                child: ErrorWidget.withDetails(
+                  message: 'Wide box: padding when space permits.',
+                ),
+              ),
+              SizedBox(
+                height: 100,
+                child: ErrorWidget.withDetails(
+                  message: 'Short box: no top padding.',
+                ),
+              ),
             ],
+          ),
+        ),
+        SizedBox(
+          width: 100,
+          child: ErrorWidget.withDetails(
+            message: 'Narrow box: no left padding.',
           ),
         ),
       ],

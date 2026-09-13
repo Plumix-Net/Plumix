@@ -635,8 +635,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new MouseRegionDemoPage()),
         new(
             SampleRoutes.DebugPainting,
-            "Placeholder + GridPaper",
-            "unbounded fallback sizing + foreground layout grid",
+            "Placeholder + GridPaper + ErrorWidget",
+            "fallback sizing + foreground grid + error paragraph padding",
             () => new DebugPaintingDemoPage()),
         new(
             SampleRoutes.RenderingDebugFlags,
