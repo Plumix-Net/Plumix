@@ -10,6 +10,23 @@ class ScrollbarDemoPage extends StatefulWidget {
 class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
   late final ScrollController _materialController;
   late final ScrollController _rawController;
+  bool _safeArea = false;
+  bool _rtl = false;
+  int _shapeIndex = 0;
+
+  OutlinedBorder? get _thumbShape => switch (_shapeIndex) {
+    1 => const CircleBorder(side: BorderSide(color: Color(0xFF00008B))),
+    2 => const BeveledRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(4)),
+    ),
+    3 => const RoundedRectangleBorder(
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(8),
+        bottomRight: Radius.circular(8),
+      ),
+    ),
+    _ => null,
+  };
 
   @override
   void initState() {
@@ -38,6 +55,26 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
         const Text(
           'Material state theming/fade beside an always-visible raw track; both thumbs are draggable.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        Row(
+          spacing: 4,
+          children: <Widget>[
+            TextButton(
+              onPressed: () => setState(() => _safeArea = !_safeArea),
+              child: Text(_safeArea ? 'Insets: on' : 'Insets: off'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _rtl = !_rtl),
+              child: Text(_rtl ? 'RTL' : 'LTR'),
+            ),
+            TextButton(
+              onPressed: () =>
+                  setState(() => _shapeIndex = (_shapeIndex + 1) % 4),
+              child: Text(
+                ['Ellipse', 'Circle', 'Beveled', 'Corners'][_shapeIndex],
+              ),
+            ),
+          ],
         ),
         Expanded(
           child: Row(
@@ -73,16 +110,29 @@ class _ScrollbarDemoPageState extends State<ScrollbarDemoPage> {
               Expanded(
                 child: _buildPane(
                   'Raw + track',
-                  RawScrollbar(
-                    controller: _rawController,
-                    thumbVisibility: true,
-                    trackVisibility: true,
-                    thickness: 8,
-                    radius: const Radius.circular(4),
-                    thumbColor: const Color(0xB3005E7A),
-                    trackColor: const Color(0x14005E7A),
-                    trackBorderColor: const Color(0x33005E7A),
-                    child: _buildList(_rawController, 'raw'),
+                  Directionality(
+                    textDirection: _rtl ? TextDirection.rtl : TextDirection.ltr,
+                    child: MediaQuery(
+                      data: MediaQuery.of(context).copyWith(
+                        padding: _safeArea
+                            ? const EdgeInsets.fromLTRB(12, 24, 20, 40)
+                            : EdgeInsets.zero,
+                      ),
+                      child: RawScrollbar(
+                        controller: _rawController,
+                        thumbVisibility: true,
+                        trackVisibility: true,
+                        thickness: 8,
+                        radius: _thumbShape == null
+                            ? const Radius.elliptical(4, 8)
+                            : null,
+                        shape: _thumbShape,
+                        thumbColor: const Color(0xB3005E7A),
+                        trackColor: const Color(0x14005E7A),
+                        trackBorderColor: const Color(0x33005E7A),
+                        child: _buildList(_rawController, 'raw'),
+                      ),
+                    ),
                   ),
                 ),
               ),
