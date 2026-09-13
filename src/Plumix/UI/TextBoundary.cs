@@ -233,22 +233,6 @@ public sealed class LineBoundary : TextBoundary
     }
 }
 
-/// A [TextBoundary] subclass that uses words as logical boundaries.
-public sealed class WordBoundary : TextBoundary
-{
-    private readonly ITextLayoutMetrics _textLayout;
-
-    public WordBoundary(ITextLayoutMetrics textLayout)
-    {
-        _textLayout = textLayout ?? throw new ArgumentNullException(nameof(textLayout));
-    }
-
-    public override TextRange GetTextBoundaryAt(int position)
-    {
-        return _textLayout.GetWordBoundary(new TextPosition(Math.Max(position, 0)));
-    }
-}
-
 /// A text boundary that uses paragraphs as logical boundaries.
 ///
 /// A paragraph is defined as the range between line terminators. If no

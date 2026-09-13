@@ -1,5 +1,6 @@
 using System.Text;
 using Plumix.Gestures;
+using Plumix.UI;
 using Plumix.Widgets;
 using Plumix.Foundation;
 
@@ -222,6 +223,15 @@ public abstract class InlineSpan : DiagnosticableTree, IEquatable<InlineSpan>
     /// When `visitor` returns true, the walk will continue. When `visitor` returns
     /// false, then the walk will end.
     public abstract bool VisitChildren(InlineSpanVisitor visitor);
+
+    /// Applies the [Style] to the `builder` and adds this span's content to it.
+    ///
+    /// `textScaler` scales the font sizes of the pushed styles (null means no scaling), and
+    /// `dimensions` carries one [PlaceholderDimensions] per [PlaceholderSpan] in the tree, in order.
+    public abstract void Build(
+        ParagraphBuilder builder,
+        TextScaler? textScaler = null,
+        IReadOnlyList<PlaceholderDimensions>? dimensions = null);
 
     /// Calls `visitor` for each immediate child of this [InlineSpan].
     ///

@@ -140,6 +140,87 @@ public sealed record TextStyle(
         return a is not null && b is not null && a.SequenceEqual(b, StringComparer.Ordinal);
     }
 
+    /// The style information for text runs, encoded for the paragraph engine.
+    ///
+    /// Only the font size is scaled by `textScaler`; letter spacing, word spacing and height are not.
+    public ParagraphTextStyle GetTextStyle(TextScaler? textScaler = null)
+    {
+        TextScaler scaler = textScaler ?? Painting.TextScaler.NoScaling;
+        return new ParagraphTextStyle(
+            Color: Color,
+            Decoration: Decoration,
+            DecorationColor: DecorationColor,
+            DecorationStyle: DecorationStyle,
+            FontWeight: FontWeight,
+            FontStyle: FontStyle,
+            TextBaseline: TextBaseline,
+            FontFamily: FontFamily,
+            FontFamilyFallback: FontFamilyFallback,
+            FontSize: FontSize is { } size ? scaler.Scale(size) : null,
+            LetterSpacing: LetterSpacing,
+            WordSpacing: WordSpacing,
+            Height: Height,
+            LeadingDistribution: LeadingDistribution);
+    }
+
+    /// The style information for paragraphs, encoded for the paragraph engine.
+    ///
+    /// The `textAlign`, `textDirection`, `ellipsis`, `maxLines`, `locale` and `strutStyle` values come
+    /// only from the arguments; font family, size, weight, style and height fall back to this style.
+    /// The font size defaults to 14 before `textScaler` is applied. An explicit `textHeightBehavior`
+    /// wins over this style's leading distribution.
+    public ParagraphStyle GetParagraphStyle(
+        TextAlign? textAlign = null,
+        TextDirection? textDirection = null,
+        TextScaler? textScaler = null,
+        string? ellipsis = null,
+        int? maxLines = null,
+        TextHeightBehavior? textHeightBehavior = null,
+        string? locale = null,
+        FontFamily? fontFamily = null,
+        double? fontSize = null,
+        FontWeight? fontWeight = null,
+        FontStyle? fontStyle = null,
+        double? height = null,
+        StrutStyle? strutStyle = null)
+    {
+        if (maxLines is <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxLines), "maxLines == null || maxLines > 0");
+        }
+
+        TextScaler scaler = textScaler ?? Painting.TextScaler.NoScaling;
+        TextHeightBehavior? effectiveTextHeightBehavior = textHeightBehavior
+                                                          ?? (LeadingDistribution is { } distribution
+                                                              ? new TextHeightBehavior(
+                                                                  LeadingDistribution: distribution)
+                                                              : null);
+        return new ParagraphStyle(
+            TextAlign: textAlign,
+            TextDirection: textDirection,
+            FontWeight: fontWeight ?? FontWeight,
+            FontStyle: fontStyle ?? FontStyle,
+            FontFamily: fontFamily ?? FontFamily,
+            FontSize: scaler.Scale(fontSize ?? FontSize ?? TextDefaults.DefaultFontSize),
+            Height: height ?? Height,
+            TextHeightBehavior: effectiveTextHeightBehavior,
+            StrutStyle: strutStyle is null
+                ? null
+                : new ParagraphStrutStyle(
+                    FontFamily: strutStyle.FontFamily,
+                    FontFamilyFallback: strutStyle.FontFamilyFallback,
+                    FontSize: strutStyle.FontSize is { } strutFontSize ? scaler.Scale(strutFontSize) : null,
+                    Height: strutStyle.Height,
+                    Leading: strutStyle.Leading,
+                    LeadingDistribution: strutStyle.LeadingDistribution,
+                    FontWeight: strutStyle.FontWeight,
+                    FontStyle: strutStyle.FontStyle,
+                    ForceStrutHeight: strutStyle.ForceStrutHeight),
+            MaxLines: maxLines,
+            Ellipsis: ellipsis,
+            Locale: locale);
+    }
+
     public static TextStyle Lerp(TextStyle a, TextStyle b, double t)
     {
         ArgumentNullException.ThrowIfNull(a);
@@ -239,15 +320,6 @@ public sealed record TextStyle(
         FontWeight: Avalonia.Media.FontWeight.Normal,
         FontStyle: Avalonia.Media.FontStyle.Normal);
 }
-
-/// <summary>Defines a minimum line height for editable and paragraph text.</summary>
-public sealed record StrutStyle(
-    FontFamily? FontFamily = null,
-    double? FontSize = null,
-    double? Height = null,
-    FontWeight? FontWeight = null,
-    FontStyle? FontStyle = null,
-    bool ForceStrutHeight = false);
 
 public sealed class DefaultTextStyle : InheritedTheme
 {

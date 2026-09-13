@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `TextPainter` is a strict port; `RenderParagraph` lays out and paints through it (text_painter.dart).
+- Breaking: text lays out through a dart:ui-shaped `Paragraph` over Avalonia or a headless engine (paragraph.dart).
+- Breaking: headless text uses Flutter's `FlutterTest` font metrics instead of the 0.6 em estimate.
+- `StrutStyle` is a strict port, and `Text`/`RichText`/`RenderParagraph` take a `strutStyle` (strut_style.dart).
+- Breaking: `TextOverflow` gains `Visible` in Dart's order; `TextHeightBehavior` gains `LeadingDistribution`.
+- Breaking: `LineMetrics`/`TextBox` take Dart's shape; `WordBoundary` moves to `Plumix.Painting` (text_painter.dart).
+- `InlineSpan.Build` and `TextStyle.GetTextStyle`/`GetParagraphStyle` land (inline_span.dart, text_style.dart).
+- Breaking: `TextOverflow.Fade` also fades vertically; `Canvas.DrawTextLayoutWithHorizontalFade` is gone.
+- Breaking: `RenderBox.HitTest` treats the right and bottom edges as outside, like `Size.contains` (box.dart).
 - Key records seal `ToString`, so a subclass of `ObjectKey`/`GlobalObjectKey`/`LabeledGlobalKey` prints like Dart's.
 - `Flex` and `Container` diagnostics omit null properties, matching Dart's `defaultValue: null` (basic.dart).
 - `LayerLink` may move between leader layers within a frame and checks the leftovers post-frame (layer.dart).

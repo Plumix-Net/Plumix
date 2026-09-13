@@ -553,7 +553,8 @@ public sealed class MaterialButtonsTests
             int longPressCount = 0;
             using var harness = new WidgetRenderHarness(
                 new Theme(
-                    data: ThemeData.Light,
+                    // Flutter's semantics tests run these buttons on a Material 2 theme.
+                    data: ThemeData.Light with { UseMaterial3 = false },
                     child: new Directionality(
                         TextDirection.Ltr,
                         new Align(
@@ -1437,7 +1438,7 @@ public sealed class MaterialButtonsTests
                         width: 120,
                         child: new TextButton(
                             onPressed: () => { },
-                            child: new Text("Tap target"))))));
+                            child: new Text("Tap"))))));
 
         harness.Pump(new Size(220, 120));
 
@@ -1464,7 +1465,7 @@ public sealed class MaterialButtonsTests
                     width: 120,
                     child: new TextButton(
                         onPressed: () => { },
-                        child: new Text("Tap target")))));
+                        child: new Text("Tap")))));
 
         harness.Pump(new Size(220, 120));
 
@@ -1504,7 +1505,7 @@ public sealed class MaterialButtonsTests
                            width: 120,
                            child: new TextButton(
                                onPressed: () => { },
-                               child: new Text("Tap target"))))))
+                               child: new Text("Tap"))))))
         {
             paddedHarness.Pump(new Size(220, 120));
             var paddedHitResult = new BoxHitTestResult();
@@ -1519,7 +1520,7 @@ public sealed class MaterialButtonsTests
                     child: new TextButton(
                         onPressed: () => { },
                         style: TextButton.StyleFrom(tapTargetSize: MaterialTapTargetSize.ShrinkWrap),
-                        child: new Text("Tap target")))));
+                        child: new Text("Tap")))));
 
         overrideHarness.Pump(new Size(220, 120));
 

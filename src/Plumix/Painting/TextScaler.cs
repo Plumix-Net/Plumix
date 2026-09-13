@@ -90,4 +90,8 @@ public static class TextDefaults
     ///
     /// This should be kept in sync with the default values of the engine.
     public const double DefaultFontSize = 14.0;
+
+    /// Dart's `kTextHeightNone`: a text height multiplier that resets an inherited height to the
+    /// font-defined line height.
+    public const double TextHeightNone = 0.0;
 }

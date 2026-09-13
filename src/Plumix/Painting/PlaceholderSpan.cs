@@ -84,9 +84,11 @@ public sealed record PlaceholderDimensions
 
     public override string ToString()
     {
-        return Size.Equals(default(Size)) && Alignment == PlaceholderAlignment.Bottom
-            ? "PlaceholderDimensions.empty"
-            : $"PlaceholderDimensions({Size}, {Baseline})";
+        string alignment = $"PlaceholderAlignment.{char.ToLowerInvariant(Alignment.ToString()[0])}"
+                           + Alignment.ToString()[1..];
+        return Alignment == PlaceholderAlignment.Baseline
+            ? $"PlaceholderDimensions({Size}, {alignment}({BaselineOffset} from top))"
+            : $"PlaceholderDimensions({Size}, {alignment})";
     }
 }
 

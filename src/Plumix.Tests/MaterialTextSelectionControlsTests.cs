@@ -170,7 +170,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
         var @delegate = new FakeSelectionDelegate(new TextEditingValue("hello", new TextSelection(1, 3)));
 
         using var harness = BuildToolbarHarness(@delegate, new ClipboardStatusNotifier(ClipboardStatus.Pasteable));
-        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(400, 300));
+        // Flutter's 800-wide test surface fits all four legacy toolbar items without an overflow menu.
+        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(800, 600));
 
         var taps = new List<SemanticsNode>();
         CollectSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap), taps);

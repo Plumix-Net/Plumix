@@ -69,6 +69,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Modal barriers are owned by `ModalRoute` in `Widgets/Navigation.cs` (`BuildModalBarrier` plus the barrier/label/curve members) and rendered by `Widgets/ModalBarrier.cs`; routes must not compose their own barrier in `BuildPage`. Coverage lives in `ModalRouteBarrierTests.cs` and `ModalBarrierTests.cs`.
 - Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
 - Material text inputs enter through `TextField.cs` + `TextFormField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; form lifecycle lives in core `Widgets/Form.cs`, editing/IME behavior stays in `Widgets/TextInput.cs`, and focused coverage is split across `FormTests.cs` and `MaterialTextFieldTests.cs`.
+- Text layout enters through `Painting/TextPainter.cs`, which builds a dart:ui-shaped `UI/Paragraph.cs` with
+  `UI/ParagraphBuilder.cs`; `UI/AvaloniaParagraph.cs` lays it out when a font manager exists and
+  `UI/HeadlessParagraph.cs` (Flutter's FlutterTest metrics) everywhere else. `RenderParagraph.cs` delegates to the
+  painter. Coverage: `TextPainterTests.cs`, `RenderParagraphTests.cs`, `ParagraphEngineTests.cs`.
 - Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;
   core default inheritance lives in `Widgets/DefaultSelectionStyle.cs` and `Widgets/InheritedTheme.cs`;
   shared registration, keyboard/copy flow, and multi-paragraph coordination live in core `Widgets/Selection.cs`,

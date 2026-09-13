@@ -319,40 +319,6 @@ public sealed partial class Canvas
         AddDrawCommand(context => layout.Draw(context, point));
     }
 
-    /// <summary>Plumix-only: draws a paragraph under a horizontal fade mask (toolbar/app-bar fades).</summary>
-    public void DrawTextLayoutWithHorizontalFade(
-        TextLayout layout,
-        Point point,
-        Rect bounds,
-        bool fadeTowardRight)
-    {
-        ArgumentNullException.ThrowIfNull(layout);
-        AddDrawCommand(context =>
-        {
-            var mask = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
-                GradientStops = fadeTowardRight
-                    ? new GradientStops
-                    {
-                        new GradientStop(Colors.White, 0),
-                        new GradientStop(Colors.White, 0.8),
-                        new GradientStop(Colors.Transparent, 1),
-                    }
-                    : new GradientStops
-                    {
-                        new GradientStop(Colors.Transparent, 0),
-                        new GradientStop(Colors.White, 0.2),
-                        new GradientStop(Colors.White, 1),
-                    },
-            };
-            using var clip = context.PushClip(bounds);
-            using var opacityMask = context.PushOpacityMask(mask, bounds);
-            layout.Draw(context, point);
-        });
-    }
-
     // Dart parity source: dart:ui Canvas.drawImageRect.
     public void DrawImage(
         IImage image,

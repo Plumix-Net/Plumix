@@ -49,6 +49,7 @@ public sealed class RichTextDemoPageState : State
                 new Text("Tapped the link span " + _taps + " times", fontSize: 14, color: Colors.DimGray),
                 BuildInlineWidgetParagraph(),
                 BuildAlignmentRow(),
+                BuildOverflowAndStrut(),
             ]);
     }
 
@@ -110,6 +111,34 @@ public sealed class RichTextDemoPageState : State
                         BuildBadge(PlaceholderAlignment.Bottom, "#FF457B9D"),
                     ]),
                 style: new TextStyle(FontSize: 24, Color: Color.Parse("#FF1D3557"))));
+    }
+
+    private static Widget BuildOverflowAndStrut()
+    {
+        const string longText = "Overflowing text can fade out, end with an ellipsis, or be clipped at the box edge.";
+        Color textColor = Color.Parse("#FF1D3557");
+        return new Container(
+            color: Color.Parse("#FFEAF4EA"),
+            padding: new Thickness(12),
+            child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                spacing: 8,
+                children:
+                [
+                    new Text(
+                        longText,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.Fade,
+                        fontSize: 16,
+                        color: textColor),
+                    new Text(longText, maxLines: 1, overflow: TextOverflow.Ellipsis, fontSize: 16, color: textColor),
+                    new Text(
+                        "A forced strut keeps\nboth lines 32 px apart.",
+                        fontSize: 16,
+                        color: textColor,
+                        strutStyle: new StrutStyle(FontSize: 16, Height: 2, ForceStrutHeight: true)),
+                ]));
     }
 
     private static InlineSpan BuildBadge(PlaceholderAlignment alignment, string color)

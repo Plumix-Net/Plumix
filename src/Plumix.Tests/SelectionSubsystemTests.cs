@@ -170,15 +170,18 @@ public sealed class SelectionSubsystemTests
     public void RenderParagraph_SplitsFragmentsAtPlaceholderBoundaries()
     {
         var registrar = new RecordingRegistrar();
-        _ = new RenderParagraph(new TextSpan(children:
-        [
-            new TextSpan("before"),
-            new WidgetSpan(new SizedBox(width: 10, height: 10)),
-            new TextSpan("after"),
-        ]))
+        var paragraph = new RenderParagraph(
+            new TextSpan(children:
+            [
+                new TextSpan("before"),
+                new WidgetSpan(new SizedBox(width: 10, height: 10)),
+                new TextSpan("after"),
+            ]),
+            [new RenderParagraph(new TextSpan("b"))])
         {
             Registrar = registrar,
         };
+        LayOut(paragraph);
 
         // The placeholder itself belongs to no fragment; the runs around it do.
         Assert.Equal(2, registrar.Selectables.Count);
@@ -195,10 +198,11 @@ public sealed class SelectionSubsystemTests
     public void SelectableFragment_SelectAllAndClearDriveGeometryAndContent()
     {
         var registrar = new RecordingRegistrar();
-        _ = new RenderParagraph(new TextSpan("hello"))
+        var paragraph = new RenderParagraph(new TextSpan("hello"))
         {
             Registrar = registrar,
         };
+        LayOut(paragraph);
         ISelectable selectable = registrar.Selectables.Single();
 
         Assert.Equal(SelectionStatus.None, selectable.Value.Status);
@@ -236,6 +240,7 @@ public sealed class SelectionSubsystemTests
         {
             Registrar = registrar,
         };
+        LayOut(paragraph);
         ISelectable selectable = registrar.Selectables.Single();
         SelectRange(selectable, 4, 5);
 
@@ -254,6 +259,7 @@ public sealed class SelectionSubsystemTests
         {
             Registrar = registrar,
         };
+        LayOut(paragraph);
         ISelectable selectable = registrar.Selectables.Single();
 
         selectable.DispatchSelectionEvent(
@@ -272,10 +278,11 @@ public sealed class SelectionSubsystemTests
     public void SelectableFragment_ReportsHandleTypesAndFlipsThemWhenReversed()
     {
         var registrar = new RecordingRegistrar();
-        _ = new RenderParagraph(new TextSpan("hello"))
+        var paragraph = new RenderParagraph(new TextSpan("hello"))
         {
             Registrar = registrar,
         };
+        LayOut(paragraph);
         ISelectable selectable = registrar.Selectables.Single();
 
         SelectRange(selectable, 1, 4);
@@ -379,6 +386,16 @@ public sealed class SelectionSubsystemTests
         Assert.Null(containerDelegate.GetSelectedContent());
         Assert.Null(containerDelegate.GetSelection());
         Assert.Equal(SelectionStatus.None, containerDelegate.Value.Status);
+    }
+
+    // Dart's rendering tests lay a paragraph out before selecting in it: every text metric the
+    // fragments read needs the text painter's layout.
+    private static void LayOut(RenderParagraph paragraph)
+    {
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = paragraph };
+        var owner = new PipelineOwner(root);
+        owner.Attach(root);
+        paragraph.Layout(new BoxConstraints(MaxWidth: 800), parentUsesSize: true);
     }
 
     private static void SelectRange(ISelectable selectable, int baseOffset, int extentOffset)

@@ -43,7 +43,8 @@ public sealed class Text : StatelessWidget
         string? semanticsLabel = null,
         double? textScaleFactor = null,
         TextScaler? textScaler = null,
-        string? locale = null) : base(key)
+        string? locale = null,
+        StrutStyle? strutStyle = null) : base(key)
     {
         ArgumentNullException.ThrowIfNull(data);
         if (maxLines is <= 0)
@@ -80,6 +81,7 @@ public sealed class Text : StatelessWidget
         TextScaleFactor = textScaleFactor;
         TextScaler = textScaler;
         Locale = locale;
+        StrutStyle = strutStyle;
     }
 
     private Text(
@@ -96,6 +98,7 @@ public sealed class Text : StatelessWidget
         double? textScaleFactor,
         TextScaler? textScaler,
         string? locale,
+        StrutStyle? strutStyle,
         Key? key) : base(key)
     {
         ArgumentNullException.ThrowIfNull(textSpan);
@@ -126,6 +129,7 @@ public sealed class Text : StatelessWidget
         TextScaleFactor = textScaleFactor;
         TextScaler = textScaler;
         Locale = locale;
+        StrutStyle = strutStyle;
     }
 
     /// Creates a text widget with an [InlineSpan].
@@ -148,6 +152,7 @@ public sealed class Text : StatelessWidget
         double? textScaleFactor = null,
         TextScaler? textScaler = null,
         string? locale = null,
+        StrutStyle? strutStyle = null,
         Key? key = null)
     {
         return new Text(
@@ -164,6 +169,7 @@ public sealed class Text : StatelessWidget
             textScaleFactor,
             textScaler,
             locale,
+            strutStyle,
             key);
     }
 
@@ -223,6 +229,9 @@ public sealed class Text : StatelessWidget
     /// differently, depending on the locale.
     public string? Locale { get; }
 
+    /// The strut style to use. Strut style defines the strut, which sets minimum vertical layout metrics.
+    public StrutStyle? StrutStyle { get; }
+
     private UI.TextDecoration? ResolveDecoration()
     {
         if (TextDecorations is not { Count: > 0 } decorations)
@@ -270,6 +279,7 @@ public sealed class Text : StatelessWidget
             textScaler: effectiveTextScaler,
             maxLines: ambient?.MaxLines ?? MaxLines,
             locale: Locale,
+            strutStyle: StrutStyle,
             textWidthBasis: TextWidthBasis ?? ambient?.TextWidthBasis ?? UI.TextWidthBasis.Parent,
             textHeightBehavior: TextHeightBehavior ?? ambient?.TextHeightBehavior,
             selectionColor: registrar is null

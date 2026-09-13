@@ -41,6 +41,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         double textScaleFactor = 1.0,
         int? maxLines = null,
         string? locale = null,
+        StrutStyle? strutStyle = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
         ISelectionRegistrar? selectionRegistrar = null,
@@ -69,6 +70,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         TextScaler = ResolveTextScaler(textScaler, textScaleFactor);
         MaxLines = maxLines;
         Locale = locale;
+        StrutStyle = strutStyle;
         TextWidthBasis = textWidthBasis;
         TextHeightBehavior = textHeightBehavior;
         SelectionRegistrar = selectionRegistrar;
@@ -86,6 +88,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         double textScaleFactor = 1.0,
         int? maxLines = null,
         string? locale = null,
+        StrutStyle? strutStyle = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
         Avalonia.Media.Color? selectionColor = null,
@@ -100,6 +103,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
             textScaleFactor,
             maxLines,
             locale,
+            strutStyle,
             textWidthBasis,
             textHeightBehavior,
             selectionConfiguration,
@@ -139,6 +143,9 @@ public sealed class RichText : MultiChildRenderObjectWidget
     /// differently, depending on the locale.
     public string? Locale { get; }
 
+    /// The strut style to use. Strut style defines the strut, which sets minimum vertical layout metrics.
+    public StrutStyle? StrutStyle { get; }
+
     /// Defines how to measure the width of the rendered text.
     public TextWidthBasis TextWidthBasis { get; }
 
@@ -162,6 +169,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
             TextScaler = TextScaler,
             MaxLines = MaxLines,
             Locale = Locale,
+            StrutStyle = StrutStyle,
             TextWidthBasis = TextWidthBasis,
             TextHeightBehavior = TextHeightBehavior,
             SelectionColor = SelectionColor,
@@ -183,6 +191,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         paragraph.TextScaler = TextScaler;
         paragraph.MaxLines = MaxLines;
         paragraph.Locale = Locale;
+        paragraph.StrutStyle = StrutStyle;
         paragraph.TextWidthBasis = TextWidthBasis;
         paragraph.TextHeightBehavior = TextHeightBehavior;
         paragraph.SelectionColor = SelectionColor;

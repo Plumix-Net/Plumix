@@ -91,6 +91,45 @@ public sealed class WidgetSpan : PlaceholderSpan
         return widgets;
     }
 
+    /// Adds a placeholder box to the paragraph builder sized by the next entry of `dimensions`.
+    ///
+    /// The widget is laid out and painted by the paragraph, which reports its dimensions first.
+    public override void Build(
+        ParagraphBuilder builder,
+        TextScaler? textScaler = null,
+        IReadOnlyList<PlaceholderDimensions>? dimensions = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        DebugAssertIsValid();
+        if (dimensions is null)
+        {
+            throw new ArgumentNullException(nameof(dimensions), "dimensions != null");
+        }
+
+        bool hasStyle = Style is not null;
+        if (hasStyle)
+        {
+            builder.PushStyle(Style!.GetTextStyle(textScaler ?? TextScaler.NoScaling));
+        }
+
+        if (builder.PlaceholderCount >= dimensions.Count)
+        {
+            throw new InvalidOperationException("builder.placeholderCount < dimensions.length");
+        }
+
+        PlaceholderDimensions currentDimensions = dimensions[builder.PlaceholderCount];
+        builder.AddPlaceholder(
+            currentDimensions.Size.Width,
+            currentDimensions.Size.Height,
+            Alignment,
+            baselineOffset: currentDimensions.BaselineOffset,
+            baseline: currentDimensions.Baseline);
+        if (hasStyle)
+        {
+            builder.Pop();
+        }
+    }
+
     /// Calls `visitor` on this [WidgetSpan]. There are no children spans to walk.
     public override bool VisitChildren(InlineSpanVisitor visitor) => visitor(this);
 

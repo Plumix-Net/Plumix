@@ -285,25 +285,26 @@ public sealed class HitTestResultTests
             new PointerDownEvent(
                 pointer: 7,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(40, 60),
+                position: new Point(40, 50),
                 buttons: PointerButtons.Primary,
                 timestampUtc: DateTime.UtcNow));
 
-        // (40, 60) / 2 = (20, 30); minus the (10, 20) padding = (10, 10).
-        Assert.Equal(new Point(10, 10), localPosition);
+        // The root is sized to its 50x60 child and its bottom edge is outside it, so the pointer stays
+        // inside. (40, 50) / 2 = (20, 25); minus the (10, 20) padding = (10, 5).
+        Assert.Equal(new Point(10, 5), localPosition);
 
         binding.HandlePointerEvent(
             pipeline.Root,
             new PointerMoveEvent(
                 pointer: 7,
                 kind: PointerDeviceKind.Touch,
-                position: new Point(60, 60),
+                position: new Point(60, 50),
                 buttons: PointerButtons.Primary,
                 down: true,
                 timestampUtc: DateTime.UtcNow));
 
         // The 20 global pixels of travel are 10 local pixels under the 2x scale.
-        Assert.Equal(new Point(20, 10), localPosition);
+        Assert.Equal(new Point(20, 5), localPosition);
         Assert.Equal(new Point(10, 0), localDelta);
 
         binding.ResetForTests();

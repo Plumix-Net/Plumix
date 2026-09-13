@@ -306,11 +306,11 @@ public sealed class MaterialSegmentedButtonsTests
                 onSelectionChanged: value => update = value)));
         exclusive.Pump(new Size(360, 120));
 
-        Tap(exclusive.RenderView, new Point(90, 24), 202);
+        Tap(exclusive.RenderView, CenterOf(exclusive.RenderView, "Two"), 202);
         Assert.NotNull(update);
         Assert.True(update!.SetEquals([1]));
         update = null;
-        Tap(exclusive.RenderView, new Point(24, 24), 203);
+        Tap(exclusive.RenderView, CenterOf(exclusive.RenderView, "One"), 203);
         Assert.Null(update);
 
         using var multi = new WidgetRenderHarness(Wrap(
@@ -321,7 +321,7 @@ public sealed class MaterialSegmentedButtonsTests
                 multiSelectionEnabled: true,
                 onSelectionChanged: value => update = value)));
         multi.Pump(new Size(360, 120));
-        Tap(multi.RenderView, new Point(90, 24), 204);
+        Tap(multi.RenderView, CenterOf(multi.RenderView, "Two"), 204);
         Assert.NotNull(update);
         Assert.True(update!.SetEquals([0, 1]));
 
@@ -333,7 +333,7 @@ public sealed class MaterialSegmentedButtonsTests
                 emptySelectionAllowed: true,
                 onSelectionChanged: value => update = value)));
         empty.Pump(new Size(360, 120));
-        Tap(empty.RenderView, new Point(24, 24), 205);
+        Tap(empty.RenderView, CenterOf(empty.RenderView, "One"), 205);
         Assert.NotNull(update);
         Assert.Empty(update!);
     }
@@ -714,6 +714,12 @@ public sealed class MaterialSegmentedButtonsTests
         {
             binding.ResetForTests();
         }
+    }
+
+    private static Point CenterOf(RenderView view, string text)
+    {
+        RenderParagraph label = FindParagraph(view, text)!;
+        return label.LocalToGlobal(new Point(label.Size.Width / 2, label.Size.Height / 2));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

@@ -103,6 +103,8 @@ public sealed partial class RenderParagraph
     {
         RemoveSelectionRegistrarSubscription();
         DisposeSelectableFragments();
+        _textPainter.Dispose();
+        _textIntrinsicsCache?.Dispose();
         base.Dispose();
     }
 
@@ -162,7 +164,7 @@ public sealed partial class RenderParagraph
 
     private List<SelectableFragment> GetSelectableFragments()
     {
-        string plainText = _text.ToPlainText(includeSemanticsLabels: false);
+        string plainText = Text.ToPlainText(includeSemanticsLabels: false);
         var result = new List<SelectableFragment>();
         int start = 0;
         while (start < plainText.Length)
@@ -1122,7 +1124,10 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
                 result = SelectionResult.End;
                 break;
             case TextGranularity.Word:
-                newPosition = MoveBeyondTextBoundaryAtDirection(targetedEdge, forward, _paragraph.MoveByWordBoundary);
+                newPosition = MoveBeyondTextBoundaryAtDirection(
+                    targetedEdge,
+                    forward,
+                    _paragraph.TextPainter.WordBoundaries.MoveByWordBoundary);
                 result = SelectionResult.End;
                 break;
             case TextGranularity.Paragraph:
@@ -1240,7 +1245,7 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
         double horizontalBaselineInParagraphCoordinates,
         bool below)
     {
-        IReadOnlyList<LineMetrics> lines = _paragraph.ComputeLineMetrics();
+        IReadOnlyList<LineMetrics> lines = _paragraph.TextPainter.ComputeLineMetrics();
         if (lines.Count == 0)
         {
             return (position, SelectionResult.End);
@@ -1448,7 +1453,7 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
 
     public TextSelection GetLineAtOffset(TextPosition position)
     {
-        TextRange line = _paragraph.GetLineBoundary(position);
+        TextRange line = _paragraph.GetLineAtOffset(position);
         return new TextSelection(
             Math.Clamp(line.Start, _range.Start, _range.End),
             Math.Clamp(line.End, _range.Start, _range.End));

@@ -166,6 +166,56 @@ public class TextSpan : InlineSpan, IHitTestTarget, IMouseTrackerAnnotation
         return true;
     }
 
+    /// Pushes this span's style, adds its text, builds its children, then pops the style.
+    ///
+    /// Text that is not well-formed UTF-16 is reported silently and replaced by U+FFFD.
+    public override void Build(
+        ParagraphBuilder builder,
+        TextScaler? textScaler = null,
+        IReadOnlyList<PlaceholderDimensions>? dimensions = null)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        DebugAssertIsValid();
+        TextScaler scaler = textScaler ?? TextScaler.NoScaling;
+        bool hasStyle = Style is not null;
+        if (hasStyle)
+        {
+            builder.PushStyle(Style!.GetTextStyle(scaler));
+        }
+
+        if (Text is not null)
+        {
+            try
+            {
+                builder.AddText(Text);
+            }
+            catch (ArgumentException exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception,
+                    stack: exception.StackTrace,
+                    library: "painting library",
+                    context: new ErrorDescription("while building a TextSpan"),
+                    silent: true));
+                builder.AddText("\uFFFD");
+            }
+        }
+
+        IReadOnlyList<InlineSpan>? children = Children;
+        if (children is not null)
+        {
+            foreach (InlineSpan child in children)
+            {
+                child.Build(builder, scaler, dimensions);
+            }
+        }
+
+        if (hasStyle)
+        {
+            builder.Pop();
+        }
+    }
+
     /// Returns the text span that contains the given position in the text.
     protected internal override InlineSpan? GetSpanForPositionVisitor(TextPosition position, Accumulator offset)
     {

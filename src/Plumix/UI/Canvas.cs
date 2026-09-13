@@ -325,6 +325,32 @@ public sealed partial class Canvas
         _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry)));
     }
 
+    /// <summary>Draws the text in the given <see cref="Paragraph"/> into this canvas at the given offset.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawParagraph</c>. The paragraph's current layout is captured when the call is
+    /// recorded, so a later relayout of the same paragraph does not change the recorded picture.
+    /// </remarks>
+    public void DrawParagraph(Paragraph paragraph, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(paragraph);
+        Action<DrawingContext>? draw = paragraph.CreateDrawAction(offset);
+        AddDrawCommand(draw ?? (static _ => { }));
+    }
+
+    /// <summary>
+    /// Plumix-only: multiplies the alpha of everything drawn until the matching restore by the alpha of
+    /// <paramref name="mask"/> over <paramref name="bounds"/>.
+    /// </summary>
+    /// <remarks>
+    /// Stands in for Dart's <c>saveLayer</c> + <c>drawRect(BlendMode.modulate, shader)</c> fade, which
+    /// needs an isolated layer Avalonia's drawing context does not expose.
+    /// </remarks>
+    internal void PushOpacityMask(IBrush mask, Rect bounds)
+    {
+        ArgumentNullException.ThrowIfNull(mask);
+        _commands.Add(CanvasCommand.ForPush(context => context.PushOpacityMask(mask, bounds)));
+    }
+
     /// <summary>Plumix-only: records a draw call that renders itself onto the backend context.</summary>
     internal void AddDrawCommand(Action<DrawingContext> draw)
     {

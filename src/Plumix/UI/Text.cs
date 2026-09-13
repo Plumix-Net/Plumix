@@ -1,4 +1,4 @@
-﻿namespace Plumix.UI;
+namespace Plumix.UI;
 
 /// A horizontal line used for aligning text.
 public enum TextBaseline
@@ -57,12 +57,20 @@ public enum TextAlign
     End
 }
 
-/// Visual overflow handling for laid out text.
+/// How overflowing text should be handled.
 public enum TextOverflow
 {
+    /// Clip the overflowing text to fix its container.
     Clip,
+
+    /// Fade the overflowing text to transparent.
+    Fade,
+
+    /// Use an ellipsis to indicate that the text has overflowed.
     Ellipsis,
-    Fade
+
+    /// Render overflowing text outside of its container.
+    Visible,
 }
 
 /// The horizontal extent used to compute the width of a paragraph.
@@ -72,9 +80,29 @@ public enum TextWidthBasis
     LongestLine,
 }
 
-/// Controls whether the first ascent and last descent include TextStyle height adjustments.
+/// Defines how to apply `TextStyle.height` over and under text.
+///
+/// `ApplyHeightToFirstAscent` and `ApplyHeightToLastDescent` only matter when a height multiplier
+/// is set; `LeadingDistribution` is the paragraph-level default for how that extra space is split.
 public readonly record struct TextHeightBehavior(
     bool ApplyHeightToFirstAscent = true,
-    bool ApplyHeightToLastDescent = true);
+    bool ApplyHeightToLastDescent = true,
+    TextLeadingDistribution LeadingDistribution = TextLeadingDistribution.Proportional)
+{
+    /// Creates the default behavior: height applies to the first ascent and the last descent, and
+    /// the leading is distributed proportionally.
+    public TextHeightBehavior()
+        : this(true, true, TextLeadingDistribution.Proportional)
+    {
+    }
+
+    public override string ToString()
+    {
+        string distribution = LeadingDistribution == TextLeadingDistribution.Even ? "even" : "proportional";
+        return $"TextHeightBehavior(applyHeightToFirstAscent: {(ApplyHeightToFirstAscent ? "true" : "false")}, "
+               + $"applyHeightToLastDescent: {(ApplyHeightToLastDescent ? "true" : "false")}, "
+               + $"leadingDistribution: TextLeadingDistribution.{distribution})";
+    }
+}
 
 // Dart parity source (reference): flutter/engine/src/flutter/lib/ui/text.dart (engine parity, approximate)

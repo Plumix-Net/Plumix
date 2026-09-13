@@ -366,7 +366,8 @@ public abstract class RenderBox : RenderObject
             return false;
         }
 
-        if (position.X < 0 || position.Y < 0 || position.X > Size.Width || position.Y > Size.Height)
+        // Dart's `Size.contains`: the right and bottom edges are outside the box.
+        if (position.X < 0 || position.Y < 0 || position.X >= Size.Width || position.Y >= Size.Height)
         {
             return false;
         }

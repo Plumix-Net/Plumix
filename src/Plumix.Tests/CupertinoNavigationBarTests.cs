@@ -117,11 +117,12 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         using var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
             leading: new Text("Something"),
             middle: new Text("Title")))));
-        harness.Pump(new Size(400, 600));
+        // Flutter's test surface is 800 logical pixels wide.
+        harness.Pump(new Size(800, 600));
 
         RenderParagraph title = FindParagraph(harness.RenderView, "Title")!;
         Point center = title.LocalToGlobal(new Point(title.Size.Width / 2, title.Size.Height / 2));
-        Assert.Equal(200.0, center.X, 3);
+        Assert.Equal(400.0, center.X, 3);
     }
 
     [Fact]

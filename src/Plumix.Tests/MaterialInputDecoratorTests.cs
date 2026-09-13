@@ -123,7 +123,8 @@ public sealed class MaterialInputDecoratorTests
         // floatingLabelHeight = textScale * (4 + 0.75 * labelFontSize); the label style is bodyLarge (16).
         const double floatingLabelHeight = 4.0 + (0.75 * 16.0);
         double containerHeight = decorator.ContainerBox!.Size.Height;
-        Assert.Equal(8.0 + floatingLabelHeight + input.Height + 8.0, containerHeight, precision: 6);
+        // A non-dense container is at least kMinInteractiveDimension (48) tall.
+        Assert.Equal(Math.Max(48.0, 8.0 + floatingLabelHeight + input.Height + 8.0), containerHeight, precision: 6);
         Assert.Equal(800.0, decorator.Size.Width, precision: 6);
 
         Rect helper = DecoratorHarness.RectOf(decorator.HelperErrorBox);

@@ -47,6 +47,7 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
         ),
         _buildInlineWidgetParagraph(),
         _buildAlignmentRow(),
+        _buildOverflowAndStrut(),
       ],
     );
   }
@@ -115,6 +116,39 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
           ],
         ),
         style: const TextStyle(fontSize: 24, color: Color(0xFF1D3557)),
+      ),
+    );
+  }
+
+  static Widget _buildOverflowAndStrut() {
+    const longText = 'Overflowing text can fade out, end with an ellipsis, or be clipped at the box edge.';
+    const textStyle = TextStyle(fontSize: 16, color: Color(0xFF1D3557));
+    return Container(
+      color: const Color(0xFFEAF4EA),
+      padding: const EdgeInsets.all(12),
+      child: const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: <Widget>[
+          Text(
+            longText,
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.fade,
+            style: textStyle,
+          ),
+          Text(
+            longText,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: textStyle,
+          ),
+          Text(
+            'A forced strut keeps\nboth lines 32 px apart.',
+            style: textStyle,
+            strutStyle: StrutStyle(fontSize: 16, height: 2, forceStrutHeight: true),
+          ),
+        ],
       ),
     );
   }

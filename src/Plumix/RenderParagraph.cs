@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
@@ -12,34 +11,41 @@ using Plumix.Foundation;
 
 namespace Plumix;
 
+/// A render object that displays a paragraph of text.
 public sealed partial class RenderParagraph : RenderBox,
     IRenderBoxContainerDefaultsMixin<RenderBox, TextParentData>,
     IRenderObjectContainer
 {
+    private const string EllipsisText = "\u2026";
+
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, TextParentData> _container;
-    private InlineSpan _text;
-    private TextScaler _textScaler = TextScaler.NoScaling;
-    private TextAlign _textAlign = TextAlign.Start;
-    private TextDirection _textDirection = TextDirection.Ltr;
+    private readonly TextPainter _textPainter;
+    private TextPainter? _textIntrinsicsCache;
     private bool _softWrap = true;
-    private int? _maxLines;
     private TextOverflow _overflow = TextOverflow.Clip;
-    private TextWidthBasis _textWidthBasis = TextWidthBasis.Parent;
-    private TextHeightBehavior? _textHeightBehavior;
-    private string? _locale;
-    private TextLayout? _layout;
-    private IReadOnlyList<PlaceholderDimensions> _placeholderDimensions = [];
-    private ParagraphSource? _source;
+    private double _devicePixelRatio = 1.0;
+    private bool _needsClipping;
+    private OverflowShader? _overflowShader;
+    private List<PlaceholderDimensions>? _placeholderDimensions;
     private List<InlineSpanSemanticsInformation>? _semanticsInfo;
     private List<InlineSpanSemanticsInformation>? _cachedCombinedSemanticsInfos;
     private Color? _selectionColor;
 
+    /// Creates a paragraph render object.
+    ///
+    /// The [MaxLines] property may be null (and indeed defaults to null), but if it is not null, it
+    /// must be greater than zero.
     public RenderParagraph(InlineSpan text, List<RenderBox>? children = null)
     {
         ArgumentNullException.ThrowIfNull(text);
         text.DebugAssertIsValid();
-        _text = text;
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, TextParentData>(this);
+        _textPainter = new TextPainter(
+            text: text,
+            textAlign: TextAlign.Start,
+            textDirection: TextDirection.Ltr,
+            textScaler: TextScaler.NoScaling,
+            textWidthBasis: TextWidthBasis.Parent);
         if (children is not null)
         {
             AddAll(children);
@@ -51,96 +57,134 @@ public sealed partial class RenderParagraph : RenderBox,
     {
     }
 
+    /// The text painter this paragraph lays out and paints with.
+    internal TextPainter TextPainter => _textPainter;
+
+    // Intrinsics cannot be calculated without a full layout for alignments other than
+    // TextAlign.start, so this second painter keeps intrinsic queries away from `_textPainter`.
+    private TextPainter TextIntrinsics
+    {
+        get
+        {
+            TextPainter painter = _textIntrinsicsCache ??= new TextPainter();
+            painter.Text = _textPainter.Text;
+            painter.TextAlign = _textPainter.TextAlign;
+            painter.TextDirection = _textPainter.TextDirection;
+            painter.TextScaler = _textPainter.TextScaler;
+            painter.MaxLines = _textPainter.MaxLines;
+            painter.Ellipsis = _textPainter.Ellipsis;
+            painter.Locale = _textPainter.Locale;
+            painter.StrutStyle = _textPainter.StrutStyle;
+            painter.TextWidthBasis = _textPainter.TextWidthBasis;
+            painter.TextHeightBehavior = _textPainter.TextHeightBehavior;
+            return painter;
+        }
+    }
+
     /// The number of device pixels for each logical pixel.
     ///
     /// This is used by some renderers (like Flutter's `WebParagraph` on the web) to regenerate the
-    /// text bitmap when the scale changes. Plumix paints text through Avalonia, which rasterises
-    /// per frame at the surface scale, so changing this only records the value.
-    public double DevicePixelRatio { get; set; } = 1.0;
+    /// text bitmap when the scale changes. Plumix paints text through Avalonia, which rasterises per
+    /// frame at the surface scale, so changing this only records the value.
+    public double DevicePixelRatio
+    {
+        get => _devicePixelRatio;
+        set
+        {
+            if (_devicePixelRatio == value)
+            {
+                return;
+            }
+
+            _devicePixelRatio = value;
+        }
+    }
 
     /// The text to display.
     public InlineSpan Text
     {
-        get => _text;
+        get => _textPainter.Text!;
         set
         {
             ArgumentNullException.ThrowIfNull(value);
-            switch (_text.CompareTo(value))
+            switch (_textPainter.Text!.CompareTo(value))
             {
                 case RenderComparison.Identical:
                     return;
                 case RenderComparison.Metadata:
-                    _text = value;
+                    _textPainter.Text = value;
                     _cachedCombinedSemanticsInfos = null;
                     MarkNeedsSemanticsUpdate();
                     break;
                 case RenderComparison.Paint:
-                    _text = value;
+                    _textPainter.Text = value;
                     _cachedCombinedSemanticsInfos = null;
                     MarkNeedsPaint();
                     MarkNeedsSemanticsUpdate();
                     break;
-                default:
-                    _text = value;
+                case RenderComparison.Layout:
+                    _textPainter.Text = value;
+                    _overflowShader = null;
                     _cachedCombinedSemanticsInfos = null;
                     MarkNeedsLayout();
-                    MarkNeedsSemanticsUpdate();
-                    RebuildSelectableFragments();
+                    RemoveSelectionRegistrarSubscription();
+                    DisposeSelectableFragments();
+                    UpdateSelectionRegistrarSubscription();
                     break;
             }
         }
     }
 
     /// The flattened plain-text representation of [Text].
-    public string PlainText => _text.ToPlainText(includeSemanticsLabels: false);
+    public string PlainText => _textPainter.PlainText;
 
-    /// The strategy the text and placeholders are scaled by before layout.
-    public TextScaler TextScaler
-    {
-        get => _textScaler;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            if (Equals(_textScaler, value))
-            {
-                return;
-            }
-
-            _textScaler = value;
-            MarkNeedsLayout();
-        }
-    }
-
+    /// How the text should be aligned horizontally.
     public TextAlign TextAlign
     {
-        get => _textAlign;
+        get => _textPainter.TextAlign;
         set
         {
-            if (_textAlign == value)
+            if (_textPainter.TextAlign == value)
             {
                 return;
             }
 
-            _textAlign = value;
-            MarkNeedsLayout();
+            _textPainter.TextAlign = value;
+            MarkNeedsPaint();
         }
     }
 
+    /// The directionality of the text.
+    ///
+    /// This decides how the [TextAlign.Start], [TextAlign.End], and [TextAlign.Justify] values of
+    /// [TextAlign] are interpreted.
+    ///
+    /// This is also used to disambiguate how to render bidirectional text. For example, if the
+    /// [Text] is an English phrase followed by a Hebrew phrase, in a [TextDirection.Ltr] context the
+    /// English phrase will be on the left and the Hebrew phrase to its right, while in a
+    /// [TextDirection.Rtl] context, the English phrase will be on the right and the Hebrew phrase on
+    /// its left.
     public TextDirection TextDirection
     {
-        get => _textDirection;
+        get => _textPainter.TextDirection!.Value;
         set
         {
-            if (_textDirection == value)
+            if (_textPainter.TextDirection == value)
             {
                 return;
             }
 
-            _textDirection = value;
+            _textPainter.TextDirection = value;
             MarkNeedsLayout();
         }
     }
 
+    /// Whether the text should break at soft line breaks.
+    ///
+    /// If false, the glyphs in the text will be positioned as if there was unlimited horizontal
+    /// space.
+    ///
+    /// If [SoftWrap] is false, [Overflow] and [TextAlign] may have unexpected effects.
     public bool SoftWrap
     {
         get => _softWrap;
@@ -156,26 +200,7 @@ public sealed partial class RenderParagraph : RenderBox,
         }
     }
 
-    public int? MaxLines
-    {
-        get => _maxLines;
-        set
-        {
-            if (value is <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "Max lines must be greater than zero.");
-            }
-
-            if (_maxLines == value)
-            {
-                return;
-            }
-
-            _maxLines = value;
-            MarkNeedsLayout();
-        }
-    }
-
+    /// How visual overflow should be handled.
     public TextOverflow Overflow
     {
         get => _overflow;
@@ -187,58 +212,124 @@ public sealed partial class RenderParagraph : RenderBox,
             }
 
             _overflow = value;
+            _textPainter.Ellipsis = value == TextOverflow.Ellipsis ? EllipsisText : null;
             MarkNeedsLayout();
         }
     }
 
-    public TextWidthBasis TextWidthBasis
+    /// The font scaling strategy to use when laying out and rendering the text.
+    public TextScaler TextScaler
     {
-        get => _textWidthBasis;
+        get => _textPainter.TextScaler;
         set
         {
-            if (_textWidthBasis == value)
+            ArgumentNullException.ThrowIfNull(value);
+            if (Equals(_textPainter.TextScaler, value))
             {
                 return;
             }
 
-            _textWidthBasis = value;
+            _textPainter.TextScaler = value;
+            _overflowShader = null;
             MarkNeedsLayout();
         }
     }
 
-    public TextHeightBehavior? TextHeightBehavior
+    /// An optional maximum number of lines for the text to span, wrapping if necessary. If the text
+    /// exceeds the given number of lines, it will be truncated according to [Overflow] and
+    /// [SoftWrap].
+    public int? MaxLines
     {
-        get => _textHeightBehavior;
+        get => _textPainter.MaxLines;
         set
         {
-            if (_textHeightBehavior == value)
+            if (value is <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Max lines must be greater than zero.");
+            }
+
+            if (_textPainter.MaxLines == value)
             {
                 return;
             }
 
-            _textHeightBehavior = value;
+            _textPainter.MaxLines = value;
+            _overflowShader = null;
             MarkNeedsLayout();
         }
     }
 
-    /// The locale used to select region-specific glyphs.
+    /// Used by this paragraph's internal [TextPainter] to select a locale-specific font.
     public string? Locale
     {
-        get => _locale;
+        get => _textPainter.Locale;
         set
         {
-            if (string.Equals(_locale, value, StringComparison.Ordinal))
+            if (_textPainter.Locale == value)
             {
                 return;
             }
 
-            _locale = value;
+            _textPainter.Locale = value;
+            _overflowShader = null;
             MarkNeedsLayout();
         }
     }
 
-    /// Whether the paragraph's text exceeded [MaxLines] during the last layout.
-    public bool DidExceedMaxLines { get; private set; }
+    /// The strut style to use. Strut style defines the strut, which sets minimum vertical layout
+    /// metrics.
+    public StrutStyle? StrutStyle
+    {
+        get => _textPainter.StrutStyle;
+        set
+        {
+            if (_textPainter.StrutStyle == value)
+            {
+                return;
+            }
+
+            _textPainter.StrutStyle = value;
+            _overflowShader = null;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// Defines how to measure the width of the rendered text.
+    public TextWidthBasis TextWidthBasis
+    {
+        get => _textPainter.TextWidthBasis;
+        set
+        {
+            if (_textPainter.TextWidthBasis == value)
+            {
+                return;
+            }
+
+            _textPainter.TextWidthBasis = value;
+            _overflowShader = null;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// Defines how to apply [TextStyle.Height] over and under text.
+    public TextHeightBehavior? TextHeightBehavior
+    {
+        get => _textPainter.TextHeightBehavior;
+        set
+        {
+            if (_textPainter.TextHeightBehavior == value)
+            {
+                return;
+            }
+
+            _textPainter.TextHeightBehavior = value;
+            _overflowShader = null;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// Whether this paragraph currently has an overflow fade shader. Dart's `debugHasOverflowShader`.
+    internal bool DebugHasOverflowShader => _overflowShader is not null;
 
     public RenderBox? FirstChild => _container.FirstChild;
 
@@ -309,11 +400,12 @@ public sealed partial class RenderParagraph : RenderBox,
     // the InlineSpan tree. These accessors project the root span's style so that
     // callers holding a paragraph can still read and write the resolved style.
 
-    private TextStyle RootStyle => _text.Style ?? TextStyle.Fallback;
+    private TextStyle RootStyle => Text.Style ?? TextStyle.Fallback;
 
     private void UpdateRootStyle(TextStyle style)
     {
-        Text = _text is TextSpan span
+        InlineSpan text = Text;
+        Text = text is TextSpan span
             ? new TextSpan(
                 text: span.Text,
                 children: span.Children,
@@ -326,7 +418,7 @@ public sealed partial class RenderParagraph : RenderBox,
                 semanticsIdentifier: span.SemanticsIdentifier,
                 locale: span.Locale,
                 spellOut: span.SpellOut)
-            : new TextSpan(children: [_text], style: style);
+            : new TextSpan(children: [text], style: style);
     }
 
     public FontFamily FontFamily
@@ -380,134 +472,89 @@ public sealed partial class RenderParagraph : RenderBox,
         set => UpdateRootStyle(RootStyle with { Decoration = value });
     }
 
+    // -- Layout --------------------------------------------------------------------
+
     protected override double ComputeMinIntrinsicWidth(double height)
     {
-        return MeasureForConstraints(
-            new BoxConstraints(MaxHeight: NormalizeIntrinsicExtent(height)),
-            dry: true).Size.Width;
+        List<PlaceholderDimensions> placeholderDimensions = RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            double.PositiveInfinity,
+            (child, _) => new Size(child.GetMinIntrinsicWidth(double.PositiveInfinity), 0.0),
+            ChildLayoutHelper.GetDryBaseline);
+        TextPainter intrinsics = TextIntrinsics;
+        intrinsics.SetPlaceholderDimensions(placeholderDimensions);
+        intrinsics.Layout();
+        return intrinsics.MinIntrinsicWidth;
     }
 
     protected override double ComputeMaxIntrinsicWidth(double height)
     {
-        return MeasureForConstraints(
-            new BoxConstraints(MaxHeight: NormalizeIntrinsicExtent(height)),
-            dry: true).Size.Width;
+        List<PlaceholderDimensions> placeholderDimensions = RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            double.PositiveInfinity,
+            // Height and baseline is irrelevant as all text will be laid out in a single line.
+            (child, _) => new Size(child.GetMaxIntrinsicWidth(double.PositiveInfinity), 0.0),
+            ChildLayoutHelper.GetDryBaseline);
+        TextPainter intrinsics = TextIntrinsics;
+        intrinsics.SetPlaceholderDimensions(placeholderDimensions);
+        intrinsics.Layout();
+        return intrinsics.MaxIntrinsicWidth;
     }
 
-    protected override double ComputeMinIntrinsicHeight(double width)
+    /// An estimate of the height of a line in the text. See [TextPainter.PreferredLineHeight].
+    ///
+    /// This does not require the layout to be updated.
+    public double PreferredLineHeight => _textPainter.PreferredLineHeight;
+
+    private double ComputeIntrinsicHeight(double width)
     {
-        return MeasureForConstraints(
-            new BoxConstraints(MaxWidth: NormalizeIntrinsicExtent(width)),
-            dry: true).Size.Height;
+        TextPainter intrinsics = TextIntrinsics;
+        intrinsics.SetPlaceholderDimensions(RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            width,
+            ChildLayoutHelper.DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline));
+        intrinsics.Layout(width, AdjustMaxWidth(width));
+        return intrinsics.Height;
     }
 
-    protected override double ComputeMaxIntrinsicHeight(double width)
-    {
-        return ComputeMinIntrinsicHeight(width);
-    }
+    protected override double ComputeMinIntrinsicHeight(double width) => ComputeIntrinsicHeight(width);
 
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    protected override double ComputeMaxIntrinsicHeight(double width) => ComputeIntrinsicHeight(width);
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
-        return MeasureForConstraints(constraints, dry: true).Size;
+        LayoutTextWithConstraints(Constraints);
+        // TODO(garyq): Since our metric for ideographic baseline is currently inaccurate and the non-
+        // alphabetic baselines are based off of the alphabetic baseline, we use the alphabetic for
+        // now to produce correct layouts. We should eventually change this back to pass the
+        // `baseline` property when the ideographic baseline is properly implemented
+        // (https://github.com/flutter/flutter/issues/22625).
+        return _textPainter.ComputeDistanceToActualBaseline(TextBaseline.Alphabetic);
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
     {
-        (TextLayout? layout, Size size, _) = MeasureForConstraints(constraints, dry: true);
-        if (layout is not null)
-        {
-            return layout.Baseline;
-        }
-
-        double lineHeight = EstimatedLineHeight;
-        return Math.Min(size.Height, lineHeight * 0.8);
+        TextPainter intrinsics = TextIntrinsics;
+        intrinsics.SetPlaceholderDimensions(RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            constraints.MaxWidth,
+            ChildLayoutHelper.DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline));
+        intrinsics.Layout(constraints.MinWidth, AdjustMaxWidth(constraints.MaxWidth));
+        return intrinsics.ComputeDistanceToActualBaseline(TextBaseline.Alphabetic);
     }
 
-    protected override void PerformLayout()
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        (TextLayout? layout, Size size, IReadOnlyList<Rect> boxes) =
-            MeasureForConstraints(Constraints, dry: false);
-        _layout = layout;
-        Size = size;
-        RenderInlineChildrenContainerDefaults.PositionInlineChildren(Children, boxes);
-    }
-
-    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
-    {
-        if (_layout is not null)
-        {
-            return _layout.Baseline;
-        }
-
-        if (!HasSize)
-        {
-            return null;
-        }
-
-        return Math.Min(Size.Height, EstimatedLineHeight * 0.8);
-    }
-
-    private double EstimatedLineHeight
-    {
-        get
-        {
-            TextStyle style = RootStyle;
-            double fontSize = _textScaler.Scale(style.FontSize ?? TextDefaults.DefaultFontSize);
-            return style.Height is > 0 ? fontSize * style.Height.Value : fontSize * 1.2;
-        }
-    }
-
-    private (TextLayout? Layout, Size Size, IReadOnlyList<Rect> Boxes) MeasureForConstraints(
-        BoxConstraints constraints,
-        bool dry)
-    {
-        double maxWidth = double.IsInfinity(constraints.MaxWidth)
-            ? double.PositiveInfinity
-            : Math.Max(0, constraints.MaxWidth);
-        double maxHeight = double.IsInfinity(constraints.MaxHeight)
-            ? double.PositiveInfinity
-            : Math.Max(0, constraints.MaxHeight);
-
-        List<RenderBox> children = Children;
-        _placeholderDimensions = RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
-            children,
-            AdjustMaxWidth(maxWidth),
-            dry ? ChildLayoutHelper.DryLayoutChild : ChildLayoutHelper.LayoutChild,
-            dry ? ChildLayoutHelper.GetDryBaseline : ChildLayoutHelper.GetBaseline);
-
-        var source = ParagraphSource.Build(_text, _textScaler, _placeholderDimensions, _textDirection);
-        _source = source;
-
-        try
-        {
-            TextLayout layout = CreateTextLayout(source, AdjustMaxWidth(maxWidth), maxHeight);
-            if (ShouldTightenAlignedWidth(layout, maxWidth, constraints, source))
-            {
-                double tightenedWidth = Math.Max(0, Math.Min(maxWidth, layout.WidthIncludingTrailingWhitespace));
-                if (tightenedWidth > 0)
-                {
-                    layout = CreateTextLayout(source, tightenedWidth, maxHeight);
-                }
-            }
-
-            DidExceedMaxLines = _maxLines is int limit && layout.TextLines.Count >= limit
-                                && (layout.Height > maxHeight || source.HasTrailingContentAfter(layout, limit));
-            double layoutWidth = _textWidthBasis == TextWidthBasis.LongestLine
-                ? layout.WidthIncludingTrailingWhitespace
-                : layout.Width;
-            Size size = constraints.Constrain(new Size(layoutWidth, layout.Height));
-            return (layout, size, source.ResolvePlaceholderBoxes(layout));
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            Size estimate = TextLayoutFallback.EstimateTextSize(
-                source.PlainText,
-                _textScaler.Scale(RootStyle.FontSize ?? TextDefaults.DefaultFontSize),
-                maxWidth,
-                RootStyle.Height,
-                RootStyle.LetterSpacing ?? 0);
-            return (null, constraints.Constrain(estimate), source.EstimatePlaceholderBoxes(estimate));
-        }
+        TextPainter intrinsics = TextIntrinsics;
+        intrinsics.SetPlaceholderDimensions(RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            constraints.MaxWidth,
+            ChildLayoutHelper.DryLayoutChild,
+            ChildLayoutHelper.GetDryBaseline));
+        intrinsics.Layout(constraints.MinWidth, AdjustMaxWidth(constraints.MaxWidth));
+        return constraints.Constrain(intrinsics.Size);
     }
 
     private double AdjustMaxWidth(double maxWidth)
@@ -515,187 +562,190 @@ public sealed partial class RenderParagraph : RenderBox,
         return _softWrap || _overflow == TextOverflow.Ellipsis ? maxWidth : double.PositiveInfinity;
     }
 
-    private TextLayout CreateTextLayout(ParagraphSource source, double maxWidth, double maxHeight)
+    private void LayoutTextWithConstraints(BoxConstraints constraints)
     {
-        return new TextLayout(
-            source,
-            source.CreateParagraphProperties(
-                ResolveTextAlignment(_textAlign, _textDirection),
-                _softWrap ? TextWrapping.Wrap : TextWrapping.NoWrap,
-                _textDirection == TextDirection.Rtl ? FlowDirection.RightToLeft : FlowDirection.LeftToRight),
-            ResolveTextTrimming(_overflow),
-            maxWidth,
-            maxHeight,
-            _maxLines ?? 0);
+        _textPainter.SetPlaceholderDimensions(_placeholderDimensions);
+        _textPainter.Layout(constraints.MinWidth, AdjustMaxWidth(constraints.MaxWidth));
     }
 
-    private bool ShouldTightenAlignedWidth(
-        TextLayout layout,
-        double maxWidth,
-        BoxConstraints constraints,
-        ParagraphSource source)
+    protected override void PerformLayout()
     {
-        if (!double.IsFinite(maxWidth) || maxWidth <= 0)
+        BoxConstraints constraints = Constraints;
+        if (_lastSelectableFragments is not null)
         {
-            return false;
+            foreach (SelectableFragment fragment in _lastSelectableFragments)
+            {
+                fragment.DidChangeParagraphLayout();
+            }
         }
 
-        if (constraints.MinWidth >= maxWidth - 0.01)
+        _placeholderDimensions = RenderInlineChildrenContainerDefaults.LayoutInlineChildren(
+            Children,
+            constraints.MaxWidth,
+            ChildLayoutHelper.LayoutChild,
+            ChildLayoutHelper.GetBaseline);
+        LayoutTextWithConstraints(constraints);
+        RenderInlineChildrenContainerDefaults.PositionInlineChildren(
+            Children,
+            _textPainter.InlinePlaceholderBoxes!.Select(box => box.ToRect()).ToList());
+
+        // We grab _textPainter.size and _textPainter.didExceedMaxLines here because assigning to `size`
+        // will trigger us to validate our intrinsic sizes, which will change _textPainter's layout
+        // because the intrinsic size calculations are destructive, which would mean we would have to
+        // re-lay out the text painter.
+        Size textSize = _textPainter.Size;
+        bool textDidExceedMaxLines = _textPainter.DidExceedMaxLines;
+        Size = constraints.Constrain(textSize);
+
+        bool didOverflowHeight = Size.Height < textSize.Height || textDidExceedMaxLines;
+        bool didOverflowWidth = Size.Width < textSize.Width;
+        // TODO(abarth): We're only measuring the sizes of the line boxes here. If the glyphs draw
+        // outside the line boxes, we won't notice. https://github.com/flutter/flutter/issues/35994
+        bool hasVisualOverflow = didOverflowWidth || didOverflowHeight;
+        if (!hasVisualOverflow)
         {
-            return false;
-        }
-
-        if (_textAlign is not (TextAlign.Center or TextAlign.Right or TextAlign.End))
-        {
-            return false;
-        }
-
-        if (source.PlainText.Length == 0)
-        {
-            return false;
-        }
-
-        Rect firstGlyph = layout.HitTestTextPosition(0);
-        return firstGlyph.X > 0.01;
-    }
-
-    private static double NormalizeIntrinsicExtent(double value)
-    {
-        return double.IsNaN(value) || value < 0.0 ? 0.0 : value;
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        if (_layout is null)
-        {
+            _needsClipping = false;
+            _overflowShader = null;
             return;
         }
 
+        switch (_overflow)
+        {
+            case TextOverflow.Visible:
+                _needsClipping = false;
+                _overflowShader = null;
+                break;
+            case TextOverflow.Clip:
+            case TextOverflow.Ellipsis:
+                _needsClipping = true;
+                _overflowShader = null;
+                break;
+            case TextOverflow.Fade:
+                _needsClipping = true;
+                using (var fadeSizePainter = new TextPainter(
+                           text: new TextSpan(style: _textPainter.Text!.Style, text: EllipsisText),
+                           textDirection: TextDirection,
+                           textScaler: TextScaler,
+                           locale: Locale))
+                {
+                    fadeSizePainter.Layout();
+                    if (didOverflowWidth)
+                    {
+                        (double fadeStart, double fadeEnd) = TextDirection switch
+                        {
+                            TextDirection.Rtl => (fadeSizePainter.Width, 0.0),
+                            _ => (Size.Width - fadeSizePainter.Width, Size.Width),
+                        };
+                        _overflowShader = new OverflowShader(new Point(fadeStart, 0.0), new Point(fadeEnd, 0.0));
+                    }
+                    else
+                    {
+                        double fadeEnd = Size.Height;
+                        double fadeStart = fadeEnd - (fadeSizePainter.Height / 2.0);
+                        _overflowShader = new OverflowShader(new Point(0.0, fadeStart), new Point(0.0, fadeEnd));
+                    }
+                }
+
+                break;
+        }
+    }
+
+    // -- Paint -------------------------------------------------------------------------
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        // Text alignment only triggers repaint so it's possible the text layout has been invalidated
+        // but performLayout wasn't called at this point. Make sure the TextPainter has a valid layout.
+        LayoutTextWithConstraints(Constraints);
         if (Constants.KDebugMode && RenderingDebug.RepaintTextRainbowEnabled)
         {
-            ctx.Canvas.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
                 null,
                 new Rect(offset, Size));
         }
 
-        PaintSelectionHighlights(ctx, offset);
-        if (_overflow == TextOverflow.Fade && _layout.WidthIncludingTrailingWhitespace > Size.Width + 0.01)
+        if (_lastSelectableFragments is not null)
         {
-            ctx.Canvas.DrawTextLayoutWithHorizontalFade(
-                _layout,
-                offset,
-                new Rect(offset, Size),
-                fadeTowardRight: _textDirection == TextDirection.Ltr);
-        }
-        else
-        {
-            ctx.Canvas.DrawTextLayout(_layout, offset);
+            if (_needsClipping)
+            {
+                context.Canvas.Save();
+                context.Canvas.ClipRect(new Rect(offset, Size));
+            }
+
+            PaintSelectionHighlights(context, offset);
+            if (_needsClipping)
+            {
+                context.Canvas.Restore();
+            }
         }
 
-        if (Constants.KDebugMode && RenderingDebug.PaintTextLayoutBoxes)
+        if (_needsClipping)
         {
-            DebugPaintCharacterLayoutBoxes(ctx, offset);
+            var bounds = new Rect(offset, Size);
+            context.Canvas.Save();
+            if (_overflowShader is { } shader)
+            {
+                // Dart saves a layer here and modulates it with the shader after the text and the inline
+                // children are painted; Plumix applies the same gradient as an opacity mask up front.
+                context.Canvas.PushOpacityMask(shader.CreateBrush(Size), bounds);
+            }
+
+            context.Canvas.ClipRect(bounds);
         }
 
-        RenderInlineChildrenContainerDefaults.PaintInlineChildren(Children, ctx, offset);
-        PaintSelectionHandles(ctx, offset);
+        if (Constants.KDebugMode)
+        {
+            _textPainter.DebugPaintTextLayoutBoxes = RenderingDebug.PaintTextLayoutBoxes;
+        }
+
+        _textPainter.Paint(context.Canvas, offset);
+        RenderInlineChildrenContainerDefaults.PaintInlineChildren(Children, context, offset);
+
+        if (_needsClipping)
+        {
+            context.Canvas.Restore();
+        }
+
+        PaintSelectionHandles(context, offset);
     }
 
-    /// <summary>Paints the layout box of every character of this paragraph.</summary>
-    /// <remarks>
-    /// Flutter's <c>TextPainter._debugPaintCharacterLayoutBoxes</c>, driven by
-    /// <see cref="RenderingDebug.PaintTextLayoutBoxes"/>. Dart's <c>TextPainter</c> owns the selection
-    /// boxes and paints them from its own <c>paint</c>; in Plumix the paragraph render object owns
-    /// them, so the same drawing lives here (see <c>docs/ai/DIVERGENCES.md</c>).
-    /// </remarks>
-    private void DebugPaintCharacterLayoutBoxes(PaintingContext ctx, Point offset)
-    {
-        string plain = _source?.PlainText ?? string.Empty;
-        if (plain.Length == 0)
-        {
-            return;
-        }
-
-        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FFFF)), 1.0);
-        IReadOnlyList<TextBox> boxes = GetBoxesForSelection(
-            new TextSelection(BaseOffset: 0, ExtentOffset: plain.Length));
-        foreach (TextBox box in boxes)
-        {
-            Rect rect = box.ToRect();
-            ctx.Canvas.DrawGeometry(
-                null,
-                pen,
-                new RectangleGeometry(new Rect(rect.Position + offset, rect.Size)));
-        }
-    }
+    // -- Hit testing ---------------------------------------------------------------------
 
     protected override bool HitTestSelf(Point position) => true;
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        InlineSpan? spanHit = SpanForPosition(position);
-        if (spanHit is IHitTestTarget target)
+        GlyphInfo? glyph = _textPainter.GetClosestGlyphForOffset(position);
+        // The hit-test can't fall through the horizontal gaps between visually adjacent characters
+        // on the same line, even with a large letter-spacing or text justification, as
+        // graphemeClusterLayoutBounds.width is the advance width to the next character, so there's no
+        // gap between their graphemeClusterLayoutBounds rects.
+        InlineSpan? spanHit = glyph is not null && Contains(glyph.GraphemeClusterLayoutBounds, position)
+            ? _textPainter.Text!.GetSpanForPosition(new TextPosition(glyph.GraphemeClusterCodeUnitRange.Start))
+            : null;
+        switch (spanHit)
         {
-            result.Add(new HitTestEntry(target));
-            return true;
+            case IHitTestTarget span:
+                result.Add(new HitTestEntry(span));
+                return true;
+            default:
+                return RenderInlineChildrenContainerDefaults.HitTestInlineChildren(Children, result, position);
         }
-
-        return RenderInlineChildrenContainerDefaults.HitTestInlineChildren(Children, result, position);
     }
 
-    /// Returns the span the given local `position` lands on, or null when the
-    /// position falls outside of every glyph.
-    private InlineSpan? SpanForPosition(Point position)
+    // Dart's `Rect.contains`: the left and top edges are inside, the right and bottom edges are not.
+    private static bool Contains(Rect rect, Point point)
     {
-        if (_layout is null || _source is null || _source.PlainText.Length == 0)
-        {
-            return null;
-        }
-
-        if (position.X < 0 || position.Y < 0 || position.X > Size.Width || position.Y > Size.Height)
-        {
-            return null;
-        }
-
-        TextHitTestResult hit = _layout.HitTestPoint(position);
-        int offset = Math.Clamp(hit.TextPosition, 0, Math.Max(0, _source.PlainText.Length - 1));
-        Rect glyph = _layout.HitTestTextPosition(offset);
-        if (!glyph.Contains(position) && !hit.IsInside)
-        {
-            return null;
-        }
-
-        return _text.GetSpanForPosition(new TextPosition(offset));
+        return point.X >= rect.Left && point.X < rect.Right && point.Y >= rect.Top && point.Y < rect.Bottom;
     }
 
-    private int EstimateTextPosition(Point localPosition, string plain)
-    {
-        if (plain.Length == 0)
-        {
-            return 0;
-        }
-
-        TextStyle style = RootStyle;
-        double fontSize = _textScaler.Scale(style.FontSize ?? TextDefaults.DefaultFontSize);
-        double characterWidth = Math.Max(1.0, (fontSize * 0.55) + (style.LetterSpacing ?? 0));
-        double lineHeight = EstimatedLineHeight;
-        string[] lines = plain.Split('\n');
-        int lineIndex = Math.Clamp((int)(localPosition.Y / Math.Max(1.0, lineHeight)), 0, lines.Length - 1);
-        int offset = 0;
-        for (int index = 0; index < lineIndex; index++)
-        {
-            offset += lines[index].Length + 1;
-        }
-
-        int column = Math.Clamp((int)Math.Round(localPosition.X / characterWidth), 0, lines[lineIndex].Length);
-        return Math.Clamp(offset + column, 0, plain.Length);
-    }
+    // -- Semantics -------------------------------------------------------------------------
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         base.DescribeSemanticsConfiguration(configuration);
-        _semanticsInfo = _text.GetSemanticsInformation();
+        _semanticsInfo = Text.GetSemanticsInformation();
         bool needsAssembleSemanticsNode = false;
         foreach (InlineSpanSemanticsInformation info in _semanticsInfo)
         {
@@ -728,7 +778,7 @@ public sealed partial class RenderParagraph : RenderBox,
         SemanticsConfiguration config,
         IReadOnlyList<SemanticsNode> children)
     {
-        _semanticsInfo ??= _text.GetSemanticsInformation();
+        _semanticsInfo ??= Text.GetSemanticsInformation();
         _cachedCombinedSemanticsInfos ??= InlineSpan.CombineSemanticsInfo(_semanticsInfo);
 
         var newChildren = new List<SemanticsNode>();
@@ -815,21 +865,16 @@ public sealed partial class RenderParagraph : RenderBox,
 
     private Rect? BoundsForRange(int start, int length)
     {
-        if (_layout is null)
-        {
-            return null;
-        }
-
-        IReadOnlyList<Rect> rects = _layout.HitTestTextRange(start, length).ToList();
+        IReadOnlyList<TextBox> rects = GetBoxesForSelection(new TextSelection(start, start + length));
         if (rects.Count == 0)
         {
             return null;
         }
 
-        Rect rect = rects[0];
+        Rect rect = rects[0].ToRect();
         for (int index = 1; index < rects.Count; index += 1)
         {
-            rect = rect.Union(rects[index]);
+            rect = rect.Union(rects[index].ToRect());
         }
 
         return new Rect(
@@ -839,27 +884,7 @@ public sealed partial class RenderParagraph : RenderBox,
             Math.Ceiling(rect.Height) + 8.0);
     }
 
-    private static TextAlignment ResolveTextAlignment(TextAlign align, TextDirection direction)
-    {
-        return align switch
-        {
-            TextAlign.Left => TextAlignment.Left,
-            TextAlign.Right => TextAlignment.Right,
-            TextAlign.Center => TextAlignment.Center,
-            TextAlign.Justify => TextAlignment.Justify,
-            TextAlign.End => direction == TextDirection.Rtl ? TextAlignment.Left : TextAlignment.Right,
-            _ => direction == TextDirection.Rtl ? TextAlignment.Right : TextAlignment.Left
-        };
-    }
-
-    private static TextTrimming ResolveTextTrimming(TextOverflow overflow)
-    {
-        return overflow switch
-        {
-            TextOverflow.Ellipsis => TextTrimming.CharacterEllipsis,
-            _ => TextTrimming.None
-        };
-    }
+    // -- Diagnostics -----------------------------------------------------------------------
 
     /// <inheritdoc />
     public override List<DiagnosticsNode> DebugDescribeChildren()
@@ -887,5 +912,26 @@ public sealed partial class RenderParagraph : RenderBox,
         properties.Add(new StringProperty("locale", Locale, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new IntProperty("maxLines", MaxLines, ifNull: "unlimited"));
         properties.Add(new DoubleProperty("devicePixelRatio", DevicePixelRatio, defaultValue: 1.0));
+    }
+
+    /// The linear white-to-transparent gradient Dart builds for `TextOverflow.fade`, in paragraph
+    /// coordinates.
+    private readonly record struct OverflowShader(Point From, Point To)
+    {
+        public IBrush CreateBrush(Size size)
+        {
+            double width = Math.Max(size.Width, double.Epsilon);
+            double height = Math.Max(size.Height, double.Epsilon);
+            return new LinearGradientBrush
+            {
+                StartPoint = new RelativePoint(From.X / width, From.Y / height, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(To.X / width, To.Y / height, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.FromUInt32(0xFFFFFFFF), 0),
+                    new GradientStop(Color.FromUInt32(0x00FFFFFF), 1),
+                },
+            };
+        }
     }
 }

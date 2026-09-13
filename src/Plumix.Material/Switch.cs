@@ -1866,7 +1866,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         var offset = new Point(
             thumbBounds.Left + ((thumbBounds.Width - iconSize) / 2.0),
             thumbBounds.Top + ((thumbBounds.Height - iconSize) / 2.0));
-        _textPainter.Paint(context, offset);
+        _textPainter.Paint(context.Canvas, offset);
     }
 
     private void HandleDecorationChanged()
