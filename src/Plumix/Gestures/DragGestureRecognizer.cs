@@ -58,9 +58,27 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     private Point _lastUpdatedDeltaForPan;
     private int? _activePointer;
 
-    protected DragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    protected DragGestureRecognizer(GestureBinding? binding) : this(binding, debugOwner: null)
     {
-        AllowedButtonsFilter = DefaultButtonAcceptBehavior;
+    }
+
+    protected DragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        MultitouchDragStrategy multitouchDragStrategy = MultitouchDragStrategy.LatestPointer,
+        GestureVelocityTrackerBuilder? velocityTrackerBuilder = null,
+        bool onlyAcceptDragOnThreshold = false,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null) : base(binding)
+    {
+        DebugOwner = debugOwner;
+        DragStartBehavior = dragStartBehavior;
+        MultitouchDragStrategy = multitouchDragStrategy;
+        VelocityTrackerBuilder = velocityTrackerBuilder ?? DefaultVelocityTrackerBuilder;
+        OnlyAcceptDragOnThreshold = onlyAcceptDragOnThreshold;
+        SupportedDevices = supportedDevices;
+        AllowedButtonsFilter = allowedButtonsFilter ?? DefaultButtonAcceptBehavior;
     }
 
     /// <summary>Dart's `_defaultBuilder`: a plain velocity tracker for the event's device kind.</summary>
@@ -126,7 +144,8 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     public double GlobalDistanceMoved => _globalDistanceMoved;
 
     /// <summary>Dart's `debugLastPendingEventTimestamp`, exposed for tests.</summary>
-    internal DateTime? DebugLastPendingEventTimestamp => _lastPendingEventTimestamp;
+    public DateTime? DebugLastPendingEventTimestamp =>
+        Constants.KDebugMode ? _lastPendingEventTimestamp : null;
 
     /// <summary>Whether the given velocity estimate is fast and far enough to be a fling.</summary>
     public abstract bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind);
@@ -236,7 +255,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
 
     protected override void HandleEvent(PointerEvent @event)
     {
-        if (_state == DragState.Ready)
+        if (Constants.KDebugMode && _state == DragState.Ready)
         {
             throw new InvalidOperationException("A drag recognizer received an event while it was ready.");
         }
@@ -340,7 +359,17 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     {
         if (MultitouchDragStrategy != MultitouchDragStrategy.AverageBoundaryPointers)
         {
+            if (Constants.KDebugMode && (_frameTimeStamp is not null || _moveDeltaBeforeFrame.Count != 0))
+            {
+                throw new InvalidOperationException("Only boundary-pointer drags accumulate frame movement.");
+            }
+
             return;
+        }
+
+        if (Constants.KDebugMode && _frameTimeStamp != Scheduler.CurrentSystemFrameTimeStamp)
+        {
+            throw new InvalidOperationException("Boundary movement must be recorded within its original frame.");
         }
 
         if (_state != DragState.Accepted || localDelta == default)
@@ -428,11 +457,21 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         {
             case DragDirection.Horizontal:
                 dx = ResolveDelta(pointer, DragDirection.Horizontal, localDelta);
+                if (Constants.KDebugMode && Math.Abs(dx) > Math.Abs(localDelta.X))
+                {
+                    throw new InvalidOperationException("Resolved horizontal movement exceeds the pointer delta.");
+                }
+
                 dy = 0.0;
                 break;
             case DragDirection.Vertical:
                 dx = 0.0;
                 dy = ResolveDelta(pointer, DragDirection.Vertical, localDelta);
+                if (Constants.KDebugMode && Math.Abs(dy) > Math.Abs(localDelta.Y))
+                {
+                    throw new InvalidOperationException("Resolved vertical movement exceeds the pointer delta.");
+                }
+
                 break;
             default:
                 double averageX = ResolveDeltaForPanGesture(DragDirection.Horizontal, localDelta);
@@ -453,6 +492,11 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         bool positive = axis == DragDirection.Horizontal ? localDelta.X > 0 : localDelta.Y > 0;
         double delta = axis == DragDirection.Horizontal ? localDelta.X : localDelta.Y;
         int? maxSumDeltaPointer = GetMaxSumDeltaPointer(positive, axis);
+        if (Constants.KDebugMode && maxSumDeltaPointer is null)
+        {
+            throw new InvalidOperationException("Boundary movement requires a recorded pointer delta.");
+        }
+
         if (maxSumDeltaPointer == pointer)
         {
             return delta;
@@ -472,6 +516,11 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
     {
         double delta = axis == DragDirection.Horizontal ? localDelta.X : localDelta.Y;
         int pointerCount = _acceptedActivePointers.Count;
+        if (Constants.KDebugMode && pointerCount < 1)
+        {
+            throw new InvalidOperationException("A pan average requires at least one accepted pointer.");
+        }
+
         double sum = delta;
         foreach (Point offset in _moveDeltaBeforeFrame.Values)
         {
@@ -483,9 +532,9 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
 
     public override void AcceptGesture(int pointer)
     {
-        if (_acceptedActivePointers.Contains(pointer))
+        if (Constants.KDebugMode && _acceptedActivePointers.Contains(pointer))
         {
-            return;
+            throw new InvalidOperationException("The drag recognizer already accepted this pointer.");
         }
 
         _acceptedActivePointers.Add(pointer);
@@ -503,6 +552,11 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
 
     protected override void DidStopTrackingLastPointer(int pointer)
     {
+        if (Constants.KDebugMode && _state == DragState.Ready)
+        {
+            throw new InvalidOperationException("A ready drag recognizer cannot stop its last pointer.");
+        }
+
         switch (_state)
         {
             case DragState.Ready:
@@ -703,7 +757,19 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
 /// <summary>Recognizes movement in the vertical direction.</summary>
 public class VerticalDragGestureRecognizer : DragGestureRecognizer
 {
-    public VerticalDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public VerticalDragGestureRecognizer(GestureBinding? binding) : this(binding, debugOwner: null)
+    {
+    }
+
+    public VerticalDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null) : base(
+            binding,
+            debugOwner: debugOwner,
+            supportedDevices: supportedDevices,
+            allowedButtonsFilter: allowedButtonsFilter)
     {
     }
 
@@ -749,7 +815,19 @@ public class VerticalDragGestureRecognizer : DragGestureRecognizer
 /// <summary>Recognizes movement in the horizontal direction.</summary>
 public class HorizontalDragGestureRecognizer : DragGestureRecognizer
 {
-    public HorizontalDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public HorizontalDragGestureRecognizer(GestureBinding? binding) : this(binding, debugOwner: null)
+    {
+    }
+
+    public HorizontalDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null) : base(
+            binding,
+            debugOwner: debugOwner,
+            supportedDevices: supportedDevices,
+            allowedButtonsFilter: allowedButtonsFilter)
     {
     }
 
@@ -795,7 +873,19 @@ public class HorizontalDragGestureRecognizer : DragGestureRecognizer
 /// <summary>Recognizes movement both horizontally and vertically.</summary>
 public class PanGestureRecognizer : DragGestureRecognizer
 {
-    public PanGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public PanGestureRecognizer(GestureBinding? binding) : this(binding, debugOwner: null)
+    {
+    }
+
+    public PanGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null) : base(
+            binding,
+            debugOwner: debugOwner,
+            supportedDevices: supportedDevices,
+            allowedButtonsFilter: allowedButtonsFilter)
     {
     }
 

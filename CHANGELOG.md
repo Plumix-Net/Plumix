@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: drag constructor options and debug contracts match Flutter; multitouch parity is covered (monodrag.dart).
 - App and Router read platform launch routes from `PlatformDispatcher`; legacy access forwards (app.dart, router.dart).
 - Breaking: sliver parent data separates plain/container types; viewport transforms match Dart (sliver.dart).
 - Breaking: fully-scrolled box slivers retain unclamped child transforms (sliver.dart).

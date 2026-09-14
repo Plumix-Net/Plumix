@@ -12,7 +12,7 @@ namespace Plumix.Tests;
 /// `DragGestureRecognizer`, driving the recognizers through the arena and pointer router the way
 /// Flutter's `GestureTester` does.
 /// </summary>
-public sealed class DragGestureRecognizerTests : IDisposable
+public sealed partial class DragGestureRecognizerTests : IDisposable
 {
     private readonly GestureBinding _binding = GestureBinding.Instance;
 

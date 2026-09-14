@@ -20,6 +20,8 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
   final List<String> _scaleLog = <String>[];
   DragStartBehavior _dragStartBehavior = DragStartBehavior.start;
   bool _onlyAcceptDragOnThreshold = false;
+  MultitouchDragStrategy _multitouchDragStrategy =
+      MultitouchDragStrategy.latestPointer;
   bool _trackpadScrollCausesScale = false;
   double _offset = 0.0;
   double _scale = 1.0;
@@ -32,58 +34,84 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 16,
-      children: <Widget>[
-        const Text(
-          'Drag, long-press and scale recognizers',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'A drag accepts once the pointer travels past the device hit slop (18 logical pixels for '
-          'touch, 1 for a mouse). DragStartBehavior decides whether that travelled distance is '
-          'reported from the down position or from where the gesture won the arena.',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        _buildSwitchRow(
-          'DragStartBehavior.down (replay the pending offset)',
-          _dragStartBehavior == DragStartBehavior.down,
-          (bool value) => setState(() {
-            _dragStartBehavior = value
-                ? DragStartBehavior.down
-                : DragStartBehavior.start;
-          }),
-        ),
-        _buildSwitchRow(
-          'onlyAcceptDragOnThreshold (hold the drag back after winning)',
-          _onlyAcceptDragOnThreshold,
-          (bool value) => setState(() => _onlyAcceptDragOnThreshold = value),
-        ),
-        _buildDragSurface(),
-        _buildLog('Drag events', _dragLog),
-        const Text(
-          'The long press deadline is 500 ms. Each mouse button dispatches its own callback set; '
-          'moving more than the touch slop before the deadline cancels it.',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        _buildLongPressSurface(),
-        _buildLog('Long-press events', _longPressLog),
-        const Text(
-          'The scale recognizer tracks every pointer at once: two fingers pinch and rotate, one '
-          'finger pans, and a trackpad pan/zoom gesture counts as two pointers. It wins the arena '
-          'once the span moves past the scale slop, the focal point past the pan slop, or the '
-          'pan/zoom scale differs by more than 5%.',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        _buildSwitchRow(
-          'trackpadScrollCausesScale (a trackpad scroll zooms instead of panning)',
-          _trackpadScrollCausesScale,
-          (bool value) => setState(() => _trackpadScrollCausesScale = value),
-        ),
-        _buildScaleSurface(),
-        _buildLog('Scale events', _scaleLog),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 16,
+        children: <Widget>[
+          const Text(
+            'Drag, long-press and scale recognizers',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'A drag accepts once the pointer travels past the device hit slop (18 logical pixels for '
+            'touch, 1 for a mouse). DragStartBehavior decides whether that travelled distance is '
+            'reported from the down position or from where the gesture won the arena.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildSwitchRow(
+            'DragStartBehavior.down (replay the pending offset)',
+            _dragStartBehavior == DragStartBehavior.down,
+            (bool value) => setState(() {
+              _dragStartBehavior = value
+                  ? DragStartBehavior.down
+                  : DragStartBehavior.start;
+            }),
+          ),
+          _buildSwitchRow(
+            'onlyAcceptDragOnThreshold (hold the drag back after winning)',
+            _onlyAcceptDragOnThreshold,
+            (bool value) => setState(() => _onlyAcceptDragOnThreshold = value),
+          ),
+          const Text(
+            'Drag with several fingers to compare the strategies. The default follows the latest finger; '
+            'boundary mode uses the furthest movement in each direction within a frame.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildSwitchRow(
+            'Sum all finger movements',
+            _multitouchDragStrategy == MultitouchDragStrategy.sumAllPointers,
+            (bool value) => setState(
+              () => _multitouchDragStrategy = value
+                  ? MultitouchDragStrategy.sumAllPointers
+                  : MultitouchDragStrategy.latestPointer,
+            ),
+          ),
+          _buildSwitchRow(
+            'Use boundary finger movements',
+            _multitouchDragStrategy ==
+                MultitouchDragStrategy.averageBoundaryPointers,
+            (bool value) => setState(
+              () => _multitouchDragStrategy = value
+                  ? MultitouchDragStrategy.averageBoundaryPointers
+                  : MultitouchDragStrategy.latestPointer,
+            ),
+          ),
+          _buildDragSurface(),
+          _buildLog('Drag events', _dragLog),
+          const Text(
+            'The long press deadline is 500 ms. Each mouse button dispatches its own callback set; '
+            'moving more than the touch slop before the deadline cancels it.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildLongPressSurface(),
+          _buildLog('Long-press events', _longPressLog),
+          const Text(
+            'The scale recognizer tracks every pointer at once: two fingers pinch and rotate, one '
+            'finger pans, and a trackpad pan/zoom gesture counts as two pointers. It wins the arena '
+            'once the span moves past the scale slop, the focal point past the pan slop, or the '
+            'pan/zoom scale differs by more than 5%.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildSwitchRow(
+            'trackpadScrollCausesScale (a trackpad scroll zooms instead of panning)',
+            _trackpadScrollCausesScale,
+            (bool value) => setState(() => _trackpadScrollCausesScale = value),
+          ),
+          _buildScaleSurface(),
+          _buildLog('Scale events', _scaleLog),
+        ],
+      ),
     );
   }
 
@@ -117,6 +145,7 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
               HorizontalDragGestureRecognizer instance,
             ) {
               instance.dragStartBehavior = _dragStartBehavior;
+              instance.multitouchDragStrategy = _multitouchDragStrategy;
               instance.onlyAcceptDragOnThreshold = _onlyAcceptDragOnThreshold;
               instance.onDown = (DragDownDetails details) {
                 _log(_dragLog, 'down');

@@ -31,6 +31,7 @@ public sealed class GestureRecognizerDemoPageState : State
     private readonly List<string> _scaleLog = [];
     private DragStartBehavior _dragStartBehavior = DragStartBehavior.Start;
     private bool _onlyAcceptDragOnThreshold;
+    private MultitouchDragStrategy _multitouchDragStrategy = MultitouchDragStrategy.LatestPointer;
     private bool _trackpadScrollCausesScale;
     private double _offset;
     private double _scale = 1.0;
@@ -43,7 +44,7 @@ public sealed class GestureRecognizerDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 16,
             children:
@@ -64,6 +65,23 @@ public sealed class GestureRecognizerDemoPageState : State
                     "OnlyAcceptDragOnThreshold (hold the drag back after winning)",
                     _onlyAcceptDragOnThreshold,
                     value => SetState(() => _onlyAcceptDragOnThreshold = value)),
+                new Text(
+                    "Drag with several fingers to compare the strategies. The default follows the latest finger; "
+                    + "boundary mode uses the furthest movement in each direction within a frame.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildSwitchRow(
+                    "Sum all finger movements",
+                    _multitouchDragStrategy == MultitouchDragStrategy.SumAllPointers,
+                    value => SetState(() => _multitouchDragStrategy = value
+                        ? MultitouchDragStrategy.SumAllPointers
+                        : MultitouchDragStrategy.LatestPointer)),
+                BuildSwitchRow(
+                    "Use boundary finger movements",
+                    _multitouchDragStrategy == MultitouchDragStrategy.AverageBoundaryPointers,
+                    value => SetState(() => _multitouchDragStrategy = value
+                        ? MultitouchDragStrategy.AverageBoundaryPointers
+                        : MultitouchDragStrategy.LatestPointer)),
                 BuildDragSurface(),
                 BuildLog("Drag events", _dragLog),
                 new Text(
@@ -86,7 +104,7 @@ public sealed class GestureRecognizerDemoPageState : State
                     value => SetState(() => _trackpadScrollCausesScale = value)),
                 BuildScaleSurface(),
                 BuildLog("Scale events", _scaleLog),
-            ]);
+            ]));
     }
 
     private Widget BuildSwitchRow(string label, bool value, Action<bool> onChanged)
@@ -110,6 +128,7 @@ public sealed class GestureRecognizerDemoPageState : State
                     instance =>
                     {
                         instance.DragStartBehavior = _dragStartBehavior;
+                        instance.MultitouchDragStrategy = _multitouchDragStrategy;
                         instance.OnlyAcceptDragOnThreshold = _onlyAcceptDragOnThreshold;
                         instance.OnDown = _ => Log(_dragLog, "down");
                         instance.OnStart = details => Log(
