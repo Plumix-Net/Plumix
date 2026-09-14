@@ -88,7 +88,7 @@ internal class TapTracker
 /// Recognizes when the user has tapped the screen at the same location twice in quick succession.
 /// Ports Dart's `DoubleTapGestureRecognizer`.
 /// </summary>
-public class DoubleTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public class DoubleTapGestureRecognizer : GestureRecognizer
 {
     // The recognizer has four implicit states, exactly like Dart:
     // - Waiting on first tap: no trackers, `_firstTap` null.
@@ -101,9 +101,9 @@ public class DoubleTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
 
     public DoubleTapGestureRecognizer(
         AllowedButtonsFilter? allowedButtonsFilter = null,
-        GestureBinding? binding = null) : base(binding)
+        GestureBinding? binding = null)
+        : base(binding, allowedButtonsFilter: allowedButtonsFilter ?? DefaultDoubleTapButtonAcceptBehavior)
     {
-        AllowedButtonsFilter = allowedButtonsFilter ?? DefaultDoubleTapButtonAcceptBehavior;
     }
 
     /// <summary>Dart's `_defaultButtonAcceptBehavior`: double taps accept only the primary button.</summary>
@@ -173,7 +173,7 @@ public class DoubleTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         TrackTap(@event);
     }
 
-    protected override void HandleEvent(PointerEvent @event)
+    private void HandleEvent(PointerEvent @event)
     {
         if (!_trackers.TryGetValue(@event.Pointer, out TapTracker? tracker))
         {
@@ -206,11 +206,11 @@ public class DoubleTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         }
     }
 
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         if (!_trackers.TryGetValue(pointer, out TapTracker? tracker))
         {
@@ -465,7 +465,7 @@ internal sealed class TapGesture : TapTracker
 /// Recognizes taps on a per-pointer basis: each pointer is a potential tap independently of other
 /// pointers. Ports Dart's `MultiTapGestureRecognizer`.
 /// </summary>
-public class MultiTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public class MultiTapGestureRecognizer : GestureRecognizer
 {
     private readonly Dictionary<int, TapGesture> _gestureMap = [];
 
@@ -514,12 +514,7 @@ public class MultiTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         }
     }
 
-    protected override void HandleEvent(PointerEvent @event)
-    {
-        // Each TapGesture routes its own pointer events; nothing arrives through base tracking.
-    }
-
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
         if (_gestureMap.TryGetValue(pointer, out TapGesture? gesture))
         {
@@ -527,7 +522,7 @@ public class MultiTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         }
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         if (_gestureMap.TryGetValue(pointer, out TapGesture? gesture))
         {
@@ -680,7 +675,7 @@ public sealed class SerialTapUpDetails : IPositionedGestureDetails
 /// Recognizes serial taps: taps in a series, whether one, two, or more.
 /// Ports Dart's `SerialTapGestureRecognizer`.
 /// </summary>
-public class SerialTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public class SerialTapGestureRecognizer : GestureRecognizer
 {
     private readonly List<TapTracker> _completedTaps = [];
     private readonly Dictionary<int, GestureDisposition> _gestureResolutions = [];
@@ -754,7 +749,7 @@ public class SerialTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         tracker.StartTrackingPointer(PointerRouter, HandleEvent);
     }
 
-    protected override void HandleEvent(PointerEvent @event)
+    private void HandleEvent(PointerEvent @event)
     {
         if (_pendingTap is not { } tracker || tracker.Pointer != @event.Pointer)
         {
@@ -779,12 +774,12 @@ public class SerialTapGestureRecognizer : GestureRecognizer, IGestureArenaMember
         }
     }
 
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
         _gestureResolutions[pointer] = GestureDisposition.Accepted;
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         _gestureResolutions[pointer] = GestureDisposition.Rejected;
         Reset();

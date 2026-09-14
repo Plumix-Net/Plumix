@@ -1286,8 +1286,10 @@ public sealed class ReorderableDelayedDragStartListener : ReorderableDragStartLi
     protected override bool Delayed => true;
 }
 
-internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMember
+internal sealed class ReorderDragRecognizer : GestureRecognizer
 {
+    public override string DebugDescription => "reorder drag";
+
     private const double TouchSlop = 18.0;
     private readonly bool _delayed;
     private readonly Action<Point> _onStart;
@@ -1325,7 +1327,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         _pointer = @event.Pointer;
         _initialPosition = @event.Position;
         _arenaEntry = GestureArena.Add(@event.Pointer, this);
-        StartTrackingPointer(@event.Pointer);
+        PointerRouter.AddRoute(@event.Pointer, HandleEvent);
         if (_delayed)
         {
             StartDeadline(@event.Pointer);
@@ -1337,7 +1339,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         }
     }
 
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
         if (_pointer != pointer || !_deadlineExceeded)
         {
@@ -1348,7 +1350,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         _onStart(_initialPosition);
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         if (_pointer != pointer)
         {
@@ -1358,7 +1360,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         Cleanup();
     }
 
-    protected override void HandleEvent(PointerEvent @event)
+    private void HandleEvent(PointerEvent @event)
     {
         switch (@event)
         {
@@ -1440,7 +1442,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
         _deadlineCancellation = null;
         if (_pointer is int pointer)
         {
-            StopTrackingPointer(pointer);
+            PointerRouter.RemoveRoute(pointer, HandleEvent);
         }
 
         _pointer = null;

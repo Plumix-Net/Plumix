@@ -54,9 +54,9 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
         : base(
             deadline: duration ?? GestureConstants.LongPressTimeout,
             postAcceptSlopTolerance: postAcceptSlopTolerance,
-            binding: binding)
+            binding: binding,
+            allowedButtonsFilter: DefaultButtonAcceptBehavior)
     {
-        AllowedButtonsFilter = DefaultButtonAcceptBehavior;
     }
 
     /// <summary>Called when a pointer that might cause a long press has contacted the screen.</summary>

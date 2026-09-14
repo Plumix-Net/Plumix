@@ -749,8 +749,10 @@ internal sealed class DragAvatar<T> : IDragAvatar
     }
 }
 
-internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMember
+internal class DraggableGestureRecognizer : GestureRecognizer
 {
+    public override string DebugDescription => "draggable";
+
     private const double TouchSlop = 18.0;
     private readonly Axis? _affinity;
     private readonly Func<PointerButtons, bool>? _allowedButtonsFilter;
@@ -788,7 +790,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
             @event.Position,
             @event.TimestampUtc,
             entry);
-        StartTrackingPointer(@event.Pointer);
+        PointerRouter.AddRoute(@event.Pointer, HandleEvent);
         if (_delay.HasValue)
         {
             StartDelayTimer(@event.Pointer, _trackers[@event.Pointer]);
@@ -799,7 +801,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
         }
     }
 
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
         if (!_trackers.TryGetValue(pointer, out DragTracker? tracker))
         {
@@ -813,7 +815,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
         }
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         Cleanup(pointer);
     }
@@ -829,7 +831,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
         base.Dispose();
     }
 
-    protected override void HandleEvent(PointerEvent @event)
+    private void HandleEvent(PointerEvent @event)
     {
         if (!_trackers.TryGetValue(@event.Pointer, out DragTracker? tracker))
         {
@@ -934,7 +936,11 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
             tracker.DelayCancellation.Dispose();
         }
 
-        StopTrackingPointer(pointer);
+        if (_trackers.ContainsKey(pointer))
+        {
+            PointerRouter.RemoveRoute(pointer, HandleEvent);
+        }
+
         _trackers.Remove(pointer);
     }
 

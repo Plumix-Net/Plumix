@@ -29,6 +29,7 @@ public sealed class GestureRecognizerDemoPageState : State
     private readonly List<string> _dragLog = [];
     private readonly List<string> _longPressLog = [];
     private readonly List<string> _scaleLog = [];
+    private readonly List<string> _multiTapLog = [];
     private DragStartBehavior _dragStartBehavior = DragStartBehavior.Start;
     private bool _onlyAcceptDragOnThreshold;
     private MultitouchDragStrategy _multitouchDragStrategy = MultitouchDragStrategy.LatestPointer;
@@ -104,6 +105,13 @@ public sealed class GestureRecognizerDemoPageState : State
                     value => SetState(() => _trackpadScrollCausesScale = value)),
                 BuildScaleSurface(),
                 BuildLog("Scale events", _scaleLog),
+                new Text(
+                    "Tap with several fingers at once. Each finger completes or cancels its own tap; "
+                    + "holding for 250 ms also logs a long tap.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildMultiTapSurface(),
+                BuildLog("Independent tap events", _multiTapLog),
             ]));
     }
 
@@ -232,6 +240,34 @@ public sealed class GestureRecognizerDemoPageState : State
                                     width: 72,
                                     height: 72,
                                     color: Color.Parse("#FF31506F"))))))));
+    }
+
+    private Widget BuildMultiTapSurface()
+    {
+        var gestures = new Dictionary<Type, IGestureRecognizerFactory>
+        {
+            [typeof(MultiTapGestureRecognizer)] = new GestureRecognizerFactoryWithHandlers<MultiTapGestureRecognizer>(
+                () => new MultiTapGestureRecognizer(TimeSpan.FromMilliseconds(250)),
+                instance =>
+                {
+                    instance.OnTapDown = (pointer, _) => Log(_multiTapLog, $"{pointer}: down");
+                    instance.OnLongTapDown = (pointer, _) => Log(_multiTapLog, $"{pointer}: long tap");
+                    instance.OnTapUp = (pointer, _) => Log(_multiTapLog, $"{pointer}: up");
+                    instance.OnTap = pointer => Log(_multiTapLog, $"{pointer}: tap");
+                    instance.OnTapCancel = pointer => Log(_multiTapLog, $"{pointer}: cancel");
+                }),
+        };
+
+        return new RawGestureDetector(
+            behavior: HitTestBehavior.Opaque,
+            gestures: gestures,
+            child: new Container(
+                height: 96,
+                color: Color.Parse("#FFE7EDF6"),
+                child: new Center(child: new Text(
+                    "Tap or hold with several fingers",
+                    fontSize: 14,
+                    color: Color.Parse("#FF31506F")))));
     }
 
     private static Widget BuildLog(string title, List<string> lines)

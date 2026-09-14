@@ -98,7 +98,8 @@ public class ForcePressGestureRecognizer : OneSequenceGestureRecognizer
         object? debugOwner = null,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         AllowedButtonsFilter? allowedButtonsFilter = null,
-        GestureBinding? binding = null) : base(binding)
+        GestureBinding? binding = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
         if (peakPressure <= startPressure)
         {
@@ -110,12 +111,6 @@ public class ForcePressGestureRecognizer : OneSequenceGestureRecognizer
         StartPressure = startPressure;
         PeakPressure = peakPressure;
         Interpolation = interpolation ?? InverseLerp;
-        DebugOwner = debugOwner;
-        SupportedDevices = supportedDevices;
-        if (allowedButtonsFilter is not null)
-        {
-            AllowedButtonsFilter = allowedButtonsFilter;
-        }
     }
 
     /// <summary>

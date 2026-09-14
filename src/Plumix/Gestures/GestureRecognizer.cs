@@ -2,12 +2,7 @@ using Avalonia;
 using Plumix.Foundation;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/recognizer.dart
-// Structure delta (see docs/ai/DIVERGENCES.md): Dart keeps `_entries`, `_trackedPointers`, `team`,
-// `startTrackingPointer`, `stopTrackingPointer` and `_addPointerToArena` on
-// `OneSequenceGestureRecognizer` and lets `MultiDragGestureRecognizer`, `DoubleTapGestureRecognizer`,
-// `MultiTapGestureRecognizer` and `SerialTapGestureRecognizer` hand-roll the same routing. Plumix
-// hoists them to `GestureRecognizer` so those four share one implementation; behavior is identical.
+// Dart parity source: flutter/packages/flutter/lib/src/gestures/recognizer.dart
 
 namespace Plumix.Gestures;
 
@@ -36,17 +31,24 @@ public enum MultitouchDragStrategy
     SumAllPointers
 }
 
-public abstract class GestureRecognizer : Diagnosticable, IDisposable
+public abstract class GestureRecognizer : DiagnosticableTree, IGestureArenaMember, IDisposable
 {
-    private readonly HashSet<int> _trackedPointers = [];
     private readonly Dictionary<int, (PointerDeviceKind Kind, PointerButtons Buttons)> _pointerToEventData = [];
-    private readonly PointerRoute _route;
-    private GestureArenaTeam? _team;
 
-    protected GestureRecognizer(GestureBinding? binding = null)
+    protected GestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
     {
         Binding = binding ?? GestureBinding.Instance;
-        _route = HandleRoutedEvent;
+        DebugOwner = debugOwner;
+        SupportedDevices = supportedDevices;
+        AllowedButtonsFilter = allowedButtonsFilter ?? DefaultButtonAcceptBehavior;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("gestures", "GestureRecognizer", this);
+        }
     }
 
     protected GestureBinding Binding { get; }
@@ -56,7 +58,7 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
     protected GestureArenaManager GestureArena => Binding.GestureArena;
 
     /// <summary>The recognizer's owner, used only for diagnostics.</summary>
-    public object? DebugOwner { get; set; }
+    public object? DebugOwner { get; init; }
 
     /// <summary>Device kinds this recognizer accepts; null accepts every kind.</summary>
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; set; }
@@ -64,28 +66,17 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
     /// <summary>Host-supplied gesture tuning that overrides framework defaults such as touch slop.</summary>
     public DeviceGestureSettings? GestureSettings { get; set; }
 
-    /// <summary>The arena team this recognizer competes through, when one is assigned.</summary>
-    public GestureArenaTeam? Team
-    {
-        get => _team;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            if (_team is not null || HasTrackedPointers)
-            {
-                throw new InvalidOperationException(
-                    "A gesture recognizer's team can only be assigned once before it tracks pointers.");
-            }
-
-            _team = value;
-        }
-    }
-
     /// <summary>Dart's `allowedButtonsFilter`; the default accepts every button combination.</summary>
-    public AllowedButtonsFilter AllowedButtonsFilter { get; set; } = DefaultButtonAcceptBehavior;
+    public AllowedButtonsFilter AllowedButtonsFilter { get; init; }
 
     /// <summary>A short description used by diagnostics.</summary>
-    public virtual string DebugDescription => GetType().Name;
+    public abstract string DebugDescription { get; }
+
+    /// <summary>Called when this recognizer wins the arena for the given pointer.</summary>
+    public abstract void AcceptGesture(int pointer);
+
+    /// <summary>Called when this recognizer loses the arena for the given pointer.</summary>
+    public abstract void RejectGesture(int pointer);
 
     public virtual void AddPointer(PointerDownEvent @event)
     {
@@ -158,13 +149,13 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
     /// <summary>The device kind recorded when the given pointer went down.</summary>
     protected PointerDeviceKind GetKindForPointer(int pointer)
     {
-        return _pointerToEventData.TryGetValue(pointer, out var data) ? data.Kind : PointerDeviceKind.Unknown;
+        return _pointerToEventData[pointer].Kind;
     }
 
     /// <summary>The buttons recorded when the given pointer went down.</summary>
     protected PointerButtons GetButtonsForPointer(int pointer)
     {
-        return _pointerToEventData.TryGetValue(pointer, out var data) ? data.Buttons : PointerButtons.None;
+        return _pointerToEventData[pointer].Buttons;
     }
 
     /// <summary>
@@ -177,7 +168,7 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
         T? result = default;
         try
         {
-            if (GestureDebug.PrintRecognizerCallbacksTrace)
+            if (Constants.KDebugMode && GestureDebug.PrintRecognizerCallbacksTrace)
             {
                 string? report = debugReport?.Invoke();
                 string prefix = GestureDebug.PrintGestureArenaDiagnostics
@@ -193,16 +184,17 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
         {
             FlutterError.ReportError(new FlutterErrorDetails(
                 exception: exception,
+                stack: exception.StackTrace,
                 library: "gesture",
                 context: new ErrorDescription("while handling a gesture"),
-                informationCollector: () =>
+                informationCollector: Constants.KDebugMode ? () =>
                 [
                     new StringProperty("Handler", name),
                     new DiagnosticsProperty<GestureRecognizer>(
                         "Recognizer",
                         this,
                         style: DiagnosticsTreeStyle.ErrorProperty)
-                ]));
+                ] : null));
         }
 
         return result;
@@ -230,110 +222,44 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
 
     public virtual void Dispose()
     {
-        foreach (int pointer in _trackedPointers.ToArray())
+        if (Constants.KDebugMode)
         {
-            PointerRouter.RemoveRoute(pointer, _route);
-        }
-
-        _trackedPointers.Clear();
-        _pointerToEventData.Clear();
-    }
-
-    protected virtual void StartTrackingPointer(int pointer, Matrix4? transform = null)
-    {
-        if (_trackedPointers.Add(pointer))
-        {
-            PointerRouter.AddRoute(pointer, _route, transform);
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
     }
-
-    protected virtual void StopTrackingPointer(int pointer)
-    {
-        if (_trackedPointers.Remove(pointer))
-        {
-            PointerRouter.RemoveRoute(pointer, _route);
-        }
-    }
-
-    protected bool IsTrackingPointer(int pointer)
-    {
-        return _trackedPointers.Contains(pointer);
-    }
-
-    /// <summary>Whether any pointer is currently routed to this recognizer.</summary>
-    protected bool HasTrackedPointers => _trackedPointers.Count > 0;
-
-    /// <summary>Adds this recognizer, or its team, to the arena for <paramref name="pointer"/>.</summary>
-    protected GestureArenaEntry AddPointerToArena(int pointer, IGestureArenaMember member)
-    {
-        return _team?.Add(pointer, member) ?? GestureArena.Add(pointer, member);
-    }
-
-    protected abstract void HandleEvent(PointerEvent @event);
 
     private static bool DefaultButtonAcceptBehavior(PointerButtons buttons) => true;
-
-    private void HandleRoutedEvent(PointerEvent @event)
-    {
-        if (!IsTrackingPointer(@event.Pointer))
-        {
-            return;
-        }
-
-        HandleEvent(@event);
-    }
-}
-
-/// <summary>
-/// A pair of positions for the same point: one in the global (root) coordinate space and one in the
-/// receiving render object's local space.
-/// </summary>
-public readonly record struct OffsetPair(Point Local, Point Global)
-{
-    public static OffsetPair Zero { get; } = new(default, default);
-
-    /// <summary>The event's position pair.</summary>
-    public static OffsetPair FromEventPosition(PointerEvent @event)
-    {
-        return new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
-    }
-
-    /// <summary>The event's delta pair.</summary>
-    public static OffsetPair FromEventDelta(PointerEvent @event)
-    {
-        return new OffsetPair(Local: @event.LocalDelta, Global: @event.Delta);
-    }
-
-    public static OffsetPair operator +(OffsetPair left, OffsetPair right)
-    {
-        return new OffsetPair(Local: left.Local + right.Local, Global: left.Global + right.Global);
-    }
-
-    public static OffsetPair operator -(OffsetPair left, OffsetPair right)
-    {
-        return new OffsetPair(Local: left.Local - right.Local, Global: left.Global - right.Global);
-    }
 }
 
 /// <summary>
 /// A recognizer that tracks a single sequence of pointer events: it owns one arena entry per pointer
 /// and learns when the last of them stops being tracked.
 /// </summary>
-public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public abstract class OneSequenceGestureRecognizer : GestureRecognizer
 {
     private readonly Dictionary<int, GestureArenaEntry> _entries = [];
+    private readonly HashSet<int> _trackedPointers = [];
+    private GestureArenaTeam? _team;
 
-    protected OneSequenceGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    protected OneSequenceGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
     }
 
+    /// <summary>Handles events routed to this recognizer's tracked pointers.</summary>
+    protected abstract void HandleEvent(PointerEvent @event);
+
     /// <summary>Called when this recognizer wins the arena for the given pointer.</summary>
-    public virtual void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
     }
 
     /// <summary>Called when this recognizer loses the arena for the given pointer.</summary>
-    public virtual void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
     }
 
@@ -366,7 +292,7 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     }
 
     /// <summary>Resolves a single pointer this recognizer is competing for.</summary>
-    protected void ResolvePointer(int pointer, GestureDisposition disposition)
+    protected virtual void ResolvePointer(int pointer, GestureDisposition disposition)
     {
         if (_entries.Remove(pointer, out GestureArenaEntry entry))
         {
@@ -374,20 +300,46 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
         }
     }
 
-    protected override void StartTrackingPointer(int pointer, Matrix4? transform = null)
+    /// <summary>The arena team this recognizer competes through, when one is assigned.</summary>
+    public GestureArenaTeam? Team
     {
-        base.StartTrackingPointer(pointer, transform);
-        // A reused pointer id starts a fresh arena, so the entry is always replaced.
-        _entries[pointer] = AddPointerToArena(pointer, this);
+        get => _team;
+        set
+        {
+            if (Constants.KDebugMode
+                && (value is null || _entries.Count > 0 || _trackedPointers.Count > 0 || _team is not null))
+            {
+                throw new InvalidOperationException(
+                    "A gesture recognizer's team can only be assigned once before it tracks pointers.");
+            }
+
+            _team = value;
+        }
     }
 
-    protected override void StopTrackingPointer(int pointer)
+    private GestureArenaEntry AddPointerToArena(int pointer)
     {
-        bool wasTracking = IsTrackingPointer(pointer);
-        base.StopTrackingPointer(pointer);
-        if (wasTracking && !HasTrackedPointers)
+        return _team?.Add(pointer, this) ?? GestureArena.Add(pointer, this);
+    }
+
+    protected virtual void StartTrackingPointer(int pointer, Matrix4? transform = null)
+    {
+        PointerRouter.AddRoute(pointer, HandleEvent, transform);
+        _trackedPointers.Add(pointer);
+        // Upstream intentionally permits replacing an old, unresolved entry for a reused pointer id.
+        _entries[pointer] = AddPointerToArena(pointer);
+    }
+
+    protected virtual void StopTrackingPointer(int pointer)
+    {
+        if (_trackedPointers.Contains(pointer))
         {
-            DidStopTrackingLastPointer(pointer);
+            PointerRouter.RemoveRoute(pointer, HandleEvent);
+            _trackedPointers.Remove(pointer);
+            if (_trackedPointers.Count == 0)
+            {
+                DidStopTrackingLastPointer(pointer);
+            }
         }
     }
 
@@ -403,8 +355,18 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     public override void Dispose()
     {
         Resolve(GestureDisposition.Rejected);
+        foreach (int pointer in _trackedPointers)
+        {
+            PointerRouter.RemoveRoute(pointer, HandleEvent);
+        }
+
+        _trackedPointers.Clear();
+        if (Constants.KDebugMode && _entries.Count != 0)
+        {
+            throw new InvalidOperationException("A disposed recognizer must have no arena entries.");
+        }
+
         base.Dispose();
-        _entries.Clear();
     }
 }
 
@@ -442,16 +404,22 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
         TimeSpan? deadline = null,
         double? preAcceptSlopTolerance = UnsetTouchSlop,
         double? postAcceptSlopTolerance = UnsetTouchSlop,
-        GestureBinding? binding = null) : base(binding)
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
-        if (preAcceptSlopTolerance is { } pre && pre != UnsetTouchSlop && pre < 0.0)
+        if (Constants.KDebugMode
+            && preAcceptSlopTolerance is { } pre && pre != UnsetTouchSlop && !(pre >= 0.0))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(preAcceptSlopTolerance),
                 "The preAcceptSlopTolerance must be unspecified, positive, or null.");
         }
 
-        if (postAcceptSlopTolerance is { } post && post != UnsetTouchSlop && post < 0.0)
+        if (Constants.KDebugMode
+            && postAcceptSlopTolerance is { } post && post != UnsetTouchSlop && !(post >= 0.0))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(postAcceptSlopTolerance),
@@ -520,6 +488,11 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
 
     protected override void HandleEvent(PointerEvent @event)
     {
+        if (Constants.KDebugMode && State == GestureRecognizerState.Ready)
+        {
+            throw new InvalidOperationException("A primary recognizer cannot handle events while ready.");
+        }
+
         if (State == GestureRecognizerState.Possible && @event.Pointer == PrimaryPointer)
         {
             bool isPreAcceptSlopPastTolerance = !_gestureAccepted
@@ -552,7 +525,7 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
     /// </summary>
     protected virtual void DidExceedDeadline()
     {
-        if (Deadline is not null)
+        if (Constants.KDebugMode && Deadline is not null)
         {
             throw new InvalidOperationException(
                 $"{DebugDescription} supplies a deadline but overrides neither DidExceedDeadline() "
@@ -586,6 +559,11 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
 
     protected override void DidStopTrackingLastPointer(int pointer)
     {
+        if (Constants.KDebugMode && State == GestureRecognizerState.Ready)
+        {
+            throw new InvalidOperationException("A primary recognizer must be tracking before it stops.");
+        }
+
         StopTimer();
         State = GestureRecognizerState.Ready;
         InitialPosition = null;
@@ -615,6 +593,40 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
     {
         return (@event.Position - InitialPosition!.Value.Global).Distance();
     }
+}
+
+/// <summary>
+/// A pair of positions for the same point: one in the global (root) coordinate space and one in the
+/// receiving render object's local space.
+/// </summary>
+public readonly record struct OffsetPair(Point Local, Point Global)
+{
+    public static OffsetPair Zero { get; } = new(default, default);
+
+    /// <summary>The event's position pair.</summary>
+    public static OffsetPair FromEventPosition(PointerEvent @event)
+    {
+        return new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
+    }
+
+    /// <summary>The event's delta pair.</summary>
+    public static OffsetPair FromEventDelta(PointerEvent @event)
+    {
+        return new OffsetPair(Local: @event.LocalDelta, Global: @event.Delta);
+    }
+
+    public static OffsetPair operator +(OffsetPair left, OffsetPair right)
+    {
+        return new OffsetPair(Local: left.Local + right.Local, Global: left.Global + right.Global);
+    }
+
+    public static OffsetPair operator -(OffsetPair left, OffsetPair right)
+    {
+        return new OffsetPair(Local: left.Local - right.Local, Global: left.Global - right.Global);
+    }
+
+    public override string ToString() => FormattableString.Invariant(
+        $"OffsetPair(local: Offset({Local.X:0.0}, {Local.Y:0.0}), global: Offset({Global.X:0.0}, {Global.Y:0.0}))");
 }
 
 public readonly record struct DragDownDetails(

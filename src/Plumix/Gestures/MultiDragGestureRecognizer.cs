@@ -170,13 +170,13 @@ public abstract class MultiDragPointerState : IDisposable
 }
 
 /// <summary>Recognizes movement on a per-pointer basis, so multiple drags can run at the same time.</summary>
-public abstract class MultiDragGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public abstract class MultiDragGestureRecognizer : GestureRecognizer
 {
     private readonly Dictionary<int, MultiDragPointerState> _pointers = [];
 
-    protected MultiDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    protected MultiDragGestureRecognizer(GestureBinding? binding = null)
+        : base(binding, allowedButtonsFilter: DefaultButtonAcceptBehavior)
     {
-        AllowedButtonsFilter = DefaultButtonAcceptBehavior;
     }
 
     /// <summary>Called when this class recognizes the start of a drag gesture for a pointer.</summary>
@@ -194,14 +194,14 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer, IGestureAr
 
         MultiDragPointerState state = CreateNewPointerState(@event);
         _pointers[@event.Pointer] = state;
-        StartTrackingPointer(@event.Pointer);
-        state.SetArenaEntry(AddPointerToArena(@event.Pointer, this));
+        PointerRouter.AddRoute(@event.Pointer, HandleEvent);
+        state.SetArenaEntry(GestureArena.Add(@event.Pointer, this));
     }
 
     /// <summary>Creates the specific state object tracking one new pointer.</summary>
     protected abstract MultiDragPointerState CreateNewPointerState(PointerDownEvent @event);
 
-    protected override void HandleEvent(PointerEvent @event)
+    private void HandleEvent(PointerEvent @event)
     {
         if (!_pointers.TryGetValue(@event.Pointer, out MultiDragPointerState? state))
         {
@@ -224,7 +224,7 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer, IGestureAr
         }
     }
 
-    public void AcceptGesture(int pointer)
+    public override void AcceptGesture(int pointer)
     {
         if (!_pointers.TryGetValue(pointer, out MultiDragPointerState? state))
         {
@@ -256,7 +256,7 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer, IGestureAr
         return drag;
     }
 
-    public void RejectGesture(int pointer)
+    public override void RejectGesture(int pointer)
     {
         if (_pointers.TryGetValue(pointer, out MultiDragPointerState? state))
         {
@@ -272,7 +272,7 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer, IGestureAr
             return;
         }
 
-        StopTrackingPointer(pointer);
+        PointerRouter.RemoveRoute(pointer, HandleEvent);
         state.Dispose();
     }
 

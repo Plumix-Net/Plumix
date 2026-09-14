@@ -70,15 +70,13 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         GestureVelocityTrackerBuilder? velocityTrackerBuilder = null,
         bool onlyAcceptDragOnThreshold = false,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
-        AllowedButtonsFilter? allowedButtonsFilter = null) : base(binding)
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter ?? DefaultButtonAcceptBehavior)
     {
-        DebugOwner = debugOwner;
         DragStartBehavior = dragStartBehavior;
         MultitouchDragStrategy = multitouchDragStrategy;
         VelocityTrackerBuilder = velocityTrackerBuilder ?? DefaultVelocityTrackerBuilder;
         OnlyAcceptDragOnThreshold = onlyAcceptDragOnThreshold;
-        SupportedDevices = supportedDevices;
-        AllowedButtonsFilter = allowedButtonsFilter ?? DefaultButtonAcceptBehavior;
     }
 
     /// <summary>Dart's `_defaultBuilder`: a plain velocity tracker for the event's device kind.</summary>

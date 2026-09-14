@@ -18,6 +18,7 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
   final List<String> _dragLog = <String>[];
   final List<String> _longPressLog = <String>[];
   final List<String> _scaleLog = <String>[];
+  final List<String> _multiTapLog = <String>[];
   DragStartBehavior _dragStartBehavior = DragStartBehavior.start;
   bool _onlyAcceptDragOnThreshold = false;
   MultitouchDragStrategy _multitouchDragStrategy =
@@ -110,6 +111,13 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
           ),
           _buildScaleSurface(),
           _buildLog('Scale events', _scaleLog),
+          const Text(
+            'Tap with several fingers at once. Each finger completes or cancels its own tap; '
+            'holding for 250 ms also logs a long tap.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildMultiTapSurface(),
+          _buildLog('Independent tap events', _multiTapLog),
         ],
       ),
     );
@@ -304,6 +312,43 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
                 ),
               ),
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMultiTapSurface() {
+    return RawGestureDetector(
+      behavior: HitTestBehavior.opaque,
+      gestures: <Type, GestureRecognizerFactory>{
+        MultiTapGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<MultiTapGestureRecognizer>(
+              () => MultiTapGestureRecognizer(
+                longTapDelay: const Duration(milliseconds: 250),
+              ),
+              (MultiTapGestureRecognizer instance) {
+                instance.onTapDown = (int pointer, TapDownDetails details) =>
+                    _log(_multiTapLog, '$pointer: down');
+                instance.onLongTapDown =
+                    (int pointer, TapDownDetails details) =>
+                        _log(_multiTapLog, '$pointer: long tap');
+                instance.onTapUp = (int pointer, TapUpDetails details) =>
+                    _log(_multiTapLog, '$pointer: up');
+                instance.onTap = (int pointer) =>
+                    _log(_multiTapLog, '$pointer: tap');
+                instance.onTapCancel = (int pointer) =>
+                    _log(_multiTapLog, '$pointer: cancel');
+              },
+            ),
+      },
+      child: Container(
+        height: 96,
+        color: const Color(0xFFE7EDF6),
+        child: const Center(
+          child: Text(
+            'Tap or hold with several fingers',
+            style: TextStyle(fontSize: 14, color: Color(0xFF31506F)),
           ),
         ),
       ),
