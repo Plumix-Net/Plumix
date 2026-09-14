@@ -363,10 +363,7 @@ internal sealed class RouterState<T> : RouterStateBase
         }
 
         _routeInformationReportingTaskScheduled = true;
-
-        // Flutter only queues the callback and relies on the surrounding frame; Plumix schedules the frame
-        // too, so the very first report still lands when nothing else dirties the tree.
-        Scheduler.AddPostFrameCallback(ReportRouteInformation);
+        Scheduler.AddPostFrameCallback(ReportRouteInformation, debugLabel: "Router.reportRouteInfo");
     }
 
     private void ReportRouteInformation(TimeSpan timestamp)
@@ -939,7 +936,7 @@ public class PlatformRouteInformationProvider : RouteInformationProvider, Widget
         ArgumentNullException.ThrowIfNull(initialRouteInformation);
         _value = initialRouteInformation;
         _valueInEngine = new RouteInformation(
-            new Uri(SystemNavigator.DefaultRouteName, UriKind.RelativeOrAbsolute));
+            new Uri(PlatformDispatcher.Instance.DefaultRouteName, UriKind.RelativeOrAbsolute));
     }
 
     public override RouteInformation Value => _value;

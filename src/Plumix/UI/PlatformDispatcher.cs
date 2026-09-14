@@ -3,14 +3,14 @@ using Avalonia.Threading;
 namespace Plumix.UI;
 
 // Dart parity source (reference):
-// flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart (frame + view-focus subset, adapted)
+// flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart (frame + view-focus + launch-route subset, adapted)
 
 /// <summary>
 /// The framework's side of the platform: the engine-level requests the framework can make of a
 /// host, independent of any particular view.
 /// </summary>
 /// <remarks>
-/// dart:ui's <c>PlatformDispatcher</c>, limited to the frame pipeline and the view-focus request
+/// dart:ui's <c>PlatformDispatcher</c>, limited to launch routes, the frame pipeline and the view-focus request
 /// the widget layer makes. Flutter forwards <see cref="RequestViewFocusChange"/> to the engine,
 /// which moves native focus to the view's window; Plumix has no engine, so the request is published
 /// through <see cref="ViewFocusChangeRequested"/> and the host that owns the named view answers it.
@@ -29,6 +29,14 @@ public sealed class PlatformDispatcher
     /// <summary>The ambient platform dispatcher.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.instance</c>.</remarks>
     public static PlatformDispatcher Instance { get; } = new();
+
+    /// <summary>The route requested by the platform when the application was launched, or <c>/</c>.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.defaultRouteName</c>. A host sets this before mounting the app;
+    /// subsequent navigation requests arrive through <c>SystemChannels.Navigation</c>.
+    /// Flutter reads this from its engine; the setter supplies that value in an Avalonia host.
+    /// </remarks>
+    public string DefaultRouteName { get; set; } = "/";
 
     /// <summary>
     /// Raised by <see cref="RequestViewFocusChange"/>. A host that owns the view named by the event

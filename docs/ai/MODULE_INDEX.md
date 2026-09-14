@@ -234,7 +234,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`
   - `src/Plumix/Widgets/FlutterView.cs`
   - `src/Plumix/RendererBinding.cs` (root pipeline owner, `RenderView` registry, `HandleMetricsChanged`)
-  - `src/Plumix/UI/PlatformDispatcher.cs` (frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
+  - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
   - `src/Plumix/FrameworkSynchronizationContext.cs`

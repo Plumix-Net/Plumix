@@ -20,6 +20,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public ApplicationWidgetsTests()
     {
         Scheduler.ResetForTests();
+        SystemNavigator.ResetForTests();
         SystemChrome.ResetApplicationSwitcherDescriptionForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
@@ -27,6 +28,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public void Dispose()
     {
         Scheduler.ResetForTests();
+        SystemNavigator.ResetForTests();
         SystemChrome.ResetApplicationSwitcherDescriptionForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
@@ -315,6 +317,40 @@ public sealed class ApplicationWidgetsTests : IDisposable
             new ApplicationSwitcherDescription("localized", 0xFF112233),
             SystemChrome.CurrentApplicationSwitcherDescription);
         root.UnmountRoot();
+    }
+
+    [Theory]
+    [InlineData("/", null, "/")]
+    [InlineData("/", "/configured", "/configured")]
+    [InlineData("/launch", null, "/launch")]
+    [InlineData("/launch", "/configured", "/launch")]
+    public void WidgetsApp_ResolvesInitialRouteFromPlatformBeforeWidgetConfiguration(
+        string platformRoute,
+        string? configuredRoute,
+        string expectedRoute)
+    {
+        PlatformDispatcher.Instance.DefaultRouteName = platformRoute;
+        string? generatedRoute = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new WidgetsApp(
+            color: Colors.Blue,
+            initialRoute: configuredRoute,
+            routes: new Dictionary<string, WidgetBuilder> { ["/"] = _ => new SizedBox() },
+            onGenerateInitialRoutes: routeName =>
+            {
+                generatedRoute = routeName;
+                return [new BuilderPageRoute(_ => new SizedBox(), new RouteSettings(Name: routeName))];
+            },
+            pageRouteBuilder: (settings, builder) => new BuilderPageRoute(context => builder(context), settings)));
+        try
+        {
+            MountAndFlush(root, owner);
+            Assert.Equal(expectedRoute, generatedRoute);
+        }
+        finally
+        {
+            root.UnmountRoot();
+        }
     }
 
     [Fact]

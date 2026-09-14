@@ -547,9 +547,12 @@ public sealed class WidgetsApp : StatefulWidget
             CurrentWidget.BackButtonDispatcher ?? _defaultBackButtonDispatcher;
 
         private string InitialRouteName =>
-            !string.Equals(SystemNavigator.DefaultRouteName, Navigator.DefaultRouteName, StringComparison.Ordinal)
-                ? SystemNavigator.DefaultRouteName
-                : CurrentWidget.InitialRoute ?? SystemNavigator.DefaultRouteName;
+            !string.Equals(
+                PlatformDispatcher.Instance.DefaultRouteName,
+                Navigator.DefaultRouteName,
+                StringComparison.Ordinal)
+                ? PlatformDispatcher.Instance.DefaultRouteName
+                : CurrentWidget.InitialRoute ?? PlatformDispatcher.Instance.DefaultRouteName;
 
         public override void InitState()
         {

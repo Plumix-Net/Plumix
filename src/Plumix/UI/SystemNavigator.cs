@@ -6,11 +6,14 @@ namespace Plumix.UI;
 public static class SystemNavigator
 {
     /// <summary>
-    /// The route the host launched the application with. Flutter reads this from
-    /// <c>PlatformDispatcher.defaultRouteName</c>; Plumix has no platform dispatcher, so hosts assign it
-    /// here before the first frame. See <c>docs/ai/DIVERGENCES.md</c>.
+    /// Compatibility access to the route the host launched the application with.
+    /// New hosts should assign <see cref="PlatformDispatcher.DefaultRouteName"/> before mounting the app.
     /// </summary>
-    public static string DefaultRouteName { get; set; } = "/";
+    public static string DefaultRouteName
+    {
+        get => PlatformDispatcher.Instance.DefaultRouteName;
+        set => PlatformDispatcher.Instance.DefaultRouteName = value;
+    }
 
     /// <summary>
     /// Informs the platform of whether or not the Flutter framework will handle back events.

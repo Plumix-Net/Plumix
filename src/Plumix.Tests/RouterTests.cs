@@ -6,6 +6,7 @@ using Xunit;
 namespace Plumix.Tests;
 
 // Dart parity sources:
+// flutter/packages/flutter/lib/src/services/system_navigator.dart
 // flutter/packages/flutter/lib/src/widgets/router.dart
 // flutter/packages/flutter/test/widgets/router_test.dart
 // flutter/packages/flutter/test/widgets/router_restoration_test.dart
@@ -680,6 +681,32 @@ public sealed class RouterTests : IDisposable
     // ------------------------------------------------------------- reporting
 
     [Fact]
+    public void Router_QueuesExplicitReportWithoutRequestingAnotherFrame()
+    {
+        var reports = new List<RouteInformationReportingType>();
+        var provider = new SimpleRouteInformationProvider(Info("/launch"), (_, type) => reports.Add(type));
+        BuildContext? routerContext = null;
+        var routerDelegate = new SimpleRouterDelegate((context, _) =>
+        {
+            routerContext = context;
+            return new SizedBox();
+        }, reportConfiguration: true);
+        using var harness = new RestorationHarness(new Router<RouteInformation>(
+            routerDelegate: routerDelegate,
+            routeInformationProvider: provider,
+            routeInformationParser: new SimpleRouteInformationParser()));
+        Pump(harness);
+        reports.Clear();
+        Assert.False(Scheduler.HasScheduledFrame);
+
+        Router.Neglect(routerContext!, () => { });
+        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.Empty(reports);
+        Scheduler.PumpFrameForTests();
+        Assert.Equal([RouteInformationReportingType.Neglect], reports);
+    }
+
+    [Fact]
     public void Router_ReportsTheParsedConfigurationOncePerFrame()
     {
         var reports = new List<(string Uri, RouteInformationReportingType Type)>();
@@ -860,6 +887,45 @@ public sealed class RouterTests : IDisposable
     // --------------------------------------- PlatformRouteInformationProvider
 
     [Fact]
+    public void SystemNavigator_DefaultRouteNameForwardsToPlatformDispatcher()
+    {
+        Assert.Equal("/", PlatformDispatcher.Instance.DefaultRouteName);
+        Assert.Equal("/", SystemNavigator.DefaultRouteName);
+
+        PlatformDispatcher.Instance.DefaultRouteName = "/platform";
+        Assert.Equal("/platform", SystemNavigator.DefaultRouteName);
+
+        SystemNavigator.DefaultRouteName = "/legacy";
+        Assert.Equal("/legacy", PlatformDispatcher.Instance.DefaultRouteName);
+        SystemNavigator.ResetForTests();
+        Assert.Equal("/", PlatformDispatcher.Instance.DefaultRouteName);
+    }
+
+    [Theory]
+    [InlineData("/launch?a=ws/abcd", "/launch?a=ws%2Fabcd", true)]
+    [InlineData("/launch", "/different", false)]
+    public void PlatformRouteInformationProvider_UsesPlatformLaunchRouteAsInitialHistoryBaseline(
+        string platformRoute,
+        string reportedRoute,
+        bool expectedReplace)
+    {
+        PlatformDispatcher.Instance.DefaultRouteName = platformRoute;
+        using var provider = new PlatformRouteInformationProvider(Info("/application"));
+        Assert.Equal("/application", provider.Value.Uri.ToString());
+
+        // The engine baseline is captured at provider creation, independently of its application value.
+        PlatformDispatcher.Instance.DefaultRouteName = "/later";
+        using var navigation = new MockMethodCallHandler(SystemChannels.Navigation);
+        provider.RouterReportsNewRouteInformation(Info(reportedRoute, state: "state"));
+
+        Assert.Equal(["selectMultiEntryHistory", "routeInformationUpdated"], navigation.Methods);
+        MethodCall update = navigation.Log[1];
+        Assert.Equal(reportedRoute, RouteUpdateUri(update));
+        Assert.Equal(expectedReplace, RouteUpdateReplace(update));
+        Assert.Equal("state", ((IDictionary<string, object?>)update.Arguments!)["state"]);
+    }
+
+    [Fact]
     public void PlatformRouteInformationProvider_ReportsThroughSystemNavigator()
     {
         var provider = new PlatformRouteInformationProvider(Info("initial"));
@@ -1012,6 +1078,29 @@ public sealed class RouterTests : IDisposable
     }
 
     // ------------------------------------------------------------- app hosts
+
+    [Theory]
+    [InlineData("/")]
+    [InlineData("/launch?value=1#section")]
+    public void WidgetsAppRouter_DefaultProviderParsesPlatformLaunchRoute(string platformRoute)
+    {
+        PlatformDispatcher.Instance.DefaultRouteName = platformRoute;
+        var routerDelegate = new SimpleRouterDelegate((_, _) => new SizedBox(), reportConfiguration: true);
+        using var navigation = new MockMethodCallHandler(SystemChannels.Navigation);
+        using var harness = new RestorationHarness(WidgetsApp.Router(
+            color: Avalonia.Media.Colors.Blue,
+            routerDelegate: routerDelegate,
+            routeInformationParser: new SimpleRouteInformationParser()));
+        Pump(harness);
+
+        Assert.Equal([platformRoute], routerDelegate.InitialRoutePaths.Select(route => route.Uri.ToString()));
+        var provider = Assert.IsType<PlatformRouteInformationProvider>(
+            harness.FindWidget<Router<RouteInformation>>()!.RouteInformationProvider);
+        Assert.Equal(platformRoute, provider.Value.Uri.ToString());
+        MethodCall update = Assert.Single(navigation.Log, call => call.Method == "routeInformationUpdated");
+        Assert.Equal(platformRoute, RouteUpdateUri(update));
+        Assert.True(RouteUpdateReplace(update));
+    }
 
     [Fact]
     public void WidgetsAppRouter_BuildsARouterWithDefaultProviderAndDispatcher()
