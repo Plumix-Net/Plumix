@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: ValueKey subclasses inherit Flutter's printer and use Dart type names (foundation/key.dart).
 - Breaking: library states check typed widget contracts through direct and shared bases (framework.dart).
 - Breaking: `FittedSizes` is an immutable reference pair with Dart identity equality (box_fit.dart).
 - Fix host view metrics on initial layout and resize so popup geometry uses the incoming window size.

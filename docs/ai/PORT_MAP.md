@@ -262,7 +262,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
 | `foundation/debug.dart` | `src/Plumix/Foundation/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnosticable.cs`<br>`src/Plumix/Foundation/Diagnostics.Node.cs`<br>`src/Plumix/Foundation/Diagnostics.TextTree.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | `src/Plumix.Tests/DiagnosticsTests.cs`<br>`src/Plumix.Tests/ElementDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs` | — |
-| `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` _(reference) (approximate)_ | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
+| `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/memory_allocations.dart` | `src/Plumix/Foundation/MemoryAllocations.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
@@ -615,7 +615,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - `src/Plumix/FlutterExtensions.cs` — (reference) (host integration, adapted)
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
-- `src/Plumix/Foundation/Key.cs` — (reference) (approximate)
 - `src/Plumix/Foundation/Listenable.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/GestureBinding.cs` — (reference) (approximate)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
@@ -649,5 +648,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 702
 - C# files without a marker: 47
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 29
+- C# files with a qualified (non-strict) marker: 28
 

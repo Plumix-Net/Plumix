@@ -1,7 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/foundation/key.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/foundation/key.dart
 
 namespace Plumix.Foundation;
 
@@ -60,13 +60,27 @@ public sealed record UniqueKey : LocalKey
 /// <typeparam name="T"></typeparam>
 public record ValueKey<T>(T Value) : LocalKey
 {
-    public override string ToString()
+    // A record subclass otherwise synthesizes its own printer, but Dart's ValueKey.toString is
+    // inherited by subclasses (including PageStorageKey).
+    public sealed override string ToString()
     {
         string valueString = typeof(T) == typeof(string) ? $"<'{Value}'>" : $"<{Diagnostics.DescribeValue(Value)}>";
 
         // Dart omits the type for a plain `ValueKey<T>` and prints it only for subclasses.
         return GetType() == typeof(ValueKey<T>)
             ? $"[{valueString}]"
-            : $"[{Diagnostics.DescribeType(typeof(T))} {valueString}]";
+            : $"[{DartTypeName(typeof(T))} {valueString}]";
+    }
+
+    private static string DartTypeName(Type type)
+    {
+        Type? nullableType = Nullable.GetUnderlyingType(type);
+        if (nullableType is not null) return $"{DartTypeName(nullableType)}?";
+        if (type == typeof(int) || type == typeof(long)) return "int";
+        if (type == typeof(bool)) return "bool";
+        if (type == typeof(double)) return "double";
+        if (type == typeof(string)) return "String";
+        if (type == typeof(object)) return "Object";
+        return Diagnostics.DescribeType(type);
     }
 }
