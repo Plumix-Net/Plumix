@@ -1,6 +1,6 @@
 using Avalonia;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/painting/box_fit.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/painting/box_fit.dart
 
 namespace Plumix.Rendering;
 
@@ -15,7 +15,13 @@ public enum BoxFit
     ScaleDown
 }
 
-public readonly record struct FittedSizes(Size Source, Size Destination);
+/// <summary>The source area and destination area returned by <see cref="BoxFitUtils.ApplyBoxFit"/>.</summary>
+public sealed class FittedSizes(Size source, Size destination)
+{
+    public Size Source { get; } = source;
+
+    public Size Destination { get; } = destination;
+}
 
 public static class BoxFitUtils
 {

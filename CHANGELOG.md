@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `FittedSizes` is an immutable reference pair with Dart identity equality (box_fit.dart).
 - Fix host view metrics on initial layout and resize so popup geometry uses the incoming window size.
 - Breaking: Cupertino sliding taps arbitrate with scrolling and hit-test the whole view (dialog.dart).
 - Breaking: recognizer arena/routing ownership and construction-only options match Flutter (recognizer.dart).
