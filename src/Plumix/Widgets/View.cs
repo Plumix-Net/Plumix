@@ -904,9 +904,23 @@ internal sealed class MultiChildComponentElement : Element
 /// (view, deprecated owner, deprecated render view) triple, so a <see cref="RawView"/> rebuilt for
 /// the same view keeps its element and two widgets for one view collide.
 /// </summary>
-internal sealed record DeprecatedRawViewKey(FlutterView View, PipelineOwner? Owner, RenderView? RenderView)
+internal sealed class DeprecatedRawViewKey(FlutterView view, PipelineOwner? owner, RenderView? renderView)
     : GlobalKey<State>
 {
+    public FlutterView View { get; } = view;
+    public PipelineOwner? Owner { get; } = owner;
+    public RenderView? RenderView { get; } = renderView;
+
+    public override bool Equals(object? obj)
+    {
+        return obj is DeprecatedRawViewKey other
+            && ReferenceEquals(other.View, View)
+            && ReferenceEquals(other.Owner, Owner)
+            && ReferenceEquals(other.RenderView, RenderView);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(View, Owner, RenderView);
+
     /// <inheritdoc />
     public override string ToString() => $"[_DeprecatedRawViewKey {Diagnostics.DescribeIdentity(View)}]";
 }

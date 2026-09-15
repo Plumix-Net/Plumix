@@ -1013,7 +1013,22 @@ internal sealed class ReorderableListScope : InheritedWidget
     }
 }
 
-internal sealed record ReorderableItemKey(Key SubKey, int Index, SliverReorderableListState Owner) : GlobalKey;
+internal sealed class ReorderableItemKey(Key subKey, int index, SliverReorderableListState owner) : GlobalKey
+{
+    public Key SubKey { get; } = subKey;
+    public int Index { get; } = index;
+    public SliverReorderableListState Owner { get; } = owner;
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ReorderableItemKey other
+            && other.SubKey == SubKey
+            && other.Index == Index
+            && ReferenceEquals(other.Owner, Owner);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(SubKey, Index, Owner);
+}
 
 internal sealed class ReorderableItem : StatefulWidget
 {

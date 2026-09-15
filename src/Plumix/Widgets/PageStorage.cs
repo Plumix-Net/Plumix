@@ -4,7 +4,7 @@ using Plumix.Foundation;
 
 namespace Plumix.Widgets;
 
-public record PageStorageKey<T>(T Value) : ValueKey<T>(Value);
+public class PageStorageKey<T>(T value) : ValueKey<T>(value);
 
 public sealed class PageStorageBucket
 {

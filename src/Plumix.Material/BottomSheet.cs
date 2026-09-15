@@ -120,7 +120,10 @@ public sealed class BottomSheet : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(value));
     }
 
-    private sealed record BottomSheetChildKey(Guid Id) : GlobalKey;
+    private sealed class BottomSheetChildKey(Guid id) : GlobalKey
+    {
+        public Guid Id { get; } = id;
+    }
 
     private sealed class BottomSheetState : State<BottomSheet>
     {

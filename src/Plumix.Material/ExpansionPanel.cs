@@ -9,7 +9,20 @@ using Plumix.Widgets;
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/expansion_panel.dart
-internal sealed record ExpansionPanelSaltedKey(BuildContext Salt, int Value) : LocalKey;
+internal sealed class ExpansionPanelSaltedKey(BuildContext salt, int value) : LocalKey
+{
+    public BuildContext Salt { get; } = salt;
+    public int Value { get; } = value;
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ExpansionPanelSaltedKey other && other.Salt == Salt && other.Value == Value;
+    }
+
+    public override int GetHashCode() => HashCode.Combine(GetType(), Salt, Value);
+
+    public override string ToString() => $"[<{Salt}> <{Value}>]";
+}
 
 public delegate void ExpansionPanelCallback(int panelIndex, bool isExpanded);
 

@@ -492,6 +492,19 @@ public sealed class ReorderableListView : StatefulWidget
     }
 }
 
-internal sealed record ReorderableListViewChildKey(Key SubKey, State Owner) : GlobalKey;
+internal sealed class ReorderableListViewChildKey(Key subKey, State owner) : GlobalKey
+{
+    public Key SubKey { get; } = subKey;
+    public State Owner { get; } = owner;
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ReorderableListViewChildKey other
+            && other.SubKey == SubKey
+            && ReferenceEquals(other.Owner, Owner);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(SubKey, Owner);
+}
 
 #pragma warning restore CS0618

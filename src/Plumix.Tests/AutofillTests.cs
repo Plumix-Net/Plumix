@@ -623,7 +623,10 @@ public sealed class AutofillTests : IDisposable
             null);
     }
 
-    private sealed record ProbeKey(int Id) : GlobalKey<EditableText.EditableTextState>;
+    private sealed class ProbeKey(int id) : GlobalKey<EditableText.EditableTextState>
+    {
+        public int Id { get; } = id;
+    }
 
     private sealed class RecordingTextInputControl : TextInputControl
     {

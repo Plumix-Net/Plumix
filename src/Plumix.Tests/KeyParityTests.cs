@@ -45,6 +45,36 @@ public sealed class KeyParityTests
     }
 
     [Fact]
+    public void ValueKeySubclassIgnoresExtraFieldsAsDartDoes()
+    {
+        Key first = new SaltedValueKey(7, "one");
+        Key second = new SaltedValueKey(7, "two");
+
+        Assert.True(first == second);
+        Assert.Equal(first, second);
+        Assert.Equal(first.GetHashCode(), second.GetHashCode());
+        Assert.Single(new HashSet<Key> { first, second });
+        Assert.NotEqual(first, new ValueKey<int>(7));
+        Assert.NotEqual(first, new OtherValueKey(7));
+        Assert.True(Widget.CanUpdate(new SizedBox(key: first), new SizedBox(key: second)));
+    }
+
+    [Fact]
+    public void OtherKeyFamiliesRetainTheirOwnEqualityContracts()
+    {
+        object value = new object();
+        Key objectKey = new ObjectKey(value);
+        Key matchingObjectKey = new ObjectKey(value);
+        Key globalObjectKey = new GlobalObjectKey<State>(value);
+
+        Assert.True(objectKey == matchingObjectKey);
+        Assert.NotEqual(objectKey, new ObjectKey(new object()));
+        Assert.Equal(globalObjectKey, new GlobalObjectKey<State>(value));
+        Assert.NotEqual(globalObjectKey, new OtherGlobalObjectKey(value));
+        Assert.NotEqual(new LabeledGlobalKey<State>("label"), new LabeledGlobalKey<State>("label"));
+    }
+
+    [Fact]
     public void ValueKeySubclassInheritsTheFlutterPrinter()
     {
         Assert.Equal("[<7>]", new ValueKey<int>(7).ToString());
@@ -54,4 +84,13 @@ public sealed class KeyParityTests
         Assert.Equal("[<null>]", new ValueKey<object?>(null).ToString());
         Assert.Equal("[int? <null>]", new PageStorageKey<int?>(null).ToString());
     }
+
+    private sealed class SaltedValueKey(int value, string salt) : ValueKey<int>(value)
+    {
+        public string Salt { get; } = salt;
+    }
+
+    private sealed class OtherValueKey(int value) : ValueKey<int>(value);
+
+    private sealed class OtherGlobalObjectKey(object value) : GlobalObjectKey<State>(value);
 }

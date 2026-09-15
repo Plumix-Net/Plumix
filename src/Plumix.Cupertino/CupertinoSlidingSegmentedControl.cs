@@ -500,7 +500,10 @@ internal sealed class CupertinoSlidingSegmentedControlState<T>
         return null;
     }
 
-    private sealed record SlidingRenderKey(Guid Id) : GlobalKey;
+    private sealed class SlidingRenderKey(Guid id) : GlobalKey
+    {
+        public Guid Id { get; } = id;
+    }
 }
 
 internal enum SlidingSegmentLocation

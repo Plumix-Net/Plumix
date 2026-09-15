@@ -176,7 +176,7 @@ internal static class ScrollDelegateSupport
 /// Flutter's <c>_SaltedValueKey</c>: a <c>ValueKey&lt;Key&gt;</c> whose distinct runtime type lets
 /// <c>findIndexByKey</c> tell a salted child key from a caller's own key and unwrap it.
 /// </remarks>
-internal sealed record SliverChildKey(Key Value) : LocalKey;
+internal sealed class SliverChildKey(Key value) : ValueKey<Key>(value);
 
 public sealed class SliverChildBuilderDelegate : SliverChildDelegate
 {

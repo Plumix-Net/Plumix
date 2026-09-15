@@ -17,7 +17,7 @@ namespace Plumix.Foundation;
 ///
 /// Subclasses of [Key] should either subclass [LocalKey] or [GlobalKey].
 /// </summary>
-public abstract record Key
+public abstract class Key
 {
     /// <summary>
     /// Construct a <see cref="ValueKey{string}"/> with the given <see cref="string"/>.
@@ -27,26 +27,26 @@ public abstract record Key
     /// <param name="value"></param>
     /// <returns></returns>
     public static Key Create(string value) => new ValueKey<string>(value);
+
+    public static bool operator ==(Key? left, Key? right) => Equals(left, right);
+
+    public static bool operator !=(Key? left, Key? right) => !Equals(left, right);
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj);
+
+    public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
 }
 
 /// <summary>
 /// A key that is not a <see cref="GlobalKey{T}"/>.
 /// </summary>
-public abstract record LocalKey : Key;
+public abstract class LocalKey : Key;
 
 /// <summary>
 /// A key that is only equal to itself.
 /// </summary>
-public sealed record UniqueKey : LocalKey
+public sealed class UniqueKey : LocalKey
 {
-    /// <remarks>
-    /// Dart's `UniqueKey` inherits `Object`'s identity `==`, so it is only ever equal to itself. A
-    /// C# record with no fields would otherwise make every `UniqueKey` equal to every other one.
-    /// </remarks>
-    public bool Equals(UniqueKey? other) => ReferenceEquals(this, other);
-
-    public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
-
     public override string ToString()
     {
         return $"[#{Diagnostics.ShortHash(this)}]";
@@ -56,13 +56,22 @@ public sealed record UniqueKey : LocalKey
 /// <summary>
 /// A key that uses a value of a particular type to identify itself.
 /// </summary>
-/// <param name="Value">The value to which this key delegates its</param>
+/// <param name="value">The value to which this key delegates its equality.</param>
 /// <typeparam name="T"></typeparam>
-public record ValueKey<T>(T Value) : LocalKey
+public class ValueKey<T>(T value) : LocalKey
 {
-    // A record subclass otherwise synthesizes its own printer, but Dart's ValueKey.toString is
-    // inherited by subclasses (including PageStorageKey).
-    public sealed override string ToString()
+    public T Value { get; } = value;
+
+    public override bool Equals(object? obj)
+    {
+        return obj is ValueKey<T> other
+            && other.GetType() == GetType()
+            && EqualityComparer<T>.Default.Equals(other.Value, Value);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(GetType(), Value);
+
+    public override string ToString()
     {
         string valueString = typeof(T) == typeof(string) ? $"<'{Value}'>" : $"<{Diagnostics.DescribeValue(Value)}>";
 

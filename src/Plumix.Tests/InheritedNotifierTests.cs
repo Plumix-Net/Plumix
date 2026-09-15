@@ -230,7 +230,10 @@ public sealed class InheritedNotifierTests
         }
     }
 
-    private sealed record TestGlobalKey(string Id) : GlobalKey;
+    private sealed class TestGlobalKey(string id) : GlobalKey
+    {
+        public string Id { get; } = id;
+    }
 
     private sealed class CountingIntNotifier : IListenable
     {

@@ -56,16 +56,16 @@ internal static class DebugAssertions
 ///  * The discussion at [Widget.key] for more information about how widgets use
 ///    keys.
 /// </summary>
-/// <param name="Value"></param>
-public record ObjectKey(object? Value) : LocalKey
+/// <param name="value"></param>
+public class ObjectKey(object? value) : LocalKey
 {
+    public object? Value { get; } = value;
+
     // Dart compares with `identical(other.value, value)` and hashes `identityHashCode(value)`, so an
-    // ObjectKey ties a widget to one *instance*. The record-generated members would instead use the
-    // value's own Equals/GetHashCode, which makes two keys over equal-but-distinct objects
-    // interchangeable and silently reuses the wrong element.
-    public virtual bool Equals(ObjectKey? other)
+    // ObjectKey ties a widget to one *instance*, not the value's Equals/GetHashCode.
+    public override bool Equals(object? obj)
     {
-        return other is not null
+        return obj is ObjectKey other
             && other.GetType() == GetType()
             && ReferenceEquals(other.Value, Value);
     }
@@ -75,8 +75,7 @@ public record ObjectKey(object? Value) : LocalKey
         return HashCode.Combine(GetType(), RuntimeHelpers.GetHashCode(Value));
     }
 
-    // Sealed so a record subclass inherits Dart's printer instead of getting a synthesized one.
-    public sealed override string ToString()
+    public override string ToString()
     {
         string identity = Diagnostics.DescribeIdentity(Value);
         return GetType() == typeof(ObjectKey)
@@ -104,7 +103,7 @@ public record ObjectKey(object? Value) : LocalKey
 /// GlobalKeys should not be re-created on every build. They should usually be
 /// long-lived objects owned by a [State] object, for example.
 /// </summary>
-public abstract record GlobalKey : Key
+public abstract class GlobalKey : Key
 {
     /// <summary>
     /// Dart's <c>GlobalKey._currentElement</c>: the registry is keyed by <c>==</c>, so an equal key
@@ -117,16 +116,10 @@ public abstract record GlobalKey : Key
 
     /// <summary>The widget in the tree that currently has this global key.</summary>
     public Widget? CurrentWidget => CurrentElement?.Widget;
-
-    /// <summary>
-    /// A key's identity is not its current element: the record printer must not walk
-    /// <see cref="CurrentContext"/>, whose description prints this key again.
-    /// </summary>
-    protected override bool PrintMembers(System.Text.StringBuilder builder) => false;
 }
 
 /// <summary>A <see cref="GlobalKey"/> whose <see cref="CurrentState"/> is typed.</summary>
-public abstract record GlobalKey<T> : GlobalKey where T : State
+public abstract class GlobalKey<T> : GlobalKey where T : State
 {
     /// <summary>
     /// The <see cref="State"/> for the widget in the tree that currently has this global key, or null
@@ -141,24 +134,18 @@ public abstract record GlobalKey<T> : GlobalKey where T : State
 /// The debug label is useful for documentation and for debugging. The label
 /// does not affect the key's identity.
 /// </summary>
-/// <param name="DebugLabel"></param>
+/// <param name="debugLabel"></param>
 /// <typeparam name="T"></typeparam>
-public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : State
+public class LabeledGlobalKey<T>(string? debugLabel) : GlobalKey<T> where T : State
 {
-    // Dart's LabeledGlobalKey is a class and inherits identity equality, so two keys built with the same
-    // label stay distinct. The generated record equality would instead make them interchangeable, which
-    // collides as soon as two instances of the same widget (two Scaffolds, two Drawers, ...) are mounted
-    // in one tree.
-    public virtual bool Equals(LabeledGlobalKey<T>? other) => ReferenceEquals(this, other);
-
-    public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+    public string? DebugLabel { get; } = debugLabel;
 
     /// <summary>
     /// Ports Dart's <c>LabeledGlobalKey.toString</c>: <c>[GlobalKey#hash label]</c> when the runtime
     /// type is <c>LabeledGlobalKey&lt;State&lt;StatefulWidget&gt;&gt;</c> (what <c>GlobalKey()</c>
     /// creates), <c>[describeIdentity(this) label]</c> for any other type argument or subclass.
     /// </summary>
-    public sealed override string ToString()
+    public override string ToString()
     {
         string label = DebugLabel is null ? string.Empty : $" {DebugLabel}";
         return GetType() == typeof(LabeledGlobalKey<State>)
@@ -175,16 +162,17 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
 ///
 /// Any [GlobalObjectKey] created for the same object will match.
 /// </summary>
-/// <param name="Value"></param>
+/// <param name="value"></param>
 /// <typeparam name="T"></typeparam>
-public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
+public class GlobalObjectKey<T>(object value) : GlobalKey<T> where T : State
 {
+    public object Value { get; } = value;
+
     // Dart compares with `identical(other.value, value)` and hashes `identityHashCode(value)`, so the
-    // key follows one instance. The record-generated members would defer to the value's own
-    // Equals/GetHashCode and make two keys over equal-but-distinct objects collide.
-    public virtual bool Equals(GlobalObjectKey<T>? other)
+    // key follows one instance, not the value's Equals/GetHashCode.
+    public override bool Equals(object? obj)
     {
-        return other is not null
+        return obj is GlobalObjectKey<T> other
             && other.GetType() == GetType()
             && ReferenceEquals(other.Value, Value);
     }
@@ -193,11 +181,10 @@ public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
 
     /// <summary>
     /// Ports Dart's `GlobalObjectKey.toString`: the key's own type plus the identity of its value,
-    /// never the value's own `toString`. The record-generated printer would render `Value` in full,
-    /// which recurses without bound whenever the value is a <see cref="Foundation.IDiagnosticable"/>
-    /// that dumps the widget tree the key is mounted in.
+    /// never the value's own `toString`, which could recurse when the value is a
+    /// <see cref="Foundation.IDiagnosticable"/> that dumps the widget tree the key is mounted in.
     /// </summary>
-    public sealed override string ToString()
+    public override string ToString()
     {
         string selfType = Foundation.Diagnostics.ObjectRuntimeType(this, "GlobalObjectKey");
         const string suffix = "<State>";

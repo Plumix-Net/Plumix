@@ -1498,7 +1498,7 @@ public sealed class FrameworkDartParityTests
         public override Widget Build(BuildContext context) => new SizedBox();
     }
 
-    private sealed record MyGlobalObjectKey<T>(object Value) : GlobalObjectKey<T>(Value) where T : State;
+    private sealed class MyGlobalObjectKey<T>(object value) : GlobalObjectKey<T>(value) where T : State;
 
     private sealed class TestInheritedElement(InheritedWidget widget) : InheritedElement(widget);
 

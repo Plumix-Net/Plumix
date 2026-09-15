@@ -553,7 +553,16 @@ public sealed class MergeableMaterial : StatefulWidget
     }
 }
 
-internal sealed record MergeableMaterialSliceKey(LocalKey Value) : GlobalKey;
+internal sealed class MergeableMaterialSliceKey(LocalKey value) : GlobalKey
+{
+    public LocalKey Value { get; } = value;
+
+    public override bool Equals(object? obj) => obj is MergeableMaterialSliceKey other && other.Value == Value;
+
+    public override int GetHashCode() => Value.GetHashCode();
+
+    public override string ToString() => $"_MergeableMaterialSliceKey({Value})";
+}
 
 internal sealed class MergeableMaterialListBody : MultiChildRenderObjectWidget
 {

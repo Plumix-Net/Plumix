@@ -1327,7 +1327,10 @@ public sealed class EditableText : StatefulWidget
         private int _spellCheckRequest;
         private PointerDeviceKind _lastPointerKind = PointerDeviceKind.Unknown;
 
-        private sealed record EditableRenderKey(Guid Id) : GlobalKey;
+        private sealed class EditableRenderKey(Guid id) : GlobalKey
+        {
+            public Guid Id { get; } = id;
+        }
         private Point? _lastPointerPosition;
         private int? _pointerSelectionAnchor;
         private TextSelection _lastSelection;
