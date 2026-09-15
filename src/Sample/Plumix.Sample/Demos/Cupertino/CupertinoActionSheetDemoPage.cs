@@ -31,7 +31,8 @@ internal sealed class CupertinoActionSheetDemoPageState : State
                 new Text("Cupertino action sheet", fontSize: 20.0, color: Colors.Black),
                 new Text(
                     "Blurred bottom sheet with a title/message section, hairline-separated actions, "
-                    + "a detached cancel button, and slide-to-select.",
+                    + "a detached cancel button, and slide-to-select. Use the mouse wheel to scroll "
+                    + "the long list; touch scrolling does not select a folder.",
                     fontSize: 14.0,
                     color: Colors.DimGray),
                 new Text($"last result: {_lastResult}", fontSize: 12.0, color: Color.Parse("#FF607D8B")),

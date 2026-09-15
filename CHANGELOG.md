@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Fix host view metrics on initial layout and resize so popup geometry uses the incoming window size.
+- Breaking: Cupertino sliding taps arbitrate with scrolling and hit-test the whole view (dialog.dart).
 - Breaking: recognizer arena/routing ownership and construction-only options match Flutter (recognizer.dart).
 - Breaking: drag constructor options and debug contracts match Flutter; multitouch parity is covered (monodrag.dart).
 - App and Router read platform launch routes from `PlatformDispatcher`; legacy access forwards (app.dart, router.dart).

@@ -599,8 +599,10 @@ public class PlumixHost : Control
     protected MediaQueryData GetMediaQueryData()
     {
         var viewPadding = _insetsManager?.SafeAreaPadding ?? default;
-        var viewInsets = ResolveViewInsets(_inputPane?.OccludedRect ?? default, Bounds.Size);
-        var size = Bounds.Size;
+        // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
+        // callback must use its finalSize, including the first layout and subsequent resizes.
+        var size = _lastArrangedSize;
+        var viewInsets = ResolveViewInsets(_inputPane?.OccludedRect ?? default, size);
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {

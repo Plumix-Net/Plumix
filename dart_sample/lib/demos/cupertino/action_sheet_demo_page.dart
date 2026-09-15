@@ -27,7 +27,8 @@ class _CupertinoActionSheetDemoPageState
         ),
         const Text(
           'Blurred bottom sheet with a title/message section, hairline-separated '
-          'actions, a detached cancel button, and slide-to-select.',
+          'actions, a detached cancel button, and slide-to-select. Use the mouse '
+          'wheel to scroll the long list; touch scrolling does not select a folder.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Text(

@@ -608,17 +608,17 @@ public sealed class CupertinoActionSheetTests : IDisposable
     }
 
     private static void PointerDown(CupertinoThemeTestHarness harness, Point position) =>
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+        harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
 
     private static void PointerMove(CupertinoThemeTestHarness harness, Point position) =>
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+        harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.Primary, down: true, timestampUtc: DateTime.UtcNow));
 
     private static void PointerUp(CupertinoThemeTestHarness harness, Point position) =>
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+        harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
             buttons: PointerButtons.None, timestampUtc: DateTime.UtcNow));
 

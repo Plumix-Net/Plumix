@@ -1,5 +1,7 @@
 using Avalonia;
+using Plumix.Gestures;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Tests;
@@ -20,7 +22,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
-        _root = new RootElement(RenderView, widget);
+        _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _root.Attach(_owner);
         _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
@@ -30,7 +32,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
 
     public void PumpWidget(Widget widget)
     {
-        _root.Update(widget);
+        _root.Update(new ViewScope(RenderView.FlutterView, widget));
         _owner.FlushBuild();
     }
 
@@ -77,6 +79,19 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         T? result = null;
         VisitStates(_root, state => result ??= state as T);
         return result ?? throw new InvalidOperationException($"State {typeof(T).Name} was not found.");
+    }
+
+    public void HandlePointerEvent(PointerEvent @event)
+    {
+        RendererBinding.Instance.AddRenderView(RenderView);
+        try
+        {
+            GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
+        }
+        finally
+        {
+            RendererBinding.Instance.RemoveRenderView(RenderView);
+        }
     }
 
     public void Dispose() => _root.UnmountRoot();

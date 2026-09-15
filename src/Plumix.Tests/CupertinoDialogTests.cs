@@ -171,8 +171,7 @@ public sealed class CupertinoDialogTests : IDisposable
 
         Point onePosition = CenterOf(FindParagraph(harness.RenderView, "One")!);
         Point twoPosition = CenterOf(FindParagraph(harness.RenderView, "Two")!);
-        var binding = GestureBinding.Instance;
-        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+        harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: onePosition,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
         harness.Pump(new Size(600, 600));
@@ -180,10 +179,10 @@ public sealed class CupertinoDialogTests : IDisposable
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
             box.Color == Color.FromUInt32(0xFFE1E1E1));
 
-        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+        harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: twoPosition,
             buttons: PointerButtons.Primary, down: true, timestampUtc: DateTime.UtcNow));
-        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+        harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: twoPosition,
             buttons: PointerButtons.None, timestampUtc: DateTime.UtcNow));
         Assert.Equal("Two", confirmed);
@@ -203,15 +202,14 @@ public sealed class CupertinoDialogTests : IDisposable
         harness.Pump(new Size(600, 600));
 
         Point disabledPosition = CenterOf(FindParagraph(harness.RenderView, "Disabled")!);
-        var binding = GestureBinding.Instance;
-        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+        harness.HandlePointerEvent(new PointerDownEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: disabledPosition,
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
         harness.Pump(new Size(600, 600));
         Assert.DoesNotContain(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
             box.Color == Color.FromUInt32(0xFFE1E1E1));
 
-        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+        harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: disabledPosition,
             buttons: PointerButtons.None, timestampUtc: DateTime.UtcNow));
         Assert.False(confirmed);
@@ -462,7 +460,7 @@ public sealed class CupertinoDialogTests : IDisposable
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -485,6 +483,19 @@ public sealed class CupertinoDialogTests : IDisposable
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
             return _pipeline.SemanticsOwner!.RootNode;
+        }
+
+        public void HandlePointerEvent(PointerEvent @event)
+        {
+            RendererBinding.Instance.AddRenderView(RenderView);
+            try
+            {
+                GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
+            }
+            finally
+            {
+                RendererBinding.Instance.RemoveRenderView(RenderView);
+            }
         }
 
         public void Dispose() => _rootElement.UnmountRoot();
