@@ -77,13 +77,11 @@ public sealed class AutofillGroup : StatefulWidget
 /// C# has no mixins, so Dart's <c>AutofillScopeMixin</c> body is reached through the
 /// <see cref="AutofillScopeMixin"/> companion.
 /// </remarks>
-public sealed class AutofillGroupState : State, IAutofillScope
+public sealed class AutofillGroupState : State<AutofillGroup>, IAutofillScope
 {
     private readonly Dictionary<string, IAutofillClient> _clients = [];
     private readonly List<string> _registrationOrder = [];
     private bool _isTopmostAutofillGroup;
-
-    private AutofillGroup Widget => (AutofillGroup)StateWidget;
 
     /// <summary>The autofill clients in this group, in first-registration order, filtered to the
     /// ones that have autofill enabled.</summary>

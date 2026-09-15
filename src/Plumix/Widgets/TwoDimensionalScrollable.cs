@@ -151,7 +151,7 @@ internal sealed class TwoDimensionalScrollableScope : InheritedWidget
 }
 
 /// <summary>State for a <see cref="TwoDimensionalScrollable"/>.</summary>
-public class TwoDimensionalScrollableState : State
+public class TwoDimensionalScrollableState : State<TwoDimensionalScrollable>
 {
     private readonly GlobalObjectKey<Scrollable.ScrollableState> _verticalOuterScrollableKey =
         new(new object());
@@ -198,7 +198,7 @@ public class TwoDimensionalScrollableState : State
         base.InitState();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(TwoDimensionalScrollable oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (TwoDimensionalScrollable)oldWidget;

@@ -27,7 +27,7 @@ public sealed class ValueListenableBuilder<T> : StatefulWidget
 
     public override State CreateState() => new ValueListenableBuilderState();
 
-    private sealed class ValueListenableBuilderState : State
+    private sealed class ValueListenableBuilderState : State<ValueListenableBuilder<T>>
     {
         private T _value = default!;
 
@@ -39,7 +39,7 @@ public sealed class ValueListenableBuilder<T> : StatefulWidget
             CurrentWidget.ValueListenable.AddListener(HandleValueChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(ValueListenableBuilder<T> oldWidget)
         {
             var oldBuilder = (ValueListenableBuilder<T>)oldWidget;
             if (ReferenceEquals(oldBuilder.ValueListenable, CurrentWidget.ValueListenable))

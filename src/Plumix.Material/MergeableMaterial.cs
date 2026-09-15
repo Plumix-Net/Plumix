@@ -100,7 +100,7 @@ public sealed class MergeableMaterial : StatefulWidget
         }
     }
 
-    private sealed class MergeableMaterialState : State
+    private sealed class MergeableMaterialState : State<MergeableMaterial>
     {
         private readonly Dictionary<LocalKey, AnimationTuple?> _animationTuples = [];
         private List<MergeableMaterialItem> _children = [];
@@ -139,7 +139,7 @@ public sealed class MergeableMaterial : StatefulWidget
             base.Dispose();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(MergeableMaterial oldWidget)
         {
             var previous = (MergeableMaterial)oldWidget;
             var oldKeys = previous.Children.Select(child => child.Key).ToHashSet();

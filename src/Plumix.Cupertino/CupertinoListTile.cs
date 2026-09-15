@@ -136,7 +136,7 @@ public sealed class CupertinoListTile : StatefulWidget
         Notched,
     }
 
-    private sealed class CupertinoListTileState : State
+    private sealed class CupertinoListTileState : State<CupertinoListTile>
     {
         private const double MinHeight = 44.0;
         private const double MinHeightWithSubtitle = 48.0;

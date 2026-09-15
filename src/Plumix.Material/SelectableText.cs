@@ -113,7 +113,7 @@ public sealed class SelectableText : StatefulWidget
     }
 }
 
-internal sealed class SelectableTextState : State
+internal sealed class SelectableTextState : State<SelectableText>
 {
     private readonly TextEditingController _controller = new();
     private FocusNode? _focusNode;
@@ -126,7 +126,7 @@ internal sealed class SelectableTextState : State
         AttachFocusNode(Current.FocusNode);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SelectableText oldWidget)
     {
         var previous = (SelectableText)oldWidget;
         if (!string.Equals(previous.Data, Current.Data, StringComparison.Ordinal)) _controller.Text = Current.Data;

@@ -77,7 +77,7 @@ public sealed class BottomAppBar : StatefulWidget
     }
 }
 
-internal sealed class BottomAppBarState : State
+internal sealed class BottomAppBarState : State<BottomAppBar>
 {
     private BottomAppBar CurrentWidget => (BottomAppBar)StateWidget;
 

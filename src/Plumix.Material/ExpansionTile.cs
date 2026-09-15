@@ -131,7 +131,7 @@ public sealed class ExpansionTile : StatefulWidget
 
     public override State CreateState() => new ExpansionTileState();
 
-    private sealed class ExpansionTileState : State
+    private sealed class ExpansionTileState : State<ExpansionTile>
     {
         private ExpansibleController? _controller;
         private bool _ownsController;
@@ -150,7 +150,7 @@ public sealed class ExpansionTile : StatefulWidget
             _controller!.AddListener(HandleExpansionChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(ExpansionTile oldWidget)
         {
             var oldTile = (ExpansionTile)oldWidget;
             if (!ReferenceEquals(oldTile.Controller, CurrentWidget.Controller))

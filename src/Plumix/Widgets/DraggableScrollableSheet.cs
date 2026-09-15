@@ -394,7 +394,7 @@ public sealed class DraggableScrollableActuator : StatefulWidget
 
     public override State CreateState() => new DraggableScrollableActuatorState();
 
-    private sealed class DraggableScrollableActuatorState : State
+    private sealed class DraggableScrollableActuatorState : State<DraggableScrollableActuator>
     {
         private readonly ResetNotifier _notifier = new();
 
@@ -460,7 +460,7 @@ internal sealed class InheritedResetNotifier : InheritedNotifier<ResetNotifier>
     internal bool SendReset() => Notifier!.SendReset();
 }
 
-internal sealed class DraggableScrollableSheetState : State
+internal sealed class DraggableScrollableSheetState : State<DraggableScrollableSheet>
 {
     private DraggableSheetExtent _extent = null!;
     private DraggableScrollableSheetScrollController _scrollController = null!;
@@ -481,7 +481,7 @@ internal sealed class DraggableScrollableSheetState : State
         CurrentWidget.Controller?.Attach(_scrollController);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(DraggableScrollableSheet oldWidget)
     {
         var previous = (DraggableScrollableSheet)oldWidget;
         if (!ReferenceEquals(previous.Controller, CurrentWidget.Controller))

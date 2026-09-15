@@ -414,7 +414,7 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
     public override State CreateState() => new NavigationBarDestinationTileState();
 }
 
-internal sealed class NavigationBarDestinationTileState : State
+internal sealed class NavigationBarDestinationTileState : State<NavigationBarDestinationTile>
 {
     private readonly GlobalKey _iconKey = new LabeledGlobalKey<State>("NavigationBar destination icon");
     private AnimationController? _controller;
@@ -426,7 +426,7 @@ internal sealed class NavigationBarDestinationTileState : State
         CreateController(CurrentWidget.Selected ? 1 : 0);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(NavigationBarDestinationTile oldWidget)
     {
         var old = (NavigationBarDestinationTile)oldWidget;
         if (old.Duration != CurrentWidget.Duration)

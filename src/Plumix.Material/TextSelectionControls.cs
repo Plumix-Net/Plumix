@@ -235,7 +235,7 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
 
     public override State CreateState() => new TextSelectionControlsToolbarState();
 
-    private sealed class TextSelectionControlsToolbarState : State
+    private sealed class TextSelectionControlsToolbarState : State<TextSelectionControlsToolbar>
     {
         private TextSelectionControlsToolbar CurrentWidget => (TextSelectionControlsToolbar)StateWidget;
 
@@ -244,7 +244,7 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
             CurrentWidget.ClipboardStatus?.AddListener(HandleClipboardStatusChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TextSelectionControlsToolbar oldWidget)
         {
             var previous = (TextSelectionControlsToolbar)oldWidget;
             if (ReferenceEquals(previous.ClipboardStatus, CurrentWidget.ClipboardStatus))

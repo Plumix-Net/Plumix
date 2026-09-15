@@ -201,7 +201,7 @@ internal sealed class TextSelectionToolbarOverflowable : StatefulWidget
 
     public override State CreateState() => new TextSelectionToolbarOverflowableState();
 
-    private sealed class TextSelectionToolbarOverflowableState : State
+    private sealed class TextSelectionToolbarOverflowableState : State<TextSelectionToolbarOverflowable>
     {
         private bool _overflowOpen;
         private Key _containerKey = new UniqueKey();
@@ -209,7 +209,7 @@ internal sealed class TextSelectionToolbarOverflowable : StatefulWidget
         private TextSelectionToolbarOverflowable CurrentWidget =>
             (TextSelectionToolbarOverflowable)StateWidget;
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TextSelectionToolbarOverflowable oldWidget)
         {
             var oldToolbar = (TextSelectionToolbarOverflowable)oldWidget;
             if (!ChildrenEqual(CurrentWidget.Children, oldToolbar.Children))

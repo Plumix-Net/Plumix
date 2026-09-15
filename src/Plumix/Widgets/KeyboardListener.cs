@@ -89,7 +89,7 @@ public sealed class RawKeyboardListener : StatefulWidget
         return new RawKeyboardListenerState();
     }
 
-    private sealed class RawKeyboardListenerState : State
+    private sealed class RawKeyboardListenerState : State<RawKeyboardListener>
     {
         private bool _listening;
 
@@ -101,7 +101,7 @@ public sealed class RawKeyboardListener : StatefulWidget
             HandleFocusChanged();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RawKeyboardListener oldWidget)
         {
             var oldListener = (RawKeyboardListener)oldWidget;
             if (ReferenceEquals(oldListener.FocusNode, CurrentWidget.FocusNode))

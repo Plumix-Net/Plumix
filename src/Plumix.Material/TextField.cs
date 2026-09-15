@@ -212,7 +212,7 @@ public sealed class TextField : StatefulWidget
                                                     ?? DefaultSpellCheckSuggestionsToolbarBuilder);
     }
 
-    private sealed class TextFieldState : RestorationState
+    private sealed class TextFieldState : RestorationState<TextField>
     {
         private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
             new GlobalObjectKey<EditableText.EditableTextState>(new object());
@@ -238,7 +238,7 @@ public sealed class TextField : StatefulWidget
             if (_restorableController is not null) RegisterForRestoration(_restorableController, "controller");
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TextField oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var old = (TextField)oldWidget;

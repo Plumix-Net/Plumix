@@ -166,7 +166,7 @@ public sealed class RawAutocomplete<T> : StatefulWidget
     }
 }
 
-internal sealed class RawAutocompleteState<T> : State
+internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
 {
     private const int PageSize = 4;
     private const double MinimumOptionsHeight = 48.0;
@@ -205,7 +205,7 @@ internal sealed class RawAutocompleteState<T> : State
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawAutocomplete<T> oldWidget)
     {
         var old = (RawAutocomplete<T>)oldWidget;
         if (!ReferenceEquals(old.TextEditingController, Current.TextEditingController))

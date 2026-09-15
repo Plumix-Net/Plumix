@@ -62,7 +62,7 @@ public sealed class CupertinoFocusHalo : StatefulWidget
 
     public override State CreateState() => new CupertinoFocusHaloState();
 
-    private sealed class CupertinoFocusHaloState : State
+    private sealed class CupertinoFocusHaloState : State<CupertinoFocusHalo>
     {
         private const double FocusColorOpacity = CupertinoConstants.CupertinoFocusColorOpacity;
         private const double FocusColorBrightness = CupertinoConstants.CupertinoFocusColorBrightness;

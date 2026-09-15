@@ -66,7 +66,7 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
 
     public override State CreateState() => new CupertinoTextMagnifierState();
 
-    internal sealed class CupertinoTextMagnifierState : State
+    internal sealed class CupertinoTextMagnifierState : State<CupertinoTextMagnifier>
     {
         // Initialize to dummy values for the event that the initial call to
         // DetermineMagnifierPositionAndFocalPoint calls hide, and thus does not set these values.
@@ -105,7 +105,7 @@ public sealed class CupertinoTextMagnifier : StatefulWidget
             base.DidChangeDependencies();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoTextMagnifier oldWidget)
         {
             var oldMagnifier = (CupertinoTextMagnifier)oldWidget;
             if (!ReferenceEquals(oldMagnifier.MagnifierInfo, CurrentWidget.MagnifierInfo))

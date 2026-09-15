@@ -179,7 +179,7 @@ public abstract class StreamBuilderBase<T, TSummary> : StatefulWidget
         return new StreamBuilderBaseState();
     }
 
-    private sealed class StreamBuilderBaseState : State
+    private sealed class StreamBuilderBaseState : State<StreamBuilderBase<T, TSummary>>
     {
         private IDisposable? _subscription;
         private object? _subscriptionIdentity;
@@ -194,7 +194,7 @@ public abstract class StreamBuilderBase<T, TSummary> : StatefulWidget
             Subscribe();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(StreamBuilderBase<T, TSummary> oldWidget)
         {
             var oldBuilder = (StreamBuilderBase<T, TSummary>)oldWidget;
             if (ReferenceEquals(oldBuilder.Stream, CurrentWidget.Stream))
@@ -392,7 +392,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
         return new FutureBuilderState();
     }
 
-    private sealed class FutureBuilderState : State
+    private sealed class FutureBuilderState : State<FutureBuilder<T>>
     {
         private object? _activeCallbackIdentity;
         private AsyncSnapshot<T> _snapshot = null!;
@@ -407,7 +407,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
             Subscribe();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(FutureBuilder<T> oldWidget)
         {
             var oldBuilder = (FutureBuilder<T>)oldWidget;
             if (ReferenceEquals(oldBuilder.Future, CurrentWidget.Future))

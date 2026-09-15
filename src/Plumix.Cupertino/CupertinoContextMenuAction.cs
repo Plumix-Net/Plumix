@@ -39,7 +39,7 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
 
     public override State CreateState() => new CupertinoContextMenuActionState();
 
-    private sealed class CupertinoContextMenuActionState : State
+    private sealed class CupertinoContextMenuActionState : State<CupertinoContextMenuAction>
     {
         private static readonly CupertinoDynamicColor BackgroundColorPressed =
             CupertinoDynamicColor.WithBrightness(

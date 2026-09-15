@@ -295,7 +295,7 @@ public sealed class LicensePage : StatefulWidget
 }
 
 /// <summary>Dart's private `_LicensePageState`.</summary>
-internal sealed class LicensePageState : State
+internal sealed class LicensePageState : State<LicensePage>
 {
     private readonly ValueNotifier<int?> _selectedId = new(null);
 
@@ -413,7 +413,7 @@ internal sealed class PackagesView : StatefulWidget
 }
 
 /// <summary>Dart's private `_PackagesViewState`.</summary>
-internal sealed class PackagesViewState : State
+internal sealed class PackagesViewState : State<PackagesView>
 {
     private readonly Task<LicenseData> _licenses = LoadLicensesAsync();
 
@@ -675,7 +675,7 @@ internal sealed class PackageLicensePage : StatefulWidget
 }
 
 /// <summary>Dart's private `_PackageLicensePageState`.</summary>
-internal sealed class PackageLicensePageState : State
+internal sealed class PackageLicensePageState : State<PackageLicensePage>
 {
     private static readonly Locale LicenseLocale = new("en", "US");
 
@@ -922,7 +922,7 @@ internal sealed class MasterDetailFlow : StatefulWidget
 }
 
 /// <summary>Dart's private `_MasterDetailFlowState`.</summary>
-internal sealed class MasterDetailFlowState : State, IPageOpener
+internal sealed class MasterDetailFlowState : State<MasterDetailFlow>, IPageOpener
 {
     private readonly LabeledGlobalKey<NavigatorState> _navigatorKey = new("_MasterDetailFlow");
 
@@ -1080,7 +1080,7 @@ internal sealed class MasterDetailScaffold : StatefulWidget
 }
 
 /// <summary>Dart's private `_MasterDetailScaffoldState`.</summary>
-internal sealed class MasterDetailScaffoldState : State, IPageOpener
+internal sealed class MasterDetailScaffoldState : State<MasterDetailScaffold>, IPageOpener
 {
     private readonly ValueNotifier<object?> _detailArguments = new(null);
 

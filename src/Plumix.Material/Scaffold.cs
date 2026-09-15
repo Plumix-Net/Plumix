@@ -313,7 +313,7 @@ internal sealed class ScaffoldScope : InheritedWidget
     }
 }
 
-public sealed class ScaffoldState : RestorationState, WidgetsBindingObserver
+public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingObserver
 {
     private static readonly TimeSpan StatusBarTapScrollDuration = TimeSpan.FromMilliseconds(1000);
     private readonly LabeledGlobalKey<DrawerControllerState> _drawerKey = new("Scaffold drawer");
@@ -848,7 +848,7 @@ public sealed class ScaffoldState : RestorationState, WidgetsBindingObserver
         return _currentBottomSheet!;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(Scaffold oldWidget)
     {
         var oldScaffold = (Scaffold)oldWidget;
         if (!ReferenceEquals(
@@ -1317,7 +1317,7 @@ public sealed class StandardBottomSheet : StatefulWidget
 }
 
 /// <summary>Ports Flutter's private <c>_StandardBottomSheetState</c>.</summary>
-public sealed class StandardBottomSheetState : State
+public sealed class StandardBottomSheetState : State<StandardBottomSheet>
 {
     // Dart parity source: the file-level `_standardBottomSheetCurve = standardEasing` in scaffold.dart.
     private static readonly Curve StandardBottomSheetCurve = Curves.FastOutSlowIn;
@@ -1345,7 +1345,7 @@ public sealed class StandardBottomSheetState : State
         base.Dispose();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(StandardBottomSheet oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (!ReferenceEquals(((StandardBottomSheet)oldWidget).AnimationController, CurrentWidget.AnimationController))

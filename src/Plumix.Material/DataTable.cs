@@ -627,7 +627,7 @@ public sealed class DataTable : StatelessWidget
 
         public override State CreateState() => new SortArrowState();
 
-        private sealed class SortArrowState : State
+        private sealed class SortArrowState : State<SortArrow>
         {
             private AnimationController? _opacityController;
             private AnimationController? _orientationController;
@@ -651,7 +651,7 @@ public sealed class DataTable : StatelessWidget
                 }
             }
 
-            public override void DidUpdateWidget(StatefulWidget oldWidget)
+            public override void DidUpdateWidget(SortArrow oldWidget)
             {
                 var oldArrow = (SortArrow)oldWidget;
                 _opacityController!.Duration = CurrentWidget.Duration;

@@ -214,7 +214,7 @@ public sealed class Radio<T> : StatefulWidget
 
     public override State CreateState() => new RadioState();
 
-    private sealed class RadioState : State
+    private sealed class RadioState : State<Radio<T>>
     {
         private const double DefaultInnerRadius = 4.5;
         private const double DefaultSplashRadius = 20.0;
@@ -232,7 +232,7 @@ public sealed class Radio<T> : StatefulWidget
             AttachFocusNode(CurrentWidget.FocusNode);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Radio<T> oldWidget)
         {
             var oldRadio = (Radio<T>)oldWidget;
             if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))

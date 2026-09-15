@@ -655,7 +655,7 @@ public sealed class CupertinoTextField : StatefulWidget
     }
 }
 
-internal sealed class CupertinoTextFieldState : RestorationState
+internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextField>
 {
     private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
         new GlobalObjectKey<EditableText.EditableTextState>(new object());
@@ -684,7 +684,7 @@ internal sealed class CupertinoTextFieldState : RestorationState
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoTextField oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (CupertinoTextField)oldWidget;

@@ -48,7 +48,7 @@ public sealed class WillPopScope : StatefulWidget
 }
 
 /// <summary>Flutter's <c>_WillPopScopeState</c>.</summary>
-internal sealed class WillPopScopeState : State
+internal sealed class WillPopScopeState : State<WillPopScope>
 {
     private ModalRoute? _route;
 
@@ -71,7 +71,7 @@ internal sealed class WillPopScopeState : State
     }
 
     /// <inheritdoc />
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(WillPopScope oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (WillPopScope)oldWidget;

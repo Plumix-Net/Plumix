@@ -315,7 +315,7 @@ public sealed class Image : StatefulWidget
         }
     }
 
-    private sealed class ImageState : State
+    private sealed class ImageState : State<Image>
     {
         private ImageStream? _imageStream;
         private ImageStreamListener? _imageStreamListener;
@@ -345,7 +345,7 @@ public sealed class Image : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Image oldWidget)
         {
             var oldImage = (Image)oldWidget;
             if (_isListeningToStream

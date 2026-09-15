@@ -371,7 +371,7 @@ public sealed class AnimatedIconTheme : StatefulWidget
         return new AnimatedIconThemeState();
     }
 
-    private sealed class AnimatedIconThemeState : State
+    private sealed class AnimatedIconThemeState : State<AnimatedIconTheme>
     {
         private AnimationController? _controller;
         private IconThemeData _begin = null!;
@@ -390,7 +390,7 @@ public sealed class AnimatedIconTheme : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedIconTheme oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;

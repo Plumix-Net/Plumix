@@ -187,7 +187,7 @@ public sealed class OverlayPortal : StatefulWidget
     internal OverlayChildLayoutBuilder? LayoutBuilder => _overlayChildLayoutBuilder;
 }
 
-internal sealed class OverlayPortalState : State
+internal sealed class OverlayPortalState : State<OverlayPortal>
 {
     private long? _zOrderIndex;
 
@@ -214,7 +214,7 @@ internal sealed class OverlayPortalState : State
         _childModelMayHaveChanged = true;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(OverlayPortal oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldPortal = (OverlayPortal)oldWidget;
@@ -858,7 +858,7 @@ public sealed class Overlay : StatefulWidget
     public override State CreateState() => new OverlayState();
 }
 
-public sealed class OverlayState : State
+public sealed class OverlayState : State<Overlay>
 {
     private readonly List<OverlayEntry> _entries = [];
 
@@ -1139,7 +1139,7 @@ internal sealed class WrappingOverlay : StatefulWidget
     public override State CreateState() => new WrappingOverlayState();
 }
 
-internal sealed class WrappingOverlayState : State
+internal sealed class WrappingOverlayState : State<WrappingOverlay>
 {
     private OverlayEntry? _entry;
 
@@ -1154,7 +1154,7 @@ internal sealed class WrappingOverlayState : State
             canSizeOverlay: true);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(WrappingOverlay oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         _entry!.MarkNeedsBuild();
@@ -1752,7 +1752,7 @@ internal sealed class OverlayEntryWidget : StatefulWidget
     public override State CreateState() => new OverlayEntryWidgetState();
 }
 
-internal sealed class OverlayEntryWidgetState : State
+internal sealed class OverlayEntryWidgetState : State<OverlayEntryWidget>
 {
     private RenderOverlayTheater? _theater;
 
@@ -1782,7 +1782,7 @@ internal sealed class OverlayEntryWidgetState : State
                    ?? throw new InvalidOperationException("An OverlayEntry must be built inside an Overlay.");
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(OverlayEntryWidget oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldEntryWidget = (OverlayEntryWidget)oldWidget;

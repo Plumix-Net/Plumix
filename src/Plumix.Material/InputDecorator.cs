@@ -404,7 +404,7 @@ public sealed class InputDecorator : StatefulWidget
 
     public override State CreateState() => new InputDecoratorState();
 
-    private sealed class InputDecoratorState : State
+    private sealed class InputDecoratorState : State<InputDecorator>
     {
         private AnimationController _floatingLabelController = null!;
         private CurvedAnimation _floatingLabelAnimation = null!;
@@ -452,7 +452,7 @@ public sealed class InputDecorator : StatefulWidget
             _floatingLabelController.SetValue(labelIsFloating ? 1.0 : 0.0);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(InputDecorator oldWidget)
         {
             var old = (InputDecorator)oldWidget;
             if (!Equals(Current.Decoration, old.Decoration))
@@ -1084,7 +1084,7 @@ internal sealed class HelperError : StatefulWidget
 
     public override State CreateState() => new HelperErrorState();
 
-    private sealed class HelperErrorState : State
+    private sealed class HelperErrorState : State<HelperError>
     {
         private AnimationController _controller = null!;
         private Widget? _helper;
@@ -1120,7 +1120,7 @@ internal sealed class HelperError : StatefulWidget
 
         private void HandleChange() => SetState(() => { });
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(HelperError oldWidget)
         {
             var old = (HelperError)oldWidget;
             bool errorStateChanged = (Current.Error is not null) != (old.Error is not null);
@@ -1254,7 +1254,7 @@ internal sealed class BorderContainer : StatefulWidget
 
     public override State CreateState() => new BorderContainerState();
 
-    private sealed class BorderContainerState : State
+    private sealed class BorderContainerState : State<BorderContainer>
     {
         private static readonly TimeSpan HoverDuration = TimeSpan.FromMilliseconds(15);
 
@@ -1283,7 +1283,7 @@ internal sealed class BorderContainer : StatefulWidget
             _end = Current.Border;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(BorderContainer oldWidget)
         {
             var old = (BorderContainer)oldWidget;
             if (!Equals(Current.Border, old.Border))

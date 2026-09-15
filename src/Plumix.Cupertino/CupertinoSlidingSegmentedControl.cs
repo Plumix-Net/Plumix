@@ -83,7 +83,8 @@ public sealed class CupertinoSlidingSegmentedControl<T> : StatefulWidget where T
     public override State CreateState() => new CupertinoSlidingSegmentedControlState<T>();
 }
 
-internal sealed class CupertinoSlidingSegmentedControlState<T> : State where T : notnull
+internal sealed class CupertinoSlidingSegmentedControlState<T>
+    : State<CupertinoSlidingSegmentedControl<T>> where T : notnull
 {
     internal static readonly TimeSpan SpringAnimationDuration = TimeSpan.FromMilliseconds(412.0);
     private static readonly SpringDescription ThumbSpring = new(
@@ -151,7 +152,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T> : State where T :
         _longPress.Team = team;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSlidingSegmentedControl<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (IsThumbDragging || ValuesEqual(_highlighted, Current.GroupValue))
@@ -547,7 +548,7 @@ internal sealed class SlidingSegment<T> : StatefulWidget where T : notnull
     public override State CreateState() => new SlidingSegmentState<T>();
 }
 
-internal sealed class SlidingSegmentState<T> : State where T : notnull
+internal sealed class SlidingSegmentState<T> : State<SlidingSegment<T>> where T : notnull
 {
     private static readonly Color DisabledContentColor = Color.FromArgb(115, 122, 122, 122);
     private AnimationController? _scaleController;
@@ -565,7 +566,7 @@ internal sealed class SlidingSegmentState<T> : State where T : notnull
         _scaleAnimation = new DoubleTween(begin: 1.0, end: 1.0).Animate(_scaleController);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SlidingSegment<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldSegment = (SlidingSegment<T>)oldWidget;
@@ -676,7 +677,7 @@ internal sealed class SlidingSegmentSeparator : StatefulWidget
     public override State CreateState() => new SlidingSegmentSeparatorState();
 }
 
-internal sealed class SlidingSegmentSeparatorState : State
+internal sealed class SlidingSegmentSeparatorState : State<SlidingSegmentSeparator>
 {
     private static readonly Color SeparatorColor = Color.FromUInt32(0x4D8E8E93);
     private AnimationController? _opacityController;
@@ -692,7 +693,7 @@ internal sealed class SlidingSegmentSeparatorState : State
             vsync: this);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SlidingSegmentSeparator oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (((SlidingSegmentSeparator)oldWidget).Highlighted == Current.Highlighted)
@@ -756,7 +757,8 @@ internal sealed class CupertinoSlidingSegmentButton<T> : StatefulWidget where T 
     public override State CreateState() => new CupertinoSlidingSegmentButtonState<T>();
 }
 
-internal sealed class CupertinoSlidingSegmentButtonState<T> : State, RadioClient<T> where T : notnull
+internal sealed class CupertinoSlidingSegmentButtonState<T>
+    : State<CupertinoSlidingSegmentButton<T>>, RadioClient<T> where T : notnull
 {
     private readonly FocusNode _focusNode = new();
     private RadioGroupRegistry<T>? _registry;
@@ -778,7 +780,7 @@ internal sealed class CupertinoSlidingSegmentButtonState<T> : State, RadioClient
         UpdateRegistry();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSlidingSegmentButton<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (((CupertinoSlidingSegmentButton<T>)oldWidget).Enabled != Current.Enabled)

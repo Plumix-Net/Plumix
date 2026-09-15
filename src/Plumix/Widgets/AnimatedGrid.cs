@@ -79,7 +79,7 @@ public sealed class AnimatedGrid : StatefulWidget
     public override State CreateState() => new AnimatedGridState();
 }
 
-public sealed class AnimatedGridState : State
+public sealed class AnimatedGridState : State<AnimatedGrid>
 {
     private readonly LabeledGlobalKey<SliverAnimatedGridState> _sliverKey = new("AnimatedGrid");
 
@@ -197,7 +197,7 @@ public sealed class SliverAnimatedGrid : StatefulWidget
     public override State CreateState() => new SliverAnimatedGridState();
 }
 
-public sealed class SliverAnimatedGridState : State
+public sealed class SliverAnimatedGridState : State<SliverAnimatedGrid>
 {
     private static readonly TimeSpan DefaultDuration = TimeSpan.FromMilliseconds(300);
     private static readonly Animation<double> AlwaysCompleteAnimation = new CompleteAnimation();

@@ -226,7 +226,7 @@ public sealed class LongPressDraggable<T> : Draggable<T>
     }
 }
 
-internal sealed class DraggableState<T> : State
+internal sealed class DraggableState<T> : State<Draggable<T>>
 {
     private DraggableGestureRecognizer? _recognizer;
     private int _activeCount;
@@ -422,7 +422,7 @@ internal interface IDragTargetState
     void DidMove(IDragAvatar avatar);
 }
 
-internal sealed class DragTargetState<T> : State, IDragTargetState
+internal sealed class DragTargetState<T> : State<DragTarget<T>>, IDragTargetState
 {
     private readonly List<IDragAvatar> _candidateAvatars = [];
     private readonly List<IDragAvatar> _rejectedAvatars = [];

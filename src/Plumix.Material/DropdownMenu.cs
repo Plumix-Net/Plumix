@@ -224,7 +224,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public override State CreateState() => new DropdownMenuState<T>();
 }
 
-public sealed class DropdownMenuState<T> : State
+public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
 {
     private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> EditableShortcuts =
         new Dictionary<ShortcutActivator, Intent>
@@ -310,7 +310,7 @@ public sealed class DropdownMenuState<T> : State
         base.Dispose();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(DropdownMenu<T> oldWidget)
     {
         var old = (DropdownMenu<T>)oldWidget;
         if (!ReferenceEquals(old.Controller, Current.Controller))

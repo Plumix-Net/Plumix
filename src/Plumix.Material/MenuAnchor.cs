@@ -136,7 +136,7 @@ public class MenuAnchor : StatefulWidget
     public override State CreateState() => new MenuAnchorState();
 }
 
-public class MenuAnchorState : State
+public class MenuAnchorState : State<MenuAnchor>
 {
     private readonly List<Widget> _menuChildren = [];
     private readonly List<CurvedAnimation> _cachedAnimations = [];
@@ -210,7 +210,7 @@ public class MenuAnchorState : State
         _anchorParent = MenuAnchorScope.MaybeOf(Context)?.State;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(MenuAnchor oldWidget)
     {
         var previous = (MenuAnchor)oldWidget;
         if (!ReferenceEquals(previous.Controller, CurrentAnchor.Controller))
@@ -679,7 +679,7 @@ internal sealed class MenuPanel : StatefulWidget
     public override State CreateState() => new MenuPanelState();
 }
 
-internal sealed class MenuPanelState : State
+internal sealed class MenuPanelState : State<MenuPanel>
 {
     private readonly ScrollController _scrollController = new();
 
@@ -1361,7 +1361,7 @@ public sealed class MenuItemButton : StatefulWidget
     public override State CreateState() => new MenuItemButtonState();
 }
 
-public sealed class MenuItemButtonState : State
+public sealed class MenuItemButtonState : State<MenuItemButton>
 {
     private readonly FocusNode _internalFocusNode = new();
     private MenuAnchorState? _anchor;
@@ -1381,7 +1381,7 @@ public sealed class MenuItemButtonState : State
         _anchor = MenuAnchorScope.MaybeOf(Context)?.State;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(MenuItemButton oldWidget)
     {
         var previous = (MenuItemButton)oldWidget;
         if (!ReferenceEquals(previous.FocusNode, Current.FocusNode))
@@ -1861,7 +1861,7 @@ public sealed class SubmenuButton : StatefulWidget
     public override State CreateState() => new SubmenuButtonState();
 }
 
-public sealed class SubmenuButtonState : State
+public sealed class SubmenuButtonState : State<SubmenuButton>
 {
     private readonly FocusNode _internalFocusNode = new();
     private MenuController? _internalController;
@@ -1896,7 +1896,7 @@ public sealed class SubmenuButtonState : State
         ValidateHoverOpenDelay();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SubmenuButton oldWidget)
     {
         var previous = (SubmenuButton)oldWidget;
         if (!ReferenceEquals(previous.Controller, Current.Controller))

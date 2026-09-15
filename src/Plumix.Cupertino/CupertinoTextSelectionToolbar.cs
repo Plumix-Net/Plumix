@@ -159,7 +159,7 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 
     public override State CreateState() => new CupertinoTextSelectionToolbarContentState();
 
-    internal sealed class CupertinoTextSelectionToolbarContentState : State
+    internal sealed class CupertinoTextSelectionToolbarContentState : State<CupertinoTextSelectionToolbarContent>
     {
         private readonly GlobalKey _toolbarItemsKey = new LabeledGlobalKey<State>("CupertinoToolbarItems");
         private AnimationController _controller = null!;
@@ -178,7 +178,7 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
                 duration: CupertinoTextSelectionToolbar.ToolbarTransitionDuration);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoTextSelectionToolbarContent oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
 

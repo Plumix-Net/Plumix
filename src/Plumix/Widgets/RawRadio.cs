@@ -256,7 +256,7 @@ public sealed class RawRadio<T> : StatefulWidget
     }
 }
 
-public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
+public sealed class RawRadioState<T> : ToggleableState<RawRadio<T>>, RadioClient<T>
 {
     private RadioGroupRegistry<T>? _registry;
 
@@ -310,7 +310,7 @@ public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
         base.InitState();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawRadio<T> oldWidget)
     {
         var oldRadio = (RawRadio<T>)oldWidget;
         SetRegistry(CurrentWidget.GroupRegistry);

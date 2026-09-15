@@ -122,7 +122,7 @@ public sealed class Expansible : StatefulWidget
             children: [header, body]);
     }
 
-    public sealed class ExpansibleState : State
+    public sealed class ExpansibleState : State<Expansible>
     {
         private AnimationController? _animation;
 
@@ -154,7 +154,7 @@ public sealed class Expansible : StatefulWidget
             CurrentWidget.Controller.AddListener(HandleControllerChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Expansible oldWidget)
         {
             var oldExpansible = (Expansible)oldWidget;
             TimeSpan oldDuration = oldExpansible.AnimationStyle?.Duration ?? oldExpansible.Duration;

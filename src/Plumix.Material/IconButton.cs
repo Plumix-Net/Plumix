@@ -969,7 +969,7 @@ internal sealed class SelectableIconButton : StatefulWidget
 
     public override State CreateState() => new SelectableIconButtonState();
 
-    private sealed class SelectableIconButtonState : State
+    private sealed class SelectableIconButtonState : State<SelectableIconButton>
     {
         private WidgetStatesController? _internalStatesController;
 
@@ -991,7 +991,7 @@ internal sealed class SelectableIconButton : StatefulWidget
             StatesController.Update(WidgetState.Selected, IsSelected);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SelectableIconButton oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var old = (SelectableIconButton)oldWidget;

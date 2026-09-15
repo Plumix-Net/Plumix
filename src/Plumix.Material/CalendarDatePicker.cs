@@ -62,7 +62,7 @@ public sealed class CalendarDatePicker : StatefulWidget
         }
     }
 
-    private sealed class CalendarDatePickerState : State
+    private sealed class CalendarDatePickerState : State<CalendarDatePicker>
     {
         private const double SubHeaderHeight = 52;
         private DatePickerMode _mode;
@@ -594,7 +594,7 @@ internal sealed class CalendarDay : StatefulWidget
     public WidgetStateProperty<Color?>? OverlayColor { get; }
     public override State CreateState() => new CalendarDayState();
 
-    private sealed class CalendarDayState : State
+    private sealed class CalendarDayState : State<CalendarDay>
     {
         private WidgetStatesController? _states;
         private FocusNode? _focusNode;
@@ -608,7 +608,7 @@ internal sealed class CalendarDay : StatefulWidget
             SyncStates();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget) => SyncStates();
+        public override void DidUpdateWidget(CalendarDay oldWidget) => SyncStates();
 
         public override void Dispose()
         {
@@ -738,7 +738,7 @@ public sealed class YearPicker : StatefulWidget
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
     public override State CreateState() => new YearPickerState();
 
-    private sealed class YearPickerState : State
+    private sealed class YearPickerState : State<YearPicker>
     {
         private const int MinimumYears = 18;
         private ScrollController? _scrollController;
@@ -746,7 +746,7 @@ public sealed class YearPicker : StatefulWidget
 
         public override void InitState() => _scrollController = new ScrollController(ScrollOffsetFor(CurrentWidget.SelectedDate ?? CurrentWidget.FirstDate));
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(YearPicker oldWidget)
         {
             var old = (YearPicker)oldWidget;
             if (CurrentWidget.SelectedDate != old.SelectedDate && CurrentWidget.SelectedDate.HasValue)
@@ -849,7 +849,7 @@ internal sealed class CalendarYear : StatefulWidget
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
     public override State CreateState() => new CalendarYearState();
 
-    private sealed class CalendarYearState : State
+    private sealed class CalendarYearState : State<CalendarYear>
     {
         private WidgetStatesController? _states;
         private CalendarYear CurrentWidget => (CalendarYear)StateWidget;
@@ -861,7 +861,7 @@ internal sealed class CalendarYear : StatefulWidget
             SyncStates();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget) => SyncStates();
+        public override void DidUpdateWidget(CalendarYear oldWidget) => SyncStates();
 
         public override void Dispose()
         {

@@ -198,7 +198,7 @@ public sealed class Banner : StatefulWidget
 
     public override State CreateState() => new BannerState();
 
-    private sealed class BannerState : State
+    private sealed class BannerState : State<Banner>
     {
         private BannerPainter? _painter;
 

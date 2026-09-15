@@ -78,7 +78,7 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
     }
 }
 
-public sealed class ScaffoldMessengerState : State
+public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
 {
     private sealed class MaterialBannerEntry
     {

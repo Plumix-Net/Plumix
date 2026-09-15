@@ -69,7 +69,7 @@ internal sealed class CupertinoMenuOverlay : StatefulWidget
 }
 
 /// <summary>Dart parity source: <c>_MenuOverlayState</c>.</summary>
-internal sealed class CupertinoMenuOverlayState : State, WidgetsBindingObserver
+internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, WidgetsBindingObserver
 {
     private static readonly Vector KAttachmentOffset = new(0.0, 8.0);
 
@@ -134,7 +134,7 @@ internal sealed class CupertinoMenuOverlayState : State, WidgetsBindingObserver
         ResolveMotion();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoMenuOverlay oldWidget)
     {
         var previous = (CupertinoMenuOverlay)oldWidget;
         if (!ReferenceEquals(previous.SwipeDistanceListenable, Current.SwipeDistanceListenable))

@@ -136,7 +136,7 @@ public sealed class MaterialBanner : StatefulWidget
         }
     }
 
-    private sealed class MaterialBannerState : State
+    private sealed class MaterialBannerState : State<MaterialBanner>
     {
         private bool _wasVisible;
         private CurvedAnimation? _heightAnimation;
@@ -151,7 +151,7 @@ public sealed class MaterialBanner : StatefulWidget
             SetCurvedAnimations();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(MaterialBanner oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldBanner = (MaterialBanner)oldWidget;

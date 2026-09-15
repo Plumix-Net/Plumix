@@ -138,7 +138,7 @@ internal sealed class DropdownMenuItemButton<T> : StatefulWidget
     public override State CreateState() => new DropdownMenuItemButtonState<T>();
 }
 
-internal sealed class DropdownMenuItemButtonState<T> : State
+internal sealed class DropdownMenuItemButtonState<T> : State<DropdownMenuItemButton<T>>
 {
     private CurvedAnimation? _opacityAnimation;
 
@@ -150,7 +150,7 @@ internal sealed class DropdownMenuItemButtonState<T> : State
         SetOpacityAnimation();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(DropdownMenuItemButton<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (DropdownMenuItemButton<T>)oldWidget;
@@ -304,7 +304,7 @@ internal sealed class DropdownMenuPanel<T> : StatefulWidget
     public override State CreateState() => new DropdownMenuPanelState<T>();
 }
 
-internal sealed class DropdownMenuPanelState<T> : State
+internal sealed class DropdownMenuPanelState<T> : State<DropdownMenuPanel<T>>
 {
     private CurvedAnimation? _fadeOpacity;
     private CurvedAnimation? _resize;
@@ -687,7 +687,7 @@ internal sealed class DropdownRoutePage<T> : StatefulWidget
     public override State CreateState() => new DropdownRoutePageState<T>();
 }
 
-internal sealed class DropdownRoutePageState<T> : State
+internal sealed class DropdownRoutePageState<T> : State<DropdownRoutePage<T>>
 {
     private ScrollController? _scrollController;
 
@@ -1047,7 +1047,7 @@ public sealed class DropdownButton<T> : StatefulWidget
     }
 }
 
-internal sealed class DropdownButtonState<T> : State
+internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
 {
     private int? _selectedIndex;
     private DropdownRoute<T>? _dropdownRoute;
@@ -1089,7 +1089,7 @@ internal sealed class DropdownButtonState<T> : State
         EffectiveFocusNode.AddListener(HandleFocusChanged);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(DropdownButton<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (DropdownButton<T>)oldWidget;

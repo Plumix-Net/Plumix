@@ -156,7 +156,7 @@ public sealed class CupertinoAlertDialog : StatefulWidget
     public override State CreateState() => new CupertinoAlertDialogState();
 }
 
-internal sealed class CupertinoAlertDialogState : State
+internal sealed class CupertinoAlertDialogState : State<CupertinoAlertDialog>
 {
     private int? _pressedIndex;
     private ScrollController? _backupScrollController;
@@ -369,7 +369,7 @@ public sealed class CupertinoDialogAction : StatefulWidget
     public override State CreateState() => new CupertinoDialogActionState();
 }
 
-internal sealed class CupertinoDialogActionState : State, ISlideTarget
+internal sealed class CupertinoDialogActionState : State<CupertinoDialogAction>, ISlideTarget
 {
     private CupertinoDialogAction Current => (CupertinoDialogAction)StateWidget;
 
@@ -562,7 +562,7 @@ internal sealed class AlertDialogButtonBackground : StatefulWidget
     public override State CreateState() => new AlertDialogButtonBackgroundState();
 }
 
-internal sealed class AlertDialogButtonBackgroundState : State, ISlideTarget
+internal sealed class AlertDialogButtonBackgroundState : State<AlertDialogButtonBackground>, ISlideTarget
 {
     private AlertDialogButtonBackground Current => (AlertDialogButtonBackground)StateWidget;
 
@@ -777,7 +777,7 @@ internal sealed class OverscrollBackground : StatefulWidget
     public override State CreateState() => new OverscrollBackgroundState();
 }
 
-internal sealed class OverscrollBackgroundState : State
+internal sealed class OverscrollBackgroundState : State<OverscrollBackground>
 {
     private double _topOverscroll;
     private double _bottomOverscroll;

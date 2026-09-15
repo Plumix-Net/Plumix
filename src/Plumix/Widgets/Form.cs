@@ -86,7 +86,7 @@ public sealed class Form : StatefulWidget
     public override State CreateState() => new FormState();
 }
 
-public sealed class FormState : State
+public sealed class FormState : State<Form>
 {
     private readonly HashSet<FormFieldState> _fields = [];
     private int _generation;
@@ -349,6 +349,10 @@ public class FormFieldState<T> : FormFieldState
     private T? _value;
 
     protected FormField<T> CurrentField => (FormField<T>)StateWidget;
+
+    public FormField<T> Widget => CurrentField;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is FormField<T>;
 
     public T? Value => _value;
     public override string? ErrorText => _errorText.Value;

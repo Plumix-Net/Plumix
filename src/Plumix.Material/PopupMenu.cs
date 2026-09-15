@@ -66,7 +66,7 @@ public sealed class PopupMenuDivider : PopupMenuEntry
 
     public override State CreateState() => new PopupMenuDividerState();
 
-    private sealed class PopupMenuDividerState : State
+    private sealed class PopupMenuDividerState : State<PopupMenuDivider>
     {
         private PopupMenuDivider CurrentWidget => (PopupMenuDivider)StateWidget;
 
@@ -124,7 +124,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
 
 }
 
-public class PopupMenuItemState<T> : State
+public class PopupMenuItemState<T> : State<PopupMenuItem<T>>
 {
     protected PopupMenuItem<T> CurrentWidget => (PopupMenuItem<T>)StateWidget;
 
@@ -456,7 +456,7 @@ public sealed class PopupMenuButton<T> : StatefulWidget
     public override State CreateState() => new PopupMenuButtonState<T>();
 }
 
-public sealed class PopupMenuButtonState<T> : State
+public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
 {
     private bool _isMenuExpanded;
     private RelativeRect? _lastPosition;
@@ -1010,7 +1010,7 @@ internal sealed class PopupMenuEnsureVisible : StatefulWidget
 
     public override State CreateState() => new PopupMenuEnsureVisibleState();
 
-    private sealed class PopupMenuEnsureVisibleState : State
+    private sealed class PopupMenuEnsureVisibleState : State<PopupMenuEnsureVisible>
     {
         private int _attempts;
 

@@ -150,7 +150,7 @@ public sealed class Hero : StatefulWidget
 }
 
 /// <summary>Dart's `_HeroState`.</summary>
-internal sealed class HeroState : State
+internal sealed class HeroState : State<Hero>
 {
     private readonly GlobalKey _key;
     private Size? _placeholderSize;

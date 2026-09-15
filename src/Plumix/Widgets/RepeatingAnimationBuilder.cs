@@ -53,7 +53,7 @@ public sealed class RepeatingAnimationBuilder<T> : StatefulWidget
 
     public override State CreateState() => new RepeatingAnimationBuilderState();
 
-    private sealed class RepeatingAnimationBuilderState : State
+    private sealed class RepeatingAnimationBuilderState : State<RepeatingAnimationBuilder<T>>
     {
         private AnimationController? _controller;
         private CurvedAnimation? _curvedAnimation;
@@ -73,7 +73,7 @@ public sealed class RepeatingAnimationBuilder<T> : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RepeatingAnimationBuilder<T> oldWidget)
         {
             var oldBuilder = (RepeatingAnimationBuilder<T>)oldWidget;
             AnimationController controller = _controller!;

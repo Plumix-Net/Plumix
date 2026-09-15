@@ -35,7 +35,7 @@ public sealed class RadioGroup<T> : StatefulWidget
         return new RadioGroupState();
     }
 
-    private sealed class RadioGroupState : State
+    private sealed class RadioGroupState : State<RadioGroup<T>>
     {
         private readonly RegistryImpl _registry;
         private readonly IReadOnlyDictionary<ShortcutActivator, Intent> _shortcuts;
@@ -60,7 +60,7 @@ public sealed class RadioGroup<T> : StatefulWidget
 
         private RadioGroup<T> CurrentWidget => (RadioGroup<T>)StateWidget;
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RadioGroup<T> oldWidget)
         {
             _registry.ValidateSingleSelection();
         }

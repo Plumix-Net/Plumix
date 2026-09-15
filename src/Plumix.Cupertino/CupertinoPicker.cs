@@ -226,7 +226,7 @@ public sealed class CupertinoPicker : StatefulWidget
 
     public override State CreateState() => new CupertinoPickerState();
 
-    internal sealed class CupertinoPickerState : State
+    internal sealed class CupertinoPickerState : State<CupertinoPicker>
     {
         private int _lastHapticIndex;
         private int? _lastMiddlePosition;
@@ -249,7 +249,7 @@ public sealed class CupertinoPicker : StatefulWidget
             EffectiveController.AddListener(HandleScroll);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoPicker oldWidget)
         {
             var oldPicker = (CupertinoPicker)oldWidget;
             if (Current.ScrollController is not null && oldPicker.ScrollController is null)

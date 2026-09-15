@@ -300,7 +300,7 @@ public class Scrollable : StatefulWidget
     /// tells it whether the user may drag and whether the viewport should ignore pointer events.
     /// </para>
     /// </remarks>
-    public class ScrollableState : RestorationState, IScrollContext
+    public class ScrollableState : RestorationState<Scrollable>, IScrollContext
     {
         private readonly RestorableScrollOffset _persistedScrollOffset = new();
         private bool _persistedScrollOffsetRegistered;
@@ -509,7 +509,7 @@ public class Scrollable : StatefulWidget
             return current.Controller?.GetType() != oldWidget.Controller?.GetType();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Scrollable oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldScrollable = (Scrollable)oldWidget;

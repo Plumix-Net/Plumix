@@ -147,7 +147,7 @@ public sealed class PaginatedDataTable : StatefulWidget
     }
 }
 
-public sealed class PaginatedDataTableState : State
+public sealed class PaginatedDataTableState : State<PaginatedDataTable>
 {
     private int _firstRowIndex;
     private int _rowCount;
@@ -167,7 +167,7 @@ public sealed class PaginatedDataTableState : State
         UpdateCaches();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(PaginatedDataTable oldWidget)
     {
         var oldTable = (PaginatedDataTable)oldWidget;
         if (!ReferenceEquals(oldTable.Source, CurrentWidget.Source))

@@ -55,7 +55,7 @@ public sealed class SelectionContainer : StatefulWidget
     public override State CreateState() => new SelectionContainerState();
 }
 
-public sealed class SelectionContainerState : State, ISelectable
+public sealed class SelectionContainerState : State<SelectionContainer>, ISelectable
 {
     private static readonly SelectionGeometry DisabledGeometry =
         new(status: SelectionStatus.None, hasContent: true);
@@ -87,7 +87,7 @@ public sealed class SelectionContainerState : State, ISelectable
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SelectionContainer oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (SelectionContainer)oldWidget;

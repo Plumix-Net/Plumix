@@ -454,7 +454,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
     public override State CreateState() => new CupertinoNavigationBarState();
 }
 
-internal sealed class CupertinoNavigationBarState : State
+internal sealed class CupertinoNavigationBarState : State<CupertinoNavigationBar>
 {
     private NavigationBarStaticComponentsKeys _keys = null!;
     private ScrollNotificationObserverState? _scrollNotificationObserver;

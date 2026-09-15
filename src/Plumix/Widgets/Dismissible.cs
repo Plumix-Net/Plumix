@@ -185,7 +185,7 @@ public sealed class Dismissible : StatefulWidget
 
     public override State CreateState() => new DismissibleState();
 
-    private sealed class DismissibleState : AutomaticKeepAliveClientMixin
+    private sealed class DismissibleState : AutomaticKeepAliveClientMixin<Dismissible>
     {
         private const double MinFlingVelocity = 700.0;
         private const double MinFlingVelocityDelta = 400.0;

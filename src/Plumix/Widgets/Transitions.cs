@@ -21,7 +21,7 @@ public abstract class AnimatedWidget : StatefulWidget
 
     public sealed override State CreateState() => new AnimatedWidgetState();
 
-    private sealed class AnimatedWidgetState : State
+    private sealed class AnimatedWidgetState : State<AnimatedWidget>
     {
         private AnimatedWidget CurrentWidget => (AnimatedWidget)StateWidget;
 
@@ -30,7 +30,7 @@ public abstract class AnimatedWidget : StatefulWidget
             CurrentWidget.Listenable.AddListener(HandleChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedWidget oldWidget)
         {
             var oldAnimatedWidget = (AnimatedWidget)oldWidget;
             if (ReferenceEquals(oldAnimatedWidget.Listenable, CurrentWidget.Listenable))

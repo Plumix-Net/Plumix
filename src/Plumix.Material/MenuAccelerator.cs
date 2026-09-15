@@ -171,7 +171,7 @@ public sealed class MenuAcceleratorLabel : StatefulWidget
     }
 }
 
-internal sealed class MenuAcceleratorLabelState : State
+internal sealed class MenuAcceleratorLabelState : State<MenuAcceleratorLabel>
 {
     private string _displayLabel = string.Empty;
     private int _acceleratorIndex = -1;
@@ -217,7 +217,7 @@ internal sealed class MenuAcceleratorLabelState : State
         UpdateAcceleratorShortcut();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(MenuAcceleratorLabel oldWidget)
     {
         var oldLabel = (MenuAcceleratorLabel)oldWidget;
         if (!string.Equals(oldLabel.Label, Current.Label, StringComparison.Ordinal))

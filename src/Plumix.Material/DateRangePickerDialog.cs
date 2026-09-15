@@ -101,7 +101,7 @@ public sealed class DateRangePickerDialog : StatefulWidget
     }
 }
 
-internal sealed class DateRangePickerDialogState : State
+internal sealed class DateRangePickerDialogState : State<DateRangePickerDialog>
 {
     private static readonly Size InputPortraitSizeM2 = new(330, 270);
     private static readonly Size InputPortraitSizeM3 = new(328, 270);
@@ -512,7 +512,7 @@ internal sealed class CalendarDateRangePicker : StatefulWidget
     public override State CreateState() => new CalendarDateRangePickerState();
 }
 
-internal sealed class CalendarDateRangePickerState : State
+internal sealed class CalendarDateRangePickerState : State<CalendarDateRangePicker>
 {
     private const double MonthHeaderHeight = 58;
     private const double MonthFooterHeight = 12;

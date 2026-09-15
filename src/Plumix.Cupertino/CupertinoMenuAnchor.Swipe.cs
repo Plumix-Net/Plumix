@@ -83,7 +83,7 @@ internal sealed class CupertinoMenuSwipeRegion : StatefulWidget
 }
 
 /// <summary>Dart parity source: <c>_SwipeRegionState</c>.</summary>
-internal sealed class CupertinoMenuSwipeRegionState : State
+internal sealed class CupertinoMenuSwipeRegionState : State<CupertinoMenuSwipeRegion>
 {
     private readonly List<RenderCupertinoMenuSwipeSurface> _surfaces = [];
     private MultiDragGestureRecognizer? _recognizer;
@@ -101,7 +101,7 @@ internal sealed class CupertinoMenuSwipeRegionState : State
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoMenuSwipeRegion oldWidget)
     {
         var previous = (CupertinoMenuSwipeRegion)oldWidget;
         if (previous.Enabled && !Current.Enabled)

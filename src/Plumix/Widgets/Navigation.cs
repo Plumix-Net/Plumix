@@ -2252,7 +2252,7 @@ internal sealed class ModalScope : StatefulWidget
     public override State CreateState() => new ModalScopeState();
 }
 
-internal sealed class ModalScopeState : State
+internal sealed class ModalScopeState : State<ModalScope>
 {
     private readonly ScrollController _primaryScrollController = new();
     private Animation<double> _animation = new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
@@ -2282,7 +2282,7 @@ internal sealed class ModalScopeState : State
         _listenable = Listenable.Merge(_animation, _secondaryAnimation);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(ModalScope oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         UpdateFocusScopeNode();

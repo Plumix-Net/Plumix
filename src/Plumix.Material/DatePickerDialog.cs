@@ -96,7 +96,7 @@ public sealed class DatePickerDialog : StatefulWidget
     }
 }
 
-internal sealed class DatePickerDialogState : State
+internal sealed class DatePickerDialogState : State<DatePickerDialog>
 {
     private const double InputFormPortraitHeight = 98;
     private const double InputFormLandscapeHeight = 108;

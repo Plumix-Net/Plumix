@@ -206,7 +206,7 @@ public sealed class Checkbox : StatefulWidget
 
     public override State CreateState() => new CheckboxState();
 
-    private sealed class CheckboxState : ToggleableState
+    private sealed class CheckboxState : ToggleableState<Checkbox>
     {
         private const double DefaultSplashRadius = 20.0;
         private const byte RadialReactionAlpha = 0x1F;
@@ -231,7 +231,7 @@ public sealed class Checkbox : StatefulWidget
                 ReactionFocusFade);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Checkbox oldWidget)
         {
             var oldCheckbox = (Checkbox)oldWidget;
             base.DidUpdateWidget(oldWidget);

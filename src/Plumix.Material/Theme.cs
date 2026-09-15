@@ -184,7 +184,7 @@ public sealed class AnimatedTheme : StatefulWidget
 
     public override State CreateState() => new AnimatedThemeState();
 
-    private sealed class AnimatedThemeState : State
+    private sealed class AnimatedThemeState : State<AnimatedTheme>
     {
         private AnimationController? _controller;
         private ThemeData _begin = null!;
@@ -203,7 +203,7 @@ public sealed class AnimatedTheme : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedTheme oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;

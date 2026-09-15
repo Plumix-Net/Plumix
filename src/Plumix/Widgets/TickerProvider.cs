@@ -80,7 +80,7 @@ public sealed class TickerMode : StatefulWidget
 
     public override State CreateState() => new TickerModeState();
 
-    private sealed class TickerModeState : State
+    private sealed class TickerModeState : State<TickerMode>
     {
         private bool _ancestorTickerMode = TickerModeData.Fallback.Enabled;
         private bool _ancestorForceFrames = TickerModeData.Fallback.ForceFrames;
@@ -98,7 +98,7 @@ public sealed class TickerMode : StatefulWidget
             UpdateEffectiveMode();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TickerMode oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             UpdateEffectiveMode();

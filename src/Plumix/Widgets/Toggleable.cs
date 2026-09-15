@@ -379,6 +379,27 @@ public abstract class ToggleableState : State
     }
 }
 
+/// <summary>A toggleable state whose widget type follows Dart's <c>State&lt;T&gt;</c> contract.</summary>
+public abstract class ToggleableState<TWidget> : ToggleableState where TWidget : StatefulWidget
+{
+    public TWidget Widget => (TWidget)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is TWidget;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((TWidget)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(TWidget oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(TWidget)]);
+}
+
 public abstract class ToggleablePainter : CustomPainter
 {
     private readonly MergedListenable _mergedRepaint;

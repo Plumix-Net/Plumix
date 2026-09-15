@@ -292,7 +292,7 @@ public sealed class ReorderableListView : StatefulWidget
 
     public override State CreateState() => new ReorderableListViewState();
 
-    private sealed class ReorderableListViewState : State
+    private sealed class ReorderableListViewState : State<ReorderableListView>
     {
         private readonly ValueNotifier<bool> _dragging = new(false);
 

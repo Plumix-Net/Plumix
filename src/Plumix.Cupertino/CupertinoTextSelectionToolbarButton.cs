@@ -113,7 +113,7 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
 
     public override State CreateState() => new CupertinoTextSelectionToolbarButtonState();
 
-    private sealed class CupertinoTextSelectionToolbarButtonState : State
+    private sealed class CupertinoTextSelectionToolbarButtonState : State<CupertinoTextSelectionToolbarButton>
     {
         private bool _isPressed;
 
@@ -322,7 +322,8 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
 
     public override State CreateState() => new CupertinoDesktopTextSelectionToolbarButtonState();
 
-    private sealed class CupertinoDesktopTextSelectionToolbarButtonState : State
+    private sealed class CupertinoDesktopTextSelectionToolbarButtonState
+        : State<CupertinoDesktopTextSelectionToolbarButton>
     {
         private bool _isHovered;
 

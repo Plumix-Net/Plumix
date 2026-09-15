@@ -433,7 +433,7 @@ internal sealed class DatePickerLayoutDelegate : MultiChildLayoutDelegate
     }
 }
 
-internal sealed class CupertinoDatePickerDateState : State
+internal sealed class CupertinoDatePickerDateState : State<CupertinoDatePicker>
 {
     private FixedExtentScrollController _dayController = null!;
     private FixedExtentScrollController _monthController = null!;
@@ -456,7 +456,7 @@ internal sealed class CupertinoDatePickerDateState : State
         _yearController = new FixedExtentScrollController(initialItem: _selectedYear - Current.MinimumYear);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
         var oldPicker = (CupertinoDatePicker)oldWidget;
         if (oldPicker.Mode != Current.Mode)
@@ -800,7 +800,7 @@ internal sealed class CupertinoDatePickerDateState : State
         Action<int> OnSelected);
 }
 
-internal sealed class CupertinoDatePickerMonthYearState : State
+internal sealed class CupertinoDatePickerMonthYearState : State<CupertinoDatePicker>
 {
     private FixedExtentScrollController _monthController = null!;
     private FixedExtentScrollController _yearController = null!;
@@ -819,7 +819,7 @@ internal sealed class CupertinoDatePickerMonthYearState : State
         _yearController = new FixedExtentScrollController(initialItem: _selectedYear - Current.MinimumYear);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
         if (((CupertinoDatePicker)oldWidget).Mode != Current.Mode)
         {
@@ -1039,7 +1039,7 @@ internal sealed class CupertinoDatePickerMonthYearState : State
     private static DateTime FirstOfMonth(DateTime value) => new(value.Year, value.Month, 1);
 }
 
-internal sealed class CupertinoDatePickerDateTimeState : State
+internal sealed class CupertinoDatePickerDateTimeState : State<CupertinoDatePicker>
 {
     private FixedExtentScrollController _dateController = null!;
     private FixedExtentScrollController _hourController = null!;
@@ -1069,7 +1069,7 @@ internal sealed class CupertinoDatePickerDateTimeState : State
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoDatePicker oldWidget)
     {
         var oldPicker = (CupertinoDatePicker)oldWidget;
         if (oldPicker.Mode != Current.Mode)
@@ -1547,7 +1547,7 @@ internal sealed class CupertinoDatePickerDateTimeState : State
         Func<BuildContext, CupertinoLocalizations, int, int, double, double, Widget> Builder);
 }
 
-internal sealed class CupertinoTimerPickerState : State
+internal sealed class CupertinoTimerPickerState : State<CupertinoTimerPicker>
 {
     private const double TimerPickerMagnification = 34.0 / 32.0;
     private const double TimerPickerMinHorizontalPadding = 30.0;
@@ -1591,7 +1591,7 @@ internal sealed class CupertinoTimerPickerState : State
         }
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoTimerPicker oldWidget)
     {
         if (((CupertinoTimerPicker)oldWidget).Mode != Current.Mode)
         {

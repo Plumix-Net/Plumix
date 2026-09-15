@@ -7,7 +7,7 @@ using Plumix.UI;
 
 namespace Plumix.Widgets;
 
-public sealed partial class NavigatorState : RestorationState
+public sealed partial class NavigatorState : RestorationState<Navigator>
 {
     private readonly RouteHistory _history = new();
     private readonly HashSet<RouteEntry> _entriesWaitingForSubtreeDisposal = [];
@@ -95,7 +95,7 @@ public sealed partial class NavigatorState : RestorationState
         _history.AddListener(HandleHistoryChanged);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(Navigator oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldNavigator = (Navigator)oldWidget;

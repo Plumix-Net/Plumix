@@ -44,7 +44,7 @@ public sealed class SelectionArea : StatefulWidget
     }
 }
 
-public sealed class SelectionAreaState : State
+public sealed class SelectionAreaState : State<SelectionArea>
 {
     private readonly GlobalKey<SelectableRegionState> _selectableRegionKey =
         new LabeledGlobalKey<SelectableRegionState>("SelectionArea");

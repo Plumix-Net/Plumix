@@ -352,7 +352,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                };
     }
 
-    private sealed class AppBarState : State
+    private sealed class AppBarState : State<AppBar>
     {
         private ScrollNotificationObserverState? _scrollNotificationObserver;
         private bool _scrolledUnder;

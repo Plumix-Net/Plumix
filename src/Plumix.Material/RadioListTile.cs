@@ -434,7 +434,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         }
     }
 
-    private sealed class RadioListTileState : State, RadioClient<T>
+    private sealed class RadioListTileState : State<RadioListTile<T>>, RadioClient<T>
     {
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
@@ -463,7 +463,7 @@ public sealed class RadioListTile<T> : StatefulWidget
             SetRegistry(RadioGroup<T>.MaybeOf(Context));
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RadioListTile<T> oldWidget)
         {
             var oldTile = (RadioListTile<T>)oldWidget;
             if (!ReferenceEquals(oldTile.FocusNode, CurrentWidget.FocusNode))

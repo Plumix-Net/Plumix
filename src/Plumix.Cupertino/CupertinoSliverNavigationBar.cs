@@ -330,7 +330,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
     public override State CreateState() => new CupertinoSliverNavigationBarState();
 }
 
-internal sealed class CupertinoSliverNavigationBarState : State
+internal sealed class CupertinoSliverNavigationBarState : State<CupertinoSliverNavigationBar>
 {
     private NavigationBarStaticComponentsKeys _keys = null!;
     private Scrollable.ScrollableState? _scrollableState;
@@ -356,7 +356,7 @@ internal sealed class CupertinoSliverNavigationBarState : State
         _searchAnimation = new Plumix.CurvedAnimation(_animationController, NavBarStatics.NavBarSearchCurve);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSliverNavigationBar oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (!ReferenceEquals(CurrentWidget.Middle, ((CupertinoSliverNavigationBar)oldWidget).Middle))

@@ -59,7 +59,7 @@ public sealed class InputDatePickerFormField : StatefulWidget
     public override State CreateState() => new InputDatePickerFormFieldState();
 }
 
-internal sealed class InputDatePickerFormFieldState : State
+internal sealed class InputDatePickerFormFieldState : State<InputDatePickerFormField>
 {
     private readonly TextEditingController _controller = new();
     private DateTime? _selectedDate;
@@ -75,7 +75,7 @@ internal sealed class InputDatePickerFormFieldState : State
 
     public override void DidChangeDependencies() => UpdateValueForSelectedDate();
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(InputDatePickerFormField oldWidget)
     {
         var old = (InputDatePickerFormField)oldWidget;
         if (Nullable.Equals(old.InitialDate, Current.InitialDate)) return;

@@ -43,7 +43,7 @@ internal sealed class ScrollableSelectionHandler : StatefulWidget
     public override State CreateState() => new ScrollableSelectionHandlerState();
 }
 
-internal sealed class ScrollableSelectionHandlerState : State
+internal sealed class ScrollableSelectionHandlerState : State<ScrollableSelectionHandler>
 {
     private ScrollableSelectionContainerDelegate _selectionDelegate = null!;
 
@@ -57,7 +57,7 @@ internal sealed class ScrollableSelectionHandlerState : State
         _selectionDelegate = new ScrollableSelectionContainerDelegate(Current.State, Current.Position);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(ScrollableSelectionHandler oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (ScrollableSelectionHandler)oldWidget;

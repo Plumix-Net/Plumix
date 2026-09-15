@@ -751,7 +751,7 @@ public sealed class ListWheelScrollView : StatefulWidget
 
     public override State CreateState() => new ListWheelScrollViewState();
 
-    private sealed class ListWheelScrollViewState : State
+    private sealed class ListWheelScrollViewState : State<ListWheelScrollView>
     {
         private int _lastReportedItemIndex;
         private ScrollController? _backupController;

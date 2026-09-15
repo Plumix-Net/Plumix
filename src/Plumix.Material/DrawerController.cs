@@ -82,7 +82,7 @@ public sealed class DrawerController : StatefulWidget
     public override State CreateState() => new DrawerControllerState();
 }
 
-public sealed class DrawerControllerState : State
+public sealed class DrawerControllerState : State<DrawerController>
 {
     private const double DefaultWidth = 304.0;
     private const double DefaultEdgeDragWidth = 20.0;
@@ -110,7 +110,7 @@ public sealed class DrawerControllerState : State
         _controller.SetValue(CurrentWidget.IsDrawerOpen ? 1.0 : 0.0);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(DrawerController oldWidget)
     {
         var oldController = (DrawerController)oldWidget;
         if (_controller.Status.IsAnimating() || _isDragging)

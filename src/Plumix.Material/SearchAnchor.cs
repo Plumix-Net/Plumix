@@ -319,7 +319,7 @@ public class SearchAnchor : StatefulWidget
         return new SearchAnchorState();
     }
 
-    public sealed class SearchAnchorState : State
+    public sealed class SearchAnchorState : State<SearchAnchor>
     {
         private readonly GlobalKey _anchorKey = new GlobalObjectKey<State>(new object());
         private bool _anchorIsVisible = true;
@@ -351,7 +351,7 @@ public class SearchAnchor : StatefulWidget
             _screenSize = updatedScreenSize;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SearchAnchor oldWidget)
         {
             var old = (SearchAnchor)oldWidget;
             if (!ReferenceEquals(old.SearchController, CurrentWidget.SearchController))
@@ -882,7 +882,7 @@ internal sealed class SearchViewContent : StatefulWidget
         return new SearchViewContentState();
     }
 
-    private sealed class SearchViewContentState : State
+    private sealed class SearchViewContentState : State<SearchViewContent>
     {
         private Size? _screenSize;
         private Rect _viewRect;
@@ -914,7 +914,7 @@ internal sealed class SearchViewContent : StatefulWidget
                 Curves.Flipped(SearchViewChoreography.ViewListFadeOnInterval));
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SearchViewContent oldWidget)
         {
             var old = (SearchViewContent)oldWidget;
             if (!ReferenceEquals(old.SearchController, Current.SearchController))
@@ -1249,7 +1249,7 @@ public sealed class SearchBar : StatefulWidget
         return new SearchBarState();
     }
 
-    private sealed class SearchBarState : State
+    private sealed class SearchBarState : State<SearchBar>
     {
         private readonly WidgetStatesController _internalStatesController = new();
         private FocusNode? _internalFocusNode;
@@ -1265,7 +1265,7 @@ public sealed class SearchBar : StatefulWidget
             AttachFocusListener();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SearchBar oldWidget)
         {
             var old = (SearchBar)oldWidget;
             if (!ReferenceEquals(old.FocusNode, CurrentWidget.FocusNode))

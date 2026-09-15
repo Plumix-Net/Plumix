@@ -122,7 +122,7 @@ public sealed class BottomSheet : StatefulWidget
 
     private sealed record BottomSheetChildKey(Guid Id) : GlobalKey;
 
-    private sealed class BottomSheetState : State
+    private sealed class BottomSheetState : State<BottomSheet>
     {
         private readonly GlobalKey _childKey = new BottomSheetChildKey(Guid.NewGuid());
         private readonly HashSet<WidgetState> _dragHandleStates = [];
@@ -570,7 +570,7 @@ internal sealed class ModalBottomSheetWidget<T> : StatefulWidget
     public override State CreateState() => new ModalBottomSheetWidgetState<T>();
 }
 
-internal sealed class ModalBottomSheetWidgetState<T> : State
+internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWidget<T>>
 {
     private static readonly Animation<double> AlwaysDismissedAnimation =
         new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);

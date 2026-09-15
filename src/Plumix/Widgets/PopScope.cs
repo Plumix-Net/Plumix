@@ -58,7 +58,7 @@ public sealed class PopScope<T> : StatefulWidget
     }
 }
 
-internal sealed class PopScopeState<T> : State, PopEntry
+internal sealed class PopScopeState<T> : State<PopScope<T>>, PopEntry
 {
     private ModalRoute? _route;
     private ValueNotifier<bool> _canPopNotifier = null!;
@@ -87,7 +87,7 @@ internal sealed class PopScopeState<T> : State, PopEntry
         _route?.RegisterPopEntry(this);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(PopScope<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         _canPopNotifier.Value = CurrentWidget.CanPop;
@@ -158,7 +158,7 @@ public sealed class NavigatorPopHandler<T> : StatefulWidget
     }
 }
 
-internal sealed class NavigatorPopHandlerState<T> : State
+internal sealed class NavigatorPopHandlerState<T> : State<NavigatorPopHandler<T>>
 {
     private bool _canPop = true;
 

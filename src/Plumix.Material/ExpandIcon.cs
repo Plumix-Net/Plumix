@@ -43,7 +43,7 @@ public sealed class ExpandIcon : StatefulWidget
 
     public override State CreateState() => new ExpandIconState();
 
-    private sealed class ExpandIconState : State
+    private sealed class ExpandIconState : State<ExpandIcon>
     {
         private static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
         private static readonly DoubleTween IconTurnTween = new(begin: 0.0, end: 0.5);
@@ -65,7 +65,7 @@ public sealed class ExpandIcon : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(ExpandIcon oldWidget)
         {
             var oldIcon = (ExpandIcon)oldWidget;
             if (oldIcon.IsExpanded == CurrentWidget.IsExpanded) return;

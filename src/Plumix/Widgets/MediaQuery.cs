@@ -686,7 +686,7 @@ internal sealed class MediaQueryFromView : StatefulWidget
     public override State CreateState() => new MediaQueryFromViewState();
 
     /// <summary>Flutter's <c>_MediaQueryFromViewState</c>.</summary>
-    private sealed class MediaQueryFromViewState : State, WidgetsBindingObserver
+    private sealed class MediaQueryFromViewState : State<MediaQueryFromView>, WidgetsBindingObserver
     {
         private MediaQueryData? _parentData;
         private MediaQueryData? _data;
@@ -707,7 +707,7 @@ internal sealed class MediaQueryFromView : StatefulWidget
             Debug.Assert(_data is not null);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(MediaQueryFromView oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var old = (MediaQueryFromView)oldWidget;

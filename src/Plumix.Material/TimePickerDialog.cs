@@ -807,7 +807,7 @@ internal sealed class TimePickerInput : StatefulWidget
     public override State CreateState() => new TimePickerInputState();
 }
 
-internal sealed class TimePickerInputState : State
+internal sealed class TimePickerInputState : State<TimePickerInput>
 {
     private TimeOfDay _selectedTime;
     private bool _hourHasError;
@@ -1140,7 +1140,7 @@ internal sealed class HourMinuteTextField : StatefulWidget
     public override State CreateState() => new HourMinuteTextFieldState();
 }
 
-internal sealed class HourMinuteTextFieldState : State
+internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
 {
     private readonly TextEditingController _controller = new();
     private readonly FocusNode _focusNode = new();
@@ -1451,7 +1451,7 @@ internal sealed class Dial : StatefulWidget
     public override State CreateState() => new DialState();
 }
 
-internal sealed class DialState : State
+internal sealed class DialState : State<Dial>
 {
     private static readonly int[] AmHours = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
     private static readonly int[] TwentyFourHoursM2 = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
@@ -1482,7 +1482,7 @@ internal sealed class DialState : State
         _radius.AddListener(() => SetState(() => { }));
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(Dial oldWidget)
     {
         var old = (Dial)oldWidget;
         if ((old.HourMinuteMode != Current.HourMinuteMode || old.SelectedTime != Current.SelectedTime)
@@ -1825,7 +1825,7 @@ internal sealed class TimePickerBody : StatefulWidget
     public override State CreateState() => new TimePickerBodyState();
 }
 
-internal sealed class TimePickerBodyState : State
+internal sealed class TimePickerBodyState : State<TimePickerBody>
 {
     private HourMinuteMode _hourMinuteMode = HourMinuteMode.Hour;
     private bool? _autofocusHour;
@@ -1844,7 +1844,7 @@ internal sealed class TimePickerBodyState : State
         _orientation = Current.Orientation;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(TimePickerBody oldWidget)
     {
         var old = (TimePickerBody)oldWidget;
         if (old.Orientation != Current.Orientation) _orientation = Current.Orientation;
@@ -2096,7 +2096,7 @@ public sealed class TimePickerDialog : StatefulWidget
     public override State CreateState() => new TimePickerDialogState();
 }
 
-internal sealed class TimePickerDialogState : State
+internal sealed class TimePickerDialogState : State<TimePickerDialog>
 {
     internal static readonly Size PortraitSize = new(310, 468);
     internal static readonly Size LandscapeSize = new(524, 342);

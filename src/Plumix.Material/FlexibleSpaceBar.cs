@@ -97,7 +97,7 @@ public sealed class FlexibleSpaceBar : StatefulWidget
     }
 }
 
-internal sealed class FlexibleSpaceBarState : State
+internal sealed class FlexibleSpaceBarState : State<FlexibleSpaceBar>
 {
     private FlexibleSpaceBar CurrentWidget => (FlexibleSpaceBar)StateWidget;
 

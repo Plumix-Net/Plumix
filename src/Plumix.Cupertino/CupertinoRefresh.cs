@@ -318,7 +318,7 @@ public sealed class CupertinoSliverRefreshControl : StatefulWidget
     }
 }
 
-internal sealed class CupertinoSliverRefreshControlState : State
+internal sealed class CupertinoSliverRefreshControlState : State<CupertinoSliverRefreshControl>
 {
     private const double InactiveResetOverscrollFraction = 0.1;
 

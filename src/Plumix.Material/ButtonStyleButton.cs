@@ -279,7 +279,7 @@ public abstract class ButtonStyleButton : StatefulWidget
 }
 
 /// <summary>Dart parity: `_ButtonStyleState`.</summary>
-public sealed class ButtonStyleState : State
+public sealed class ButtonStyleState : State<ButtonStyleButton>
 {
     /// Dart's `kThemeChangeDuration`.
     internal static readonly TimeSpan ThemeChangeDuration = TimeSpan.FromMilliseconds(200);
@@ -300,7 +300,7 @@ public sealed class ButtonStyleState : State
         InitStatesController();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(ButtonStyleButton oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (ButtonStyleButton)oldWidget;

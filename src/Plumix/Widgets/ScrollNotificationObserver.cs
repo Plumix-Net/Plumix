@@ -39,7 +39,7 @@ public sealed class ScrollNotificationObserver : StatefulWidget
     }
 }
 
-public sealed class ScrollNotificationObserverState : State
+public sealed class ScrollNotificationObserverState : State<ScrollNotificationObserver>
 {
     private List<ListenerEntry>? _listeners = [];
 

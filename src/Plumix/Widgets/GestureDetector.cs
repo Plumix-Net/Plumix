@@ -675,7 +675,7 @@ public sealed class RawGestureDetector : StatefulWidget
 }
 
 /// <summary>State for a <see cref="RawGestureDetector"/>.</summary>
-public sealed class RawGestureDetectorState : State
+public sealed class RawGestureDetectorState : State<RawGestureDetector>
 {
     // Dart initializes this to a const empty map and nulls it on dispose; the null is the disposed
     // sentinel `debugFillProperties` reports as DISPOSED.
@@ -698,7 +698,7 @@ public sealed class RawGestureDetectorState : State
         SyncAll(CurrentWidget.Gestures);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawGestureDetector oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (RawGestureDetector)oldWidget;

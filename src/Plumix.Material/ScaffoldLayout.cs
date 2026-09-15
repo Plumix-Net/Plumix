@@ -432,7 +432,7 @@ internal sealed class FloatingActionButtonTransition : StatefulWidget
     public override State CreateState() => new FloatingActionButtonTransitionState();
 }
 
-internal sealed class FloatingActionButtonTransitionState : State
+internal sealed class FloatingActionButtonTransitionState : State<FloatingActionButtonTransition>
 {
     private static readonly Animatable<double> EntranceTurnTween =
         new DoubleTween(begin: 1.0 - FloatingActionButtonConstants.TurnInterval, end: 1.0)
@@ -483,7 +483,7 @@ internal sealed class FloatingActionButtonTransitionState : State
         base.Dispose();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(FloatingActionButtonTransition oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (FloatingActionButtonTransition)oldWidget;

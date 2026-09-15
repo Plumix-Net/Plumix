@@ -446,7 +446,7 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
             return new SnapshotGateState();
         }
 
-        private sealed class SnapshotGateState : State
+        private sealed class SnapshotGateState : State<SnapshotGate>
         {
             private readonly SnapshotController _controller = new();
 
@@ -458,7 +458,7 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
                 UpdateController();
             }
 
-            public override void DidUpdateWidget(StatefulWidget oldWidget)
+            public override void DidUpdateWidget(SnapshotGate oldWidget)
             {
                 var oldGate = (SnapshotGate)oldWidget;
                 if (!ReferenceEquals(oldGate.Animation, CurrentWidget.Animation))
@@ -711,7 +711,7 @@ public sealed class PageTransitionsTheme : IEquatable<PageTransitionsTheme>
             return new PageTransitionsThemeTransitionsState();
         }
 
-        private sealed class PageTransitionsThemeTransitionsState : State
+        private sealed class PageTransitionsThemeTransitionsState : State<PageTransitionsThemeTransitions>
         {
             private TargetPlatform? _transitionPlatform;
 
@@ -867,7 +867,8 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
         return new PredictiveBackGestureDetectorState();
     }
 
-    private sealed class PredictiveBackGestureDetectorState : State, WidgetsBindingObserver
+    private sealed class PredictiveBackGestureDetectorState
+        : State<PredictiveBackGestureDetector>, WidgetsBindingObserver
     {
         private PredictiveBackPhase _phase;
         private PredictiveBackEvent? _startEvent;

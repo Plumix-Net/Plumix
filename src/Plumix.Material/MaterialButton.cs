@@ -288,7 +288,7 @@ public sealed class RawMaterialButton : StatefulWidget
         }
     }
 
-    private sealed class RawMaterialButtonState : MaterialStateMixin
+    private sealed class RawMaterialButtonState : MaterialStateMixin<RawMaterialButton>
     {
         private RawMaterialButton CurrentWidget => (RawMaterialButton)StateWidget;
 
@@ -298,7 +298,7 @@ public sealed class RawMaterialButton : StatefulWidget
             SetMaterialState(WidgetState.Disabled, !CurrentWidget.Enabled);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RawMaterialButton oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             SetMaterialState(WidgetState.Disabled, !CurrentWidget.Enabled);

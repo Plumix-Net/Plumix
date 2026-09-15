@@ -230,7 +230,7 @@ public sealed class Material : StatefulWidget
 
     public override State CreateState() => new IReadOnlySet<WidgetState>();
 
-    private sealed class IReadOnlySet<WidgetState> : State
+    private sealed class IReadOnlySet<WidgetState> : State<Material>
     {
         private AnimationController? _controller;
         private MaterialVisual? _begin;
@@ -243,7 +243,7 @@ public sealed class Material : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Material oldWidget)
         {
             var oldMaterial = (Material)oldWidget;
             if (oldMaterial.AnimationDuration != CurrentWidget.AnimationDuration)

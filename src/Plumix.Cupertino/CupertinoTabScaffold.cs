@@ -96,7 +96,7 @@ public sealed class CupertinoTabScaffold : StatefulWidget
     public override State CreateState() => new CupertinoTabScaffoldState();
 }
 
-internal sealed class CupertinoTabScaffoldState : RestorationState
+internal sealed class CupertinoTabScaffoldState : RestorationState<CupertinoTabScaffold>
 {
     private RestorableCupertinoTabController? _internalController;
 
@@ -117,7 +117,7 @@ internal sealed class CupertinoTabScaffoldState : RestorationState
         UpdateTabController();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoTabScaffold oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldTabScaffold = (CupertinoTabScaffold)oldWidget;
@@ -293,7 +293,7 @@ internal sealed class CupertinoTabSwitchingView : StatefulWidget
     public override State CreateState() => new CupertinoTabSwitchingViewState();
 }
 
-internal sealed class CupertinoTabSwitchingViewState : State
+internal sealed class CupertinoTabSwitchingViewState : State<CupertinoTabSwitchingView>
 {
     private readonly List<bool> _shouldBuildTab = [];
     private readonly List<FocusScopeNode> _tabFocusNodes = [];
@@ -313,7 +313,7 @@ internal sealed class CupertinoTabSwitchingViewState : State
         FocusActiveTab();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoTabSwitchingView oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
 

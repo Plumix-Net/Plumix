@@ -348,7 +348,7 @@ internal sealed class FloatingHeader : StatefulWidget
     public override State CreateState() => new FloatingHeaderState();
 }
 
-internal sealed class FloatingHeaderState : State
+internal sealed class FloatingHeaderState : State<FloatingHeader>
 {
     private ScrollPosition? _position;
 

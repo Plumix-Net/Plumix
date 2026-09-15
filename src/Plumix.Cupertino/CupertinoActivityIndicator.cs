@@ -90,7 +90,7 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
 
     public override State CreateState() => new CupertinoActivityIndicatorState();
 
-    private sealed class CupertinoActivityIndicatorState : State
+    private sealed class CupertinoActivityIndicatorState : State<CupertinoActivityIndicator>
     {
         private AnimationController? _controller;
 
@@ -107,7 +107,7 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoActivityIndicator oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             if (CurrentWidget.Animating != ((CupertinoActivityIndicator)oldWidget).Animating)

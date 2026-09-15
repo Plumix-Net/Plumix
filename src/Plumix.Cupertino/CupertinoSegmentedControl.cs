@@ -78,7 +78,7 @@ public sealed class CupertinoSegmentedControl<T> : StatefulWidget where T : notn
     public override State CreateState() => new CupertinoSegmentedControlState<T>();
 }
 
-internal sealed class CupertinoSegmentedControlState<T> : State where T : notnull
+internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegmentedControl<T>> where T : notnull
 {
     private static readonly TimeSpan SelectionAnimationDuration = TimeSpan.FromMilliseconds(165.0);
     private static readonly Color DefaultDisabledTextColor = Color.FromArgb(115, 122, 122, 122);
@@ -106,7 +106,7 @@ internal sealed class CupertinoSegmentedControlState<T> : State where T : notnul
         UpdateColors();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSegmentedControl<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldControl = (CupertinoSegmentedControl<T>)oldWidget;
@@ -436,7 +436,8 @@ internal sealed class CupertinoSegmentButton<T> : StatefulWidget where T : notnu
     public override State CreateState() => new CupertinoSegmentButtonState<T>();
 }
 
-internal sealed class CupertinoSegmentButtonState<T> : State, RadioClient<T> where T : notnull
+internal sealed class CupertinoSegmentButtonState<T>
+    : State<CupertinoSegmentButton<T>>, RadioClient<T> where T : notnull
 {
     private readonly FocusNode _focusNode = new();
     private RadioGroupRegistry<T>? _registry;

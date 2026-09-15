@@ -138,7 +138,7 @@ public sealed class View : StatefulWidget
     public override State CreateState() => new ViewState();
 
     /// <summary>Flutter's <c>_ViewState</c>: the per-view focus scope and its platform focus plumbing.</summary>
-    private sealed class ViewState : State, WidgetsBindingObserver
+    private sealed class ViewState : State<View>, WidgetsBindingObserver
     {
         private readonly FocusScopeNode _scopeNode =
             new(debugLabel: Constants.KReleaseMode ? null : "View Scope");

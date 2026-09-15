@@ -30,7 +30,7 @@ public sealed class SelectionListener : StatefulWidget
     public override State CreateState() => new SelectionListenerState();
 }
 
-internal sealed class SelectionListenerState : State
+internal sealed class SelectionListenerState : State<SelectionListener>
 {
     private SelectionListenerDelegate? _selectionDelegateField;
 
@@ -40,7 +40,7 @@ internal sealed class SelectionListenerState : State
     private SelectionListenerDelegate SelectionDelegate =>
         _selectionDelegateField ??= new SelectionListenerDelegate(Current.SelectionNotifier);
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SelectionListener oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (!ReferenceEquals(((SelectionListener)oldWidget).SelectionNotifier, Current.SelectionNotifier))

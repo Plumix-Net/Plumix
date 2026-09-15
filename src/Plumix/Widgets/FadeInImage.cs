@@ -268,7 +268,7 @@ public sealed class FadeInImage : StatefulWidget
         }
     }
 
-    private sealed class FadeInImageState : State
+    private sealed class FadeInImageState : State<FadeInImage>
     {
         private bool _targetLoaded;
         private readonly ProxyAnimation _imageAnimation = new(OpaqueAnimation);
@@ -403,7 +403,7 @@ public sealed class FadeInImage : StatefulWidget
         public override State CreateState() => new AnimatedFadeOutFadeInState();
     }
 
-    private sealed class AnimatedFadeOutFadeInState : State
+    private sealed class AnimatedFadeOutFadeInState : State<AnimatedFadeOutFadeIn>
     {
         private AnimationController? _controller;
         private MappedDoubleAnimation? _targetOpacityAnimation;
@@ -429,7 +429,7 @@ public sealed class FadeInImage : StatefulWidget
             _placeholderRemoved = CurrentWidget.IsTargetLoaded;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedFadeOutFadeIn oldWidget)
         {
             var oldFade = (AnimatedFadeOutFadeIn)oldWidget;
             if (CurrentWidget.WasSynchronouslyLoaded)

@@ -98,7 +98,7 @@ public sealed class SnackBarAction : StatefulWidget
 
     public override State CreateState() => new SnackBarActionState();
 
-    private sealed class SnackBarActionState : State
+    private sealed class SnackBarActionState : State<SnackBarAction>
     {
         private bool _haveTriggeredAction;
 
@@ -335,7 +335,7 @@ public sealed class SnackBar : StatefulWidget
 
     public override State CreateState() => new SnackBarState();
 
-    private sealed class SnackBarState : State
+    private sealed class SnackBarState : State<SnackBar>
     {
         private readonly Key _dismissibleKey = new UniqueKey();
         private bool _wasVisible;
@@ -354,7 +354,7 @@ public sealed class SnackBar : StatefulWidget
             SetAnimations();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SnackBar oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldSnackBar = (SnackBar)oldWidget;

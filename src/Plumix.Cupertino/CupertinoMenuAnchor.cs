@@ -478,7 +478,7 @@ public sealed class CupertinoMenuAnchor : StatefulWidget
     public override State CreateState() => new CupertinoMenuAnchorState();
 }
 
-public sealed class CupertinoMenuAnchorState : State
+public sealed class CupertinoMenuAnchorState : State<CupertinoMenuAnchor>
 {
     private static readonly TimeSpan KLongPressToOpenDuration = TimeSpan.FromMilliseconds(400);
 
@@ -521,7 +521,7 @@ public sealed class CupertinoMenuAnchorState : State
         _animationController.AddStatusListener(HandleAnimationStatusChange);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoMenuAnchor oldWidget)
     {
         var previous = (CupertinoMenuAnchor)oldWidget;
         if (!ReferenceEquals(previous.Controller, Current.Controller))

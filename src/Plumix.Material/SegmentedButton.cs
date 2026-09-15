@@ -217,7 +217,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
     }
 }
 
-public sealed class SegmentedButtonState<T> : State
+public sealed class SegmentedButtonState<T> : State<SegmentedButton<T>>
 {
     private bool _hovering;
     private bool _focused;
@@ -226,7 +226,7 @@ public sealed class SegmentedButtonState<T> : State
 
     public Dictionary<ButtonSegment<T>, WidgetStatesController> StatesControllers { get; } = [];
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SegmentedButton<T> oldWidget)
     {
         var retainedSegments = CurrentWidget.Segments.ToHashSet();
         foreach (ButtonSegment<T> segment in StatesControllers.Keys.ToArray())

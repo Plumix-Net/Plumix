@@ -211,7 +211,27 @@ internal abstract class RouterStateBase : RestorationState
     internal abstract void SetStateWithExplicitReportStatus(RouteInformationReportingType status, Action callback);
 }
 
-internal sealed class RouterState<T> : RouterStateBase
+internal abstract class RouterStateBase<T> : RouterStateBase
+{
+    public Router<T> Widget => (Router<T>)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is Router<T>;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((Router<T>)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(Router<T> oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(Router<T>)]);
+}
+
+internal sealed class RouterState<T> : RouterStateBase<T>
 {
     private readonly RestorableRouteInformation _routeInformation = new();
     private object? _currentRouterTransaction;
@@ -274,7 +294,7 @@ internal sealed class RouterState<T> : RouterStateBase
         MaybeNeedToReportRouteInformation();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(Router<T> oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (Router<T>)oldWidget;
@@ -797,7 +817,7 @@ public sealed class BackButtonListener : StatefulWidget
 
     public override State CreateState() => new BackButtonListenerState();
 
-    private sealed class BackButtonListenerState : State
+    private sealed class BackButtonListenerState : State<BackButtonListener>
     {
         private BackButtonDispatcher? _dispatcher;
 
@@ -817,7 +837,7 @@ public sealed class BackButtonListener : StatefulWidget
             base.DidChangeDependencies();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(BackButtonListener oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var previous = (BackButtonListener)oldWidget;

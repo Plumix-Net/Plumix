@@ -42,7 +42,7 @@ public sealed class CupertinoPageScaffold : StatefulWidget
     public override State CreateState() => new CupertinoPageScaffoldState();
 }
 
-internal sealed class CupertinoPageScaffoldState : State, WidgetsBindingObserver
+internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>, WidgetsBindingObserver
 {
     private static readonly TimeSpan StatusBarTapScrollDuration = TimeSpan.FromMilliseconds(500);
     private readonly LabeledGlobalKey<State> _statusBarKey = new("CupertinoPageScaffold status bar");

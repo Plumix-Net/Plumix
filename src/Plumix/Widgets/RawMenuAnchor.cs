@@ -311,6 +311,27 @@ public abstract class RawMenuAnchorBaseState : State
     }
 }
 
+/// <summary>A typed menu-anchor state with Dart's <c>State&lt;T&gt;</c> widget check.</summary>
+public abstract class RawMenuAnchorBaseState<TWidget> : RawMenuAnchorBaseState where TWidget : StatefulWidget
+{
+    public TWidget Widget => (TWidget)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is TWidget;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((TWidget)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(TWidget oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(TWidget)]);
+}
+
 /// <summary>A menu anchor that shows an overlay built by <see cref="OverlayBuilder"/>.</summary>
 public sealed class RawMenuAnchor : StatefulWidget
 {
@@ -382,7 +403,7 @@ public sealed class RawMenuAnchor : StatefulWidget
     private static void DefaultOnCloseRequested(Action hideOverlay) => hideOverlay();
 }
 
-public sealed class RawMenuAnchorState : RawMenuAnchorBaseState
+public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
 {
     private readonly OverlayPortalController _overlayController = new("MenuAnchor controller");
     private Vector? _menuPosition;
@@ -400,7 +421,7 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState
         ? parentAnchor.UseRootOverlay
         : Current.UseRootOverlay;
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawMenuAnchor oldWidget)
     {
         var previous = (RawMenuAnchor)oldWidget;
         if (!ReferenceEquals(previous.Controller, Current.Controller))
@@ -547,7 +568,7 @@ public sealed class RawMenuAnchorGroup : StatefulWidget
     public override State CreateState() => new RawMenuAnchorGroupState();
 }
 
-public sealed class RawMenuAnchorGroupState : RawMenuAnchorBaseState
+public sealed class RawMenuAnchorGroupState : RawMenuAnchorBaseState<RawMenuAnchorGroup>
 {
     private RawMenuAnchorGroup Current => (RawMenuAnchorGroup)StateWidget;
 
@@ -555,7 +576,7 @@ public sealed class RawMenuAnchorGroupState : RawMenuAnchorBaseState
 
     internal override bool IsOpen => AnchorChildren.Any(child => child.IsOpen);
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawMenuAnchorGroup oldWidget)
     {
         var previous = (RawMenuAnchorGroup)oldWidget;
         if (!ReferenceEquals(previous.Controller, Current.Controller))

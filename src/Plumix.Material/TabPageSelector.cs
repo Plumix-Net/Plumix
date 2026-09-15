@@ -85,7 +85,7 @@ public sealed class TabPageSelector : StatefulWidget
 
     public override State CreateState() => new TabPageSelectorState();
 
-    private sealed class TabPageSelectorState : State
+    private sealed class TabPageSelectorState : State<TabPageSelector>
     {
         private CurvedAnimation? _animation;
         private TabController? _previousTabController;
@@ -111,7 +111,7 @@ public sealed class TabPageSelector : StatefulWidget
             _previousTabController = TabController;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TabPageSelector oldWidget)
         {
             if (!ReferenceEquals(_previousTabController?.Animation, TabController.Animation))
             {

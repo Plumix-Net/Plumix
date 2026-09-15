@@ -227,7 +227,7 @@ internal sealed class FocusWithExternalFocusNode : Focus
 }
 
 /// <summary>Dart parity source: <c>_FocusState</c>.</summary>
-internal class FocusState : State
+internal class FocusState : State<Focus>
 {
     private FocusNode? _internalNode;
     private bool _hadPrimaryFocus;
@@ -237,8 +237,6 @@ internal class FocusState : State
     private bool _didAutofocus;
 
     private protected FocusAttachment? FocusAttachment;
-
-    private protected Focus Widget => (Focus)StateWidget;
 
     private protected FocusNode FocusNode => Widget.FocusNode ?? (_internalNode ??= CreateNode());
 
@@ -314,7 +312,7 @@ internal class FocusState : State
         _didAutofocus = false;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(Focus oldWidget)
     {
         var oldFocusWidget = (Focus)oldWidget;
         if (ReferenceEquals(oldFocusWidget.FocusNode, Widget.FocusNode))

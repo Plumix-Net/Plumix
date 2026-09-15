@@ -245,7 +245,7 @@ public sealed class ActionListener : StatefulWidget
 
     public override State CreateState() => new ActionListenerState();
 
-    private sealed class ActionListenerState : State
+    private sealed class ActionListenerState : State<ActionListener>
     {
         private ActionListener Current => (ActionListener)StateWidget;
 
@@ -254,7 +254,7 @@ public sealed class ActionListener : StatefulWidget
             Current.Action.AddActionListener(HandleActionChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(ActionListener oldWidget)
         {
             var oldListener = (ActionListener)oldWidget;
             if (!ReferenceEquals(oldListener.Action, Current.Action))
@@ -517,7 +517,7 @@ public sealed class Actions : StatefulWidget
         return new ActionDispatcher();
     }
 
-    private sealed class ActionsState : State
+    private sealed class ActionsState : State<Actions>
     {
         private readonly HashSet<FlutterAction> _listenedActions = [];
         private int _version;
@@ -529,7 +529,7 @@ public sealed class Actions : StatefulWidget
             UpdateActionListeners();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Actions oldWidget)
         {
             UpdateActionListeners();
         }
@@ -668,7 +668,7 @@ public sealed class FocusableActionDetector : StatefulWidget
 
     public override State CreateState() => new FocusableActionDetectorState();
 
-    private sealed class FocusableActionDetectorState : State
+    private sealed class FocusableActionDetectorState : State<FocusableActionDetector>
     {
         private readonly GlobalObjectKey<State> _mouseRegionKey;
         private bool _canShowHighlight;
@@ -694,7 +694,7 @@ public sealed class FocusableActionDetector : StatefulWidget
             FocusManager.Instance.AddHighlightModeListener(HandleFocusHighlightModeChange);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(FocusableActionDetector oldWidget)
         {
             var oldDetector = (FocusableActionDetector)oldWidget;
             if (oldDetector.Enabled == Current.Enabled)

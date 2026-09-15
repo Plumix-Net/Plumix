@@ -689,7 +689,7 @@ public sealed class RawChip : StatefulWidget
 
     public override State CreateState() => new RawChipState();
 
-    private sealed class RawChipState : State
+    private sealed class RawChipState : State<RawChip>
     {
         private AnimationController? _selectionController;
         private double _selectionProgress;
@@ -744,7 +744,7 @@ public sealed class RawChip : StatefulWidget
             UpdateAnimationProgress();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RawChip oldWidget)
         {
             var oldChip = (RawChip)oldWidget;
             _statesController.Update(WidgetState.Disabled, !CurrentWidget.IsEnabled);

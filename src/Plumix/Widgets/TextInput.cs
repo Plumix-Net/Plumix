@@ -1306,7 +1306,8 @@ public sealed class EditableText : StatefulWidget
             : new ToolbarOptions();
     }
 
-    public sealed class EditableTextState : State, ITextSelectionDelegate, IAutofillClient, ITextInputClient
+    public sealed class EditableTextState
+        : State<EditableText>, ITextSelectionDelegate, IAutofillClient, ITextInputClient
     {
         private AutofillGroupState? _currentAutofillScope;
         private TextInputConnection? _textInputConnection;
@@ -1339,8 +1340,6 @@ public sealed class EditableText : StatefulWidget
         {
             _cursorTicker = new Ticker(HandleCursorTick, "EditableText cursor");
         }
-
-        private EditableText Widget => (EditableText)StateWidget;
 
         public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems
         {
@@ -1563,7 +1562,7 @@ public sealed class EditableText : StatefulWidget
             UpdateCursorTicker();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(EditableText oldWidget)
         {
             var oldEditableText = (EditableText)oldWidget;
             if (!ReferenceEquals(oldEditableText.Controller, Widget.Controller))

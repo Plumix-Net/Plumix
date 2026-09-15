@@ -127,7 +127,7 @@ public class NestedScrollView : StatefulWidget
 }
 
 /// <summary>The state of a <see cref="NestedScrollView"/>, exposing its two scroll controllers.</summary>
-public class NestedScrollViewState : State
+public class NestedScrollViewState : State<NestedScrollView>
 {
     private NestedScrollCoordinator? _coordinator;
     private bool? _lastHasScrolledBody;
@@ -158,7 +158,7 @@ public class NestedScrollViewState : State
         _coordinator!.SetParent(CurrentWidget.Controller);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(NestedScrollView oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (!ReferenceEquals(((NestedScrollView)oldWidget).Controller, CurrentWidget.Controller))

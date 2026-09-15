@@ -1117,7 +1117,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
 
     public override State CreateState() => new SelectionToolbarWrapperState();
 
-    private sealed class SelectionToolbarWrapperState : State
+    private sealed class SelectionToolbarWrapperState : State<SelectionToolbarWrapper>
     {
         private AnimationController? _controller;
 
@@ -1130,7 +1130,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
             CurrentWidget.Visibility?.AddListener(HandleVisibilityChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SelectionToolbarWrapper oldWidget)
         {
             var previous = (SelectionToolbarWrapper)oldWidget;
             if (ReferenceEquals(previous.Visibility, CurrentWidget.Visibility))
@@ -1230,7 +1230,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
     public override State CreateState() => new SelectionHandleOverlayState();
 
-    private sealed class SelectionHandleOverlayState : State
+    private sealed class SelectionHandleOverlayState : State<SelectionHandleOverlay>
     {
         private static readonly IReadOnlySet<PointerDeviceKind> DragDevices = new HashSet<PointerDeviceKind>
         {
@@ -1250,7 +1250,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
             CurrentWidget.Visibility?.AddListener(HandleVisibilityChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SelectionHandleOverlay oldWidget)
         {
             ((SelectionHandleOverlay)oldWidget).Visibility?.RemoveListener(HandleVisibilityChanged);
             HandleVisibilityChanged();

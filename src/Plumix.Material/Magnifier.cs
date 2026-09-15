@@ -42,7 +42,7 @@ public sealed class TextMagnifier : StatefulWidget
         };
     }
 
-    internal sealed class TextMagnifierState : State
+    internal sealed class TextMagnifierState : State<TextMagnifier>
     {
         private Point? _magnifierPosition;
         private Point _extraFocalPointOffset;
@@ -68,7 +68,7 @@ public sealed class TextMagnifier : StatefulWidget
             base.DidChangeDependencies();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TextMagnifier oldWidget)
         {
             var oldMagnifier = (TextMagnifier)oldWidget;
             if (!ReferenceEquals(oldMagnifier.MagnifierInfo, CurrentWidget.MagnifierInfo))

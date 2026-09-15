@@ -90,7 +90,7 @@ public sealed class AnimatedOpacity : StatefulWidget
 
     public override State CreateState() => new AnimatedOpacityState();
 
-    private sealed class AnimatedOpacityState : State
+    private sealed class AnimatedOpacityState : State<AnimatedOpacity>
     {
         private AnimationController? _controller;
         private double _begin;
@@ -108,7 +108,7 @@ public sealed class AnimatedOpacity : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedOpacity oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -193,7 +193,7 @@ public sealed class SliverAnimatedOpacity : StatefulWidget
 
     public override State CreateState() => new SliverAnimatedOpacityState();
 
-    private sealed class SliverAnimatedOpacityState : State
+    private sealed class SliverAnimatedOpacityState : State<SliverAnimatedOpacity>
     {
         private AnimationController? _controller;
         private CurvedAnimation? _animation;
@@ -212,7 +212,7 @@ public sealed class SliverAnimatedOpacity : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(SliverAnimatedOpacity oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _animation!.Curve = CurrentWidget.Curve;
@@ -289,7 +289,7 @@ public sealed class AnimatedSlide : StatefulWidget
 
     public override State CreateState() => new AnimatedSlideState();
 
-    private sealed class AnimatedSlideState : State
+    private sealed class AnimatedSlideState : State<AnimatedSlide>
     {
         private AnimationController? _controller;
         private Vector _begin;
@@ -307,7 +307,7 @@ public sealed class AnimatedSlide : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedSlide oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -397,7 +397,7 @@ public sealed class AnimatedScale : StatefulWidget
 
     public override State CreateState() => new AnimatedScaleState();
 
-    private sealed class AnimatedScaleState : State
+    private sealed class AnimatedScaleState : State<AnimatedScale>
     {
         private AnimationController? _controller;
         private double _begin;
@@ -411,7 +411,7 @@ public sealed class AnimatedScale : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedScale oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -517,7 +517,7 @@ public sealed class AnimatedRotation : StatefulWidget
 
     public override State CreateState() => new AnimatedRotationState();
 
-    private sealed class AnimatedRotationState : State
+    private sealed class AnimatedRotationState : State<AnimatedRotation>
     {
         private AnimationController? _controller;
         private double _begin;
@@ -531,7 +531,7 @@ public sealed class AnimatedRotation : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedRotation oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -657,7 +657,7 @@ public sealed class AnimatedContainer : StatefulWidget
         }
     }
 
-    private sealed class AnimatedContainerState : State
+    private sealed class AnimatedContainerState : State<AnimatedContainer>
     {
         private AnimationController? _controller;
         private AnimatedContainerValues _begin = null!;
@@ -671,7 +671,7 @@ public sealed class AnimatedContainer : StatefulWidget
             CreateController(CurrentWidget.Duration);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedContainer oldWidget)
         {
             var oldContainer = (AnimatedContainer)oldWidget;
             var current = Evaluate(_controller!.Evaluate());
@@ -882,7 +882,7 @@ public sealed class AnimatedPadding : StatefulWidget
         }
     }
 
-    private sealed class AnimatedPaddingState : State
+    private sealed class AnimatedPaddingState : State<AnimatedPadding>
     {
         private AnimationController? _controller;
         private Thickness _begin;
@@ -896,7 +896,7 @@ public sealed class AnimatedPadding : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedPadding oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1009,7 +1009,7 @@ public sealed class AnimatedAlign : StatefulWidget
 
     public override State CreateState() => new AnimatedAlignState();
 
-    private sealed class AnimatedAlignState : State
+    private sealed class AnimatedAlignState : State<AnimatedAlign>
     {
         private AnimationController? _controller;
         private AnimatedAlignValues _begin = null!;
@@ -1023,7 +1023,7 @@ public sealed class AnimatedAlign : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedAlign oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1245,7 +1245,7 @@ public sealed class AnimatedPositioned : StatefulWidget
         }
     }
 
-    private sealed class AnimatedPositionedState : State
+    private sealed class AnimatedPositionedState : State<AnimatedPositioned>
     {
         private AnimationController? _controller;
         private AnimatedPositionedValues _begin = null!;
@@ -1259,7 +1259,7 @@ public sealed class AnimatedPositioned : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedPositioned oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1407,7 +1407,7 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
         }
     }
 
-    private sealed class AnimatedPositionedDirectionalState : State
+    private sealed class AnimatedPositionedDirectionalState : State<AnimatedPositionedDirectional>
     {
         private AnimationController? _controller;
         private AnimatedPositionedValues _begin = null!;
@@ -1422,7 +1422,7 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
             CreateController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedPositionedDirectional oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1567,7 +1567,7 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
 
     public override State CreateState() => new AnimatedDefaultTextStyleState();
 
-    private sealed class AnimatedDefaultTextStyleState : State
+    private sealed class AnimatedDefaultTextStyleState : State<AnimatedDefaultTextStyle>
     {
         private AnimationController? _controller;
         private TextStyle _begin = null!;
@@ -1585,7 +1585,7 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedDefaultTextStyle oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1700,7 +1700,7 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
 
     public override State CreateState() => new AnimatedPhysicalModelState();
 
-    private sealed class AnimatedPhysicalModelState : State
+    private sealed class AnimatedPhysicalModelState : State<AnimatedPhysicalModel>
     {
         private readonly ColorTween _colorTween = new();
         private AnimationController? _controller;
@@ -1719,7 +1719,7 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedPhysicalModel oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;
@@ -1829,7 +1829,7 @@ public sealed class AnimatedFractionallySizedBox : StatefulWidget
 
     public override State CreateState() => new AnimatedFractionallySizedBoxState();
 
-    private sealed class AnimatedFractionallySizedBoxState : State
+    private sealed class AnimatedFractionallySizedBoxState : State<AnimatedFractionallySizedBox>
     {
         private AnimationController? _controller;
         private Alignment _alignmentBegin;
@@ -1865,7 +1865,7 @@ public sealed class AnimatedFractionallySizedBox : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedFractionallySizedBox oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;

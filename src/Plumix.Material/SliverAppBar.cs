@@ -316,7 +316,7 @@ public sealed class SliverAppBar : StatefulWidget
 /// This class is only stateful because it owns the ticker provider used by the floating app bar's
 /// snap animation (through <see cref="FloatingHeaderSnapConfiguration"/>).
 /// </summary>
-internal sealed class SliverAppBarState : State
+internal sealed class SliverAppBarState : State<SliverAppBar>
 {
     private FloatingHeaderSnapConfiguration? _snapConfiguration;
     private OverScrollHeaderStretchConfiguration? _stretchConfiguration;
@@ -331,7 +331,7 @@ internal sealed class SliverAppBarState : State
         UpdateStretchConfiguration();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SliverAppBar oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (SliverAppBar)oldWidget;

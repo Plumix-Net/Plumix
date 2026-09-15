@@ -126,7 +126,7 @@ public sealed class AnimatedSwitcher : StatefulWidget
         }
     }
 
-    private sealed class AnimatedSwitcherState : State
+    private sealed class AnimatedSwitcherState : State<AnimatedSwitcher>
     {
         private ChildEntry? _currentEntry;
         private readonly List<ChildEntry> _outgoingEntries = [];
@@ -140,7 +140,7 @@ public sealed class AnimatedSwitcher : StatefulWidget
             AddEntryForNewChild(animate: false);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedSwitcher oldWidget)
         {
             var oldSwitcher = (AnimatedSwitcher)oldWidget;
             if (CurrentWidget.TransitionBuilder != oldSwitcher.TransitionBuilder)
@@ -161,7 +161,7 @@ public sealed class AnimatedSwitcher : StatefulWidget
             bool hasNewChild = CurrentWidget.Child is not null;
             bool hasOldChild = _currentEntry is not null;
             if (hasNewChild != hasOldChild
-                || (hasNewChild && !Widget.CanUpdate(_currentEntry!.WidgetChild, CurrentWidget.Child!)))
+                || (hasNewChild && !Plumix.Widgets.Widget.CanUpdate(_currentEntry!.WidgetChild, CurrentWidget.Child!)))
             {
                 _childNumber++;
                 AddEntryForNewChild(animate: true);
@@ -384,7 +384,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
             ]);
     }
 
-    private sealed class AnimatedCrossFadeState : State
+    private sealed class AnimatedCrossFadeState : State<AnimatedCrossFade>
     {
         private AnimationController? _controller;
         private MappedDoubleAnimation? _firstAnimation;
@@ -408,7 +408,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
             _controller.AddStatusListener(HandleStatusChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedCrossFade oldWidget)
         {
             var oldCrossFade = (AnimatedCrossFade)oldWidget;
             _controller!.Duration = CurrentWidget.Duration;

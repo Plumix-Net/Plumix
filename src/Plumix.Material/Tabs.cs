@@ -1469,7 +1469,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
     public override State CreateState() => new TabBarState();
 
-    private sealed class TabBarState : State, ITabBarScrollHost
+    private sealed class TabBarState : State<TabBar>, ITabBarScrollHost
     {
         private readonly List<GlobalKey> _tabKeys = [];
         private readonly List<EdgeInsetsGeometry> _labelPaddings = [];
@@ -1514,7 +1514,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
             InitIndicatorPainter();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TabBar oldWidget)
         {
             var old = (TabBar)oldWidget;
             if (!ReferenceEquals(old.Controller, Current.Controller)
@@ -2155,7 +2155,7 @@ public sealed class TabBarView : StatefulWidget
 
     public override State CreateState() => new TabBarViewState();
 
-    private sealed class TabBarViewState : State
+    private sealed class TabBarViewState : State<TabBarView>
     {
         private TabController? _controller;
         private PageController? _pageController;
@@ -2192,7 +2192,7 @@ public sealed class TabBarView : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TabBarView oldWidget)
         {
             var old = (TabBarView)oldWidget;
             if (!ReferenceEquals(old.Controller, Current.Controller))

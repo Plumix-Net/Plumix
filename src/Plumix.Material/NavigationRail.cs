@@ -167,7 +167,7 @@ public sealed class NavigationRail : StatefulWidget
     }
 }
 
-internal sealed class NavigationRailState : State
+internal sealed class NavigationRailState : State<NavigationRail>
 {
     private static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
     private AnimationController? _extendedController;
@@ -184,7 +184,7 @@ internal sealed class NavigationRailState : State
         if (CurrentWidget.Extended) _extendedController.Forward(1);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(NavigationRail oldWidget)
     {
         var old = (NavigationRail)oldWidget;
         if (old.Extended != CurrentWidget.Extended)
@@ -418,7 +418,7 @@ internal sealed class NavigationRailDestinationTile : StatefulWidget
     public override State CreateState() => new NavigationRailDestinationTileState();
 }
 
-internal sealed class NavigationRailDestinationTileState : State
+internal sealed class NavigationRailDestinationTileState : State<NavigationRailDestinationTile>
 {
     private static readonly TimeSpan SelectionDuration = TimeSpan.FromMilliseconds(200);
     private AnimationController? _selectionController;
@@ -434,7 +434,7 @@ internal sealed class NavigationRailDestinationTileState : State
         if (CurrentWidget.Selected) _selectionController.Forward(1);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(NavigationRailDestinationTile oldWidget)
     {
         var old = (NavigationRailDestinationTile)oldWidget;
         if (old.Selected != CurrentWidget.Selected)

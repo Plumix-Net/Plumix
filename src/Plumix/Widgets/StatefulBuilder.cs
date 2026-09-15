@@ -19,7 +19,7 @@ public sealed class StatefulBuilder : StatefulWidget
 
     public override State CreateState() => new StatefulBuilderState();
 
-    private sealed class StatefulBuilderState : State
+    private sealed class StatefulBuilderState : State<StatefulBuilder>
     {
         public override Widget Build(BuildContext context)
         {

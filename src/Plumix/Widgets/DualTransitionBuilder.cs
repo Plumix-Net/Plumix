@@ -34,7 +34,7 @@ public sealed class DualTransitionBuilder : StatefulWidget
 
     public override State CreateState() => new DualTransitionBuilderState();
 
-    private sealed class DualTransitionBuilderState : State
+    private sealed class DualTransitionBuilderState : State<DualTransitionBuilder>
     {
         private static readonly Animation<double> AlwaysCompleteAnimation = new ConstantAnimation(
             value: 1.0,
@@ -56,7 +56,7 @@ public sealed class DualTransitionBuilder : StatefulWidget
             UpdateAnimations();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(DualTransitionBuilder oldWidget)
         {
             var oldBuilder = (DualTransitionBuilder)oldWidget;
             if (ReferenceEquals(oldBuilder.Animation, CurrentWidget.Animation))

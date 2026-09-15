@@ -97,7 +97,7 @@ public sealed class CupertinoSlider : StatefulWidget
         properties.Add(new DoubleProperty("max", Max));
     }
 
-    private sealed class CupertinoSliderState : State
+    private sealed class CupertinoSliderState : State<CupertinoSlider>
     {
         private CupertinoSlider CurrentWidget => (CupertinoSlider)StateWidget;
 

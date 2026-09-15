@@ -282,7 +282,7 @@ public sealed class DefaultTabController : StatefulWidget
 
     public override State CreateState() => new DefaultTabControllerState();
 
-    private sealed class DefaultTabControllerState : State
+    private sealed class DefaultTabControllerState : State<DefaultTabController>
     {
         private TabController? _controller;
 
@@ -297,7 +297,7 @@ public sealed class DefaultTabController : StatefulWidget
                 vsync: this);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(DefaultTabController oldWidget)
         {
             var old = (DefaultTabController)oldWidget;
             if (old.Length != Current.Length)

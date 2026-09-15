@@ -160,7 +160,7 @@ public sealed class SelectableRegion : StatefulWidget
     public override State CreateState() => new SelectableRegionState();
 }
 
-public sealed class SelectableRegionState : State, ISelectionRegistrar
+public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionRegistrar
 {
     /// Dart's `_kLongPressSelectionDevices`.
     private static readonly IReadOnlySet<PointerDeviceKind> LongPressSelectionDevices =
@@ -338,7 +338,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         _lastOrientation = orientation;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SelectableRegion oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (SelectableRegion)oldWidget;

@@ -351,7 +351,7 @@ internal sealed class SearchPage<T> : StatefulWidget
     public override State CreateState() => new SearchPageState<T>();
 }
 
-internal sealed class SearchPageState<T> : State
+internal sealed class SearchPageState<T> : State<SearchPage<T>>
 {
     private readonly FocusNode _focusNode = new();
 

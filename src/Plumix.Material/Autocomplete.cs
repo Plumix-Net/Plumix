@@ -223,13 +223,13 @@ internal sealed class AutocompleteOptionsList<T> : StatefulWidget
     public override State CreateState() => new AutocompleteOptionsListState<T>();
 }
 
-internal sealed class AutocompleteOptionsListState<T> : State
+internal sealed class AutocompleteOptionsListState<T> : State<AutocompleteOptionsList<T>>
 {
     private readonly ScrollController _scrollController = new();
 
     private AutocompleteOptionsList<T> Current => (AutocompleteOptionsList<T>)StateWidget;
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(AutocompleteOptionsList<T> oldWidget)
     {
         var old = (AutocompleteOptionsList<T>)oldWidget;
         if (old.HighlightedIndex == Current.HighlightedIndex)

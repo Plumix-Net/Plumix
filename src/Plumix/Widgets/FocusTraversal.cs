@@ -1371,7 +1371,7 @@ public sealed class FocusTraversalGroup : StatefulWidget
 
     public override State CreateState() => new FocusTraversalGroupState();
 
-    private sealed class FocusTraversalGroupState : State
+    private sealed class FocusTraversalGroupState : State<FocusTraversalGroup>
     {
         private FocusTraversalGroupNode? _focusNode;
 
@@ -1390,7 +1390,7 @@ public sealed class FocusTraversalGroup : StatefulWidget
             base.Dispose();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(FocusTraversalGroup oldWidget)
         {
             var old = (FocusTraversalGroup)oldWidget;
             if (!ReferenceEquals(old.Policy, CurrentWidget.Policy))

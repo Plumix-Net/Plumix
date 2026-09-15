@@ -110,7 +110,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
     public override State CreateState() => new CupertinoRadioState();
 
-    private sealed class CupertinoRadioState : State
+    private sealed class CupertinoRadioState : State<CupertinoRadio<T>>
     {
         private FocusNode? _internalFocusNode;
         private RadioRegistry? _internalRadioRegistry;
@@ -256,7 +256,7 @@ internal sealed class CupertinoRadioPaint<T> : StatefulWidget
 
     public override State CreateState() => new CupertinoRadioPaintState();
 
-    private sealed class CupertinoRadioPaintState : State
+    private sealed class CupertinoRadioPaintState : State<CupertinoRadioPaint<T>>
     {
         private CupertinoRadioPainter? _painter;
 

@@ -49,7 +49,7 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
 
     public override State CreateState() => new TweenAnimationBuilderState();
 
-    private sealed class TweenAnimationBuilderState : State
+    private sealed class TweenAnimationBuilderState : State<TweenAnimationBuilder<T>>
     {
         private AnimationController? _controller;
         private Tween<T>? _currentTween;
@@ -79,7 +79,7 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(TweenAnimationBuilder<T> oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;

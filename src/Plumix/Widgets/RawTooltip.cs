@@ -197,7 +197,7 @@ public sealed class RawTooltip : StatefulWidget
     }
 }
 
-public sealed class RawTooltipState : State
+public sealed class RawTooltipState : State<RawTooltip>
 {
     private readonly OverlayPortalController _overlayController = new();
     private readonly HashSet<int> _activeHoveringPointers = [];
@@ -222,7 +222,7 @@ public sealed class RawTooltipState : State
         GestureBinding.Instance.PointerRouter.AddGlobalRoute(HandleGlobalPointerEvent);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RawTooltip oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         if (_controller is null)

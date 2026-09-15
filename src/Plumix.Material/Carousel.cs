@@ -292,7 +292,7 @@ public sealed class CarouselView : StatefulWidget
     public override State CreateState() => new CarouselViewState();
 }
 
-public sealed class CarouselViewState : State
+public sealed class CarouselViewState : State<CarouselView>
 {
     private double? _itemExtent;
     private CarouselController? _internalController;
@@ -322,7 +322,7 @@ public sealed class CarouselViewState : State
         Controller.AddListener(HandleScroll);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CarouselView oldWidget)
     {
         CarouselView oldCarousel = (CarouselView)oldWidget;
         if (!ReferenceEquals(Current.Controller, oldCarousel.Controller))

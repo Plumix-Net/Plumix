@@ -909,7 +909,7 @@ public class RawScrollbar : StatefulWidget
 /// Controls the animation that fades a scrollbar's thumb in and out of view, and provides the
 /// default gestures for dragging the scrollbar thumb and tapping on the scrollbar track.
 /// </remarks>
-public class RawScrollbarState<T> : State where T : RawScrollbar
+public class RawScrollbarState<T> : State<T> where T : RawScrollbar
 {
     private readonly GlobalKey _scrollbarPainterKey =
         new LabeledGlobalKey<State>("RawScrollbar painter");
@@ -1132,7 +1132,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         ScrollbarPainter.IgnorePointer = !EnableGestures;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(T oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (RawScrollbar)oldWidget;

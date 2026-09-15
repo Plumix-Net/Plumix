@@ -61,7 +61,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
     public override State CreateState() => new RefreshProgressIndicatorState();
 
-    private sealed class RefreshProgressIndicatorState : State
+    private sealed class RefreshProgressIndicatorState : State<RefreshProgressIndicator>
     {
         private const double FullSweep = (Math.PI * 2.0) - 0.001;
         private AnimationController? _controller;
@@ -438,7 +438,7 @@ public sealed class RefreshIndicator : StatefulWidget
     public override State CreateState() => new RefreshIndicatorState();
 }
 
-public sealed class RefreshIndicatorState : State
+public sealed class RefreshIndicatorState : State<RefreshIndicator>
 {
     private const double DragContainerExtentPercentage = 0.25;
     private const double DragSizeFactorLimit = 1.5;
@@ -475,7 +475,7 @@ public sealed class RefreshIndicatorState : State
         base.DidChangeDependencies();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(RefreshIndicator oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldIndicator = (RefreshIndicator)oldWidget;

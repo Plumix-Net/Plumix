@@ -130,7 +130,7 @@ public sealed class GlowingOverscrollIndicator : StatefulWidget
     public override State CreateState() => new GlowingOverscrollIndicatorState();
 }
 
-internal sealed class GlowingOverscrollIndicatorState : State
+internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollIndicator>
 {
     private readonly Dictionary<bool, bool> _accepted = new()
     {
@@ -157,7 +157,7 @@ internal sealed class GlowingOverscrollIndicatorState : State
         _controllers = new MergedListenable(_leadingController, _trailingController);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(GlowingOverscrollIndicator oldWidget)
     {
         var oldIndicator = (GlowingOverscrollIndicator)oldWidget;
         if (oldIndicator.Color == CurrentWidget.Color && oldIndicator.Axis == CurrentWidget.Axis)
@@ -317,7 +317,7 @@ public sealed class StretchingOverscrollIndicator : StatefulWidget
     public override State CreateState() => new StretchingOverscrollIndicatorState();
 }
 
-internal sealed class StretchingOverscrollIndicatorState : State
+internal sealed class StretchingOverscrollIndicatorState : State<StretchingOverscrollIndicator>
 {
     private StretchController _stretchController = null!;
     private ScrollNotification? _lastNotification;

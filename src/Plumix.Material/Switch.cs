@@ -522,7 +522,7 @@ internal sealed class MaterialSwitch : StatefulWidget
 }
 
 /// Dart's `_MaterialSwitchState`.
-internal sealed class MaterialSwitchState : ToggleableState
+internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
 {
     private SwitchPainter? _painter;
     private bool _needsPositionAnimation;
@@ -546,7 +546,7 @@ internal sealed class MaterialSwitchState : ToggleableState
             PositionController);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(MaterialSwitch oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var previous = (MaterialSwitch)oldWidget;

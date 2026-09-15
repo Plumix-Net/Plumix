@@ -190,7 +190,7 @@ public sealed class ReorderableList : StatefulWidget
     }
 }
 
-public sealed class ReorderableListState : State
+public sealed class ReorderableListState : State<ReorderableList>
 {
     private readonly GlobalKey<SliverReorderableListState> _sliverKey =
         new LabeledGlobalKey<SliverReorderableListState>("ReorderableList");
@@ -344,7 +344,7 @@ public sealed class SliverReorderableList : StatefulWidget
     }
 }
 
-public sealed class SliverReorderableListState : State
+public sealed class SliverReorderableListState : State<SliverReorderableList>
 {
     private readonly Dictionary<int, ReorderableItemState> _items = [];
     private AnimationController? _proxyAnimation;
@@ -386,7 +386,7 @@ public sealed class SliverReorderableListState : State
         _proxyAnimation.Dismissed += HandleProxyAnimationDismissed;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SliverReorderableList oldWidget)
     {
         var oldList = (SliverReorderableList)oldWidget;
         if (oldList.ItemCount != CurrentWidget.ItemCount)
@@ -1041,7 +1041,7 @@ internal sealed class ReorderableItem : StatefulWidget
     public override State CreateState() => new ReorderableItemState();
 }
 
-internal sealed class ReorderableItemState : State
+internal sealed class ReorderableItemState : State<ReorderableItem>
 {
     private SliverReorderableListState? _listState;
     private AnimationController? _offsetAnimation;
@@ -1074,7 +1074,7 @@ internal sealed class ReorderableItemState : State
         _listState.RegisterItem(this);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(ReorderableItem oldWidget)
     {
         var oldItem = (ReorderableItem)oldWidget;
         if (oldItem.Index != Index)

@@ -272,7 +272,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
         return new AutomaticKeepAliveState();
     }
 
-    private sealed class AutomaticKeepAliveState : State
+    private sealed class AutomaticKeepAliveState : State<AutomaticKeepAlive>
     {
         private readonly Dictionary<KeepAliveHandle, Action> _releaseCallbacks = [];
 
@@ -289,7 +289,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
             UpdateChild();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AutomaticKeepAlive oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             UpdateChild();
@@ -472,6 +472,28 @@ public abstract class AutomaticKeepAliveClientMixin : State
         _keepAliveHandle = null;
         handle.Release();
     }
+}
+
+/// <summary>A keep-alive client with the widget type checked at creation.</summary>
+public abstract class AutomaticKeepAliveClientMixin<TWidget> : AutomaticKeepAliveClientMixin
+    where TWidget : StatefulWidget
+{
+    public TWidget Widget => (TWidget)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is TWidget;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((TWidget)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(TWidget oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(TWidget)]);
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/primary_scroll_controller.dart

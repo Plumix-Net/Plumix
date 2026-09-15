@@ -630,7 +630,7 @@ public sealed class Shortcuts : StatefulWidget
 
     public override State CreateState() => new ShortcutsState();
 
-    private sealed class ShortcutsState : State
+    private sealed class ShortcutsState : State<Shortcuts>
     {
         private ShortcutManager? _internalManager;
 
@@ -646,7 +646,7 @@ public sealed class Shortcuts : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Shortcuts oldWidget)
         {
             var oldShortcuts = (Shortcuts)oldWidget;
             if (!ReferenceEquals(oldShortcuts.Manager, Current.Manager))
@@ -856,7 +856,7 @@ public sealed class ShortcutRegistrar : StatefulWidget
 
     public override State CreateState() => new ShortcutRegistrarState();
 
-    private sealed class ShortcutRegistrarState : State
+    private sealed class ShortcutRegistrarState : State<ShortcutRegistrar>
     {
         private readonly ShortcutRegistry _registry = new();
         private readonly ShortcutManager _manager = new();

@@ -122,7 +122,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
     public override State CreateState() => new CupertinoCheckboxState();
 
-    private sealed class CupertinoCheckboxState : ToggleableState
+    private sealed class CupertinoCheckboxState : ToggleableState<CupertinoCheckbox>
     {
         private CupertinoCheckboxPainter? _painter;
         private bool? _previousValue;
@@ -144,7 +144,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
                 ReactionFocusFade);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoCheckbox oldWidget)
         {
             var oldCheckbox = (CupertinoCheckbox)oldWidget;
             base.DidUpdateWidget(oldWidget);

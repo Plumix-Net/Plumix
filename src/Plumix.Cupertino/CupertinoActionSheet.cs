@@ -65,7 +65,7 @@ public sealed class CupertinoActionSheet : StatefulWidget
     public override State CreateState() => new CupertinoActionSheetState();
 }
 
-internal sealed class CupertinoActionSheetState : State
+internal sealed class CupertinoActionSheetState : State<CupertinoActionSheet>
 {
     private const int CancelButtonIndex = -1;
 
@@ -328,7 +328,7 @@ public sealed class CupertinoActionSheetAction : StatefulWidget
     public override State CreateState() => new CupertinoActionSheetActionState();
 }
 
-internal sealed class CupertinoActionSheetActionState : State, ISlideTarget
+internal sealed class CupertinoActionSheetActionState : State<CupertinoActionSheetAction>, ISlideTarget
 {
     private bool _showHighlight;
 
@@ -506,7 +506,7 @@ internal sealed class ActionSheetButtonBackground : StatefulWidget
     public override State CreateState() => new ActionSheetButtonBackgroundState();
 }
 
-internal sealed class ActionSheetButtonBackgroundState : State, ISlideTarget
+internal sealed class ActionSheetButtonBackgroundState : State<ActionSheetButtonBackground>, ISlideTarget
 {
     private ActionSheetButtonBackground Current => (ActionSheetButtonBackground)StateWidget;
 

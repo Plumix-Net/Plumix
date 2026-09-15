@@ -138,7 +138,7 @@ public class InkResponse : StatefulWidget
 
     public override State CreateState() => new InkResponseState();
 
-    private sealed class InkResponseState : State, IParentInkResponseState
+    private sealed class InkResponseState : State<InkResponse>, IParentInkResponseState
     {
         private static readonly Point CenterOrigin = new(double.NaN, double.NaN);
         private FocusNode? _focusNode;
@@ -185,7 +185,7 @@ public class InkResponse : StatefulWidget
             SyncDisabledState();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(InkResponse oldWidget)
         {
             var oldResponse = (InkResponse)oldWidget;
             if (!ReferenceEquals(oldResponse.FocusNode, CurrentWidget.FocusNode))

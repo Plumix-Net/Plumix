@@ -132,7 +132,7 @@ public sealed class LinearProgressIndicator : ProgressIndicator
         return new LinearProgressIndicatorState();
     }
 
-    private sealed class LinearProgressIndicatorState : State
+    private sealed class LinearProgressIndicatorState : State<LinearProgressIndicator>
     {
         private AnimationController? _internalController;
         private AnimationController? _activeController;
@@ -147,7 +147,7 @@ public sealed class LinearProgressIndicator : ProgressIndicator
             _isMounted = true;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(LinearProgressIndicator oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
         }
@@ -995,7 +995,7 @@ public class CircularProgressIndicator : ProgressIndicator
         return new CircularProgressIndicatorState();
     }
 
-    private sealed class CircularProgressIndicatorState : State
+    private sealed class CircularProgressIndicatorState : State<CircularProgressIndicator>
     {
         private const int PathCount = 2222;
         private const int RotationCount = 1333;
@@ -1016,7 +1016,7 @@ public class CircularProgressIndicator : ProgressIndicator
             _isMounted = true;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CircularProgressIndicator oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
         }

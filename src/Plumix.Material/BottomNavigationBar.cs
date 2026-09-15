@@ -561,7 +561,7 @@ internal sealed class BottomNavigationTileLabel : StatelessWidget
     }
 }
 
-internal sealed class BottomNavigationBarState : State
+internal sealed class BottomNavigationBarState : State<BottomNavigationBar>
 {
     private static readonly DoubleTween FlexTween = new(begin: 1.0, end: 1.5);
 
@@ -576,8 +576,6 @@ internal sealed class BottomNavigationBarState : State
     private Color? _backgroundColor;
 
     internal IReadOnlyList<CurvedAnimation> Animations => _animations;
-
-    private BottomNavigationBar Widget => (BottomNavigationBar)StateWidget;
 
     private BottomNavigationBarType EffectiveType(BottomNavigationBarThemeData bottomTheme)
     {
@@ -603,7 +601,7 @@ internal sealed class BottomNavigationBarState : State
         ResetState();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(BottomNavigationBar oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (BottomNavigationBar)oldWidget;

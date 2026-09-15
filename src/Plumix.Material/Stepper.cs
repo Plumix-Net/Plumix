@@ -191,7 +191,7 @@ public sealed class Stepper : StatefulWidget
         }
     }
 
-    private sealed class StepperState : State
+    private sealed class StepperState : State<Stepper>
     {
         private readonly List<GlobalKey> _keys = [];
         private readonly Dictionary<int, StepState> _oldStates = [];
@@ -207,7 +207,7 @@ public sealed class Stepper : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Stepper oldWidget)
         {
             var oldStepper = (Stepper)oldWidget;
             if (oldStepper.Steps.Count != CurrentWidget.Steps.Count)

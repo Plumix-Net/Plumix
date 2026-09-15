@@ -525,7 +525,7 @@ public sealed class WidgetsApp : StatefulWidget
 
     public override State CreateState() => new WidgetsAppState();
 
-    private sealed class WidgetsAppState : State, WidgetsBindingObserver
+    private sealed class WidgetsAppState : State<WidgetsApp>, WidgetsBindingObserver
     {
         private readonly GlobalKey<NavigatorState> _navigatorKey =
             new LabeledGlobalKey<NavigatorState>("WidgetsApp navigator");
@@ -562,7 +562,7 @@ public sealed class WidgetsApp : StatefulWidget
             UpdateRouting();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(WidgetsApp oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             UpdateRouting();

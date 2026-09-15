@@ -52,7 +52,7 @@ public sealed class SharedAppData : StatefulWidget
             $"SharedAppData.{methodName} requires a SharedAppData widget ancestor.");
     }
 
-    private sealed class SharedAppDataState : State
+    private sealed class SharedAppDataState : State<SharedAppData>
     {
         private Dictionary<object, object?> _data = [];
 

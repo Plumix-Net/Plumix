@@ -371,7 +371,7 @@ public sealed class CupertinoPageTransition : StatefulWidget
 
     public override State CreateState() => new CupertinoPageTransitionState();
 
-    private sealed class CupertinoPageTransitionState : State
+    private sealed class CupertinoPageTransitionState : State<CupertinoPageTransition>
     {
         private Animation<Vector> _primaryPositionAnimation = null!;
         private Animation<Vector> _secondaryPositionAnimation = null!;
@@ -388,7 +388,7 @@ public sealed class CupertinoPageTransition : StatefulWidget
             SetupAnimation();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoPageTransition oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldTransition = (CupertinoPageTransition)oldWidget;
@@ -487,7 +487,7 @@ public sealed class CupertinoFullscreenDialogTransition : StatefulWidget
 
     public override State CreateState() => new CupertinoFullscreenDialogTransitionState();
 
-    private sealed class CupertinoFullscreenDialogTransitionState : State
+    private sealed class CupertinoFullscreenDialogTransitionState : State<CupertinoFullscreenDialogTransition>
     {
         private Animation<Vector> _primaryPositionAnimation = null!;
         private Animation<Vector> _secondaryPositionAnimation = null!;
@@ -503,7 +503,7 @@ public sealed class CupertinoFullscreenDialogTransition : StatefulWidget
             SetupAnimation();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoFullscreenDialogTransition oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldTransition = (CupertinoFullscreenDialogTransition)oldWidget;
@@ -917,7 +917,7 @@ internal sealed class CupertinoBackGestureDetector : StatefulWidget
 
     public override State CreateState() => new CupertinoBackGestureDetectorState();
 
-    private sealed class CupertinoBackGestureDetectorState : State
+    private sealed class CupertinoBackGestureDetectorState : State<CupertinoBackGestureDetector>
     {
         private HorizontalDragGestureRecognizer? _recognizer;
         private bool _gestureStarted;

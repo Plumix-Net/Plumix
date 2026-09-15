@@ -193,7 +193,7 @@ public sealed class Tooltip : StatefulWidget
     }
 }
 
-public sealed class TooltipState : State
+public sealed class TooltipState : State<Tooltip>
 {
     private static readonly TimeSpan DefaultShowDuration = TimeSpan.FromMilliseconds(1500);
     private static readonly TimeSpan DefaultExitDuration = TimeSpan.FromMilliseconds(100);

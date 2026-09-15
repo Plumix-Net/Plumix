@@ -298,7 +298,7 @@ public sealed class Localizations : StatefulWidget
 
     public override State CreateState() => new LocalizationsState();
 
-    private sealed class LocalizationsState : State
+    private sealed class LocalizationsState : State<Localizations>
     {
         private IReadOnlyDictionary<Type, object> _resources =
             new Dictionary<Type, object>();
@@ -311,7 +311,7 @@ public sealed class Localizations : StatefulWidget
             Load(CurrentWidget.Locale);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Localizations oldWidget)
         {
             var oldLocalizations = (Localizations)oldWidget;
             if (!Equals(CurrentWidget.Locale, oldLocalizations.Locale)

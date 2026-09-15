@@ -21,7 +21,7 @@ public abstract class StatusTransitionWidget : StatefulWidget
         return new StatusTransitionState();
     }
 
-    private sealed class StatusTransitionState : State
+    private sealed class StatusTransitionState : State<StatusTransitionWidget>
     {
         private StatusTransitionWidget CurrentWidget => (StatusTransitionWidget)StateWidget;
 
@@ -31,7 +31,7 @@ public abstract class StatusTransitionWidget : StatefulWidget
             CurrentWidget.Animation.AddStatusListener(HandleAnimationStatusChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(StatusTransitionWidget oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldTransition = (StatusTransitionWidget)oldWidget;

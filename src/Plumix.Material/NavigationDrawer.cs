@@ -181,7 +181,7 @@ internal sealed class NavigationDrawerDestinationTile : StatefulWidget
     public override State CreateState() => new NavigationDrawerDestinationTileState();
 }
 
-internal sealed class NavigationDrawerDestinationTileState : State
+internal sealed class NavigationDrawerDestinationTileState : State<NavigationDrawerDestinationTile>
 {
     private AnimationController? _controller;
 
@@ -193,7 +193,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
         CreateController(CurrentWidget.Selected ? 1 : 0);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(NavigationDrawerDestinationTile oldWidget)
     {
         var old = (NavigationDrawerDestinationTile)oldWidget;
         if (old.Duration != CurrentWidget.Duration)

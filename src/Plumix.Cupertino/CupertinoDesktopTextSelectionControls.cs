@@ -158,7 +158,8 @@ internal sealed class CupertinoDesktopTextSelectionControlsToolbar : StatefulWid
 
     public override State CreateState() => new CupertinoDesktopTextSelectionControlsToolbarState();
 
-    private sealed class CupertinoDesktopTextSelectionControlsToolbarState : State
+    private sealed class CupertinoDesktopTextSelectionControlsToolbarState
+        : State<CupertinoDesktopTextSelectionControlsToolbar>
     {
         private CupertinoDesktopTextSelectionControlsToolbar Current =>
             (CupertinoDesktopTextSelectionControlsToolbar)StateWidget;
@@ -168,7 +169,7 @@ internal sealed class CupertinoDesktopTextSelectionControlsToolbar : StatefulWid
             Current.ClipboardStatus?.AddListener(HandleClipboardStatusChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoDesktopTextSelectionControlsToolbar oldWidget)
         {
             var previous = (CupertinoDesktopTextSelectionControlsToolbar)oldWidget;
             if (ReferenceEquals(previous.ClipboardStatus, Current.ClipboardStatus))

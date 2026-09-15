@@ -308,7 +308,7 @@ public sealed class CupertinoApp : StatefulWidget
         }
     }
 
-    private sealed class CupertinoAppState : State
+    private sealed class CupertinoAppState : State<CupertinoApp>
     {
         private HeroController _heroController = null!;
 

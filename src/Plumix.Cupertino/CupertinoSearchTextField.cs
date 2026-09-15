@@ -167,7 +167,7 @@ public sealed class CupertinoSearchTextField : StatefulWidget
     public override State CreateState() => new CupertinoSearchTextFieldState();
 }
 
-internal sealed class CupertinoSearchTextFieldState : RestorationState
+internal sealed class CupertinoSearchTextFieldState : RestorationState<CupertinoSearchTextField>
 {
     private const double MinHeightBeforeTotalTransparency = 4.0 / 5.0;
     private const double MaxPrefixIconSize = 30.0;
@@ -208,7 +208,7 @@ internal sealed class CupertinoSearchTextFieldState : RestorationState
         _scrollNotificationObserver?.AddListener(HandleScrollNotification);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSearchTextField oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var old = (CupertinoSearchTextField)oldWidget;

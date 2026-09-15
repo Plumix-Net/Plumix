@@ -625,7 +625,7 @@ internal sealed class CupertinoMenuItemInteractionHandler : StatefulWidget
 }
 
 /// <summary>Dart parity source: <c>_CupertinoMenuItemInteractionHandlerState</c>.</summary>
-internal sealed class CupertinoMenuItemInteractionHandlerState : State
+internal sealed class CupertinoMenuItemInteractionHandlerState : State<CupertinoMenuItemInteractionHandler>
 {
     private readonly WidgetStatesController _statesController = new();
     private IReadOnlyDictionary<Type, FlutterAction>? _actions;
@@ -684,7 +684,7 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State
         IsFocused = EffectiveFocusNode.HasPrimaryFocus;
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoMenuItemInteractionHandler oldWidget)
     {
         var previous = (CupertinoMenuItemInteractionHandler)oldWidget;
         if (!ReferenceEquals(previous.FocusNode, Current.FocusNode))

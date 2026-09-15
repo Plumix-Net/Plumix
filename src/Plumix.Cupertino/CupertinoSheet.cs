@@ -145,7 +145,7 @@ public sealed class CupertinoSheetTransition : StatefulWidget
     }
 }
 
-internal sealed class CupertinoSheetTransitionState : State
+internal sealed class CupertinoSheetTransitionState : State<CupertinoSheetTransition>
 {
     private AnimationController _stretchDragController = null!;
     private CurvedAnimation _primaryCurve = null!;
@@ -162,7 +162,7 @@ internal sealed class CupertinoSheetTransitionState : State
         UpdateAnimations();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoSheetTransition oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldTransition = (CupertinoSheetTransition)oldWidget;
@@ -576,7 +576,7 @@ internal sealed class CupertinoSheetScrollable : StatefulWidget
     public override State CreateState() => new CupertinoSheetScrollableState();
 }
 
-internal sealed class CupertinoSheetScrollableState : State
+internal sealed class CupertinoSheetScrollableState : State<CupertinoSheetScrollable>
 {
     private CupertinoSheetScrollController _scrollController = null!;
     private SheetPopGestureController? _dragController;

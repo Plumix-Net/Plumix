@@ -169,7 +169,7 @@ public sealed class AnimatedList : StatefulWidget
     }
 }
 
-public sealed class AnimatedListState : State
+public sealed class AnimatedListState : State<AnimatedList>
 {
     private readonly LabeledGlobalKey<SliverAnimatedListState> _sliverKey = new("AnimatedList");
 
@@ -390,7 +390,7 @@ public sealed class SliverAnimatedList : StatefulWidget
     public override State CreateState() => new SliverAnimatedListState();
 }
 
-public sealed class SliverAnimatedListState : State
+public sealed class SliverAnimatedListState : State<SliverAnimatedList>
 {
     private static readonly TimeSpan DefaultDuration = TimeSpan.FromMilliseconds(300);
     private static readonly Animation<double> AlwaysCompleteAnimation = new CompleteAnimation();

@@ -728,7 +728,7 @@ public sealed class PageView : StatefulWidget
 
     public override State CreateState() => new PageViewState();
 
-    private sealed class PageViewState : State
+    private sealed class PageViewState : State<PageView>
     {
         private int _lastReportedPage;
         private PageController _controller = null!;
@@ -742,7 +742,7 @@ public sealed class PageView : StatefulWidget
             _lastReportedPage = _controller.InitialPage;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(PageView oldWidget)
         {
             var old = (PageView)oldWidget;
             if (ReferenceEquals(old.Controller, CurrentWidget.Controller))

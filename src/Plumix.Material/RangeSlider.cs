@@ -148,7 +148,7 @@ public sealed class RangeSlider : StatefulWidget
     /// public fields on it and its own tests reach them through <c>tester.state(...)</c>. C# has no
     /// <c>dynamic</c>-friendly equivalent for a private nested type, so the state is <c>internal</c>.
     /// </remarks>
-    internal sealed class RangeSliderState : State
+    internal sealed class RangeSliderState : State<RangeSlider>
     {
         private const double DefaultTrackHeight = 4.0;
         private const double DefaultThumbRadius = 10.0;

@@ -86,7 +86,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
     public override State CreateState() => new CupertinoContextMenuState();
 
-    private sealed class CupertinoContextMenuState : State
+    private sealed class CupertinoContextMenuState : State<CupertinoContextMenu>
     {
         private readonly GlobalKey _childGlobalKey = new GlobalObjectKey<State>(new object());
         private AnimationController _openController = null!;
@@ -466,7 +466,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
         public override State CreateState() => new ContextMenuRouteBodyState();
     }
 
-    private sealed class ContextMenuRouteBodyState : State
+    private sealed class ContextMenuRouteBodyState : State<ContextMenuRouteBody>
     {
         private const double MinScale = 0.8;
         private const double SheetScaleThreshold = 0.9;
@@ -655,7 +655,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
         public override State CreateState() => new ContextMenuSheetState();
     }
 
-    private sealed class ContextMenuSheetState : State
+    private sealed class ContextMenuSheetState : State<ContextMenuSheet>
     {
         private static readonly CupertinoDynamicColor BorderColor =
             CupertinoDynamicColor.WithBrightness(

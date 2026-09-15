@@ -225,7 +225,7 @@ public sealed class SliverFloatingHeader : StatefulWidget
     public override State CreateState() => new SliverFloatingHeaderState();
 }
 
-internal sealed class SliverFloatingHeaderState : State
+internal sealed class SliverFloatingHeaderState : State<SliverFloatingHeader>
 {
     private SliverFloatingHeader CurrentWidget => (SliverFloatingHeader)StateWidget;
 
@@ -253,7 +253,7 @@ internal sealed class SliverFloatingHeaderSnapTrigger : StatefulWidget
     public override State CreateState() => new SliverFloatingHeaderSnapTriggerState();
 }
 
-internal sealed class SliverFloatingHeaderSnapTriggerState : State
+internal sealed class SliverFloatingHeaderSnapTriggerState : State<SliverFloatingHeaderSnapTrigger>
 {
     private ScrollPosition? _position;
 
@@ -266,7 +266,7 @@ internal sealed class SliverFloatingHeaderSnapTriggerState : State
         ReplacePosition(Scrollable.MaybeOf(Context)?.Position);
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(SliverFloatingHeaderSnapTrigger oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         ReplacePosition(Scrollable.MaybeOf(Context)?.Position);

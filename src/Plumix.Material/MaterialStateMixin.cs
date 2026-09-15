@@ -103,3 +103,24 @@ public abstract class MaterialStateMixin : State
             defaultValue: new HashSet<WidgetState>()));
     }
 }
+
+/// <summary>A typed Material state with Dart's <c>State&lt;T&gt;</c> widget check.</summary>
+public abstract class MaterialStateMixin<TWidget> : MaterialStateMixin where TWidget : StatefulWidget
+{
+    public TWidget Widget => (TWidget)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is TWidget;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((TWidget)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(TWidget oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(TWidget)]);
+}

@@ -35,7 +35,7 @@ public sealed class Title : StatefulWidget
         return new TitleState();
     }
 
-    private sealed class TitleState : State
+    private sealed class TitleState : State<Title>
     {
         private Title CurrentWidget => (Title)StateWidget;
 
@@ -45,7 +45,7 @@ public sealed class Title : StatefulWidget
             UpdateChrome();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Title oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             var oldTitle = (Title)oldWidget;

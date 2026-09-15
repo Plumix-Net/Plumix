@@ -224,7 +224,7 @@ public sealed class Slider : StatefulWidget
         return new SliderState();
     }
 
-    private sealed class SliderState : State
+    private sealed class SliderState : State<Slider>
     {
         private const double DefaultTrackHeight = 4.0;
         private const double DefaultThumbRadius = 10.0;
@@ -243,7 +243,7 @@ public sealed class Slider : StatefulWidget
             AttachFocusNode(CurrentWidget.FocusNode);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(Slider oldWidget)
         {
             var oldSlider = (Slider)oldWidget;
             if (!ReferenceEquals(oldSlider.FocusNode, CurrentWidget.FocusNode))

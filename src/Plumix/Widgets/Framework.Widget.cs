@@ -162,7 +162,7 @@ public abstract class State : Diagnosticable, ITickerProvider
     internal StatefulWidget? WidgetOrNull => _widget;
 
     /// <summary>Dart's <c>State._debugTypesAreRight</c>; <see cref="State{T}"/> narrows it.</summary>
-    internal virtual bool DebugTypesAreRight(Widget widget) => true;
+    protected internal virtual bool DebugTypesAreRight(Widget widget) => true;
 
     /// <summary>The body of Dart's <c>StatefulElement</c> constructor after <c>createState</c>.</summary>
     internal void AttachElement(StatefulElement element, StatefulWidget widget)
@@ -234,7 +234,7 @@ public abstract class State : Diagnosticable, ITickerProvider
         ]);
     }
 
-    private protected virtual bool DebugDidUpdateWidgetIsAsync() =>
+    protected internal virtual bool DebugDidUpdateWidgetIsAsync() =>
         DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(StatefulWidget)]);
 
     /// <summary>
@@ -243,7 +243,7 @@ public abstract class State : Diagnosticable, ITickerProvider
     /// one, so the same mistake is an <c>async void</c> override; this reads the compiler's
     /// state-machine marker off the most-derived override.
     /// </summary>
-    private protected bool DebugOverrideIsAsync(string name, Type[] parameterTypes)
+    protected bool DebugOverrideIsAsync(string name, Type[] parameterTypes)
     {
         return DebugAsyncOverrides.GetOrAdd(
             (GetType(), name + ":" + string.Join(",", parameterTypes.Select(type => type.FullName))),
@@ -586,7 +586,7 @@ public abstract class State<T> : State where T : StatefulWidget
     /// <summary>The current configuration. Dart's <c>State.widget</c>.</summary>
     public T Widget => (T)StateWidget;
 
-    internal override bool DebugTypesAreRight(Widget widget) => widget is T;
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is T;
 
     /// <summary>Forwards to the typed <see cref="DidUpdateWidget(T)"/>.</summary>
     public sealed override void DidUpdateWidget(StatefulWidget oldWidget) => DidUpdateWidget((T)oldWidget);
@@ -596,7 +596,7 @@ public abstract class State<T> : State where T : StatefulWidget
     {
     }
 
-    private protected override bool DebugDidUpdateWidgetIsAsync() =>
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
         DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(T)]);
 }
 

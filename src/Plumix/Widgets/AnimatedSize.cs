@@ -54,7 +54,7 @@ public sealed class AnimatedSize : StatefulWidget
 
     public override State CreateState() => new AnimatedSizeState();
 
-    private sealed class AnimatedSizeState : State
+    private sealed class AnimatedSizeState : State<AnimatedSize>
     {
         private AnimationController? _controller;
 
@@ -69,7 +69,7 @@ public sealed class AnimatedSize : StatefulWidget
             _controller.Completed += HandleCompleted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AnimatedSize oldWidget)
         {
             _controller!.Duration = CurrentWidget.Duration;
             _controller.Curve = CurrentWidget.Curve;

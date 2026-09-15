@@ -135,7 +135,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
         }
     }
 
-    private sealed class UserAccountsDrawerHeaderState : State
+    private sealed class UserAccountsDrawerHeaderState : State<UserAccountsDrawerHeader>
     {
         private bool _isOpen;
         private UserAccountsDrawerHeader CurrentWidget => (UserAccountsDrawerHeader)StateWidget;
@@ -238,7 +238,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
         public override State CreateState() => new AccountDetailsState();
     }
 
-    private sealed class AccountDetailsState : State
+    private sealed class AccountDetailsState : State<AccountDetails>
     {
         private AnimationController? _controller;
         private CurvedAnimation? _animation;
@@ -256,7 +256,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
             _animation.AddListener(HandleAnimationChanged);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(AccountDetails oldWidget)
         {
             var oldDetails = (AccountDetails)oldWidget;
             if (oldDetails.IsOpen == CurrentWidget.IsOpen)

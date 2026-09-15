@@ -51,7 +51,7 @@ public sealed class CupertinoTabView : StatefulWidget
     public override State CreateState() => new CupertinoTabViewState();
 }
 
-internal sealed class CupertinoTabViewState : State
+internal sealed class CupertinoTabViewState : State<CupertinoTabView>
 {
     private HeroController _heroController = null!;
     private IReadOnlyList<NavigatorObserver> _navigatorObservers = null!;
@@ -72,7 +72,7 @@ internal sealed class CupertinoTabViewState : State
         UpdateObservers();
     }
 
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    public override void DidUpdateWidget(CupertinoTabView oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldTabView = (CupertinoTabView)oldWidget;

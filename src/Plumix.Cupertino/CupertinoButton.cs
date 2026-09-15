@@ -383,7 +383,7 @@ public sealed class CupertinoButton : StatefulWidget
         properties.Add(new FlagProperty("enabled", Enabled, ifFalse: "disabled"));
     }
 
-    private sealed class CupertinoButtonState : State
+    private sealed class CupertinoButtonState : State<CupertinoButton>
     {
         // Eyeballed values. Feel free to tweak.
         private static readonly TimeSpan FadeOutDuration = TimeSpan.FromMilliseconds(120);
@@ -432,7 +432,7 @@ public sealed class CupertinoButton : StatefulWidget
             SetTween();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoButton oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             SetTween();

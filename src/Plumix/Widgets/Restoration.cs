@@ -42,7 +42,7 @@ public sealed class RestorationScope : StatefulWidget
 
     public override State CreateState() => new RestorationScopeState();
 
-    private sealed class RestorationScopeState : RestorationState
+    private sealed class RestorationScopeState : RestorationState<RestorationScope>
     {
         private RestorationScope CurrentWidget => (RestorationScope)StateWidget;
 
@@ -98,7 +98,7 @@ public sealed class RootRestorationScope : StatefulWidget
 
     public override State CreateState() => new RootRestorationScopeState();
 
-    private sealed class RootRestorationScopeState : State
+    private sealed class RootRestorationScopeState : State<RootRestorationScope>
     {
         private bool? _okToRenderBlankContainer;
         private bool _rootBucketValid;
@@ -121,7 +121,7 @@ public sealed class RootRestorationScope : StatefulWidget
             _okToRenderBlankContainer ??= CurrentWidget.RestorationId is not null && NeedsRootBucketInserted;
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(RootRestorationScope oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
             LoadRootBucketIfNecessary();
@@ -562,4 +562,25 @@ public abstract class RestorationState : State
             _bucket?.Remove<object>(property.RegisteredRestorationId!);
         }
     }
+}
+
+/// <summary>A restoration state whose widget type is checked when <c>createState</c> runs.</summary>
+public abstract class RestorationState<TWidget> : RestorationState where TWidget : StatefulWidget
+{
+    public TWidget Widget => (TWidget)StateWidget;
+
+    protected internal override bool DebugTypesAreRight(Widget widget) => widget is TWidget;
+
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        DidUpdateWidget((TWidget)oldWidget);
+    }
+
+    public virtual void DidUpdateWidget(TWidget oldWidget)
+    {
+    }
+
+    protected internal override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(TWidget)]);
 }

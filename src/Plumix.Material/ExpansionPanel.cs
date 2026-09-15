@@ -220,7 +220,7 @@ public sealed class ExpansionPanelList : StatefulWidget
         }
     }
 
-    private sealed class ExpansionPanelListState : State
+    private sealed class ExpansionPanelListState : State<ExpansionPanelList>
     {
         private ExpansionPanelRadio? _currentOpenPanel;
 
@@ -234,7 +234,7 @@ public sealed class ExpansionPanelList : StatefulWidget
             }
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(ExpansionPanelList oldWidget)
         {
             var oldList = (ExpansionPanelList)oldWidget;
             CurrentWidget.ValidateRadioChildren();

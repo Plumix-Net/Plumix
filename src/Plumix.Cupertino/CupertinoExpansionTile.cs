@@ -41,7 +41,7 @@ public sealed class CupertinoExpansionTile : StatefulWidget
 
     public override State CreateState() => new CupertinoExpansionTileState();
 
-    private sealed class CupertinoExpansionTileState : State
+    private sealed class CupertinoExpansionTileState : State<CupertinoExpansionTile>
     {
         private static readonly TimeSpan AnimationDuration = TimeSpan.FromMilliseconds(250.0);
         private static readonly Animatable<double> QuarterTween = new DoubleTween(begin: 0.0, end: 0.25);
@@ -58,7 +58,7 @@ public sealed class CupertinoExpansionTile : StatefulWidget
             _tileController = CurrentWidget.Controller ?? new ExpansibleController();
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoExpansionTile oldWidget)
         {
             var oldTile = (CupertinoExpansionTile)oldWidget;
             if (!ReferenceEquals(oldTile.Controller, CurrentWidget.Controller))

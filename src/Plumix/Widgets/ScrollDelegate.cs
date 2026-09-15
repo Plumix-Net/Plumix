@@ -452,7 +452,8 @@ internal sealed class SelectionKeepAlive : StatefulWidget
 
     public override State CreateState() => new SelectionKeepAliveState();
 
-    private sealed class SelectionKeepAliveState : AutomaticKeepAliveClientMixin, ISelectionRegistrar
+    private sealed class SelectionKeepAliveState
+        : AutomaticKeepAliveClientMixin<SelectionKeepAlive>, ISelectionRegistrar
     {
         private HashSet<ISelectable>? _selectablesWithSelections;
         private Dictionary<ISelectable, Action>? _selectableAttachments;

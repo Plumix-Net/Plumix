@@ -138,7 +138,7 @@ public sealed class CupertinoSwitch : StatefulWidget
 
     public override State CreateState() => new CupertinoSwitchState();
 
-    private sealed class CupertinoSwitchState : ToggleableState
+    private sealed class CupertinoSwitchState : ToggleableState<CupertinoSwitch>
     {
         private const double TrackInnerLength = 20.0;
         private const double DragCommitThreshold = 0.7;
@@ -174,7 +174,7 @@ public sealed class CupertinoSwitch : StatefulWidget
                 PositionController);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        public override void DidUpdateWidget(CupertinoSwitch oldWidget)
         {
             var oldSwitch = (CupertinoSwitch)oldWidget;
             base.DidUpdateWidget(oldWidget);

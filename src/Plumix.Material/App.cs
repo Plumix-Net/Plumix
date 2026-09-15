@@ -417,7 +417,7 @@ public sealed class MaterialApp : StatefulWidget
 
     public override State CreateState() => new MaterialAppState();
 
-    private sealed class MaterialAppState : State
+    private sealed class MaterialAppState : State<MaterialApp>
     {
         private HeroController _heroController = null!;
 
