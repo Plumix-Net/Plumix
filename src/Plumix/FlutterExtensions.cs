@@ -2,7 +2,7 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/binding.dart; flutter/packages/flutter/lib/src/rendering/binding.dart (host integration, adapted)
+// C#-only infrastructure: maps Plumix widget bootstrap onto Avalonia application lifetimes.
 
 namespace Plumix;
 

@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Classify `PlumixExtensions` as Avalonia-only bootstrap and track the missing binding-owned `runApp` API.
 - Breaking: key classes preserve Dart's inherited value/identity equality for subclasses (foundation/key.dart).
 - Breaking: ValueKey subclasses inherit Flutter's printer and use Dart type names (foundation/key.dart).
 - Breaking: library states check typed widget contracts through direct and shared bases (framework.dart).
