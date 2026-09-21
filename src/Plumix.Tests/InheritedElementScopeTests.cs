@@ -22,7 +22,7 @@ public sealed class InheritedElementScopeTests
     public void DependOnInherited_LookingUpTheBaseType_DoesNotFindASubclassScope()
     {
         var probe = new ScopeProbe();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DerivedScope(value: 7, child: probe));
         Mount(root, owner);
 
@@ -37,7 +37,7 @@ public sealed class InheritedElementScopeTests
     public void DependOnInherited_LookingUpASubclass_DoesNotFindTheBaseTypeScope()
     {
         var probe = new ScopeProbe();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BaseScope(value: 3, child: probe));
         Mount(root, owner);
 
@@ -55,7 +55,7 @@ public sealed class InheritedElementScopeTests
         DerivedScope? seenDerived = null;
         int buildCount = 0;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Widget Body() => new Builder(context =>
         {
             buildCount++;
@@ -87,7 +87,7 @@ public sealed class InheritedElementScopeTests
         InheritedElement? baseElement = null;
         InheritedElement? derivedElement = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DerivedScope(value: 1, child: new Builder(context =>
         {
             baseElement = context.GetElementForInheritedWidgetOfExactType<BaseScope>();
@@ -109,7 +109,7 @@ public sealed class InheritedElementScopeTests
         BaseHolder? seenBase = null;
         DerivedHolder? seenDerived = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DerivedHolder(new Builder(context =>
         {
             seenBase = context.FindAncestorWidgetOfExactType<BaseHolder>();
@@ -130,7 +130,7 @@ public sealed class InheritedElementScopeTests
         int? inner = null;
         int? outer = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BaseScope(
             value: 1,
             child: new Builder(context =>
@@ -158,7 +158,7 @@ public sealed class InheritedElementScopeTests
         BaseScope? aboveScope = null;
         BaseScope? belowScope = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Builder(above =>
         {
             aboveScope = above.DependOnInheritedWidgetOfExactType<BaseScope>();
@@ -184,7 +184,7 @@ public sealed class InheritedElementScopeTests
         Element? outerReader = null;
         Element? innerReader = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BaseScope(
             value: 1,
             child: new Builder(context =>
@@ -218,7 +218,7 @@ public sealed class InheritedElementScopeTests
     {
         Element? reader = null;
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BaseScope(value: 1, child: new Builder(context =>
         {
             reader = (Element)context;
@@ -244,7 +244,7 @@ public sealed class InheritedElementScopeTests
     {
         var probeKey = new LabeledGlobalKey<ScopeProbeState>("probe");
         var probe = new ScopeProbe(key: probeKey);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BaseScope(value: 1, child: new Column(children: [
             new BaseScope(value: 2, child: probe),
             new SizedBox()
@@ -271,7 +271,7 @@ public sealed class InheritedElementScopeTests
     {
         var probeKey = new LabeledGlobalKey<ScopeProbeState>("probe");
         var probe = new ScopeProbe(key: probeKey);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Column(children: [probe]));
         Mount(root, owner);
 

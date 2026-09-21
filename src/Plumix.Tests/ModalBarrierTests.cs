@@ -62,7 +62,7 @@ public sealed class ModalBarrierTests
         try
         {
             int dismissCount = 0;
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new Directionality(
                 TextDirection.Rtl,
                 new ModalBarrier(
@@ -107,7 +107,7 @@ public sealed class ModalBarrierTests
     {
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ModalBarrier(dismissible: false));
         Mount(root, owner);
 
@@ -123,7 +123,7 @@ public sealed class ModalBarrierTests
     public void AnimatedModalBarrier_RebuildsWithCurrentAnimationColor()
     {
         var animation = new ManualAnimation<Color?>(Colors.Red);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedModalBarrier(animation));
         Mount(root, owner);
 

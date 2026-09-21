@@ -216,7 +216,7 @@ public sealed class MaterialAppBarTests
         var background = WidgetStateColor.ResolveWith(
             states => states.Contains(WidgetState.ScrolledUnder) ? Colors.DarkGreen : Colors.Goldenrod);
         BuildContext? emitter = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildScrollProbe(background, context => emitter = context));
 
         root.Attach(owner);
@@ -239,7 +239,7 @@ public sealed class MaterialAppBarTests
         var background = WidgetStateColor.ResolveWith(
             states => states.Contains(WidgetState.ScrolledUnder) ? Colors.DarkGreen : Colors.Goldenrod);
         BuildContext? emitter = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildScrollProbe(background, context => emitter = context));
 
         root.Attach(owner);
@@ -271,7 +271,7 @@ public sealed class MaterialAppBarTests
         ScaffoldState? scaffold = null;
         StateSetter? rebuildTheme = null;
         bool dark = false;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Directionality(
                 textDirection: TextDirection.Ltr,
@@ -335,7 +335,7 @@ public sealed class MaterialAppBarTests
     public void AppBar_ImpliedEndDrawerButton_IsNotWrappedInTheActionsPadding()
     {
         // Dart only pads the explicit `actions` row; the implied EndDrawerButton bypasses it.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Directionality(
                 textDirection: TextDirection.Ltr,
@@ -366,7 +366,7 @@ public sealed class MaterialAppBarTests
     {
         // Dart resolves `widget.titleTextStyle ?? appBarTheme.titleTextStyle ?? defaults…`; it never
         // merges the widget style onto the default, so unset fields stay unset.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var style = new TextStyle(FontSize: 30);
         var root = new TestRootElement(Wrap(new AppBar(primary: false, title: new Text("T"), titleTextStyle: style)));
 
@@ -410,7 +410,7 @@ public sealed class MaterialAppBarTests
     {
         // Dart wraps the leading slot in `ConstrainedBox(BoxConstraints.tightFor(width: …))`; the
         // NavigationToolbar is what forces the height.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(
             primary: false,
             title: new Text("Title"),
@@ -433,7 +433,7 @@ public sealed class MaterialAppBarTests
     public void AppBar_ToolbarOpacity_FadesTextStylesAndIconThemesThroughTheInterval()
     {
         double expected = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(0.5);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(
             primary: false,
             title: new Text("Title"),
@@ -458,7 +458,7 @@ public sealed class MaterialAppBarTests
     public void AppBar_BottomOpacity_WrapsTheBottomInAnOpacity()
     {
         double expected = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(0.5);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(
             primary: false,
             title: new Text("Title"),
@@ -534,7 +534,7 @@ public sealed class MaterialAppBarTests
     {
         // Taking `defaults.surfaceTintColor` (transparent in M3) would defeat scrolledUnderElevation, so
         // Dart falls through to `colorScheme.surfaceTint`.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(primary: false, title: new Text("Title"))));
 
         root.Attach(owner);
@@ -612,7 +612,7 @@ public sealed class MaterialAppBarTests
 
     private static SystemUiOverlayStyle OverlayStyleFor(Color background, bool useMaterial3)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(
             new AppBar(primary: false, title: new Text("Title"), backgroundColor: background),
             ThemeData.Light with { UseMaterial3 = useMaterial3 }));
@@ -626,7 +626,7 @@ public sealed class MaterialAppBarTests
 
     private static Color? ResolvedActionsIconColor(AppBar template, AppBarThemeData appBarTheme)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var appBar = new AppBar(
             primary: false,
             title: new Text("Title"),
@@ -648,7 +648,7 @@ public sealed class MaterialAppBarTests
     private static BuildContext CaptureContext(AppBarThemeData appBarTheme)
     {
         BuildContext? captured = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(
             new CaptureBuildContextWidget(context => captured = context),
             ThemeData.Light with { AppBarTheme = appBarTheme }));
@@ -726,7 +726,7 @@ public sealed class MaterialAppBarTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

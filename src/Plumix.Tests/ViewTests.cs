@@ -831,7 +831,7 @@ public sealed class ViewTests
     /// </summary>
     private sealed class ViewTree : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
 
         public ViewTree(Widget widget)
         {

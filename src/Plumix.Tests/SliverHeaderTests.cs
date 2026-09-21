@@ -101,7 +101,7 @@ public sealed class SliverHeaderTests
     [Fact]
     public void SliverResizingHeader_ElementOwnsThreeIndependentRenderSlots()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverResizingHeader(
             minExtentPrototype: new SizedBox(height: 40),
             maxExtentPrototype: new SizedBox(height: 120),

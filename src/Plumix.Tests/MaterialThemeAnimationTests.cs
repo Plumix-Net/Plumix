@@ -216,7 +216,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
     [Fact]
     public void AnimatedTheme_InterpolatesFromCurrentThemeAcrossInterruptedUpdates_AndCallsOnEnd()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ThemeData? observedTheme = null;
         int completed = 0;
         var probe = new ThemeProbe(theme => observedTheme = theme);
@@ -310,7 +310,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
                 new Directionality(
                     Plumix.UI.TextDirection.Ltr,
                     new Navigator(route))));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

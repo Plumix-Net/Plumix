@@ -29,6 +29,10 @@ public partial class WidgetsBinding
     /// <remarks>Flutter's <c>WidgetsBinding.buildOwner</c>.</remarks>
     public BuildOwner BuildOwner => _buildOwner;
 
+    /// <summary>The focus manager owned by the binding's current <see cref="BuildOwner"/>.</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.focusManager</c>.</remarks>
+    public FocusManager FocusManager => _buildOwner.FocusManager;
+
     /// <summary>The root of the binding's widget tree, or <see langword="null"/> before attachment.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.rootElement</c>.</remarks>
     public Element? RootElement => _rootElement;
@@ -105,7 +109,7 @@ public partial class WidgetsBinding
     {
         if (_rootElement is not null)
         {
-            _buildOwner.BuildScope();
+            _buildOwner.BuildScope(_rootElement);
         }
     }
 
@@ -163,6 +167,7 @@ public partial class WidgetsBinding
     internal void ResetRootForTests()
     {
         _rootElement?.UnmountRoot();
+        _buildOwner.FocusManager.Dispose();
         _rootElement = null;
         _readyToProduceFrames = false;
         _implicitPipelineOwner = null;

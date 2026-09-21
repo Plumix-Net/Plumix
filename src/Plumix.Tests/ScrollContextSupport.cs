@@ -119,7 +119,7 @@ internal static class ScrollPositionTestDriver
 /// </summary>
 internal static class EmptyBuildContext
 {
-    private static readonly BuildOwner Owner = new();
+    private static readonly BuildOwner Owner = TestBuildOwner.Create();
     private static BuildContext? _instance;
 
     public static BuildContext Instance
@@ -203,7 +203,7 @@ internal static class EmptyBuildContext
 /// </summary>
 internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvider, IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly List<Ticker> _tickers = [];
     private readonly Element _root;
 

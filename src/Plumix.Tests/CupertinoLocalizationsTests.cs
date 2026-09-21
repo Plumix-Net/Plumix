@@ -122,7 +122,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
     public void OfRequiresAndReturnsTheNearestCupertinoLocalizationResource()
     {
         Exception? missingException = null;
-        var missingOwner = new BuildOwner();
+        var missingOwner = TestBuildOwner.Create();
         var missingRoot = new TestRootElement(new Builder(context =>
         {
             missingException = Record.Exception(() => CupertinoLocalizations.Of(context));
@@ -136,7 +136,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
         missingRoot.UnmountRoot();
 
         CupertinoLocalizations? resolved = null;
-        var localizedOwner = new BuildOwner();
+        var localizedOwner = TestBuildOwner.Create();
         var localizedRoot = new TestRootElement(new Localizations(
             locale: new Locale("en", "US"),
             delegates:
@@ -161,7 +161,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
     {
         CupertinoLocalizations? cupertino = null;
         WidgetsLocalizations? widgets = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Localizations(
             locale: new Locale("ar"),
             delegates: GlobalCupertinoLocalizations.Delegates,

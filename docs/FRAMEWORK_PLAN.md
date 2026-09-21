@@ -37,7 +37,7 @@ milestones:
 ## Confirmed Done (Repository Baseline)
 
 - [x] Flutter-like core abstractions exist and are wired: `Widget -> Element -> RenderObject`.
-- [x] Stateful lifecycle and build scheduling are implemented (`State`, `SetState`, `BuildOwner`).
+- [x] Stateful lifecycle and build scheduling include per-owner focus managers and per-root build scopes.
 - [x] Inherited dependency model is implemented (`InheritedWidget`, `InheritedModel`, `InheritedNotifier`).
 - [x] Render pipeline is implemented (`PipelineOwner`, layout/compositing/paint/semantics phases).
 - [x] Layer tree primitives are implemented (offset/opacity/transform/clip/picture layers).

@@ -15,7 +15,7 @@ public sealed class HotReloadTests
     {
         ReassembleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ReassembleHost());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -43,7 +43,7 @@ public sealed class HotReloadTests
     {
         ReassembleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ReassembleHost());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

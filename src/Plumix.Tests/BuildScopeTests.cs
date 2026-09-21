@@ -31,22 +31,21 @@ public sealed class BuildScopeTests
     }
 
     [Fact]
-    public void Element_BuildScope_IsTheOwnerRootScopeAtTheRootAndInheritedByEveryDescendant()
+    public void Element_BuildScope_IsRootLocalAndInheritedByEveryDescendant()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Probe("a"));
         Mount(root, owner);
 
-        Assert.Same(owner.RootBuildScope, root.BuildScope);
-        Assert.Same(owner.RootBuildScope, root.ChildElement!.BuildScope);
-        Assert.Same(owner.RootBuildScope, root.ChildElement!.RenderObjectAttachingChild!.BuildScope);
+        Assert.Same(root.BuildScope, root.ChildElement!.BuildScope);
+        Assert.Same(root.BuildScope, root.ChildElement!.RenderObjectAttachingChild!.BuildScope);
     }
 
     [Fact]
     public void BuildScope_SegregatesDirtyElementsFromTheAmbientBuild()
     {
         var scope = new BuildScope();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? inner = null;
         var root = new TestRootElement(new Scoped(scope, new Probe("inner", state => inner = state)));
         Mount(root, owner);
@@ -72,7 +71,7 @@ public sealed class BuildScopeTests
     {
         int scheduled = 0;
         var scope = new BuildScope(() => scheduled++);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? first = null;
         ProbeState? second = null;
         var root = new TestRootElement(new Scoped(
@@ -97,7 +96,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void BuildScope_RebuildsParentsBeforeChildrenAndEachDirtyElementExactlyOnce()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var order = new List<string>();
         ProbeState? outer = null;
         ProbeState? middle = null;
@@ -125,7 +124,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void BuildScope_ReSortsAndRewindsWhenAnAncestorDirtiesADescendantDuringTheFlush()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var order = new List<string>();
         ProbeState? parent = null;
         ProbeState? child = null;
@@ -150,7 +149,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void BuildScope_ReportsAThrowingDirtyElementAndContinuesTheFlush()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ThrowAfterBuildElement? failing = null;
         ProbeState? later = null;
         var root = new TestRootElement(new ThrowAfterBuild(
@@ -192,13 +191,13 @@ public sealed class BuildScopeTests
             node => node.ToString().Contains("The element being rebuilt at the time was", StringComparison.Ordinal));
         Assert.Equal(2, later.Builds);
         Assert.False(later.Element.Dirty);
-        Assert.Empty(owner.RootBuildScope.DirtyElements);
+        Assert.Empty(root.BuildScope.DirtyElements);
     }
 
     [Fact]
     public void BuildScope_WithNoCallbackAndAnEmptyDirtyList_ReturnsWithoutBuilding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? probe = null;
         var root = new TestRootElement(new Probe("a", state => probe = state));
         Mount(root, owner);
@@ -213,7 +212,7 @@ public sealed class BuildScopeTests
     [DebugOnlyFact]
     public void BuildScope_IsNotReentrant()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Probe("a"));
         Mount(root, owner);
 
@@ -225,7 +224,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void ScheduleBuild_OnAnElementThatIsNotDirty_ReportsTheDartError()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Probe("a"));
         Mount(root, owner);
 
@@ -240,7 +239,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void BuildScope_DirtyElementOutsideTheScopeRoot_ReportsTheDartError()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? first = null;
         ProbeState? second = null;
         var root = new TestRootElement(new Pair(
@@ -261,7 +260,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void MarkNeedsBuild_DuringBuild_RejectsAnElementOutsideTheSubtreeBeingBuilt()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? middle = null;
         ProbeState? deep = null;
         var root = new TestRootElement(new Probe(
@@ -301,7 +300,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void MarkNeedsBuild_DuringBuild_AllowsADescendantOfTheElementBeingBuilt()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? outer = null;
         ProbeState? deep = null;
         var root = new TestRootElement(new Probe(
@@ -334,15 +333,15 @@ public sealed class BuildScopeTests
     public void ReparentingADirtyElementIntoAnotherBuildScope_LeavesItForThatScope()
     {
         var scope = new BuildScope();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? moved = null;
         var key = new GlobalObjectKey<ProbeState>(new object());
         var root = new TestRootElement(new Mover(key, scope, insideScope: false, state => moved = state));
         Mount(root, owner);
 
-        Assert.Same(owner.RootBuildScope, moved!.Element.BuildScope);
+        Assert.Same(root.BuildScope, moved!.Element.BuildScope);
         moved.Bump();
-        Assert.Contains(moved.Element, owner.RootBuildScope.DirtyElements);
+        Assert.Contains(moved.Element, root.BuildScope.DirtyElements);
 
         // Dart's _updateBuildScopeRecursively runs before activate(), so the pending rebuild lands in
         // the scope the element is moving into and the root scope keeps only a skipped tombstone.
@@ -376,7 +375,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void LayoutBuilder_OwnsItsBuildScopeAndKeepsDescendantsOutOfTheAmbientBuild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? inner = null;
         var root = new TestRootElement(new LayoutBuilder((_, _) => new Probe("inner", state => inner = state)));
         Mount(root, owner);
@@ -385,7 +384,7 @@ public sealed class BuildScopeTests
         LayoutOnce(renderObject, BoxConstraints.Tight(new Size(100, 100)));
 
         Element builderElement = root.ChildElement!;
-        Assert.NotSame(owner.RootBuildScope, builderElement.BuildScope);
+        Assert.NotSame(root.BuildScope, builderElement.BuildScope);
         Assert.Same(builderElement.BuildScope, inner!.Element.BuildScope);
         Assert.Equal(1, inner.Builds);
 
@@ -397,7 +396,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void SliverLayoutBuilder_OwnsItsBuildScopeAndFlushesItFromLayout()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? inner = null;
         var root = new TestRootElement(new SliverLayoutBuilder((_, _) =>
             new SliverToBoxAdapter(new Probe("inner", state => inner = state))));
@@ -413,7 +412,7 @@ public sealed class BuildScopeTests
             RemainingCacheExtent: 80);
         renderObject.LayoutWithSliverConstraints(constraints);
 
-        Assert.NotSame(owner.RootBuildScope, root.ChildElement!.BuildScope);
+        Assert.NotSame(root.BuildScope, root.ChildElement!.BuildScope);
         Assert.Same(root.ChildElement!.BuildScope, inner!.Element.BuildScope);
         Assert.Equal(1, inner.Builds);
 
@@ -428,7 +427,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void LayoutBuilder_FlushesADescendantDirtiedBetweenLayoutsEvenWhenTheConstraintsAreUnchanged()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int builderCalls = 0;
         ProbeState? inner = null;
         var root = new TestRootElement(new LayoutBuilder((_, _) =>
@@ -458,7 +457,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void LayoutBuilder_RebuildsADescendantOnceWhenBothTheConstraintsAndAnInheritedValueChange()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? inner = null;
         var root = new TestRootElement(new Inherited(
             1,
@@ -482,7 +481,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void LayoutBuilder_MarkNeedsBuildOnADescendantWhileIdle_DefersInsteadOfDirtyingTheRenderTree()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? inner = null;
         var root = new TestRootElement(new LayoutBuilder((_, _) => new Probe("inner", state => inner = state)));
         Mount(root, owner);
@@ -517,7 +516,7 @@ public sealed class BuildScopeTests
     [InlineData(true)]
     public void DeactivationAndUnmount_PreserveDirtyStateUntilTheScopeDropsMembership(bool dirty)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox(width: 1, height: 1));
         Mount(root, owner);
         Element child = root.ChildElement!;
@@ -538,7 +537,7 @@ public sealed class BuildScopeTests
         owner.FlushBuild();
         Assert.Equal(dirty, child.Dirty);
         Assert.False(child.InDirtyList);
-        Assert.Empty(owner.RootBuildScope.DirtyElements);
+        Assert.Empty(root.BuildScope.DirtyElements);
     }
 
     [Theory]
@@ -546,7 +545,7 @@ public sealed class BuildScopeTests
     [InlineData(true)]
     public void ReactivationInTheSameScope_PreservesCleanElementsAndReusesDirtyEntries(bool dirty)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox(width: 1, height: 1));
         Mount(root, owner);
         Element child = root.ChildElement!;
@@ -562,7 +561,7 @@ public sealed class BuildScopeTests
             child.ActivateWithParent(root, null);
             Assert.Equal(dirty, child.Dirty);
             Assert.Equal(dirty, child.InDirtyList);
-            Assert.Equal(dirty ? 1 : 0, owner.RootBuildScope.DirtyElements.Count);
+            Assert.Equal(dirty ? 1 : 0, root.BuildScope.DirtyElements.Count);
         });
 
         Assert.False(child.Dirty);
@@ -572,14 +571,14 @@ public sealed class BuildScopeTests
     [Fact]
     public void InactiveDirtyElement_IsNotRebuiltAndIsQueuedAgainWhenReactivatedAfterAFlush()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? probe = null;
         var root = new TestRootElement(new Probe("probe", state => probe = state));
         Mount(root, owner);
         Element child = root.ChildElement!;
         probe!.Bump();
         root.DeactivateChild(child);
-        owner.RootBuildScope.FlushDirtyElements(root);
+        root.BuildScope.FlushDirtyElements(root);
 
         Assert.Equal(1, probe.Builds);
         Assert.True(child.Dirty);
@@ -588,7 +587,7 @@ public sealed class BuildScopeTests
         owner.BuildScope(root, () =>
         {
             child.ActivateWithParent(root, null);
-            Assert.Single(owner.RootBuildScope.DirtyElements);
+            Assert.Single(root.BuildScope.DirtyElements);
         });
         Assert.Equal(2, probe.Builds);
         Assert.False(child.Dirty);
@@ -597,7 +596,7 @@ public sealed class BuildScopeTests
     [Fact]
     public void Reactivation_NotifiesInheritedDependenciesBeforeStateAndChildrenActivate()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? parent = null;
         ProbeState? child = null;
         var root = new TestRootElement(new Inherited(

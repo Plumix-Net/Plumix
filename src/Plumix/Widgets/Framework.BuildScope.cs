@@ -12,8 +12,8 @@ namespace Plumix.Widgets;
 /// <para>
 /// Dart's <c>BuildScope</c>. Elements in the same scope share one dirty list, which
 /// <see cref="BuildOwner.BuildScope(Element, Action?)"/> flushes in depth order. Most elements
-/// inherit the scope of their parent, so a widget tree normally has exactly one scope — the one
-/// <see cref="BuildOwner.RootBuildScope"/> hands to the root element. A widget that builds its
+/// inherit the scope of their parent, so a widget tree normally has exactly one scope — the fresh
+/// scope assigned to its root element. A widget that builds its
 /// children at a different time than the enclosing tree (Plumix's <c>LayoutBuilder</c> and
 /// <c>SliverLayoutBuilder</c>, which build during layout) gives its element its own scope by
 /// overriding <see cref="Element.BuildScope"/>, so those descendants are never rebuilt by the

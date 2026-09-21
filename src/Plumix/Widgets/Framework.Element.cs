@@ -352,18 +352,16 @@ public abstract class Element : DiagnosticableTree, BuildContext
     public virtual bool DebugDoingBuild => false;
 
     /// <summary>
-    /// Assigns <paramref name="owner"/> to a parentless element and gives it the owner's root
-    /// <see cref="Widgets.BuildScope"/>.
+    /// Assigns <paramref name="owner"/> and a fresh build scope to a parentless element.
     /// </summary>
     /// <remarks>
     /// The body of Dart's <c>RootElementMixin.assignOwner</c>, available to every element because C#
-    /// has no mixins. Plumix hosts and harnesses drive one root per owner, so the owner keeps the
-    /// scope (<see cref="BuildOwner.RootBuildScope"/>) instead of creating one per root.
+    /// has no mixins. Each root receives its own scope even when roots share an owner.
     /// </remarks>
     internal void Attach(BuildOwner owner)
     {
         Owner = owner;
-        _parentBuildScope = owner.RootBuildScope;
+        _parentBuildScope = new BuildScope();
     }
 
     /// <summary>

@@ -1544,7 +1544,7 @@ public sealed class MaterialTabsTests
     private sealed class WidgetRenderHarness : IDisposable
     {
         private static readonly Dictionary<RenderObject, Element> Roots = [];
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
 

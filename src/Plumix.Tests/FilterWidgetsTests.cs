@@ -131,7 +131,7 @@ public sealed class FilterWidgetsTests
         var updatedKey = new BackdropKey();
         var initialFilter = new ImageFilter.Blur(2.0, 3.0);
         var updatedConfig = new ImageFilterConfig.Blur(4.0, 5.0, bounded: true);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new BackdropGroup(
             new SizedBox(
                 width: 20.0,
@@ -204,7 +204,7 @@ public sealed class FilterWidgetsTests
             0.0, 0.0, 1.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 1.0, 0.0,
         ]);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ColorFiltered(
             initialColorFilter,
             new SizedBox(width: 12.0, height: 8.0)));
@@ -256,7 +256,7 @@ public sealed class FilterWidgetsTests
         Assert.Null(widget.Child);
         Assert.Throws<ArgumentNullException>(() => new ShaderMask(null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ShaderMask(
             initialCallback,
             child: new SizedBox(width: 20.0, height: 10.0)));

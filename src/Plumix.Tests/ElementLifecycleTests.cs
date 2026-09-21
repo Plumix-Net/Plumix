@@ -14,7 +14,7 @@ public sealed class ElementLifecycleTests
     {
         KeyedTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new KeyedListHost([1, 2, 3]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -45,7 +45,7 @@ public sealed class ElementLifecycleTests
     {
         LifecycleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         object identity = new object();
 
         var root = new TestRootElement(new GlobalReparentHost(moveToLeft: true, identity));
@@ -75,7 +75,7 @@ public sealed class ElementLifecycleTests
     {
         LifecycleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
@@ -99,7 +99,7 @@ public sealed class ElementLifecycleTests
     {
         LifecycleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
@@ -124,7 +124,7 @@ public sealed class ElementLifecycleTests
     {
         LifecycleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         object identity = new object();
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
@@ -149,7 +149,7 @@ public sealed class ElementLifecycleTests
     {
         LifecycleTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Padding(
                 insets: new Avalonia.Thickness(4),
@@ -173,7 +173,7 @@ public sealed class ElementLifecycleTests
     {
         MixedTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MixedKeyedUnkeyedHost(reorder: false));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -208,7 +208,7 @@ public sealed class ElementLifecycleTests
         MixedTracker.Reset();
         NestedBranchTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new NestedMixedAcrossParentsHost(reorder: false));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

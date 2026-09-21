@@ -23,7 +23,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void OpacityWidget_CreatesRenderOpacity_AndUpdatesOpacity()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Opacity(
                 opacity: 1.0,
@@ -64,7 +64,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void TransformWidget_CreatesRenderTransform_AndUpdatesTransform()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Transform(
                 transform: Matrix4.TranslationValues(12, 6, 0.0),
@@ -98,7 +98,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void FractionalTranslationWidget_UsesFlutterDefaultsAndUpdatesRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new FractionalTranslation(
                 translation: new Point(0.25, -0.5),
@@ -151,7 +151,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void RotatedBoxWidget_CreatesAndUpdatesRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new RotatedBox(
                 quarterTurns: 1,
@@ -217,7 +217,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void ClipRectWidget_CreatesRenderClipRect_AndUpdatesClip()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var initialClipper = new FixedRectClipper(new Rect(1, 2, 30, 40));
         var root = new TestRootElement(
             new ClipRect(
@@ -246,7 +246,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void ClipRRectWidget_CreatesRenderClipRRect_AndUpdatesBorderRadius()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var initialBorderRadius = BorderRadius.Circular(8);
         var root = new TestRootElement(
             new ClipRRect(
@@ -274,7 +274,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void IgnorePointerWidget_CreatesRenderIgnorePointer_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new IgnorePointer(
                 ignoring: true,
@@ -304,7 +304,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void AbsorbPointerWidget_CreatesRenderAbsorbPointer_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new AbsorbPointer(
                 absorbing: true,
@@ -334,7 +334,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void WrapWidget_CreatesRenderWrap_AndUpdatesRunConfiguration()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Wrap(
             spacing: 3,
             runSpacing: 5,
@@ -409,7 +409,7 @@ public sealed class BasicWidgetProxyTests
             new ValueKey<object>(1),
             Assert.IsType<RepaintBoundary>(widget.Children[1]).Key);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -453,7 +453,7 @@ public sealed class BasicWidgetProxyTests
     [Fact]
     public void RowWidget_ForwardsAndUpdatesTextBaseline()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Row(
             crossAxisAlignment: CrossAxisAlignment.Baseline,
             textBaseline: Plumix.UI.TextBaseline.Alphabetic,

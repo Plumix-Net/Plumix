@@ -328,7 +328,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
 

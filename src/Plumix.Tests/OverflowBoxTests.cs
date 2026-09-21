@@ -80,7 +80,7 @@ public sealed class OverflowBoxTests
     [Fact]
     public void OverflowBoxWidget_CreatesRenderObject_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new OverflowBox(
                 alignment: Alignment.TopLeft,
@@ -126,7 +126,7 @@ public sealed class OverflowBoxTests
     [Fact]
     public void SizedOverflowBoxWidget_CreatesRenderObject_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new SizedOverflowBox(
                 size: new Size(80, 40),

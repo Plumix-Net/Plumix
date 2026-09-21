@@ -203,7 +203,7 @@ public sealed class ProxyBoxParityTests
     [Fact]
     public void FadeTransition_CreatesARenderAnimatedOpacity()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var animation = new AnimationValue(0.5);
         var root = new TestRootElement(new FadeTransition(animation, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
@@ -241,7 +241,7 @@ public sealed class ProxyBoxParityTests
     [Fact]
     public void ClipRSuperellipseWidget_BuildsTheDedicatedRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             TextDirection.Rtl,
             new ClipRSuperellipse(
@@ -296,7 +296,7 @@ public sealed class ProxyBoxParityTests
     [Fact]
     public void MergeSemanticsWidget_BuildsTheDedicatedRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MergeSemantics(new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

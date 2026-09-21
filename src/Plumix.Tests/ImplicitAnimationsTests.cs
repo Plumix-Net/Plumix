@@ -126,7 +126,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedOpacity_InterpolatesFromCurrentValueAndUpdatesSemanticsPolicyImmediately()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedOpacity(
             opacity: 1.0,
             duration: TimeSpan.FromMilliseconds(200),
@@ -176,7 +176,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedSlide_InterpolatesFractionalOffsetAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedSlide(
             offset: default,
             duration: TimeSpan.FromMilliseconds(200),
@@ -272,7 +272,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedScale_InterpolatesFromCurrentValueAndUpdatesTransformOptionsImmediately()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedScale(
             scale: 1,
             duration: TimeSpan.FromMilliseconds(200),
@@ -330,7 +330,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedRotation_UsesTurnsAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedRotation(
             turns: 0,
             duration: TimeSpan.FromMilliseconds(200),
@@ -447,7 +447,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPadding_InterpolatesFromCurrentValueAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedPadding(
             padding: new Thickness(0),
             duration: TimeSpan.FromMilliseconds(200),
@@ -496,7 +496,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedAlign_InterpolatesAlignmentAndFactorsAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedAlign(
             alignment: Alignment.TopLeft,
             duration: TimeSpan.FromMilliseconds(200),
@@ -542,7 +542,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedAlign_NullableFactorsSwitchImmediatelyWithoutStartingAnimation()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedAlign(
             alignment: Alignment.Center,
             duration: TimeSpan.FromMilliseconds(200),
@@ -666,7 +666,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPositioned_InterpolatesLayoutAndContinuesFromInterruptedValue()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildAnimatedPositioned(
             left: 0,
             top: 0,
@@ -724,7 +724,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPositioned_NullTargetsSwitchImmediatelyWithoutStartingAnimation()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildAnimatedPositioned(
             left: 12,
             top: 8,
@@ -755,7 +755,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPositionedDirectional_AnimatesLogicalInsetsAndResolvesAmbientDirectionImmediately()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildDirectionalPositioned(
             direction: Plumix.UI.TextDirection.Rtl,
             start: 0,
@@ -832,7 +832,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedDefaultTextStyle_InterpolatesStyleAndAppliesOtherTextPropertiesImmediately()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedDefaultTextStyle(
             child: new Text("animated text"),
             style: new TextStyle(FontSize: 10, Color: Colors.Red, LetterSpacing: 0),
@@ -895,7 +895,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     [Fact]
     public void PhysicalModel_CreatesAndUpdatesSourceShapedRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new PhysicalModel(
             color: Colors.Red,
             shape: BoxShape.Rectangle,
@@ -969,7 +969,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedPhysicalModel_InterpolatesVisualsAndHonorsColorAnimationFlags()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedPhysicalModel(
             child: new SizedBox(width: 40, height: 24),
             color: Colors.Red,
@@ -1067,7 +1067,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     public void AnimatedFractionallySizedBox_InterpolatesFactorsAlignmentAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedFractionallySizedBox(
             duration: TimeSpan.FromMilliseconds(200),
             alignment: Alignment.TopLeft,
@@ -1128,7 +1128,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     [Fact]
     public void AnimatedFractionallySizedBox_MatchesDartNullableTweenLifecycle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedFractionallySizedBox(
             duration: TimeSpan.FromMilliseconds(200),
             widthFactor: 0.5,
@@ -1156,7 +1156,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             widthFactor: 0.5,
             heightFactor: 0.5);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(fraction);
         Mount(root, owner);
         var renderObject = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
@@ -1170,7 +1170,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     [Fact]
     public void AlignDemoPage_LeavingRouteUnmountsNestedAnimationsWithoutDoubleDispose()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AlignDemoPage());
         Mount(root, owner);
 

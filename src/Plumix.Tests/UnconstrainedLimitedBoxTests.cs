@@ -56,7 +56,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void UnconstrainedBoxWidget_ComposesConstraintsTransformBox_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Directionality(
                 TextDirection.Rtl,
@@ -108,7 +108,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void ConstraintsTransformBoxWidget_ExplicitDirectionResolvesDirectionalAlignment()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new ConstraintsTransformBox(
                 constraintsTransform: ConstraintsTransformBox.Unconstrained,
@@ -299,7 +299,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void LimitedBoxWidget_CreatesRenderObject_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new LimitedBox(
                 maxWidth: 120,

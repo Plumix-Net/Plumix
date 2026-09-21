@@ -301,7 +301,7 @@ internal sealed class RestorableWidgetState : RestorationState
 /// <summary>Minimal element host used by the restoration widget tests.</summary>
 internal sealed class RestorationHarness : IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly HarnessRootElement _root;
     private readonly PipelineOwner _pipeline;
 

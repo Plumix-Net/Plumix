@@ -32,7 +32,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
         int notifications = 0;
         SystemChrome.ApplicationSwitcherDescriptionChanged += _ => notifications++;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Title(
             title: "First",
             color: Color.FromArgb(0xFF, 0x12, 0x34, 0x56),
@@ -73,7 +73,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         var inheritedCursor = Colors.Crimson;
         var localSelection = Colors.CornflowerBlue;
         MouseCursor inheritedMouseCursor = SystemMouseCursors.Click;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DefaultSelectionStyle(
             cursorColor: inheritedCursor,
             selectionColor: Colors.DarkGreen,
@@ -115,7 +115,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
     {
         int? resolvedThemeValue = null;
         Color? resolvedSelectionColor = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TestTheme(
             value: 1,
             child: new DefaultSelectionStyle(

@@ -54,7 +54,7 @@ public sealed class SafeAreaTests
     {
         MediaQueryProbe.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -78,7 +78,7 @@ public sealed class SafeAreaTests
     {
         MediaQueryProbe.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -116,7 +116,7 @@ public sealed class SafeAreaTests
     [Fact]
     public void SliverSafeArea_ForwardsResolvedInsetsIntoSliverGeometryAndCrossAxisConstraints()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -150,7 +150,7 @@ public sealed class SafeAreaTests
     {
         MediaQueryProbe.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -174,7 +174,7 @@ public sealed class SafeAreaTests
     {
         MediaQueryProbe.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -199,7 +199,7 @@ public sealed class SafeAreaTests
     {
         MediaQueryProbe.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -225,7 +225,7 @@ public sealed class SafeAreaTests
     [Fact]
     public void SafeArea_NestingConsumesEachMediaPaddingSideOnlyOnce()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new MediaQuery(
                 data: new MediaQueryData(
@@ -259,7 +259,7 @@ public sealed class SafeAreaTests
                 left: false,
                 bottom: false,
                 child: new SizedBox(width: 40, height: 30)));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(
                 Padding: new Thickness(20),

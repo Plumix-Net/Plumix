@@ -75,7 +75,7 @@ public sealed class OffstageTests
     [Fact]
     public void OffstageWidget_CreatesRenderObject_AndUpdatesProperty()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Offstage(
                 offstage: true,

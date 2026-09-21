@@ -19,7 +19,7 @@ public sealed class InactiveElementsTests
     public void UnmountAll_UnmountsChildrenBeforeTheirParent()
     {
         List<string> log = [];
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Marker(log, "outer", new Marker(log, "inner")));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -36,7 +36,7 @@ public sealed class InactiveElementsTests
     public void UnmountAll_ReachesEveryChildOfAMultiChildElement()
     {
         List<string> log = [];
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Marker(
             log,
             "parent",
@@ -60,7 +60,7 @@ public sealed class InactiveElementsTests
     public void UnmountAll_UnmountsTheDeeperDeactivationRootFirst()
     {
         List<string> log = [];
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var toggle = new ToggleWidget(log);
         var root = new TestRootElement(toggle);
         root.Attach(owner);
@@ -81,7 +81,7 @@ public sealed class InactiveElementsTests
     {
         List<string> log = [];
         var key = new LabeledGlobalKey<State>("kept");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Column([new Marker(log, "kept", key: key)]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -97,7 +97,7 @@ public sealed class InactiveElementsTests
     public void DeactivatedElement_StaysMountedUntilTheInactiveListIsFlushed()
     {
         List<string> log = [];
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Marker(log, "child"));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

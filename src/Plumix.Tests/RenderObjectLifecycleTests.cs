@@ -167,7 +167,7 @@ public sealed class RenderObjectLifecycleTests
     public void RenderObjectElement_Unmount_DisposesItsRenderObject()
     {
         var widget = new TrackingRenderObjectWidget();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -188,7 +188,7 @@ public sealed class RenderObjectLifecycleTests
     {
         var innerWidget = new TrackingProxyRenderObjectWidget();
         var outerWidget = new TrackingProxyRenderObjectWidget(innerWidget);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(outerWidget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

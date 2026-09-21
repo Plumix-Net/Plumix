@@ -20,9 +20,20 @@ public sealed class BuildOwner
     private bool _scheduledFlushDirtyElements;
 
     /// <summary>Creates an object that manages widgets.</summary>
-    public BuildOwner(Action? onBuildScheduled = null)
+    /// <remarks>
+    /// Flutter's <c>BuildOwner({onBuildScheduled, focusManager})</c>. When no manager is supplied,
+    /// the owner creates one and registers its global input handlers. Additional/off-screen owners
+    /// should pass an explicit manager when they must not replace those handlers.
+    /// </remarks>
+    public BuildOwner(Action? onBuildScheduled = null, FocusManager? focusManager = null)
     {
         OnBuildScheduled = onBuildScheduled;
+        FocusManager = focusManager ?? new FocusManager();
+        if (focusManager is null)
+        {
+            FocusManager.RegisterGlobalHandlers();
+        }
+
         lock (OwnersLock)
         {
             Owners.Add(new WeakReference<BuildOwner>(this));
@@ -35,20 +46,16 @@ public sealed class BuildOwner
     /// </summary>
     public Action? OnBuildScheduled { get; set; }
 
+    /// <summary>The focus-tree owner associated with this widget-tree owner.</summary>
+    /// <remarks>Flutter's mutable <c>BuildOwner.focusManager</c> field.</remarks>
+    public FocusManager FocusManager { get; set; }
+
     /// <summary>Dart's <c>BuildOwner._inactiveElements</c>.</summary>
     internal InactiveElements InactiveElements { get; } = new();
 
     /// <summary>
-    /// The scope every parentless element attached to this owner starts in. Dart creates one per root in
-    /// <c>RootElementMixin.assignOwner</c>; Plumix keeps it on the owner, because an owner drives
-    /// exactly one root element. It has no <see cref="Widgets.BuildScope.ScheduleRebuild"/>:
-    /// <see cref="OnBuildScheduled"/> already asks the host for a frame.
-    /// </summary>
-    public BuildScope RootBuildScope { get; } = new();
-
-    /// <summary>
     /// The element mounted without a parent, used as the debug build root of the parameterless
-    /// <see cref="BuildScope()"/>. Dart reads it from <c>WidgetsBinding.rootElement</c>.
+    /// harness pump. Dart reads it from <c>WidgetsBinding.rootElement</c>.
     /// </summary>
     private Element? _rootElement;
 
@@ -199,23 +206,6 @@ public sealed class BuildOwner
     }
 
     /// <summary>
-    /// Flushes <see cref="RootBuildScope"/>.
-    /// </summary>
-    /// <remarks>
-    /// Plumix-only entry point: Dart's <c>buildScope</c> always takes a context, which the hosts
-    /// reach through <c>WidgetsBinding.drawFrame</c>'s <c>buildOwner.buildScope(rootElement!)</c>.
-    /// </remarks>
-    internal void BuildScope()
-    {
-        if (RootBuildScope.DirtyElements.Count == 0)
-        {
-            return;
-        }
-
-        RunBuildScope(RootBuildScope, _rootElement, callback: null);
-    }
-
-    /// <summary>
     /// Establishes <paramref name="context"/> as the target of a build-scope callback, then flushes
     /// the dirty elements of that context's <see cref="Widgets.BuildScope"/>.
     /// </summary>
@@ -356,7 +346,10 @@ public sealed class BuildOwner
         // `LayoutBuilder`'s scope defers its rebuild request to one. A harness pump produces no
         // frame, so drain them here or that rebuild is dropped.
         Scheduler.RunScheduledFrameCallbacksOutsideFrame();
-        BuildScope();
+        if (_rootElement is not null)
+        {
+            BuildScope(_rootElement);
+        }
 
         // A harness pump has no render phase of its own to finalize after, so it finalizes here.
         FinalizeTree();

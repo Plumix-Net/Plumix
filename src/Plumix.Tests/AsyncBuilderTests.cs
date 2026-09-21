@@ -75,7 +75,7 @@ public sealed class AsyncBuilderTests : IDisposable
     {
         var stream = new ManualObservable<int>();
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new StreamBuilder<int>(
             stream,
             initialData: 7,
@@ -102,7 +102,7 @@ public sealed class AsyncBuilderTests : IDisposable
     {
         var stream = new ManualObservable<int>();
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(stream));
         Mount(root, owner);
 
@@ -131,7 +131,7 @@ public sealed class AsyncBuilderTests : IDisposable
         var first = new ManualObservable<int>();
         var second = new ManualObservable<int>();
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first));
         Mount(root, owner);
 
@@ -166,7 +166,7 @@ public sealed class AsyncBuilderTests : IDisposable
         var first = new ManualObservable<int>();
         var second = new ManualObservable<int>();
         var summaries = new List<string>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new FoldingStreamBuilder(first, summaries));
         Mount(root, owner);
 
@@ -188,7 +188,7 @@ public sealed class AsyncBuilderTests : IDisposable
     {
         var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new FutureBuilder<int>(
             completion.Task,
             initialData: 5,
@@ -207,7 +207,7 @@ public sealed class AsyncBuilderTests : IDisposable
     {
         var completion = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new FutureBuilder<int>(
             completion.Task,
             (_, snapshot) => Capture(snapshot, snapshots)));
@@ -229,7 +229,7 @@ public sealed class AsyncBuilderTests : IDisposable
         var first = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first.Task));
         Mount(root, owner);
 
@@ -258,7 +258,7 @@ public sealed class AsyncBuilderTests : IDisposable
         var first = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first.Task));
         Mount(root, owner);
 
@@ -293,7 +293,7 @@ public sealed class AsyncBuilderTests : IDisposable
         // its callback as a microtask on the single thread that owns the element tree.
         var completion = new TaskCompletionSource<int>();
         var snapshots = new List<AsyncSnapshot<int>>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new FutureBuilder<int>(
             completion.Task,
             (_, snapshot) => Capture(snapshot, snapshots)));

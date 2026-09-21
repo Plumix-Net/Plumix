@@ -16,7 +16,7 @@ public sealed class IntrinsicWidgetsTests
     [Fact]
     public void IntrinsicWidth_AcceptsZeroStepsAndNormalizesThemForRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new IntrinsicWidth(
             stepWidth: 0.0,
             stepHeight: 0.0,
@@ -77,7 +77,7 @@ public sealed class IntrinsicWidgetsTests
     [Fact]
     public void IntrinsicHeightWidget_CreatesRenderIntrinsicHeight()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new IntrinsicHeight(
             child: new SizedBox(width: 20.0, height: 10.0)));
 

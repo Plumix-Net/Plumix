@@ -35,7 +35,7 @@ public sealed class DecoratedBoxTests
     [Fact]
     public void DecoratedBoxWidget_CreatesRenderDecoratedBox_AndUpdatesDecoration()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new DecoratedBox(
                 decoration: new BoxDecoration(
@@ -84,7 +84,7 @@ public sealed class DecoratedBoxTests
     [Fact]
     public void Container_DecorationTakesPrecedenceOverColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 decoration: new BoxDecoration(Color: Colors.Red),

@@ -51,7 +51,7 @@ public sealed class PopScopeTests : IDisposable
     [Fact]
     public void PopScope_BlocksCollectively_ReportsResult_AndUpdatesCanPop()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         PopScopeProbeState? probe = null;
         var invocations = new List<(bool DidPop, string? Result)>();
@@ -93,7 +93,7 @@ public sealed class PopScopeTests : IDisposable
     [Fact]
     public void NavigatorPop_BypassesPopScopeVeto_AndReportsSuccessfulResult()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         bool? didPop = null;
         string? callbackResult = null;
@@ -132,7 +132,7 @@ public sealed class PopScopeTests : IDisposable
     [Fact]
     public void NavigatorPopHandler_UsesChildNavigationNotification_ToHandleOuterPop()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? outerNavigator = null;
         NavigatorState? innerNavigator = null;
         int callbackCount = 0;
@@ -189,7 +189,7 @@ public sealed class PopScopeTests : IDisposable
     [Fact]
     public void Form_DelegatesCanPopAndResultCallback_ToPopScope()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         bool? didPop = null;
         object? callbackResult = null;

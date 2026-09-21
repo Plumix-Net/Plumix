@@ -59,7 +59,7 @@ public sealed class FractionallySizedBoxTests
     [Fact]
     public void FractionallySizedBoxWidget_CreatesRenderObject_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new FractionallySizedBox(
                 alignment: Alignment.TopLeft,

@@ -27,7 +27,7 @@ public sealed class LayoutBuilderTests
     {
         int builderCalls = 0;
         SliverConstraints? receivedConstraints = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverLayoutBuilder((_, constraints) =>
         {
             builderCalls++;
@@ -61,7 +61,7 @@ public sealed class LayoutBuilderTests
     public void SliverLayoutBuilder_RebuildsForChangedConstraintsButSkipsEquivalentLayoutInfo()
     {
         int builderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverLayoutBuilder((_, constraints) =>
         {
             builderCalls++;
@@ -96,7 +96,7 @@ public sealed class LayoutBuilderTests
     {
         int firstBuilderCalls = 0;
         int secondBuilderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverLayoutBuilder((_, _) =>
         {
             firstBuilderCalls++;
@@ -142,7 +142,7 @@ public sealed class LayoutBuilderTests
             values.Add(context.DependOnInheritedWidgetOfExactType<TestInheritedValue>()!.Value);
             return new SliverToBoxAdapter(new SizedBox(height: 20));
         });
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TestInheritedValue(1, layoutBuilder));
         Mount(root, owner);
 
@@ -181,7 +181,7 @@ public sealed class LayoutBuilderTests
     {
         int builderCalls = 0;
         BoxConstraints? receivedConstraints = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new LayoutBuilder((_, constraints) =>
         {
             builderCalls++;
@@ -206,7 +206,7 @@ public sealed class LayoutBuilderTests
     public void LayoutBuilder_RebuildsForChangedConstraintsButSkipsEquivalentLayoutInfo()
     {
         int builderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new LayoutBuilder((_, constraints) =>
         {
             builderCalls++;
@@ -235,7 +235,7 @@ public sealed class LayoutBuilderTests
     {
         int firstBuilderCalls = 0;
         int secondBuilderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new LayoutBuilder((_, _) =>
         {
             firstBuilderCalls++;
@@ -268,7 +268,7 @@ public sealed class LayoutBuilderTests
     public void LayoutBuilder_MarkNeedsBuildRebuildsWithLastConstraintsDuringNextLayout()
     {
         int builderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new LayoutBuilder((_, _) =>
         {
             builderCalls++;
@@ -300,7 +300,7 @@ public sealed class LayoutBuilderTests
             values.Add(context.DependOnInheritedWidgetOfExactType<TestInheritedValue>()!.Value);
             return new SizedBox(width: 20, height: 10);
         });
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TestInheritedValue(1, layoutBuilder));
         Mount(root, owner);
 
@@ -329,7 +329,7 @@ public sealed class LayoutBuilderTests
         Orientation expected)
     {
         Orientation? received = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new OrientationBuilder((_, orientation) =>
         {
             received = orientation;
@@ -358,7 +358,7 @@ public sealed class LayoutBuilderTests
     public void LayoutBuilder_RunsScheduledCallbackWhenAnAncestorSkipsLayingOutTheSubtree()
     {
         int builds = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SkipLayoutHost(
             new LayoutBuilder((_, _) =>
             {
@@ -396,7 +396,7 @@ public sealed class LayoutBuilderTests
     public void SliverLayoutBuilder_RunsScheduledCallbackWhenAnAncestorSkipsLayingOutTheSubtree()
     {
         int builds = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SkipLayoutHost(
             new SliverLayoutBuilder((_, _) =>
             {
@@ -431,7 +431,7 @@ public sealed class LayoutBuilderTests
     public void LayoutBuilder_RepeatedScheduleLayoutCallbackBeforeLayoutIsANoOp()
     {
         int builds = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new LayoutBuilder((_, _) =>
         {
             builds++;

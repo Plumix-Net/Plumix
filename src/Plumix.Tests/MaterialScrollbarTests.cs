@@ -1392,7 +1392,7 @@ public sealed class MaterialScrollbarTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
         private bool _registeredForPointerEvents;
@@ -1457,7 +1457,7 @@ public sealed class MaterialScrollbarTests
 
     private sealed class WidgetTree : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly TreeRootElement _root;
 
         public WidgetTree(Widget widget)

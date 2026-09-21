@@ -48,7 +48,7 @@ public sealed class SampleCounterStateTests
     {
         CounterScopeTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var model = new CounterAppModel();
 
         var root = new TestRootElement(new CounterScope(model, new CounterCountProbeWidget()));

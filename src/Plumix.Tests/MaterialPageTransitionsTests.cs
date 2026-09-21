@@ -588,7 +588,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
     private sealed class RenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly PipelineOwner _pipeline;
         private readonly RenderRootElement _root;
 

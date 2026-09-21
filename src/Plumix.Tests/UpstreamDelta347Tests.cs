@@ -166,7 +166,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         Assert.Throws<ArgumentException>(
             () => new ImageIcon(provider, color: Green, useOriginalColors: true));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext context = null!;
         var root = new TestRootElement(new Builder(builderContext =>
         {
@@ -252,7 +252,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         // Dart guards the inherited-widget lookup with `context.mounted`, so an animation
         // controller that is a late field first touched in State.dispose() still gets a value.
         BuildContext context = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Builder(builderContext =>
         {
             context = builderContext;
@@ -285,7 +285,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         }
 
         BuildContext context = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             new MediaQueryData(DevicePixelRatio: 2.5),
             new Directionality(

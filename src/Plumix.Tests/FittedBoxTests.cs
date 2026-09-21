@@ -56,7 +56,7 @@ public sealed class FittedBoxTests
     [Fact]
     public void FittedBoxWidget_CreatesRenderObject_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new FittedBox(
                 fit: BoxFit.Fill,

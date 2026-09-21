@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 /// size is observable, mirroring how Flutter's input_decorator_test.dart wraps the widget.
 internal sealed class DecoratorHarness : IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly RootElement _root;
     private readonly PipelineOwner _pipeline;
     private readonly Size _viewSize;

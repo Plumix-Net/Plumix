@@ -18,7 +18,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootWidget_Attach_MountsTheElementAndBuildsItsChild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var probe = new Probe("a");
         RootElement root = new RootWidget(child: probe).Attach(owner);
 
@@ -31,19 +31,21 @@ public sealed class RootWidgetTests
     }
 
     [Fact]
-    public void RootWidget_Attach_PutsTheRootInTheOwnerRootBuildScope()
+    public void RootWidget_Attach_CreatesASeparateBuildScopeForEachRoot()
     {
-        var owner = new BuildOwner();
-        RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
+        var owner = TestBuildOwner.Create();
+        RootElement first = new RootWidget(child: new Probe("a")).Attach(owner);
+        RootElement second = new RootWidget(child: new Probe("b")).Attach(owner);
 
-        Assert.Same(owner.RootBuildScope, root.BuildScope);
-        Assert.Same(owner.RootBuildScope, root.ChildElement!.BuildScope);
+        Assert.Same(first.BuildScope, first.ChildElement!.BuildScope);
+        Assert.Same(second.BuildScope, second.ChildElement!.BuildScope);
+        Assert.NotSame(first.BuildScope, second.BuildScope);
     }
 
     [Fact]
     public void RootWidget_Attach_MountsInsideALockedBuildScope()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         bool? lockedDuringMount = null;
         bool? buildingDuringMount = null;
         Element? targetDuringMount = null;
@@ -67,7 +69,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootWidget_Attach_WithAnExistingElement_ParksTheWidgetUntilTheNextBuild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
         Element firstChild = root.ChildElement!;
 
@@ -88,7 +90,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootWidget_Attach_WithAnExistingElement_AsksTheOwnerForABuild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int scheduled = 0;
         owner.OnBuildScheduled = () => scheduled++;
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
@@ -102,7 +104,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootElement_ReplacesTheChildElementWhenTheChildWidgetTypeChanges()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
         Element firstChild = root.ChildElement!;
 
@@ -123,7 +125,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootElement_DoesNotExpectARenderObjectFromItsChild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
 
         Assert.False(root.DebugExpectsRenderObjectForSlot(null));
@@ -137,7 +139,7 @@ public sealed class RootWidgetTests
         FlutterError.OnError = reported.Add;
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             RootElement root = new RootWidget(child: new SizedBox(width: 5, height: 6)).Attach(owner);
 
             // Dart's `runWidget` without a `View`: the render object is created but never attached.
@@ -159,7 +161,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootElement_Mount_RejectsAParent()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement parent = new RootWidget(child: new Probe("a")).Attach(owner);
         var orphan = (RootElement)new RootWidget(child: new Probe("b")).CreateElement();
         orphan.AssignOwner(owner);
@@ -170,16 +172,16 @@ public sealed class RootWidgetTests
     [Fact]
     public void RootElement_Mount_RejectsARootWidgetWithNoChild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Assert.Throws<AssertionError>(() => new RootWidget().Attach(owner));
     }
 
     [Fact]
     public void RootElement_ForgetChild_RejectsAnElementThatIsNotItsChild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
-        RootElement other = new RootWidget(child: new Probe("b")).Attach(new BuildOwner());
+        RootElement other = new RootWidget(child: new Probe("b")).Attach(TestBuildOwner.Create());
 
         Assert.Throws<AssertionError>(() => root.ForgetChild(other.ChildElement!));
     }
@@ -192,7 +194,7 @@ public sealed class RootWidgetTests
         FlutterError.OnError = reported.Add;
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
             new RootWidget(child: new Thrower()).Attach(owner, root);
             owner.FlushBuild();
@@ -214,7 +216,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void ScheduleBuildFor_RejectsAnElementThatIsNotDirty()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
 
         FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuildFor(root.ChildElement!));
@@ -226,7 +228,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void ScheduleBuildFor_RejectsAnElementThatIsAlreadyInTheDirtyList()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? state = null;
         RootElement root = new RootWidget(child: new Probe("a", report: s => state = s)).Attach(owner);
         _ = root;
@@ -245,7 +247,7 @@ public sealed class RootWidgetTests
     [Fact]
     public void ScheduleBuildFor_AcceptsAnElementThatIsAlreadyInTheDirtyListWhileBuilding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ProbeState? state = null;
         RootElement root = new RootWidget(child: new Probe("a", report: s => state = s)).Attach(owner);
 

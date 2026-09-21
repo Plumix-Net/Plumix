@@ -197,7 +197,7 @@ public sealed class MaterialIconsTests
 
         foreach (IconData icon in representatives)
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new Directionality(
                 textDirection: TextDirection.Ltr,
                 child: new Icon(icon, size: 128.0)));
@@ -215,7 +215,7 @@ public sealed class MaterialIconsTests
     [Fact]
     public void DirectionalIcons_MirrorOnlyInRightToLeftLayouts()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var directionalRoot = new TestRootElement(new Directionality(
             textDirection: TextDirection.Rtl,
             child: new Icon(Icons.ArrowBack)));

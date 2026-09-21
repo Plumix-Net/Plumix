@@ -41,7 +41,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_M3DefaultForeground_ReadsColorSchemePrimaryDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -67,7 +67,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_M2DefaultForeground_ReadsColorSchemePrimaryDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -96,7 +96,7 @@ public sealed class MaterialButtonsTests
     [InlineData(false)]
     public void TextButton_DisabledDefaultForeground_ReadsColorSchemeOnSurfaceDirectly(bool useMaterial3)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = useMaterial3,
@@ -123,7 +123,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultIconTheme_UsesForegroundAndIconSizeDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -323,7 +323,7 @@ public sealed class MaterialButtonsTests
     [InlineData(false)]
     public void FilledButton_DefaultsReadColorSchemeRolesDirectly(bool useMaterial3)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var colorScheme = ThemeData.Light.ColorScheme.CopyWith(
             primary: Colors.DarkCyan,
             onPrimary: Colors.AliceBlue,
@@ -360,7 +360,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DefaultStyleExposesGeneratedNonNullContract()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ButtonStyle? captured = null;
         var button = new FilledButton(
             onPressed: () => { },
@@ -408,7 +408,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButtonTonal_DefaultsReadColorSchemeRolesDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var colorScheme = ThemeData.Light.ColorScheme.CopyWith(
             secondaryContainer: Colors.Bisque,
             onSecondaryContainer: Colors.DarkSlateBlue);
@@ -587,7 +587,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DisabledWhileHoveredReportsExitAndClearsHoveredState()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var statesController = new WidgetStatesController();
         var hoverChanges = new List<bool>();
         Widget BuildButton(Action? onPressed)
@@ -642,7 +642,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DisablingPressedButtonAddsDisabledBeforeRemovingPressed()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var statesController = new WidgetStatesController();
         var values = new List<IReadOnlySet<WidgetState>>();
         // `WidgetStatesController` notifies over the same mutable set Dart's does, so each
@@ -726,7 +726,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_IconUsesWidgetForegroundBeforeGeneratedDefaultIconColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedIconTheme = null;
         var root = new TestRootElement(
             new Theme(
@@ -748,7 +748,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_LayerBuildersReceiveStatesAndBackgroundCanDropForeground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var statesController = new WidgetStatesController([WidgetState.Focused]);
         IReadOnlySet<WidgetState> foregroundStates = new HashSet<WidgetState>();
         IReadOnlySet<WidgetState> backgroundStates = new HashSet<WidgetState>();
@@ -783,7 +783,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_TextAndIconColorsAnimateOverConfiguredDuration()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var statesController = new WidgetStatesController();
         IconThemeData? capturedIconTheme = null;
         WidgetStateProperty<Color?> color = WidgetStateProperty<Color?>.ResolveWith(states =>
@@ -856,7 +856,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_IconColorAndSizeOverrideDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -882,7 +882,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_DisabledIconColorOverridesForegroundFallback()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -908,7 +908,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -931,7 +931,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_IconColorWithoutDisabledIcon_FallsBackToDefaultDisabledIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -957,7 +957,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_IconColorWithoutDisabledIcon_FallsBackToDefaultDisabledIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -983,7 +983,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_StyleFrom_IconColorWithoutDisabledIcon_FallsBackToDefaultDisabledIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -1008,7 +1008,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultMinSize_UsesMaterialBaseline64x40()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1030,7 +1030,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1052,7 +1052,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultPadding_UseMaterial3Disabled_UsesAll8()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1073,7 +1073,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_DefaultPadding_UsesStart12TopBottom8End16()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1095,7 +1095,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesAll8()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1117,7 +1117,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultPadding_TextScaleFactor2_UsesHorizontal8AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1140,7 +1140,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_DefaultPadding_TextScaleFactor2_UsesHorizontal4AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1164,7 +1164,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_DefaultPadding_Rtl_UsesDirectionalStartEnd()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(
@@ -1188,7 +1188,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_DefaultSpacing_Uses8()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1210,7 +1210,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_TextScaleFactor15_UsesInterpolatedSpacing6()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1234,7 +1234,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_TextScaleFactor3_ClampsSpacingTo4()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1258,7 +1258,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_StyleTextSize28_UsesClampedSpacing4()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1282,7 +1282,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1305,7 +1305,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_StyleFromIconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1328,7 +1328,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1353,7 +1353,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_IconAlignmentParameter_OverridesStyleFromIconAlignment()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1377,7 +1377,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_IconAlignmentStart_Rtl_KeepsIconFirstInTheRow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(
@@ -1404,7 +1404,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_Icon_IconAlignmentEnd_Rtl_KeepsLabelFirstInTheRow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(
@@ -1476,7 +1476,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -1531,7 +1531,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1552,7 +1552,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1573,7 +1573,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1595,7 +1595,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1617,7 +1617,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1640,7 +1640,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1664,7 +1664,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(
@@ -1690,7 +1690,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1715,7 +1715,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1737,7 +1737,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1758,7 +1758,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1779,7 +1779,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_Icon_DefaultPadding_UsesStart16AndEnd24()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1801,7 +1801,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1823,7 +1823,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1846,7 +1846,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1870,7 +1870,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_Icon_DefaultPadding_TextScaleFactor2_UseMaterial3Disabled_UsesHorizontal8()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -1894,7 +1894,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1919,7 +1919,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterialBaseline64x36()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1941,7 +1941,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DefaultPadding_UsesHorizontal24AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1962,7 +1962,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -1983,7 +1983,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButtonTonal_DefaultPadding_UseMaterial3Disabled_UsesHorizontal16AndZeroVertical()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2004,7 +2004,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_Icon_DefaultPadding_UsesStart16AndEnd24()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2026,7 +2026,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2048,7 +2048,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButtonTonal_Icon_DefaultPadding_UseMaterial3Disabled_UsesStart12AndEnd16()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2070,7 +2070,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DefaultPadding_TextScaleFactor2_UsesHorizontal12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -2093,7 +2093,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_UsesStart8End12()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new MediaQuery(
@@ -2117,7 +2117,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_Icon_DefaultPadding_TextScaleFactor2_Rtl_UsesDirectionalStartEnd()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(
@@ -2143,7 +2143,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButtonTonal_Icon_IconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2166,7 +2166,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_Icon_ThemeIconAlignmentEnd_PlacesLabelBeforeIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2191,7 +2191,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_DefaultTextStyle_UsesLabelLargeTypography()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2215,7 +2215,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_TextStyleColor_DoesNotOverrideForegroundColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -2239,7 +2239,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_M3Defaults_ReadColorSchemeRolesDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -2274,7 +2274,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_M2Defaults_ReadColorSchemeRolesDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2308,7 +2308,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_SurfaceTintColor_TintsBackgroundByElevation()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var baseBackground = Colors.White;
         var surfaceTint = Colors.Red;
 
@@ -2335,7 +2335,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ThemeStyleSurfaceTintColor_TintsDefaultBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ElevatedButtonTheme = new ElevatedButtonThemeData(
@@ -2364,7 +2364,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_SurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var baseBackground = Colors.White;
         var root = new TestRootElement(
             new Theme(
@@ -2389,7 +2389,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ThemeStyleSurfaceTintColor_DoesNotTintBackground_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2420,7 +2420,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultShadow_IsAppliedWhenEnabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2442,7 +2442,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DisabledState_DoesNotApplyShadow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2462,7 +2462,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DefaultElevation_Hovered_UsesOneAndDefaultUsesZero()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2514,7 +2514,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2539,7 +2539,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { ShadowColor = Colors.Black },
@@ -2562,7 +2562,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -2590,7 +2590,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2615,7 +2615,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_DoesNotApplyShadowInMaterial3()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { ShadowColor = Colors.Black },
@@ -2638,7 +2638,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallbackInMaterial2()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -2666,7 +2666,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_StyleFrom_ElevationAndShadowColor_AppliesShadow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2690,7 +2690,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_StyleFrom_ElevationWithoutShadowColor_UsesThemeShadowColorFallback()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { ShadowColor = Colors.Black },
@@ -2713,7 +2713,7 @@ public sealed class MaterialButtonsTests
     public void OutlinedButton_M3Defaults_ReadColorSchemeRolesDirectly()
     {
         FocusManager.Instance.ResetForTests();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
         var theme = ThemeData.Light with
         {
@@ -2762,7 +2762,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultBorder_UseMaterial3Disabled_UsesOnSurfaceOpacity()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2790,7 +2790,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_FocusedBorder_UseMaterial3Disabled_StaysOnSurfaceOpacity()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
         var theme = ThemeData.Light with
         {
@@ -2827,7 +2827,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_DefaultForegroundUsesColorSchemePrimary()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.MediumVioletRed,
@@ -2855,7 +2855,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_M2Defaults_ReadColorSchemePrimaryDirectly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2884,7 +2884,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_BackgroundOnly_AppliesBackgroundWhenDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2906,7 +2906,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_StyleFrom_BackgroundOnly_OverridesThemeDisabledBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             OutlinedButtonTheme = new OutlinedButtonThemeData(
@@ -2935,7 +2935,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_UsesThemePrimaryAndOnPrimaryColorsByDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.DarkSlateBlue,
@@ -2970,7 +2970,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButtonTonal_UsesThemeSecondaryContainerAndOnSecondaryContainerColorsByDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -3004,7 +3004,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_DisabledStateUsesThemeOnSurfaceTones()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOliveGreen)
@@ -3036,7 +3036,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_StyleFrom_BackgroundOnly_DisabledFallsBackToThemeDisabledBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkSlateGray)
@@ -3062,7 +3062,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleForegroundOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -3085,7 +3085,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleAlignmentOverridesDefaultCenter()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3107,7 +3107,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ThemeStyleAlignmentOverridesDefaultCenter()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(
@@ -3134,7 +3134,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_WidgetStyleAlignmentOverridesThemeStyleAlignment()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(
@@ -3162,7 +3162,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ButtonStyleMinimumSizeOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3185,7 +3185,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleMinimumSize_AllowsZero()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3208,7 +3208,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleMaximumSizeClampsDefaultInfinityMax()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3233,7 +3233,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleFixedSizeSetsTightConstraints_WithinMaximum()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3260,7 +3260,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleFixedSizeInfiniteWidth_OnlyTightensFiniteAxis()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3285,7 +3285,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ButtonStyleSideOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3308,7 +3308,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ThemeStyleForegroundOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -3336,7 +3336,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_WidgetStyleForegroundOverridesThemeStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
@@ -3364,7 +3364,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ThemeStyleBackgroundOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
@@ -3391,7 +3391,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ThemeStyleSideOverridesDefault()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
@@ -3419,7 +3419,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_LocalThemeStyleForegroundOverridesThemeDataStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -3451,7 +3451,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_WidgetStyleForegroundOverridesLocalThemeStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
@@ -3483,7 +3483,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_LocalThemeNullStyle_DoesNotFallbackToThemeDataStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -3513,7 +3513,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_LocalThemeStyleBackgroundOverridesThemeDataStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
@@ -3544,7 +3544,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_LocalThemeStyleSideOverridesThemeDataStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
@@ -3576,7 +3576,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_LocalThemeStyleBackgroundOverridesThemeDataStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             FilledButtonTheme = new FilledButtonThemeData(style: new ButtonStyle(
@@ -3606,7 +3606,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ButtonStyle_Merge_FillsNullFields_FromArgument_WithoutOverridingExisting()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var mergedStyle = new ButtonStyle(
                 ForegroundColor: WidgetStateProperty<Color?>.All(Colors.Crimson))
             .Merge(new ButtonStyle(
@@ -3664,7 +3664,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_AppliesForegroundAndTextStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3691,7 +3691,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_WidgetTextStyleStateResolver_NullDisabled_FallsBackToThemeTextStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(
@@ -3725,7 +3725,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_WidgetTextStyleStateResolver_Enabled_OverridesThemeTextStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(
@@ -3828,7 +3828,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleOverlayAll_DoesNotTintAtRest_ButAppliesOnHover()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var overlayColor = Colors.HotPink;
         var root = new TestRootElement(
             new Theme(
@@ -3889,7 +3889,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_UsesDisabledColorOverrides()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3918,7 +3918,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_ForegroundOnly_DisabledFallsBackToThemeDisabledForeground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
@@ -3946,7 +3946,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_BackgroundOnly_DisabledFallsBackToThemeDisabledBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
@@ -3972,7 +3972,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_DisabledForegroundOnly_PreservesEnabledThemeForeground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.DarkCyan,
@@ -3999,7 +3999,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_DisabledBackgroundOnly_PreservesEnabledThemeBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.LightCyan)
@@ -4025,7 +4025,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ButtonStyleForegroundResolverNullForEnabled_FallsBackToDefaultEnabledColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.DarkCyan,
@@ -4054,7 +4054,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ButtonStyleForegroundResolverNullForEnabled_FallsBackToDefaultEnabledColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -4083,7 +4083,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ButtonStyleForegroundResolverNullForEnabled_FallsBackToDefaultEnabledColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -4114,7 +4114,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_ButtonStyleForegroundResolverNullForEnabled_FallsBackToDefaultEnabledColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.DarkGoldenrod)
@@ -4144,7 +4144,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ButtonStyleBackgroundResolverNullForDisabled_FallsBackToDefaultDisabledBackground()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
@@ -4172,7 +4172,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ButtonStyleSideResolverNullForEnabled_FallsBackToDefaultEnabledSide()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue)
@@ -4203,7 +4203,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ButtonStyleSideResolverNullForDisabled_FallsBackToDefaultDisabledSide()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOliveGreen)
@@ -4423,7 +4423,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DisabledStateUsesThemeOnSurfaceTones()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var background = Colors.DarkGreen;
         var foreground = Colors.White;
         var theme = ThemeData.Light with
@@ -4488,7 +4488,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_HoverStateAppliesOverlayUntilExit()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.IndianRed,
@@ -4572,7 +4572,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_HoverOverlayTakesPriorityOverFocusOverlay()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.MediumSeaGreen,
@@ -4643,7 +4643,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_KeyboardActivation_UsesPressedOverlay_AndInvokesOnPressedOnKeyDownOnly()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
@@ -4708,7 +4708,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_KeyboardActivation_NumPadEnter_InvokesOnPressed()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int pressedCount = 0;
         var root = new TestRootElement(
             new Theme(
@@ -4744,7 +4744,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_KeyboardActivation_IgnoresModifiedSpaceChord()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
@@ -4886,7 +4886,7 @@ public sealed class MaterialButtonsTests
     {
         FocusManager.Instance.ResetForTests();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -5027,7 +5027,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_HasNoClipByDefault_ButInkRemainsContained()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -5067,7 +5067,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_HasNoClipByDefault_WhenUseMaterial3Disabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { UseMaterial3 = false },
@@ -5087,7 +5087,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_HasNoClipByDefault_WhenUseMaterial3Disabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { UseMaterial3 = false },
@@ -5128,7 +5128,7 @@ public sealed class MaterialButtonsTests
     {
         FocusManager.Instance.ResetForTests();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
         var focusedOverlay = Colors.OrangeRed;
 
@@ -5167,7 +5167,7 @@ public sealed class MaterialButtonsTests
     {
         FocusManager.Instance.ResetForTests();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
 
         var root = new TestRootElement(
@@ -5195,7 +5195,7 @@ public sealed class MaterialButtonsTests
     {
         FocusManager.Instance.ResetForTests();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
 
         var root = new TestRootElement(
@@ -5258,7 +5258,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_DefaultIconTheme_UsesOnSurfaceVariantAndSize24()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -5338,7 +5338,7 @@ public sealed class MaterialButtonsTests
             Color expectedBackground,
             BorderSide? expectedBorder)
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             IconThemeData? capturedTheme = null;
             var root = new TestRootElement(
                 new Theme(
@@ -5367,7 +5367,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void Theme_InstallsConfiguredIconThemeForWidgetDescendants()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
         var expected = new IconThemeData(
             Color: Colors.DarkOrange,
@@ -5396,7 +5396,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_DefaultMinSize_UsesMaterial3Baseline40x40()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -5418,7 +5418,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_DefaultMinSize_UseMaterial3Disabled_UsesMaterial2Baseline48x48()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -5440,7 +5440,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_StyleFrom_ForegroundAndIconSizeOverrideDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -5465,7 +5465,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_ThemeStyle_OverridesAmbientIconThemeDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -5495,7 +5495,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_WidgetStyle_OverridesIconButtonThemeStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
 
         var root = new TestRootElement(
@@ -5521,7 +5521,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_IsSelectedTrue_UsesSelectedIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Theme(
@@ -5544,7 +5544,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_Outlined_SelectedState_DropsOutlineBorder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -5676,7 +5676,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_Material2UsesLegacyBranchAndIgnoresToggleIcon()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
         var theme = ThemeData.Light with
         {
@@ -5715,7 +5715,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_ExternalStatesControllerTracksSelectedAndDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var statesController = new WidgetStatesController();
         var root = new TestRootElement(
             new Theme(
@@ -5750,7 +5750,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_LocalThemeOverridesGlobalThemeAndAmbientIconTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedTheme = null;
         var root = new TestRootElement(
             new Theme(
@@ -6098,7 +6098,7 @@ public sealed class MaterialButtonsTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

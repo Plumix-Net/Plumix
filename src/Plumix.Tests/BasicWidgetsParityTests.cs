@@ -236,7 +236,7 @@ public sealed class BasicWidgetsParityTests
     /// <summary>Mounts the widget under a Directionality and returns every widget in the tree.</summary>
     private static IReadOnlyList<Widget> Mount(Widget widget)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

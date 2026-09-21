@@ -35,7 +35,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_UsesThemeScaffoldBackgroundColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ScaffoldBackgroundColor = Colors.Beige
@@ -61,7 +61,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_UsesExplicitBackgroundColorOverride()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -83,7 +83,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_DefaultWidth_Is304()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -125,7 +125,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_UsesDrawerThemeDefaults_WhenWidgetValuesAreNull()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var drawerTheme = new DrawerThemeData(
             BackgroundColor: Colors.CadetBlue,
             ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
@@ -173,7 +173,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_WidgetValues_OverrideDrawerThemeDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var drawerTheme = new DrawerThemeData(
             BackgroundColor: Colors.CadetBlue,
             ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
@@ -225,7 +225,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_ZeroThemedWidth_IsAcceptedLikeFlutterBoxConstraints()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -248,7 +248,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_InvalidThemedElevation_ThrowsArgumentOutOfRange()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -271,7 +271,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_ShowsMenuIcon_WhenScaffoldHasDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -300,7 +300,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_False_HidesMenuIcon_WhenScaffoldHasDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -324,7 +324,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyActions_ShowsMenuIcon_WhenScaffoldHasEndDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -346,7 +346,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyActions_False_HidesMenuIcon_WhenScaffoldHasEndDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -382,7 +382,7 @@ public sealed class MaterialScaffoldTests
         Dictionary<object, object?>? snapshot;
 
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             BuildContext? scaffoldContext = null;
             var root = new TestRootElement(new UnmanagedRestorationScope(
                 bucket: RestorationBucket.Root(manager, rawData),
@@ -409,7 +409,7 @@ public sealed class MaterialScaffoldTests
         Assert.Equal(false, values["drawer_open"]);
         Assert.Equal(true, values["end_drawer_open"]);
 
-        var restartOwner = new BuildOwner();
+        var restartOwner = TestBuildOwner.Create();
         BuildContext? restoredContext = null;
         var restarted = new TestRootElement(new UnmanagedRestorationScope(
             bucket: RestorationBucket.Root(manager, snapshot),
@@ -435,7 +435,7 @@ public sealed class MaterialScaffoldTests
         Dictionary<object, object?>? snapshot;
 
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             BuildContext? scaffoldContext = null;
             var root = new TestRootElement(new UnmanagedRestorationScope(
                 bucket: RestorationBucket.Root(manager, rawData),
@@ -455,7 +455,7 @@ public sealed class MaterialScaffoldTests
 
         Assert.Null(RawRestorationData.Child(snapshot!, "scaffold"));
 
-        var restartOwner = new BuildOwner();
+        var restartOwner = TestBuildOwner.Create();
         BuildContext? restoredContext = null;
         var restarted = new TestRootElement(new UnmanagedRestorationScope(
             bucket: RestorationBucket.Root(manager, snapshot),
@@ -482,7 +482,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void ScaffoldState_OpenDrawer_AndCloseDrawer_TogglesDrawerVisibility()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
 
         var root = new TestRootElement(
@@ -520,7 +520,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void ScaffoldState_OpenDrawer_WithoutDrawer_DoesNothing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
 
         var root = new TestRootElement(
@@ -546,7 +546,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void ScaffoldState_OpenEndDrawer_AndCloseEndDrawer_TogglesDrawerVisibility()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
 
         var root = new TestRootElement(
@@ -584,7 +584,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void ScaffoldState_OpenEndDrawer_WithoutEndDrawer_DoesNothing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
 
         var root = new TestRootElement(
@@ -610,7 +610,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void ScaffoldState_OpenDrawer_ClosesEndDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
 
         var root = new TestRootElement(
@@ -1980,7 +1980,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_NavigatorMaybePop_ClosesDrawerOnRootRoute_WithoutPoppingRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
         NavigatorState? navigatorState = null;
         ModalRoute? rootRoute = null;
@@ -2047,7 +2047,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_WithAppBar_UsesThemeCanvasColorForAppBarBackground_WhenUseMaterial3IsEnabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             // Pinned: on iOS/macOS the scaffold also installs a status-bar slot.
@@ -2080,7 +2080,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_WithAppBar_UsesThemePrimaryColorForAppBarBackground_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2114,7 +2114,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_WithAppBar_UsesThemeCanvasColorForAppBarBackground_WhenUseMaterial3IsDisabledAndBrightnessDark()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2150,7 +2150,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_DefaultTitle_UsesThemeOnSurfaceColor_WhenUseMaterial3IsEnabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -2180,7 +2180,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_DefaultTitle_UsesThemeOnPrimaryColor_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2211,7 +2211,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_DefaultTitle_UsesThemeOnSurfaceColor_WhenUseMaterial3IsDisabledAndBrightnessDark()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -2245,7 +2245,7 @@ public sealed class MaterialScaffoldTests
     {
         // Dart puts `softWrap: false, overflow: TextOverflow.ellipsis` on the title's DefaultTextStyle
         // and leaves `maxLines` unset.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2266,7 +2266,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_BackgroundColor_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.DarkSlateBlue,
@@ -2291,7 +2291,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_BackgroundColor_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(BackgroundColor: Colors.Crimson),
@@ -2317,7 +2317,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ForegroundColor_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.Bisque),
@@ -2342,7 +2342,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ForegroundColor_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(ForegroundColor: Colors.Goldenrod),
@@ -2368,7 +2368,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_SystemOverlayStyle_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var themedStyle = new SystemUiOverlayStyle(
             StatusBarColor: Colors.Crimson,
             NavigationBarColor: Colors.DarkGreen,
@@ -2396,7 +2396,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_SystemOverlayStyle_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var themedStyle = new SystemUiOverlayStyle(
             StatusBarColor: Colors.Crimson,
             NavigationBarColor: Colors.DarkGreen,
@@ -2431,7 +2431,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_CenterTitleTrue_ConfiguresNavigationToolbar()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2450,7 +2450,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_CenterTitle_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             Platform = TargetPlatform.Android,
@@ -2473,7 +2473,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_CenterTitle_ExplicitValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             Platform = TargetPlatform.MacOS,
@@ -2498,7 +2498,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_CenterTitle_DefaultsFromPlatform_MacOS_WhenActionsCountLessThanTwo()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             Platform = TargetPlatform.MacOS,
@@ -2525,7 +2525,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_CenterTitle_DefaultsFromPlatform_MacOS_WithTwoActions_IsNotCentered()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             Platform = TargetPlatform.MacOS,
@@ -2553,7 +2553,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_LeadingWidth_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(LeadingWidth: 80),
@@ -2581,7 +2581,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_LeadingWidth_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(LeadingWidth: 80),
@@ -2610,7 +2610,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_ShowsBackIcon_OnNonRootRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? rootContext = null;
 
         static Widget BuildBody() => new SizedBox(width: 24, height: 12);
@@ -2663,7 +2663,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_ShowsBackIcon_OnRootRouteWithLocalHistory()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         ModalRoute? rootRoute = null;
 
@@ -2704,7 +2704,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_UsesCloseIcon_OnFullscreenDialogRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? rootContext = null;
 
         static Widget BuildBody() => new SizedBox(width: 24, height: 12);
@@ -2759,7 +2759,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_AutomaticallyImplyLeading_False_HidesBackIcon_OnNonRootRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? rootContext = null;
 
         static Widget BuildBody() => new SizedBox(width: 24, height: 12);
@@ -2811,7 +2811,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ActionsPadding_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(ActionsPadding: new Thickness(13, 5, 19, 7)),
@@ -2844,7 +2844,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ActionsPadding_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(ActionsPadding: new Thickness(13, 5, 19, 7)),
@@ -2878,7 +2878,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_PrimaryTrue_AppliesMediaQueryTopPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2905,7 +2905,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_PrimaryFalse_DoesNotApplyMediaQueryTopPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2934,7 +2934,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ActionsRow_DoesNotApplyExtraSpacing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -2970,7 +2970,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ActionsRow_UsesStretchCrossAxisAlignment_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false
@@ -3009,7 +3009,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_IconTheme_DefaultsFromThemeAppBarTheme_ForLeading()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3038,7 +3038,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_IconTheme_DefaultsToOnSurfaceAndSize24_ForLeading_WhenUseMaterial3IsEnabled()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.CadetBlue),
@@ -3064,7 +3064,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_IconTheme_DefaultsToOnPrimary_ForLeading_WhenUseMaterial3IsDisabled()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -3091,7 +3091,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_IconTheme_WidgetValue_OverridesThemeAppBarTheme_ForLeading()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3126,7 +3126,7 @@ public sealed class MaterialScaffoldTests
         // a supplied icon theme ends the chain, so a null color falls through `IconTheme.merge` to the
         // ambient theme rather than to `foregroundColor`.
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3149,7 +3149,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_DefaultsFromThemeAppBarTheme_ForActions()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3181,7 +3181,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_DefaultsToOnSurfaceVariant_WhenUseMaterial3IsEnabled()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -3212,7 +3212,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_DefaultsToOnPrimary_WhenUseMaterial3IsDisabled()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -3241,7 +3241,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_WidgetValue_OverridesThemeAppBarTheme_ForActions()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3276,7 +3276,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_FallsBackToAppBarIconTheme_WhenActionsThemeMissing()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3308,7 +3308,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_FallsBackToWidgetIconTheme_WhenActionsThemeMissing()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3335,7 +3335,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_ActionsIconTheme_WithNullColor_FallsBackToForeground_ForActions()
     {
         IconThemeData? capturedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3361,7 +3361,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_Actions_ReceiveToolbarTextStyle_AndActionsIconTheme()
     {
         ActionContextSnapshot? snapshot = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3395,7 +3395,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleSpacing_ConfiguresNavigationToolbar()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3414,7 +3414,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleSpacing_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(TitleSpacing: 22),
@@ -3436,7 +3436,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleSpacing_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(TitleSpacing: 22),
@@ -3460,7 +3460,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarHeight_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(ToolbarHeight: 72),
@@ -3482,7 +3482,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarHeight_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(ToolbarHeight: 72),
@@ -3506,7 +3506,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarHeight_DefaultsTo56_WhenUseMaterial3IsEnabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3523,7 +3523,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarHeight_DefaultsTo56_WhenUseMaterial3IsDisabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false
@@ -3544,7 +3544,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleTextStyle_DefaultsFromTextThemeTitleLarge_WithThemeForegroundFallback()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Bisque),
@@ -3575,7 +3575,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleTextStyle_DefaultsFromThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3605,7 +3605,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_TitleTextStyle_WidgetValue_OverridesThemeAppBarTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3640,7 +3640,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarTextStyle_DefaultsFromThemeAppBarTheme_ForActionsText()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3675,7 +3675,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ToolbarTextStyle_WidgetValue_OverridesThemeAppBarTheme_ForActionsText()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(
@@ -3724,7 +3724,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ZeroThemeToolbarHeight_IsAcceptedLikeFlutter()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -3743,7 +3743,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBar_ZeroThemeLeadingWidth_IsAcceptedLikeFlutter()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -3767,7 +3767,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBarTheme_LocalData_OverridesThemeData_AndWidgetOverridesLocalData()
     {
-        var localOwner = new BuildOwner();
+        var localOwner = TestBuildOwner.Create();
         var localRoot = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -3785,7 +3785,7 @@ public sealed class MaterialScaffoldTests
             FindWidgets<MaterialWidget>(localRoot.ChildElement),
             material => material.Color == Colors.Crimson);
 
-        var widgetOwner = new BuildOwner();
+        var widgetOwner = TestBuildOwner.Create();
         var widgetRoot = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -3806,7 +3806,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void AppBarTheme_Of_UsesNearestLocalData()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         AppBarThemeData? captured = null;
         var localData = new AppBarThemeData(
             ForegroundColor: Colors.Goldenrod,
@@ -3904,7 +3904,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void DrawerController_Of_ExposesAlignmentInsideOpenDrawer()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         DrawerController? captured = null;
         var root = new TestRootElement(
             new Directionality(
@@ -3928,7 +3928,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Drawer_UsesAlignmentSpecificThemeShapeFromDrawerControllerScope()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Directionality(
                 textDirection: TextDirection.Ltr,
@@ -4114,7 +4114,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void DrawerController_Open_AddsLocalHistoryAndBackClosesWithoutPoppingRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var drawerKey = new LabeledGlobalKey<DrawerControllerState>("history-drawer");
         var navigatorKey = new LabeledGlobalKey<NavigatorState>("history-navigator");
         var callbacks = new List<bool>();
@@ -4149,7 +4149,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_OpenEndDrawer_ProvidesEndAlignedDrawerControllerScope()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? scaffoldContext = null;
         DrawerController? captured = null;
         var root = new TestRootElement(
@@ -4184,7 +4184,7 @@ public sealed class MaterialScaffoldTests
             states => states.Contains(WidgetState.ScrolledUnder)
                 ? Colors.DarkSlateBlue
                 : Colors.Crimson);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -4518,7 +4518,7 @@ public sealed class MaterialScaffoldTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

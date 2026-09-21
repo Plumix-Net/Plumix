@@ -143,20 +143,20 @@ public sealed class FramePipelineTests
         Scheduler.ResetForTests();
         try
         {
-            var owner = new BuildOwner
+            var owner = new BuildOwner(focusManager: FocusManager.Instance)
             {
                 OnBuildScheduled = Scheduler.ScheduleFrame
             };
+            var element = new ProbeElement();
+            element.Attach(owner);
 
             int drawFrames = 0;
             Scheduler.DrawFrame += _ =>
             {
                 drawFrames += 1;
-                owner.BuildScope();
+                owner.BuildScope(element);
             };
 
-            var element = new ProbeElement();
-            element.Attach(owner);
             owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
 
             // An element is born dirty and clears the flag by building once during mount, so the

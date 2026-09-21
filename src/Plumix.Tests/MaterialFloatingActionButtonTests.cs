@@ -16,7 +16,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultM3_UsesThemePrimaryContainerAndOnPrimaryContainerColors()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedIconTheme = null;
         var theme = ThemeData.Light with
         {
@@ -65,7 +65,7 @@ public sealed class MaterialFloatingActionButtonTests
             HoverColor = hover,
             SplashColor = splash,
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: theme,
@@ -92,7 +92,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultM3_UsesRegular56ConstraintAndRounded16Shape()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -121,7 +121,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultClipBehavior_DoesNotInsertClipRRect()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -140,7 +140,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_ClipBehaviorHardEdge_InsertsClipRRect()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -177,7 +177,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_HeroTag_WrapsBuiltResultWithHero()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Widget? capturedBuiltWidget = null;
         object heroTag = new object();
 
@@ -206,7 +206,7 @@ public sealed class MaterialFloatingActionButtonTests
         var first = new FloatingActionButton(new Icon(Icons.Add), () => { });
         var second = FloatingActionButton.Small(new Icon(Icons.Add), () => { });
         Widget? capturedBuiltWidget = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -229,7 +229,7 @@ public sealed class MaterialFloatingActionButtonTests
     public void FloatingActionButton_NullHeroTag_KeepsMergeSemanticsWithoutHero()
     {
         Widget? capturedBuiltWidget = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -251,7 +251,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultMouseCursor_UsesAdaptiveDesktopBasicOnHover()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -274,7 +274,7 @@ public sealed class MaterialFloatingActionButtonTests
     public void FloatingActionButton_ThemeMouseCursor_UsedWhenWidgetMouseCursorIsNull()
     {
         var themeCursor = new SystemMouseCursor("themeCursor");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -306,7 +306,7 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
@@ -356,7 +356,7 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light,
@@ -406,7 +406,7 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new Theme(
                     data: ThemeData.Light with
@@ -451,7 +451,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Small_Uses40Constraint()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -474,7 +474,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Large_Uses96ConstraintAndIconSize36()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedIconTheme = null;
         var root = new TestRootElement(
             new Theme(
@@ -500,7 +500,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Extended_WithIcon_UsesHeight56AndDirectionalPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -529,7 +529,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Extended_WithoutIcon_UsesStart20End20Padding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -549,7 +549,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_ThemeDefaults_ApplyWhenWidgetOverridesMissing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedIconTheme = null;
         var theme = ThemeData.Light with
         {
@@ -656,7 +656,7 @@ public sealed class MaterialFloatingActionButtonTests
                 MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(
                     states => states.Contains(WidgetState.Disabled) ? disabledCursor : enabledCursor)),
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: theme,
@@ -680,7 +680,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_WidgetColors_OverrideThemeDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         IconThemeData? capturedIconTheme = null;
         var theme = ThemeData.Light with
         {
@@ -765,7 +765,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Disabled_FallsBackToBaseElevationWhenDisabledElevationMissing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { ShadowColor = Colors.Black },
@@ -786,7 +786,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_Tooltip_ContributesTooltipSemantics()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -809,7 +809,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_ExtendedCollapsed_PreservesSourcePaddingAndOverflowLayout()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -869,7 +869,7 @@ public sealed class MaterialFloatingActionButtonTests
                         new MediaQuery(
                             new MediaQueryData(Size: new Size(800, 600)),
                             new Navigator(route)))));
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -1152,7 +1152,7 @@ public sealed class MaterialFloatingActionButtonTests
     /// a laid-out `RenderView`.
     private sealed class FabRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

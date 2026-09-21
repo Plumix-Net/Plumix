@@ -67,7 +67,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         string? value = null;
         TextDirection? direction = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Localizations(
             locale: new Locale("ar"),
             delegates:
@@ -95,7 +95,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public void Localizations_ReloadsOnlyForLocaleTypeOrDelegatePolicyChanges()
     {
         string? value = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         Localizations BuildLocalizations(string resourceValue, bool shouldReload)
         {
@@ -297,7 +297,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
                 return Localizations.Of<TestStrings>(context).Value;
             },
             restorationScopeId: "app");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(app);
 
         MountAndFlush(root, owner);
@@ -331,7 +331,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     {
         PlatformDispatcher.Instance.DefaultRouteName = platformRoute;
         string? generatedRoute = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new WidgetsApp(
             color: Colors.Blue,
             initialRoute: configuredRoute,
@@ -365,7 +365,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
                 new RouteSettings(Name: "unknown:" + settings.Name));
         }
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new WidgetsApp(
             color: Colors.Blue,
             navigatorKey: navigatorKey,
@@ -396,7 +396,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public void WidgetsApp_CustomInitialRoutesOverrideDeepLinks_AndMissingTargetsFallBackToRoot()
     {
         var customObserver = new RecordingNavigatorObserver();
-        var customOwner = new BuildOwner();
+        var customOwner = TestBuildOwner.Create();
         var customRoot = new TestRootElement(new WidgetsApp(
             color: Colors.Blue,
             routes: new Dictionary<string, WidgetBuilder> { ["/"] = _ => new SizedBox() },
@@ -422,7 +422,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         int unknownCalls = 0;
         var fallbackObserver = new RecordingNavigatorObserver();
-        var fallbackOwner = new BuildOwner();
+        var fallbackOwner = TestBuildOwner.Create();
         var fallbackRoot = new TestRootElement(new WidgetsApp(
             color: Colors.Blue,
             routes: new Dictionary<string, WidgetBuilder> { ["/"] = _ => new SizedBox() },
@@ -453,7 +453,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
             theme: new ThemeData(platform: TargetPlatform.Linux),
             home: new SizedBox(),
             debugShowCheckedModeBanner: false);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(),
             child: app));
@@ -485,7 +485,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MaterialLocalizations? materialLocalizations = null;
         CupertinoLocalizations? cupertinoLocalizations = null;
         ScrollBehavior? scrollBehavior = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
             child: new MaterialApp(
@@ -535,7 +535,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
             brightness: Brightness.Dark,
             primaryColor: Color.FromRgb(4, 4, 4));
         ThemeData? resolvedTheme = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(
                 PlatformBrightness: PlatformBrightness.Dark,
@@ -568,7 +568,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             NavigatorState? navigator = null;
             var root = new TestRootElement(new WidgetsApp(
                 color: Colors.Blue,
@@ -614,7 +614,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public void WidgetsApp_SystemBack_PopsTheRootNavigator_ThenAsksThePlatformToPopTheApp()
     {
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         var root = new TestRootElement(new WidgetsApp(
             color: Colors.Blue,
@@ -654,7 +654,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     [Fact]
     public void WidgetsApp_SystemBack_PopsTheNestedNavigatorFirst_ThroughNavigatorPopHandler()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? outerNavigator = null;
         NavigatorState? innerNavigator = null;
         var root = new TestRootElement(new WidgetsApp(

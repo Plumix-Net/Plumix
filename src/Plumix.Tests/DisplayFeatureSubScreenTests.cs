@@ -113,7 +113,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
 
     private sealed class Harness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
 

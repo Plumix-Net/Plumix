@@ -9,7 +9,7 @@ namespace Plumix.Tests;
 
 internal sealed class FocusLayoutHarness : IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = new(focusManager: FocusManager.Instance);
     private readonly PipelineOwner _pipeline;
     private readonly HarnessRootElement _rootElement;
 

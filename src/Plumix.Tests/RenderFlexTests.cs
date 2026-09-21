@@ -1359,7 +1359,7 @@ public sealed class RenderFlexTests
 
     private sealed class FlexHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

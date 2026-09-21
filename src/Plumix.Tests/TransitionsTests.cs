@@ -38,7 +38,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Same(child, transition.Child);
         Assert.Throws<ArgumentNullException>(() => new SlideTransition(null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SlideTransition(
             position: animation,
             transformHitTests: false,
@@ -66,7 +66,7 @@ public sealed class TransitionsTests : IDisposable
     {
         var first = new TestValueAnimation<Vector>(new Vector(0.2, 0.3), AnimationStatus.Forward);
         var second = new TestValueAnimation<Vector>(new Vector(-0.5, 0.1), AnimationStatus.Reverse);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SlideTransition(
             position: first,
             transformHitTests: false,
@@ -160,7 +160,7 @@ public sealed class TransitionsTests : IDisposable
     public void SizeTransition_ClampsFactorClipsAndResolvesDirectionalAlignment()
     {
         var animation = new TestAnimation(-0.25, AnimationStatus.Forward);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             textDirection: Plumix.UI.TextDirection.Ltr,
             child: new SizeTransition(
@@ -198,7 +198,7 @@ public sealed class TransitionsTests : IDisposable
     {
         var first = new TestAnimation(0.25, AnimationStatus.Forward);
         var second = new TestAnimation(0.75, AnimationStatus.Reverse);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             textDirection: Plumix.UI.TextDirection.Rtl,
             child: new SizeTransition(
@@ -283,7 +283,7 @@ public sealed class TransitionsTests : IDisposable
             alignment: Alignment.BottomRight,
             filterQuality: FilterQuality.High,
             child: new SizedBox(width: 24, height: 16));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(transition);
         Mount(root, owner);
 
@@ -317,7 +317,7 @@ public sealed class TransitionsTests : IDisposable
     {
         var firstAnimation = new TestAnimation(0.5, AnimationStatus.Forward);
         var secondAnimation = new TestAnimation(1.25, AnimationStatus.Reverse);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ScaleTransition(
             scale: firstAnimation,
             alignment: Alignment.TopLeft,
@@ -361,7 +361,7 @@ public sealed class TransitionsTests : IDisposable
     public void MatrixTransition_DropsFilterQualityOnAnimationControllerTerminalFrame()
     {
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ScaleTransition(
             scale: animation,
             filterQuality: FilterQuality.High,
@@ -393,7 +393,7 @@ public sealed class TransitionsTests : IDisposable
         // `Transform.rotate` it does not snap quarter turns, so the near-zero entries stay.
         var animation = new TestAnimation(turns, AnimationStatus.Completed);
         var transition = new RotationTransition(animation);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(transition);
         Mount(root, owner);
 
@@ -456,7 +456,7 @@ public sealed class TransitionsTests : IDisposable
         var secondAnimation = new TestValueAnimation<RelativeRect>(
             new RelativeRect(7, 9, 11, 13),
             AnimationStatus.Reverse);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Stack(
             textDirection: TextDirection.Ltr,
             children:
@@ -518,7 +518,7 @@ public sealed class TransitionsTests : IDisposable
         var animation = new TestValueAnimation<Rect?>(
             new Rect(20, 15, 50, 30),
             AnimationStatus.Forward);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Stack(
             textDirection: TextDirection.Ltr,
             children:
@@ -579,7 +579,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => new AlignTransition(null!, child));
         Assert.Throws<ArgumentNullException>(() => new AlignTransition(first, null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             textDirection: TextDirection.Rtl,
             child: transition));
@@ -637,7 +637,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => new DefaultTextStyleTransition(null!, child));
         Assert.Throws<ArgumentNullException>(() => new DefaultTextStyleTransition(first, null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DefaultTextStyleTransition(
             style: first,
             child: child,
@@ -734,7 +734,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Throws<ArgumentNullException>(() => new DecoratedBoxTransition(null!, child));
         Assert.Throws<ArgumentNullException>(() => new DecoratedBoxTransition(first, null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DecoratedBoxTransition(
             decoration: first,
             position: DecorationPosition.Foreground,

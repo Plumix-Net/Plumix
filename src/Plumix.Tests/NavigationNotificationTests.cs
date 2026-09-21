@@ -33,7 +33,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void WithNoPopScope_OneNotificationReportsThatNothingHandlesThePop()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         TestRootElement root = MountNavigator(owner, out _, _ => new SizedBox());
 
         Pump(owner);
@@ -45,7 +45,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void WithAWillPopCallback_ASecondNotificationReportsThatThePopIsHandled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ModalRoute? route = null;
         TestRootElement root = MountNavigator(owner, out _, context =>
         {
@@ -69,7 +69,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void WithAPopScope_TheNavigatorAlsoReportsTheBlockedPop()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         TestRootElement root = MountNavigator(
             owner,
             out _,
@@ -86,7 +86,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void TogglingCanPopOnTheRootRoute_FlipsPopDispositionAndTheNotification()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Action<bool>? setCanPop = null;
         ModalRoute? route = null;
         TestRootElement root = MountNavigator(owner, out _, context =>
@@ -115,7 +115,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void RemovingThePopScopeFromTheTree_RemovesItsEffectOnNavigation()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Action<bool>? setPresent = null;
         ModalRoute? route = null;
         bool present = true;
@@ -146,7 +146,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void IdenticalPopScopes_KeepBlockingUntilTheLastOneIsRemoved()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Action<int>? setCount = null;
         ModalRoute? route = null;
         int count = 2;
@@ -184,7 +184,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void TogglingCanPopOnASecondaryRoute_UpdatesTheNotification()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         TestRootElement root = MountNavigator(owner, out NavigatorState? navigator, _ => new SizedBox());
         Pump(owner);
         Assert.Equal([false], _notifications);
@@ -207,7 +207,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void ANonCurrentRoute_DoesNotDispatch()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ModalRoute? bottomRoute = null;
         TestRootElement root = MountNavigator(owner, out NavigatorState? navigator, context =>
         {
@@ -229,7 +229,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void ANestedNavigatorThatCanPop_UpgradesTheNotificationToTrue()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? inner = null;
         TestRootElement root = MountNavigator(owner, out _, _ => new Navigator(
             initialRoute: new BuilderPageRoute(
@@ -255,7 +255,7 @@ public sealed class NavigationNotificationTests : IDisposable
     [Fact]
     public void NotificationsNeverDispatchDuringABuild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var duringBuild = new List<bool>();
         TestRootElement root = MountNavigator(owner, out NavigatorState? navigator, _ =>
             new PopScope<object>(canPop: false, child: new SizedBox()));

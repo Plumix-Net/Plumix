@@ -539,7 +539,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
     private sealed class SliverHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly PipelineOwner _pipeline;
         private readonly RootElement _root;
         private readonly ScrollController _controller = new();

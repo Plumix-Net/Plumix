@@ -114,10 +114,18 @@ public partial class WidgetsBinding
     {
         // Only the ambient binding owns the platform channels; a locally constructed one (tests do this)
         // must not hijack them.
+        SharedInstance.FocusManager.ListenToApplicationLifecycleChangesIfSupported();
         SharedInstance.InitInstances();
     }
 
     public static WidgetsBinding Instance => SharedInstance;
+
+    /// <summary>
+    /// Returns the ambient binding after its static construction has completed. A
+    /// <see cref="Widgets.FocusManager"/> created by that construction sees <see langword="null"/>
+    /// and is connected by the static constructor immediately afterwards.
+    /// </summary>
+    internal static WidgetsBinding? MaybeInstance => SharedInstance;
 
     public AppLifecycleState? LifecycleState { get; private set; }
 

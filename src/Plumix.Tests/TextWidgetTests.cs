@@ -15,7 +15,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void TextWidget_CreatesAndUpdatesRenderParagraph_WithTextLayoutOptions()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Text(
                 "alpha",
@@ -116,7 +116,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void TextWidget_InheritsAndOverrides_DefaultTextStyle()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var style1 = new TextStyle(
             FontFamily: new FontFamily("Arial"),
             FontSize: 15,
@@ -203,7 +203,7 @@ public sealed class TextWidgetTests
         // Dart's `Theme._wrapsWidgetThemes` installs only `IconTheme` and `DefaultSelectionStyle`;
         // the text style comes from `Material`'s `AnimatedDefaultTextStyle`. A `Text` under a bare
         // `Theme` therefore keeps `DefaultTextStyle.fallback`, not `textTheme.bodyMedium`.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var themedStyle = new TextStyle(
             FontFamily: new FontFamily("Arial"),
             FontSize: 17,
@@ -240,7 +240,7 @@ public sealed class TextWidgetTests
                 child: new global::Plumix.Material.Material(
                     type: MaterialType.Transparency,
                     child: new Text("alpha"))));
-        var materialOwner = new BuildOwner();
+        var materialOwner = TestBuildOwner.Create();
         materialRoot.Attach(materialOwner);
         materialOwner.BuildScope(materialRoot, () => materialRoot.Mount(parent: null, newSlot: null));
         materialOwner.FlushBuild();
@@ -255,7 +255,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void TextWidget_PreservesTheExactAmbientTextScaler()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var scaler = new SquareTextScaler();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(TextScaler: scaler),
@@ -274,7 +274,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void TextAndRichText_KeepLegacyScaleFactorCompatibility()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Text("scaled", fontSize: 12, textScaleFactor: 1.5));
 
         root.Attach(owner);
@@ -300,7 +300,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_UsesIconThemeDefaults_WhenArgumentsAreOmitted()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new IconTheme(
@@ -324,7 +324,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_ExplicitColorAndSize_OverrideIconTheme()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new IconTheme(
@@ -347,7 +347,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_IconThemeOpacityAppliesToExplicitColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var explicitColor = Color.Parse("#FF663399");
         var root = new TestRootElement(
             new IconTheme(
@@ -370,7 +370,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_UsesAmbientApplyTextScaling()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             new MediaQueryData(TextScaleFactor: 1.5),
             new IconTheme(
@@ -389,7 +389,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_NullIcon_RendersSquareByResolvedSize()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(new Icon(icon: null, size: 18));
 
@@ -408,7 +408,7 @@ public sealed class TextWidgetTests
     [Fact]
     public void IconWidget_MatchTextDirection_Rtl_MirrorsGlyphWithTransform()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
 
         var root = new TestRootElement(
             new Directionality(

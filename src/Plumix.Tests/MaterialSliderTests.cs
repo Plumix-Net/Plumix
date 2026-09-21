@@ -523,7 +523,7 @@ public sealed class MaterialSliderTests
             var focusNode = new FocusNode();
             double next = 0.0;
 
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new Theme(
                     data: new ThemeData(platform: TargetPlatform.MacOS),
@@ -562,7 +562,7 @@ public sealed class MaterialSliderTests
             var focusNode = new FocusNode();
             double next = 0.0;
 
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new Theme(
                     data: new ThemeData(platform: TargetPlatform.MacOS),
@@ -1078,7 +1078,7 @@ public sealed class MaterialSliderTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

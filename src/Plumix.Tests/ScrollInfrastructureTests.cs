@@ -17,7 +17,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void ScrollMetricsNotification_CarriesItsMetricsThroughAsScrollUpdate()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ScrollMetricsNotification? notification = null;
 
         var root = new TestRootElement(
@@ -45,7 +45,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void NotificationListener_ReceivesBubbledNotification()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int handled = 0;
 
         var root = new TestRootElement(
@@ -67,7 +67,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void PrimaryScrollController_Of_ResolvesControllerFromContext()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var injected = new ScrollController();
         ScrollController? resolved = null;
 
@@ -104,7 +104,7 @@ public sealed class ScrollInfrastructureTests
     {
         bool vertical = false;
         bool horizontal = true;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         using var controller = new ScrollController();
         var root = new TestRootElement(
             new ScrollConfiguration(
@@ -129,7 +129,7 @@ public sealed class ScrollInfrastructureTests
     public void PrimaryScrollController_DoesNotRebuildDependentsWhenControllerScrolls()
     {
         int builds = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         using var controller = new TestScrollController();
         var root = new TestRootElement(
             new PrimaryScrollController(
@@ -148,7 +148,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void CustomScrollView_AutomaticallyUsesMobilePrimaryController()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         using var controller = new ScrollController();
         var root = new TestRootElement(
             new ScrollConfiguration(
@@ -168,7 +168,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void PrimaryScrollController_AutomaticInheritanceIsShieldedFromNestedScrollViews()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         using var controller = new TestScrollController();
         var root = new TestRootElement(
             new ScrollConfiguration(
@@ -193,7 +193,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void ScrollConfiguration_DefaultsAndCopyWith_MatchFlutterPolicy()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ScrollBehavior? inherited = null;
         Widget? desktopChrome = null;
         Widget child = new SizedBox();
@@ -267,7 +267,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void AutomaticKeepAlive_HandlesKeepAliveNotification()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var handle = new KeepAliveHandle();
         bool dispatched = false;
 
@@ -297,7 +297,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void AutomaticKeepAliveClientMixin_DispatchesWhenEnabled()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int notifications = 0;
         Func<KeepAliveNotification, bool> onNotification = _ =>
         {
@@ -331,7 +331,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void ListView_Separated_AlternatesItemAndSeparatorBuilders()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var sampledChildren = new List<Widget?>();
         Widget? built = null;
 
@@ -382,7 +382,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void ListView_Separated_WithItemExtent_UsesSliverFixedExtentList()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var sampledChildren = new List<Widget?>();
 
         var root = new TestRootElement(
@@ -415,7 +415,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void ListView_WithPadding_WrapsSliverIntoSliverPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var expectedPadding = new Avalonia.Thickness(4, 8, 12, 16);
         Widget? rootSliver = null;
         Widget? childSliver = null;
@@ -448,7 +448,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void GridView_Builder_UsesSliverGrid_AndBuildsChildrenFromDelegate()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var sampledChildren = new List<Widget?>();
         SliverGridDelegate? sampledDelegate = null;
 
@@ -485,7 +485,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void GridView_Count_UsesFixedCrossAxisDelegate()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         SliverGridDelegate? sampledDelegate = null;
 
         var root = new TestRootElement(
@@ -517,7 +517,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void GridView_Extent_UsesMaxCrossAxisDelegate()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         SliverGridDelegate? sampledDelegate = null;
 
         var root = new TestRootElement(
@@ -549,7 +549,7 @@ public sealed class ScrollInfrastructureTests
     [Fact]
     public void GridView_WithPadding_WrapsSliverIntoSliverPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var expectedPadding = new Avalonia.Thickness(6, 10, 14, 18);
         Widget? rootSliver = null;
         Widget? childSliver = null;

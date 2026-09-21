@@ -13,7 +13,7 @@ public sealed class InheritedWidgetTests
     {
         InheritedTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var dependent = new IntScopeDependentProbeWidget();
         var passive = new PassiveProbeWidget();
         var stableChildTree = new Row(children: [dependent, passive]);
@@ -40,7 +40,7 @@ public sealed class InheritedWidgetTests
     {
         InheritedTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var dependent = new ConditionalScopeDependentProbeWidget();
         var passive = new PassiveProbeWidget();
         var stableChildTree = new Row(children: [dependent, passive]);
@@ -96,7 +96,7 @@ public sealed class InheritedWidgetTests
         // Dart's `TextSelectionTheme` overrides the `child` getter to slip a wrapper into the
         // subtree without changing its constructor; `ProxyElement.build` reads the getter, so the
         // wrapper is what gets inflated.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var leaf = new SizedBox(width: 3, height: 4);
 
         var root = new TestRootElement(new WrappingScope(value: 1, child: leaf));
@@ -117,7 +117,7 @@ public sealed class InheritedWidgetTests
     {
         // `ProxyElement.update` calls `rebuild(force: true)` whether or not `updated` notified the
         // dependents, so a new child instance is inflated even when nothing depends on the scope.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var firstChild = new SizedBox(width: 1, height: 1);
 
         var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: false, child: firstChild));

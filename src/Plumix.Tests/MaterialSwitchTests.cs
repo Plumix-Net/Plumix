@@ -616,7 +616,7 @@ public sealed class MaterialSwitchTests
     {
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var focusNode = new FocusNode();
             bool nextValue = false;
             var root = new TestRootElement(
@@ -829,7 +829,7 @@ public sealed class MaterialSwitchTests
     private static TestRootElement Mount(ThemeData theme, Widget child)
     {
         var root = new TestRootElement(new Theme(data: theme, child: child));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
@@ -892,7 +892,7 @@ public sealed class MaterialSwitchTests
                 inactiveThumbImage: inactiveThumbImage,
                 onInactiveThumbImageError: onInactiveThumbImageError);
         var root = new TestRootElement(new Theme(data: theme, child: child));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
@@ -1088,7 +1088,7 @@ public sealed class MaterialSwitchTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

@@ -20,7 +20,7 @@ public sealed class MetaDataIndexedSemanticsTests
         Assert.Null(initial.Metadata);
         Assert.Equal(HitTestBehavior.DeferToChild, initial.Behavior);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(initial);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -84,7 +84,7 @@ public sealed class MetaDataIndexedSemanticsTests
     [Fact]
     public void IndexedSemantics_UsesAnyIntegerAndUpdatesItsRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new IndexedSemantics(
                 index: 3,

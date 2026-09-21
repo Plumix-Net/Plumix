@@ -28,7 +28,7 @@ internal sealed class FrameworkDartTester : IDisposable
     private static int _nextViewId = 7000;
     private static int _nextPointer = 7000;
 
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly FlutterExceptionHandler? _previousOnError;
     private readonly List<FlutterErrorDetails> _unexpected = [];
     private readonly Action<TimeSpan> _drawFrame;

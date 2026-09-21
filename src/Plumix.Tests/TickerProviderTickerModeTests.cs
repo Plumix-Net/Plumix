@@ -25,7 +25,7 @@ public sealed class TickerModeTests : IDisposable
     {
         var key = new LabeledGlobalKey<TickingState>("ticker");
         var child = new TickingWidget(key);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TickerMode(child: child, enabled: true));
         Mount(root, owner);
 
@@ -54,7 +54,7 @@ public sealed class TickerModeTests : IDisposable
     {
         var outerKey = new LabeledGlobalKey<TickingState>("outer");
         var innerKey = new LabeledGlobalKey<TickingState>("inner");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildNestedModes(
             outerKey,
             innerKey,
@@ -99,7 +99,7 @@ public sealed class TickerModeTests : IDisposable
             return new SizedBox();
         });
         Widget merged = TickerMode.Merge(child: probe, enabled: true, forceFrames: true);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TickerMode(child: merged, enabled: false));
         Mount(root, owner);
 
@@ -126,7 +126,7 @@ public sealed class TickerModeTests : IDisposable
         bool? enabled = null;
         IValueListenable<TickerModeData>? valuesNotifier = null;
         IValueListenable<bool>? enabledNotifier = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Builder(context =>
         {
             values = TickerMode.ValuesOf(context);
@@ -150,7 +150,7 @@ public sealed class TickerModeTests : IDisposable
     {
         var key = new LabeledGlobalKey<TickingState>("ticker");
         var child = new TickingWidget(key);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TickerMode(child: child, enabled: true));
         Mount(root, owner);
         TickingState state = Assert.IsType<TickingState>(key.CurrentState);
@@ -190,7 +190,7 @@ public sealed class TickerModeTests : IDisposable
                 builds++;
                 return new SizedBox();
             });
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TickerMode(child: animation, enabled: false));
         Mount(root, owner);
         int initialBuilds = builds;
@@ -214,7 +214,7 @@ public sealed class TickerModeTests : IDisposable
     {
         var childKey = new LabeledGlobalKey<TickingState>("ticker");
         var child = new TickingWidget(childKey);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TickerMode(
             child: child,
             enabled: true,

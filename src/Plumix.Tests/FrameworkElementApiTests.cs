@@ -185,7 +185,7 @@ public sealed class FrameworkElementApiTests
     public void HandWrittenElement_RunsTheFullLifecycle()
     {
         var log = new ProbeLog();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -215,7 +215,7 @@ public sealed class FrameworkElementApiTests
     public void HandWrittenElement_IsReinflatedWhenItsKeyChanges()
     {
         var log = new ProbeLog();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(
             new LifecycleProbe(log, new SizedBox(width: 10, height: 10), new ValueKey<int>(1)));
         root.Attach(owner);
@@ -241,7 +241,7 @@ public sealed class FrameworkElementApiTests
         Assert.True(fresh.Dirty);
 
         var log = new ProbeLog();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
         Assert.True(root.Dirty);
 
@@ -257,7 +257,7 @@ public sealed class FrameworkElementApiTests
     public void Rebuild_SkipsACleanElementUnlessItIsForced()
     {
         var log = new ProbeLog();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -289,7 +289,7 @@ public sealed class FrameworkElementApiTests
         Assert.Throws<AssertionError>(() => element.Rebuild());
         Assert.Throws<AssertionError>(() => element.Rebuild(force: true));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         element.Attach(owner);
         owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
@@ -306,7 +306,7 @@ public sealed class FrameworkElementApiTests
         // Dart clears the dirty flag only after `build()` returns, precisely so that a
         // markNeedsBuild() made while building is swallowed instead of scheduling a second pass.
         int builds = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new Builder(context =>
         {
             builds += 1;
@@ -329,7 +329,7 @@ public sealed class FrameworkElementApiTests
     {
         bool insideBuild = false;
         Element? captured = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new Builder(context =>
         {
             captured = (Element)context;
@@ -349,7 +349,7 @@ public sealed class FrameworkElementApiTests
     public void DebugDoingBuild_IsSetWhileARenderObjectIsCreatedAndUpdated()
     {
         var log = new List<(string Phase, bool DoingBuild)>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new DoingBuildProbe(log));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -367,7 +367,7 @@ public sealed class FrameworkElementApiTests
         // Flutter's framework_test.dart asserts the same message for a render object read off an
         // element that has left the tree.
         var log = new ProbeLog();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -390,7 +390,7 @@ public sealed class FrameworkElementApiTests
     {
         // The struct wrapper used to expose the *element* as `Owner`; Dart's `BuildContext.owner` is
         // the BuildOwner, and the element is the context itself.
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         Element? captured = null;
         var root = new ProbeRootElement(new Builder(context =>
         {

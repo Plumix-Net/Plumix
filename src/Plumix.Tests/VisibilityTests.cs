@@ -99,7 +99,7 @@ public sealed class VisibilityTests
     {
         int disposals = 0;
         var key = new LabeledGlobalKey<ProbeState>("visibility-probe");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Visibility(
             visible: true,
             child: new ProbeWidget(key, onDispose: () => disposals++)));
@@ -129,7 +129,7 @@ public sealed class VisibilityTests
     {
         int disposals = 0;
         var key = new LabeledGlobalKey<ProbeState>("maintained-visibility-probe");
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Visibility(
             visible: true,
             maintainState: true,
@@ -159,7 +159,7 @@ public sealed class VisibilityTests
     [Fact]
     public void Visibility_MaintainSizePreservesLayoutAndAppliesPaintHitTestAndSemanticsPolicies()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Visibility(
             visible: false,
             maintainState: true,
@@ -200,7 +200,7 @@ public sealed class VisibilityTests
     public void VisibilityOf_CombinesNestedAncestorVisibility()
     {
         var probe = new VisibilityProbe();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Visibility(
             visible: false,
             maintainState: true,
@@ -252,7 +252,7 @@ public sealed class VisibilityTests
     public void NestedVisibility_CannotRestoreFocusabilityExcludedByHiddenAncestor()
     {
         var probe = new FocusabilityProbe();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Visibility(
             visible: false,
             maintainState: true,

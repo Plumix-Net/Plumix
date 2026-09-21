@@ -111,7 +111,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int innerInvocations = 0;
         var dispatcher = new TrackingDispatcher();
         BuildContext capturedContext = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Actions(
                 actions: new Dictionary<Type, FlutterAction>
@@ -167,7 +167,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int outerInvocations = 0;
         int dependentBuilds = 0;
         BuildContext capturedContext = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Actions(
                 actions: new Dictionary<Type, FlutterAction>
@@ -213,7 +213,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         var first = new ToggleAction(enabled: true);
         var second = new ToggleAction(enabled: true);
         int notifications = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ActionListener(
             action: first,
             listener: _ => notifications++,
@@ -246,7 +246,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         var defaultAction = new RecordingAction("default");
         var override1 = new RecordingAction("override");
         BuildContext innerContext = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Actions(
                 actions: new Dictionary<Type, FlutterAction>
@@ -292,7 +292,7 @@ public sealed class ActionsShortcutsTests : IDisposable
     {
         var defaultAction = new RecordingAction("default");
         BuildContext context = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Builder(builderContext =>
         {
             context = builderContext;
@@ -319,7 +319,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         var action = new ContextProbeAction();
         var focusNode = new FocusNode();
         BuildContext capturedContext = null!;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Actions(
                 actions: new Dictionary<Type, FlutterAction>
@@ -356,7 +356,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int consumedInvocations = 0;
         int propagatedInvocations = 0;
         var focusNode = new FocusNode();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Shortcuts(
                 shortcuts: new Dictionary<ShortcutActivator, Intent>
@@ -401,7 +401,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int innerInvocations = 0;
         var focusNode = new FocusNode();
         var modalManager = new ShortcutManager(modal: true);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Shortcuts(
                 manager: modalManager,
@@ -452,7 +452,7 @@ public sealed class ActionsShortcutsTests : IDisposable
     {
         int invocationCount = 0;
         var focusNode = new FocusNode();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new CallbackShortcuts(
                 bindings: new Dictionary<ShortcutActivator, System.Action>
@@ -478,7 +478,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int invocationCount = 0;
         var focusNode = new FocusNode();
         ShortcutRegistryEntry? entry = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new ShortcutRegistrar(
                 child: new Builder(context =>

@@ -38,7 +38,7 @@ public sealed class DirectionalPositionedTableCellTests
     [Fact]
     public void PositionedDirectional_UsesAmbientDirectionAndUpdatesPhysicalInsets()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildDirectionalStack(TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -66,7 +66,7 @@ public sealed class DirectionalPositionedTableCellTests
     [Fact]
     public void PositionedDirectional_RejectsOverSpecifiedResolvedInsets()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             TextDirection.Ltr,
             new Stack(children:
@@ -86,7 +86,7 @@ public sealed class DirectionalPositionedTableCellTests
     [Fact]
     public void TableCellWidget_AppliesAndUpdatesParentDataAndCellSemantics()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildTableCell(TableCellVerticalAlignment.Top));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

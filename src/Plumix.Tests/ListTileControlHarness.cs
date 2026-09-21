@@ -14,7 +14,7 @@ namespace Plumix.Tests;
 /// tests rely on.
 internal sealed class ListTileControlHarness : IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly RootElement _root;
     private readonly PipelineOwner _pipeline;
     private readonly Size _viewSize;

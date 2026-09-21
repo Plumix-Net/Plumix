@@ -143,7 +143,7 @@ public sealed class ElementDiagnosticsTests
     [Fact]
     public void DescribeMissingAncestor_AtTheRoot_SaysThereAreNoAncestors()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -192,7 +192,7 @@ public sealed class ElementDiagnosticsTests
     [DebugOnlyFact]
     public void ToStringShort_IsTheWidgetsUntilTheElementIsDefunct()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox(key: new ValueKey<string>("box")));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -245,7 +245,7 @@ public sealed class ElementDiagnosticsTests
     [DebugOnlyFact]
     public void DebugFillProperties_OnADefunctElement_ReportsNoWidget()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -309,7 +309,7 @@ public sealed class ElementDiagnosticsTests
     [DebugOnlyFact]
     public void ElementDiagnosticsJson_OnADefunctElement_OmitsTheWidgetRuntimeType()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -637,7 +637,7 @@ public sealed class ElementDiagnosticsTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly PipelineOwner _pipeline;
         private readonly RootElement _root;
         private bool _disposed;

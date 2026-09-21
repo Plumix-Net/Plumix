@@ -24,7 +24,7 @@ public sealed class ClipWidgetsTests
         Assert.Null(path.Clipper);
         Assert.Equal(Clip.AntiAlias, path.ClipBehavior);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ClipOval(
             clipper: ovalClipper,
             child: new SizedBox(width: 40, height: 30)));
@@ -62,7 +62,7 @@ public sealed class ClipWidgetsTests
     public void ClipPathShape_UsesShapeBorderClipperAndAmbientDirection()
     {
         var shape = new CircleBorder(new BorderSide(Colors.Red, 2));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             TextDirection.Rtl,
             ClipPath.Shape(
@@ -268,7 +268,7 @@ public sealed class ClipWidgetsTests
             Colors.Red,
             elevation: -1.0));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new PhysicalShape(
             clipper: initialClipper,
             color: Colors.Orange,
@@ -429,7 +429,7 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void ClipRRectWidget_PassesTheAmbientDirectionalityToTheRenderObject()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             TextDirection.Rtl,
             new ClipRRect(

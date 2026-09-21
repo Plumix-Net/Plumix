@@ -85,7 +85,7 @@ public sealed class FrameworkParityTests
     [Fact]
     public void MultiChildRenderObjectElement_DoesNotMoveChildrenWhenTheSlotsAreUnchanged()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new RecordingFlex([new ProbeWidget(), new ProbeWidget()]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -106,7 +106,7 @@ public sealed class FrameworkParityTests
     [Fact]
     public void ThrowingBuild_IsReportedAndReplacedByAnErrorWidget()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new ThrowingBuilder("boom"));
         root.Attach(owner);
 
@@ -137,7 +137,7 @@ public sealed class FrameworkParityTests
     {
         Exception failure = BuildErrors.TakeException(() =>
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new SelfReturningBuilder());
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -153,7 +153,7 @@ public sealed class FrameworkParityTests
     public void SetState_AfterDispose_ExplainsTheAsynchronousCauses()
     {
         var widget = new ProbeWidget();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -182,7 +182,7 @@ public sealed class FrameworkParityTests
     public void SetState_WithAnAsynchronousCallback_IsRejected()
     {
         var widget = new ProbeWidget();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -206,7 +206,7 @@ public sealed class FrameworkParityTests
     [Fact]
     public void Dispose_ThatForgetsToCallBase_IsReported()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new RudeDisposeWidget());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -226,7 +226,7 @@ public sealed class FrameworkParityTests
     public void ThrowingDeactivate_LeavesTheElementNeitherActiveNorDefunct()
     {
         var widget = new ProbeWidget(throwOnDeactivate: true);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -249,7 +249,7 @@ public sealed class FrameworkParityTests
     public void ThrowingDispose_StillUnmountsTheElement()
     {
         var widget = new ProbeWidget(throwOnDispose: true);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -283,7 +283,7 @@ public sealed class FrameworkParityTests
     {
         Exception failure = BuildErrors.TakeException(() =>
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new RecordingFlex([new TestParentDataWidget(7.0, new ProbeWidget())]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -302,7 +302,7 @@ public sealed class FrameworkParityTests
     {
         Exception failure = BuildErrors.TakeException(() =>
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new SlotHost(
                 new TestParentDataWidget(1.0, new TestParentDataWidget(2.0, new ProbeWidget()))));
             root.Attach(owner);
@@ -325,7 +325,7 @@ public sealed class FrameworkParityTests
 
         Exception failure = BuildErrors.TakeException(() =>
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new RecordingFlex(
             [
                 new ProbeWidget(key: key),
@@ -352,7 +352,7 @@ public sealed class FrameworkParityTests
         FlutterError.OnError = reported.Add;
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(new RecordingFlex(
             [
                 new SlotHost(new ProbeWidget(key: key), key: new ValueKey<int>(1)),
@@ -390,7 +390,7 @@ public sealed class FrameworkParityTests
         WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle = true;
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             var root = new TestRootElement(
                 new RecordingFlex([new ProbeWidget(key: new LabeledGlobalKey<State>("k"))]));
             root.Attach(owner);

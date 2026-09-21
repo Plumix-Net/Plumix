@@ -106,8 +106,8 @@ public class RootElement : Element
     internal RootWidget? NewWidget { get; set; }
 
     /// <summary>
-    /// Sets the owner of this element; it is propagated to every descendant by
-    /// <see cref="Element.Mount"/>.
+    /// Sets the owner of this element and creates its root build scope; both are propagated to every
+    /// descendant by <see cref="Element.Mount"/>.
     /// </summary>
     /// <remarks>
     /// Dart's <c>RootElementMixin.assignOwner</c>. Only root elements may have their owner set

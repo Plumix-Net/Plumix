@@ -280,7 +280,7 @@ public sealed class ScrollViewTests
     /// </summary>
     private sealed class ScrollViewProbeHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly ProbeRoot _root;
 
         public ScrollViewProbeHarness(MediaQueryData? mediaQuery = null)

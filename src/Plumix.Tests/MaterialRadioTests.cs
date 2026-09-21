@@ -16,7 +16,7 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_DefaultM3_Selected_UsesPrimaryColorForBorderAndDot()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.Coral)
@@ -45,7 +45,7 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_DefaultM3_Unselected_UsesOnSurfaceVariantBorderAndNoDot()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurfaceVariant: Colors.CadetBlue)
@@ -72,7 +72,7 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_DefaultM3_DisabledSelected_UsesOnSurfaceOpacityForBorderAndDot()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Brown)
@@ -101,7 +101,7 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_WidgetFillColor_PrecedesActiveColorAndThemeFillColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -135,7 +135,7 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_ThemeFillColor_Applies_WhenWidgetFillColorIsMissing()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -165,7 +165,7 @@ public sealed class MaterialRadioTests
         FocusManager.Instance.ResetForTests();
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             string? nextValue = null;
             var focusNode = new FocusNode();
             var root = new TestRootElement(
@@ -203,7 +203,7 @@ public sealed class MaterialRadioTests
         FocusManager.Instance.ResetForTests();
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             string? nextValue = "first";
             var focusNode = new FocusNode();
             var root = new TestRootElement(
@@ -757,7 +757,7 @@ public sealed class MaterialRadioTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

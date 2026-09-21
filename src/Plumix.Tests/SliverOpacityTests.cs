@@ -36,7 +36,7 @@ public sealed class SliverOpacityTests : IDisposable
     [Fact]
     public void SliverOpacityWidget_CreatesRenderObjectAndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverOpacity(
             opacity: 0.25,
             sliver: new SliverToBoxAdapter(new SizedBox(width: 20, height: 30))));
@@ -170,7 +170,7 @@ public sealed class SliverOpacityTests : IDisposable
     public void SliverAnimatedOpacity_InterpolatesFromCurrentValueAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverAnimatedOpacity(
             opacity: 0.0,
             duration: TimeSpan.FromMilliseconds(200),

@@ -19,7 +19,7 @@ public sealed class CompositedTransformTests
     {
         var firstLink = new LayerLink();
         var secondLink = new LayerLink();
-        var targetOwner = new BuildOwner();
+        var targetOwner = TestBuildOwner.Create();
         var targetRoot = new TestRootElement(
             new CompositedTransformTarget(
                 firstLink,
@@ -41,7 +41,7 @@ public sealed class CompositedTransformTests
         Assert.Same(target, updatedTarget);
         Assert.Same(secondLink, updatedTarget.Link);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new CompositedTransformFollower(
                 firstLink,

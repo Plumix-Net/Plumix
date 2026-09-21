@@ -905,7 +905,7 @@ public sealed class TableTests
     [Fact]
     public void Table_EmptyTableBuilds()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, new Table()));
 
         var table = FindRenderObject<RenderTable>(root);
@@ -918,7 +918,7 @@ public sealed class TableTests
     [InlineData(TextDirection.Rtl)]
     public void Table_DefaultFlexColumnsGiveEveryCellTheSameWidth(TextDirection direction)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(direction, BuildGrid(3, 3)));
         var table = FindRenderObject<RenderTable>(root);
 
@@ -938,7 +938,7 @@ public sealed class TableTests
             [1] = new FixedColumnWidth(110),
             [2] = new FixedColumnWidth(125),
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(direction, BuildGrid(3, 3, widths)));
         var table = FindRenderObject<RenderTable>(root);
 
@@ -955,7 +955,7 @@ public sealed class TableTests
     [Fact]
     public void Table_ChangingDimensionsReusesSurvivingCells()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, BuildGrid(3, 3)));
         var table = FindRenderObject<RenderTable>(root);
         RenderBox firstCellBefore = table.Row(0)[0];
@@ -974,7 +974,7 @@ public sealed class TableTests
     [Fact]
     public void Table_MovingAKeyedRowPreservesItsCellElements()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, BuildKeyedRows([1, 2])));
         var table = FindRenderObject<RenderTable>(root);
         RenderBox keyedCellBefore = table.Row(0)[0];
@@ -988,7 +988,7 @@ public sealed class TableTests
     [Fact]
     public void Table_RemovingAKeyedRowUnmountsOnlyThatRow()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, BuildKeyedRows([1, 2])));
         var table = FindRenderObject<RenderTable>(root);
         RenderBox removed = table.Row(0)[0];
@@ -1005,7 +1005,7 @@ public sealed class TableTests
     [Fact]
     public void Table_SwitchingDefaultColumnWidthRelayouts()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, BuildGrid(1, 2)));
         var table = FindRenderObject<RenderTable>(root);
         var constraints = BoxConstraints.Tight(new Size(300, 40));
@@ -1025,7 +1025,7 @@ public sealed class TableTests
     [Fact]
     public void Table_RowDecorationsAreForwardedOnlyWhenPresent()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = Mount(owner, new Directionality(TextDirection.Ltr, BuildGrid(1, 1)));
         var table = FindRenderObject<RenderTable>(root);
         Assert.Null(table.RowDecorations);

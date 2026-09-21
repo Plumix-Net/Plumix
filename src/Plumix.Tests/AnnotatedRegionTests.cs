@@ -32,7 +32,7 @@ public sealed class AnnotatedRegionTests
             value: "value",
             child: null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         Mount(root, owner);
 

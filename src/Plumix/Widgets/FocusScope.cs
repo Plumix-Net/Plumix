@@ -491,7 +491,7 @@ public class FocusScope : Focus
     public static FocusScopeNode Of(BuildContext context, bool createDependency = true)
     {
         return Focus.MaybeOf(context, scopeOk: true, createDependency: createDependency)?.NearestScope
-               ?? FocusManager.Instance.RootScope;
+               ?? context.Owner!.FocusManager.RootScope;
     }
 
     /// <summary>The enclosing scope node, or <c>null</c> when there is no <see cref="Focus"/> ancestor.</summary>

@@ -23,7 +23,7 @@ public sealed class MaterialStateMixinTests
     [InlineData(WidgetState.Error)]
     public void UpdateMaterialState_TracksEveryWidgetStateValue(WidgetState state)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new TrackingWidget(state);
         var root = new TestRootElement(widget);
         root.Attach(owner);
@@ -47,7 +47,7 @@ public sealed class MaterialStateMixinTests
     [Fact]
     public void UpdateMaterialState_InvokesOnChangedOnlyOnARealChange()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new TrackingWidget(WidgetState.Hovered);
         var root = new TestRootElement(widget);
         root.Attach(owner);
@@ -73,7 +73,7 @@ public sealed class MaterialStateMixinTests
     [Fact]
     public void SetMaterialState_AddsAndRemovesWithoutGoingThroughACallback()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new TrackingWidget(WidgetState.Selected);
         var root = new TestRootElement(widget);
         root.Attach(owner);
@@ -95,7 +95,7 @@ public sealed class MaterialStateMixinTests
     [Fact]
     public void MaterialStates_ResolvesACoreWidgetStateProperty()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new TrackingWidget(WidgetState.Hovered);
         var root = new TestRootElement(widget);
         root.Attach(owner);
@@ -116,7 +116,7 @@ public sealed class MaterialStateMixinTests
     [DebugOnlyFact]
     public void DebugFillProperties_DumpsTheManagedSet()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var widget = new TrackingWidget(WidgetState.Focused);
         var root = new TestRootElement(widget);
         root.Attach(owner);

@@ -76,7 +76,7 @@ public sealed class CupertinoAppTests : IDisposable
         CupertinoLocalizations? localizations = null;
         ScrollBehavior? scrollBehavior = null;
         CupertinoUserInterfaceLevelData? interfaceLevel = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
             child: new CupertinoApp(
@@ -118,7 +118,7 @@ public sealed class CupertinoAppTests : IDisposable
         CupertinoLocalizations? localizations = null;
         ScrollBehavior? scrollBehavior = null;
         var customScrollBehavior = new TestScrollBehavior();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(),
             child: new CupertinoApp(
@@ -145,7 +145,7 @@ public sealed class CupertinoAppTests : IDisposable
     {
         Color lightColor = Color.FromRgb(1, 2, 3);
         Color darkColor = Color.FromRgb(4, 5, 6);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
             child: new CupertinoApp(
@@ -176,7 +176,7 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.Null(app.RouteInformationParser);
         Assert.Null(app.RouterConfig);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(),
             child: app));

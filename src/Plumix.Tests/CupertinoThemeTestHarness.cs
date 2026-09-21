@@ -13,7 +13,7 @@ namespace Plumix.Tests;
 /// </summary>
 internal sealed class CupertinoThemeTestHarness : IDisposable
 {
-    private readonly BuildOwner _owner = new();
+    private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly PipelineOwner _pipeline;
     private readonly RootElement _root;
 

@@ -854,7 +854,7 @@ public sealed class DragTargetTests
 
     private sealed class WidgetHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly TestRootElement _root;
         private readonly RenderView _renderView;
         private readonly PipelineOwner _pipeline;

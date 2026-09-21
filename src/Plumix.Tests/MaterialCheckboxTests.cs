@@ -36,7 +36,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_DefaultM3_Checked_UsesPrimaryFillAndTransparentBorder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme with
@@ -66,7 +66,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_DefaultM3_Unchecked_UsesTransparentFillAndOnSurfaceVariantBorder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme with
@@ -96,7 +96,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_DefaultM3_DisabledChecked_UsesOnSurfaceOpacityFill()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme with
@@ -123,7 +123,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_Checkmark_UsesCheckColorOverride()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -143,7 +143,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_Unchecked_DoesNotRenderCheckmarkParagraph()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -162,7 +162,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_TristateNull_RendersDashIndicator()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -289,7 +289,7 @@ public sealed class MaterialCheckboxTests
         FocusManager.Instance.ResetForTests();
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             bool? nextValue = null;
             var focusNode = new FocusNode();
             var root = new TestRootElement(
@@ -325,7 +325,7 @@ public sealed class MaterialCheckboxTests
         FocusManager.Instance.ResetForTests();
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             bool? nextValue = true;
             var focusNode = new FocusNode();
             var root = new TestRootElement(
@@ -362,7 +362,7 @@ public sealed class MaterialCheckboxTests
         FocusManager.Instance.ResetForTests();
         try
         {
-            var owner = new BuildOwner();
+            var owner = TestBuildOwner.Create();
             bool? nextValue = null;
             var focusNode = new FocusNode();
             var root = new TestRootElement(
@@ -396,7 +396,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_ThemeFillColor_IsApplied_WhenWidgetFillIsNotProvided()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -419,7 +419,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_WidgetFillColor_PrecedesCheckboxThemeFillColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -443,7 +443,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_ErrorState_Checked_UsesErrorFillAndOnErrorCheckColor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme with
@@ -473,7 +473,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_ErrorState_Unchecked_UsesErrorBorder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme with
@@ -515,7 +515,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveIOS_Checked_UsesCupertinoDefaults()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
             Platform = TargetPlatform.IOS,
@@ -542,7 +542,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveIOS_Checked_UsesVectorIndicatorInsteadOfTextParagraph()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -564,7 +564,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveIOS_FillColorParameter_IsIgnored()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -675,7 +675,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveDarkUnchecked_PainterReceivesDarkBrightness()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
@@ -700,7 +700,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveDarkCheckedEnabled_UsesDarkFillWithoutGradient()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
@@ -725,7 +725,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_ThemeSplashRadius_PropagatesToInkSplash()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with
@@ -789,7 +789,7 @@ public sealed class MaterialCheckboxTests
             useMaterial3: false,
             colorScheme: colorScheme,
             unselectedWidgetColor: Colors.CadetBlue);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var checkedRoot = new TestRootElement(
             new Theme(
                 data: theme,
@@ -883,7 +883,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_FixedSide_AppliesOnlyWhenUnselected()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -912,7 +912,7 @@ public sealed class MaterialCheckboxTests
                                 && states.Contains(WidgetState.Error);
             return new BorderSide(Colors.Red, 4);
         });
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -935,7 +935,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_UncheckedFillColor_IsRetainedAlongsideDefaultBorder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -956,7 +956,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_DefaultM3OverlayColors_MatchActiveAndInactiveTokens()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -1109,7 +1109,7 @@ public sealed class MaterialCheckboxTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

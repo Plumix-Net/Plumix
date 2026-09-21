@@ -76,7 +76,7 @@ public sealed class AlignTests
     [Fact]
     public void AlignWidget_CreatesRenderAlign_AndUpdatesProperties()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Align(
                 alignment: Alignment.TopLeft,
@@ -109,7 +109,7 @@ public sealed class AlignTests
     [Fact]
     public void CenterWidget_CreatesRenderAlign_WithCenterAlignment()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Center(
                 widthFactor: 2,
@@ -129,7 +129,7 @@ public sealed class AlignTests
     [Fact]
     public void AlignWidget_ResolvesDirectionalAlignmentAndUsesDebugOnlyFactorAssertions()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             textDirection: TextDirection.Rtl,
             child: new Align(

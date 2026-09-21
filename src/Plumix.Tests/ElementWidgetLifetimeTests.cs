@@ -13,7 +13,7 @@ public sealed class ElementWidgetLifetimeTests
     {
         var widget = new EmptyWidget();
         var element = new EmptyElement(widget);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext context = element;
 
         Assert.True(context.Mounted);
@@ -47,7 +47,7 @@ public sealed class ElementWidgetLifetimeTests
     {
         var widget = new EmptyWidget();
         var element = new EmptyElement(widget);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         element.Attach(owner);
         owner.BuildScope(element, () => element.Mount(null, null));
 
@@ -69,7 +69,7 @@ public sealed class ElementWidgetLifetimeTests
     {
         var key = new GlobalObjectKey<DisposeState>(new object());
         var original = new DisposeWidget(key);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(original).Attach(owner);
         var element = Assert.IsType<StatefulElement>(root.ChildElement);
         var state = Assert.IsType<DisposeState>(element.State);
@@ -106,7 +106,7 @@ public sealed class ElementWidgetLifetimeTests
     {
         var key = new GlobalObjectKey<DisposeState>(new object());
         var widget = new EmptyWidget(key);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RootElement root = new RootWidget(widget).Attach(owner);
         Element element = root.ChildElement!;
 

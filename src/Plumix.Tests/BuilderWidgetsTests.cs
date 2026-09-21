@@ -54,7 +54,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var child = new BuildCounterWidget();
         var passedChildren = new List<Widget?>();
         int builderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first));
         Mount(root, owner);
 
@@ -112,7 +112,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var animation = new TrackingListenable();
         var child = new BuildCounterWidget();
         int builderCalls = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedBuilder(
             animation: animation,
             child: child,
@@ -165,7 +165,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var child = new SizedBox(width: 10, height: 10);
         var values = new List<int>();
         var passedChildren = new List<Widget?>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first));
         Mount(root, owner);
 
@@ -257,7 +257,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var values = new List<double>();
         var passedChildren = new List<Widget?>();
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(firstTween, Curves.Linear));
         Mount(root, owner);
 
@@ -313,7 +313,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var tween = new DoubleTween(end: 42.0);
         var values = new List<double>();
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new TweenAnimationBuilder<double>(
             tween: tween,
             duration: TimeSpan.FromMilliseconds(200),
@@ -429,7 +429,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var buildOrder = new List<string>();
         Animation<double>? forwardAnimation = null;
         Animation<double>? reverseAnimation = null;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(first));
         Mount(root, owner);
 
@@ -535,7 +535,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         var child = new BuildCounterWidget();
         var values = new List<double>();
         var passedChildren = new List<Widget?>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(paused: false));
         Mount(root, owner);
 
@@ -595,7 +595,7 @@ public sealed class BuilderWidgetsTests : IDisposable
     public void RepeatingAnimationBuilder_ReverseModePingPongsAndAppliesCurve()
     {
         var values = new List<double>();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new RepeatingAnimationBuilder<double>(
             animatable: new DoubleTween(begin: 0.0, end: 1.0),
             duration: TimeSpan.FromSeconds(1),
@@ -632,7 +632,7 @@ public sealed class BuilderWidgetsTests : IDisposable
     {
         var values = new List<double>();
         var tween = new DoubleTween(begin: 0.0, end: 1.0);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Build(
             duration: TimeSpan.FromSeconds(1),
             curve: Curves.Linear,

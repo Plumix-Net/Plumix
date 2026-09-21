@@ -81,7 +81,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void PlumixHost_TextInputMethodClientRequested_ProvidesPreeditBridge()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -117,7 +117,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void PlumixHost_TextInputMethodClient_ReflectsSurroundingTextSelectionAndCursorGeometry()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -157,7 +157,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_Multiline_EnterAndVerticalCaretNavigation_Work()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -311,7 +311,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_TextInputAndBackspace_UpdateController()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -337,7 +337,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_CompositionUpdateCommitAndEscape_Work()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -376,7 +376,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_ArrowAndSelectionKeys_UpdateControllerSelection()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -410,7 +410,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_WordShortcuts_UseCtrlAndAltModifiers()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -453,7 +453,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_Multiline_ParagraphShortcuts_UseCtrlAndAltArrowUpDown()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -486,7 +486,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_ClipboardShortcuts_CopyCutPaste_Work()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -546,7 +546,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_DeleteForward_AndBackspaceOnSelection_Work()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -578,7 +578,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_Disabled_IgnoresTextInput()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
             new EditableText(
@@ -606,7 +606,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_OnChanged_IsRaisedOnTextMutation()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var changes = new List<string>();
         var root = new TestRootElement(

@@ -335,7 +335,7 @@ public sealed class MaterialColorSchemeTests
                         localized = Theme.Of(context);
                         return new SizedBox();
                     }))));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();

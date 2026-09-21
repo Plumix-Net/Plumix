@@ -139,7 +139,7 @@ public sealed class CustomMultiChildLayoutTests
         double expectedMiddleX,
         double expectedTrailingX)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             textDirection,
             new NavigationToolbar(
@@ -166,7 +166,7 @@ public sealed class CustomMultiChildLayoutTests
     [Fact]
     public void NavigationToolbar_ClampsCenteredMiddleBetweenLargeEdgeSlots()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new NavigationToolbar(
             leading: new SizedBox(width: 120),
             middle: new SizedBox(width: 100, height: 20),
@@ -195,7 +195,7 @@ public sealed class CustomMultiChildLayoutTests
         Assert.True(toolbar.CenterMiddle);
         Assert.Equal(NavigationToolbar.KMiddleSpacing, toolbar.MiddleSpacing);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(toolbar);
         Mount(root, owner);
         var layout = FindRenderObject<RenderCustomMultiChildLayoutBox>(root);

@@ -62,7 +62,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             }
             return new Stack(children: children);
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildSwitcher(
             value: "one",
             childKey: new ValueKey<int>(1),
@@ -137,7 +137,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             secondBuilderCalls++;
             return new Padding(insets: new Thickness(1), child: child);
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildSwitcher(
             value: "one",
             childKey: new ValueKey<int>(1),
@@ -221,7 +221,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         TextDirection direction,
         double expectedX)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(
             direction,
             new AnimatedCrossFade(
@@ -245,7 +245,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
     public void AnimatedCrossFade_FadesBothChildrenResizesAndCallsOnEnd()
     {
         int completed = 0;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildCrossFade(
             CrossFadeState.ShowFirst,
             () => completed++));
@@ -308,7 +308,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             bottomExcludingFocus = focus.Excluding;
             return new Stack(children: [bottom, top]);
         };
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new AnimatedCrossFade(
             firstChild: new SizedBox(width: 20, height: 20),
             secondChild: new SizedBox(width: 20, height: 20),
@@ -373,7 +373,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
 
     private static RenderObject CreateRenderObject(Widget widget)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         Mount(root, owner);
         RenderObject renderObject = root.ChildElement!.RenderObject!;

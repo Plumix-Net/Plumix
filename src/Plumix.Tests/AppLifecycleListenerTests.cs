@@ -211,7 +211,7 @@ public sealed class AppLifecycleListenerTests
 
     private static TestRootElement Mount(Widget widget)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

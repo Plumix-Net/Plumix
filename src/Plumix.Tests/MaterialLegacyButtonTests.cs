@@ -421,7 +421,7 @@ public sealed class MaterialLegacyButtonTests
 
     private sealed class WidgetTree : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly RootElement _root;
         private readonly PipelineOwner _pipeline;
 

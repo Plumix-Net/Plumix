@@ -1145,7 +1145,7 @@ public sealed class MaterialBottomNavigationBarTests
 
     private static MountedScope Mount(Widget widget)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, child: widget));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -1559,7 +1559,7 @@ public sealed class MaterialBottomNavigationBarTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

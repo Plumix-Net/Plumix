@@ -16,7 +16,7 @@ public sealed class WillPopScopeTests
     public void WillPopScope_VetoesThePopWhileItsCallbackReturnsFalse()
     {
         bool allowPop = false;
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         var root = new TestRootElement(new Navigator(
             initialRoute: new BuilderPageRoute(
@@ -51,7 +51,7 @@ public sealed class WillPopScopeTests
     [Fact]
     public void WillPopScope_RegistersItsCallbackWithTheEnclosingModalRouteAndBlocksTheBackGesture()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigator = null;
         var root = new TestRootElement(new Navigator(
             initialRoute: new BuilderPageRoute(

@@ -14,7 +14,7 @@ public sealed class InheritedNotifierTests
     {
         InheritedNotifierTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var notifier = new ValueNotifier<int>(0);
         var stableChildTree = new Row(children: [new NotifierReaderWidget()]);
 
@@ -37,7 +37,7 @@ public sealed class InheritedNotifierTests
     {
         InheritedNotifierTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var notifierA = new ValueNotifier<int>(0);
         var notifierB = new ValueNotifier<int>(10);
         var stableChildTree = new Row(children: [new NotifierReaderWidget()]);
@@ -66,7 +66,7 @@ public sealed class InheritedNotifierTests
     {
         InheritedNotifierTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var notifier = new ValueNotifier<int>(5);
         var stableChildTree = new Row(children: [new NotifierReaderWidget()]);
 
@@ -99,7 +99,7 @@ public sealed class InheritedNotifierTests
     {
         InheritedNotifierTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var notifier = new CountingIntNotifier(0);
         var globalWidget = new CountingIntInheritedNotifier(
             notifier,

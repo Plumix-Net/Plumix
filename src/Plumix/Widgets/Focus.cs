@@ -159,7 +159,7 @@ public sealed class FocusAttachment
         }
 
         parent ??= Focus.MaybeOf(context, scopeOk: true);
-        parent ??= FocusManager.Instance.RootScope;
+        parent ??= context.Owner!.FocusManager.RootScope;
         parent.Reparent(_node);
     }
 }
@@ -927,25 +927,21 @@ public sealed class FocusManager : ChangeNotifier
     private bool? _lastInteractionRequiresTraditionalHighlights;
     private bool _haveScheduledUpdate;
     private FocusAppLifecycleListener? _appLifecycleListener;
+    private Func<KeyMessage, bool>? _keyMessageHandler;
+    private bool _globalHandlersRegistered;
     private FocusNode? _suspendedNode;
 
-    public FocusManager() : this(registerGlobalHandlers: false)
-    {
-    }
-
-    private FocusManager(bool registerGlobalHandlers)
+    public FocusManager()
     {
         _rootScope.UpdateManager(this);
         if (RespondToLifecycleChange)
         {
-            _appLifecycleListener = new FocusAppLifecycleListener(HandleAppLifecycleChange);
-            WidgetsBinding.Instance.AddObserver(_appLifecycleListener);
-        }
-
-        if (registerGlobalHandlers)
-        {
-            GestureBinding.PointerEventReceived += HandlePointerEvent;
-            RegisterKeyMessageHandler();
+            WidgetsBinding? binding = WidgetsBinding.MaybeInstance;
+            if (binding is not null)
+            {
+                _appLifecycleListener = new FocusAppLifecycleListener(HandleAppLifecycleChange);
+                binding.AddObserver(_appLifecycleListener);
+            }
         }
     }
 
@@ -998,7 +994,21 @@ public sealed class FocusManager : ChangeNotifier
         }
     }
 
-    public static FocusManager Instance { get; } = new(registerGlobalHandlers: true);
+    public static FocusManager Instance => WidgetsBinding.Instance.FocusManager;
+
+    /// <summary>Registers this manager as the receiver of process-global pointer and key input.</summary>
+    /// <remarks>Flutter's <c>FocusManager.registerGlobalHandlers</c>.</remarks>
+    public void RegisterGlobalHandlers()
+    {
+        if (_globalHandlersRegistered)
+        {
+            return;
+        }
+
+        _globalHandlersRegistered = true;
+        GestureBinding.PointerEventReceived += HandlePointerEvent;
+        RegisterKeyMessageHandler();
+    }
 
     public FocusNode? PrimaryFocus { get; private set; }
 
@@ -1369,7 +1379,10 @@ public sealed class FocusManager : ChangeNotifier
         RawKeyboard.Instance.ClearListeners();
 #pragma warning restore CS0618
         KeyEventManager.Instance.ClearState();
-        RegisterKeyMessageHandler();
+        if (_globalHandlersRegistered)
+        {
+            RegisterKeyMessageHandler();
+        }
     }
 
     /// <summary>
@@ -1379,7 +1392,7 @@ public sealed class FocusManager : ChangeNotifier
     private void RegisterKeyMessageHandler()
     {
 #pragma warning disable CS0618
-        KeyEventManager.Instance.KeyMessageHandler = message =>
+        _keyMessageHandler ??= message =>
         {
             bool handled = false;
             foreach (KeyEvent keyEvent in message.Events)
@@ -1389,7 +1402,32 @@ public sealed class FocusManager : ChangeNotifier
 
             return handled;
         };
+        KeyEventManager.Instance.KeyMessageHandler = _keyMessageHandler;
 #pragma warning restore CS0618
+    }
+
+    public override void Dispose()
+    {
+        if (_appLifecycleListener is not null)
+        {
+            _ = WidgetsBinding.Instance.RemoveObserver(_appLifecycleListener);
+            _appLifecycleListener = null;
+        }
+
+        if (_globalHandlersRegistered)
+        {
+            GestureBinding.PointerEventReceived -= HandlePointerEvent;
+#pragma warning disable CS0618
+            if (ReferenceEquals(KeyEventManager.Instance.KeyMessageHandler, _keyMessageHandler))
+            {
+                KeyEventManager.Instance.KeyMessageHandler = null;
+            }
+#pragma warning restore CS0618
+            _globalHandlersRegistered = false;
+        }
+
+        _rootScope.Dispose();
+        base.Dispose();
     }
 
     /// <summary>Dart parity source: <c>_HighlightModeManager.handlePointerEvent</c>.</summary>

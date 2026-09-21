@@ -25,6 +25,81 @@ public sealed class FocusTests : IDisposable
     }
 
     [Fact]
+    public void BuildOwner_UsesProvidedFocusManagerWithoutReplacingGlobalKeyHandler()
+    {
+#pragma warning disable CS0618
+        Func<KeyMessage, bool>? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
+#pragma warning restore CS0618
+        using var manager = new FocusManager();
+
+        var owner = new BuildOwner(focusManager: manager);
+
+        Assert.Same(manager, owner.FocusManager);
+#pragma warning disable CS0618
+        Assert.Same(globalHandler, KeyEventManager.Instance.KeyMessageHandler);
+#pragma warning restore CS0618
+    }
+
+    [Fact]
+    public void BuildOwner_CreatesAndRegistersAFocusManagerWhenNoneIsProvided()
+    {
+#pragma warning disable CS0618
+        Func<KeyMessage, bool>? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
+#pragma warning restore CS0618
+        var owner = new BuildOwner(focusManager: null);
+
+        try
+        {
+            Assert.NotSame(FocusManager.Instance, owner.FocusManager);
+#pragma warning disable CS0618
+            Assert.NotSame(globalHandler, KeyEventManager.Instance.KeyMessageHandler);
+#pragma warning restore CS0618
+        }
+        finally
+        {
+            owner.FocusManager.Dispose();
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void BuildOwners_IsolateTheirFocusTrees()
+    {
+        using var firstManager = new FocusManager();
+        using var secondManager = new FocusManager();
+        var firstOwner = new BuildOwner(focusManager: firstManager);
+        var secondOwner = new BuildOwner(focusManager: secondManager);
+        var firstNode = new FocusNode();
+        var secondNode = new FocusNode();
+        var firstRoot = new TestRootElement(
+            new Focus(focusNode: firstNode, autofocus: true, child: new SizedBox()));
+        var secondRoot = new TestRootElement(
+            new Focus(focusNode: secondNode, autofocus: true, child: new SizedBox()));
+
+        firstRoot.Attach(firstOwner);
+        firstOwner.BuildScope(firstRoot, () => firstRoot.Mount(parent: null, newSlot: null));
+        firstOwner.FlushBuild();
+        secondRoot.Attach(secondOwner);
+        secondOwner.BuildScope(secondRoot, () => secondRoot.Mount(parent: null, newSlot: null));
+        secondOwner.FlushBuild();
+
+        Assert.Same(firstNode, firstManager.PrimaryFocus);
+        Assert.Same(secondNode, secondManager.PrimaryFocus);
+        Assert.True(firstNode.HasFocus);
+        Assert.True(secondNode.HasFocus);
+
+        firstRoot.UnmountRoot();
+        secondRoot.UnmountRoot();
+    }
+
+    [Fact]
+    public void WidgetsBinding_FocusManagerComesFromItsBuildOwner()
+    {
+        Assert.Same(WidgetsBinding.Instance.BuildOwner.FocusManager, WidgetsBinding.Instance.FocusManager);
+        Assert.Same(WidgetsBinding.Instance.FocusManager, FocusManager.Instance);
+    }
+
+    [Fact]
     public void FocusManager_RequestFocus_IsDeferredAndCoalescesToTheLastRequest()
     {
         var manager = new FocusManager();
@@ -149,7 +224,7 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusNode_HasFocusTracksFocusedDescendantsWithoutFlickeringBetweenThem()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var ancestor = new FocusNode();
         var first = new FocusNode();
         var second = new FocusNode();
@@ -412,7 +487,7 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusWidget_Autofocus_RequestsFocusOnMount()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();
         var root = new TestRootElement(
             new Focus(
@@ -425,13 +500,13 @@ public sealed class FocusTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(focusNode.HasFocus);
-        Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
+        Assert.Same(focusNode, owner.FocusManager.PrimaryFocus);
     }
 
     [Fact]
     public void FocusWidget_OnKeyEvent_CallbackIsUsedByFocusManager()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         int keyEventCount = 0;
         var root = new TestRootElement(
             new Focus(
@@ -452,7 +527,7 @@ public sealed class FocusTests : IDisposable
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
+        bool handled = owner.FocusManager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
 
         Assert.True(handled);
         Assert.Equal(1, keyEventCount);
@@ -461,7 +536,7 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusWidgets_TabKey_TraversesRegisteredFocusNodes()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var first = new FocusNode();
         var second = new FocusNode();
 
@@ -476,15 +551,15 @@ public sealed class FocusTests : IDisposable
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+        Assert.Same(first, owner.FocusManager.PrimaryFocus);
         Assert.True(first.HasFocus);
         Assert.False(second.HasFocus);
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
+        bool handled = owner.FocusManager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Scheduler.FlushMicrotasks();
 
         Assert.True(handled);
-        Assert.Same(second, FocusManager.Instance.PrimaryFocus);
+        Assert.Same(second, owner.FocusManager.PrimaryFocus);
         Assert.False(first.HasFocus);
         Assert.True(second.HasFocus);
     }

@@ -79,7 +79,7 @@ public sealed class StackTests
     [Fact]
     public void StackWidget_PositionedParentData_AppliesAndUpdates()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Stack(
                 alignment: Alignment.TopLeft,
@@ -128,7 +128,7 @@ public sealed class StackTests
     [Fact]
     public void StackAndIndexedStack_ResolveDirectionalAlignmentOnDirectionChange()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(BuildDirectionalStacks(TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -222,7 +222,7 @@ public sealed class StackTests
     [Fact]
     public void IndexedStack_PositionedChildUsesStackParentDataAndIsADirectRenderChild()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new RawIndexedStack(
             children:
             [
@@ -254,7 +254,7 @@ public sealed class StackTests
     [Fact]
     public void IndexedStackElement_VisitsOnlyTheSelectedChildOnstage()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new RawIndexedStack(
             children:
             [
@@ -311,7 +311,7 @@ public sealed class StackTests
         Assert.Throws<AssertionError>(() => new RawIndexedStack(children: [new SizedBox()], index: 1));
 
         var directional = new RawIndexedStack(children: [new SizedBox()]);
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var contextRoot = new TestRootElement(new SizedBox());
         contextRoot.Attach(owner);
         owner.BuildScope(contextRoot, () => contextRoot.Mount(parent: null, newSlot: null));

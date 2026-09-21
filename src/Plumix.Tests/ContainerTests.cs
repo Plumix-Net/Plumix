@@ -12,7 +12,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithMargin_WrapsRootInRenderPadding()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 margin: new Thickness(4),
@@ -32,7 +32,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithAlignment_UsesRenderAlign()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 alignment: Alignment.BottomRight,
@@ -49,7 +49,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithAlignmentAndPadding_WrapOrder_IsPaddingOutsideAlign()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 alignment: Alignment.TopLeft,
@@ -69,7 +69,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithConstraints_UsesRenderConstrainedBox()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 constraints: new BoxConstraints(MinWidth: 20, MaxWidth: 40, MinHeight: 12, MaxHeight: 22),
@@ -86,7 +86,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithWidthHeightAndConstraints_TightensToClampedConstraints()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 width: 150,
@@ -107,7 +107,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_WithTransformAndMargin_WrapOrder_IsTransformOutsideMargin()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Container(
                 margin: new Thickness(5),
@@ -127,7 +127,7 @@ public sealed class ContainerTests
     [Fact]
     public void Container_ResolvesDirectionalPaddingAndMarginFromDirectionality()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Directionality(
                 TextDirection.Rtl,

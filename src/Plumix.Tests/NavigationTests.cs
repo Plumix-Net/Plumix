@@ -12,7 +12,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_PushAndPop_UpdatesCurrentRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
 
@@ -52,7 +52,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_PushReplacement_ReplacesTopRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
 
@@ -83,7 +83,7 @@ public sealed class NavigationTests
     [Fact]
     public void NavigatorObserver_ReceivesPushPopAndReplace()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         var observer = new RecordingObserver();
 
@@ -127,7 +127,7 @@ public sealed class NavigationTests
     [Fact]
     public void ModalRoute_Of_ReturnsCurrentRouteInsidePageBuilder()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         ModalRoute? capturedRoute = null;
 
         var initialRoute = new BuilderPageRoute(
@@ -153,7 +153,7 @@ public sealed class NavigationTests
     [Fact]
     public void RouteObserver_Subscribe_ReceivesPushNextPopNextAndPop()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var routeObserver = new RouteObserver<PageRoute>();
         NavigatorState? navigatorState = null;
         PageRoute? rootRoute = null;
@@ -228,7 +228,7 @@ public sealed class NavigationTests
     [Fact]
     public void RouteObserver_DidReplace_RebindsSubscribersToReplacementRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var routeObserver = new RouteObserver<PageRoute>();
         NavigatorState? navigatorState = null;
         PageRoute? detailsRoute = null;
@@ -292,7 +292,7 @@ public sealed class NavigationTests
     [Fact]
     public void RouteObserver_Unsubscribe_StopsFurtherNotifications()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var routeObserver = new RouteObserver<PageRoute>();
         NavigatorState? navigatorState = null;
         PageRoute? rootRoute = null;
@@ -351,7 +351,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_MaybePop_HandlesLocalHistoryOnRootRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         ModalRoute? rootRoute = null;
         bool localHistoryRemoved = false;
@@ -388,7 +388,7 @@ public sealed class NavigationTests
     [Fact]
     public void NavigatorObserver_UserGestureStartStop_ReceivesCallbacks()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         var observer = new RecordingObserver();
 
@@ -426,7 +426,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_UserGesture_NestedStartStop_NotifiesOnce()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         var observer = new RecordingObserver();
 
@@ -462,7 +462,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_MaybePopFromUserGesture_PopsAndStopsGesture()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
         var observer = new RecordingObserver();
@@ -504,7 +504,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_NamedRoutes_ResolvesInitialAndPushNamed()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
         object? latestArguments = null;
@@ -560,7 +560,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_StaticApi_PushNamedAndPop_WorkThroughBuildContext()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         BuildContext? rootContext = null;
         BuildContext? detailsContext = null;
         string currentPageName = string.Empty;
@@ -624,7 +624,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_PushReplacementNamed_ReplacesTopRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
 
@@ -671,7 +671,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_PopUntil_PopsUntilPredicateMatches()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
 
@@ -704,7 +704,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_PushNamedAndRemoveUntil_RemovesIntermediateRoutes()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
 
@@ -762,7 +762,7 @@ public sealed class NavigationTests
     [Fact]
     public void NavigatorObserver_DidRemove_ReceivesEventsFromPushNamedAndRemoveUntil()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         var observer = new RecordingObserver();
 
@@ -822,7 +822,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_RemoveRoute_RemovesSpecificRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
         var routesByName = new Dictionary<string, Route>(StringComparer.Ordinal);
@@ -882,7 +882,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_RemoveRouteBelow_RemovesRouteUnderAnchor()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         string currentPageName = string.Empty;
         var routesByName = new Dictionary<string, Route>(StringComparer.Ordinal);
@@ -940,7 +940,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_RemoveRoute_ThrowsWhenRemovingLastRoute()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         Route? rootRoute = null;
 
@@ -967,7 +967,7 @@ public sealed class NavigationTests
     [Fact]
     public void Navigator_InitialRouteData_PassesParsedQueryAndArguments()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         RouteData? capturedRouteData = null;
         string currentPageName = string.Empty;
 
@@ -1009,7 +1009,7 @@ public sealed class NavigationTests
     public void PageRouteBuilder_DrivesPrimaryAndSecondaryAnimations_AndDefersPopDisposal()
     {
         Scheduler.ResetForTests();
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         Animation<double>? rootSecondaryAnimation = null;
         Animation<double>? detailsAnimation = null;

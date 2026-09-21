@@ -1720,7 +1720,7 @@ public sealed class ScrollPipelineTests
     /// </summary>
     private sealed class ViewWidgetHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly RootElement _root;
 
         public ViewWidgetHarness(Widget rootWidget)
@@ -1746,7 +1746,7 @@ public sealed class ScrollPipelineTests
 
     private sealed class WidgetRenderHarness
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
 

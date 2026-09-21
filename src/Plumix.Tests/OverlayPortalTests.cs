@@ -606,7 +606,7 @@ public sealed class OverlayPortalTests
     {
         public static readonly Size ViewSize = new(240, 120);
 
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly TestRootElement _root;
         private readonly RenderView _renderView;
         private readonly PipelineOwner _pipeline;

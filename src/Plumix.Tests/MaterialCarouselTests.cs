@@ -569,7 +569,7 @@ public sealed class MaterialCarouselTests
 
     private sealed class CarouselHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly RootElement _root;
         private readonly PipelineOwner _pipeline;
         private readonly ThemeData _theme;

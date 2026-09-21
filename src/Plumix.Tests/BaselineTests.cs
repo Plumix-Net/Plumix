@@ -17,7 +17,7 @@ public sealed class BaselineTests
     [Fact]
     public void BaselineWidget_CreatesAndUpdatesRenderBaseline()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Baseline(
             baseline: 18,
             baselineType: TextBaseline.Alphabetic,
@@ -120,7 +120,7 @@ public sealed class BaselineTests
     [Fact]
     public void IgnoreBaselineWidget_CreatesRenderIgnoreBaseline()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new IgnoreBaseline(
             child: new SizedBox(width: 20, height: 10)));
 

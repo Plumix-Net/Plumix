@@ -1429,7 +1429,7 @@ public sealed class HeroNavigatorTests
 
     private sealed class WidgetRenderHarness : IDisposable
     {
-        private readonly BuildOwner _owner = new();
+        private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly PipelineOwner _pipeline;
         private readonly HarnessRootElement _rootElement;
 

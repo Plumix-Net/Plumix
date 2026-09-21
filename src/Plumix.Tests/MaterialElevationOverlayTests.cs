@@ -85,7 +85,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
             colorScheme: ThemeData.Dark.ColorScheme.CopyWith(
                 surface: surface,
                 onSurface: onSurface));
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Theme(
                 theme,
@@ -203,7 +203,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
 
     private static Color ResolveMaterialColor(ThemeData theme, MaterialSurface material)
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Theme(theme, material));
         MountAndFlush(root, owner);
         var decorations = new List<DecoratedBox>();

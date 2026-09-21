@@ -13,7 +13,7 @@ public sealed class InheritedModelTests
     {
         InheritedModelTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var stableChildTree = new Row(children: [new AspectAReaderWidget(), new AspectBReaderWidget()]);
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
@@ -42,7 +42,7 @@ public sealed class InheritedModelTests
     {
         InheritedModelTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var stableChildTree = new Row(children: [new UnqualifiedReaderWidget()]);
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
@@ -65,7 +65,7 @@ public sealed class InheritedModelTests
     {
         InheritedModelTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var stableChildTree = new Row(children: [new MultiAspectReaderWidget()]);
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
@@ -88,7 +88,7 @@ public sealed class InheritedModelTests
     {
         InheritedModelTracker.Reset();
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var stableChildTree = new Row(children: [new ShadowedAspectAReaderWidget(), new ShadowedAspectBReaderWidget()]);
 
         Widget BuildTree(int outerA, int outerB, int innerA, int innerB)

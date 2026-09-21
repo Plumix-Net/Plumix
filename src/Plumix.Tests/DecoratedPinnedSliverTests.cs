@@ -20,7 +20,7 @@ public sealed class DecoratedPinnedSliverTests
         Assert.Null(widget.Child);
         Assert.Throws<ArgumentNullException>(() => new DecoratedSliver(null!));
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new DecoratedSliver(
             decoration: first,
             sliver: new SliverToBoxAdapter(new SizedBox(height: 20))));
@@ -99,7 +99,7 @@ public sealed class DecoratedPinnedSliverTests
         var widget = new PinnedHeaderSliver();
         Assert.Null(widget.Child);
 
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new PinnedHeaderSliver(
             child: new SizedBox(width: 80, height: 44)));
         Mount(root, owner);

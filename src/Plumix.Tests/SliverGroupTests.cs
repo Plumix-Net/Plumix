@@ -32,7 +32,7 @@ public sealed class SliverGroupTests
     [Fact]
     public void SliverCrossAxisGroup_WiresDefaultZeroAndExpandedParentData()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new SliverCrossAxisGroup(
             [
                 new RecordingSliverWidget(),

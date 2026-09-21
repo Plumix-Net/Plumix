@@ -55,7 +55,7 @@ public sealed class AspectRatioTests
     [Fact]
     public void AspectRatioWidget_CreatesRenderAspectRatio_AndUpdatesRatio()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new AspectRatio(
                 aspectRatio: 1.5,
@@ -81,7 +81,7 @@ public sealed class AspectRatioTests
     [Fact]
     public void SpacerWidget_UsesExpandedTightFlexParentData()
     {
-        var owner = new BuildOwner();
+        var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
             new Row(children:
             [
