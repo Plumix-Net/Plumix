@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -335,6 +336,11 @@ public sealed record MediaQueryData
     public static MediaQueryData FromView(FlutterView view, MediaQueryData? platformData = null)
     {
         ArgumentNullException.ThrowIfNull(view);
+        if (platformData is null && ReferenceEquals(PlatformDispatcher.Instance.ImplicitView, view))
+        {
+            platformData = PlatformDispatcher.Instance.ImplicitViewPlatformData;
+        }
+
         double devicePixelRatio = view.DevicePixelRatio;
         return new MediaQueryData(
             Size: new Size(view.PhysicalSize.Width / devicePixelRatio, view.PhysicalSize.Height / devicePixelRatio),

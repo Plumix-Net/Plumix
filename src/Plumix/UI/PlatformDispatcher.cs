@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Plumix.Widgets;
 
 namespace Plumix.UI;
 
@@ -29,6 +30,40 @@ public sealed class PlatformDispatcher
     /// <summary>The ambient platform dispatcher.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.instance</c>.</remarks>
     public static PlatformDispatcher Instance { get; } = new();
+
+    /// <summary>The platform's implicit view, when the application is running in single-view mode.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.implicitView</c>. A Plumix host installs its view before
+    /// <c>RunApp</c> wraps the application; an explicit <c>RunWidget</c> tree does not need one.
+    /// </remarks>
+    public FlutterView? ImplicitView { get; private set; }
+
+    /// <summary>Platform-wide media data associated with <see cref="ImplicitView"/>.</summary>
+    internal MediaQueryData? ImplicitViewPlatformData { get; private set; }
+
+    /// <summary>Installs the view and platform data supplied by the current single-view host.</summary>
+    internal void SetImplicitView(FlutterView view, MediaQueryData platformData)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ImplicitView = view;
+        ImplicitViewPlatformData = platformData;
+    }
+
+    /// <summary>Refreshes platform data for the current implicit view.</summary>
+    internal void UpdateImplicitViewPlatformData(FlutterView view, MediaQueryData platformData)
+    {
+        if (ReferenceEquals(ImplicitView, view))
+        {
+            ImplicitViewPlatformData = platformData;
+        }
+    }
+
+    /// <summary>Clears the implicit-view contract for an isolated test binding.</summary>
+    internal void ClearImplicitViewForTests()
+    {
+        ImplicitView = null;
+        ImplicitViewPlatformData = null;
+    }
 
     /// <summary>The route requested by the platform when the application was launched, or <c>/</c>.</summary>
     /// <remarks>

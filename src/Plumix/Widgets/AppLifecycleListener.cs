@@ -104,9 +104,9 @@ public interface WidgetsBindingObserver
     }
 }
 
-public class WidgetsBinding
+public partial class WidgetsBinding
 {
-    private static readonly WidgetsBinding SharedInstance = new();
+    private static readonly WidgetsBinding SharedInstance = new WidgetsFlutterBinding();
     private readonly List<WidgetsBindingObserver> _observers = [];
     private readonly List<WidgetsBindingObserver> _backGestureObservers = [];
 
@@ -283,10 +283,12 @@ public class WidgetsBinding
 
     /// <summary>
     /// Flutter's <c>WidgetsBinding.initInstances</c>: installs the <c>flutter/navigation</c> handler so a
-    /// host can push deep links and back requests through the channel.
+    /// host can push deep links and back requests through the channel, and registers the persistent
+    /// widget-build callback before a renderer host begins flushing layout.
     /// </summary>
     public void InitInstances()
     {
+        EnsureFrameCallback();
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
     }
 

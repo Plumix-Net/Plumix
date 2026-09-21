@@ -44,7 +44,7 @@ milestones:
 - [x] Gesture system is implemented (pointer router, arena, tap/drag/long-press recognizers).
 - [x] Navigation stack is implemented (`Navigator`, routes, named routes, observers, back handling).
 - [x] Scroll/sliver stack is implemented (`Scrollable`, `Viewport`, sliver lists/grids, keep-alive, notifications).
-- [x] Widget host path is active on desktop (`FlutterExtensions.Run` + `WidgetHost`).
+- [x] Binding-owned `RunApp`/`RunWidget` bootstrap drives the desktop `WidgetHost` implicit view.
 - [x] Sample gallery demonstrates navigation, scrolling, and editable text/focus demos through framework widgets.
 - [x] Automated test project exists and covers lifecycle, rendering, layers, semantics, gestures, navigation, and scrolling.
 - [x] Hot reload is supported via .NET Hot Reload + Flutter-style reassemble flow (`HotReloadManager`, `ReassembleApplication`, `Element.Reassemble`), preserving `State` across code patches.

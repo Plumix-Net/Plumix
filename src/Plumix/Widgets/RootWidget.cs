@@ -10,8 +10,8 @@ namespace Plumix.Widgets;
 /// </summary>
 /// <remarks>
 /// Dart's <c>RootWidget</c>. <see cref="Attach"/> inflates it and bootstraps the element tree
-/// against a <see cref="BuildOwner"/>; the hosts reach it through
-/// <c>WidgetHost.AttachRootWidget</c>, which is Plumix's <c>WidgetsBinding.attachRootWidget</c>.
+/// against a <see cref="BuildOwner"/>; <see cref="WidgetsBinding.AttachRootWidget"/> owns the
+/// process root and reconciles later <c>RunApp</c>/<c>RunWidget</c> calls through it.
 /// The root hosts no render object of its own: the <see cref="View"/> below it publishes the render
 /// tree through a <see cref="RenderTreeRootElement"/>.
 /// </remarks>

@@ -482,6 +482,7 @@ public class PlumixHost : Control
             gestureSettings: data.GestureSettings,
             displayFeatures: data.DisplayFeatures,
             displayCornerRadii: data.DisplayCornerRadii);
+        PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, data);
         WidgetsBinding.Instance.HandleMetricsChanged();
     }
 

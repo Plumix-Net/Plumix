@@ -109,7 +109,8 @@ public abstract class GlobalKey : Key
     /// Dart's <c>GlobalKey._currentElement</c>: the registry is keyed by <c>==</c>, so an equal key
     /// instance finds the element too.
     /// </summary>
-    internal Element? CurrentElement => BuildOwner.LookupGlobalKey(this);
+    internal Element? CurrentElement =>
+        WidgetsBinding.Instance.BuildOwner.GlobalKeyElement(this) ?? BuildOwner.LookupGlobalKey(this);
 
     /// <summary>The build context in which the widget with this key builds.</summary>
     public BuildContext? CurrentContext => CurrentElement;
