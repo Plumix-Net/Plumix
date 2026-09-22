@@ -22,10 +22,12 @@ public sealed class ModalRouteAspectTests : IDisposable
     public ModalRouteAspectTests()
     {
         Scheduler.ResetForTests();
+        FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
+        FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
     }
 

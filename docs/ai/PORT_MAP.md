@@ -258,7 +258,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `animation/animations.dart` | `src/Plumix/Animation.cs`<br>`src/Plumix/CompoundAnimation.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
 | `foundation/assertions.dart` | `src/Plumix/Foundation/Assertions.cs` | `src/Plumix.Tests/AssertionsTests.cs` | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` _(reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)_ | `src/Plumix.Tests/HotReloadTests.cs` | — |
-| `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` _(reference) (approximate)_ | — | — |
+| `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
 | `foundation/debug.dart` | `src/Plumix/Foundation/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnosticable.cs`<br>`src/Plumix/Foundation/Diagnostics.Node.cs`<br>`src/Plumix/Foundation/Diagnostics.TextTree.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | `src/Plumix.Tests/DiagnosticsTests.cs`<br>`src/Plumix.Tests/ElementDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs` | — |
@@ -615,7 +615,6 @@ tightening candidate: re-read the Dart source, close the gap, and drop the quali
 marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
-- `src/Plumix/Foundation/Listenable.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/GestureBinding.cs` — (reference) (approximate)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
 - `src/Plumix/Painting/BasicTypes.cs` — (reference) (approximate)
@@ -648,5 +647,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 701
 - C# files without a marker: 48
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 27
+- C# files with a qualified (non-strict) marker: 26
 

@@ -278,6 +278,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Framework.cs` (keys, `DebugAssertions`), `Framework.BuildScope.cs`,
     `Framework.InactiveElements.cs`
   - `src/Plumix/Widgets/Notifications.cs` (notification tree, `NotifiableElementMixin`)
+  - `src/Plumix/Foundation/Listenable.cs` (`IListenable`, `ChangeNotifier`, `ValueNotifier`)
   - `src/Plumix/Foundation/MemoryAllocations.cs` (`FlutterMemoryAllocations`, dispatched from `Debug.cs`)
   - `src/Plumix/Widgets/StatefulBuilder.cs`
   - `src/Plumix/Widgets/LookupBoundary.cs`
@@ -295,6 +296,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/InheritedWidgetTests.cs`
   - `src/Plumix.Tests/InheritedModelTests.cs`
   - `src/Plumix.Tests/InheritedNotifierTests.cs`
+  - `src/Plumix.Tests/ChangeNotifierTests.cs`
   - `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs`
   - `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs`
   - `src/Plumix.Tests/DiagnosticsTests.cs`

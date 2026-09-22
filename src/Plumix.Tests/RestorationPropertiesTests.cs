@@ -216,7 +216,7 @@ public sealed class RestorationPropertiesTests : IDisposable
 
         original.AddListener(() => { });
         Scheduler.FlushMicrotasks();
-        Assert.Throws<ObjectDisposedException>(() => original.AddListener(() => { }));
+        Assert.Throws<FlutterError>(() => original.AddListener(() => { }));
         Assert.Equal("replacement", bag.Controller.Value.Text);
     }
 

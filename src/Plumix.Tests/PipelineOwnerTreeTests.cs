@@ -344,7 +344,7 @@ public sealed class PipelineOwnerTreeTests
 
         handle.Dispose();
         Assert.Null(owner.SemanticsOwner);
-        semanticsOwner.NotifyListeners();
+        Assert.Throws<FlutterError>(semanticsOwner.NotifyListeners);
         Assert.Equal(1, notifications);
     }
 

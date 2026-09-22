@@ -154,9 +154,22 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
             tabBuilder: (_, index) => new Text($"Page {index}"))));
         harness.Pump(ViewSize);
 
-        ArgumentOutOfRangeException error = Assert.Throws<ArgumentOutOfRangeException>(() => controller.Index = 2);
+        FlutterErrorDetails? reported = null;
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = details => reported = details;
+        try
+        {
+            controller.Index = 2;
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
 
+        Assert.NotNull(reported);
+        ArgumentOutOfRangeException error = Assert.IsType<ArgumentOutOfRangeException>(reported!.Exception);
         Assert.Contains("with 2 tabs", error.Message, StringComparison.Ordinal);
+        controller.Index = 1;
     }
 
     [Fact]

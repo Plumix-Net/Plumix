@@ -83,6 +83,36 @@ public sealed class ConstantAnimation<T> : Animation<T>
     }
 }
 
+public sealed class AlwaysStoppedAnimation<T> : Animation<T>
+{
+    public AlwaysStoppedAnimation(T value)
+    {
+        Value = value;
+    }
+
+    public override T Value { get; }
+
+    public override AnimationStatus Status => AnimationStatus.Forward;
+
+    public override void AddListener(Action listener)
+    {
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+    }
+
+    public override void AddStatusListener(Action<AnimationStatus> listener)
+    {
+    }
+
+    public override void RemoveStatusListener(Action<AnimationStatus> listener)
+    {
+    }
+
+    public override string ToString() => $"{GetType().Name}({Value}; paused)";
+}
+
 public sealed class ProxyAnimation : Animation<double>
 {
     private readonly List<Action> _listeners = [];

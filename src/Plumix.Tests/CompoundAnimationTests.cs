@@ -9,6 +9,23 @@ namespace Plumix.Tests;
 public sealed class CompoundAnimationTests
 {
     [Fact]
+    public void AlwaysStoppedAnimation_IsForwardAndNeverNotifies()
+    {
+        var animation = new AlwaysStoppedAnimation<double>(0.5);
+        int valueNotifications = 0;
+        int statusNotifications = 0;
+
+        animation.AddListener(() => valueNotifications++);
+        animation.AddStatusListener(_ => statusNotifications++);
+
+        Assert.Equal(0.5, animation.Value);
+        Assert.Equal(AnimationStatus.Forward, animation.Status);
+        Assert.Equal(0, valueNotifications);
+        Assert.Equal(0, statusNotifications);
+        Assert.Contains("; paused", animation.ToString());
+    }
+
+    [Fact]
     public void AnimationMinAndMax_TrackTheirChildrenAndPreferAnAnimatingStatus()
     {
         using var first = new AnimationController(duration: TimeSpan.FromSeconds(1));

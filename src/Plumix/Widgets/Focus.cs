@@ -1408,6 +1408,14 @@ public sealed class FocusManager : ChangeNotifier
 
     public override void Dispose()
     {
+        // A queued focus-update microtask may outlive the owner that scheduled it. Dart's binding
+        // keeps the manager for process lifetime; Plumix test/host roots replace managers, so make
+        // that already-queued callback observe no pending work before the notifier is disposed.
+        _haveScheduledUpdate = false;
+        MarkedForFocus = null;
+        _dirtyNodes.Clear();
+        _pendingAutofocuses.Clear();
+
         if (_appLifecycleListener is not null)
         {
             _ = WidgetsBinding.Instance.RemoveObserver(_appLifecycleListener);

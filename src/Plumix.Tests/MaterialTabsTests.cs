@@ -185,7 +185,7 @@ public sealed class MaterialTabsTests
     [Fact]
     public void DefaultTabController_LengthChangeKeepsAnimationAndClampsIndex()
     {
-        using var controller = new TabController(length: 4, initialIndex: 3);
+        var controller = new TabController(length: 4, initialIndex: 3);
         Animation<double> animation = controller.Animation!;
 
         TabController shortened = controller.CopyWithAndDispose(
