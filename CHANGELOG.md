@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: PageStorage recognizes derived keys and reports Flutter's missing-ancestor error (page_storage.dart).
 - Breaking: ChangeNotifier matches Dart dispatch, disposal, merge and allocation events (change_notifier.dart).
 - Host view focus follows window activation and Tab entry direction (widgets/view.dart).
 - Breaking: BuildOwner owns its FocusManager and each root gets a fresh BuildScope (framework.dart).

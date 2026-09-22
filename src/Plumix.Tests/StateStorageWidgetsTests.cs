@@ -5,7 +5,7 @@ using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
-// Dart parity sources (reference):
+// Dart parity sources:
 // - flutter/packages/flutter/lib/src/widgets/page_storage.dart
 // - flutter/packages/flutter/lib/src/widgets/shared_app_data.dart
 // - flutter/packages/flutter/lib/src/widgets/scroll_position.dart
@@ -61,6 +61,65 @@ public sealed class StateStorageWidgetsTests
     }
 
     [Fact]
+    public void PageStorageBucket_DerivedPageStorageKeyParticipatesInIdentifier()
+    {
+        var bucket = new PageStorageBucket();
+        object? restored = null;
+
+        using var harness = new WidgetRenderHarness(
+            new PageStorage(
+                bucket,
+                new ContextProbe(
+                    context => bucket.WriteState(context, 42),
+                    new DerivedPageStorageKey("derived"))));
+        harness.Pump(new Size(40, 40));
+
+        harness.Update(
+            new PageStorage(
+                bucket,
+                new ContextProbe(
+                    context => restored = bucket.ReadState(context),
+                    new DerivedPageStorageKey("derived"))));
+        harness.Pump(new Size(40, 40));
+
+        Assert.Equal(42, restored);
+    }
+
+    [Fact]
+    public void PageStorageBucket_ImplicitIdentifierStopsAtNearestPageStorage()
+    {
+        var bucket = new PageStorageBucket();
+        object? restored = null;
+
+        using var harness = new WidgetRenderHarness(
+            BuildNestedStorageProbe(bucket, outerKey: "outer-a", context => bucket.WriteState(context, 42)));
+        harness.Pump(new Size(40, 40));
+
+        harness.Update(
+            BuildNestedStorageProbe(bucket, outerKey: "outer-b", context => restored = bucket.ReadState(context)));
+        harness.Pump(new Size(40, 40));
+
+        Assert.Equal(42, restored);
+    }
+
+    [Fact]
+    public void PageStorageBucket_WithoutKeyDoesNotSaveImplicitIdentifier()
+    {
+        var bucket = new PageStorageBucket();
+        object? restored = 1;
+
+        using var harness = new WidgetRenderHarness(
+            new PageStorage(bucket, new ContextProbe(context => bucket.WriteState(context, 42))));
+        harness.Pump(new Size(40, 40));
+
+        harness.Update(
+            new PageStorage(bucket, new ContextProbe(context => restored = bucket.ReadState(context))));
+        harness.Pump(new Size(40, 40));
+
+        Assert.Null(restored);
+    }
+
+    [Fact]
     public void PageStorage_OfAndMaybeOf_ResolveNearestBucket()
     {
         var outer = new PageStorageBucket();
@@ -76,6 +135,25 @@ public sealed class StateStorageWidgetsTests
         harness.Pump(new Size(40, 40));
 
         Assert.Same(inner, resolved);
+    }
+
+    [Fact]
+    public void PageStorage_OfWithoutAncestorThrowsDartsFlutterError()
+    {
+        FlutterError? error = null;
+        PageStorageBucket? maybeBucket = new PageStorageBucket();
+        using var harness = new WidgetRenderHarness(
+            new ContextProbe(context =>
+            {
+                maybeBucket = PageStorage.MaybeOf(context);
+                error = Record.Exception(() => PageStorage.Of(context)) as FlutterError;
+            }));
+        harness.Pump(new Size(40, 40));
+
+        Assert.Null(maybeBucket);
+        Assert.NotNull(error);
+        Assert.Contains("PageStorage.Of() was called with a context", error.Message);
+        Assert.Contains("The context used was:", error.Message);
     }
 
     [Fact]
@@ -220,6 +298,18 @@ public sealed class StateStorageWidgetsTests
                 child: new ContextProbe(callback, new PageStorageKey<string>(innerKey))));
     }
 
+    private static Widget BuildNestedStorageProbe(
+        PageStorageBucket bucket,
+        string outerKey,
+        Action<BuildContext> callback)
+    {
+        return new KeyedSubtree(
+            key: new PageStorageKey<string>(outerKey),
+            child: new PageStorage(
+                bucket,
+                new ContextProbe(callback, new PageStorageKey<string>("inner"))));
+    }
+
     private static Widget BuildScrollable(PageStorageBucket bucket, ScrollController controller)
     {
         return new PageStorage(
@@ -245,6 +335,8 @@ public sealed class StateStorageWidgetsTests
             return new SizedBox(width: 1, height: 1);
         }
     }
+
+    private sealed class DerivedPageStorageKey(string value) : PageStorageKey<string>(value);
 
     private sealed class SharedValueReader : StatelessWidget
     {

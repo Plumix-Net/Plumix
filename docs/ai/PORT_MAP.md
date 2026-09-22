@@ -477,7 +477,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/overflow_bar.dart` | `src/Plumix/Widgets/OverflowBar.cs` | — | — |
 | `widgets/overlay.dart` | `src/Plumix/Rendering/Overlay.cs`<br>`src/Plumix/Widgets/Overlay.cs` | `src/Plumix.Tests/MaterialElevationOverlayTests.cs`<br>`src/Plumix.Tests/NavigatorOverlayTests.cs`<br>`src/Plumix.Tests/OverlayPortalTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs` | — |
 | `widgets/overscroll_indicator.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
-| `widgets/page_storage.dart` | `src/Plumix/Widgets/PageStorage.cs` _(reference)_ | — | — |
+| `widgets/page_storage.dart` | `src/Plumix/Widgets/PageStorage.cs` | — | — |
 | `widgets/page_view.dart` | `src/Plumix/Widgets/PageView.cs` | `src/Plumix.Tests/PageViewTests.cs` | `dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
 | `widgets/pinned_header_sliver.dart` | `src/Plumix/Widgets/SliverDecoratedPinned.cs` | — | — |
 | `widgets/placeholder.dart` | `src/Plumix/Widgets/Placeholder.cs` | — | — |
@@ -636,7 +636,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Widgets/DefaultTextStyle.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Directionality.cs` — (reference) (Directionality, approximate)
 - `src/Plumix/Widgets/Icon.cs` — (reference) (approximate)
-- `src/Plumix/Widgets/PageStorage.cs` — (reference)
 - `src/Plumix/Widgets/Scrollable.cs` — (adapted)
 - `src/Plumix/Widgets/SharedAppData.cs` — (reference)
 - `src/Plumix/Widgets/TextClipboard.cs` — (reference) (adapted)
@@ -647,5 +646,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 701
 - C# files without a marker: 48
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 26
+- C# files with a qualified (non-strict) marker: 25
 
