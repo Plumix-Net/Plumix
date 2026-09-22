@@ -149,8 +149,8 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
 
-        var childParentData = (BoxParentData)child.parentData!;
-        Assert.Equal(new Point(0, -50), childParentData.offset);
+        var childParentData = (SliverPhysicalParentData)child.parentData!;
+        Assert.Equal(new Point(0, -50), childParentData.PaintOffset);
         Assert.Equal(200, viewportOffset.ViewportDimension);
         Assert.Equal(0, viewportOffset.MinScrollExtent);
         Assert.Equal(400, viewportOffset.MaxScrollExtent);
@@ -174,8 +174,8 @@ public sealed class ScrollPipelineTests
 
         Assert.Equal(130, viewportOffset.MaxScrollExtent);
 
-        var firstBoxOffset = ((BoxParentData)((RenderBox)first.Child!).parentData!).offset;
-        var secondBoxOffset = ((BoxParentData)((RenderBox)second.Child!).parentData!).offset;
+        var firstBoxOffset = ((SliverPhysicalParentData)((RenderBox)first.Child!).parentData!).PaintOffset;
+        var secondBoxOffset = ((SliverPhysicalParentData)((RenderBox)second.Child!).parentData!).PaintOffset;
         Assert.Equal(new Point(0, -80), firstBoxOffset);
         Assert.Equal(new Point(0, 0), secondBoxOffset);
     }
@@ -236,7 +236,7 @@ public sealed class ScrollPipelineTests
 
         Assert.Equal(200, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
-        Assert.Equal(new Point(0, 0), sliverParentData.offset);
+        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
 
         // Overscrolled past the leading edge: the offset survives layout and the content is pushed
         // down by exactly the overscroll, which is what makes the iOS rubber band visible.
@@ -244,12 +244,12 @@ public sealed class ScrollPipelineTests
         pipeline.FlushLayout(new Size(100, 100));
 
         Assert.Equal(-30, viewportOffset.Pixels);
-        Assert.Equal(new Point(0, 30), sliverParentData.offset);
+        Assert.Equal(new Point(0, 30), sliverParentData.PaintOffset);
 
         // The leading sliver is told about the overscroll through a negative overlap, which is what
         // overscroll-aware slivers stretch into.
-        Assert.Equal(-30, innerSliver.ConstraintsForSliver.Overlap);
-        Assert.Equal(0, innerSliver.ConstraintsForSliver.ScrollOffset);
+        Assert.Equal(-30, innerSliver.Constraints.Overlap);
+        Assert.Equal(0, innerSliver.Constraints.ScrollOffset);
 
         // Overscrolled past the trailing edge: the offset is kept rather than clamped to the max.
         viewportOffset.JumpTo(240);
@@ -263,7 +263,7 @@ public sealed class ScrollPipelineTests
         pipeline.FlushLayout(new Size(100, 100));
 
         Assert.Equal(50, viewportOffset.Pixels);
-        Assert.Equal(new Point(0, 0), sliverParentData.offset);
+        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
     }
 
     [Fact]
@@ -282,13 +282,13 @@ public sealed class ScrollPipelineTests
 
         Assert.Equal(50, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
-        Assert.Equal(new Point(0, 10), sliverParentData.offset);
+        Assert.Equal(new Point(0, 10), sliverParentData.PaintOffset);
 
         viewportOffset.JumpTo(15);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(new Point(0, 0), sliverParentData.offset);
-        var innerBoxOffset = ((BoxParentData)((RenderBox)innerSliver.Child!).parentData!).offset;
+        Assert.Equal(new Point(0, 0), sliverParentData.PaintOffset);
+        var innerBoxOffset = ((SliverPhysicalParentData)((RenderBox)innerSliver.Child!).parentData!).PaintOffset;
         Assert.Equal(new Point(0, -5), innerBoxOffset);
     }
 
@@ -306,12 +306,12 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
 
         pipeline.FlushLayout(new Size(100, 200));
-        var childParentData = (BoxParentData)child.parentData!;
-        Assert.Equal(new Point(0, -400), childParentData.offset);
+        var childParentData = (SliverPhysicalParentData)child.parentData!;
+        Assert.Equal(new Point(0, -400), childParentData.PaintOffset);
 
         viewportOffset.JumpTo(400);
         pipeline.FlushLayout(new Size(100, 200));
-        Assert.Equal(new Point(0, 0), childParentData.offset);
+        Assert.Equal(new Point(0, 0), childParentData.PaintOffset);
     }
 
     [Fact]
@@ -470,7 +470,7 @@ public sealed class ScrollPipelineTests
         RenderSliver reverseChild = viewport.FirstChild!;
         Assert.NotNull(viewport.Center);
         Assert.NotSame(reverseChild, viewport.Center);
-        Assert.Equal(GrowthDirection.Reverse, reverseChild.ConstraintsForSliver.GrowthDirection);
+        Assert.Equal(GrowthDirection.Reverse, reverseChild.Constraints.GrowthDirection);
         Assert.Equal(150.0, reverseChild.Geometry.PaintExtent);
     }
 
@@ -683,14 +683,14 @@ public sealed class ScrollPipelineTests
         var sliver = new RenderSliverVariedExtentList(builder, manager);
         manager.AttachOwner(sliver);
 
-        sliver.LayoutWithSliverConstraints(new SliverConstraints(
+        sliver.Layout(TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 100,
             CrossAxisExtent: 120,
             ViewportMainAxisExtent: 100,
             RemainingCacheExtent: 100,
-            PrecedingScrollExtent: 17));
+            PrecedingScrollExtent: 17), parentUsesSize: true);
 
         // Dart's `estimateMaxScrollOffset` extrapolates from the average extent of the laid-out
         // children (100 over three children, one child left) rather than summing every extent.
@@ -710,13 +710,13 @@ public sealed class ScrollPipelineTests
             Assert.Equal(120, current.CrossAxisExtent);
         });
 
-        sliver.LayoutWithSliverConstraints(new SliverConstraints(
+        sliver.Layout(TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 80,
             RemainingPaintExtent: 60,
             CrossAxisExtent: 120,
             ViewportMainAxisExtent: 100,
-            RemainingCacheExtent: 60));
+            RemainingCacheExtent: 60), parentUsesSize: true);
 
         // `_getChildIndexForScrollOffset` walks until the running position reaches the offset and
         // then steps back one, so the child that ends exactly at the scroll offset stays reified.
@@ -735,13 +735,13 @@ public sealed class ScrollPipelineTests
 
         // Flutter has no extent validation of its own: a NaN item extent reaches the child's box
         // constraints, and `BoxConstraints`'s own assert reports it.
-        Assert.Throws<FlutterError>(() => sliver.LayoutWithSliverConstraints(new SliverConstraints(
+        Assert.Throws<FlutterError>(() => sliver.Layout(TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 100,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 100,
-            RemainingCacheExtent: 100)));
+            RemainingCacheExtent: 100), parentUsesSize: true));
     }
 
     [Fact]
@@ -751,7 +751,7 @@ public sealed class ScrollPipelineTests
         var prototype = new FixedSizeBox(new Size(40, 60));
         var sliver = new RenderSliverPrototypeExtentList(prototype, manager);
         manager.AttachOwner(sliver);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 120,
@@ -759,7 +759,7 @@ public sealed class ScrollPipelineTests
             ViewportMainAxisExtent: 120,
             RemainingCacheExtent: 120);
 
-        sliver.LayoutWithSliverConstraints(constraints);
+        sliver.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(new Size(100, 60), prototype.Size);
         Assert.Equal(240, sliver.Geometry.ScrollExtent);
@@ -776,7 +776,7 @@ public sealed class ScrollPipelineTests
         Assert.Equal(2, semanticChildren.Count);
 
         sliver.PrototypeChild = new FixedSizeBox(new Size(40, 40));
-        sliver.LayoutWithSliverConstraints(constraints);
+        sliver.Layout(constraints, parentUsesSize: true);
         Assert.Equal(160, sliver.Geometry.ScrollExtent);
         Assert.All(ActiveChildren(sliver), child => Assert.Equal(40, child.Size.Height));
     }
@@ -961,7 +961,7 @@ public sealed class ScrollPipelineTests
         {
             if (currentSliver.parentData is SliverPhysicalParentData parentData)
             {
-                offset += parentData.offset.Y;
+                offset += parentData.PaintOffset.Y;
             }
 
             var parent = currentSliver.Parent;
@@ -1896,8 +1896,9 @@ public sealed class ScrollPipelineTests
             _scrollExtent = scrollExtent;
         }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             if (!_didCorrect && Math.Abs(constraints.ScrollOffset) > 0.0001)
             {
                 _didCorrect = true;
@@ -1924,8 +1925,9 @@ public sealed class ScrollPipelineTests
 
     private sealed class PaintTrackingSliver(string name, List<string> paintOrder) : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             Geometry = new SliverGeometry(
                 ScrollExtent: 50,
                 PaintExtent: Math.Min(50, constraints.RemainingPaintExtent),
@@ -1947,8 +1949,9 @@ public sealed class ScrollPipelineTests
 
         public SliverConstraints LastConstraints { get; private set; }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             LastConstraints = constraints;
             double remaining = Math.Max(0, _scrollExtent - constraints.ScrollOffset);
             double paintExtent = Math.Min(remaining, constraints.RemainingPaintExtent);

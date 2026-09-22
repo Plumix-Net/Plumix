@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
@@ -23,9 +24,7 @@ public enum SliverPaintOrder
 /// </summary>
 /// <remarks>
 /// Flutter declares this as <c>RenderViewportBase&lt;ParentDataClass&gt;</c> mixing in
-/// <c>ContainerRenderObjectMixin</c>. Plumix composes the container mixin instead of mixing it in,
-/// and its <see cref="RenderSliver"/> is a <see cref="RenderBox"/>, so hit testing goes through the
-/// box protocol rather than <c>SliverHitTestResult</c>.
+/// <c>ContainerRenderObjectMixin</c>. Plumix composes the container mixin instead of mixing it in.
 /// </remarks>
 public abstract class RenderViewportBase<TParentData> : RenderBox,
     IContainerRenderObjectMixin<RenderSliver, TParentData>, IRenderObjectContainer, IRenderAbstractViewport
@@ -407,20 +406,21 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             double correctedCacheOrigin = Math.Max(cacheOrigin, -sliverScrollOffset);
             double cacheExtentCorrection = cacheOrigin - correctedCacheOrigin;
 
-            child.LayoutWithSliverConstraints(new SliverConstraints(
-                Axis: Axis,
-                ScrollOffset: sliverScrollOffset,
-                RemainingPaintExtent: Math.Max(0.0, remainingPaintExtent - layoutOffset + initialLayoutOffset),
-                CrossAxisExtent: crossAxisExtent,
-                ViewportMainAxisExtent: mainAxisExtent,
-                CacheOrigin: correctedCacheOrigin,
-                RemainingCacheExtent: Math.Max(0.0, remainingCacheExtent + cacheExtentCorrection),
-                AxisDirection: _axisDirection,
-                GrowthDirection: growthDirection,
-                Overlap: maxPaintOffset - layoutOffset,
-                PrecedingScrollExtent: precedingScrollExtent,
-                UserScrollDirection: adjustedUserScrollDirection,
-                CrossAxisDirection: _crossAxisDirection));
+            child.Layout(
+                new SliverConstraints(
+                    AxisDirection: _axisDirection,
+                    GrowthDirection: growthDirection,
+                    UserScrollDirection: adjustedUserScrollDirection,
+                    ScrollOffset: sliverScrollOffset,
+                    PrecedingScrollExtent: precedingScrollExtent,
+                    Overlap: maxPaintOffset - layoutOffset,
+                    RemainingPaintExtent: Math.Max(0.0, remainingPaintExtent - layoutOffset + initialLayoutOffset),
+                    CrossAxisExtent: crossAxisExtent,
+                    CrossAxisDirection: _crossAxisDirection,
+                    ViewportMainAxisExtent: mainAxisExtent,
+                    RemainingCacheExtent: Math.Max(0.0, remainingCacheExtent + cacheExtentCorrection),
+                    CacheOrigin: correctedCacheOrigin),
+                parentUsesSize: true);
 
             SliverGeometry childLayoutGeometry = child.Geometry;
 
@@ -556,8 +556,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         for (RenderSliver? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             Size size = Axis == Axis.Vertical
-                ? new Size(child.ConstraintsForSliver.CrossAxisExtent, child.Geometry.LayoutExtent)
-                : new Size(child.Geometry.LayoutExtent, child.ConstraintsForSliver.CrossAxisExtent);
+                ? new Size(child.Constraints.CrossAxisExtent, child.Geometry.LayoutExtent)
+                : new Size(child.Geometry.LayoutExtent, child.Constraints.CrossAxisExtent);
             var rect = new Rect(offset + PaintOffsetOf(child), size);
             context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
         }
@@ -574,8 +574,19 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderViewportBase.hitTestChildren</c>: each visible sliver, in hit-test order, is
+    /// hit tested through the sliver protocol under the inverse of its paint transform.
+    /// </remarks>
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
+        (double mainAxisPosition, double crossAxisPosition) = Axis switch
+        {
+            Axis.Vertical => (position.Y, position.X),
+            _ => (position.X, position.Y),
+        };
+        var sliverResult = SliverHitTestResult.Wrap(result);
         foreach (RenderSliver child in ChildrenInHitTestOrder)
         {
             if (!child.Geometry.Visible)
@@ -583,11 +594,15 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                 continue;
             }
 
+            Matrix4 transform = Matrix4.Identity();
+            ApplyPaintTransform(child, transform); // must be invertible
             RenderSliver localChild = child;
-            Point paintOffset = PaintOffsetOf(child);
             bool isHit = result.AddWithOutOfBandPosition(
-                hitResult => localChild.HitTest(hitResult, position - paintOffset),
-                paintOffset: paintOffset);
+                _ => localChild.HitTest(
+                    sliverResult,
+                    mainAxisPosition: ComputeChildMainAxisPosition(localChild, mainAxisPosition),
+                    crossAxisPosition: crossAxisPosition),
+                paintTransform: transform);
             if (isHit)
             {
                 return true;
@@ -621,10 +636,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                 return new RevealedOffset(_offset.Pixels, rect ?? target.PaintBounds);
             }
 
-            // Flutter's `RenderSliver` is not a `RenderBox`, so its walk can test the type directly.
-            // Plumix's is (see the sliver hit-testing divergence), so a nested sliver would otherwise
-            // become the pivot and the descendant's paint offset inside it would be counted twice.
-            if (current is RenderBox box && current is not RenderSliver)
+            if (current is RenderBox box)
             {
                 pivot = box;
             }
@@ -650,7 +662,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         if (pivot != null)
         {
             var pivotParent = (RenderSliver)pivot.Parent!;
-            growthDirection = pivotParent.ConstraintsForSliver.GrowthDirection;
+            growthDirection = pivotParent.Constraints.GrowthDirection;
             pivotExtent = effectiveAxis == Axis.Horizontal ? pivot.Size.Width : pivot.Size.Height;
             rect ??= target.PaintBounds;
             rectLocal = RenderObject.TransformRect(target.GetTransformTo(pivot), rect.Value);
@@ -660,9 +672,9 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             // The target is a sliver and there is no box between it and this viewport, so a rect is
             // made up from the sliver's own geometry.
             var targetSliver = (RenderSliver)target;
-            growthDirection = targetSliver.ConstraintsForSliver.GrowthDirection;
+            growthDirection = targetSliver.Constraints.GrowthDirection;
             pivotExtent = targetSliver.Geometry.ScrollExtent;
-            double crossAxisExtent = targetSliver.ConstraintsForSliver.CrossAxisExtent;
+            double crossAxisExtent = targetSliver.Constraints.CrossAxisExtent;
             rect ??= effectiveAxis == Axis.Horizontal
                 ? new Rect(0.0, 0.0, targetSliver.Geometry.ScrollExtent, crossAxisExtent)
                 : new Rect(0.0, 0.0, crossAxisExtent, targetSliver.Geometry.ScrollExtent);
@@ -690,7 +702,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
 
         Rect targetRect = RenderObject.TransformRect(target.GetTransformTo(this), rect.Value);
         double extentOfPinnedSlivers = MaxScrollObstructionExtentBefore(sliver);
-        switch (sliver.ConstraintsForSliver.GrowthDirection)
+        switch (sliver.Constraints.GrowthDirection)
         {
             case GrowthDirection.Forward:
                 if (isPinned && alignment <= 0)
@@ -806,7 +818,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             return viewportClip;
         }
 
-        SliverConstraints constraints = clippedSliver.ConstraintsForSliver;
+        SliverConstraints constraints = clippedSliver.Constraints;
         // The viewport's main axis extent is infinite for a shrink-wrapping viewport inside a flex,
         // which makes the overlap start meaningless.
         if (constraints.Overlap == 0 || double.IsInfinity(constraints.ViewportMainAxisExtent))
@@ -1270,7 +1282,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
 
     public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
     {
-        switch (child.ConstraintsForSliver.GrowthDirection)
+        switch (child.Constraints.GrowthDirection)
         {
             case GrowthDirection.Forward:
             {
@@ -1303,7 +1315,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
     public override double MaxScrollObstructionExtentBefore(RenderSliver child)
     {
         double pinnedExtent = 0.0;
-        switch (child.ConstraintsForSliver.GrowthDirection)
+        switch (child.Constraints.GrowthDirection)
         {
             case GrowthDirection.Forward:
             {
@@ -1335,8 +1347,8 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
     {
         Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
-            child.ConstraintsForSliver.AxisDirection,
-            child.ConstraintsForSliver.GrowthDirection) switch
+            child.Constraints.AxisDirection,
+            child.Constraints.GrowthDirection) switch
         {
             AxisDirection.Down => parentMainAxisPosition - paintOffset.Y,
             AxisDirection.Right => parentMainAxisPosition - paintOffset.X,
@@ -1551,7 +1563,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
         var childParentData = (SliverLogicalParentData)child.parentData!;
         return ComputeAbsolutePaintOffset(
             child,
-            childParentData.LayoutOffset ?? 0.0,
+            childParentData.LayoutOffset!.Value,
             GrowthDirection.Forward);
     }
 
@@ -1589,10 +1601,11 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
 
     public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
     {
-        double layoutOffset = ((SliverLogicalParentData)child.parentData!).LayoutOffset ?? 0.0;
+        Debug.Assert(HasSize);
+        double layoutOffset = ((SliverLogicalParentData)child.parentData!).LayoutOffset!.Value;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
-            child.ConstraintsForSliver.AxisDirection,
-            child.ConstraintsForSliver.GrowthDirection) switch
+            child.Constraints.AxisDirection,
+            child.Constraints.GrowthDirection) switch
         {
             AxisDirection.Down or AxisDirection.Right => parentMainAxisPosition - layoutOffset,
             AxisDirection.Up => Size.Height - parentMainAxisPosition - layoutOffset,

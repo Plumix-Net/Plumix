@@ -799,9 +799,9 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     /// Flutter's <c>_RenderDeferredLayoutBox.layout</c>. <c>parentUsesSize</c> is ignored because this
     /// box is sized by its parent.
     /// </remarks>
-    public override void Layout(BoxConstraints constraints, bool parentUsesSize = false)
+    public override void Layout(IConstraints constraints, bool parentUsesSize = false)
     {
-        DoLayoutFrom(Parent!, constraints);
+        DoLayoutFrom(Parent!, (BoxConstraints)constraints);
     }
 
     /// <remarks>Flutter's <c>_RenderDeferredLayoutBox._doLayoutFrom</c>.</remarks>

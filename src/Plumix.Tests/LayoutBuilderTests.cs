@@ -38,7 +38,7 @@ public sealed class LayoutBuilderTests
 
         Assert.Equal(0, builderCalls);
         var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 20,
             RemainingPaintExtent: 80,
@@ -46,7 +46,7 @@ public sealed class LayoutBuilderTests
             ViewportMainAxisExtent: 80,
             RemainingCacheExtent: 100);
 
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(1, builderCalls);
         Assert.Equal(constraints, receivedConstraints);
@@ -54,7 +54,7 @@ public sealed class LayoutBuilderTests
         Assert.Equal(renderObject.Child!.Geometry, renderObject.Geometry);
         Assert.Equal(140, renderObject.Geometry.ScrollExtent);
         Assert.Equal(80, renderObject.Geometry.PaintExtent);
-        Assert.Equal(new Size(100, 80), renderObject.Size);
+        Assert.Equal(new Rect(0, 0, 100, 80), renderObject.PaintBounds);
     }
 
     [Fact]
@@ -71,22 +71,22 @@ public sealed class LayoutBuilderTests
         Mount(root, owner);
 
         var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
-        var firstConstraints = new SliverConstraints(
+        var firstConstraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 80,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 80,
             RemainingCacheExtent: 80);
-        renderObject.LayoutWithSliverConstraints(firstConstraints);
+        renderObject.Layout(firstConstraints, parentUsesSize: true);
         Assert.Equal(1, builderCalls);
 
         renderObject.ScheduleLayoutCallback();
-        renderObject.LayoutWithSliverConstraints(firstConstraints);
+        renderObject.Layout(firstConstraints, parentUsesSize: true);
         Assert.Equal(1, builderCalls);
 
         var secondConstraints = firstConstraints with { RemainingPaintExtent = 120 };
-        renderObject.LayoutWithSliverConstraints(secondConstraints);
+        renderObject.Layout(secondConstraints, parentUsesSize: true);
         Assert.Equal(2, builderCalls);
         Assert.Equal(120, renderObject.Geometry.ScrollExtent);
     }
@@ -105,14 +105,14 @@ public sealed class LayoutBuilderTests
         Mount(root, owner);
 
         var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 100,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 100,
             RemainingCacheExtent: 100);
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
 
         root.Update(new SliverLayoutBuilder((_, _) =>
         {
@@ -124,7 +124,7 @@ public sealed class LayoutBuilderTests
         Assert.Equal(0, secondBuilderCalls);
         Assert.Same(renderObject, root.ChildElement!.RenderObject);
 
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(1, firstBuilderCalls);
         Assert.Equal(1, secondBuilderCalls);
@@ -147,21 +147,21 @@ public sealed class LayoutBuilderTests
         Mount(root, owner);
 
         var renderObject = Assert.IsType<RenderSliverLayoutBuilder>(root.ChildElement!.RenderObject);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 100,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 100,
             RemainingCacheExtent: 100);
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
         Assert.Equal([1], values);
 
         root.Update(new TestInheritedValue(2, layoutBuilder));
         owner.FlushBuild();
         Assert.Equal(1, builderCalls);
 
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
         Assert.Equal(2, builderCalls);
         Assert.Equal([1, 2], values);
     }
@@ -397,27 +397,23 @@ public sealed class LayoutBuilderTests
     {
         int builds = 0;
         var owner = TestBuildOwner.Create();
-        var root = new TestRootElement(new SkipLayoutHost(
-            new SliverLayoutBuilder((_, _) =>
-            {
-                builds++;
-                return new SliverToBoxAdapter(new SizedBox(height: 10));
-            })));
+        var root = new TestRootElement(new Viewport(
+            ViewportOffset.Zero(),
+            [
+                new SkipLayoutSliverHost(new SliverLayoutBuilder((_, _) =>
+                {
+                    builds++;
+                    return new SliverToBoxAdapter(new SizedBox(height: 10));
+                })),
+            ]));
         Mount(root, owner);
 
-        var host = Assert.IsType<RenderSkipLayoutHost>(root.ChildElement!.RenderObject);
-        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = host };
+        var viewport = Assert.IsType<RenderViewport>(root.ChildElement!.RenderObject);
+        var host = Assert.IsType<RenderSkipLayoutSliverHost>(viewport.FirstChild);
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
-
-        RenderSliverLayoutBuilder layoutBuilder = FindRenderObject<RenderSliverLayoutBuilder>(renderView);
-        layoutBuilder.LayoutWithSliverConstraints(new SliverConstraints(
-            Axis: Axis.Vertical,
-            ScrollOffset: 0,
-            RemainingPaintExtent: 100,
-            CrossAxisExtent: 200,
-            ViewportMainAxisExtent: 100,
-            RemainingCacheExtent: 100));
+        pipeline.FlushLayout(new Size(200, 100));
         Assert.Equal(1, builds);
 
         host.SkipChildLayout = true;
@@ -503,6 +499,49 @@ public sealed class LayoutBuilderTests
     /// A parent that stops laying its child out, standing in for Flutter's obstructed
     /// <c>OverlayEntry</c> with <c>maintainState: true</c>.
     /// </summary>
+    private sealed class SkipLayoutSliverHost : SingleChildRenderObjectWidget
+    {
+        public SkipLayoutSliverHost(Widget sliver) : base(sliver)
+        {
+        }
+
+        public override RenderObject CreateRenderObject(BuildContext context)
+        {
+            return new RenderSkipLayoutSliverHost();
+        }
+    }
+
+    private sealed class RenderSkipLayoutSliverHost : RenderProxySliver
+    {
+        private bool _skipChildLayout;
+
+        public bool SkipChildLayout
+        {
+            get => _skipChildLayout;
+            set
+            {
+                if (_skipChildLayout == value)
+                {
+                    return;
+                }
+
+                _skipChildLayout = value;
+                MarkNeedsLayout();
+            }
+        }
+
+        protected override void PerformLayout()
+        {
+            if (_skipChildLayout)
+            {
+                Geometry = SliverGeometry.Zero;
+                return;
+            }
+
+            base.PerformLayout();
+        }
+    }
+
     private sealed class SkipLayoutHost : SingleChildRenderObjectWidget
     {
         public SkipLayoutHost(Widget child) : base(child)

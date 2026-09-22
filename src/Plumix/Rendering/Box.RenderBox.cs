@@ -333,11 +333,6 @@ public abstract class RenderBox : RenderObject
         return true;
     }
 
-    private protected override void InvalidateLayoutCache()
-    {
-        _layoutCacheStorage.Clear();
-    }
-
     public override void MarkNeedsLayout()
     {
         bool hadCachedLayoutData = _layoutCacheStorage.Clear();
@@ -359,7 +354,7 @@ public abstract class RenderBox : RenderObject
         }
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public virtual bool HitTest(BoxHitTestResult result, Point position)
     {
         if (!HasSize)
         {

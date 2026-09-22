@@ -61,7 +61,7 @@ public class RenderSliverPrototypeExtentList : RenderSliverFixedExtentBoxAdaptor
                 return 0;
             }
 
-            return ConstraintsForSliver.Axis == Axis.Vertical
+            return Constraints.Axis == Axis.Vertical
                 ? _prototypeChild.Size.Height
                 : _prototypeChild.Size.Width;
         }
@@ -79,8 +79,9 @@ public class RenderSliverPrototypeExtentList : RenderSliverFixedExtentBoxAdaptor
     }
 
     /// <inheritdoc />
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         if (_prototypeChild is null)
         {
             Geometry = default;
@@ -88,6 +89,6 @@ public class RenderSliverPrototypeExtentList : RenderSliverFixedExtentBoxAdaptor
         }
 
         _prototypeChild.Layout(constraints.AsBoxConstraints(), parentUsesSize: true);
-        base.PerformSliverLayout(constraints);
+        base.PerformLayout();
     }
 }

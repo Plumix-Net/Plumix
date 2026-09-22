@@ -403,14 +403,14 @@ public sealed class BuildScopeTests
         Mount(root, owner);
 
         var renderObject = (RenderSliverLayoutBuilder)root.ChildElement!.RenderObject!;
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 80,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 80,
             RemainingCacheExtent: 80);
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
 
         Assert.NotSame(root.BuildScope, root.ChildElement!.BuildScope);
         Assert.Same(root.ChildElement!.BuildScope, inner!.Element.BuildScope);
@@ -420,7 +420,7 @@ public sealed class BuildScopeTests
         owner.FlushBuild();
         Assert.Equal(1, inner.Builds);
 
-        renderObject.LayoutWithSliverConstraints(constraints);
+        renderObject.Layout(constraints, parentUsesSize: true);
         Assert.Equal(2, inner.Builds);
     }
 

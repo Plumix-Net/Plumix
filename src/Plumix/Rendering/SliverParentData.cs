@@ -47,13 +47,6 @@ public class SliverPhysicalParentData : ParentData
     /// <summary>The child's proportional cross-axis flexibility, or null when inflexible.</summary>
     public int? CrossAxisFlex { get; set; }
 
-    /// <summary>Compatibility spelling for the former box parent-data offset.</summary>
-    public Point offset
-    {
-        get => PaintOffset;
-        set => PaintOffset = value;
-    }
-
     /// <summary>Applies the child's paint offset to the supplied transform.</summary>
     public void ApplyPaintTransform(Matrix4 transform)
     {

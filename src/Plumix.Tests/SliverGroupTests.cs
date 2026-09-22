@@ -60,13 +60,13 @@ public sealed class SliverGroupTests
         var constrained = new RenderSliverConstrainedCrossAxis(maxExtent: 80, sliver: child);
         SliverConstraints constraints = CreateConstraints(crossAxisExtent: 120);
 
-        constrained.LayoutWithSliverConstraints(constraints);
+        constrained.Layout(constraints, parentUsesSize: true);
 
-        Assert.Equal(80, child.LastConstraints.CrossAxisExtent);
+        Assert.Equal(80, child.LastConstraints!.Value.CrossAxisExtent);
         Assert.Equal(80, constrained.Geometry.CrossAxisExtent);
         Assert.Equal(child.Geometry.ScrollExtent, constrained.Geometry.ScrollExtent);
         Assert.Equal(child.Geometry.PaintExtent, constrained.Geometry.PaintExtent);
-        Assert.Equal(default, ((SliverPhysicalParentData)child.parentData!).offset);
+        Assert.Equal(default, ((SliverPhysicalParentData)child.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -83,14 +83,14 @@ public sealed class SliverGroupTests
         ((SliverPhysicalParentData)constrained.parentData!).CrossAxisFlex = 0;
         ((SliverPhysicalParentData)expanded.parentData!).CrossAxisFlex = 2;
 
-        group.LayoutWithSliverConstraints(CreateConstraints(crossAxisExtent: 380));
+        group.Layout(CreateConstraints(crossAxisExtent: 380), parentUsesSize: true);
 
-        Assert.Equal(100, first.LastConstraints.CrossAxisExtent, precision: 3);
-        Assert.Equal(80, constrainedChild.LastConstraints.CrossAxisExtent, precision: 3);
-        Assert.Equal(200, expanded.LastConstraints.CrossAxisExtent, precision: 3);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).offset);
-        Assert.Equal(new Point(100, 0), ((SliverPhysicalParentData)constrained.parentData!).offset);
-        Assert.Equal(new Point(180, 0), ((SliverPhysicalParentData)expanded.parentData!).offset);
+        Assert.Equal(100, first.LastConstraints!.Value.CrossAxisExtent, precision: 3);
+        Assert.Equal(80, constrainedChild.LastConstraints!.Value.CrossAxisExtent, precision: 3);
+        Assert.Equal(200, expanded.LastConstraints!.Value.CrossAxisExtent, precision: 3);
+        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
+        Assert.Equal(new Point(100, 0), ((SliverPhysicalParentData)constrained.parentData!).PaintOffset);
+        Assert.Equal(new Point(180, 0), ((SliverPhysicalParentData)expanded.parentData!).PaintOffset);
         Assert.Equal(160, group.Geometry.ScrollExtent);
     }
 
@@ -103,13 +103,13 @@ public sealed class SliverGroupTests
         group.Insert(shortChild);
         group.Insert(longChild, after: shortChild);
 
-        group.LayoutWithSliverConstraints(CreateConstraints(
+        group.Layout(CreateConstraints(
             scrollOffset: 80,
             remainingPaintExtent: 50,
-            crossAxisExtent: 200));
+            crossAxisExtent: 200), parentUsesSize: true);
 
-        Assert.Equal(new Point(0, -30), ((SliverPhysicalParentData)shortChild.parentData!).offset);
-        Assert.Equal(new Point(100, -30), ((SliverPhysicalParentData)longChild.parentData!).offset);
+        Assert.Equal(new Point(0, -30), ((SliverPhysicalParentData)shortChild.parentData!).PaintOffset);
+        Assert.Equal(new Point(100, -30), ((SliverPhysicalParentData)longChild.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class SliverGroupTests
         ((SliverPhysicalParentData)second.parentData!).CrossAxisFlex = 0;
 
         Assert.Throws<InvalidOperationException>(() =>
-            group.LayoutWithSliverConstraints(CreateConstraints(crossAxisExtent: 100)));
+            group.Layout(CreateConstraints(crossAxisExtent: 100), parentUsesSize: true));
     }
 
     [Fact]
@@ -137,19 +137,19 @@ public sealed class SliverGroupTests
         group.Insert(first);
         group.Insert(second, after: first);
 
-        group.LayoutWithSliverConstraints(CreateConstraints(
+        group.Layout(CreateConstraints(
             scrollOffset: 50,
             remainingPaintExtent: 150,
             crossAxisExtent: 100,
             remainingCacheExtent: 190,
-            precedingScrollExtent: 30));
+            precedingScrollExtent: 30), parentUsesSize: true);
 
-        Assert.Equal(50, first.LastConstraints.ScrollOffset);
-        Assert.Equal(0, second.LastConstraints.ScrollOffset);
-        Assert.Equal(30, first.LastConstraints.PrecedingScrollExtent);
-        Assert.Equal(110, second.LastConstraints.PrecedingScrollExtent);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).offset);
-        Assert.Equal(new Point(0, 30), ((SliverPhysicalParentData)second.parentData!).offset);
+        Assert.Equal(50, first.LastConstraints!.Value.ScrollOffset);
+        Assert.Equal(0, second.LastConstraints!.Value.ScrollOffset);
+        Assert.Equal(30, first.LastConstraints!.Value.PrecedingScrollExtent);
+        Assert.Equal(110, second.LastConstraints!.Value.PrecedingScrollExtent);
+        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)first.parentData!).PaintOffset);
+        Assert.Equal(new Point(0, 30), ((SliverPhysicalParentData)second.parentData!).PaintOffset);
         Assert.Equal(200, group.Geometry.ScrollExtent);
         Assert.Equal(150, group.Geometry.PaintExtent);
         Assert.Equal(150, group.Geometry.LayoutExtent);
@@ -168,14 +168,14 @@ public sealed class SliverGroupTests
         group.Insert(pinned);
         group.Insert(body, after: pinned);
 
-        group.LayoutWithSliverConstraints(CreateConstraints(
+        group.Layout(CreateConstraints(
             scrollOffset: 125,
             remainingPaintExtent: 100,
-            crossAxisExtent: 100));
+            crossAxisExtent: 100), parentUsesSize: true);
 
         Assert.Equal(140, group.Geometry.ScrollExtent);
         Assert.Equal(15, group.Geometry.PaintExtent);
-        Assert.Equal(new Point(0, -40), ((SliverPhysicalParentData)pinned.parentData!).offset);
+        Assert.Equal(new Point(0, -40), ((SliverPhysicalParentData)pinned.parentData!).PaintOffset);
         Assert.Equal(0, group.ChildScrollOffset(pinned));
         Assert.Equal(0, group.ChildScrollOffset(body));
     }
@@ -189,10 +189,10 @@ public sealed class SliverGroupTests
         group.Insert(correcting);
         group.Insert(unreachable, after: correcting);
 
-        group.LayoutWithSliverConstraints(CreateConstraints());
+        group.Layout(CreateConstraints(), parentUsesSize: true);
 
         Assert.Equal(-12, group.Geometry.ScrollOffsetCorrection);
-        Assert.Equal(default, unreachable.LastConstraints);
+        Assert.Null(unreachable.LastConstraints);
     }
 
     [Fact]
@@ -237,7 +237,7 @@ public sealed class SliverGroupTests
         double remainingCacheExtent = 200.0,
         double precedingScrollExtent = 0.0)
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: scrollOffset,
             RemainingPaintExtent: remainingPaintExtent,
@@ -275,10 +275,11 @@ public sealed class SliverGroupTests
             _name = name;
         }
 
-        public SliverConstraints LastConstraints { get; private set; }
+        public SliverConstraints? LastConstraints { get; private set; }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             LastConstraints = constraints;
             if (Math.Abs(_scrollOffsetCorrection) > 0.0001)
             {

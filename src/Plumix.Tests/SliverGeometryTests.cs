@@ -127,15 +127,31 @@ public sealed class SliverGeometryTests
             PaintExtent: 10.0,
             MaxPaintExtent: 10.0,
             HitTestExtent: 24.0));
-        sliver.LayoutWithSliverConstraints(Constraints());
+        sliver.Layout(Constraints(), parentUsesSize: true);
 
-        var inside = new BoxHitTestResult();
-        var outside = new BoxHitTestResult();
+        var inside = new SliverHitTestResult();
+        var outside = new SliverHitTestResult();
 
-        Assert.True(sliver.HitTest(inside, new Point(20.0, 23.0)));
-        Assert.Single(inside.Path);
-        Assert.False(sliver.HitTest(outside, new Point(20.0, 24.0)));
+        Assert.True(sliver.HitTest(inside, mainAxisPosition: 23.0, crossAxisPosition: 20.0));
+        SliverHitTestEntry entry = Assert.IsType<SliverHitTestEntry>(Assert.Single(inside.Path));
+        Assert.Same(sliver, entry.Target);
+        Assert.Equal(23.0, entry.MainAxisPosition);
+        Assert.Equal(20.0, entry.CrossAxisPosition);
+        Assert.False(sliver.HitTest(outside, mainAxisPosition: 24.0, crossAxisPosition: 20.0));
         Assert.Empty(outside.Path);
+    }
+
+    [Fact]
+    public void HitTest_BoundsAreInclusiveAtZeroAndExclusiveAtTheExtents()
+    {
+        var sliver = new HitTestSliver(new SliverGeometry(PaintExtent: 10.0, MaxPaintExtent: 10.0));
+        sliver.Layout(Constraints(), parentUsesSize: true);
+
+        Assert.True(sliver.HitTest(new SliverHitTestResult(), mainAxisPosition: 0.0, crossAxisPosition: 0.0));
+        Assert.False(sliver.HitTest(new SliverHitTestResult(), mainAxisPosition: -0.1, crossAxisPosition: 0.0));
+        Assert.False(sliver.HitTest(new SliverHitTestResult(), mainAxisPosition: 0.0, crossAxisPosition: -0.1));
+        Assert.False(sliver.HitTest(new SliverHitTestResult(), mainAxisPosition: 0.0, crossAxisPosition: 40.0));
+        Assert.True(sliver.HitTest(new SliverHitTestResult(), mainAxisPosition: 9.9, crossAxisPosition: 39.9));
     }
 
     [Fact]
@@ -146,16 +162,18 @@ public sealed class SliverGeometryTests
             PaintExtent: 10.0,
             MaxPaintExtent: 10.0,
             HitTestExtent: 24.0));
-        var padding = new RenderSliverPadding(new Thickness(0.0, 5.0, 0.0, 7.0), child);
+        var padding = new RenderSliverPadding(new Thickness(0.0, 5.0, 0.0, 7.0), child: child);
 
-        padding.LayoutWithSliverConstraints(Constraints());
+        padding.Layout(Constraints(), parentUsesSize: true);
 
         Assert.Equal(29.0, padding.Geometry.HitTestExtent);
     }
 
     [Fact]
-    public void RenderProxySliver_PaintsAccordingToVisibleInsteadOfPaintExtent()
+    public void RenderProxySliver_PaintsItsChildWhateverTheChildGeometry()
     {
+        // Dart's RenderProxySliver.paint paints any child; skipping invisible slivers is the
+        // viewport's job (`_paintContents` checks `geometry.visible`).
         var hiddenChild = new HitTestSliver(new SliverGeometry(
             PaintExtent: 10.0,
             MaxPaintExtent: 10.0,
@@ -163,17 +181,17 @@ public sealed class SliverGeometryTests
         var visibleChild = new HitTestSliver(new SliverGeometry(Visible: true));
         var hiddenProxy = new RenderSliverIgnorePointer(sliver: hiddenChild);
         var visibleProxy = new RenderSliverIgnorePointer(sliver: visibleChild);
-        hiddenProxy.LayoutWithSliverConstraints(Constraints());
-        visibleProxy.LayoutWithSliverConstraints(Constraints());
+        hiddenProxy.Layout(Constraints(), parentUsesSize: true);
+        visibleProxy.Layout(Constraints(), parentUsesSize: true);
 
         hiddenProxy.Paint(new PaintingContext(new OffsetLayer()), default);
         visibleProxy.Paint(new PaintingContext(new OffsetLayer()), default);
 
-        Assert.Equal(0, hiddenChild.PaintCount);
+        Assert.Equal(1, hiddenChild.PaintCount);
         Assert.Equal(1, visibleChild.PaintCount);
     }
 
-    private static SliverConstraints Constraints() => new(
+    private static SliverConstraints Constraints() => TestSliverConstraints.Create(
         Axis: Axis.Vertical,
         ScrollOffset: 0.0,
         RemainingPaintExtent: 100.0,
@@ -185,12 +203,13 @@ public sealed class SliverGeometryTests
     {
         public int PaintCount { get; private set; }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             Geometry = geometry;
         }
 
-        protected override bool HitTestSelf(Point position) => true;
+        protected override bool HitTestSelf(double mainAxisPosition, double crossAxisPosition) => true;
 
         public override void Paint(PaintingContext context, Point offset)
         {

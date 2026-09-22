@@ -36,6 +36,8 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         _owner.FlushBuild();
     }
 
+    public void FlushBuild() => _owner.FlushBuild();
+
     public void Layout(Size size)
     {
         _owner.FlushBuild();

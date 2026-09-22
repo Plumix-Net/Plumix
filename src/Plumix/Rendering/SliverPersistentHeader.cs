@@ -135,7 +135,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
                 return 0.0;
             }
 
-            return ConstraintsForSliver.Axis == Axis.Vertical ? Child.Size.Height : Child.Size.Width;
+            return Constraints.Axis == Axis.Vertical ? Child.Size.Height : Child.Size.Width;
         }
     }
 
@@ -171,7 +171,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
         {
             InvokeLayoutCallback<SliverConstraints>(
                 _ => UpdateChild(shrinkOffset, overlapsContent),
-                ConstraintsForSliver);
+                Constraints);
             _lastShrinkOffset = shrinkOffset;
             _lastOverlapsContent = overlapsContent;
             _needsUpdateChild = false;
@@ -184,7 +184,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
                 + $"The specified maxExtent was {maxExtent}. The specified minExtent was {MinExtent}.");
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double stretchOffset = 0.0;
         if (StretchConfiguration != null && constraints.ScrollOffset == 0.0)
         {
@@ -210,7 +210,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
     /// <see cref="LayoutChild"/> stretches into — is not gated on a zero scroll offset.
     /// </summary>
     protected double GeometryStretchOffset =>
-        StretchConfiguration != null ? Math.Abs(ConstraintsForSliver.Overlap) : 0.0;
+        StretchConfiguration != null ? Math.Abs(Constraints.Overlap) : 0.0;
 
     /// <summary>
     /// Places the child at the offset implied by <see cref="RenderSliver.ChildMainAxisPosition"/>.
@@ -227,8 +227,8 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
         double position = ChildMainAxisPosition(Child);
         double childExtent = ChildExtent;
         double paintExtent = Geometry.PaintExtent;
-        ((BoxParentData)Child.parentData!).offset =
-            PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver) switch
+        ((SliverPhysicalParentData)Child.parentData!).PaintOffset =
+            PersistentHeaderReveal.EffectiveAxisDirection(Constraints) switch
             {
                 AxisDirection.Up => new Point(0.0, paintExtent - position - childExtent),
                 AxisDirection.Left => new Point(paintExtent - position - childExtent, 0.0),
@@ -277,8 +277,9 @@ public class RenderSliverScrollingPersistentHeader : RenderSliverPersistentHeade
     {
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         LayoutChild(constraints.ScrollOffset, MaxExtent);
         _childPosition = UpdateGeometry();
         UpdateChildPaintOffset();
@@ -287,7 +288,7 @@ public class RenderSliverScrollingPersistentHeader : RenderSliverPersistentHeade
     /// <summary>Updates <see cref="RenderSliver.Geometry"/> and returns the child's main axis position.</summary>
     protected virtual double UpdateGeometry()
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double stretchOffset = GeometryStretchOffset;
         double maxExtent = MaxExtent;
         double paintExtent = maxExtent - constraints.ScrollOffset;
@@ -325,8 +326,9 @@ public class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
     /// </summary>
     public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; set; }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         double maxExtent = MaxExtent;
         bool overlapsContent = constraints.Overlap > 0.0;
         LayoutChild(constraints.ScrollOffset, maxExtent, overlapsContent);
@@ -365,7 +367,7 @@ public class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
             : rect;
         Rect? newRect = PersistentHeaderReveal.TrimForPinnedHeader(
             localBounds,
-            PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver),
+            PersistentHeaderReveal.EffectiveAxisDirection(Constraints),
             ChildExtent);
         base.ShowOnScreen(descendant: this, rect: newRect, duration: duration, curve: curve);
     }
@@ -477,8 +479,9 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
         base.OnDetach();
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         double maxExtent = MaxExtent;
         if (_lastActualScrollOffset is { } lastActualScrollOffset
             && (constraints.ScrollOffset < lastActualScrollOffset || _effectiveScrollOffset < maxExtent))
@@ -524,7 +527,7 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
     /// <summary>Updates <see cref="RenderSliver.Geometry"/> and returns the child's main axis position.</summary>
     protected virtual double UpdateGeometry()
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double stretchOffset = GeometryStretchOffset;
         double maxExtent = MaxExtent;
         double paintExtent = maxExtent - _effectiveScrollOffset!.Value;
@@ -568,7 +571,7 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
         double childExtent = ChildExtent;
         double targetExtent;
         Rect? targetRect;
-        switch (PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver))
+        switch (PersistentHeaderReveal.EffectiveAxisDirection(Constraints))
         {
             case AxisDirection.Up:
                 targetExtent = childExtent - (childBounds?.Top ?? 0.0);
@@ -689,7 +692,7 @@ public class RenderSliverFloatingPinnedPersistentHeader : RenderSliverFloatingPe
 
     protected override double UpdateGeometry()
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double minExtent = MinExtent;
         double minAllowedExtent = constraints.RemainingPaintExtent > minExtent
             ? minExtent

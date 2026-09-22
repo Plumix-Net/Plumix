@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Widgets;
@@ -63,8 +64,9 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         return 0.0;
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         BoxConstraints prototypeConstraints = constraints.AsBoxConstraints();
         double minExtent = 0.0;
         if (_minExtentPrototype != null)
@@ -127,7 +129,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
         // A partially collapsed header must not let its children participate in the scrollable's
         // implicit scrolling, or the viewport would try to scroll them into view.
-        double childExtent = _child == null ? 0.0 : BoxExtent(_child, ConstraintsForSliver.Axis);
+        double childExtent = _child == null ? 0.0 : BoxExtent(_child, Constraints.Axis);
         if (Geometry.LayoutExtent < childExtent)
         {
             configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
@@ -144,19 +146,22 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         ctx.PaintChild(_child, offset + ((BoxParentData)_child.parentData!).offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        if (_child == null || Geometry.HitTestExtent <= 0.0)
+        Debug.Assert(Geometry.HitTestExtent > 0.0);
+        if (_child != null)
         {
-            return false;
+            return this.HitTestBoxChild(
+                BoxHitTestResult.Wrap(result),
+                _child,
+                mainAxisPosition: mainAxisPosition,
+                crossAxisPosition: crossAxisPosition);
         }
 
-        Point childOffset = ((BoxParentData)_child.parentData!).offset;
-        RenderBox child = _child;
-        return result.AddWithPaintOffset(
-            childOffset,
-            position,
-            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+        return false;
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -277,7 +282,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
                 return 0.0;
             }
 
-            return ConstraintsForSliver.Axis == Axis.Vertical ? Child.Size.Height : Child.Size.Width;
+            return Constraints.Axis == Axis.Vertical ? Child.Size.Height : Child.Size.Width;
         }
     }
 
@@ -304,7 +309,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
             return;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double childExtent = ChildExtent;
         Rect? childBounds = descendant != null
             ? RenderObject.TransformRect(
@@ -392,8 +397,9 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
         base.OnDetach();
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         bool floatingHeaderNeedsUpdate = _lastScrollOffset.HasValue
             && (constraints.ScrollOffset < _lastScrollOffset.Value
                 || _effectiveScrollOffset < ChildExtent);
@@ -442,7 +448,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
 
         if (Child != null)
         {
-            ((BoxParentData)Child.parentData!).offset = FloatingChildOffset(
+            ((SliverPhysicalParentData)Child.parentData!).PaintOffset = FloatingChildOffset(
                 constraints,
                 childExtent,
                 Geometry.PaintExtent);

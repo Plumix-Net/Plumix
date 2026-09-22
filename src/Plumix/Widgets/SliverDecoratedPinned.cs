@@ -83,7 +83,7 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
                 return 0.0;
             }
 
-            return ConstraintsForSliver.Axis == Axis.Vertical
+            return Constraints.Axis == Axis.Vertical
                 ? Child.Size.Height
                 : Child.Size.Width;
         }
@@ -105,7 +105,7 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
             : rect;
         Rect? trimmed = PersistentHeaderReveal.TrimForPinnedHeader(
             localBounds,
-            PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver),
+            PersistentHeaderReveal.EffectiveAxisDirection(Constraints),
             ChildExtent);
         base.ShowOnScreen(descendant: this, rect: trimmed, duration: duration, curve: curve);
     }
@@ -124,12 +124,13 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
         }
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         Child?.Layout(constraints.AsBoxConstraints(), parentUsesSize: true);
         if (Child != null)
         {
-            ((BoxParentData)Child.parentData!).offset = default;
+            ((SliverPhysicalParentData)Child.parentData!).PaintOffset = default;
         }
 
         double childExtent = ChildExtent;

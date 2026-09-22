@@ -286,7 +286,7 @@ public sealed class VisibilityTests
         Assert.Equal(80, child.Geometry.ScrollExtent);
         Assert.Equal(default, offstage.Geometry);
         Assert.Equal(0, box.PaintCount);
-        Assert.False(offstage.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.False(offstage.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         int semanticsVisits = 0;
         offstage.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
@@ -296,7 +296,7 @@ public sealed class VisibilityTests
         Assert.Equal(child.Geometry, offstage.Geometry);
         offstage.Paint(new PaintingContext(new OffsetLayer()), new Point(0, 0));
         Assert.Equal(1, box.PaintCount);
-        Assert.True(offstage.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.True(offstage.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         offstage.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
     }
@@ -306,10 +306,10 @@ public sealed class VisibilityTests
     {
         var child = new RenderSliverToBoxAdapter(new HitTestRenderBox(new Size(100, 80)));
         var ignore = new RenderSliverIgnorePointer(ignoring: true, sliver: child);
-        ignore.LayoutWithSliverConstraints(CreateSliverConstraints());
+        ignore.Layout(CreateSliverConstraints(), parentUsesSize: true);
 
         Assert.Equal(child.Geometry, ignore.Geometry);
-        Assert.False(ignore.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.False(ignore.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         int semanticsVisits = 0;
         ignore.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
@@ -319,7 +319,7 @@ public sealed class VisibilityTests
         Assert.Equal(1, semanticsVisits);
 
         ignore.Ignoring = false;
-        Assert.True(ignore.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.True(ignore.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
     }
 
     [Fact]
@@ -345,7 +345,7 @@ public sealed class VisibilityTests
         Assert.Equal(80, visibility.Geometry.ScrollExtent);
         Assert.Equal(60, visibility.Geometry.PaintExtent);
         Assert.Equal(0, box.PaintCount);
-        Assert.False(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.False(visibility.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         int semanticsVisits = 0;
         visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
@@ -355,14 +355,14 @@ public sealed class VisibilityTests
         ignore.Ignoring = false;
         pipeline.FlushPaint();
         Assert.Equal(1, box.PaintCount);
-        Assert.True(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.True(visibility.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
     }
 
     private static SliverConstraints CreateSliverConstraints()
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 60,

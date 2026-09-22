@@ -76,7 +76,7 @@ public sealed class CupertinoRefreshTests
             hasLayoutExtent: false,
             child: child);
 
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -40.0));
+        sliver.Layout(Constraints(overlap: -40.0), parentUsesSize: true);
         Assert.Equal(new Size(320.0, 40.0), child.Size);
         Assert.Equal(0.0, sliver.Geometry.ScrollExtent);
         Assert.Equal(-40.0, sliver.Geometry.PaintOrigin);
@@ -85,27 +85,27 @@ public sealed class CupertinoRefreshTests
         Assert.Equal(0.0, sliver.Geometry.LayoutExtent);
 
         sliver.HasLayoutExtent = true;
-        sliver.LayoutWithSliverConstraints(Constraints(remainingPaintExtent: 479.0));
+        sliver.Layout(Constraints(remainingPaintExtent: 479.0), parentUsesSize: true);
         Assert.Equal(60.0, sliver.Geometry.ScrollOffsetCorrection);
-        sliver.LayoutWithSliverConstraints(Constraints());
+        sliver.Layout(Constraints(), parentUsesSize: true);
         Assert.Equal(new Size(320.0, 60.0), child.Size);
         Assert.Equal(60.0, sliver.Geometry.ScrollExtent);
         Assert.Equal(60.0, sliver.Geometry.LayoutExtent);
 
         sliver.HasLayoutExtent = false;
-        sliver.LayoutWithSliverConstraints(Constraints());
+        sliver.Layout(Constraints(), parentUsesSize: true);
         Assert.Equal(-60.0, sliver.Geometry.ScrollOffsetCorrection);
 
         var paintOverflow = new RenderCupertinoSliverRefresh(
             refreshIndicatorExtent: 60.0,
             hasLayoutExtent: false,
             child: new ExpandingRenderBox());
-        paintOverflow.LayoutWithSliverConstraints(Constraints(
+        paintOverflow.Layout(Constraints(
             overlap: -80.0,
-            remainingPaintExtent: 20.0));
+            remainingPaintExtent: 20.0), parentUsesSize: true);
         Assert.Equal(80.0, paintOverflow.Geometry.PaintExtent);
         Assert.Throws<InvalidOperationException>(() =>
-            sliver.LayoutWithSliverConstraints(Constraints(axisDirection: AxisDirection.Up)));
+            sliver.Layout(Constraints(axisDirection: AxisDirection.Up), parentUsesSize: true));
     }
 
     [Fact]
@@ -126,19 +126,19 @@ public sealed class CupertinoRefreshTests
                 refreshCalls++;
                 return gate.Task;
             });
-        using var harness = new CupertinoThemeTestHarness(refresh);
-        var sliver = Assert.IsType<RenderCupertinoSliverRefresh>(harness.RenderView.Child);
+        using var harness = new CupertinoThemeTestHarness(InViewport(refresh));
+        var sliver = HostedSliver(harness);
         var state = harness.FindState<CupertinoSliverRefreshControlState>();
 
-        sliver.LayoutWithSliverConstraints(Constraints());
+        sliver.Layout(Constraints(), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Inactive, state.RefreshState);
         Assert.Empty(calls);
 
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -40.0));
+        sliver.Layout(Constraints(overlap: -40.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Drag, state.RefreshState);
         Assert.Equal((RefreshIndicatorMode.Drag, 40.0), calls[^1]);
 
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -100.0));
+        sliver.Layout(Constraints(overlap: -100.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Armed, state.RefreshState);
         MethodCall haptic = Assert.Single(platform.Log);
         Assert.Equal("HapticFeedback.vibrate", haptic.Method);
@@ -148,15 +148,15 @@ public sealed class CupertinoRefreshTests
         await WaitUntilAsync(() => refreshCalls == 1);
 
         harness.Layout(Viewport);
-        sliver.LayoutWithSliverConstraints(Constraints());
+        sliver.Layout(Constraints(), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Refresh, state.RefreshState);
         Assert.True(sliver.HasLayoutExtent);
 
         gate.SetResult();
         await WaitUntilAsync(() => state.RefreshState == RefreshIndicatorMode.Done);
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -101.0));
+        sliver.Layout(Constraints(overlap: -101.0), parentUsesSize: true);
         Assert.Equal(1, refreshCalls);
-        harness.Layout(Viewport);
+        harness.FlushBuild();
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
         Assert.False(sliver.HasLayoutExtent);
     }
@@ -165,22 +165,22 @@ public sealed class CupertinoRefreshTests
     public void StateMachine_WithoutRefreshCallbackShowsArmedForOneLayoutThenRetracts()
     {
         var calls = new List<RefreshIndicatorMode>();
-        using var harness = new CupertinoThemeTestHarness(new CupertinoSliverRefreshControl(
+        using var harness = new CupertinoThemeTestHarness(InViewport(new CupertinoSliverRefreshControl(
             builder: (_, mode, _, _, _) =>
             {
                 calls.Add(mode);
                 return new SizedBox();
-            }));
-        var sliver = Assert.IsType<RenderCupertinoSliverRefresh>(harness.RenderView.Child);
+            })));
+        var sliver = HostedSliver(harness);
         var state = harness.FindState<CupertinoSliverRefreshControlState>();
 
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -100.0));
+        sliver.Layout(Constraints(overlap: -100.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Armed, state.RefreshState);
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -99.0));
+        sliver.Layout(Constraints(overlap: -99.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -11.0));
+        sliver.Layout(Constraints(overlap: -11.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
-        sliver.LayoutWithSliverConstraints(Constraints(overlap: -9.0));
+        sliver.Layout(Constraints(overlap: -9.0), parentUsesSize: true);
         Assert.Equal(RefreshIndicatorMode.Inactive, state.RefreshState);
         Assert.Equal(
             [
@@ -191,6 +191,13 @@ public sealed class CupertinoRefreshTests
             ],
             calls);
     }
+
+    // A sliver needs a viewport parent; Flutter's tests host the control in a CustomScrollView.
+    private static Widget InViewport(Widget sliver) => new Viewport(ViewportOffset.Zero(), [sliver]);
+
+    private static RenderCupertinoSliverRefresh HostedSliver(CupertinoThemeTestHarness harness) =>
+        Assert.IsType<RenderCupertinoSliverRefresh>(
+            Assert.IsType<RenderViewport>(harness.RenderView.Child).FirstChild);
 
     private static Widget IndicatorFor(RefreshIndicatorMode mode, double pulledExtent)
     {
@@ -209,7 +216,7 @@ public sealed class CupertinoRefreshTests
         AxisDirection axisDirection = AxisDirection.Down,
         double remainingPaintExtent = 480.0)
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0.0,
             RemainingPaintExtent: remainingPaintExtent,

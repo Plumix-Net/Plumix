@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Widgets;
@@ -22,7 +23,7 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
     }
 
     /// <inheritdoc />
-    public override double? ItemExtent => ConstraintsForSliver.ViewportMainAxisExtent * _viewportFraction;
+    public override double? ItemExtent => Constraints.ViewportMainAxisExtent * _viewportFraction;
 
     public double ViewportFraction
     {
@@ -63,7 +64,7 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
             return;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         double itemExtent = ItemExtent!.Value;
         double visibleStart = constraints.ScrollOffset;
         double visibleEnd = visibleStart + constraints.ViewportMainAxisExtent;
@@ -101,16 +102,18 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
     }
 }
 
-internal sealed class RenderSliverFractionalPadding : RenderSliverPadding
+/// <remarks>Flutter's private <c>_RenderSliverFractionalPadding</c> (widgets/sliver_fill.dart).</remarks>
+internal sealed class RenderSliverFractionalPadding : RenderSliverEdgeInsetsPadding
 {
+    private SliverConstraints? _lastResolvedConstraints;
     private double _viewportFraction;
+    private Thickness? _resolvedPadding;
 
-    public RenderSliverFractionalPadding(
-        double viewportFraction = 0.0,
-        RenderSliver? sliver = null)
-        : base(default, sliver)
+    public RenderSliverFractionalPadding(double viewportFraction = 0.0)
     {
-        _viewportFraction = ValidateViewportFraction(viewportFraction);
+        Debug.Assert(viewportFraction <= 0.5);
+        Debug.Assert(viewportFraction >= 0);
+        _viewportFraction = viewportFraction;
     }
 
     public double ViewportFraction
@@ -118,35 +121,45 @@ internal sealed class RenderSliverFractionalPadding : RenderSliverPadding
         get => _viewportFraction;
         set
         {
-            double validated = ValidateViewportFraction(value);
-            if (Math.Abs(_viewportFraction - validated) <= 0.0001)
+            if (_viewportFraction == value)
             {
                 return;
             }
 
-            _viewportFraction = validated;
-            MarkNeedsLayout();
+            _viewportFraction = value;
+            MarkNeedsResolution();
         }
     }
 
-    protected override Thickness ResolvePaddingForConstraints(SliverConstraints constraints)
+    /// <inheritdoc />
+    public override Thickness? ResolvedPadding => _resolvedPadding;
+
+    private void MarkNeedsResolution()
     {
-        double paddingValue = constraints.ViewportMainAxisExtent * _viewportFraction;
-        return constraints.Axis == Axis.Horizontal
-            ? new Thickness(paddingValue, 0.0, paddingValue, 0.0)
-            : new Thickness(0.0, paddingValue, 0.0, paddingValue);
+        _resolvedPadding = null;
+        MarkNeedsLayout();
     }
 
-    private static double ValidateViewportFraction(double value)
+    private void Resolve()
     {
-        if (!double.IsFinite(value) || value < 0.0 || value > 0.5)
+        if (_resolvedPadding != null && _lastResolvedConstraints == Constraints)
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(value),
-                "Fractional sliver padding must be between 0 and 0.5.");
+            return;
         }
 
-        return value;
+        double paddingValue = Constraints.ViewportMainAxisExtent * ViewportFraction;
+        _lastResolvedConstraints = Constraints;
+        _resolvedPadding = Constraints.Axis switch
+        {
+            Axis.Horizontal => new Thickness(paddingValue, 0.0, paddingValue, 0.0),
+            _ => new Thickness(0.0, paddingValue, 0.0, paddingValue),
+        };
+    }
+
+    protected override void PerformLayout()
+    {
+        Resolve();
+        base.PerformLayout();
     }
 }
 
@@ -157,8 +170,9 @@ public sealed class RenderSliverFillRemainingWithScrollable : RenderSliverSingle
         Child = child;
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         double extent = Math.Max(
             0.0,
             constraints.RemainingPaintExtent - Math.Min(constraints.Overlap, 0.0));
@@ -200,8 +214,9 @@ public sealed class RenderSliverFillRemaining : RenderSliverSingleBoxAdapter
         Child = child;
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         double extent = Math.Max(0.0, constraints.ViewportMainAxisExtent - constraints.PrecedingScrollExtent);
         if (Child != null)
         {
@@ -254,8 +269,9 @@ public sealed class RenderSliverFillRemainingAndOverscroll : RenderSliverSingleB
         Child = child;
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         double extent = Math.Max(0.0, constraints.ViewportMainAxisExtent - constraints.PrecedingScrollExtent);
         double maxExtent = Math.Max(
             0.0,

@@ -130,19 +130,19 @@ public sealed class SafeAreaTests
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 120,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 120,
             RemainingCacheExtent: 120);
-        outerPadding.LayoutWithSliverConstraints(constraints);
+        outerPadding.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(110, outerPadding.Geometry.ScrollExtent);
         Assert.Equal(110, outerPadding.Geometry.PaintExtent);
         Assert.NotNull(outerPadding.Child);
-        Assert.Equal(60, outerPadding.Child!.ConstraintsForSliver.CrossAxisExtent);
+        Assert.Equal(60, outerPadding.Child!.Constraints.CrossAxisExtent);
     }
 
     [Fact]

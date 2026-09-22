@@ -66,10 +66,10 @@ public sealed class SliverFillTests
             childManager: manager);
         manager.AttachOwner(sliver);
 
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             remainingPaintExtent: 200,
             viewportMainAxisExtent: 200,
-            remainingCacheExtent: 200));
+            remainingCacheExtent: 200), parentUsesSize: true);
 
         Assert.Equal(600, sliver.Geometry.ScrollExtent);
         Assert.Equal(200, sliver.Geometry.PaintExtent);
@@ -77,11 +77,11 @@ public sealed class SliverFillTests
         Assert.Equal([0, 1], ActiveIndices(sliver));
         Assert.All(ActiveChildren(sliver), child => Assert.Equal(new Size(100, 100), child.Size));
 
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             scrollOffset: 200,
             remainingPaintExtent: 200,
             viewportMainAxisExtent: 200,
-            remainingCacheExtent: 200));
+            remainingCacheExtent: 200), parentUsesSize: true);
 
         Assert.Equal([2, 3], ActiveIndices(sliver));
         Assert.Equal(0.0, sliver.ChildMainAxisPosition(sliver.FirstChild!));
@@ -96,11 +96,11 @@ public sealed class SliverFillTests
             allowImplicitScrolling: false,
             childManager: manager);
         manager.AttachOwner(sliver);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             remainingPaintExtent: 200,
             viewportMainAxisExtent: 200,
             cacheOrigin: 0,
-            remainingCacheExtent: 400));
+            remainingCacheExtent: 400), parentUsesSize: true);
 
         var visited = new List<RenderObject>();
         sliver.VisitChildrenForSemantics(child => visited.Add(child));
@@ -116,24 +116,24 @@ public sealed class SliverFillTests
     public void RenderSliverFractionalPadding_ResolvesAgainstCurrentViewportExtentAndAxis()
     {
         var verticalChild = new RecordingSliver(scrollExtent: 200);
-        var vertical = new RenderSliverFractionalPadding(0.25, verticalChild);
-        vertical.LayoutWithSliverConstraints(CreateConstraints(
+        var vertical = new RenderSliverFractionalPadding(0.25) { Child = verticalChild };
+        vertical.Layout(CreateConstraints(
             remainingPaintExtent: 200,
-            viewportMainAxisExtent: 200));
+            viewportMainAxisExtent: 200), parentUsesSize: true);
 
         Assert.Equal(300, vertical.Geometry.ScrollExtent);
-        Assert.Equal(new Point(0, 50), ((SliverPhysicalParentData)verticalChild.parentData!).offset);
+        Assert.Equal(new Point(0, 50), ((SliverPhysicalParentData)verticalChild.parentData!).PaintOffset);
 
         var horizontalChild = new RecordingSliver(scrollExtent: 120);
-        var horizontal = new RenderSliverFractionalPadding(0.1, horizontalChild);
-        horizontal.LayoutWithSliverConstraints(CreateConstraints(
+        var horizontal = new RenderSliverFractionalPadding(0.1) { Child = horizontalChild };
+        horizontal.Layout(CreateConstraints(
             axis: Axis.Horizontal,
             crossAxisExtent: 80,
             remainingPaintExtent: 300,
-            viewportMainAxisExtent: 300));
+            viewportMainAxisExtent: 300), parentUsesSize: true);
 
         Assert.Equal(180, horizontal.Geometry.ScrollExtent);
-        Assert.Equal(new Point(30, 0), ((SliverPhysicalParentData)horizontalChild.parentData!).offset);
+        Assert.Equal(new Point(30, 0), ((SliverPhysicalParentData)horizontalChild.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -159,11 +159,11 @@ public sealed class SliverFillTests
     {
         var smallChild = new NaturalSizeBox(new Size(100, 40));
         var small = new RenderSliverFillRemaining(smallChild);
-        small.LayoutWithSliverConstraints(CreateConstraints(
+        small.Layout(CreateConstraints(
             remainingPaintExtent: 150,
             viewportMainAxisExtent: 200,
             precedingScrollExtent: 50,
-            remainingCacheExtent: 150));
+            remainingCacheExtent: 150), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 150), smallChild.Size);
         Assert.Equal(150, small.Geometry.ScrollExtent);
@@ -171,11 +171,11 @@ public sealed class SliverFillTests
 
         var largeChild = new NaturalSizeBox(new Size(100, 240));
         var large = new RenderSliverFillRemaining(largeChild);
-        large.LayoutWithSliverConstraints(CreateConstraints(
+        large.Layout(CreateConstraints(
             remainingPaintExtent: 150,
             viewportMainAxisExtent: 200,
             precedingScrollExtent: 50,
-            remainingCacheExtent: 150));
+            remainingCacheExtent: 150), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 240), largeChild.Size);
         Assert.Equal(240, large.Geometry.ScrollExtent);
@@ -188,11 +188,11 @@ public sealed class SliverFillTests
     {
         var child = new NaturalSizeBox(new Size(100, 64));
         var sliver = new RenderSliverFillRemaining(child);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             remainingPaintExtent: 100,
             viewportMainAxisExtent: 200,
             precedingScrollExtent: 260,
-            remainingCacheExtent: 100));
+            remainingCacheExtent: 100), parentUsesSize: true);
 
         Assert.Equal(64, child.Size.Height);
         Assert.Equal(64, sliver.Geometry.ScrollExtent);
@@ -203,11 +203,11 @@ public sealed class SliverFillTests
     {
         var child = new ExpandingBox();
         var sliver = new RenderSliverFillRemainingWithScrollable(child);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             remainingPaintExtent: 120,
             viewportMainAxisExtent: 200,
             overlap: -20,
-            remainingCacheExtent: 200));
+            remainingCacheExtent: 200), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 140), child.Size);
         Assert.Equal(200, sliver.Geometry.ScrollExtent);
@@ -221,12 +221,12 @@ public sealed class SliverFillTests
     {
         var child = new ExpandingBox();
         var sliver = new RenderSliverFillRemainingWithScrollable(child);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             scrollOffset: 120,
             remainingPaintExtent: 0,
             viewportMainAxisExtent: 200,
             cacheOrigin: -120,
-            remainingCacheExtent: 120));
+            remainingCacheExtent: 120), parentUsesSize: true);
 
         Assert.Equal(120, child.Size.Height);
         Assert.Equal(0, sliver.Geometry.PaintExtent);
@@ -238,12 +238,12 @@ public sealed class SliverFillTests
     {
         var child = new ExpandingBox();
         var sliver = new RenderSliverFillRemainingAndOverscroll(child);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             remainingPaintExtent: 180,
             viewportMainAxisExtent: 200,
             overlap: -40,
             precedingScrollExtent: 50,
-            remainingCacheExtent: 180));
+            remainingCacheExtent: 180), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 220), child.Size);
         Assert.Equal(150, sliver.Geometry.ScrollExtent);
@@ -257,24 +257,24 @@ public sealed class SliverFillTests
     {
         var child = new NaturalSizeBox(new Size(40, 80));
         var sliver = new RenderSliverFillRemaining(child);
-        sliver.LayoutWithSliverConstraints(CreateConstraints(
+        sliver.Layout(CreateConstraints(
             axis: Axis.Horizontal,
             axisDirection: AxisDirection.Left,
             crossAxisExtent: 80,
             scrollOffset: 30,
             remainingPaintExtent: 170,
             viewportMainAxisExtent: 200,
-            remainingCacheExtent: 170));
+            remainingCacheExtent: 170), parentUsesSize: true);
 
         Assert.Equal(new Size(200, 80), child.Size);
         // A reversed axis measures the scroll offset from the trailing end of the child, so a filled
         // sliver whose scroll extent is the viewport extent keeps its box at the sliver's origin.
-        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)child.parentData!).PaintOffset);
     }
 
     private static SliverConstraints CreateConstraints(
         Axis axis = Axis.Vertical,
-        AxisDirection axisDirection = AxisDirection.Down,
+        AxisDirection? axisDirection = null,
         double scrollOffset = 0.0,
         double remainingPaintExtent = 200.0,
         double crossAxisExtent = 100.0,
@@ -284,7 +284,7 @@ public sealed class SliverFillTests
         double overlap = 0.0,
         double precedingScrollExtent = 0.0)
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: axis,
             ScrollOffset: scrollOffset,
             RemainingPaintExtent: remainingPaintExtent,
@@ -349,8 +349,9 @@ public sealed class SliverFillTests
 
     private sealed class RecordingSliver(double scrollExtent) : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             double paintExtent = Math.Min(scrollExtent, constraints.RemainingPaintExtent);
             Geometry = new SliverGeometry(
                 ScrollExtent: scrollExtent,

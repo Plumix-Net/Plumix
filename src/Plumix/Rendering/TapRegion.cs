@@ -369,7 +369,7 @@ public sealed class RenderTapRegion : RenderProxyBoxWithHitTestBehavior
         }
     }
 
-    public override void Layout(BoxConstraints constraints, bool parentUsesSize = false)
+    public override void Layout(IConstraints constraints, bool parentUsesSize = false)
     {
         base.Layout(constraints, parentUsesSize);
         Unregister();

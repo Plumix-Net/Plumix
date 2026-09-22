@@ -38,8 +38,8 @@ public class SliverParentDataTests
         Assert.Equal("layoutOffset=12.5", logical.ToString());
         Assert.Equal("paintOffset=3, 7", physical.ToString());
         Assert.Equal(2, physical.CrossAxisFlex);
-        Assert.Equal(physical.PaintOffset, physical.offset);
-        physical.offset = new Point(9, 11);
+        Assert.Equal(physical.PaintOffset, physical.PaintOffset);
+        physical.PaintOffset = new Point(9, 11);
         Assert.Equal(new Point(9, 11), physical.PaintOffset);
     }
 
@@ -147,7 +147,14 @@ public class SliverParentDataTests
         logical.RemoveAll();
     }
 
-    private static void CheckContainer<TData>(RenderBox renderObject)
+    private static RenderViewport HostSliver(RenderSliver sliver)
+    {
+        var viewport = new RenderViewport(ViewportOffset.Zero());
+        viewport.Insert(sliver);
+        return viewport;
+    }
+
+    private static void CheckContainer<TData>(RenderObject renderObject)
         where TData : class, IContainerParentDataMixin<RenderSliver>
     {
         var container = Assert.IsAssignableFrom<IContainerRenderObjectMixin<RenderSliver, TData>>(renderObject);
@@ -164,7 +171,8 @@ public class SliverParentDataTests
         Assert.Same(middle, container.ChildBefore(last));
         TData data = Assert.IsType<TData>(middle.parentData);
 
-        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = renderObject };
+        RenderBox host = renderObject as RenderBox ?? HostSliver((RenderSliver)renderObject);
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = host };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         Assert.Same(pipeline, middle.Owner);

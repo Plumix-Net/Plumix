@@ -66,7 +66,7 @@ public sealed class SliverOpacityTests : IDisposable
         var box = new HitTestRenderBox(new Size(100, 80));
         var child = new RenderSliverToBoxAdapter(box);
         var opacity = new RenderSliverOpacity(opacity: 0.0, sliver: child);
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 60,
@@ -74,12 +74,12 @@ public sealed class SliverOpacityTests : IDisposable
             ViewportMainAxisExtent: 60,
             RemainingCacheExtent: 60);
 
-        opacity.LayoutWithSliverConstraints(constraints);
+        opacity.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(child.Geometry, opacity.Geometry);
         Assert.Equal(80, opacity.Geometry.ScrollExtent);
         Assert.Equal(60, opacity.Geometry.PaintExtent);
-        Assert.True(opacity.HitTest(new BoxHitTestResult(), new Point(10, 10)));
+        Assert.True(opacity.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
 
         int semanticsVisits = 0;
         opacity.VisitChildrenForSemantics(_ => semanticsVisits++);

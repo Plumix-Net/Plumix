@@ -42,7 +42,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     /// current constraints rather than from the pass that has not run yet.
     /// </remarks>
     public SliverLayoutDimensions LayoutDimensions =>
-        _currentLayoutDimensions ?? DimensionsFor(ConstraintsForSliver);
+        _currentLayoutDimensions ?? DimensionsFor(Constraints);
 
     /// <summary>The scroll offset of the child at <paramref name="index"/>.</summary>
     public virtual double IndexToLayoutOffset(double itemExtent, int index)
@@ -213,8 +213,9 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         ]);
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         IRenderSliverBoxChildManager? childManager = ChildManager;
         if (childManager is null)
         {
@@ -325,7 +326,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
 
     /// <summary>
     /// Turns the laid-out child range into the sliver's geometry. Split out of
-    /// <see cref="PerformSliverLayout"/> so that subclasses whose leading/trailing offsets differ
+    /// <see cref="PerformLayout"/> so that subclasses whose leading/trailing offsets differ
     /// (Flutter's <c>_RenderSliverWeightedCarousel</c>) can reuse the tail of the algorithm.
     /// </summary>
     protected SliverGeometry BuildGeometry(

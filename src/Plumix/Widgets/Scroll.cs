@@ -906,23 +906,35 @@ internal sealed class RenderSliverEnsureSemantics : RenderProxySliver
     public override bool EnsureSemantics => true;
 }
 
+/// <summary>A sliver that applies padding on each side of another sliver.</summary>
+/// <remarks>Flutter's <c>SliverPadding</c> (widgets/basic.dart).</remarks>
 public sealed class SliverPadding : SingleChildRenderObjectWidget
 {
-    public SliverPadding(Thickness padding, Widget? sliver = null, Key? key = null) : base(sliver, key)
+    public SliverPadding(EdgeInsetsGeometry padding, Widget? sliver = null, Key? key = null) : base(sliver, key)
     {
         Padding = padding;
     }
 
-    public Thickness Padding { get; }
+    /// <summary>The amount of space by which to inset the child sliver.</summary>
+    public EdgeInsetsGeometry Padding { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverPadding(Padding);
+        return new RenderSliverPadding(Padding, textDirection: Directionality.Of(context));
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderSliverPadding)renderObject).Padding = Padding;
+        var padding = (RenderSliverPadding)renderObject;
+        padding.Padding = Padding;
+        padding.TextDirection = Directionality.Of(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry>("padding", Padding));
     }
 }
 
@@ -1392,7 +1404,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     public override void DebugVisitOnstageChildren(Action<Element> visitor)
     {
         RenderSliverMultiBoxAdaptor renderObject = TypedRenderObject;
-        SliverConstraints constraints = renderObject.ConstraintsForSliver;
+        SliverConstraints constraints = renderObject.Constraints;
         foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
         {
             var parentData = (SliverMultiBoxAdaptorParentData)child.RenderObject!.parentData!;

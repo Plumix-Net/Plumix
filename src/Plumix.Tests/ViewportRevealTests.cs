@@ -718,7 +718,8 @@ public sealed class ViewportRevealTests
     public void RenderSliverBase_ChildMainAxisPositionThrowsWhenUnimplemented()
     {
         var sliver = new BareSliver();
-        Assert.Throws<InvalidOperationException>(() => sliver.ChildMainAxisPosition(sliver));
+        FlutterError error = Assert.Throws<FlutterError>(() => sliver.ChildMainAxisPosition(sliver));
+        Assert.Equal("BareSliver does not implement childPosition.", error.Message);
         Assert.Equal(0.0, sliver.ChildCrossAxisPosition(sliver));
     }
 
@@ -825,8 +826,9 @@ public sealed class ViewportRevealTests
 
     private sealed class BareSliver : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             Geometry = default;
         }
 

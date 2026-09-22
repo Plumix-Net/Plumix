@@ -159,8 +159,9 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
         }
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         if (Handle.Writers != 1)
         {
             throw new InvalidOperationException(
@@ -174,7 +175,7 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
             return;
         }
 
-        _child.LayoutWithSliverConstraints(constraints);
+        _child.Layout(constraints, parentUsesSize: true);
         SliverGeometry childLayoutGeometry = _child.Geometry;
         Geometry = childLayoutGeometry with
         {
@@ -199,9 +200,17 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
         }
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        return _child != null && _child.HitTest(result, position);
+        if (_child != null)
+        {
+            return _child.HitTest(result, mainAxisPosition, crossAxisPosition);
+        }
+
+        return false;
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -276,8 +285,9 @@ public class RenderSliverOverlapInjector : RenderSliver
         base.OnDetach();
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         _currentLayoutExtent = Handle.LayoutExtent;
         // Flutter reads layoutExtent for both; the absorber always reports the same value for each.
         _currentMaxExtent = Handle.LayoutExtent;
@@ -322,7 +332,7 @@ public class RenderSliverOverlapInjector : RenderSliver
         }
 
         var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFCC9933)), 3.0);
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         Point start;
         Point end;
         Point delta;

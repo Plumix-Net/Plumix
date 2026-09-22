@@ -153,7 +153,7 @@ public sealed class IntrinsicQueryParityTests
     {
         var fillChild = new QueryRenderBox(new Size(100, 240), baseline: null);
         var fill = new RenderSliverFillRemaining(fillChild);
-        fill.LayoutWithSliverConstraints(CreateSliverConstraints());
+        fill.Layout(CreateSliverConstraints(), parentUsesSize: true);
 
         Assert.Equal(1, fillChild.MaxHeightCount);
         Assert.Equal(1, fillChild.LayoutCount);
@@ -161,7 +161,7 @@ public sealed class IntrinsicQueryParityTests
 
         var headerChild = new QueryRenderBox(new Size(100, 300), baseline: null);
         var header = new RenderSliverResizingHeader { Child = headerChild };
-        header.LayoutWithSliverConstraints(CreateSliverConstraints());
+        header.Layout(CreateSliverConstraints(), parentUsesSize: true);
 
         Assert.Equal(1, headerChild.DryLayoutCount);
         Assert.Equal(1, headerChild.LayoutCount);
@@ -182,7 +182,7 @@ public sealed class IntrinsicQueryParityTests
 
     private static SliverConstraints CreateSliverConstraints()
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 0.0,
             RemainingPaintExtent: 150.0,

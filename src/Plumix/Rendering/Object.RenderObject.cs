@@ -455,8 +455,15 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <summary>
     /// Compute the layout for this render object.
     /// </summary>
-    public virtual void Layout(BoxConstraints constraints, bool parentUsesSize = false)
+    /// <remarks>
+    /// Flutter's <c>RenderObject.layout</c>. The constraints are the protocol's own type
+    /// (<see cref="BoxConstraints"/> for a <see cref="RenderBox"/>, <see cref="SliverConstraints"/> for
+    /// a <see cref="RenderSliver"/>); the early-out compares them by value, exactly like Dart's
+    /// <c>constraints == _constraints</c>.
+    /// </remarks>
+    public virtual void Layout(IConstraints constraints, bool parentUsesSize = false)
     {
+        ArgumentNullException.ThrowIfNull(constraints);
         EnsureNotDisposedMutation();
         Debug.Assert(!DebugDoingThisResize);
         Debug.Assert(!DebugDoingThisLayout);
@@ -469,9 +476,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _isRelayoutBoundary = !parentUsesSize || SizedByParent || constraints.IsTight || Parent == null;
         _debugCanParentUseSize = parentUsesSize;
 
-        if (!_needsLayout
-            && _constraints is BoxConstraints previousConstraints
-            && previousConstraints.Equals(constraints))
+        if (!_needsLayout && constraints.Equals(_constraints))
         {
             if (Constants.KDebugMode)
             {
@@ -789,30 +794,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
     }
 
-    /// <summary>
-    /// Marks this render object as needing layout without dirtying its ancestors, for a caller that is
-    /// about to lay it out immediately under different constraints.
-    /// </summary>
-    /// <remarks>
-    /// Dart's <c>RenderObject.layout</c> compares the incoming <c>Constraints</c> object itself, so a
-    /// sliver whose <c>SliverConstraints</c> changed always re-lays out. Plumix's <see cref="Layout"/>
-    /// takes <see cref="BoxConstraints"/>, and two different <c>SliverConstraints</c> can derive the
-    /// same box constraints, so <c>RenderSliver.LayoutWithSliverConstraints</c> has to defeat the
-    /// early-out explicitly. It must not go through <see cref="MarkNeedsLayout"/>, because the viewport
-    /// calls it from its own <c>PerformLayout</c> and Dart forbids a parent from dirtying a descendant
-    /// there.
-    /// </remarks>
-    internal void MarkNeedsImmediateRelayout()
-    {
-        _needsLayout = true;
-        InvalidateLayoutCache();
-    }
-
-    /// <summary>Drops any cached layout results; overridden by <see cref="RenderBox"/>.</summary>
-    private protected virtual void InvalidateLayoutCache()
-    {
-    }
-
     /// <remarks>Flutter's <c>RenderObject._debugRelayoutBoundaryAlreadyMarkedNeedsLayout</c>.</remarks>
     private bool DebugRelayoutBoundaryAlreadyMarkedNeedsLayout()
     {
@@ -1066,6 +1047,8 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         return DescribeApproximatePaintClip(child);
     }
 
+    internal bool HasConstraints => _constraints is not null;
+    internal IConstraints CurrentConstraints => _constraints!;
     internal bool HasBoxConstraints => _constraints is BoxConstraints;
     internal BoxConstraints CurrentBoxConstraints => (BoxConstraints)_constraints!;
     internal bool NeedsLayout => _needsLayout;
@@ -1559,11 +1542,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// Paint this render object into the given context at the given offset.
     /// </summary>
     public abstract void Paint(PaintingContext ctx, Point offset);
-
-    public virtual bool HitTest(BoxHitTestResult result, Point position)
-    {
-        return false;
-    }
 
     public virtual void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {

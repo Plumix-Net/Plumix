@@ -59,7 +59,7 @@ public sealed class SliverHeaderTests
             Child = child
         };
 
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 0.0));
+        header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 100), minPrototype.Size);
         Assert.Equal(new Size(100, 300), maxPrototype.Size);
@@ -68,7 +68,7 @@ public sealed class SliverHeaderTests
         Assert.Equal(300.0, header.Geometry.PaintExtent);
         Assert.Equal(100.0, header.Geometry.MaxScrollObstructionExtent);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 200.0));
+        header.Layout(CreateConstraints(scrollOffset: 200.0), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 100), child.Size);
         Assert.Equal(100.0, header.Geometry.PaintExtent);
@@ -86,14 +86,14 @@ public sealed class SliverHeaderTests
         var child = new NaturalSizeBox(new Size(100, 300));
         var header = new RenderSliverResizingHeader { Child = child };
 
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 299.0));
+        header.Layout(CreateConstraints(scrollOffset: 299.0), parentUsesSize: true);
 
         Assert.Equal(300.0, header.Geometry.ScrollExtent);
         Assert.Equal(0.0, header.Geometry.MaxScrollObstructionExtent);
         Assert.Equal(new Size(100, 1), child.Size);
         Assert.Equal(1.0, header.Geometry.PaintExtent);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 300.0));
+        header.Layout(CreateConstraints(scrollOffset: 300.0), parentUsesSize: true);
         Assert.Equal(0.0, child.Size.Height);
         Assert.Equal(0.0, header.Geometry.PaintExtent);
     }
@@ -114,7 +114,7 @@ public sealed class SliverHeaderTests
         Assert.NotNull(header.MinExtentPrototype);
         Assert.NotNull(header.MaxExtentPrototype);
         Assert.NotNull(header.Child);
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 80.0));
+        header.Layout(CreateConstraints(scrollOffset: 80.0), parentUsesSize: true);
         Assert.Equal(40.0, header.Child!.Size.Height);
 
         root.UnmountRoot();
@@ -167,30 +167,30 @@ public sealed class SliverHeaderTests
         var child = new NaturalSizeBox(new Size(100, 200));
         var header = new RenderSliverFloatingHeader(child: child);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 0.0));
+        header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
         Assert.Equal(200.0, header.Geometry.PaintExtent);
         Assert.Equal(200.0, header.Geometry.LayoutExtent);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(
+        header.Layout(CreateConstraints(
             scrollOffset: 200.0,
-            userScrollDirection: ScrollDirection.Reverse));
+            userScrollDirection: ScrollDirection.Reverse), parentUsesSize: true);
         Assert.Equal(0.0, header.Geometry.PaintExtent);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(
+        header.Layout(CreateConstraints(
             scrollOffset: 175.0,
-            userScrollDirection: ScrollDirection.Forward));
+            userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(25.0, header.Geometry.PaintExtent);
         Assert.Equal(25.0, header.Geometry.LayoutExtent);
-        Assert.Equal(new Point(0, -175), ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(new Point(0, -175), ((SliverPhysicalParentData)child.parentData!).PaintOffset);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(
+        header.Layout(CreateConstraints(
             scrollOffset: 150.0,
-            userScrollDirection: ScrollDirection.Forward));
+            userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(50.0, header.Geometry.PaintExtent);
 
-        header.LayoutWithSliverConstraints(CreateConstraints(
+        header.Layout(CreateConstraints(
             scrollOffset: 175.0,
-            userScrollDirection: ScrollDirection.Reverse));
+            userScrollDirection: ScrollDirection.Reverse), parentUsesSize: true);
         Assert.Equal(25.0, header.Geometry.PaintExtent);
     }
 
@@ -217,15 +217,15 @@ public sealed class SliverHeaderTests
         position.ApplyUserOffset(25.0);
         drag.EndDrag();
 
-        overlay.LayoutWithSliverConstraints(CreateConstraints(
+        overlay.Layout(CreateConstraints(
             scrollOffset: 175.0,
-            userScrollDirection: ScrollDirection.Forward));
+            userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(200.0, overlay.Geometry.PaintExtent);
         Assert.Equal(25.0, overlay.Geometry.LayoutExtent);
 
-        scroll.LayoutWithSliverConstraints(CreateConstraints(
+        scroll.Layout(CreateConstraints(
             scrollOffset: 175.0,
-            userScrollDirection: ScrollDirection.Forward));
+            userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(200.0, scroll.Geometry.PaintExtent);
         Assert.Equal(200.0, scroll.Geometry.LayoutExtent);
         position.Dispose();
@@ -237,13 +237,13 @@ public sealed class SliverHeaderTests
             animationStyle: AnimationStyle.NoAnimation,
             snapMode: snapMode,
             child: new NaturalSizeBox(new Size(100, 200)));
-        header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 0.0));
-        header.LayoutWithSliverConstraints(CreateConstraints(
+        header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
+        header.Layout(CreateConstraints(
             scrollOffset: 200.0,
-            userScrollDirection: ScrollDirection.Reverse));
-        header.LayoutWithSliverConstraints(CreateConstraints(
+            userScrollDirection: ScrollDirection.Reverse), parentUsesSize: true);
+        header.Layout(CreateConstraints(
             scrollOffset: 175.0,
-            userScrollDirection: ScrollDirection.Forward));
+            userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(25.0, header.Geometry.PaintExtent);
         return header;
     }
@@ -252,7 +252,7 @@ public sealed class SliverHeaderTests
         double scrollOffset,
         ScrollDirection userScrollDirection = ScrollDirection.Idle)
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: scrollOffset,
             RemainingPaintExtent: 400.0,

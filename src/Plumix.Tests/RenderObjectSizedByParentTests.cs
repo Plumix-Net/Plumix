@@ -203,7 +203,7 @@ public sealed class RenderObjectSizedByParentTests
     {
         var sliver = new ProbeRenderSliver();
 
-        AssertionError error = Assert.Throws<AssertionError>(
+        FlutterError error = Assert.Throws<FlutterError>(
             () => sliver.SetGeometryOutsideLayout(SliverGeometry.Zero));
 
         Assert.Contains(
@@ -211,10 +211,16 @@ public sealed class RenderObjectSizedByParentTests
             error.Message,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Because this RenderSliver has SizedByParent set to false, it must set its geometry in "
-            + "PerformLayout().",
+            "The geometry setter was called from outside layout (neither performResize() nor "
+            + "performLayout() were being run for this object).",
             error.Message,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "Because this RenderSliver has sizedByParent set to false, it must set its geometry in "
+            + "performLayout().",
+            error.Message,
+            StringComparison.Ordinal);
+        Assert.Contains("The RenderSliver in question is", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -490,8 +496,9 @@ public sealed class RenderObjectSizedByParentTests
     /// <summary>A sliver that only exists so the geometry setter's phase check can be exercised.</summary>
     private sealed class ProbeRenderSliver : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             Geometry = SliverGeometry.Zero;
         }
 

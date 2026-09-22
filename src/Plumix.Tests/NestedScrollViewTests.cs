@@ -55,7 +55,7 @@ public sealed class NestedScrollViewTests : IDisposable
         var absorber = new RenderSliverOverlapAbsorber(handle, child);
         Attach(absorber);
 
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         // The absorbed obstruction leaves the outer view's scroll and layout extents.
         Assert.Equal(144, absorber.Geometry.ScrollExtent, precision: 6);
@@ -82,7 +82,7 @@ public sealed class NestedScrollViewTests : IDisposable
         var absorber = new RenderSliverOverlapAbsorber(handle, child);
         Attach(absorber);
 
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         Assert.Equal(0, absorber.Geometry.ScrollExtent, precision: 6);
         Assert.Equal(0, absorber.Geometry.LayoutExtent, precision: 6);
@@ -95,7 +95,7 @@ public sealed class NestedScrollViewTests : IDisposable
         var absorber = new RenderSliverOverlapAbsorber(handle);
         Attach(absorber);
 
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         Assert.Equal(new SliverGeometry(), absorber.Geometry);
         Assert.Null(handle.LayoutExtent);
@@ -114,7 +114,7 @@ public sealed class NestedScrollViewTests : IDisposable
         Assert.Equal(2, CountWriters(handle));
         Assert.Contains("2 WRITERS ASSIGNED", handle.ToString());
         Assert.Throws<InvalidOperationException>(
-            () => first.LayoutWithSliverConstraints(Constraints()));
+            () => first.Layout(Constraints(), parentUsesSize: true));
     }
 
     [Fact]
@@ -130,7 +130,7 @@ public sealed class NestedScrollViewTests : IDisposable
                 MaxPaintExtent: 100,
                 MaxScrollObstructionExtent: 40)));
         Attach(absorber);
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         absorber.Handle = second;
 
@@ -153,7 +153,7 @@ public sealed class NestedScrollViewTests : IDisposable
         Attach(injector);
 
         InvalidOperationException error = Assert.Throws<InvalidOperationException>(
-            () => injector.LayoutWithSliverConstraints(Constraints()));
+            () => injector.Layout(Constraints(), parentUsesSize: true));
         Assert.Contains("SliverOverlapInjector has found no absorbed extent to inject.", error.Message);
     }
 
@@ -169,11 +169,11 @@ public sealed class NestedScrollViewTests : IDisposable
                 MaxPaintExtent: 56,
                 MaxScrollObstructionExtent: 56)));
         Attach(absorber);
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         var injector = new RenderSliverOverlapInjector(handle);
         Attach(injector);
-        injector.LayoutWithSliverConstraints(Constraints());
+        injector.Layout(Constraints(), parentUsesSize: true);
 
         Assert.Equal(56, injector.Geometry.ScrollExtent, precision: 6);
         Assert.Equal(56, injector.Geometry.PaintExtent, precision: 6);
@@ -181,13 +181,13 @@ public sealed class NestedScrollViewTests : IDisposable
         Assert.Equal(56, injector.Geometry.MaxPaintExtent, precision: 6);
 
         // Scrolled halfway through, the injected gap keeps its scroll extent but lays out less.
-        injector.LayoutWithSliverConstraints(Constraints(scrollOffset: 20));
+        injector.Layout(Constraints(scrollOffset: 20), parentUsesSize: true);
         Assert.Equal(56, injector.Geometry.ScrollExtent, precision: 6);
         Assert.Equal(56, injector.Geometry.PaintExtent, precision: 6);
         Assert.Equal(36, injector.Geometry.LayoutExtent, precision: 6);
 
         // Scrolled past, the layout extent clamps at zero.
-        injector.LayoutWithSliverConstraints(Constraints(scrollOffset: 80));
+        injector.Layout(Constraints(scrollOffset: 80), parentUsesSize: true);
         Assert.Equal(0, injector.Geometry.LayoutExtent, precision: 6);
     }
 
@@ -203,11 +203,11 @@ public sealed class NestedScrollViewTests : IDisposable
                 MaxPaintExtent: 100,
                 MaxScrollObstructionExtent: 100)));
         Attach(absorber);
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
 
         var injector = new RenderSliverOverlapInjector(handle);
         Attach(injector);
-        injector.LayoutWithSliverConstraints(Constraints(remainingPaintExtent: 30));
+        injector.Layout(Constraints(remainingPaintExtent: 30), parentUsesSize: true);
 
         Assert.Equal(30, injector.Geometry.PaintExtent, precision: 6);
         Assert.Equal(30, injector.Geometry.LayoutExtent, precision: 6);
@@ -225,10 +225,10 @@ public sealed class NestedScrollViewTests : IDisposable
                 MaxPaintExtent: 10,
                 MaxScrollObstructionExtent: 10)));
         Attach(absorber);
-        absorber.LayoutWithSliverConstraints(Constraints());
+        absorber.Layout(Constraints(), parentUsesSize: true);
         var injector = new RenderSliverOverlapInjector(handle);
         Attach(injector);
-        injector.LayoutWithSliverConstraints(Constraints());
+        injector.Layout(Constraints(), parentUsesSize: true);
         Assert.False(NeedsLayout(injector));
 
         var viewport = new RenderNestedScrollViewViewport(
@@ -785,7 +785,7 @@ public sealed class NestedScrollViewTests : IDisposable
         double remainingPaintExtent = ViewportExtent,
         double overlap = 0)
     {
-        return new SliverConstraints(
+        return TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: scrollOffset,
             RemainingPaintExtent: remainingPaintExtent,
@@ -955,8 +955,9 @@ public sealed class NestedScrollViewTests : IDisposable
     /// <summary>A sliver that reports a fixed geometry, standing in for a real header.</summary>
     private sealed class StubSliver(SliverGeometry geometry) : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             Geometry = geometry;
         }
 

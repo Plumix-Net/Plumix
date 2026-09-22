@@ -544,6 +544,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/TwoDimensionalScrollViewTests.cs`
   - `src/Plumix.Tests/SliverGroupTests.cs`
   - `src/Plumix.Tests/SliverHeaderTests.cs`
+  - `src/Plumix.Tests/SliverProtocolTests.cs`
 - Note:
   - `Scroll.cs` and `Sliver.cs` are large. Enter through tests first.
 

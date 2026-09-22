@@ -329,10 +329,23 @@ public sealed class RenderObjectDiagnosticsTests
     [DebugOnlyFact]
     public void RenderSliver_DebugFillProperties_ReportsTheSliverGeometry()
     {
-        var sliver = new RenderSliverToBoxAdapter { Child = new SizedBox(new Size(10, 10)) };
+        var sliver = new RenderSliverToBoxAdapter(new SizedBox(new Size(10, 10)));
 
+        // Dart's `geometry` is null until the first layout.
         Assert.Contains(
-            "geometry: SliverGeometry",
+            "geometry: null",
+            sliver.ToStringDeep(minLevel: DiagnosticLevel.Info),
+            StringComparison.Ordinal);
+
+        sliver.Layout(
+            TestSliverConstraints.Create(
+                RemainingPaintExtent: 100,
+                CrossAxisExtent: 10,
+                ViewportMainAxisExtent: 100,
+                RemainingCacheExtent: 100),
+            parentUsesSize: true);
+        Assert.Contains(
+            "geometry: SliverGeometry(scrollExtent: 10.0, paintExtent: 10.0,",
             sliver.ToStringDeep(minLevel: DiagnosticLevel.Info),
             StringComparison.Ordinal);
     }

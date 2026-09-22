@@ -70,7 +70,7 @@ public sealed class SliverChildManagerTests
         Assert.Equal(
             26.0,
             manager.EstimateMaxScrollOffset(
-                sliver.ConstraintsForSliver,
+                sliver.Constraints,
                 firstIndex: 3,
                 lastIndex: 4,
                 leadingScrollOffset: 25.0,
@@ -106,7 +106,7 @@ public sealed class SliverChildManagerTests
         Assert.Equal(
             1000.0,
             manager.EstimateMaxScrollOffset(
-                sliver.ConstraintsForSliver,
+                sliver.Constraints,
                 firstIndex: 0,
                 lastIndex: 1,
                 leadingScrollOffset: 0.0,
@@ -132,7 +132,7 @@ public sealed class SliverChildManagerTests
         Assert.Equal(
             double.PositiveInfinity,
             manager.EstimateMaxScrollOffset(
-                sliver.ConstraintsForSliver,
+                sliver.Constraints,
                 firstIndex: 0,
                 lastIndex: 1,
                 leadingScrollOffset: 0.0,
@@ -169,7 +169,7 @@ public sealed class SliverChildManagerTests
         Assert.InRange(childDelegate.BuildCount, 1, 12);
 
         // The precise count is what `computeMaxScrollOffset` is built on.
-        Assert.Equal(1400.0, sliver.ComputeMaxScrollOffset(sliver.ConstraintsForSliver, 200.0));
+        Assert.Equal(1400.0, sliver.ComputeMaxScrollOffset(sliver.Constraints, 200.0));
     }
 
     [Fact]

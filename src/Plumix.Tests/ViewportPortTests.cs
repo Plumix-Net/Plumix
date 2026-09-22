@@ -524,8 +524,9 @@ public class ViewportPortTests
     {
         public SliverConstraints LastConstraints { get; private set; }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             LastConstraints = constraints;
             double paintExtent = CalculatePaintOffset(constraints, from: 0.0, to: scrollExtent);
             Geometry = new SliverGeometry(
@@ -549,8 +550,9 @@ public class ViewportPortTests
     /// <summary>A sliver that pins itself to the leading edge, like a pinned header.</summary>
     private sealed class PinnedSliver(double extent) : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             double paintExtent = Math.Min(extent, constraints.RemainingPaintExtent);
             Geometry = new SliverGeometry(
                 ScrollExtent: extent,
@@ -572,8 +574,9 @@ public class ViewportPortTests
     {
         private bool _corrected;
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             if (!_corrected)
             {
                 _corrected = true;

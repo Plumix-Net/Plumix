@@ -120,12 +120,12 @@ public sealed class SliverFixedExtentListTests
 
         // The item extent that fills the viewport is 600; the 150 passed to each hook is the
         // deprecated argument Flutter keeps for source compatibility and no override reads.
-        Assert.Equal(scrollOffset, sliver.ConstraintsForSliver.ScrollOffset);
+        Assert.Equal(scrollOffset, sliver.Constraints.ScrollOffset);
         Assert.Equal(600.0, sliver.ItemExtent);
         Assert.Equal(6000.0, sliver.IndexToLayoutOffset(150.0, 10));
         Assert.Equal(expectedMinIndex, sliver.GetMinChildIndexForScrollOffset(scrollOffset, 150.0));
         Assert.Equal(expectedMaxIndex, sliver.GetMaxChildIndexForScrollOffset(scrollOffset, 150.0));
-        Assert.Equal(1800.0, sliver.ComputeMaxScrollOffset(sliver.ConstraintsForSliver, 150.0));
+        Assert.Equal(1800.0, sliver.ComputeMaxScrollOffset(sliver.Constraints, 150.0));
     }
 
     [Theory]
@@ -147,13 +147,13 @@ public sealed class SliverFixedExtentListTests
         PipelineOwner pipeline = Harness(sliver, new TestViewportOffset(scrollOffset), cacheExtent: 100);
         pipeline.FlushLayout(new Size(800, 600));
 
-        Assert.Equal(scrollOffset, sliver.ConstraintsForSliver.ScrollOffset);
-        Assert.Equal(600.0, sliver.ConstraintsForSliver.ViewportMainAxisExtent);
+        Assert.Equal(scrollOffset, sliver.Constraints.ScrollOffset);
+        Assert.Equal(600.0, sliver.Constraints.ViewportMainAxisExtent);
         Assert.Equal(30.0, sliver.ItemExtent);
         Assert.Equal(300.0, sliver.IndexToLayoutOffset(150.0, 10));
         Assert.Equal(expectedMinIndex, sliver.GetMinChildIndexForScrollOffset(scrollOffset, 150.0));
         Assert.Equal(expectedMaxIndex, sliver.GetMaxChildIndexForScrollOffset(scrollOffset, 150.0));
-        Assert.Equal(90.0, sliver.ComputeMaxScrollOffset(sliver.ConstraintsForSliver, 150.0));
+        Assert.Equal(90.0, sliver.ComputeMaxScrollOffset(sliver.Constraints, 150.0));
     }
 
     [Fact]
@@ -338,9 +338,10 @@ public sealed class SliverFixedExtentListTests
             _totalExtent = totalExtent;
         }
 
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
-            base.PerformSliverLayout(constraints);
+            SliverConstraints constraints = Constraints;
+            base.PerformLayout();
             Geometry = Geometry with { ScrollExtent = _totalExtent, MaxPaintExtent = _totalExtent };
         }
     }

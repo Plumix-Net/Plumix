@@ -119,8 +119,9 @@ internal sealed class RenderCupertinoSliverRefresh : RenderSliverSingleBoxAdapte
 
     public double LayoutExtentOffsetCompensation { get; private set; }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         if (constraints.AxisDirection != AxisDirection.Down
             || constraints.GrowthDirection != GrowthDirection.Forward)
         {
@@ -171,7 +172,7 @@ internal sealed class RenderCupertinoSliverRefresh : RenderSliverSingleBoxAdapte
             return;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         if (constraints.Overlap < 0.0 || constraints.ScrollOffset + Child.Size.Height > 0.0)
         {
             context.PaintChild(Child, offset);

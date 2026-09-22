@@ -730,7 +730,7 @@ internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentB
             return _maxExtent;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         int firstVisibleIndex = (int)Math.Floor(constraints.ScrollOffset / _maxExtent);
         double effectiveMinExtent = Math.Max(
             EuclideanRemainder(constraints.RemainingPaintExtent, _maxExtent),
@@ -772,7 +772,7 @@ internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentB
             return _maxExtent;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         int offscreenItems = (int)Math.Floor(constraints.ScrollOffset / _maxExtent);
         double offscreenExtent = constraints.ScrollOffset - (offscreenItems * _maxExtent);
         double effectiveMinExtent = Math.Max(
@@ -894,7 +894,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     public override ItemExtentBuilder? ItemExtentBuilder => _extentBuilder;
 
-    private double ExtentUnit => ConstraintsForSliver.ViewportMainAxisExtent / _weights.Sum();
+    private double ExtentUnit => Constraints.ViewportMainAxisExtent / _weights.Sum();
 
     private double FirstChildExtent => _weights[0] * ExtentUnit;
 
@@ -913,7 +913,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     {
         get
         {
-            if (ConstraintsForSliver.ViewportMainAxisExtent == 0.0)
+            if (Constraints.ViewportMainAxisExtent == 0.0)
             {
                 return 0;
             }
@@ -939,12 +939,12 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     {
         get
         {
-            if (ConstraintsForSliver.ViewportMainAxisExtent == 0.0)
+            if (Constraints.ViewportMainAxisExtent == 0.0)
             {
                 return 0;
             }
 
-            return ConstraintsForSliver.ScrollOffset - (ScrollOffsetInFirstChildExtents() * FirstChildExtent);
+            return Constraints.ScrollOffset - (ScrollOffsetInFirstChildExtents() * FirstChildExtent);
         }
     }
 
@@ -952,7 +952,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     public override double IndexToLayoutOffset(double itemExtent, int index)
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         int firstVisibleItemIndex = FirstVisibleItemIndex;
         if (index == firstVisibleItemIndex)
         {
@@ -977,7 +977,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     public override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         int? childCount = ChildManager?.EstimatedChildCount;
         int firstVisibleItemIndex = FirstVisibleItemIndex;
         if (_infinite && childCount is null)
@@ -1027,8 +1027,9 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     /// <c>extraLayoutOffset</c>, the trailing-item scroll extent, and the <c>consumeMaxWeight</c>
     /// paint origin. The copy is kept 1:1 so the two can be diffed against each other.
     /// </summary>
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         IRenderSliverBoxChildManager? childManager = ChildManager;
         if (childManager is null || _weights.Count == 0)
         {
@@ -1161,7 +1162,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     private double? BuildItemExtent(int index, SliverLayoutDimensions dimensions)
     {
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         if (constraints.ViewportMainAxisExtent == 0)
         {
             return 0;
@@ -1206,7 +1207,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
             return 0;
         }
 
-        double actual = ConstraintsForSliver.ScrollOffset / firstChildExtent;
+        double actual = Constraints.ScrollOffset / firstChildExtent;
         int round = RoundHalfAwayFromZero(actual);
         return Math.Abs(actual - round) < Constants.PrecisionErrorTolerance ? round : (int)Math.Floor(actual);
     }

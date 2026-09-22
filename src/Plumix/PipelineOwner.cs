@@ -583,9 +583,9 @@ public class PipelineOwner : DiagnosticableTree
                 {
                     node.LayoutWithoutResize();
                 }
-                else if (node.HasBoxConstraints)
+                else if (node.HasConstraints)
                 {
-                    node.Layout(node.CurrentBoxConstraints);
+                    node.Layout(node.CurrentConstraints);
                 }
                 else
                 {

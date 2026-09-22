@@ -118,7 +118,7 @@ public sealed class DecoratedPinnedSliverTests
     {
         var child = new FixedSizeRenderBox(new Size(100, 60));
         var header = new RenderPinnedHeaderSliver { Child = child };
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 80,
             RemainingPaintExtent: 200,
@@ -127,7 +127,7 @@ public sealed class DecoratedPinnedSliverTests
             RemainingCacheExtent: 200,
             Overlap: 12);
 
-        header.LayoutWithSliverConstraints(constraints);
+        header.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(60, header.ChildExtent);
         Assert.Equal(60, header.Geometry.ScrollExtent);
@@ -137,7 +137,7 @@ public sealed class DecoratedPinnedSliverTests
         Assert.Equal(60, header.Geometry.MaxPaintExtent);
         Assert.Equal(60, header.Geometry.MaxScrollObstructionExtent);
         Assert.True(header.Geometry.HasVisualOverflow);
-        Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
+        Assert.Equal(default, ((SliverPhysicalParentData)child.parentData!).PaintOffset);
     }
 
     [Fact]
@@ -145,19 +145,19 @@ public sealed class DecoratedPinnedSliverTests
     {
         var child = new MutableSizeRenderBox(new Size(100, 60));
         var header = new RenderPinnedHeaderSliver { Child = child };
-        var constraints = new SliverConstraints(
+        var constraints = TestSliverConstraints.Create(
             Axis: Axis.Vertical,
             ScrollOffset: 20,
             RemainingPaintExtent: 200,
             CrossAxisExtent: 100,
             ViewportMainAxisExtent: 200,
             RemainingCacheExtent: 200);
-        header.LayoutWithSliverConstraints(constraints);
+        header.Layout(constraints, parentUsesSize: true);
         Assert.Equal(60, header.Geometry.ScrollExtent);
         Assert.Equal(40, header.Geometry.LayoutExtent);
 
         child.UpdateSize(new Size(100, 90));
-        header.LayoutWithSliverConstraints(constraints);
+        header.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(90, header.Geometry.ScrollExtent);
         Assert.Equal(70, header.Geometry.LayoutExtent);
@@ -171,14 +171,14 @@ public sealed class DecoratedPinnedSliverTests
         {
             Child = new FixedSizeRenderBox(new Size(70, 40)),
         };
-        header.LayoutWithSliverConstraints(new SliverConstraints(
+        header.Layout(TestSliverConstraints.Create(
             Axis: Axis.Horizontal,
             ScrollOffset: 25,
             RemainingPaintExtent: 160,
             CrossAxisExtent: 40,
             ViewportMainAxisExtent: 160,
             RemainingCacheExtent: 160,
-            AxisDirection: AxisDirection.Right));
+            AxisDirection: AxisDirection.Right), parentUsesSize: true);
 
         Assert.Equal(70, header.ChildExtent);
         Assert.Equal(45, header.Geometry.LayoutExtent);
@@ -206,9 +206,9 @@ public sealed class DecoratedPinnedSliverTests
 
         Assert.Equal(0, header.Geometry.LayoutExtent);
         Assert.Equal(60, header.Geometry.PaintExtent);
-        Assert.Equal(60, body.ConstraintsForSliver.Overlap);
-        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)body.parentData!).offset);
-        Assert.Equal(new Point(0, -20), ((BoxParentData)bodyBox.parentData!).offset);
+        Assert.Equal(60, body.Constraints.Overlap);
+        Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)body.parentData!).PaintOffset);
+        Assert.Equal(new Point(0, -20), ((SliverPhysicalParentData)bodyBox.parentData!).PaintOffset);
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)
@@ -252,8 +252,9 @@ public sealed class DecoratedPinnedSliverTests
 
     private sealed class PaintTrackingSliver(List<string> order, double scrollExtent) : RenderSliver
     {
-        protected override void PerformSliverLayout(SliverConstraints constraints)
+        protected override void PerformLayout()
         {
+            SliverConstraints constraints = Constraints;
             double paintExtent = Math.Min(
                 constraints.RemainingPaintExtent,
                 double.IsPositiveInfinity(scrollExtent)

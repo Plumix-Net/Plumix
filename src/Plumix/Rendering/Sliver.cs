@@ -1,68 +1,343 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Text;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/sliver.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver.dart
 // flutter/packages/flutter/lib/src/rendering/sliver_multi_box_adaptor.dart
+// flutter/packages/flutter/lib/src/rendering/proxy_sliver.dart
+// flutter/packages/flutter/lib/src/rendering/sliver_padding.dart
 
 namespace Plumix.Rendering;
 
-public readonly record struct SliverConstraints(
-    Axis Axis,
-    double ScrollOffset,
-    double RemainingPaintExtent,
-    double CrossAxisExtent,
-    double ViewportMainAxisExtent,
-    double CacheOrigin = 0,
-    double RemainingCacheExtent = 0,
-    AxisDirection AxisDirection = AxisDirection.Down,
-    GrowthDirection GrowthDirection = GrowthDirection.Forward,
-    double Overlap = 0,
-    double PrecedingScrollExtent = 0,
-    ScrollDirection UserScrollDirection = ScrollDirection.Idle,
-    AxisDirection CrossAxisDirection = AxisDirection.Right) : IConstraints
+/// <summary>Immutable layout constraints for <see cref="RenderSliver"/> layout.</summary>
+/// <remarks>
+/// Flutter's <c>SliverConstraints</c>. Every field is required, as in Dart, and
+/// <see cref="Axis"/> is derived from <see cref="AxisDirection"/>.
+/// </remarks>
+public readonly record struct SliverConstraints : IConstraints
 {
-    public bool IsTight => false;
+    /// <summary>Creates sliver constraints with the given information.</summary>
+    public SliverConstraints(
+        AxisDirection AxisDirection,
+        GrowthDirection GrowthDirection,
+        ScrollDirection UserScrollDirection,
+        double ScrollOffset,
+        double PrecedingScrollExtent,
+        double Overlap,
+        double RemainingPaintExtent,
+        double CrossAxisExtent,
+        AxisDirection CrossAxisDirection,
+        double ViewportMainAxisExtent,
+        double RemainingCacheExtent,
+        double CacheOrigin)
+    {
+        this.AxisDirection = AxisDirection;
+        this.GrowthDirection = GrowthDirection;
+        this.UserScrollDirection = UserScrollDirection;
+        this.ScrollOffset = ScrollOffset;
+        this.PrecedingScrollExtent = PrecedingScrollExtent;
+        this.Overlap = Overlap;
+        this.RemainingPaintExtent = RemainingPaintExtent;
+        this.CrossAxisExtent = CrossAxisExtent;
+        this.CrossAxisDirection = CrossAxisDirection;
+        this.ViewportMainAxisExtent = ViewportMainAxisExtent;
+        this.RemainingCacheExtent = RemainingCacheExtent;
+        this.CacheOrigin = CacheOrigin;
+    }
 
     /// <summary>
-    /// The growth direction with respect to the axis direction rather than the scroll offset.
+    /// The direction in which the <see cref="ScrollOffset"/> and <see cref="RemainingPaintExtent"/> increase.
+    /// </summary>
+    public AxisDirection AxisDirection { get; init; }
+
+    /// <summary>
+    /// The direction in which the contents of slivers are ordered, relative to the <see cref="AxisDirection"/>.
+    /// </summary>
+    public GrowthDirection GrowthDirection { get; init; }
+
+    /// <summary>
+    /// The direction in which the user is attempting to scroll, relative to the <see cref="AxisDirection"/>.
+    /// </summary>
+    public ScrollDirection UserScrollDirection { get; init; }
+
+    /// <summary>
+    /// The scroll offset, in this sliver's coordinate system, that corresponds to the earliest visible part of this
+    /// sliver.
+    /// </summary>
+    public double ScrollOffset { get; init; }
+
+    /// <summary>The scroll distance that has been consumed by all slivers that came before this sliver.</summary>
+    public double PrecedingScrollExtent { get; init; }
+
+    /// <summary>
+    /// The number of pixels from where the pixels corresponding to the <see cref="ScrollOffset"/> will be painted up to
+    /// the first pixel that has not yet been painted on by an earlier sliver.
+    /// </summary>
+    public double Overlap { get; init; }
+
+    /// <summary>The number of pixels of content that the sliver should consider providing.</summary>
+    public double RemainingPaintExtent { get; init; }
+
+    /// <summary>The number of pixels in the cross-axis.</summary>
+    public double CrossAxisExtent { get; init; }
+
+    /// <summary>The direction in which children should be placed in the cross axis.</summary>
+    public AxisDirection CrossAxisDirection { get; init; }
+
+    /// <summary>The number of pixels the viewport can display in the main axis.</summary>
+    public double ViewportMainAxisExtent { get; init; }
+
+    /// <summary>Where the cache area starts relative to the <see cref="ScrollOffset"/>.</summary>
+    public double CacheOrigin { get; init; }
+
+    /// <summary>
+    /// Describes how much content the sliver should provide starting from the <see cref="CacheOrigin"/>.
+    /// </summary>
+    public double RemainingCacheExtent { get; init; }
+
+    /// <summary>
+    /// The axis along which the <see cref="ScrollOffset"/> and <see cref="RemainingPaintExtent"/> are measured.
+    /// </summary>
+    public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
+
+    /// <summary>
+    /// Return what the <see cref="GrowthDirection"/> would be if the <see cref="AxisDirection"/> was
+    /// either <see cref="AxisDirection.Down"/> or <see cref="AxisDirection.Right"/>.
     /// </summary>
     /// <remarks>Flutter's <c>SliverConstraints.normalizedGrowthDirection</c>.</remarks>
-    public GrowthDirection NormalizedGrowthDirection => AxisDirection switch
-    {
-        AxisDirection.Down or AxisDirection.Right => GrowthDirection,
-        _ => GrowthDirection == GrowthDirection.Forward
-            ? GrowthDirection.Reverse
-            : GrowthDirection.Forward,
-    };
+    public GrowthDirection NormalizedGrowthDirection =>
+        ScrollDirectionUtils.AxisDirectionIsReversed(AxisDirection)
+            ? GrowthDirection == GrowthDirection.Forward ? GrowthDirection.Reverse : GrowthDirection.Forward
+            : GrowthDirection;
 
+    /// <inheritdoc />
+    public bool IsTight => false;
+
+    /// <inheritdoc />
     public bool IsNormalized => ScrollOffset >= 0.0
                                 && CrossAxisExtent >= 0.0
+                                && ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection)
+                                != ScrollDirectionUtils.AxisDirectionToAxis(CrossAxisDirection)
                                 && ViewportMainAxisExtent >= 0.0
                                 && RemainingPaintExtent >= 0.0;
 
+    /// <summary>Creates a copy of this object but with the given fields replaced with the new values.</summary>
+    /// <remarks>Flutter's <c>SliverConstraints.copyWith</c>; C#'s <c>with</c> expression does the same.</remarks>
+    public SliverConstraints CopyWith(
+        AxisDirection? axisDirection = null,
+        GrowthDirection? growthDirection = null,
+        ScrollDirection? userScrollDirection = null,
+        double? scrollOffset = null,
+        double? precedingScrollExtent = null,
+        double? overlap = null,
+        double? remainingPaintExtent = null,
+        double? crossAxisExtent = null,
+        AxisDirection? crossAxisDirection = null,
+        double? viewportMainAxisExtent = null,
+        double? remainingCacheExtent = null,
+        double? cacheOrigin = null)
+    {
+        return new SliverConstraints(
+            AxisDirection: axisDirection ?? AxisDirection,
+            GrowthDirection: growthDirection ?? GrowthDirection,
+            UserScrollDirection: userScrollDirection ?? UserScrollDirection,
+            ScrollOffset: scrollOffset ?? ScrollOffset,
+            PrecedingScrollExtent: precedingScrollExtent ?? PrecedingScrollExtent,
+            Overlap: overlap ?? Overlap,
+            RemainingPaintExtent: remainingPaintExtent ?? RemainingPaintExtent,
+            CrossAxisExtent: crossAxisExtent ?? CrossAxisExtent,
+            CrossAxisDirection: crossAxisDirection ?? CrossAxisDirection,
+            ViewportMainAxisExtent: viewportMainAxisExtent ?? ViewportMainAxisExtent,
+            RemainingCacheExtent: remainingCacheExtent ?? RemainingCacheExtent,
+            CacheOrigin: cacheOrigin ?? CacheOrigin);
+    }
+
+    /// <summary>
+    /// Returns <see cref="BoxConstraints"/> that reflects the sliver constraints.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverConstraints.asBoxConstraints</c>: the cross-axis extent is tight, the main
+    /// axis extent ranges from <paramref name="minExtent"/> to <paramref name="maxExtent"/>.
+    /// </remarks>
     public BoxConstraints AsBoxConstraints(
         double minExtent = 0.0,
         double maxExtent = double.PositiveInfinity,
         double? crossAxisExtent = null)
     {
         double effectiveCrossAxisExtent = crossAxisExtent ?? CrossAxisExtent;
-        return Axis == Axis.Vertical
+        return Axis == Axis.Horizontal
             ? new BoxConstraints(
-                MinWidth: effectiveCrossAxisExtent,
-                MaxWidth: effectiveCrossAxisExtent,
-                MinHeight: minExtent,
-                MaxHeight: maxExtent)
-            : new BoxConstraints(
                 MinWidth: minExtent,
                 MaxWidth: maxExtent,
                 MinHeight: effectiveCrossAxisExtent,
-                MaxHeight: effectiveCrossAxisExtent);
+                MaxHeight: effectiveCrossAxisExtent)
+            : new BoxConstraints(
+                MinWidth: effectiveCrossAxisExtent,
+                MaxWidth: effectiveCrossAxisExtent,
+                MinHeight: minExtent,
+                MaxHeight: maxExtent);
     }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>SliverConstraints.debugAssertIsValid</c>.</remarks>
+    public bool DebugAssertIsValid(
+        bool isAppliedConstraint = false,
+        InformationCollector? informationCollector = null)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return true;
+        }
+
+        bool hasErrors = false;
+        var errorMessage = new StringBuilder("\n");
+        void Verify(bool check, string message)
+        {
+            if (check)
+            {
+                return;
+            }
+
+            hasErrors = true;
+            errorMessage.Append("  ").Append(message).Append('\n');
+        }
+
+        void VerifyDouble(double property, string name, bool mustBePositive = false, bool mustBeNegative = false)
+        {
+            if (double.IsNaN(property))
+            {
+                string additional = ".";
+                if (mustBePositive)
+                {
+                    additional = ", expected greater than or equal to zero.";
+                }
+                else if (mustBeNegative)
+                {
+                    additional = ", expected less than or equal to zero.";
+                }
+
+                Verify(false, $"The \"{name}\" is NaN{additional}");
+            }
+            else if (mustBePositive)
+            {
+                Verify(property >= 0.0, $"The \"{name}\" is negative.");
+            }
+            else if (mustBeNegative)
+            {
+                Verify(property <= 0.0, $"The \"{name}\" is positive.");
+            }
+        }
+
+        VerifyDouble(ScrollOffset, "scrollOffset");
+        VerifyDouble(Overlap, "overlap");
+        VerifyDouble(CrossAxisExtent, "crossAxisExtent");
+        VerifyDouble(ScrollOffset, "scrollOffset", mustBePositive: true);
+        Verify(
+            ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection)
+            != ScrollDirectionUtils.AxisDirectionToAxis(CrossAxisDirection),
+            "The \"axisDirection\" and the \"crossAxisDirection\" are along the same axis.");
+        VerifyDouble(ViewportMainAxisExtent, "viewportMainAxisExtent", mustBePositive: true);
+        VerifyDouble(RemainingPaintExtent, "remainingPaintExtent", mustBePositive: true);
+        VerifyDouble(RemainingCacheExtent, "remainingCacheExtent", mustBePositive: true);
+        VerifyDouble(CacheOrigin, "cacheOrigin", mustBeNegative: true);
+        VerifyDouble(PrecedingScrollExtent, "precedingScrollExtent", mustBePositive: true);
+        // Should be redundant with the earlier checks.
+        Verify(IsNormalized, "The constraints are not normalized.");
+        if (hasErrors)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"{nameof(SliverConstraints)} is not valid: {errorMessage}"),
+                .. informationCollector?.Invoke() ?? [],
+                new DiagnosticsProperty<SliverConstraints>(
+                    "The offending constraints were",
+                    this,
+                    style: DiagnosticsTreeStyle.ErrorProperty),
+            ]);
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>SliverConstraints.==</c>, which also asserts that the other constraints are valid.
+    /// </remarks>
+    public bool Equals(SliverConstraints other)
+    {
+        if (Constants.KDebugMode)
+        {
+            other.DebugAssertIsValid();
+        }
+
+        return other.AxisDirection == AxisDirection
+               && other.GrowthDirection == GrowthDirection
+               && other.UserScrollDirection == UserScrollDirection
+               && other.ScrollOffset.Equals(ScrollOffset)
+               && other.PrecedingScrollExtent.Equals(PrecedingScrollExtent)
+               && other.Overlap.Equals(Overlap)
+               && other.RemainingPaintExtent.Equals(RemainingPaintExtent)
+               && other.CrossAxisExtent.Equals(CrossAxisExtent)
+               && other.CrossAxisDirection == CrossAxisDirection
+               && other.ViewportMainAxisExtent.Equals(ViewportMainAxisExtent)
+               && other.RemainingCacheExtent.Equals(RemainingCacheExtent)
+               && other.CacheOrigin.Equals(CacheOrigin);
+    }
+
+    /// <inheritdoc />
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(AxisDirection);
+        hash.Add(GrowthDirection);
+        hash.Add(UserScrollDirection);
+        hash.Add(ScrollOffset);
+        hash.Add(PrecedingScrollExtent);
+        hash.Add(Overlap);
+        hash.Add(RemainingPaintExtent);
+        hash.Add(CrossAxisExtent);
+        hash.Add(CrossAxisDirection);
+        hash.Add(ViewportMainAxisExtent);
+        hash.Add(RemainingCacheExtent);
+        hash.Add(CacheOrigin);
+        return hash.ToHashCode();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>SliverConstraints.toString</c>.</remarks>
+    public override string ToString()
+    {
+        List<string> properties =
+        [
+            DartEnum(nameof(AxisDirection), AxisDirection.ToString()),
+            DartEnum(nameof(GrowthDirection), GrowthDirection.ToString()),
+            DartEnum(nameof(ScrollDirection), UserScrollDirection.ToString()),
+            $"scrollOffset: {Fixed(ScrollOffset)}",
+            $"precedingScrollExtent: {Fixed(PrecedingScrollExtent)}",
+            $"remainingPaintExtent: {Fixed(RemainingPaintExtent)}",
+        ];
+        if (Overlap != 0.0)
+        {
+            properties.Add($"overlap: {Fixed(Overlap)}");
+        }
+
+        properties.Add($"crossAxisExtent: {Fixed(CrossAxisExtent)}");
+        properties.Add($"crossAxisDirection: {DartEnum(nameof(AxisDirection), CrossAxisDirection.ToString())}");
+        properties.Add($"viewportMainAxisExtent: {Fixed(ViewportMainAxisExtent)}");
+        properties.Add($"remainingCacheExtent: {Fixed(RemainingCacheExtent)}");
+        properties.Add($"cacheOrigin: {Fixed(CacheOrigin)}");
+        return $"SliverConstraints({string.Join(", ", properties)})";
+    }
+
+    private static string Fixed(double value) => value.ToString("F1", CultureInfo.InvariantCulture);
+
+    private static string DartEnum(string type, string value) =>
+        $"{type}.{char.ToLowerInvariant(value[0])}{value[1..]}";
 }
 
 public readonly record struct SliverGeometry : IDiagnosticable
@@ -181,16 +456,18 @@ public readonly record struct SliverGeometry : IDiagnosticable
             ThrowInvalid(
                 new ErrorSummary("The \"layoutExtent\" exceeds the \"paintExtent\"."),
                 informationCollector,
-                CompareFloats("paintExtent", PaintExtent, "layoutExtent", LayoutExtent));
+                DebugCompareFloats("paintExtent", PaintExtent, "layoutExtent", LayoutExtent));
         }
         if (PaintExtent - MaxPaintExtent > Constants.PrecisionErrorTolerance)
         {
             ThrowInvalid(
                 new ErrorSummary("The \"maxPaintExtent\" is less than the \"paintExtent\"."),
                 informationCollector,
-                CompareFloats("maxPaintExtent", MaxPaintExtent, "paintExtent", PaintExtent),
-                new ErrorDescription(
-                    "By definition, a sliver can't paint more than the maximum that it can paint!"));
+                [
+                    .. DebugCompareFloats("maxPaintExtent", MaxPaintExtent, "paintExtent", PaintExtent),
+                    new ErrorDescription(
+                        "By definition, a sliver can't paint more than the maximum that it can paint!"),
+                ]);
         }
         if (HitTestExtent < 0.0)
         {
@@ -256,7 +533,8 @@ public readonly record struct SliverGeometry : IDiagnosticable
         properties.Add(new DoubleProperty("cacheExtent", CacheExtent, defaultValue: 0.0));
     }
 
-    private static ErrorDescription CompareFloats(
+    /// <remarks>Flutter's <c>_debugCompareFloats</c> (sliver.dart).</remarks>
+    internal static DiagnosticsNode[] DebugCompareFloats(
         string labelA,
         double valueA,
         string labelB,
@@ -266,14 +544,29 @@ public readonly record struct SliverGeometry : IDiagnosticable
         string roundedB = valueB.ToString("F1", CultureInfo.InvariantCulture);
         if (!string.Equals(roundedA, roundedB, StringComparison.Ordinal))
         {
-            return new ErrorDescription(
-                $"The {labelA} is {roundedA}, but the {labelB} is {roundedB}.");
+            return
+            [
+                new ErrorDescription($"The {labelA} is {roundedA}, but the {labelB} is {roundedB}."),
+            ];
         }
 
-        return new ErrorDescription(
-            $"The {labelA} is {valueA.ToString(CultureInfo.InvariantCulture)}, but the {labelB} is "
-            + $"{valueB.ToString(CultureInfo.InvariantCulture)}. The values may have been affected by "
-            + "floating point rounding errors.");
+        return
+        [
+            new ErrorDescription(
+                $"The {labelA} is {DartDouble(valueA)}, but the {labelB} is {DartDouble(valueB)}."),
+            new ErrorHint(
+                "Maybe you have fallen prey to floating point rounding errors, and should explicitly "
+                + $"apply the min() or max() functions, or the clamp() method, to the {labelB}?"),
+        ];
+    }
+
+    /// <remarks>Dart's <c>double.toString</c>: integral values keep a <c>.0</c> suffix.</remarks>
+    private static string DartDouble(double value)
+    {
+        string text = value.ToString("R", CultureInfo.InvariantCulture);
+        return double.IsFinite(value) && value == Math.Floor(value) && !text.Contains('E')
+            ? text + ".0"
+            : text;
     }
 
     private static void ThrowInvalid(
@@ -800,65 +1093,264 @@ public sealed class SliverGridParentData : SliverMultiBoxAdaptorParentData
     public override string ToString() => $"crossAxisOffset={CrossAxisOffset}; {base.ToString()}";
 }
 
-public abstract class RenderSliver : RenderBox
-{
-    private SliverConstraints? _sliverConstraints;
-    private SliverGeometry _geometry;
+/// <summary>Signature for a sliver hit test with main/cross-axis positions.</summary>
+/// <remarks>Flutter's <c>SliverHitTest</c>.</remarks>
+public delegate bool SliverHitTest(
+    SliverHitTestResult result,
+    double mainAxisPosition,
+    double crossAxisPosition);
 
-    public SliverConstraints ConstraintsForSliver =>
-        _sliverConstraints ?? throw new InvalidOperationException("RenderSliver is not laid out.");
+/// <summary>
+/// The result of performing a hit test on <see cref="RenderSliver"/>s.
+/// </summary>
+/// <remarks>Flutter's <c>SliverHitTestResult</c>.</remarks>
+public class SliverHitTestResult : HitTestResult
+{
+    /// <summary>Creates an empty hit test result for hit testing on <see cref="RenderSliver"/>.</summary>
+    public SliverHitTestResult()
+    {
+    }
 
     /// <summary>
-    /// Whether this sliver has been laid out at least once, so <see cref="ConstraintsForSliver"/> and
-    /// <see cref="Geometry"/> are meaningful. Stands in for Flutter's <c>geometry != null</c> check.
+    /// Wraps <paramref name="result"/> to create a result that shares its path and transform stack.
     /// </summary>
-    public bool HasSliverConstraints => _sliverConstraints.HasValue;
+    /// <remarks>Flutter's <c>SliverHitTestResult.wrap</c>.</remarks>
+    public SliverHitTestResult(HitTestResult result) : base(result)
+    {
+    }
 
+    /// <summary>Wraps <paramref name="result"/> so both share one path and transform stack.</summary>
+    public static new SliverHitTestResult Wrap(HitTestResult result) => new(result);
+
+    /// <summary>
+    /// Transforms <paramref name="mainAxisPosition"/> and <paramref name="crossAxisPosition"/> to the
+    /// local coordinate system of a child for hit-testing the child.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverHitTestResult.addWithAxisOffset</c>. The main/cross-axis offsets are
+    /// subtracted from the positions before <paramref name="hitTest"/> runs; <paramref name="paintOffset"/>
+    /// (the offset the child is painted at) only feeds the transform recorded on added entries.
+    /// </remarks>
+    public bool AddWithAxisOffset(
+        Point? paintOffset,
+        double mainAxisOffset,
+        double crossAxisOffset,
+        double mainAxisPosition,
+        double crossAxisPosition,
+        SliverHitTest hitTest)
+    {
+        ArgumentNullException.ThrowIfNull(hitTest);
+        if (paintOffset is { } offset)
+        {
+            PushOffset(new Point(-offset.X, -offset.Y));
+        }
+
+        bool isHit = hitTest(
+            this,
+            mainAxisPosition - mainAxisOffset,
+            crossAxisPosition - crossAxisOffset);
+        if (paintOffset is not null)
+        {
+            PopTransform();
+        }
+
+        return isHit;
+    }
+}
+
+/// <summary>
+/// A hit test entry used by <see cref="RenderSliver"/>.
+/// </summary>
+/// <remarks>Flutter's <c>SliverHitTestEntry</c>.</remarks>
+public class SliverHitTestEntry(RenderSliver target, double mainAxisPosition, double crossAxisPosition)
+    : HitTestEntry(target)
+{
+    /// <summary>The <see cref="RenderSliver"/> that was hit.</summary>
+    public new RenderSliver Target => (RenderSliver)base.Target;
+
+    /// <summary>
+    /// The distance in the <see cref="AxisDirection"/> from the edge of the sliver's painted
+    /// boundary to the position of the hit.
+    /// </summary>
+    public double MainAxisPosition { get; } = mainAxisPosition;
+
+    /// <summary>
+    /// The distance to the hit in the cross axis direction for the sliver.
+    /// </summary>
+    public double CrossAxisPosition { get; } = crossAxisPosition;
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"{Target.GetType().Name}@(mainAxis: {DebugFormat(MainAxisPosition)}, "
+        + $"crossAxis: {DebugFormat(CrossAxisPosition)})";
+
+    /// <remarks>Dart's <c>double.toString</c>: integral values keep a <c>.0</c> suffix.</remarks>
+    private static string DebugFormat(double value)
+    {
+        string text = value.ToString("R", CultureInfo.InvariantCulture);
+        return double.IsFinite(value) && value == Math.Floor(value) && !text.Contains('E')
+            ? text + ".0"
+            : text;
+    }
+}
+
+/// <summary>Base class for the render objects that implement scroll effects in viewports.</summary>
+/// <remarks>
+/// Flutter's <c>RenderSliver</c>: a <see cref="RenderObject"/> with its own layout protocol
+/// (<see cref="SliverConstraints"/> in, <see cref="SliverGeometry"/> out) and its own hit-test
+/// protocol (<see cref="SliverHitTestResult"/> with main/cross-axis positions).
+/// </remarks>
+public abstract class RenderSliver : RenderObject
+{
+    private SliverGeometry _geometry;
+    private bool _hasGeometry;
+
+    /// <summary>The layout constraints most recently supplied by the parent.</summary>
+    /// <remarks>Flutter's <c>RenderSliver.constraints</c>.</remarks>
+    public new SliverConstraints Constraints => (SliverConstraints)base.Constraints;
+
+    /// <summary>
+    /// Whether this sliver has been laid out at least once, so <see cref="Constraints"/> and
+    /// <see cref="Geometry"/> are meaningful.
+    /// </summary>
+    /// <remarks>
+    /// Stands in for Dart's <c>geometry != null</c>: <see cref="SliverGeometry"/> is a value type here,
+    /// so <see cref="Geometry"/> reads as <see cref="SliverGeometry.Zero"/> before the first layout.
+    /// </remarks>
+    public bool HasSliverConstraints => _hasGeometry && HasConstraints;
+
+    /// <summary>The amount of space this sliver occupies.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.geometry</c>. The setter may only be called by the sliver itself,
+    /// from <see cref="RenderObject.PerformResize"/> when <see cref="RenderObject.SizedByParent"/> is
+    /// true and from <see cref="RenderObject.PerformLayout"/> otherwise.
+    /// </remarks>
     public SliverGeometry Geometry
     {
         get => _geometry;
         protected set
         {
+            Debug.Assert(!(DebugDoingThisResize && DebugDoingThisLayout));
+            Debug.Assert(SizedByParent || !DebugDoingThisResize);
             if (Constants.KDebugMode)
             {
                 DebugCheckGeometrySetterPhase();
             }
 
-            value.DebugAssertIsValid(() =>
-            [
-                new DiagnosticsProperty<RenderSliver>(
-                    "The RenderSliver that returned the offending geometry was",
-                    this,
-                    style: DiagnosticsTreeStyle.ErrorProperty),
-            ]);
             _geometry = value;
+            _hasGeometry = true;
         }
     }
 
-    /// <summary>
-    /// Ports Dart's <c>RenderSliver.geometry</c> setter assertions: the geometry may only be written
-    /// by the sliver itself, from <see cref="PerformResize"/> when <see cref="SizedByParent"/> is
-    /// <c>true</c>, and from <c>PerformLayout</c> when it is <c>false</c>.
-    /// </summary>
+    /// <summary>Ports Dart's <c>RenderSliver.geometry</c> setter assertion.</summary>
     private void DebugCheckGeometrySetterPhase()
     {
-        if (SizedByParent ? DebugDoingThisResize : DebugDoingThisLayout)
+        if ((SizedByParent && DebugDoingThisResize) || (!SizedByParent && DebugDoingThisLayout))
         {
             return;
         }
 
-        string violation = DebugDoingThisLayout
-            ? "It appears that the geometry setter was called from PerformLayout()."
-            : "The geometry setter was called from outside layout (neither PerformResize() nor "
-              + "PerformLayout() were being run for this object).";
-        string contract = SizedByParent
-            ? "Because this RenderSliver has SizedByParent set to true, it must set its geometry in "
-              + "PerformResize()."
-            : "Because this RenderSliver has SizedByParent set to false, it must set its geometry in "
-              + "PerformLayout().";
-        throw new AssertionError(
-            $"RenderSliver geometry setter called incorrectly.\n{violation}\n{contract}\n"
-            + $"The RenderSliver in question is: {GetType().Name}#{Diagnostics.ShortHash(this)}");
+        Debug.Assert(!DebugDoingThisResize);
+        DiagnosticsNode violation;
+        DiagnosticsNode? hint = null;
+        if (DebugDoingThisLayout)
+        {
+            Debug.Assert(SizedByParent);
+            violation = new ErrorDescription(
+                "It appears that the geometry setter was called from performLayout().");
+        }
+        else
+        {
+            violation = new ErrorDescription(
+                "The geometry setter was called from outside layout (neither performResize() nor "
+                + "performLayout() were being run for this object).");
+            if (Owner is { DebugDoingLayout: true })
+            {
+                hint = new ErrorDescription(
+                    "Only the object itself can set its geometry. It is a contract violation for other "
+                    + "objects to set it.");
+            }
+        }
+
+        DiagnosticsNode contract = SizedByParent
+            ? new ErrorDescription(
+                "Because this RenderSliver has sizedByParent set to true, it must set its geometry in "
+                + "performResize().")
+            : new ErrorDescription(
+                "Because this RenderSliver has sizedByParent set to false, it must set its geometry in "
+                + "performLayout().");
+        throw new FlutterError(
+        [
+            new ErrorSummary("RenderSliver geometry setter called incorrectly."),
+            violation,
+            .. hint is null ? Array.Empty<DiagnosticsNode>() : [hint],
+            contract,
+            DescribeForError("The RenderSliver in question is"),
+        ]);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderSliver.semanticBounds</c>: the <see cref="PaintBounds"/>.</remarks>
+    protected override Rect SemanticBounds => PaintBounds;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.paintBounds</c>: the painted extent along the main axis by the cross
+    /// axis extent, anchored at the origin.
+    /// </remarks>
+    public override Rect PaintBounds => Constraints.Axis switch
+    {
+        Axis.Horizontal => new Rect(0.0, 0.0, Geometry.PaintExtent, Constraints.CrossAxisExtent),
+        _ => new Rect(0.0, 0.0, Constraints.CrossAxisExtent, Geometry.PaintExtent),
+    };
+
+    /// <inheritdoc />
+    protected override void DebugResetSize()
+    {
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderSliver.debugAssertDoesMeetConstraints</c>.</remarks>
+    protected override void DebugAssertDoesMeetConstraints()
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        Geometry.DebugAssertIsValid(() =>
+        [
+            DescribeForError("The RenderSliver that returned the offending geometry was"),
+        ]);
+        if (Geometry.PaintOrigin + Geometry.PaintExtent > Constraints.RemainingPaintExtent)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    "SliverGeometry has a paintOffset that exceeds the remainingPaintExtent from the "
+                    + "constraints."),
+                DescribeForError(
+                    "The render object whose geometry violates the constraints is the following"),
+                .. SliverGeometry.DebugCompareFloats(
+                    "remainingPaintExtent",
+                    Constraints.RemainingPaintExtent,
+                    "paintOrigin + paintExtent",
+                    Geometry.PaintOrigin + Geometry.PaintExtent),
+                new ErrorDescription(
+                    "The paintOrigin and paintExtent must cause the child sliver to paint within the "
+                    + "viewport, and so cannot exceed the remainingPaintExtent."),
+            ]);
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.performResize</c>, which is <c>assert(false)</c>: slivers are never
+    /// sized by their parent.
+    /// </remarks>
+    protected override void PerformResize()
+    {
+        Debug.Assert(false, "RenderSliver.PerformResize must not be called.");
     }
 
     /// <summary>
@@ -869,220 +1361,229 @@ public abstract class RenderSliver : RenderBox
     public virtual bool EnsureSemantics => false;
 
     /// <summary>
-    /// The amount by which the viewport's zero scroll offset is shifted when this sliver is the
-    /// viewport's <c>center</c>.
+    /// For a center sliver, the distance before the absolute zero scroll offset that this sliver can
+    /// cover.
     /// </summary>
     /// <remarks>Flutter's <c>RenderSliver.centerOffsetAdjustment</c>. Defaults to <c>0.0</c>.</remarks>
     public virtual double CenterOffsetAdjustment => 0.0;
 
-    /// <summary>Lays this sliver out under sliver constraints.</summary>
+    /// <summary>
+    /// Determines the set of render objects located at the given position.
+    /// </summary>
     /// <remarks>
-    /// Flutter's viewports call <c>child.layout(SliverConstraints(...), parentUsesSize: true)</c> —
-    /// they always read the child's <c>geometry</c> afterwards — so a sliver is a relayout boundary
-    /// only when it is <see cref="RenderObject.SizedByParent"/>, never merely by virtue of being laid
-    /// out by a viewport.
+    /// Flutter's <c>RenderSliver.hitTest</c>. Returns true if the given point is contained in this
+    /// sliver or one of its descendants, and adds a <see cref="SliverHitTestEntry"/> for this sliver
+    /// in that case. The main-axis position is measured from the edge of the sliver's painted boundary
+    /// in the <see cref="SliverConstraints.AxisDirection"/>.
     /// </remarks>
-    public void LayoutWithSliverConstraints(SliverConstraints constraints, bool parentUsesSize = true)
+    public virtual bool HitTest(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        if (_sliverConstraints != constraints)
+        ArgumentNullException.ThrowIfNull(result);
+        if (mainAxisPosition >= 0.0
+            && mainAxisPosition < Geometry.HitTestExtent
+            && crossAxisPosition >= 0.0
+            && crossAxisPosition < Constraints.CrossAxisExtent)
         {
-            MarkNeedsImmediateRelayout();
-        }
-
-        _sliverConstraints = constraints;
-        double remainingCacheExtent = constraints.RemainingCacheExtent > 0
-            ? constraints.RemainingCacheExtent
-            : constraints.RemainingPaintExtent;
-        double scrollAwareMainAxisExtent = constraints.ViewportMainAxisExtent
-                                           + Math.Max(0, constraints.ScrollOffset)
-                                           + Math.Max(0, remainingCacheExtent);
-
-        BoxConstraints layoutConstraints;
-        if (constraints.Axis == Axis.Vertical)
-        {
-            layoutConstraints = new BoxConstraints(
-                MinWidth: constraints.CrossAxisExtent,
-                MaxWidth: constraints.CrossAxisExtent,
-                MinHeight: 0,
-                MaxHeight: scrollAwareMainAxisExtent);
-        }
-        else
-        {
-            layoutConstraints = new BoxConstraints(
-                MinWidth: 0,
-                MaxWidth: scrollAwareMainAxisExtent,
-                MinHeight: constraints.CrossAxisExtent,
-                MaxHeight: constraints.CrossAxisExtent);
-        }
-
-        Layout(layoutConstraints, parentUsesSize: parentUsesSize);
-    }
-
-    protected override void PerformLayout()
-    {
-        var constraints = ConstraintsForSliver;
-        PerformSliverLayout(constraints);
-
-        double mainExtent = Math.Max(0, Geometry.PaintExtent);
-        Size = constraints.Axis == Axis.Vertical
-            ? new Size(constraints.CrossAxisExtent, mainExtent)
-            : new Size(mainExtent, constraints.CrossAxisExtent);
-    }
-
-    public override bool HitTest(BoxHitTestResult result, Point position)
-    {
-        if (!HasSliverConstraints)
-        {
-            return false;
-        }
-
-        SliverConstraints constraints = ConstraintsForSliver;
-        double mainAxisPosition = constraints.Axis == Axis.Vertical ? position.Y : position.X;
-        double crossAxisPosition = constraints.Axis == Axis.Vertical ? position.X : position.Y;
-        if (mainAxisPosition < 0.0
-            || mainAxisPosition >= Geometry.HitTestExtent
-            || crossAxisPosition < 0.0
-            || crossAxisPosition >= constraints.CrossAxisExtent)
-        {
-            return false;
-        }
-
-        if (HitTestChildren(result, position) || HitTestSelf(position))
-        {
-            result.Add(new BoxHitTestEntry(this, position));
-            return true;
+            if (HitTestChildren(result, mainAxisPosition, crossAxisPosition)
+                || HitTestSelf(mainAxisPosition, crossAxisPosition))
+            {
+                result.Add(new SliverHitTestEntry(this, mainAxisPosition, crossAxisPosition));
+                return true;
+            }
         }
 
         return false;
     }
 
-    protected abstract void PerformSliverLayout(SliverConstraints constraints);
+    /// <summary>Override this method if this render object can be hit even if its children were not.</summary>
+    /// <remarks>Flutter's <c>RenderSliver.hitTestSelf</c>.</remarks>
+    protected virtual bool HitTestSelf(double mainAxisPosition, double crossAxisPosition) => false;
 
-    protected double CalculatePaintOffset(
-        SliverConstraints constraints,
-        double from,
-        double to)
+    /// <summary>Override this method to check whether any children are located at the given position.</summary>
+    /// <remarks>Flutter's <c>RenderSliver.hitTestChildren</c>.</remarks>
+    protected virtual bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition) => false;
+
+    /// <summary>
+    /// Computes the portion of the region from <paramref name="from"/> to <paramref name="to"/> that
+    /// is visible, assuming that only the region from <see cref="SliverConstraints.ScrollOffset"/>
+    /// that is <see cref="SliverConstraints.RemainingPaintExtent"/> high is visible.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.calculatePaintOffset</c>.</remarks>
+    public double CalculatePaintOffset(SliverConstraints constraints, double from, double to)
     {
-        if (from > to)
-        {
-            throw new ArgumentOutOfRangeException(nameof(from), "from must be less than or equal to to.");
-        }
-
-        double leading = constraints.ScrollOffset;
-        double trailing = constraints.ScrollOffset + constraints.RemainingPaintExtent;
+        Debug.Assert(from <= to);
+        double a = constraints.ScrollOffset;
+        double b = constraints.ScrollOffset + constraints.RemainingPaintExtent;
         return Math.Clamp(
-            Math.Clamp(to, leading, trailing) - Math.Clamp(from, leading, trailing),
+            Math.Clamp(to, a, b) - Math.Clamp(from, a, b),
             0.0,
             constraints.RemainingPaintExtent);
     }
 
-    protected double CalculateCacheOffset(
-        SliverConstraints constraints,
-        double from,
-        double to)
+    /// <summary>
+    /// Computes the portion of the region from <paramref name="from"/> to <paramref name="to"/> that
+    /// is within the cache extent of the viewport.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.calculateCacheOffset</c>.</remarks>
+    public double CalculateCacheOffset(SliverConstraints constraints, double from, double to)
     {
-        if (from > to)
-        {
-            throw new ArgumentOutOfRangeException(nameof(from), "from must be less than or equal to to.");
-        }
-
-        double leading = constraints.ScrollOffset + constraints.CacheOrigin;
-        double trailing = constraints.ScrollOffset + constraints.RemainingCacheExtent;
+        Debug.Assert(from <= to);
+        double a = constraints.ScrollOffset + constraints.CacheOrigin;
+        double b = constraints.ScrollOffset + constraints.RemainingCacheExtent;
         return Math.Clamp(
-            Math.Clamp(to, leading, trailing) - Math.Clamp(from, leading, trailing),
+            Math.Clamp(to, a, b) - Math.Clamp(from, a, b),
             0.0,
             constraints.RemainingCacheExtent);
     }
 
     /// <summary>
-    /// Returns the distance from the leading visible edge of this sliver to the leading edge of the
-    /// given child, in the sliver's main axis.
+    /// Returns the distance from the leading <em>visible</em> edge of the sliver to the side of the
+    /// given child closest to that edge.
     /// </summary>
     /// <remarks>
-    /// Slivers that have children must override this; the base implementation throws the way
-    /// Flutter's debug assert does.
+    /// Flutter's <c>RenderSliver.childMainAxisPosition</c>. Slivers that have children must override
+    /// it; the base implementation throws in debug builds the way Dart's assert does and returns
+    /// <c>0.0</c> otherwise.
     /// </remarks>
     public virtual double ChildMainAxisPosition(RenderObject child)
     {
-        throw new InvalidOperationException(
-            $"{GetType().Name} does not implement {nameof(ChildMainAxisPosition)}.");
-    }
-
-    /// <summary>
-    /// Returns the distance from the leading edge of this sliver's cross axis to the leading edge of
-    /// the given child.
-    /// </summary>
-    public virtual double ChildCrossAxisPosition(RenderObject child)
-    {
-        return 0.0;
-    }
-
-    /// <summary>Returns the scroll offset of the leading edge of the given child.</summary>
-    /// <remarks>Null when the child's position cannot be determined (it has not been laid out yet).</remarks>
-    public virtual double? ChildScrollOffset(RenderObject child)
-    {
-        if (!ReferenceEquals(child.Parent, this))
+        if (Constants.KDebugMode)
         {
-            throw new ArgumentException("The child does not belong to this sliver.", nameof(child));
+            throw new FlutterError(
+                $"{Diagnostics.ObjectRuntimeType(this, "RenderSliver")} does not implement childPosition.");
         }
 
         return 0.0;
     }
 
+    /// <summary>
+    /// Returns the distance along the cross axis from the zero of the cross axis in this sliver's
+    /// parent coordinate space to the corresponding zero in the child's coordinate space.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.childCrossAxisPosition</c>. Defaults to <c>0.0</c>.</remarks>
+    public virtual double ChildCrossAxisPosition(RenderObject child) => 0.0;
+
+    /// <summary>
+    /// Returns the scroll offset for the leading edge of the given child.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.childScrollOffset</c>. Null when the child's position cannot be
+    /// determined.
+    /// </remarks>
+    public virtual double? ChildScrollOffset(RenderObject child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        return 0.0;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.applyPaintTransform</c>, which asserts: a sliver with children must
+    /// override it.
+    /// </remarks>
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        if (Constants.KDebugMode)
+        {
+            throw new FlutterError(
+                $"{Diagnostics.ObjectRuntimeType(this, "RenderSliver")} does not implement "
+                + "applyPaintTransform.");
+        }
+    }
+
+    /// <summary>
+    /// This returns a <see cref="Size"/> with dimensions relative to the leading edge of the sliver,
+    /// specifically the same offset that is given to the <see cref="RenderObject.Paint"/> method.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.getAbsoluteSizeRelativeToOrigin</c>. The width or height is negative
+    /// when the sliver grows up or to the left.
+    /// </remarks>
+    protected internal Size GetAbsoluteSizeRelativeToOrigin()
+    {
+        Debug.Assert(HasSliverConstraints);
+        Debug.Assert(!DebugNeedsLayout);
+        return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            Constraints.AxisDirection,
+            Constraints.GrowthDirection) switch
+        {
+            AxisDirection.Up => new Size(Constraints.CrossAxisExtent, -Geometry.PaintExtent),
+            AxisDirection.Right => new Size(Geometry.PaintExtent, Constraints.CrossAxisExtent),
+            AxisDirection.Down => new Size(Constraints.CrossAxisExtent, Geometry.PaintExtent),
+            _ => new Size(-Geometry.PaintExtent, Constraints.CrossAxisExtent),
+        };
+    }
+
+    /// <summary>
+    /// This returns the absolute <see cref="Size"/> of the sliver.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.getAbsoluteSize</c>.</remarks>
+    protected internal Size GetAbsoluteSize()
+    {
+        Debug.Assert(HasSliverConstraints);
+        Debug.Assert(!DebugNeedsLayout);
+        return Constraints.AxisDirection switch
+        {
+            AxisDirection.Up or AxisDirection.Down => new Size(
+                Constraints.CrossAxisExtent,
+                Geometry.PaintExtent),
+            _ => new Size(Geometry.PaintExtent, Constraints.CrossAxisExtent),
+        };
+    }
+
+    /// <summary>Returns the <see cref="Rect"/> that covers the total paint extent of the sliver.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.getMaxPaintRect</c>. The rect is in this sliver's local coordinate
+    /// system, whose origin is the <c>offset</c> passed to <see cref="RenderObject.Paint"/>.
+    /// </remarks>
     protected Rect GetMaxPaintRect()
     {
-        SliverGeometry geometry = Geometry;
-        if (geometry == default)
+        if (!HasSliverConstraints || Geometry == SliverGeometry.Zero)
         {
             return default;
         }
 
-        SliverConstraints constraints = ConstraintsForSliver;
-        double maxPaintExtent = geometry.MaxPaintExtent;
-        if (double.IsPositiveInfinity(maxPaintExtent))
+        SliverGeometry sliverGeometry = Geometry;
+        SliverConstraints constraints = Constraints;
+        double maxPaintExtent = sliverGeometry.MaxPaintExtent;
+        if (double.IsInfinity(maxPaintExtent))
         {
-            maxPaintExtent = constraints.ScrollOffset + geometry.CacheExtent + constraints.CacheOrigin;
+            maxPaintExtent = constraints.ScrollOffset + sliverGeometry.CacheExtent + constraints.CacheOrigin;
         }
 
-        double obstructionAdjustedScrollExtent = Math.Max(
-            0.0,
-            geometry.ScrollExtent - geometry.MaxScrollObstructionExtent);
+        double paintExtent = sliverGeometry.PaintExtent;
+        // To ensure the computed rect remains visible when pinned, the leading offset is capped at the
+        // sliver's `scrollExtent - maxScrollObstructionExtent`.
         double leadingOffset = Math.Clamp(
             constraints.ScrollOffset,
             0.0,
-            obstructionAdjustedScrollExtent);
-        double crossAxisExtent = geometry.CrossAxisExtent ?? constraints.CrossAxisExtent;
-        var rect = constraints.Axis == Axis.Horizontal
-            ? new Rect(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent)
-            : new Rect(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent);
+            sliverGeometry.ScrollExtent - sliverGeometry.MaxScrollObstructionExtent);
+        double crossAxisExtent = sliverGeometry.CrossAxisExtent ?? constraints.CrossAxisExtent;
+        Rect rect = constraints.Axis switch
+        {
+            Axis.Horizontal => new Rect(-leadingOffset, 0.0, maxPaintExtent, crossAxisExtent),
+            _ => new Rect(0.0, -leadingOffset, crossAxisExtent, maxPaintExtent),
+        };
 
-        AxisDirection effectiveAxisDirection = constraints.GrowthDirection == GrowthDirection.Forward
-            ? constraints.AxisDirection
-            : ReverseAxisDirection(constraints.AxisDirection);
-        return effectiveAxisDirection switch
+        return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            constraints.AxisDirection,
+            constraints.GrowthDirection) switch
         {
             AxisDirection.Left => new Rect(
-                geometry.PaintExtent - rect.Right,
-                rect.Top,
-                rect.Width,
-                rect.Height),
+                new Point(paintExtent - rect.Right, rect.Top),
+                new Point(paintExtent - rect.Left, rect.Bottom)),
             AxisDirection.Up => new Rect(
-                rect.Left,
-                geometry.PaintExtent - rect.Bottom,
-                rect.Width,
-                rect.Height),
+                new Point(rect.Left, paintExtent - rect.Bottom),
+                new Point(rect.Right, paintExtent - rect.Top)),
             _ => rect,
         };
     }
-
-    private static AxisDirection ReverseAxisDirection(AxisDirection direction) => direction switch
-    {
-        AxisDirection.Up => AxisDirection.Down,
-        AxisDirection.Right => AxisDirection.Left,
-        AxisDirection.Down => AxisDirection.Up,
-        AxisDirection.Left => AxisDirection.Right,
-        _ => direction,
-    };
 
     /// <inheritdoc />
     /// <remarks>
@@ -1103,7 +1604,7 @@ public abstract class RenderSliver : RenderBox
         var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF33CC33)), strokeWidth);
         double arrowExtent = Geometry.PaintExtent;
         double padding = Math.Max(2.0, strokeWidth);
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         context.Canvas.DrawCircle(
             Brushes.Transparent,
             pen,
@@ -1192,11 +1693,24 @@ public abstract class RenderSliver : RenderBox
         context.Canvas.DrawPath(path, brush: null, pen: pen);
     }
 
+    /// <summary>
+    /// Override this method to handle pointer events that hit this render object.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.handleEvent</c>, whose entry is covariantly a
+    /// <see cref="SliverHitTestEntry"/>.
+    /// </remarks>
+    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+    }
+
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<SliverGeometry>("geometry", Geometry));
+        properties.Add(new DiagnosticsProperty<SliverGeometry?>(
+            "geometry",
+            HasSliverConstraints ? Geometry : null));
     }
 }
 
@@ -1219,36 +1733,6 @@ public static class RenderSliverHelpers
     }
 
     /// <summary>
-    /// Converts a position in the sliver's own box coordinate system into the main/cross-axis pair
-    /// Flutter's sliver hit-test protocol carries.
-    /// </summary>
-    /// <remarks>
-    /// C#-only. Dart's <c>RenderViewportBase.computeChildMainAxisPosition</c> resolves the main-axis
-    /// position before it reaches the sliver; <see cref="RenderSliver"/> is a <see cref="RenderBox"/>
-    /// in Plumix and is entered through the box protocol, so a sliver that hit tests box children
-    /// resolves it here instead. The cross-axis position needs no conversion: Dart passes the
-    /// viewport's straight through, and the sliver's box spans the cross axis at the same origin.
-    /// </remarks>
-    public static (double MainAxisPosition, double CrossAxisPosition) SliverHitTestPosition(
-        this RenderSliver sliver,
-        Point position)
-    {
-        SliverConstraints constraints = sliver.ConstraintsForSliver;
-        bool vertical = constraints.Axis == Axis.Vertical;
-        double mainAxisPosition = vertical ? position.Y : position.X;
-        double crossAxisPosition = vertical ? position.X : position.Y;
-        AxisDirection resolved = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
-            constraints.AxisDirection,
-            constraints.GrowthDirection);
-        if (ScrollDirectionUtils.AxisDirectionIsReversed(resolved))
-        {
-            mainAxisPosition = sliver.Geometry.PaintExtent - mainAxisPosition;
-        }
-
-        return (mainAxisPosition, crossAxisPosition);
-    }
-
-    /// <summary>
     /// Hit tests a box child of <paramref name="sliver"/>, converting the sliver-space position into
     /// the child's box space. Calling this for a child that is not visible is not valid.
     /// </summary>
@@ -1260,7 +1744,7 @@ public static class RenderSliverHelpers
         double mainAxisPosition,
         double crossAxisPosition)
     {
-        SliverConstraints constraints = sliver.ConstraintsForSliver;
+        SliverConstraints constraints = sliver.Constraints;
         bool rightWayUp = GetRightWayUp(constraints);
         double delta = sliver.ChildMainAxisPosition(child);
         double crossAxisDelta = sliver.ChildCrossAxisPosition(child);
@@ -1308,7 +1792,7 @@ public static class RenderSliverHelpers
         RenderBox child,
         Matrix4 transform)
     {
-        SliverConstraints constraints = sliver.ConstraintsForSliver;
+        SliverConstraints constraints = sliver.Constraints;
         bool rightWayUp = GetRightWayUp(constraints);
         double delta = sliver.ChildMainAxisPosition(child);
         double crossAxisDelta = sliver.ChildCrossAxisPosition(child);
@@ -1390,8 +1874,15 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderProxySliver.semanticBounds</c>: the child's, when there is one.</remarks>
+    protected override Rect SemanticBounds => _child != null
+        ? _child.SemanticBoundsForSemantics
+        : base.SemanticBounds;
+
     public override double ChildMainAxisPosition(RenderObject child)
     {
+        Debug.Assert(ReferenceEquals(child, _child));
         return 0.0;
     }
 
@@ -1402,51 +1893,26 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_child == null || !Geometry.Visible)
+        if (_child != null)
         {
-            return;
+            ctx.PaintChild(_child, offset);
         }
-
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        ctx.PaintChild(_child, offset + childParentData.offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        if (_child == null || Geometry.HitTestExtent <= 0.0)
-        {
-            return false;
-        }
-
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        RenderSliver child = _child;
-        return result.AddWithPaintOffset(
-            childParentData.offset,
-            position,
-            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+        return _child != null
+               && _child.Geometry.HitTestExtent > 0
+               && _child.HitTest(result, mainAxisPosition, crossAxisPosition);
     }
 
-    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    protected override void PerformLayout()
     {
-        if (_child == null)
-        {
-            return;
-        }
-
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        visitor(_child);
-    }
-
-    protected override void PerformSliverLayout(SliverConstraints constraints)
-    {
-        if (_child == null)
-        {
-            Geometry = default;
-            return;
-        }
-
-        _child.LayoutWithSliverConstraints(constraints);
-        ((SliverPhysicalParentData)_child.parentData!).offset = new Point(0, 0);
+        DebugAssertions.Assert(_child != null);
+        _child!.Layout(Constraints, parentUsesSize: true);
         Geometry = _child.Geometry;
     }
 
@@ -1602,9 +2068,12 @@ public sealed class RenderSliverIgnorePointer : RenderProxySliver
         }
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    public override bool HitTest(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        return !_ignoring && base.HitTest(result, position);
+        return !_ignoring && base.HitTest(result, mainAxisPosition, crossAxisPosition);
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1653,21 +2122,44 @@ public sealed class RenderSliverOffstage : RenderProxySliver
             }
 
             _offstage = value;
-            MarkNeedsLayout();
+            MarkNeedsLayoutForSizedByParentChange();
         }
     }
 
-    public override bool HitTest(BoxHitTestResult result, Point position)
+    protected override void PerformLayout()
     {
-        return !_offstage && base.HitTest(result, position);
+        DebugAssertions.Assert(Child != null);
+        Child!.Layout(Constraints, parentUsesSize: true);
+        Geometry = _offstage ? SliverGeometry.Zero : Child.Geometry;
+    }
+
+    public override bool HitTest(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
+    {
+        return !_offstage && base.HitTest(result, mainAxisPosition, crossAxisPosition);
+    }
+
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
+    {
+        return !_offstage
+               && Child != null
+               && Child.Geometry.HitTestExtent > 0
+               && Child.HitTest(result, mainAxisPosition, crossAxisPosition);
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (!_offstage)
+        if (_offstage)
         {
-            base.Paint(ctx, offset);
+            return;
         }
+
+        ctx.PaintChild(Child!, offset);
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1675,15 +2167,6 @@ public sealed class RenderSliverOffstage : RenderProxySliver
         if (!_offstage)
         {
             base.VisitChildrenForSemantics(visitor);
-        }
-    }
-
-    protected override void PerformSliverLayout(SliverConstraints constraints)
-    {
-        base.PerformSliverLayout(constraints);
-        if (_offstage)
-        {
-            Geometry = default;
         }
     }
 
@@ -1831,7 +2314,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_opacity == 0.0)
+        if (Child == null || !Child.Geometry.Visible || _opacity == 0.0)
         {
             return;
         }
@@ -1956,9 +2439,19 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
     }
 }
 
+/// <summary>
+/// An abstract class for <see cref="RenderSliver"/>s that contain a single <see cref="RenderBox"/>.
+/// </summary>
+/// <remarks>Flutter's <c>RenderSliverSingleBoxAdapter</c>.</remarks>
 public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObjectSingleChildContainer
 {
     private RenderBox? _child;
+
+    /// <summary>Creates a <see cref="RenderSliver"/> that wraps a <see cref="RenderBox"/>.</summary>
+    protected RenderSliverSingleBoxAdapter(RenderBox? child = null)
+    {
+        Child = child;
+    }
 
     public RenderBox? Child
     {
@@ -1993,9 +2486,9 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
 
     public override void SetupParentData(RenderObject child)
     {
-        if (child.parentData is not BoxParentData)
+        if (child.parentData is not SliverPhysicalParentData)
         {
-            child.parentData = new BoxParentData();
+            child.parentData = new SliverPhysicalParentData();
         }
     }
 
@@ -2007,163 +2500,124 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         }
     }
 
-    protected static double ChildExtentForAxis(Size size, Axis axis)
-    {
-        return axis == Axis.Vertical ? size.Height : size.Width;
-    }
-
-    public override double ChildMainAxisPosition(RenderObject child)
-    {
-        return -ConstraintsForSliver.ScrollOffset;
-    }
-
-    protected static void SetChildParentData(
-        RenderBox child,
+    /// <summary>Sets the <see cref="SliverPhysicalParentData.PaintOffset"/> of the child.</summary>
+    /// <remarks>Flutter's <c>RenderSliverSingleBoxAdapter.setChildParentData</c>.</remarks>
+    protected void SetChildParentData(
+        RenderObject child,
         SliverConstraints constraints,
         SliverGeometry geometry)
     {
-        var childParentData = (BoxParentData)child.parentData!;
-        childParentData.offset = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+        var childParentData = (SliverPhysicalParentData)child.parentData!;
+        childParentData.PaintOffset = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             constraints.AxisDirection,
             constraints.GrowthDirection) switch
         {
             AxisDirection.Up => new Point(
                 0.0,
-                -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset))),
-            AxisDirection.Right => new Point(-constraints.ScrollOffset, 0.0),
-            AxisDirection.Down => new Point(0.0, -constraints.ScrollOffset),
-            _ => new Point(
-                -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset)),
+                geometry.PaintExtent + constraints.ScrollOffset - geometry.ScrollExtent),
+            AxisDirection.Left => new Point(
+                geometry.PaintExtent + constraints.ScrollOffset - geometry.ScrollExtent,
                 0.0),
+            AxisDirection.Right => new Point(-constraints.ScrollOffset, 0.0),
+            _ => new Point(0.0, -constraints.ScrollOffset),
         };
+    }
+
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
+    {
+        Debug.Assert(Geometry.HitTestExtent > 0.0);
+        if (Child != null)
+        {
+            return this.HitTestBoxChild(
+                BoxHitTestResult.Wrap(result),
+                Child,
+                mainAxisPosition: mainAxisPosition,
+                crossAxisPosition: crossAxisPosition);
+        }
+
+        return false;
+    }
+
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return -Constraints.ScrollOffset;
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        Debug.Assert(ReferenceEquals(child, Child));
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (Child == null || !Geometry.Visible)
+        if (Child != null && Geometry.Visible)
         {
-            return;
+            var childParentData = (SliverPhysicalParentData)Child.parentData!;
+            ctx.PaintChild(Child, offset + childParentData.PaintOffset);
         }
-
-        var childParentData = (BoxParentData)Child.parentData!;
-        ctx.PaintChild(Child, offset + childParentData.offset);
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        if (Child == null || Geometry.HitTestExtent <= 0.0)
-        {
-            return false;
-        }
-
-        var childParentData = (BoxParentData)Child.parentData!;
-        RenderBox child = Child;
-        return result.AddWithPaintOffset(
-            childParentData.offset,
-            position,
-            (hitResult, transformed) => child.HitTest(hitResult, transformed));
-    }
-
-    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        if (Child == null)
-        {
-            return;
-        }
-
-        var childParentData = (BoxParentData)Child.parentData!;
-        visitor(Child);
     }
 
     /// <inheritdoc />
     public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
+/// <summary>A <see cref="RenderSliver"/> that contains a single <see cref="RenderBox"/>.</summary>
+/// <remarks>Flutter's <c>RenderSliverToBoxAdapter</c>.</remarks>
 public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
 {
-    public RenderSliverToBoxAdapter(RenderBox? child = null)
+    /// <summary>Creates a <see cref="RenderSliver"/> that wraps a <see cref="RenderBox"/>.</summary>
+    public RenderSliverToBoxAdapter(RenderBox? child = null) : base(child)
     {
-        Child = child;
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
         if (Child == null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 
-        BoxConstraints childConstraints;
-        if (constraints.Axis == Axis.Vertical)
+        SliverConstraints constraints = Constraints;
+        Child.Layout(constraints.AsBoxConstraints(), parentUsesSize: true);
+        double childExtent = constraints.Axis switch
         {
-            childConstraints = new BoxConstraints(
-                MinWidth: constraints.CrossAxisExtent,
-                MaxWidth: constraints.CrossAxisExtent,
-                MinHeight: 0,
-                MaxHeight: double.PositiveInfinity);
-        }
-        else
-        {
-            childConstraints = new BoxConstraints(
-                MinWidth: 0,
-                MaxWidth: double.PositiveInfinity,
-                MinHeight: constraints.CrossAxisExtent,
-                MaxHeight: constraints.CrossAxisExtent);
-        }
+            Axis.Horizontal => Child.Size.Width,
+            _ => Child.Size.Height,
+        };
+        double paintedChildSize = CalculatePaintOffset(constraints, from: 0.0, to: childExtent);
+        double cacheExtent = CalculateCacheOffset(constraints, from: 0.0, to: childExtent);
 
-        Child.Layout(childConstraints, parentUsesSize: true);
-
-        double childExtent = ChildExtentForAxis(Child.Size, constraints.Axis);
-        double effectiveScrollOffset = Math.Clamp(constraints.ScrollOffset, 0, childExtent);
-        double remaining = Math.Max(0, childExtent - effectiveScrollOffset);
-
-        double paintedExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
-        double layoutExtent = paintedExtent;
-        double cacheStart = constraints.ScrollOffset + constraints.CacheOrigin;
-        double cacheEnd = cacheStart + Math.Max(0, constraints.RemainingCacheExtent);
-        double cacheExtent = Math.Max(0, Math.Min(childExtent, cacheEnd) - Math.Max(0, cacheStart));
-
+        Debug.Assert(double.IsFinite(paintedChildSize));
+        Debug.Assert(paintedChildSize >= 0.0);
         Geometry = new SliverGeometry(
             ScrollExtent: childExtent,
-            PaintExtent: paintedExtent,
-            LayoutExtent: layoutExtent,
-            MaxPaintExtent: childExtent,
-            HitTestExtent: paintedExtent,
+            PaintExtent: paintedChildSize,
             CacheExtent: cacheExtent,
-            HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
+            MaxPaintExtent: childExtent,
+            HitTestExtent: paintedChildSize,
+            HasVisualOverflow: childExtent > constraints.RemainingPaintExtent || constraints.ScrollOffset > 0.0);
         SetChildParentData(Child, constraints, Geometry);
     }
 }
 
-public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContainer
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver_padding.dart
+/// <summary>
+/// Insets a <see cref="RenderSliver"/> by applying <see cref="ResolvedPadding"/> on each side.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>RenderSliverEdgeInsetsPadding</c>. A subclass supplies <see cref="ResolvedPadding"/>,
+/// the padding resolved against the text direction.
+/// </remarks>
+public abstract class RenderSliverEdgeInsetsPadding : RenderSliver, IRenderObjectSingleChildContainer
 {
     private RenderSliver? _child;
-    private Thickness _padding;
-    private double _beforePadding;
-    private double _crossStartPadding;
 
-    public RenderSliverPadding(Thickness padding, RenderSliver? child = null)
-    {
-        _padding = padding;
-        Child = child;
-    }
-
-    public Thickness Padding
-    {
-        get => _padding;
-        set
-        {
-            if (_padding.Equals(value))
-            {
-                return;
-            }
-
-            _padding = value;
-            MarkNeedsLayout();
-        }
-    }
-
+    /// <summary>The sliver this padding insets.</summary>
     public RenderSliver? Child
     {
         get => _child;
@@ -2195,18 +2649,84 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         set => Child = (RenderSliver?)value;
     }
 
+    /// <summary>The amount to pad the child in each dimension.</summary>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.resolvedPadding</c>; null until resolved.</remarks>
+    public abstract Thickness? ResolvedPadding { get; }
+
+    /// <summary>The padding in the scroll direction on the side nearest the 0.0 scroll direction.</summary>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.beforePadding</c>.</remarks>
+    protected double BeforePadding
+    {
+        get
+        {
+            Debug.Assert(ResolvedPadding != null);
+            Thickness resolvedPadding = ResolvedPadding!.Value;
+            return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+                Constraints.AxisDirection,
+                Constraints.GrowthDirection) switch
+            {
+                AxisDirection.Up => resolvedPadding.Bottom,
+                AxisDirection.Right => resolvedPadding.Left,
+                AxisDirection.Down => resolvedPadding.Top,
+                _ => resolvedPadding.Right,
+            };
+        }
+    }
+
+    /// <summary>The padding in the scroll direction on the side furthest from the 0.0 scroll offset.</summary>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.afterPadding</c>.</remarks>
+    protected double AfterPadding
+    {
+        get
+        {
+            Debug.Assert(ResolvedPadding != null);
+            Thickness resolvedPadding = ResolvedPadding!.Value;
+            return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+                Constraints.AxisDirection,
+                Constraints.GrowthDirection) switch
+            {
+                AxisDirection.Up => resolvedPadding.Top,
+                AxisDirection.Right => resolvedPadding.Right,
+                AxisDirection.Down => resolvedPadding.Bottom,
+                _ => resolvedPadding.Left,
+            };
+        }
+    }
+
+    /// <summary>The total padding in the <see cref="SliverConstraints.AxisDirection"/>.</summary>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.mainAxisPadding</c>.</remarks>
+    protected double MainAxisPadding
+    {
+        get
+        {
+            Debug.Assert(ResolvedPadding != null);
+            Thickness resolvedPadding = ResolvedPadding!.Value;
+            return Constraints.Axis == Axis.Horizontal
+                ? resolvedPadding.Left + resolvedPadding.Right
+                : resolvedPadding.Top + resolvedPadding.Bottom;
+        }
+    }
+
+    /// <summary>The total padding in the cross-axis direction.</summary>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.crossAxisPadding</c>.</remarks>
+    protected double CrossAxisPadding
+    {
+        get
+        {
+            Debug.Assert(ResolvedPadding != null);
+            Thickness resolvedPadding = ResolvedPadding!.Value;
+            return Constraints.Axis == Axis.Horizontal
+                ? resolvedPadding.Top + resolvedPadding.Bottom
+                : resolvedPadding.Left + resolvedPadding.Right;
+        }
+    }
+
     public override void SetupParentData(RenderObject child)
     {
         if (child.parentData is not SliverPhysicalParentData)
         {
             child.parentData = new SliverPhysicalParentData();
         }
-    }
-
-    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
-    {
-        DebugAssertions.Assert(ReferenceEquals(child, _child));
-        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)
@@ -2217,235 +2737,168 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         }
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    protected override void PerformLayout()
     {
-        if (_child == null || !_child.Geometry.Visible)
-        {
-            return;
-        }
+        SliverConstraints constraints = Constraints;
+        double PaintOffset(double from, double to) => CalculatePaintOffset(constraints, from, to);
+        double CacheOffset(double from, double to) => CalculateCacheOffset(constraints, from, to);
 
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        ctx.PaintChild(_child, offset + childParentData.offset);
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        if (_child == null || _child.Geometry.HitTestExtent <= 0.0)
-        {
-            return false;
-        }
-
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        RenderSliver child = _child;
-        return result.AddWithPaintOffset(
-            childParentData.offset,
-            position,
-            (hitResult, transformed) => child.HitTest(hitResult, transformed));
-    }
-
-    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
+        Debug.Assert(ResolvedPadding != null);
+        Thickness resolvedPadding = ResolvedPadding!.Value;
+        double beforePadding = BeforePadding;
+        double afterPadding = AfterPadding;
+        double mainAxisPadding = MainAxisPadding;
+        double crossAxisPadding = CrossAxisPadding;
         if (_child == null)
         {
-            return;
-        }
-
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        visitor(_child);
-    }
-
-    protected override void PerformSliverLayout(SliverConstraints constraints)
-    {
-        Thickness resolvedPadding = ResolvePaddingForConstraints(constraints);
-        (double mainStartPadding, double mainEndPadding, double crossStartPadding, double crossEndPadding) =
-            ResolvePadding(resolvedPadding, constraints);
-        double mainAxisPadding = mainStartPadding + mainEndPadding;
-        double crossAxisPadding = crossStartPadding + crossEndPadding;
-        _beforePadding = mainStartPadding;
-        _crossStartPadding = crossStartPadding;
-        double remainingCacheExtent = constraints.RemainingCacheExtent > 0
-            ? constraints.RemainingCacheExtent
-            : constraints.RemainingPaintExtent;
-
-        if (_child == null)
-        {
-            double paddedPaintExtent = CalculatePaintExtent(
-                from: 0,
-                to: mainAxisPadding,
-                scrollOffset: constraints.ScrollOffset,
-                remainingPaintExtent: constraints.RemainingPaintExtent);
-            double paddedLayoutExtent = Math.Min(paddedPaintExtent, constraints.ViewportMainAxisExtent);
-            double paddedCacheExtent = CalculatePaintExtent(
-                from: 0,
-                to: mainAxisPadding,
-                scrollOffset: constraints.ScrollOffset + constraints.CacheOrigin,
-                remainingPaintExtent: remainingCacheExtent);
-            double paddedTargetEndScrollOffsetForPaint = constraints.ScrollOffset + constraints.RemainingPaintExtent;
-
+            double emptyPaintExtent = PaintOffset(0.0, mainAxisPadding);
+            double emptyCacheExtent = CacheOffset(0.0, mainAxisPadding);
             Geometry = new SliverGeometry(
                 ScrollExtent: mainAxisPadding,
-                PaintExtent: paddedPaintExtent,
-                LayoutExtent: paddedLayoutExtent,
+                PaintExtent: Math.Min(emptyPaintExtent, constraints.RemainingPaintExtent),
                 MaxPaintExtent: mainAxisPadding,
-                CacheExtent: paddedCacheExtent,
-                HasVisualOverflow: mainAxisPadding > paddedTargetEndScrollOffsetForPaint || constraints.ScrollOffset > 0);
+                CacheExtent: emptyCacheExtent);
             return;
         }
 
-        double cacheStart = constraints.ScrollOffset + constraints.CacheOrigin;
-        double cacheEnd = cacheStart + Math.Max(0, remainingCacheExtent);
-        double childScrollOffset = Math.Max(0, constraints.ScrollOffset - mainStartPadding);
-        double childCacheStart = Math.Max(0, cacheStart - mainStartPadding);
-        double childCacheEnd = Math.Max(childCacheStart, cacheEnd - mainStartPadding);
-        double childRemainingCacheExtent = Math.Max(0, childCacheEnd - childCacheStart);
-        double childCacheOrigin = childCacheStart - childScrollOffset;
-        double beforePaddingPaintExtent = CalculatePaintExtent(
-            from: 0,
-            to: mainStartPadding,
-            scrollOffset: constraints.ScrollOffset,
-            remainingPaintExtent: constraints.RemainingPaintExtent);
-        double childRemainingPaintExtent = Math.Max(0, constraints.RemainingPaintExtent - beforePaddingPaintExtent);
-        double childCrossAxisExtent = Math.Max(0, constraints.CrossAxisExtent - crossAxisPadding);
+        double beforePaddingPaintExtent = PaintOffset(0.0, beforePadding);
+        double overlap = constraints.Overlap;
+        if (overlap > 0)
+        {
+            overlap = Math.Max(0.0, constraints.Overlap - beforePaddingPaintExtent);
+        }
 
-        _child.LayoutWithSliverConstraints(new SliverConstraints(
-            constraints.Axis,
-            childScrollOffset,
-            childRemainingPaintExtent,
-            childCrossAxisExtent,
-            constraints.ViewportMainAxisExtent,
-            CacheOrigin: childCacheOrigin,
-            RemainingCacheExtent: childRemainingCacheExtent,
-            AxisDirection: constraints.AxisDirection,
-            GrowthDirection: constraints.GrowthDirection));
-
-        if (_child.Geometry.ScrollOffsetCorrection is double correction)
+        _child.Layout(
+            constraints with
+            {
+                ScrollOffset = Math.Max(0.0, constraints.ScrollOffset - beforePadding),
+                CacheOrigin = Math.Min(0.0, constraints.CacheOrigin + beforePadding),
+                Overlap = overlap,
+                RemainingPaintExtent = constraints.RemainingPaintExtent - PaintOffset(0.0, beforePadding),
+                RemainingCacheExtent = constraints.RemainingCacheExtent - CacheOffset(0.0, beforePadding),
+                CrossAxisExtent = Math.Max(0.0, constraints.CrossAxisExtent - crossAxisPadding),
+                PrecedingScrollExtent = beforePadding + constraints.PrecedingScrollExtent,
+            },
+            parentUsesSize: true);
+        SliverGeometry childLayoutGeometry = _child.Geometry;
+        if (childLayoutGeometry.ScrollOffsetCorrection is double correction)
         {
             Geometry = new SliverGeometry(ScrollOffsetCorrection: correction);
             return;
         }
 
-        var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        // Child paint origin is the visible portion of leading padding; the child sliver
-        // applies its own scroll offset internally and must not be shifted by full scroll offset again.
-        double childMainAxisOffset = beforePaddingPaintExtent;
-        childParentData.offset = constraints.Axis == Axis.Vertical
-            ? new Point(crossStartPadding, childMainAxisOffset)
-            : new Point(childMainAxisOffset, crossStartPadding);
-
-        double totalScrollExtent = mainStartPadding + _child.Geometry.ScrollExtent + mainEndPadding;
-        double maxPaintExtent = mainStartPadding + _child.Geometry.MaxPaintExtent + mainEndPadding;
-        double afterPaddingPaintExtent = CalculatePaintExtent(
-            from: mainStartPadding + _child.Geometry.ScrollExtent,
-            to: totalScrollExtent,
-            scrollOffset: constraints.ScrollOffset,
-            remainingPaintExtent: constraints.RemainingPaintExtent);
+        double scrollExtent = childLayoutGeometry.ScrollExtent;
+        double beforePaddingCacheExtent = CacheOffset(0.0, beforePadding);
+        double afterPaddingCacheExtent = CacheOffset(
+            beforePadding + scrollExtent,
+            mainAxisPadding + scrollExtent);
+        double afterPaddingPaintExtent = PaintOffset(
+            beforePadding + scrollExtent,
+            mainAxisPadding + scrollExtent);
+        double mainAxisPaddingCacheExtent = beforePaddingCacheExtent + afterPaddingCacheExtent;
         double mainAxisPaddingPaintExtent = beforePaddingPaintExtent + afterPaddingPaintExtent;
-        double paintExtent = CalculatePaintExtent(
-            from: 0,
-            to: totalScrollExtent,
-            scrollOffset: constraints.ScrollOffset,
-            remainingPaintExtent: constraints.RemainingPaintExtent);
-        double layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
-        double hitTestExtent = Math.Max(
-            mainAxisPaddingPaintExtent + _child.Geometry.PaintExtent,
-            beforePaddingPaintExtent + _child.Geometry.HitTestExtent);
-        double cacheExtent = CalculatePaintExtent(
-            from: 0,
-            to: totalScrollExtent,
-            scrollOffset: constraints.ScrollOffset + constraints.CacheOrigin,
-            remainingPaintExtent: remainingCacheExtent);
-        double targetEndScrollOffsetForPaint = constraints.ScrollOffset + constraints.RemainingPaintExtent;
-
+        double paintExtent = Math.Min(
+            beforePaddingPaintExtent
+            + Math.Max(
+                childLayoutGeometry.PaintExtent,
+                childLayoutGeometry.LayoutExtent + afterPaddingPaintExtent),
+            constraints.RemainingPaintExtent);
         Geometry = new SliverGeometry(
-            ScrollExtent: totalScrollExtent,
+            PaintOrigin: childLayoutGeometry.PaintOrigin,
+            ScrollExtent: mainAxisPadding + scrollExtent,
             PaintExtent: paintExtent,
-            LayoutExtent: layoutExtent,
-            MaxPaintExtent: maxPaintExtent,
-            HitTestExtent: hitTestExtent,
-            CacheExtent: cacheExtent,
-            HasVisualOverflow:
-            _child.Geometry.HasVisualOverflow
-            || totalScrollExtent > targetEndScrollOffsetForPaint
-            || constraints.ScrollOffset > 0);
+            LayoutExtent: Math.Min(
+                mainAxisPaddingPaintExtent + childLayoutGeometry.LayoutExtent,
+                paintExtent),
+            CacheExtent: Math.Min(
+                mainAxisPaddingCacheExtent + childLayoutGeometry.CacheExtent,
+                constraints.RemainingCacheExtent),
+            MaxPaintExtent: mainAxisPadding + childLayoutGeometry.MaxPaintExtent,
+            HitTestExtent: Math.Max(
+                mainAxisPaddingPaintExtent + childLayoutGeometry.PaintExtent,
+                beforePaddingPaintExtent + childLayoutGeometry.HitTestExtent),
+            HasVisualOverflow: childLayoutGeometry.HasVisualOverflow);
+        double calculatedOffset = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            constraints.AxisDirection,
+            constraints.GrowthDirection) switch
+        {
+            AxisDirection.Up => PaintOffset(
+                resolvedPadding.Bottom + scrollExtent,
+                resolvedPadding.Top + resolvedPadding.Bottom + scrollExtent),
+            AxisDirection.Left => PaintOffset(
+                resolvedPadding.Right + scrollExtent,
+                resolvedPadding.Left + resolvedPadding.Right + scrollExtent),
+            AxisDirection.Right => PaintOffset(0.0, resolvedPadding.Left),
+            _ => PaintOffset(0.0, resolvedPadding.Top),
+        };
+        var childParentData = (SliverPhysicalParentData)_child.parentData!;
+        childParentData.PaintOffset = constraints.Axis switch
+        {
+            Axis.Horizontal => new Point(calculatedOffset, resolvedPadding.Top),
+            _ => new Point(resolvedPadding.Left, calculatedOffset),
+        };
+        Debug.Assert(beforePadding == BeforePadding);
+        Debug.Assert(afterPadding == AfterPadding);
+        Debug.Assert(mainAxisPadding == MainAxisPadding);
+        Debug.Assert(crossAxisPadding == CrossAxisPadding);
     }
 
-    /// <summary>The main-axis padding before the child, in scroll-offset units.</summary>
-    protected double BeforePadding => _beforePadding;
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
+    {
+        if (_child != null && _child.Geometry.HitTestExtent > 0.0)
+        {
+            var childParentData = (SliverPhysicalParentData)_child.parentData!;
+            return result.AddWithAxisOffset(
+                mainAxisPosition: mainAxisPosition,
+                crossAxisPosition: crossAxisPosition,
+                mainAxisOffset: ChildMainAxisPosition(_child),
+                crossAxisOffset: ChildCrossAxisPosition(_child),
+                paintOffset: childParentData.PaintOffset,
+                hitTest: _child.HitTest);
+        }
+
+        return false;
+    }
 
     public override double ChildMainAxisPosition(RenderObject child)
     {
-        return CalculatePaintOffset(ConstraintsForSliver, from: 0.0, to: _beforePadding);
+        Debug.Assert(ReferenceEquals(child, _child));
+        return CalculatePaintOffset(Constraints, from: 0.0, to: BeforePadding);
     }
 
     public override double ChildCrossAxisPosition(RenderObject child)
     {
-        return _crossStartPadding;
+        Debug.Assert(ReferenceEquals(child, _child));
+        Debug.Assert(ResolvedPadding != null);
+        return Constraints.Axis == Axis.Horizontal ? ResolvedPadding!.Value.Top : ResolvedPadding!.Value.Left;
     }
 
     public override double? ChildScrollOffset(RenderObject child)
     {
-        if (!ReferenceEquals(child.Parent, this))
-        {
-            throw new ArgumentException("The child does not belong to this sliver.", nameof(child));
-        }
-
-        return _beforePadding;
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        return BeforePadding;
     }
 
-    protected virtual Thickness ResolvePaddingForConstraints(SliverConstraints constraints)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        return _padding;
+        Debug.Assert(ReferenceEquals(child, _child));
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
-    private static (double mainStart, double mainEnd, double crossStart, double crossEnd) ResolvePadding(
-        Thickness padding,
-        SliverConstraints constraints)
+    public override void Paint(PaintingContext ctx, Point offset)
     {
-        double mainStart;
-        double mainEnd;
-        double crossStart;
-        double crossEnd;
-
-        if (constraints.Axis == Axis.Vertical)
+        if (_child != null && _child.Geometry.Visible)
         {
-            mainStart = constraints.AxisDirection == AxisDirection.Up ? padding.Bottom : padding.Top;
-            mainEnd = constraints.AxisDirection == AxisDirection.Up ? padding.Top : padding.Bottom;
-            crossStart = padding.Left;
-            crossEnd = padding.Right;
+            var childParentData = (SliverPhysicalParentData)_child.parentData!;
+            ctx.PaintChild(_child, offset + childParentData.PaintOffset);
         }
-        else
-        {
-            mainStart = constraints.AxisDirection == AxisDirection.Left ? padding.Right : padding.Left;
-            mainEnd = constraints.AxisDirection == AxisDirection.Left ? padding.Left : padding.Right;
-            crossStart = padding.Top;
-            crossEnd = padding.Bottom;
-        }
-
-        if (constraints.GrowthDirection == GrowthDirection.Reverse)
-        {
-            (mainStart, mainEnd) = (mainEnd, mainStart);
-        }
-
-        return (mainStart, mainEnd, crossStart, crossEnd);
-    }
-
-    private static double CalculatePaintExtent(
-        double from,
-        double to,
-        double scrollOffset,
-        double remainingPaintExtent)
-    {
-        double visibleStart = Math.Max(from, scrollOffset);
-        double visibleEnd = Math.Min(to, scrollOffset + remainingPaintExtent);
-        return Math.Max(0, visibleEnd - visibleStart);
     }
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>RenderSliverEdgeInsetsPadding.debugPaint</c>. Dart's <c>getAbsoluteSize()</c> is
-    /// Plumix's <see cref="RenderBox.Size"/>, which <c>RenderSliver.PerformLayout</c> already sets
-    /// from the paint extent and the cross axis extent.
-    /// </remarks>
+    /// <remarks>Flutter's <c>RenderSliverEdgeInsetsPadding.debugPaint</c>.</remarks>
     protected override void DebugPaint(PaintingContext context, Point offset)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -2455,26 +2908,115 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             return;
         }
 
-        var outerRect = new Rect(offset, Size);
+        var outerRect = new Rect(offset, GetAbsoluteSize());
         Rect? innerRect = null;
         if (_child is not null)
         {
+            Size childSize = _child.GetAbsoluteSize();
             var childParentData = (SliverPhysicalParentData)_child.parentData!;
-            innerRect = new Rect(offset + childParentData.offset, _child.Size);
+            Rect inner = new(offset + childParentData.PaintOffset, childSize);
+            Debug.Assert(inner.Top >= outerRect.Top);
+            Debug.Assert(inner.Left >= outerRect.Left);
+            Debug.Assert(inner.Right <= outerRect.Right);
+            Debug.Assert(inner.Bottom <= outerRect.Bottom);
+            innerRect = inner;
         }
 
         RenderingDebug.PaintPadding(context, outerRect, innerRect);
     }
 
     /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
+}
+
+/// <summary>
+/// Insets a <see cref="RenderSliver"/>, applying padding on each side.
+/// </summary>
+/// <remarks>Flutter's <c>RenderSliverPadding</c>.</remarks>
+public class RenderSliverPadding : RenderSliverEdgeInsetsPadding
+{
+    private Thickness? _resolvedPadding;
+    private EdgeInsetsGeometry _padding;
+    private TextDirection? _textDirection;
+
+    /// <summary>Creates a render object that insets its child in a viewport.</summary>
+    public RenderSliverPadding(
+        EdgeInsetsGeometry padding,
+        RenderSliver? child = null,
+        TextDirection? textDirection = null)
     {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Thickness>("padding", Padding));
+        Debug.Assert(padding.IsNonNegative);
+        _padding = padding;
+        _textDirection = textDirection;
+        Child = child;
     }
 
     /// <inheritdoc />
-    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
+    public override Thickness? ResolvedPadding => _resolvedPadding;
+
+    private void Resolve()
+    {
+        if (ResolvedPadding != null)
+        {
+            return;
+        }
+
+        _resolvedPadding = _padding.Resolve(_textDirection);
+        Debug.Assert(((EdgeInsetsGeometry)_resolvedPadding.Value).IsNonNegative);
+    }
+
+    private void MarkNeedsResolution()
+    {
+        _resolvedPadding = null;
+        MarkNeedsLayout();
+    }
+
+    /// <summary>The amount to pad the child in each dimension.</summary>
+    public EdgeInsetsGeometry Padding
+    {
+        get => _padding;
+        set
+        {
+            Debug.Assert(value.IsNonNegative);
+            if (_padding == value)
+            {
+                return;
+            }
+
+            _padding = value;
+            MarkNeedsResolution();
+        }
+    }
+
+    /// <summary>The text direction with which to resolve <see cref="Padding"/>.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            MarkNeedsResolution();
+        }
+    }
+
+    protected override void PerformLayout()
+    {
+        Resolve();
+        base.PerformLayout();
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry>("padding", Padding));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+    }
 }
 
 public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
@@ -2699,7 +3241,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
         // offset is to the top-left corner, regardless of our axis direction.
         // originOffset gives us the delta from the real origin to the origin in the axis direction.
-        SliverConstraints constraints = ConstraintsForSliver;
+        SliverConstraints constraints = Constraints;
         Point mainAxisUnit;
         Point crossAxisUnit;
         Point originOffset;
@@ -2761,17 +3303,17 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     }
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>RenderSliverMultiBoxAdaptor.hitTestChildren</c>, entered through the box protocol
-    /// because <see cref="RenderSliver"/> is a <see cref="RenderBox"/> in Plumix.
-    /// </remarks>
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor.hitTestChildren</c>.</remarks>
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        (double mainAxisPosition, double crossAxisPosition) = this.SliverHitTestPosition(position);
         RenderBox? child = LastChild;
+        var boxResult = BoxHitTestResult.Wrap(result);
         while (child is not null)
         {
-            if (this.HitTestBoxChild(result, child, mainAxisPosition, crossAxisPosition))
+            if (this.HitTestBoxChild(boxResult, child, mainAxisPosition, crossAxisPosition))
             {
                 return true;
             }
@@ -2853,7 +3395,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
     public override double ChildMainAxisPosition(RenderObject child)
     {
-        return ChildScrollOffset(child)!.Value - ConstraintsForSliver.ScrollOffset;
+        return ChildScrollOffset(child)!.Value - Constraints.ScrollOffset;
     }
 
     /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor._debugAssertChildListLocked</c>.</remarks>
@@ -2997,7 +3539,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor.paintExtentOf</c>.</remarks>
     public virtual double PaintExtentOf(RenderBox child)
     {
-        return ConstraintsForSliver.Axis == Axis.Horizontal ? child.Size.Width : child.Size.Height;
+        return Constraints.Axis == Axis.Horizontal ? child.Size.Width : child.Size.Height;
     }
 
     /// <inheritdoc />
@@ -3047,7 +3589,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
                 Debug.Assert(_keepAliveBucket.Values.All(static child =>
                     ((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive));
             };
-        body(ConstraintsForSliver);
+        body(Constraints);
     }
 
     /// <remarks>
@@ -3083,7 +3625,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
                 _childManager?.CreateChild(index, after);
             },
-            ConstraintsForSliver);
+            Constraints);
     }
 
     /// <remarks>
@@ -3097,7 +3639,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     /// </remarks>
     private void DestroyOrCacheChild(RenderBox child)
     {
-        InvokeLayoutCallback<SliverConstraints>(_ => DestroyOrCacheChildInner(child), ConstraintsForSliver);
+        InvokeLayoutCallback<SliverConstraints>(_ => DestroyOrCacheChildInner(child), Constraints);
     }
 
     private void DestroyOrCacheChildInner(RenderBox child)
@@ -3174,8 +3716,9 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
     {
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         IRenderSliverBoxChildManager? childManager = ChildManager;
         if (childManager is null)
         {
@@ -3535,8 +4078,9 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         }
     }
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         var childManager = ChildManager;
         if (childManager == null)
         {

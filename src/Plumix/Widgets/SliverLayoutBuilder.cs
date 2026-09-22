@@ -209,10 +209,11 @@ internal sealed class RenderSliverLayoutBuilder : RenderProxySliver, IRenderObje
     /// without scheduling another callback run.</remarks>
     internal void ClearCallback() => _callback = null;
 
-    void IRenderObjectWithLayoutCallback.LayoutCallback() => _callback!(ConstraintsForSliver);
+    void IRenderObjectWithLayoutCallback.LayoutCallback() => _callback!(Constraints);
 
-    protected override void PerformSliverLayout(SliverConstraints constraints)
+    protected override void PerformLayout()
     {
+        SliverConstraints constraints = Constraints;
         RunLayoutCallback();
 
         if (Child == null)
@@ -221,8 +222,8 @@ internal sealed class RenderSliverLayoutBuilder : RenderProxySliver, IRenderObje
             return;
         }
 
-        Child.LayoutWithSliverConstraints(constraints);
-        ((SliverPhysicalParentData)Child.parentData!).offset = new Point();
+        Child.Layout(constraints, parentUsesSize: true);
+        ((SliverPhysicalParentData)Child.parentData!).PaintOffset = new Point();
         Geometry = Child.Geometry;
     }
 }
