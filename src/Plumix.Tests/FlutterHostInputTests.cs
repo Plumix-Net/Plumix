@@ -1,4 +1,5 @@
 using Avalonia.Input;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 using FrameworkFocusManager = Plumix.Widgets.FocusManager;
@@ -94,8 +95,101 @@ public sealed class PlumixHostInputTests : IDisposable
         Assert.Equal(Plumix.UI.PhysicalKeyboardKey.Slash, events[0].PhysicalKey);
     }
 
+    [Theory]
+    [InlineData(NavigationMethod.Tab, KeyModifiers.None, ViewFocusDirection.Forward)]
+    [InlineData(NavigationMethod.Tab, KeyModifiers.Shift, ViewFocusDirection.Backward)]
+    [InlineData(NavigationMethod.Pointer, KeyModifiers.None, ViewFocusDirection.Undefined)]
+    public void PlumixHost_ReportsViewFocusEntryDirection(
+        NavigationMethod method,
+        KeyModifiers modifiers,
+        ViewFocusDirection expectedDirection)
+    {
+        var observer = new ViewFocusObserver();
+        WidgetsBinding.Instance.AddObserver(observer);
+        try
+        {
+            var host = new TestPlumixHost();
+            host.DispatchGotFocus(method, modifiers);
+            host.DispatchGotFocus(method, modifiers);
+            host.DispatchLostFocus();
+            host.DispatchLostFocus();
+
+            Assert.Collection(observer.Events,
+                gained =>
+                {
+                    Assert.Equal(host.RootFlutterView.ViewId, gained.ViewId);
+                    Assert.Equal(ViewFocusState.Focused, gained.State);
+                    Assert.Equal(expectedDirection, gained.Direction);
+                },
+                lost =>
+                {
+                    Assert.Equal(host.RootFlutterView.ViewId, lost.ViewId);
+                    Assert.Equal(ViewFocusState.Unfocused, lost.State);
+                    Assert.Equal(ViewFocusDirection.Undefined, lost.Direction);
+                });
+        }
+        finally
+        {
+            WidgetsBinding.Instance.RemoveObserver(observer);
+        }
+    }
+
+    [Fact]
+    public void PlumixHost_WindowActivationRestoresFocusedViewOnce()
+    {
+        var observer = new ViewFocusObserver();
+        WidgetsBinding.Instance.AddObserver(observer);
+        try
+        {
+            var host = new TestPlumixHost();
+            host.DispatchGotFocus(NavigationMethod.Pointer, KeyModifiers.None);
+            host.UpdateViewFocusForWindowActivation(active: false);
+            host.UpdateViewFocusForWindowActivation(active: false);
+            host.UpdateViewFocusForWindowActivation(active: true);
+            host.UpdateViewFocusForWindowActivation(active: true);
+
+            Assert.Collection(observer.Events,
+                gained => Assert.Equal(ViewFocusState.Focused, gained.State),
+                lost => Assert.Equal(ViewFocusState.Unfocused, lost.State),
+                regained =>
+                {
+                    Assert.Equal(ViewFocusState.Focused, regained.State);
+                    Assert.Equal(ViewFocusDirection.Undefined, regained.Direction);
+                });
+        }
+        finally
+        {
+            WidgetsBinding.Instance.RemoveObserver(observer);
+        }
+    }
+
+    private sealed class ViewFocusObserver : WidgetsBindingObserver
+    {
+        public List<ViewFocusEvent> Events { get; } = [];
+
+        public void DidChangeViewFocus(ViewFocusEvent @event)
+        {
+            Events.Add(@event);
+        }
+    }
+
     private sealed class TestPlumixHost : PlumixHost
     {
+        public void DispatchGotFocus(NavigationMethod method, KeyModifiers modifiers)
+        {
+            RaiseEvent(new FocusChangedEventArgs(InputElement.GotFocusEvent)
+            {
+                Source = this,
+                NavigationMethod = method,
+                KeyModifiers = modifiers
+            });
+        }
+
+        public void DispatchLostFocus()
+        {
+            RaiseEvent(new FocusChangedEventArgs(InputElement.LostFocusEvent) { Source = this });
+        }
+
         public bool DispatchKeyDown(
             Key key,
             KeyModifiers modifiers = KeyModifiers.None,

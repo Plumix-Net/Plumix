@@ -51,6 +51,8 @@ public class PlumixHost : Control
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToPlatformChannel;
     private bool _allowWindowClose;
+    private bool _viewHasFocus;
+    private ViewFocusDirection _requestedViewFocusDirection;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
         SystemChrome.CurrentApplicationSwitcherDescription;
@@ -431,11 +433,16 @@ public class PlumixHost : Control
         AttachMetricSources();
         PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
         PlatformDispatcher.Instance.ViewFocusChangeRequested += HandleViewFocusChangeRequested;
+        if (IsFocused && (_attachedTopLevel is not WindowBase window || window.IsActive))
+        {
+            ReportViewFocus(ViewFocusState.Focused, ViewFocusDirection.Undefined);
+        }
         OnMetricsChanged();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        ReportViewFocus(ViewFocusState.Unfocused, ViewFocusDirection.Undefined);
         PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
         DetachMetricSources();
         DetachPlatformChannelHandler();
@@ -502,33 +509,83 @@ public class PlumixHost : Control
     /// </summary>
     private void HandleViewFocusChangeRequested(ViewFocusEvent @event)
     {
-        if (@event.ViewId != _view.ViewId || @event.State != ViewFocusState.Focused || IsFocused)
+        if (@event.ViewId != _view.ViewId || @event.State != ViewFocusState.Focused)
         {
             return;
         }
 
-        Focus();
+        _requestedViewFocusDirection = @event.Direction;
+        try
+        {
+            if (_attachedTopLevel is WindowBase window && !window.IsActive)
+            {
+                window.Activate();
+            }
+
+            if (!IsFocused)
+            {
+                KeyModifiers modifiers = @event.Direction == ViewFocusDirection.Backward
+                    ? KeyModifiers.Shift
+                    : KeyModifiers.None;
+                Focus(NavigationMethod.Tab, modifiers);
+            }
+
+            if (IsFocused && (_attachedTopLevel is not WindowBase activeWindow || activeWindow.IsActive))
+            {
+                ReportViewFocus(ViewFocusState.Focused, @event.Direction);
+            }
+        }
+        finally
+        {
+            _requestedViewFocusDirection = ViewFocusDirection.Undefined;
+        }
     }
 
     /// <inheritdoc />
     /// <remarks>
-    /// The platform's half of view focus: Flutter's engine reports the window gaining focus through
-    /// <c>PlatformDispatcher.onViewFocusChange</c>; the host reports its Avalonia keyboard focus.
-    /// Avalonia does not say which way focus travelled, so the direction is undefined.
+    /// The platform's half of view focus: the host reports keyboard focus and the containing window's
+    /// activation state. Avalonia's Tab navigation and Shift modifier identify the entry direction.
     /// </remarks>
     protected override void OnGotFocus(FocusChangedEventArgs e)
     {
         base.OnGotFocus(e);
-        WidgetsBinding.Instance.HandleViewFocusChanged(
-            new ViewFocusEvent(_view.ViewId, ViewFocusState.Focused, ViewFocusDirection.Undefined));
+        if (e.Source is not null && !ReferenceEquals(e.Source, this))
+        {
+            return;
+        }
+
+        ViewFocusDirection direction = _requestedViewFocusDirection != ViewFocusDirection.Undefined
+            ? _requestedViewFocusDirection
+            : e.NavigationMethod == NavigationMethod.Tab
+                ? e.KeyModifiers.HasFlag(KeyModifiers.Shift)
+                    ? ViewFocusDirection.Backward
+                    : ViewFocusDirection.Forward
+                : ViewFocusDirection.Undefined;
+        ReportViewFocus(ViewFocusState.Focused, direction);
     }
 
     /// <inheritdoc />
     protected override void OnLostFocus(FocusChangedEventArgs e)
     {
         base.OnLostFocus(e);
-        WidgetsBinding.Instance.HandleViewFocusChanged(
-            new ViewFocusEvent(_view.ViewId, ViewFocusState.Unfocused, ViewFocusDirection.Undefined));
+        if (e.Source is not null && !ReferenceEquals(e.Source, this))
+        {
+            return;
+        }
+
+        ReportViewFocus(ViewFocusState.Unfocused, ViewFocusDirection.Undefined);
+    }
+
+    private void ReportViewFocus(ViewFocusState state, ViewFocusDirection direction)
+    {
+        bool focused = state == ViewFocusState.Focused;
+        if (_viewHasFocus == focused)
+        {
+            return;
+        }
+
+        _viewHasFocus = focused;
+        WidgetsBinding.Instance.HandleViewFocusChanged(new ViewFocusEvent(_view.ViewId, state, direction));
     }
 
     private void AttachTextInputConfigurationListener()
@@ -823,16 +880,32 @@ public class PlumixHost : Control
         _inputPane = null;
     }
 
-    private static void HandleWindowActivated(object? sender, EventArgs e)
+    private void HandleWindowActivated(object? sender, EventArgs e)
     {
         AppLifecycleState state = sender is Window { WindowState: WindowState.Minimized }
             ? AppLifecycleState.Hidden
             : AppLifecycleState.Resumed;
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
+        UpdateViewFocusForWindowActivation(active: state == AppLifecycleState.Resumed);
     }
 
-    private static void HandleWindowDeactivated(object? sender, EventArgs e)
+    internal void UpdateViewFocusForWindowActivation(bool active)
     {
+        if (!active)
+        {
+            ReportViewFocus(ViewFocusState.Unfocused, ViewFocusDirection.Undefined);
+            return;
+        }
+
+        if (IsFocused)
+        {
+            ReportViewFocus(ViewFocusState.Focused, _requestedViewFocusDirection);
+        }
+    }
+
+    private void HandleWindowDeactivated(object? sender, EventArgs e)
+    {
+        UpdateViewFocusForWindowActivation(active: false);
         AppLifecycleState state = sender is Window { WindowState: WindowState.Minimized }
             ? AppLifecycleState.Hidden
             : AppLifecycleState.Inactive;
