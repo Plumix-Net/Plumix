@@ -24,10 +24,56 @@ public readonly record struct AlignmentDirectional(double Start, double Y)
 
     public static AlignmentDirectional BottomEnd => new(1, 1);
 
+    public static AlignmentDirectional operator +(AlignmentDirectional a, AlignmentDirectional b) =>
+        new(a.Start + b.Start, a.Y + b.Y);
+
+    public static AlignmentDirectional operator -(AlignmentDirectional a, AlignmentDirectional b) =>
+        new(a.Start - b.Start, a.Y - b.Y);
+
+    public static AlignmentDirectional operator -(AlignmentDirectional value) => new(-value.Start, -value.Y);
+
+    public static AlignmentDirectional operator *(AlignmentDirectional value, double factor) =>
+        new(value.Start * factor, value.Y * factor);
+
+    public static AlignmentDirectional operator /(AlignmentDirectional value, double divisor) =>
+        new(value.Start / divisor, value.Y / divisor);
+
+    public static AlignmentDirectional operator %(AlignmentDirectional value, double divisor) =>
+        new(AlignmentGeometry.Modulo(value.Start, divisor), AlignmentGeometry.Modulo(value.Y, divisor));
+
+    public AlignmentDirectional TruncateDivide(double divisor) =>
+        new(Math.Truncate(Start / divisor), Math.Truncate(Y / divisor));
+
+    public AlignmentGeometry Add(AlignmentGeometry other) => (AlignmentGeometry)this + other;
+
+    public static AlignmentDirectional? Lerp(AlignmentDirectional? a, AlignmentDirectional? b, double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        AlignmentDirectional from = a ?? Center;
+        AlignmentDirectional to = b ?? Center;
+        return new AlignmentDirectional(
+            from.Start + ((to.Start - from.Start) * t),
+            from.Y + ((to.Y - from.Y) * t));
+    }
+
     public Alignment Resolve(TextDirection direction)
     {
         double x = direction == TextDirection.Rtl ? -Start : Start;
         return new Alignment(x, Y);
+    }
+
+    public Alignment Resolve(TextDirection? direction)
+    {
+        if (direction is null)
+        {
+            throw new ArgumentNullException(nameof(direction));
+        }
+
+        return Resolve(direction.Value);
     }
 
     public override string ToString()
@@ -50,12 +96,13 @@ public readonly record struct AlignmentDirectional(double Start, double Y)
 
 public readonly record struct AlignmentGeometry
 {
-    private AlignmentGeometry(double x, double start, double y, bool isDirectional)
+    private AlignmentGeometry(double x, double start, double y, bool isDirectional, bool isMixed = false)
     {
         PhysicalX = x;
         Start = start;
         Y = y;
         IsDirectional = isDirectional;
+        IsMixed = isMixed;
     }
 
     private double PhysicalX { get; }
@@ -73,11 +120,66 @@ public readonly record struct AlignmentGeometry
     /// </summary>
     public bool IsDirectional { get; }
 
+    private bool IsMixed { get; }
+
     /// <summary>
     /// Whether resolving this value needs a text direction, mirroring the assert Dart's
     /// `AlignmentDirectional.resolve` and `_MixedAlignment.resolve` share.
     /// </summary>
-    public bool RequiresTextDirection => Start != 0.0;
+    public bool RequiresTextDirection => IsDirectional || IsMixed;
+
+    public static AlignmentGeometry TopLeft => Alignment.TopLeft;
+    public static AlignmentGeometry TopCenter => Alignment.TopCenter;
+    public static AlignmentGeometry TopRight => Alignment.TopRight;
+    public static AlignmentGeometry TopStart => AlignmentDirectional.TopStart;
+    public static AlignmentGeometry TopEnd => AlignmentDirectional.TopEnd;
+    public static AlignmentGeometry CenterLeft => Alignment.CenterLeft;
+    public static AlignmentGeometry Center => Alignment.Center;
+    public static AlignmentGeometry CenterRight => Alignment.CenterRight;
+    public static AlignmentGeometry CenterStart => AlignmentDirectional.CenterStart;
+    public static AlignmentGeometry CenterEnd => AlignmentDirectional.CenterEnd;
+    public static AlignmentGeometry BottomLeft => Alignment.BottomLeft;
+    public static AlignmentGeometry BottomCenter => Alignment.BottomCenter;
+    public static AlignmentGeometry BottomRight => Alignment.BottomRight;
+    public static AlignmentGeometry BottomStart => AlignmentDirectional.BottomStart;
+    public static AlignmentGeometry BottomEnd => AlignmentDirectional.BottomEnd;
+
+    public static AlignmentGeometry Xy(double x, double y) => new Alignment(x, y);
+
+    public static AlignmentGeometry Directional(double start, double y) => new AlignmentDirectional(start, y);
+
+    public static AlignmentGeometry operator +(AlignmentGeometry a, AlignmentGeometry b)
+    {
+        bool samePhysical = !a.IsDirectional && !a.IsMixed && !b.IsDirectional && !b.IsMixed;
+        bool sameDirectional = a.IsDirectional && b.IsDirectional;
+        return new AlignmentGeometry(
+            a.PhysicalX + b.PhysicalX,
+            a.Start + b.Start,
+            a.Y + b.Y,
+            sameDirectional,
+            isMixed: !samePhysical && !sameDirectional);
+    }
+
+    public static AlignmentGeometry operator -(AlignmentGeometry value) =>
+        new(-value.PhysicalX, -value.Start, -value.Y, value.IsDirectional, value.IsMixed);
+
+    public static AlignmentGeometry operator *(AlignmentGeometry value, double factor) =>
+        new(value.PhysicalX * factor, value.Start * factor, value.Y * factor,
+            value.IsDirectional, value.IsMixed);
+
+    public static AlignmentGeometry operator /(AlignmentGeometry value, double divisor) =>
+        new(value.PhysicalX / divisor, value.Start / divisor, value.Y / divisor,
+            value.IsDirectional, value.IsMixed);
+
+    public static AlignmentGeometry operator %(AlignmentGeometry value, double divisor) =>
+        new(Modulo(value.PhysicalX, divisor), Modulo(value.Start, divisor), Modulo(value.Y, divisor),
+            value.IsDirectional, value.IsMixed);
+
+    public AlignmentGeometry TruncateDivide(double divisor) =>
+        new(Math.Truncate(PhysicalX / divisor), Math.Truncate(Start / divisor), Math.Truncate(Y / divisor),
+            IsDirectional, IsMixed);
+
+    public AlignmentGeometry Add(AlignmentGeometry other) => this + other;
 
     public Alignment Resolve(TextDirection direction)
     {
@@ -111,28 +213,31 @@ public readonly record struct AlignmentGeometry
         AlignmentGeometry? b,
         double t)
     {
-        if (a == b)
+        if (a is null && b is null)
         {
             return a;
         }
 
         if (a is null)
         {
-            return Scale(b!.Value, t);
+            return b!.Value * t;
         }
 
         if (b is null)
         {
-            return Scale(a.Value, 1.0 - t);
+            return a.Value * (1.0 - t);
         }
 
         AlignmentGeometry from = a.Value;
         AlignmentGeometry to = b.Value;
+        bool samePhysical = !from.IsDirectional && !from.IsMixed && !to.IsDirectional && !to.IsMixed;
+        bool sameDirectional = from.IsDirectional && to.IsDirectional;
         return new AlignmentGeometry(
             x: LerpDouble(from.PhysicalX, to.PhysicalX, t),
             start: LerpDouble(from.Start, to.Start, t),
             y: LerpDouble(from.Y, to.Y, t),
-            isDirectional: from.IsDirectional && to.IsDirectional);
+            isDirectional: sameDirectional,
+            isMixed: !samePhysical && !sameDirectional);
     }
 
     public static implicit operator AlignmentGeometry(Alignment alignment)
@@ -145,19 +250,26 @@ public readonly record struct AlignmentGeometry
         return new AlignmentGeometry(0.0, alignment.Start, alignment.Y, isDirectional: true);
     }
 
-    private static AlignmentGeometry Scale(AlignmentGeometry value, double factor)
+    internal static double Modulo(double value, double divisor)
     {
-        return new AlignmentGeometry(
-            x: value.PhysicalX * factor,
-            start: value.Start * factor,
-            y: value.Y * factor,
-            isDirectional: value.IsDirectional);
+        double remainder = value % divisor;
+        return remainder < 0.0 ? remainder + Math.Abs(divisor) : remainder;
     }
+
+    public bool Equals(AlignmentGeometry other) =>
+        PhysicalX == other.PhysicalX && Start == other.Start && Y == other.Y;
+
+    public override int GetHashCode() => HashCode.Combine(PhysicalX, Start, Y);
 
     private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 
     public override string ToString()
     {
+        if (IsDirectional)
+        {
+            return new AlignmentDirectional(Start, Y).ToString();
+        }
+
         if (Start == 0.0)
         {
             return new Alignment(PhysicalX, Y).ToString();

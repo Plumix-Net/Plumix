@@ -1,6 +1,8 @@
 using Avalonia;
+using Plumix.Foundation;
+using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/painting/alignment.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/painting/alignment.dart
 
 namespace Plumix.Rendering;
 
@@ -15,6 +17,52 @@ public readonly record struct Alignment(double X, double Y)
     public static Alignment BottomLeft => new(-1, 1);
     public static Alignment BottomCenter => new(0, 1);
     public static Alignment BottomRight => new(1, 1);
+
+    public static Alignment operator +(Alignment a, Alignment b) => new(a.X + b.X, a.Y + b.Y);
+
+    public static Alignment operator -(Alignment a, Alignment b) => new(a.X - b.X, a.Y - b.Y);
+
+    public static Alignment operator -(Alignment value) => new(-value.X, -value.Y);
+
+    public static Alignment operator *(Alignment value, double factor) => new(value.X * factor, value.Y * factor);
+
+    public static Alignment operator /(Alignment value, double divisor) => new(value.X / divisor, value.Y / divisor);
+
+    public static Alignment operator %(Alignment value, double divisor) =>
+        new(AlignmentGeometry.Modulo(value.X, divisor), AlignmentGeometry.Modulo(value.Y, divisor));
+
+    public Alignment TruncateDivide(double divisor) =>
+        new(Math.Truncate(X / divisor), Math.Truncate(Y / divisor));
+
+    public AlignmentGeometry Add(AlignmentGeometry other) => (AlignmentGeometry)this + other;
+
+    public Alignment Resolve(TextDirection? direction) => this;
+
+    public static Alignment? Lerp(Alignment? a, Alignment? b, double t)
+    {
+        if (a is null && b is null)
+        {
+            return null;
+        }
+
+        Alignment from = a ?? Center;
+        Alignment to = b ?? Center;
+        return new Alignment(from.X + ((to.X - from.X) * t), from.Y + ((to.Y - from.Y) * t));
+    }
+
+    public Point AlongOffset(Vector other)
+    {
+        double centerX = other.X / 2.0;
+        double centerY = other.Y / 2.0;
+        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
+    }
+
+    public Point AlongOffset(Point other)
+    {
+        double centerX = other.X / 2.0;
+        double centerY = other.Y / 2.0;
+        return new Point(centerX + (X * centerX), centerY + (Y * centerY));
+    }
 
     public Point AlongOffset(Size parentSize, Size childSize)
     {
@@ -77,7 +125,7 @@ public readonly record struct TextAlignVertical
 {
     public TextAlignVertical(double y)
     {
-        if (y < -1.0 || y > 1.0)
+        if (Constants.KDebugMode && !(y >= -1.0 && y <= 1.0))
         {
             throw new ArgumentOutOfRangeException(nameof(y), y, "TextAlignVertical.y must be between -1.0 and 1.0.");
         }
@@ -92,4 +140,6 @@ public readonly record struct TextAlignVertical
     public static TextAlignVertical Center => new(0.0);
 
     public static TextAlignVertical Bottom => new(1.0);
+
+    public override string ToString() => $"TextAlignVertical(y: {DartFormat.Number(Y)})";
 }

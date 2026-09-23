@@ -293,7 +293,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
 | `gestures/velocity_tracker.dart` | `src/Plumix/Gestures/VelocityTracker.cs` | — | — |
-| `painting/alignment.dart` | `src/Plumix/Rendering/Alignment.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/AlignmentGeometry.cs` | — | — |
+| `painting/alignment.dart` | `src/Plumix/Rendering/Alignment.cs`<br>`src/Plumix/Rendering/AlignmentGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs` | — |
 | `painting/basic_types.dart` | `src/Plumix/Painting/BasicTypes.cs`<br>`src/Plumix/Rendering/Flex.cs`<br>`src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/BasicTypesTests.cs`<br>`src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/RenderFlexTests.cs`<br>`src/Plumix.Tests/ScrollActivityTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollDelegateTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionTests.cs`<br>`src/Plumix.Tests/ScrollableTests.cs`<br>`src/Plumix.Tests/SingleChildScrollViewTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollViewTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/flex_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/two_dimensional_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FlexDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/TwoDimensionalScrollViewDemoPage.cs` |
 | `painting/beveled_rectangle_border.dart` | `src/Plumix/Rendering/BeveledRectangleBorder.cs` | — | — |
 | `painting/border_radius.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
@@ -621,7 +621,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/PipelineOwner.cs` — (host integration extras)
 - `src/Plumix/RenderView.cs` — (reference) (approximate)
 - `src/Plumix/RendererBinding.cs` — (reference) (adapted)
-- `src/Plumix/Rendering/Alignment.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Box.RenderBox.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Box.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Layer.cs` — (reference) (approximate)
@@ -644,5 +643,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 705
 - C# files without a marker: 48
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 22
+- C# files with a qualified (non-strict) marker: 21
 
