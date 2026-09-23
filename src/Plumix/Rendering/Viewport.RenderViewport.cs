@@ -422,7 +422,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
                     CacheOrigin: correctedCacheOrigin),
                 parentUsesSize: true);
 
-            SliverGeometry childLayoutGeometry = child.Geometry;
+            SliverGeometry childLayoutGeometry = child.Geometry!;
 
             // If the child overflowed, ask the viewport to relayout at a corrected scroll offset.
             if (childLayoutGeometry.ScrollOffsetCorrection is double correction)
@@ -506,8 +506,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     {
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(_axisDirection, growthDirection) switch
         {
-            AxisDirection.Up => new Point(0.0, Size.Height - layoutOffset - child.Geometry.PaintExtent),
-            AxisDirection.Left => new Point(Size.Width - layoutOffset - child.Geometry.PaintExtent, 0.0),
+            AxisDirection.Up => new Point(0.0, Size.Height - layoutOffset - child.Geometry!.PaintExtent),
+            AxisDirection.Left => new Point(Size.Width - layoutOffset - child.Geometry!.PaintExtent, 0.0),
             AxisDirection.Right => new Point(layoutOffset, 0.0),
             _ => new Point(0.0, layoutOffset),
         };
@@ -556,8 +556,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         for (RenderSliver? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             Size size = Axis == Axis.Vertical
-                ? new Size(child.Constraints.CrossAxisExtent, child.Geometry.LayoutExtent)
-                : new Size(child.Geometry.LayoutExtent, child.Constraints.CrossAxisExtent);
+                ? new Size(child.Constraints.CrossAxisExtent, child.Geometry!.LayoutExtent)
+                : new Size(child.Geometry!.LayoutExtent, child.Constraints.CrossAxisExtent);
             var rect = new Rect(offset + PaintOffsetOf(child), size);
             context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
         }
@@ -567,7 +567,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     {
         foreach (RenderSliver child in ChildrenInPaintOrder)
         {
-            if (child.Geometry.Visible)
+            if (child.Geometry!.Visible)
             {
                 context.PaintChild(child, offset + PaintOffsetOf(child));
             }
@@ -589,7 +589,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         var sliverResult = SliverHitTestResult.Wrap(result);
         foreach (RenderSliver child in ChildrenInHitTestOrder)
         {
-            if (!child.Geometry.Visible)
+            if (!child.Geometry!.Visible)
             {
                 continue;
             }
@@ -673,11 +673,11 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
             // made up from the sliver's own geometry.
             var targetSliver = (RenderSliver)target;
             growthDirection = targetSliver.Constraints.GrowthDirection;
-            pivotExtent = targetSliver.Geometry.ScrollExtent;
+            pivotExtent = targetSliver.Geometry!.ScrollExtent;
             double crossAxisExtent = targetSliver.Constraints.CrossAxisExtent;
             rect ??= effectiveAxis == Axis.Horizontal
-                ? new Rect(0.0, 0.0, targetSliver.Geometry.ScrollExtent, crossAxisExtent)
-                : new Rect(0.0, 0.0, crossAxisExtent, targetSliver.Geometry.ScrollExtent);
+                ? new Rect(0.0, 0.0, targetSliver.Geometry!.ScrollExtent, crossAxisExtent)
+                : new Rect(0.0, 0.0, crossAxisExtent, targetSliver.Geometry!.ScrollExtent);
             rectLocal = rect.Value;
         }
         else
@@ -697,7 +697,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
         };
 
         // The scroll offset at which the leading edge of the sliver would already be pinned in place.
-        bool isPinned = sliver.Geometry.MaxScrollObstructionExtent > 0.0 && leadingScrollOffset >= 0.0;
+        bool isPinned = sliver.Geometry!.MaxScrollObstructionExtent > 0.0 && leadingScrollOffset >= 0.0;
         leadingScrollOffset = ScrollOffsetOf(sliver, leadingScrollOffset);
 
         Rect targetRect = RenderObject.TransformRect(target.GetTransformTo(this), rect.Value);
@@ -796,13 +796,13 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     /// </summary>
     private static bool IsSemanticallyRelevant(RenderSliver child)
     {
-        return child.Geometry.Visible || child.Geometry.CacheExtent > 0.0 || child.EnsureSemantics;
+        return child.Geometry!.Visible || child.Geometry!.CacheExtent > 0.0 || child.EnsureSemantics;
     }
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
         if (child is RenderSliver sliver && sliver.EnsureSemantics
-            && !(sliver.Geometry.Visible || sliver.Geometry.CacheExtent > 0.0))
+            && !(sliver.Geometry!.Visible || sliver.Geometry!.CacheExtent > 0.0))
         {
             return null;
         }
@@ -860,7 +860,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
         if (child is RenderSliver sliver && sliver.EnsureSemantics
-            && !(sliver.Geometry.Visible || sliver.Geometry.CacheExtent > 0.0))
+            && !(sliver.Geometry!.Visible || sliver.Geometry!.CacheExtent > 0.0))
         {
             return null;
         }
@@ -1290,7 +1290,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
                 RenderSliver? current = Center;
                 while (current != null && !ReferenceEquals(current, child))
                 {
-                    scrollOffsetToChild += current.Geometry.ScrollExtent;
+                    scrollOffsetToChild += current.Geometry!.ScrollExtent;
                     current = ChildAfter(current);
                 }
 
@@ -1303,7 +1303,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
                 RenderSliver? current = ChildBefore(Center!);
                 while (current != null && !ReferenceEquals(current, child))
                 {
-                    scrollOffsetToChild -= current.Geometry.ScrollExtent;
+                    scrollOffsetToChild -= current.Geometry!.ScrollExtent;
                     current = ChildBefore(current);
                 }
 
@@ -1322,7 +1322,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
                 RenderSliver? current = Center;
                 while (current != null && !ReferenceEquals(current, child))
                 {
-                    pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                    pinnedExtent += current.Geometry!.MaxScrollObstructionExtent;
                     current = ChildAfter(current);
                 }
 
@@ -1334,7 +1334,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
                 RenderSliver? current = ChildBefore(Center!);
                 while (current != null && !ReferenceEquals(current, child))
                 {
-                    pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                    pinnedExtent += current.Geometry!.MaxScrollObstructionExtent;
                     current = ChildBefore(current);
                 }
 
@@ -1352,8 +1352,8 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentDa
         {
             AxisDirection.Down => parentMainAxisPosition - paintOffset.Y,
             AxisDirection.Right => parentMainAxisPosition - paintOffset.X,
-            AxisDirection.Up => child.Geometry.PaintExtent - (parentMainAxisPosition - paintOffset.Y),
-            _ => child.Geometry.PaintExtent - (parentMainAxisPosition - paintOffset.X),
+            AxisDirection.Up => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.Y),
+            _ => child.Geometry!.PaintExtent - (parentMainAxisPosition - paintOffset.X),
         };
     }
 
@@ -1579,7 +1579,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
         RenderSliver? current = FirstChild;
         while (current != null && !ReferenceEquals(current, child))
         {
-            scrollOffsetToChild += current.Geometry.ScrollExtent;
+            scrollOffsetToChild += current.Geometry!.ScrollExtent;
             current = ChildAfter(current);
         }
 
@@ -1592,7 +1592,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
         RenderSliver? current = FirstChild;
         while (current != null && !ReferenceEquals(current, child))
         {
-            pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+            pinnedExtent += current.Geometry!.MaxScrollObstructionExtent;
             current = ChildAfter(current);
         }
 

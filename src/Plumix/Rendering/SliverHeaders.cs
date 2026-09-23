@@ -119,7 +119,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
             ((BoxParentData)_child.parentData!).offset = PinnedChildOffset(
                 constraints,
                 childExtent,
-                Geometry.PaintExtent);
+                Geometry!.PaintExtent);
         }
     }
 
@@ -130,7 +130,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         // A partially collapsed header must not let its children participate in the scrollable's
         // implicit scrolling, or the viewport would try to scroll them into view.
         double childExtent = _child == null ? 0.0 : BoxExtent(_child, Constraints.Axis);
-        if (Geometry.LayoutExtent < childExtent)
+        if (Geometry!.LayoutExtent < childExtent)
         {
             configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
         }
@@ -138,7 +138,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_child == null || !Geometry.Visible)
+        if (_child == null || !Geometry!.Visible)
         {
             return;
         }
@@ -151,7 +151,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         double mainAxisPosition,
         double crossAxisPosition)
     {
-        Debug.Assert(Geometry.HitTestExtent > 0.0);
+        Debug.Assert(Geometry!.HitTestExtent > 0.0);
         if (_child != null)
         {
             return this.HitTestBoxChild(
@@ -166,7 +166,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (_child != null && Geometry.Visible)
+        if (_child != null && Geometry!.Visible)
         {
             visitor(_child);
         }
@@ -288,7 +288,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
 
     public override double ChildMainAxisPosition(RenderObject child)
     {
-        return Math.Min(0.0, Geometry.PaintExtent - ChildExtent);
+        return Math.Min(0.0, Geometry!.PaintExtent - ChildExtent);
     }
 
     /// <summary>
@@ -346,10 +346,10 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
                 targetExtent,
                 configuration.MinShowOnScreenExtent,
                 configuration.MaxShowOnScreenExtent),
-            Geometry.PaintExtent,
+            Geometry!.PaintExtent,
             childExtent);
 
-        if (targetExtent > Geometry.PaintExtent && !IsSnapping)
+        if (targetExtent > Geometry!.PaintExtent && !IsSnapping)
         {
             StartSnap(childExtent - targetExtent, ResolveSnapDuration(duration), ResolveSnapCurve(curve));
         }
@@ -451,7 +451,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
             ((SliverPhysicalParentData)Child.parentData!).PaintOffset = FloatingChildOffset(
                 constraints,
                 childExtent,
-                Geometry.PaintExtent);
+                Geometry!.PaintExtent);
         }
 
         _lastScrollOffset = constraints.ScrollOffset;

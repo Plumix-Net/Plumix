@@ -118,7 +118,7 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         base.DescribeSemanticsConfiguration(configuration);
-        if (HasSliverConstraints && Geometry.LayoutExtent < ChildExtent)
+        if (Geometry is not null && Geometry.LayoutExtent < ChildExtent)
         {
             configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
         }

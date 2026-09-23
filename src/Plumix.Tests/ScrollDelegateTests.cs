@@ -350,7 +350,7 @@ public sealed class ScrollDelegateTests
         harness.Pump(new Size(800, 600));
 
         var sliver = Assert.IsType<RenderSliverList>(FindRenderObject<RenderSliverList>(harness.RenderView));
-        Assert.Equal(300.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(300.0, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>

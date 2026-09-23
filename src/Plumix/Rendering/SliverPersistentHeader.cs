@@ -226,7 +226,7 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
 
         double position = ChildMainAxisPosition(Child);
         double childExtent = ChildExtent;
-        double paintExtent = Geometry.PaintExtent;
+        double paintExtent = Geometry!.PaintExtent;
         ((SliverPhysicalParentData)Child.parentData!).PaintOffset =
             PersistentHeaderReveal.EffectiveAxisDirection(Constraints) switch
             {

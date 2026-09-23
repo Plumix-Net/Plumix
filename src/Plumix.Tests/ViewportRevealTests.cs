@@ -829,7 +829,7 @@ public sealed class ViewportRevealTests
         protected override void PerformLayout()
         {
             SliverConstraints constraints = Constraints;
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
         }
 
         public override void Paint(PaintingContext ctx, Point offset)

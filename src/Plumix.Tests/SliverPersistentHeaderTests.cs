@@ -50,23 +50,23 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.Layout(Constraints(scrollOffset: 0), parentUsesSize: true);
         Assert.Equal(200, child.Size.Height, precision: 3);
-        Assert.Equal(200, header.Geometry.ScrollExtent, precision: 3);
-        Assert.Equal(200, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(200, header.Geometry.MaxPaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.MaxScrollObstructionExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.ScrollExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.MaxPaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
         Assert.Equal(0, header.ChildMainAxisPosition(child), precision: 3);
-        Assert.True(header.Geometry.HasVisualOverflow);
+        Assert.True(header.Geometry!.HasVisualOverflow);
 
         // Shrinking: the child collapses toward minExtent and stays at the leading edge.
         header.Layout(Constraints(scrollOffset: 150), parentUsesSize: true);
         Assert.Equal(60, child.Size.Height, precision: 3);
-        Assert.Equal(50, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(50, header.Geometry!.PaintExtent, precision: 3);
         Assert.Equal(-10, header.ChildMainAxisPosition(child), precision: 3);
 
         // Fully scrolled off: paintExtent clamps at zero, but the sliver keeps its scroll extent.
         header.Layout(Constraints(scrollOffset: 260), parentUsesSize: true);
-        Assert.Equal(0, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(200, header.Geometry.ScrollExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.ScrollExtent, precision: 3);
     }
 
     [Fact]
@@ -78,10 +78,10 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
 
         header.Layout(Constraints(scrollOffset: 0, overlap: -40), parentUsesSize: true);
-        Assert.Equal(-40, header.Geometry.PaintOrigin, precision: 3);
+        Assert.Equal(-40, header.Geometry!.PaintOrigin, precision: 3);
 
         header.Layout(Constraints(scrollOffset: 0, overlap: 40), parentUsesSize: true);
-        Assert.Equal(0, header.Geometry.PaintOrigin, precision: 3);
+        Assert.Equal(0, header.Geometry!.PaintOrigin, precision: 3);
     }
 
     [Fact]
@@ -92,18 +92,18 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.Layout(Constraints(scrollOffset: 400), parentUsesSize: true);
         Assert.Equal(60, child.Size.Height, precision: 3);
-        Assert.Equal(60, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.LayoutExtent, precision: 3);
-        Assert.Equal(60, header.Geometry.MaxScrollObstructionExtent, precision: 3);
+        Assert.Equal(60, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.LayoutExtent, precision: 3);
+        Assert.Equal(60, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
         Assert.Equal(0, header.ChildMainAxisPosition(child), precision: 3);
 
         // An incoming positive overlap is both the paint origin and the overlapsContent signal, and
         // it is discounted from the paint extent available to the header.
         header.Layout(Constraints(scrollOffset: 400, overlap: 30), parentUsesSize: true);
-        Assert.Equal(30, header.Geometry.PaintOrigin, precision: 3);
+        Assert.Equal(30, header.Geometry!.PaintOrigin, precision: 3);
         Assert.True(header.LastOverlapsContent);
         header.Layout(Constraints(scrollOffset: 400, remainingPaintExtent: 40, overlap: 30), parentUsesSize: true);
-        Assert.Equal(10, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(10, header.Geometry!.PaintExtent, precision: 3);
     }
 
     [Fact]
@@ -116,15 +116,15 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.Layout(Constraints(scrollOffset: 500), parentUsesSize: true);
         Assert.Equal(500, header.EffectiveScrollOffset);
-        Assert.Equal(0, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.MaxScrollObstructionExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
 
         // Reverse (or idle) user scroll: no floating expansion, the header stays hidden.
         header.Layout(Constraints(
             scrollOffset: 460,
             userScrollDirection: ScrollDirection.Reverse), parentUsesSize: true);
         Assert.Equal(460, header.EffectiveScrollOffset);
-        Assert.Equal(0, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.PaintExtent, precision: 3);
 
         // Forward user scroll: the effective offset is pulled back to maxExtent and then floats in
         // by the scrolled delta.
@@ -132,8 +132,8 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             scrollOffset: 420,
             userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(160, header.EffectiveScrollOffset);
-        Assert.Equal(40, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.LayoutExtent, precision: 3);
+        Assert.Equal(40, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.LayoutExtent, precision: 3);
         Assert.True(header.LastOverlapsContent);
     }
 
@@ -149,7 +149,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         header.UpdateScrollStartDirection(ScrollDirection.Forward);
         header.Layout(Constraints(scrollOffset: 470), parentUsesSize: true);
         Assert.Equal(170, header.EffectiveScrollOffset);
-        Assert.Equal(30, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(30, header.Geometry!.PaintExtent, precision: 3);
     }
 
     [Fact]
@@ -161,15 +161,15 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
 
         header.Layout(Constraints(scrollOffset: 500), parentUsesSize: true);
-        Assert.Equal(60, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.LayoutExtent, precision: 3);
-        Assert.Equal(60, header.Geometry.MaxScrollObstructionExtent, precision: 3);
+        Assert.Equal(60, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.LayoutExtent, precision: 3);
+        Assert.Equal(60, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
 
         // Regression for flutter/flutter#21887: less remaining paint extent than minExtent must not
         // grow the header past what is left.
         header.Layout(Constraints(scrollOffset: 500, remainingPaintExtent: 50), parentUsesSize: true);
-        Assert.Equal(50, header.Geometry.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry.LayoutExtent, precision: 3);
+        Assert.Equal(50, header.Geometry!.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry!.LayoutExtent, precision: 3);
     }
 
     [Fact]
@@ -184,13 +184,13 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.Layout(Constraints(scrollOffset: 0, overlap: -100), parentUsesSize: true);
         Assert.Equal(300, child.Size.Height, precision: 3);
-        Assert.Equal(300, header.Geometry.MaxPaintExtent, precision: 3);
+        Assert.Equal(300, header.Geometry!.MaxPaintExtent, precision: 3);
         Assert.Equal(0, header.ChildMainAxisPosition(child), precision: 3);
 
         // The stretch itself only applies at scroll offset zero.
         header.Layout(Constraints(scrollOffset: 20, overlap: -100), parentUsesSize: true);
         Assert.Equal(180, child.Size.Height, precision: 3);
-        Assert.Equal(300, header.Geometry.MaxPaintExtent, precision: 3);
+        Assert.Equal(300, header.Geometry!.MaxPaintExtent, precision: 3);
     }
 
     [Fact]
@@ -205,7 +205,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.Layout(Constraints(scrollOffset: 0), parentUsesSize: true);
         Assert.Equal(200, child.Size.Height, precision: 3);
-        Assert.Equal(200, header.Geometry.MaxPaintExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.MaxPaintExtent, precision: 3);
     }
 
     [Theory]
@@ -313,7 +313,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             showOnScreenConfiguration: new PersistentHeaderShowOnScreenConfiguration(
                 minShowOnScreenExtent: double.PositiveInfinity));
         header.Layout(Constraints(scrollOffset: 180), parentUsesSize: true);
-        Assert.Equal(20, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(20, header.Geometry!.PaintExtent, precision: 3);
 
         header.ShowOnScreen(duration: TimeSpan.FromMilliseconds(100));
         vsync.Advance(TimeSpan.FromMilliseconds(200));
@@ -322,7 +322,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         // SliverAppBar's snap configuration asks for an infinite extent, which clamps to the full
         // header: the effective offset animates all the way back to zero.
         Assert.Equal(0, header.EffectiveScrollOffset!.Value, precision: 3);
-        Assert.Equal(200, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(200, header.Geometry!.PaintExtent, precision: 3);
     }
 
     [Fact]
@@ -337,7 +337,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         header.ShowOnScreen();
         Assert.Equal(180, header.EffectiveScrollOffset);
-        Assert.Equal(20, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(20, header.Geometry!.PaintExtent, precision: 3);
     }
 
     [Theory]

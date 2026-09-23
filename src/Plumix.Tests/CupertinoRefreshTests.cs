@@ -78,23 +78,23 @@ public sealed class CupertinoRefreshTests
 
         sliver.Layout(Constraints(overlap: -40.0), parentUsesSize: true);
         Assert.Equal(new Size(320.0, 40.0), child.Size);
-        Assert.Equal(0.0, sliver.Geometry.ScrollExtent);
-        Assert.Equal(-40.0, sliver.Geometry.PaintOrigin);
-        Assert.Equal(40.0, sliver.Geometry.PaintExtent);
-        Assert.Equal(40.0, sliver.Geometry.MaxPaintExtent);
-        Assert.Equal(0.0, sliver.Geometry.LayoutExtent);
+        Assert.Equal(0.0, sliver.Geometry!.ScrollExtent);
+        Assert.Equal(-40.0, sliver.Geometry!.PaintOrigin);
+        Assert.Equal(40.0, sliver.Geometry!.PaintExtent);
+        Assert.Equal(40.0, sliver.Geometry!.MaxPaintExtent);
+        Assert.Equal(0.0, sliver.Geometry!.LayoutExtent);
 
         sliver.HasLayoutExtent = true;
         sliver.Layout(Constraints(remainingPaintExtent: 479.0), parentUsesSize: true);
-        Assert.Equal(60.0, sliver.Geometry.ScrollOffsetCorrection);
+        Assert.Equal(60.0, sliver.Geometry!.ScrollOffsetCorrection);
         sliver.Layout(Constraints(), parentUsesSize: true);
         Assert.Equal(new Size(320.0, 60.0), child.Size);
-        Assert.Equal(60.0, sliver.Geometry.ScrollExtent);
-        Assert.Equal(60.0, sliver.Geometry.LayoutExtent);
+        Assert.Equal(60.0, sliver.Geometry!.ScrollExtent);
+        Assert.Equal(60.0, sliver.Geometry!.LayoutExtent);
 
         sliver.HasLayoutExtent = false;
         sliver.Layout(Constraints(), parentUsesSize: true);
-        Assert.Equal(-60.0, sliver.Geometry.ScrollOffsetCorrection);
+        Assert.Equal(-60.0, sliver.Geometry!.ScrollOffsetCorrection);
 
         var paintOverflow = new RenderCupertinoSliverRefresh(
             refreshIndicatorExtent: 60.0,
@@ -103,7 +103,7 @@ public sealed class CupertinoRefreshTests
         paintOverflow.Layout(Constraints(
             overlap: -80.0,
             remainingPaintExtent: 20.0), parentUsesSize: true);
-        Assert.Equal(80.0, paintOverflow.Geometry.PaintExtent);
+        Assert.Equal(80.0, paintOverflow.Geometry!.PaintExtent);
         Assert.Throws<InvalidOperationException>(() =>
             sliver.Layout(Constraints(axisDirection: AxisDirection.Up), parentUsesSize: true));
     }

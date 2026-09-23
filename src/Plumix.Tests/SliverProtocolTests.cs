@@ -427,6 +427,15 @@ public sealed class SliverProtocolTests
         Assert.Equal(expected, sliver.MaxPaintRect);
     }
 
+    [Fact]
+    public void GetMaxPaintRect_BeforeLayoutIsEmpty()
+    {
+        var sliver = new ProbeSliver();
+
+        Assert.Null(sliver.Geometry);
+        Assert.Equal(new Rect(0, 0, 0, 0), sliver.MaxPaintRect);
+    }
+
     public static TheoryData<SliverGeometry, AxisDirection, GrowthDirection, double, double, double, double, Rect>
         MaxPaintRectCases()
     {
@@ -435,6 +444,8 @@ public sealed class SliverProtocolTests
         var forward = GrowthDirection.Forward;
         return new()
         {
+            { SliverGeometry.Zero, AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 0, 0) },
+            { new SliverGeometry(), AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 0) },
             { full, AxisDirection.Down, forward, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
             { full, AxisDirection.Down, GrowthDirection.Reverse, 0, 300, 100, 0, new Rect(0, 0, 100, 100) },
             { half, AxisDirection.Down, forward, 50, 50, 100, 0, new Rect(0, -50, 100, 100) },
@@ -646,7 +657,7 @@ public sealed class SliverProtocolTests
     }
 
     /// <summary>Flutter's `_TestRenderSliver`: reports a fixed geometry.</summary>
-    private sealed class ProbeSliver(SliverGeometry geometry = default) : RenderSliver
+    private sealed class ProbeSliver(SliverGeometry? geometry = null) : RenderSliver
     {
         public int LayoutCount { get; private set; }
 
@@ -686,7 +697,7 @@ public sealed class SliverProtocolTests
         public override bool HitTest(SliverHitTestResult result, double mainAxisPosition, double crossAxisPosition)
         {
             if (mainAxisPosition >= 0.0
-                && mainAxisPosition < Geometry.HitTestExtent
+                && mainAxisPosition < Geometry!.HitTestExtent
                 && crossAxisPosition >= 0.0
                 && crossAxisPosition < Constraints.CrossAxisExtent)
             {

@@ -283,8 +283,8 @@ public sealed class VisibilityTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        Assert.Equal(80, child.Geometry.ScrollExtent);
-        Assert.Equal(default, offstage.Geometry);
+        Assert.Equal(80, child.Geometry!.ScrollExtent);
+        Assert.Same(SliverGeometry.Zero, offstage.Geometry);
         Assert.Equal(0, box.PaintCount);
         Assert.False(offstage.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         int semanticsVisits = 0;
@@ -342,8 +342,8 @@ public sealed class VisibilityTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
         Assert.Equal(child.Geometry, visibility.Geometry);
-        Assert.Equal(80, visibility.Geometry.ScrollExtent);
-        Assert.Equal(60, visibility.Geometry.PaintExtent);
+        Assert.Equal(80, visibility.Geometry!.ScrollExtent);
+        Assert.Equal(60, visibility.Geometry!.PaintExtent);
         Assert.Equal(0, box.PaintCount);
         Assert.False(visibility.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
         int semanticsVisits = 0;

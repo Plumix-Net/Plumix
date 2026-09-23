@@ -108,11 +108,11 @@ public class ViewportPortTests
         // At the zero offset the center child sits at the leading edge and the reverse sliver is
         // entirely scrolled off the leading edge.
         Assert.Equal(new Point(0, 0), viewport.PaintOffsetOf(center));
-        Assert.Equal(0.0, before.Geometry.PaintExtent);
+        Assert.Equal(0.0, before.Geometry!.PaintExtent);
 
         offset.JumpTo(-120);
         Layout(viewport, new Size(100, 200));
-        Assert.Equal(120.0, before.Geometry.PaintExtent);
+        Assert.Equal(120.0, before.Geometry!.PaintExtent);
         Assert.Equal(new Point(0, 120), viewport.PaintOffsetOf(center));
     }
 
@@ -330,7 +330,7 @@ public class ViewportPortTests
         // A reverse-growth sliver is just outside the leading edge when the offset equals its own
         // leading scroll offset, so revealing it subtracts the target extent.
         RevealedOffset revealed = viewport.GetOffsetToReveal(before, 0.0);
-        Assert.Equal(-300.0 - before.Geometry.PaintExtent, revealed.Offset);
+        Assert.Equal(-300.0 - before.Geometry!.PaintExtent, revealed.Offset);
     }
 
     [Fact]

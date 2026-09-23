@@ -58,12 +58,12 @@ public sealed class NestedScrollViewTests : IDisposable
         absorber.Layout(Constraints(), parentUsesSize: true);
 
         // The absorbed obstruction leaves the outer view's scroll and layout extents.
-        Assert.Equal(144, absorber.Geometry.ScrollExtent, precision: 6);
-        Assert.Equal(64, absorber.Geometry.LayoutExtent, precision: 6);
+        Assert.Equal(144, absorber.Geometry!.ScrollExtent, precision: 6);
+        Assert.Equal(64, absorber.Geometry!.LayoutExtent, precision: 6);
         // Everything else is the child's geometry unchanged.
-        Assert.Equal(120, absorber.Geometry.PaintExtent, precision: 6);
-        Assert.Equal(200, absorber.Geometry.MaxPaintExtent, precision: 6);
-        Assert.Equal(56, absorber.Geometry.MaxScrollObstructionExtent, precision: 6);
+        Assert.Equal(120, absorber.Geometry!.PaintExtent, precision: 6);
+        Assert.Equal(200, absorber.Geometry!.MaxPaintExtent, precision: 6);
+        Assert.Equal(56, absorber.Geometry!.MaxScrollObstructionExtent, precision: 6);
         Assert.Equal(56, handle.LayoutExtent);
         Assert.Equal(56, handle.ScrollExtent);
         Assert.Equal("SliverOverlapAbsorberHandle(56)", handle.ToString());
@@ -84,8 +84,8 @@ public sealed class NestedScrollViewTests : IDisposable
 
         absorber.Layout(Constraints(), parentUsesSize: true);
 
-        Assert.Equal(0, absorber.Geometry.ScrollExtent, precision: 6);
-        Assert.Equal(0, absorber.Geometry.LayoutExtent, precision: 6);
+        Assert.Equal(0, absorber.Geometry!.ScrollExtent, precision: 6);
+        Assert.Equal(0, absorber.Geometry!.LayoutExtent, precision: 6);
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
         absorber.Layout(Constraints(), parentUsesSize: true);
 
-        Assert.Equal(new SliverGeometry(), absorber.Geometry);
+        Assert.Same(SliverGeometry.Zero, absorber.Geometry);
         Assert.Null(handle.LayoutExtent);
     }
 
@@ -175,20 +175,20 @@ public sealed class NestedScrollViewTests : IDisposable
         Attach(injector);
         injector.Layout(Constraints(), parentUsesSize: true);
 
-        Assert.Equal(56, injector.Geometry.ScrollExtent, precision: 6);
-        Assert.Equal(56, injector.Geometry.PaintExtent, precision: 6);
-        Assert.Equal(56, injector.Geometry.LayoutExtent, precision: 6);
-        Assert.Equal(56, injector.Geometry.MaxPaintExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.ScrollExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.PaintExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.LayoutExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.MaxPaintExtent, precision: 6);
 
         // Scrolled halfway through, the injected gap keeps its scroll extent but lays out less.
         injector.Layout(Constraints(scrollOffset: 20), parentUsesSize: true);
-        Assert.Equal(56, injector.Geometry.ScrollExtent, precision: 6);
-        Assert.Equal(56, injector.Geometry.PaintExtent, precision: 6);
-        Assert.Equal(36, injector.Geometry.LayoutExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.ScrollExtent, precision: 6);
+        Assert.Equal(56, injector.Geometry!.PaintExtent, precision: 6);
+        Assert.Equal(36, injector.Geometry!.LayoutExtent, precision: 6);
 
         // Scrolled past, the layout extent clamps at zero.
         injector.Layout(Constraints(scrollOffset: 80), parentUsesSize: true);
-        Assert.Equal(0, injector.Geometry.LayoutExtent, precision: 6);
+        Assert.Equal(0, injector.Geometry!.LayoutExtent, precision: 6);
     }
 
     [Fact]
@@ -209,9 +209,9 @@ public sealed class NestedScrollViewTests : IDisposable
         Attach(injector);
         injector.Layout(Constraints(remainingPaintExtent: 30), parentUsesSize: true);
 
-        Assert.Equal(30, injector.Geometry.PaintExtent, precision: 6);
-        Assert.Equal(30, injector.Geometry.LayoutExtent, precision: 6);
-        Assert.Equal(100, injector.Geometry.ScrollExtent, precision: 6);
+        Assert.Equal(30, injector.Geometry!.PaintExtent, precision: 6);
+        Assert.Equal(30, injector.Geometry!.LayoutExtent, precision: 6);
+        Assert.Equal(100, injector.Geometry!.ScrollExtent, precision: 6);
     }
 
     [Fact]

@@ -130,13 +130,13 @@ public sealed class DecoratedPinnedSliverTests
         header.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(60, header.ChildExtent);
-        Assert.Equal(60, header.Geometry.ScrollExtent);
-        Assert.Equal(0, header.Geometry.LayoutExtent);
-        Assert.Equal(60, header.Geometry.PaintExtent);
-        Assert.Equal(12, header.Geometry.PaintOrigin);
-        Assert.Equal(60, header.Geometry.MaxPaintExtent);
-        Assert.Equal(60, header.Geometry.MaxScrollObstructionExtent);
-        Assert.True(header.Geometry.HasVisualOverflow);
+        Assert.Equal(60, header.Geometry!.ScrollExtent);
+        Assert.Equal(0, header.Geometry!.LayoutExtent);
+        Assert.Equal(60, header.Geometry!.PaintExtent);
+        Assert.Equal(12, header.Geometry!.PaintOrigin);
+        Assert.Equal(60, header.Geometry!.MaxPaintExtent);
+        Assert.Equal(60, header.Geometry!.MaxScrollObstructionExtent);
+        Assert.True(header.Geometry!.HasVisualOverflow);
         Assert.Equal(default, ((SliverPhysicalParentData)child.parentData!).PaintOffset);
     }
 
@@ -153,15 +153,15 @@ public sealed class DecoratedPinnedSliverTests
             ViewportMainAxisExtent: 200,
             RemainingCacheExtent: 200);
         header.Layout(constraints, parentUsesSize: true);
-        Assert.Equal(60, header.Geometry.ScrollExtent);
-        Assert.Equal(40, header.Geometry.LayoutExtent);
+        Assert.Equal(60, header.Geometry!.ScrollExtent);
+        Assert.Equal(40, header.Geometry!.LayoutExtent);
 
         child.UpdateSize(new Size(100, 90));
         header.Layout(constraints, parentUsesSize: true);
 
-        Assert.Equal(90, header.Geometry.ScrollExtent);
-        Assert.Equal(70, header.Geometry.LayoutExtent);
-        Assert.Equal(90, header.Geometry.MaxScrollObstructionExtent);
+        Assert.Equal(90, header.Geometry!.ScrollExtent);
+        Assert.Equal(70, header.Geometry!.LayoutExtent);
+        Assert.Equal(90, header.Geometry!.MaxScrollObstructionExtent);
     }
 
     [Fact]
@@ -181,8 +181,8 @@ public sealed class DecoratedPinnedSliverTests
             AxisDirection: AxisDirection.Right), parentUsesSize: true);
 
         Assert.Equal(70, header.ChildExtent);
-        Assert.Equal(45, header.Geometry.LayoutExtent);
-        Assert.Equal(70, header.Geometry.PaintExtent);
+        Assert.Equal(45, header.Geometry!.LayoutExtent);
+        Assert.Equal(70, header.Geometry!.PaintExtent);
         Assert.Equal(new Size(70, 40), header.Child!.Size);
     }
 
@@ -204,8 +204,8 @@ public sealed class DecoratedPinnedSliverTests
 
         pipeline.FlushLayout(new Size(100, 200));
 
-        Assert.Equal(0, header.Geometry.LayoutExtent);
-        Assert.Equal(60, header.Geometry.PaintExtent);
+        Assert.Equal(0, header.Geometry!.LayoutExtent);
+        Assert.Equal(60, header.Geometry!.PaintExtent);
         Assert.Equal(60, body.Constraints.Overlap);
         Assert.Equal(new Point(0, 0), ((SliverPhysicalParentData)body.parentData!).PaintOffset);
         Assert.Equal(new Point(0, -20), ((SliverPhysicalParentData)bodyBox.parentData!).PaintOffset);

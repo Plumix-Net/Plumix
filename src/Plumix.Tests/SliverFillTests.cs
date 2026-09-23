@@ -71,8 +71,8 @@ public sealed class SliverFillTests
             viewportMainAxisExtent: 200,
             remainingCacheExtent: 200), parentUsesSize: true);
 
-        Assert.Equal(600, sliver.Geometry.ScrollExtent);
-        Assert.Equal(200, sliver.Geometry.PaintExtent);
+        Assert.Equal(600, sliver.Geometry!.ScrollExtent);
+        Assert.Equal(200, sliver.Geometry!.PaintExtent);
         Assert.Equal(100, sliver.ItemExtent);
         Assert.Equal([0, 1], ActiveIndices(sliver));
         Assert.All(ActiveChildren(sliver), child => Assert.Equal(new Size(100, 100), child.Size));
@@ -121,7 +121,7 @@ public sealed class SliverFillTests
             remainingPaintExtent: 200,
             viewportMainAxisExtent: 200), parentUsesSize: true);
 
-        Assert.Equal(300, vertical.Geometry.ScrollExtent);
+        Assert.Equal(300, vertical.Geometry!.ScrollExtent);
         Assert.Equal(new Point(0, 50), ((SliverPhysicalParentData)verticalChild.parentData!).PaintOffset);
 
         var horizontalChild = new RecordingSliver(scrollExtent: 120);
@@ -132,7 +132,7 @@ public sealed class SliverFillTests
             remainingPaintExtent: 300,
             viewportMainAxisExtent: 300), parentUsesSize: true);
 
-        Assert.Equal(180, horizontal.Geometry.ScrollExtent);
+        Assert.Equal(180, horizontal.Geometry!.ScrollExtent);
         Assert.Equal(new Point(30, 0), ((SliverPhysicalParentData)horizontalChild.parentData!).PaintOffset);
     }
 
@@ -166,8 +166,8 @@ public sealed class SliverFillTests
             remainingCacheExtent: 150), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 150), smallChild.Size);
-        Assert.Equal(150, small.Geometry.ScrollExtent);
-        Assert.Equal(150, small.Geometry.PaintExtent);
+        Assert.Equal(150, small.Geometry!.ScrollExtent);
+        Assert.Equal(150, small.Geometry!.PaintExtent);
 
         var largeChild = new NaturalSizeBox(new Size(100, 240));
         var large = new RenderSliverFillRemaining(largeChild);
@@ -178,9 +178,9 @@ public sealed class SliverFillTests
             remainingCacheExtent: 150), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 240), largeChild.Size);
-        Assert.Equal(240, large.Geometry.ScrollExtent);
-        Assert.Equal(150, large.Geometry.PaintExtent);
-        Assert.True(large.Geometry.HasVisualOverflow);
+        Assert.Equal(240, large.Geometry!.ScrollExtent);
+        Assert.Equal(150, large.Geometry!.PaintExtent);
+        Assert.True(large.Geometry!.HasVisualOverflow);
     }
 
     [Fact]
@@ -195,7 +195,7 @@ public sealed class SliverFillTests
             remainingCacheExtent: 100), parentUsesSize: true);
 
         Assert.Equal(64, child.Size.Height);
-        Assert.Equal(64, sliver.Geometry.ScrollExtent);
+        Assert.Equal(64, sliver.Geometry!.ScrollExtent);
     }
 
     [Fact]
@@ -210,10 +210,10 @@ public sealed class SliverFillTests
             remainingCacheExtent: 200), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 140), child.Size);
-        Assert.Equal(200, sliver.Geometry.ScrollExtent);
-        Assert.Equal(120, sliver.Geometry.PaintExtent);
-        Assert.Equal(120, sliver.Geometry.LayoutExtent);
-        Assert.True(sliver.Geometry.HasVisualOverflow);
+        Assert.Equal(200, sliver.Geometry!.ScrollExtent);
+        Assert.Equal(120, sliver.Geometry!.PaintExtent);
+        Assert.Equal(120, sliver.Geometry!.LayoutExtent);
+        Assert.True(sliver.Geometry!.HasVisualOverflow);
     }
 
     [Fact]
@@ -229,8 +229,8 @@ public sealed class SliverFillTests
             remainingCacheExtent: 120), parentUsesSize: true);
 
         Assert.Equal(120, child.Size.Height);
-        Assert.Equal(0, sliver.Geometry.PaintExtent);
-        Assert.Equal(120, sliver.Geometry.CacheExtent);
+        Assert.Equal(0, sliver.Geometry!.PaintExtent);
+        Assert.Equal(120, sliver.Geometry!.CacheExtent);
     }
 
     [Fact]
@@ -246,10 +246,10 @@ public sealed class SliverFillTests
             remainingCacheExtent: 180), parentUsesSize: true);
 
         Assert.Equal(new Size(100, 220), child.Size);
-        Assert.Equal(150, sliver.Geometry.ScrollExtent);
-        Assert.Equal(180, sliver.Geometry.PaintExtent);
-        Assert.Equal(180, sliver.Geometry.LayoutExtent);
-        Assert.Equal(220, sliver.Geometry.MaxPaintExtent);
+        Assert.Equal(150, sliver.Geometry!.ScrollExtent);
+        Assert.Equal(180, sliver.Geometry!.PaintExtent);
+        Assert.Equal(180, sliver.Geometry!.LayoutExtent);
+        Assert.Equal(220, sliver.Geometry!.MaxPaintExtent);
     }
 
     [Fact]

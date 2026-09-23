@@ -218,7 +218,7 @@ internal sealed class RenderSliverLayoutBuilder : RenderProxySliver, IRenderObje
 
         if (Child == null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 

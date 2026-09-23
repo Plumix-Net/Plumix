@@ -471,7 +471,7 @@ public sealed class ScrollPipelineTests
         Assert.NotNull(viewport.Center);
         Assert.NotSame(reverseChild, viewport.Center);
         Assert.Equal(GrowthDirection.Reverse, reverseChild.Constraints.GrowthDirection);
-        Assert.Equal(150.0, reverseChild.Geometry.PaintExtent);
+        Assert.Equal(150.0, reverseChild.Geometry!.PaintExtent);
     }
 
     [Fact]
@@ -694,7 +694,7 @@ public sealed class ScrollPipelineTests
 
         // Dart's `estimateMaxScrollOffset` extrapolates from the average extent of the laid-out
         // children (100 over three children, one child left) rather than summing every extent.
-        Assert.Equal(400.0 / 3, sliver.Geometry.ScrollExtent, 9);
+        Assert.Equal(400.0 / 3, sliver.Geometry!.ScrollExtent, 9);
         Assert.Equal([0, 1, 2], ActiveIndices(sliver));
         Assert.Equal([30, 50, 20], ActiveChildren(sliver).Select(child => child.Size.Height));
         Assert.Equal([0, 30, 80], ActiveChildren(sliver).Select(
@@ -762,7 +762,7 @@ public sealed class ScrollPipelineTests
         sliver.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(new Size(100, 60), prototype.Size);
-        Assert.Equal(240, sliver.Geometry.ScrollExtent);
+        Assert.Equal(240, sliver.Geometry!.ScrollExtent);
         Assert.Equal([0, 1], ActiveIndices(sliver));
         Assert.All(ActiveChildren(sliver), child => Assert.Equal(new Size(100, 60), child.Size));
 
@@ -777,7 +777,7 @@ public sealed class ScrollPipelineTests
 
         sliver.PrototypeChild = new FixedSizeBox(new Size(40, 40));
         sliver.Layout(constraints, parentUsesSize: true);
-        Assert.Equal(160, sliver.Geometry.ScrollExtent);
+        Assert.Equal(160, sliver.Geometry!.ScrollExtent);
         Assert.All(ActiveChildren(sliver), child => Assert.Equal(40, child.Size.Height));
     }
 
@@ -804,7 +804,7 @@ public sealed class ScrollPipelineTests
             FindRenderObject<RenderSliverPrototypeExtentList>(harness.RenderView));
         Assert.NotNull(sliver.PrototypeChild);
         Assert.Equal(new Size(100, 55), sliver.PrototypeChild!.Size);
-        Assert.Equal(275, sliver.Geometry.ScrollExtent);
+        Assert.Equal(275, sliver.Geometry!.ScrollExtent);
         Assert.Equal([0, 1, 2], ActiveIndices(sliver));
         Assert.Equal(3, sliver.ChildCount);
     }

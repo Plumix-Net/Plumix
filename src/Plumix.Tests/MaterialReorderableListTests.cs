@@ -620,7 +620,7 @@ public sealed class MaterialReorderableListTests
         }
 
         Assert.Equal([30, 50, 70], heights);
-        Assert.Equal(150, sliver.Geometry.ScrollExtent);
+        Assert.Equal(150, sliver.Geometry!.ScrollExtent);
     }
 
     [Fact]
@@ -650,7 +650,7 @@ public sealed class MaterialReorderableListTests
         }
 
         Assert.Equal([44, 44, 44], heights);
-        Assert.Equal(176, sliver.Geometry.ScrollExtent);
+        Assert.Equal(176, sliver.Geometry!.ScrollExtent);
         Assert.Equal(new Size(200, 44), sliver.PrototypeChild!.Size);
     }
 

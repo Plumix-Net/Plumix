@@ -185,13 +185,13 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     protected override void DebugAssertDoesMeetConstraints()
     {
         base.DebugAssertDoesMeetConstraints();
-        if (!Constants.KDebugMode || ItemExtentBuilder is not null || !double.IsFinite(Geometry.ScrollExtent))
+        if (!Constants.KDebugMode || ItemExtentBuilder is not null || !double.IsFinite(Geometry!.ScrollExtent))
         {
             return;
         }
 
         double itemExtent = ItemExtent ?? 0;
-        double scrollExtent = Geometry.ScrollExtent;
+        double scrollExtent = Geometry!.ScrollExtent;
         double count = scrollExtent / itemExtent;
         double diff = Math.Abs(Math.Round(count, MidpointRounding.AwayFromZero) - count);
         if (diff * itemExtent <= Constants.PrecisionErrorTolerance || diff <= Constants.PrecisionErrorTolerance)
@@ -219,7 +219,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         IRenderSliverBoxChildManager? childManager = ChildManager;
         if (childManager is null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 

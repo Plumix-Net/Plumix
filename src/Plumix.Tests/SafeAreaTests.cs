@@ -139,8 +139,8 @@ public sealed class SafeAreaTests
             RemainingCacheExtent: 120);
         outerPadding.Layout(constraints, parentUsesSize: true);
 
-        Assert.Equal(110, outerPadding.Geometry.ScrollExtent);
-        Assert.Equal(110, outerPadding.Geometry.PaintExtent);
+        Assert.Equal(110, outerPadding.Geometry!.ScrollExtent);
+        Assert.Equal(110, outerPadding.Geometry!.PaintExtent);
         Assert.NotNull(outerPadding.Child);
         Assert.Equal(60, outerPadding.Child!.Constraints.CrossAxisExtent);
     }

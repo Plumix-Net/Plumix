@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: SliverGeometry uses identity and nullable pre-layout geometry (rendering/sliver.dart).
 - Feedback sends platform sound/haptics and semantics events before wrapped callbacks (widgets/feedback.dart).
 - Repaint boundaries reject replacing their framework-owned layer in debug builds (rendering/object.dart).
 - Breaking: Alignment geometry matches Flutter arithmetic, interpolation and direction checks (alignment.dart).

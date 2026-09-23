@@ -73,7 +73,7 @@ public sealed class RenderDecoratedSliver : RenderProxySliver
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        if (Child == null || !Geometry.Visible)
+        if (Child == null || !Geometry!.Visible)
         {
             return;
         }

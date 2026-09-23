@@ -52,8 +52,8 @@ public sealed class LayoutBuilderTests
         Assert.Equal(constraints, receivedConstraints);
         Assert.NotNull(renderObject.Child);
         Assert.Equal(renderObject.Child!.Geometry, renderObject.Geometry);
-        Assert.Equal(140, renderObject.Geometry.ScrollExtent);
-        Assert.Equal(80, renderObject.Geometry.PaintExtent);
+        Assert.Equal(140, renderObject.Geometry!.ScrollExtent);
+        Assert.Equal(80, renderObject.Geometry!.PaintExtent);
         Assert.Equal(new Rect(0, 0, 100, 80), renderObject.PaintBounds);
     }
 
@@ -88,7 +88,7 @@ public sealed class LayoutBuilderTests
         var secondConstraints = firstConstraints with { RemainingPaintExtent = 120 };
         renderObject.Layout(secondConstraints, parentUsesSize: true);
         Assert.Equal(2, builderCalls);
-        Assert.Equal(120, renderObject.Geometry.ScrollExtent);
+        Assert.Equal(120, renderObject.Geometry!.ScrollExtent);
     }
 
     [Fact]
@@ -128,7 +128,7 @@ public sealed class LayoutBuilderTests
 
         Assert.Equal(1, firstBuilderCalls);
         Assert.Equal(1, secondBuilderCalls);
-        Assert.Equal(40, renderObject.Geometry.ScrollExtent);
+        Assert.Equal(40, renderObject.Geometry!.ScrollExtent);
     }
 
     [Fact]

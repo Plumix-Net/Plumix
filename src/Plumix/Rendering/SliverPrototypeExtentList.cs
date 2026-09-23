@@ -84,7 +84,7 @@ public class RenderSliverPrototypeExtentList : RenderSliverFixedExtentBoxAdaptor
         SliverConstraints constraints = Constraints;
         if (_prototypeChild is null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 

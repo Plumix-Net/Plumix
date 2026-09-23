@@ -171,20 +171,17 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
 
         if (_child == null)
         {
-            Geometry = new SliverGeometry();
+            Geometry = SliverGeometry.Zero;
             return;
         }
 
         _child.Layout(constraints, parentUsesSize: true);
-        SliverGeometry childLayoutGeometry = _child.Geometry;
-        Geometry = childLayoutGeometry with
-        {
-            ScrollExtent = childLayoutGeometry.ScrollExtent
-                           - childLayoutGeometry.MaxScrollObstructionExtent,
-            LayoutExtent = Math.Max(
+        SliverGeometry childLayoutGeometry = _child.Geometry!;
+        Geometry = childLayoutGeometry.CopyWith(
+            scrollExtent: childLayoutGeometry.ScrollExtent - childLayoutGeometry.MaxScrollObstructionExtent,
+            layoutExtent: Math.Max(
                 0.0,
-                childLayoutGeometry.PaintExtent - childLayoutGeometry.MaxScrollObstructionExtent),
-        };
+                childLayoutGeometry.PaintExtent - childLayoutGeometry.MaxScrollObstructionExtent));
         Handle.SetExtents(
             childLayoutGeometry.MaxScrollObstructionExtent,
             childLayoutGeometry.MaxScrollObstructionExtent);
@@ -326,7 +323,7 @@ public class RenderSliverOverlapInjector : RenderSliver
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaint(context, offset);
-        if (!RenderingDebug.PaintSizeEnabled || !HasSliverConstraints)
+        if (!RenderingDebug.PaintSizeEnabled || Geometry is null)
         {
             return;
         }
@@ -340,14 +337,14 @@ public class RenderSliverOverlapInjector : RenderSliver
         {
             double x = offset.X + (constraints.CrossAxisExtent / 2.0);
             start = new Point(x, offset.Y);
-            end = new Point(x, offset.Y + Geometry.PaintExtent);
+            end = new Point(x, offset.Y + Geometry!.PaintExtent);
             delta = new Point(constraints.CrossAxisExtent / 5.0, 0.0);
         }
         else
         {
             double y = offset.Y + (constraints.CrossAxisExtent / 2.0);
             start = new Point(offset.X, y);
-            end = new Point(offset.Y + Geometry.PaintExtent, y);
+            end = new Point(offset.Y + Geometry!.PaintExtent, y);
             delta = new Point(0.0, constraints.CrossAxisExtent / 5.0);
         }
 

@@ -137,7 +137,7 @@ public sealed class SliverChildManagerTests
                 lastIndex: 1,
                 leadingScrollOffset: 0.0,
                 trailingScrollOffset: 400.0));
-        Assert.Equal(double.PositiveInfinity, sliver.Geometry.ScrollExtent);
+        Assert.Equal(double.PositiveInfinity, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>
@@ -307,7 +307,7 @@ public sealed class SliverChildManagerTests
 
         var sliver = Assert.IsType<RenderSliverFixedExtentList>(
             FindRenderObject<RenderSliverFixedExtentList>(harness.RenderView));
-        Assert.Equal(4242.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(4242.0, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>
@@ -337,7 +337,7 @@ public sealed class SliverChildManagerTests
         var sliver = Assert.IsType<RenderSliverGrid>(FindRenderObject<RenderSliverGrid>(harness.RenderView));
 
         // 50 rows of stride 50, less the trailing 10 px of main-axis spacing.
-        Assert.Equal(2490.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(2490.0, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>
@@ -368,15 +368,15 @@ public sealed class SliverChildManagerTests
         harness.Pump(viewportSize);
 
         var sliver = Assert.IsType<RenderSliverList>(FindRenderObject<RenderSliverList>(harness.RenderView));
-        Assert.Equal(100.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(100.0, sliver.Geometry!.ScrollExtent);
 
         setState!(() => childCount = 3);
         harness.Pump(viewportSize);
-        Assert.Equal(300.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(300.0, sliver.Geometry!.ScrollExtent);
 
         setState(() => childCount = 0);
         harness.Pump(viewportSize);
-        Assert.Equal(0.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(0.0, sliver.Geometry!.ScrollExtent);
     }
 
 
@@ -483,7 +483,7 @@ public sealed class SliverChildManagerTests
 
         Assert.Null(manager.EstimatedChildCount);
         Assert.Equal(4, manager.ChildCount);
-        Assert.Equal(400.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(400.0, sliver.Geometry!.ScrollExtent);
 
         // The probe doubles past the end before bisecting, so it asks for indices beyond the list.
         Assert.Contains(probed, index => index > 4);
@@ -619,7 +619,7 @@ public sealed class SliverChildManagerTests
 
         Assert.Equal([0, 1], ActiveIndices(sliver));
         Assert.Equal([0.0, 100.0], ActiveLayoutOffsets(sliver));
-        Assert.Equal(200.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(200.0, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>
@@ -707,7 +707,7 @@ public sealed class SliverChildManagerTests
 
         Assert.Equal(0, sliver.IndexOf(sliver.FirstChild!));
         Assert.Equal(0.0, ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).LayoutOffset);
-        Assert.Equal(300.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(300.0, sliver.Geometry!.ScrollExtent);
     }
 
     /// <remarks>
@@ -737,7 +737,7 @@ public sealed class SliverChildManagerTests
         sliver.MarkNeedsLayout();
         pipeline.FlushLayout(new Size(100, 300));
 
-        Assert.Null(sliver.Geometry.ScrollOffsetCorrection);
+        Assert.Null(sliver.Geometry!.ScrollOffsetCorrection);
     }
 
     /// <remarks>

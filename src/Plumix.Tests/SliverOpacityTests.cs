@@ -77,8 +77,8 @@ public sealed class SliverOpacityTests : IDisposable
         opacity.Layout(constraints, parentUsesSize: true);
 
         Assert.Equal(child.Geometry, opacity.Geometry);
-        Assert.Equal(80, opacity.Geometry.ScrollExtent);
-        Assert.Equal(60, opacity.Geometry.PaintExtent);
+        Assert.Equal(80, opacity.Geometry!.ScrollExtent);
+        Assert.Equal(60, opacity.Geometry!.PaintExtent);
         Assert.True(opacity.HitTest(new SliverHitTestResult(), mainAxisPosition: 10, crossAxisPosition: 10));
 
         int semanticsVisits = 0;

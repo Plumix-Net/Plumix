@@ -52,7 +52,7 @@ public sealed class RenderSliverConstrainedCrossAxis : RenderProxySliver
         double crossAxisExtent = Math.Min(MaxExtent, constraints.CrossAxisExtent);
         Child.Layout(constraints with { CrossAxisExtent = crossAxisExtent }, parentUsesSize: true);
         ((SliverPhysicalParentData)Child.parentData!).PaintOffset = default;
-        Geometry = Child.Geometry with { CrossAxisExtent = crossAxisExtent };
+        Geometry = Child.Geometry!.CopyWith(crossAxisExtent: crossAxisExtent);
     }
 }
 
@@ -147,7 +147,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
             {
                 EnsureExtentAvailable(remainingExtent);
                 child.Layout(constraints with { CrossAxisExtent = remainingExtent }, parentUsesSize: true);
-                double childCrossAxisExtent = child.Geometry.CrossAxisExtent
+                double childCrossAxisExtent = child.Geometry!.CrossAxisExtent
                     ?? throw new InvalidOperationException(
                         "A non-flex SliverCrossAxisGroup child must provide CrossAxisExtent geometry.");
                 remainingExtent = Math.Max(0.0, remainingExtent - childCrossAxisExtent);
@@ -159,7 +159,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
         }
 
         double extentPerFlexValue = totalFlex == 0 ? 0.0 : remainingExtent / totalFlex;
-        Geometry = default;
+        Geometry = SliverGeometry.Zero;
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var parentData = (SliverPhysicalParentData)child.parentData!;
@@ -171,7 +171,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
                 child.Layout(constraints with { CrossAxisExtent = childExtent }, parentUsesSize: true);
             }
 
-            if (Geometry.ScrollExtent < child.Geometry.ScrollExtent)
+            if (Geometry!.ScrollExtent < child.Geometry!.ScrollExtent)
             {
                 Geometry = child.Geometry;
             }
@@ -181,8 +181,8 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            SliverGeometry childGeometry = child.Geometry;
-            double remainingScrollExtent = Geometry.ScrollExtent - constraints.ScrollOffset;
+            SliverGeometry childGeometry = child.Geometry!;
+            double remainingScrollExtent = Geometry!.ScrollExtent - constraints.ScrollOffset;
             double paintCorrection = childGeometry.PaintExtent > remainingScrollExtent
                 ? childGeometry.PaintExtent - remainingScrollExtent
                 : 0.0;
@@ -199,7 +199,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver,
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            if (!child.Geometry.Visible)
+            if (!child.Geometry!.Visible)
             {
                 continue;
             }
@@ -357,7 +357,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
                 PrecedingScrollExtent = scrollOffset + constraints.PrecedingScrollExtent,
             }, parentUsesSize: true);
 
-            SliverGeometry childGeometry = child.Geometry;
+            SliverGeometry childGeometry = child.Geometry!;
             if (childGeometry.ScrollOffsetCorrection is double correction)
             {
                 Geometry = new SliverGeometry(ScrollOffsetCorrection: correction);
@@ -396,7 +396,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
             paintOffset = remainingExtent;
             for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
             {
-                SliverGeometry childGeometry = child.Geometry;
+                SliverGeometry childGeometry = child.Geometry!;
                 var parentData = (SliverPhysicalParentData)child.parentData!;
                 double childMainAxisPaintOffset = constraints.Axis == Axis.Vertical
                     ? parentData.PaintOffset.Y
@@ -436,9 +436,9 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
             {
                 AxisDirection.Up => new Point(
                     0.0,
-                    paintExtent - parentData.PaintOffset.Y - child.Geometry.PaintExtent),
+                    paintExtent - parentData.PaintOffset.Y - child.Geometry!.PaintExtent),
                 AxisDirection.Left => new Point(
-                    paintExtent - parentData.PaintOffset.X - child.Geometry.PaintExtent,
+                    paintExtent - parentData.PaintOffset.X - child.Geometry!.PaintExtent,
                     0.0),
                 _ => parentData.PaintOffset,
             };
@@ -449,7 +449,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
     {
         for (RenderSliver? child = LastChild; child != null; child = ChildBefore(child))
         {
-            if (!child.Geometry.Visible)
+            if (!child.Geometry!.Visible)
             {
                 continue;
             }
@@ -490,7 +490,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            if (!child.Geometry.Visible && child.Geometry.CacheExtent <= 0.0)
+            if (!child.Geometry!.Visible && child.Geometry!.CacheExtent <= 0.0)
             {
                 continue;
             }
@@ -511,8 +511,8 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
         {
             AxisDirection.Down => paintOffset.Y,
             AxisDirection.Right => paintOffset.X,
-            AxisDirection.Up => Geometry.PaintExtent - sliver.Geometry.PaintExtent - paintOffset.Y,
-            AxisDirection.Left => Geometry.PaintExtent - sliver.Geometry.PaintExtent - paintOffset.X,
+            AxisDirection.Up => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.Y,
+            AxisDirection.Left => Geometry!.PaintExtent - sliver.Geometry!.PaintExtent - paintOffset.X,
             _ => paintOffset.Y,
         };
     }
@@ -536,14 +536,14 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
         {
             for (RenderSliver? current = ChildBefore(child); current != null; current = ChildBefore(current))
             {
-                offset += current.Geometry.ScrollExtent;
+                offset += current.Geometry!.ScrollExtent;
             }
         }
         else
         {
             for (RenderSliver? current = ChildAfter(child); current != null; current = ChildAfter(current))
             {
-                offset -= current.Geometry.ScrollExtent;
+                offset -= current.Geometry!.ScrollExtent;
             }
         }
 
@@ -559,7 +559,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
                  current != null && !ReferenceEquals(current, child);
                  current = ChildAfter(current))
             {
-                pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                pinnedExtent += current.Geometry!.MaxScrollObstructionExtent;
             }
         }
         else
@@ -568,7 +568,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver,
                  current != null && !ReferenceEquals(current, child);
                  current = ChildBefore(current))
             {
-                pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                pinnedExtent += current.Geometry!.MaxScrollObstructionExtent;
             }
         }
 

@@ -14,7 +14,8 @@ public sealed class SliverGeometryTests
     {
         var zero = new SliverGeometry();
 
-        Assert.Equal(SliverGeometry.Zero, zero);
+        Assert.NotSame(SliverGeometry.Zero, zero);
+        Assert.NotEqual(SliverGeometry.Zero, zero);
         Assert.Equal(0.0, zero.ScrollExtent);
         Assert.Equal(0.0, zero.PaintExtent);
         Assert.Equal(0.0, zero.LayoutExtent);
@@ -56,6 +57,18 @@ public sealed class SliverGeometryTests
     }
 
     [Fact]
+    public void RenderSliver_GeometryIsNullUntilLayout()
+    {
+        var sliver = new HitTestSliver(new SliverGeometry());
+
+        Assert.Null(sliver.Geometry);
+
+        sliver.Layout(Constraints(), parentUsesSize: true);
+
+        Assert.NotNull(sliver.Geometry);
+    }
+
+    [Fact]
     public void CopyWith_PreservesDerivedFieldsAndDropsScrollOffsetCorrection()
     {
         var source = new SliverGeometry(
@@ -69,6 +82,7 @@ public sealed class SliverGeometryTests
 
         SliverGeometry copy = source.CopyWith(paintExtent: 6.0);
 
+        Assert.NotSame(source, copy);
         Assert.Equal(6.0, copy.PaintExtent);
         Assert.Equal(8.0, copy.LayoutExtent);
         Assert.Equal(12.0, copy.HitTestExtent);
@@ -166,7 +180,7 @@ public sealed class SliverGeometryTests
 
         padding.Layout(Constraints(), parentUsesSize: true);
 
-        Assert.Equal(29.0, padding.Geometry.HitTestExtent);
+        Assert.Equal(29.0, padding.Geometry!.HitTestExtent);
     }
 
     [Fact]

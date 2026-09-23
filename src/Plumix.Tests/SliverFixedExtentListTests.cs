@@ -216,7 +216,7 @@ public sealed class SliverFixedExtentListTests
 
         pipeline.FlushLayout(new Size(800, 600));
 
-        Assert.Equal(200.0000000000001, sliver.Geometry.ScrollExtent);
+        Assert.Equal(200.0000000000001, sliver.Geometry!.ScrollExtent);
     }
 
     [DebugOnlyFact]
@@ -272,7 +272,7 @@ public sealed class SliverFixedExtentListTests
         Assert.Equal([100.0, 150.0, 200.0], Children(sliver).Select(child => child.Size.Height));
         Assert.Equal([0.0, 100.0, 250.0], Children(sliver).Select(
             child => ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset));
-        Assert.Equal(450.0, sliver.Geometry.ScrollExtent);
+        Assert.Equal(450.0, sliver.Geometry!.ScrollExtent);
         Assert.Equal(150.0, sliver.PaintExtentOf(sliver.ChildAfter(sliver.FirstChild!)!));
 
         ItemExtentBuilder replacement = (_, _) => 60.0;
@@ -342,7 +342,7 @@ public sealed class SliverFixedExtentListTests
         {
             SliverConstraints constraints = Constraints;
             base.PerformLayout();
-            Geometry = Geometry with { ScrollExtent = _totalExtent, MaxPaintExtent = _totalExtent };
+            Geometry = Geometry!.CopyWith(scrollExtent: _totalExtent, maxPaintExtent: _totalExtent);
         }
     }
 

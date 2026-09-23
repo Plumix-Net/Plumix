@@ -157,7 +157,7 @@ public sealed class IntrinsicQueryParityTests
 
         Assert.Equal(1, fillChild.MaxHeightCount);
         Assert.Equal(1, fillChild.LayoutCount);
-        Assert.Equal(240.0, fill.Geometry.ScrollExtent);
+        Assert.Equal(240.0, fill.Geometry!.ScrollExtent);
 
         var headerChild = new QueryRenderBox(new Size(100, 300), baseline: null);
         var header = new RenderSliverResizingHeader { Child = headerChild };
@@ -165,7 +165,7 @@ public sealed class IntrinsicQueryParityTests
 
         Assert.Equal(1, headerChild.DryLayoutCount);
         Assert.Equal(1, headerChild.LayoutCount);
-        Assert.Equal(300.0, header.Geometry.ScrollExtent);
+        Assert.Equal(300.0, header.Geometry!.ScrollExtent);
 
         var overflowChild = new QueryRenderBox(new Size(200, 40), baseline: null);
         var overflow = new RenderFloatingActionButtonChildOverflowBox { Child = overflowChild };
