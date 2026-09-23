@@ -336,6 +336,7 @@ internal sealed class RestorationHarness : IDisposable
         _pipeline.FlushLayout(size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.CompositeFrame();
 
         // Flutter's `WidgetsBinding.drawFrame` finalizes the tree after the render phase, so the
         // children a sliver dropped during layout are unmounted before post-frame callbacks run.

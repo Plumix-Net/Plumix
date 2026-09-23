@@ -302,6 +302,7 @@ public sealed class FilterWidgetsTests
         renderObject.ColorFilter = updatedFilter;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(updatedFilter, layer.ColorFilter);
@@ -329,6 +330,7 @@ public sealed class FilterWidgetsTests
         renderObject.ImageFilter = updatedFilter;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(updatedFilter, layer.ImageFilter);
@@ -356,6 +358,7 @@ public sealed class FilterWidgetsTests
         renderObject.Enabled = true;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(renderObject.IsRepaintBoundary);
         Assert.IsType<ImageFilterLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -364,6 +367,7 @@ public sealed class FilterWidgetsTests
         renderObject.Enabled = false;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.False(renderObject.IsRepaintBoundary);
         Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -404,6 +408,7 @@ public sealed class FilterWidgetsTests
         renderObject.BlendMode = BlendMode.Screen;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Same(layer, Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(BlendMode.Screen, layer.BlendMode);
@@ -451,6 +456,7 @@ public sealed class FilterWidgetsTests
         backdrop.BlendMode = BlendMode.Source;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var updatedLayer = FindLayer<BackdropFilterLayer>(pipeline.RootLayer);
         Assert.Same(layer, updatedLayer);
@@ -461,12 +467,14 @@ public sealed class FilterWidgetsTests
         backdrop.Enabled = false;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Null(FindLayer<BackdropFilterLayer>(pipeline.RootLayer));
         Assert.Equal(3, filteredChild.PaintCount);
 
         backdrop.Enabled = true;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Same(layer, FindLayer<BackdropFilterLayer>(pipeline.RootLayer));
         Assert.Equal(4, filteredChild.PaintCount);
     }
@@ -638,6 +646,7 @@ public sealed class FilterWidgetsTests
         pipeline.FlushLayout(new Size(40.0, 30.0));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

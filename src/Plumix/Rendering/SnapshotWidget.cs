@@ -234,9 +234,15 @@ public sealed class SnapshotOffsetLayer : OffsetLayer
         _snapshot = null;
     }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
         Point sceneOffset = offset + Offset;
+        if (context == null)
+        {
+            AddChildrenToScene(null, sceneOffset);
+            return;
+        }
+
         if (!AllowSnapshotting || Size.Width <= 0.0 || Size.Height <= 0.0)
         {
             AddChildrenToScene(context, sceneOffset);

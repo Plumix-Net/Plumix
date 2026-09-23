@@ -253,6 +253,7 @@ public sealed class RawTooltipTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispatch(PointerEvent @event)
@@ -298,7 +299,7 @@ public sealed class RawTooltipTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void Update(Widget newWidget)

@@ -447,6 +447,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public IReadOnlyList<T> FindWidgets<T>() where T : Widget

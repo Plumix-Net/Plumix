@@ -1208,7 +1208,7 @@ public sealed class NavigationTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

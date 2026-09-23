@@ -183,6 +183,7 @@ public sealed class ViewConfigurationTests
             pipeline.FlushLayout();
             pipeline.FlushCompositingBits();
             pipeline.FlushPaint();
+            pipeline.CompositeFrame();
             Assert.Equal(1, calls);
         }
         finally
@@ -194,6 +195,7 @@ public sealed class ViewConfigurationTests
         pipeline.FlushLayout();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(1, calls);
     }
 

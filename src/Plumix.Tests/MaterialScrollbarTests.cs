@@ -1431,6 +1431,7 @@ public sealed class MaterialScrollbarTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void UpdateWidget(Widget widget)
@@ -1491,7 +1492,11 @@ public sealed class MaterialScrollbarTests
         public override RenderObject? RenderObject => _child?.RenderObject;
         public override Element? RenderObjectAttachingChild => _child;
         protected override void OnMount() { base.OnMount(); Rebuild(); }
-        protected override void PerformRebuild() { base.PerformRebuild(); _child = UpdateChild(_child, Widget, Slot); }
+        protected override void PerformRebuild()
+        {
+            base.PerformRebuild();
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
+        }
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);

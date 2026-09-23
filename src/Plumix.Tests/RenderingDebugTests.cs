@@ -463,10 +463,12 @@ public sealed class RenderingDebugTests : IDisposable
         pipeline.FlushLayout(new Size(40.0, 40.0));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(1, boundary.DebugSymmetricPaintCount);
 
         boundary.MarkNeedsPaint();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, boundary.DebugAsymmetricPaintCount);
     }
@@ -737,6 +739,7 @@ public sealed class RenderingDebugTests : IDisposable
         pipeline.FlushLayout(size);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private static OffsetLayer Paint(RenderBox root, Size size)
@@ -747,6 +750,7 @@ public sealed class RenderingDebugTests : IDisposable
         pipeline.FlushLayout(size);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         return pipeline.RootLayer;
     }
 

@@ -383,6 +383,7 @@ public sealed class MaterialMergeableMaterialTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose() => _rootElement.UnmountRoot();

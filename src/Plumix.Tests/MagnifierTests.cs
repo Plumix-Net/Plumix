@@ -374,6 +374,7 @@ public sealed class MagnifierTests : IDisposable
             Pipeline.FlushLayout(size);
             Pipeline.FlushCompositingBits();
             Pipeline.FlushPaint();
+            Pipeline.CompositeFrame();
         }
 
         public T FindState<T>() where T : State
@@ -412,7 +413,7 @@ public sealed class MagnifierTests : IDisposable
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
             public override void Update(Widget newWidget)
             {

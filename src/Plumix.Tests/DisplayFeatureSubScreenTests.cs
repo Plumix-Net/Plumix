@@ -137,6 +137,7 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose() => _root.UnmountRoot();

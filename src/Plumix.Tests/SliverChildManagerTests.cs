@@ -873,6 +873,7 @@ public sealed class SliverChildManagerTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         private sealed class HarnessRootElement(RenderView renderView, Widget widget) : Element(widget), IRenderObjectHost
@@ -892,7 +893,7 @@ public sealed class SliverChildManagerTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void Update(Widget newWidget)

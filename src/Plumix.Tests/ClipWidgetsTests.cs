@@ -109,6 +109,7 @@ public sealed class ClipWidgetsTests
         Assert.Equal(new Rect(0, 0, 100, 60), oval.InvokeDescribeApproximatePaintClip(child));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     [Fact]
@@ -165,6 +166,7 @@ public sealed class ClipWidgetsTests
         pipeline.FlushLayout(new Size(80, 50));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, reclip.ListenerCount);
         Assert.True(oval.HitTest(new BoxHitTestResult(), new Point(40, 25)));
@@ -200,6 +202,7 @@ public sealed class ClipWidgetsTests
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         // Dart's non-compositing branch records the clip into the picture, with no layer at all.
         Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -226,6 +229,7 @@ public sealed class ClipWidgetsTests
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var layer = Assert.IsType<ClipPathLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Point(12, 8), layer.ClipPath.GetBounds().Position);
@@ -243,6 +247,7 @@ public sealed class ClipWidgetsTests
         var pipeline = BuildPipeline(clip, new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
     }
@@ -313,6 +318,7 @@ public sealed class ClipWidgetsTests
         var pipeline = BuildPipeline(physicalShape, new Size(100.0, 60.0));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(physicalShape.HitTest(new BoxHitTestResult(), new Point(50.0, 20.0)));
         Assert.False(physicalShape.HitTest(new BoxHitTestResult(), new Point(5.0, 50.0)));

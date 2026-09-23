@@ -52,6 +52,7 @@ internal sealed class DecoratorHarness : IDisposable
         _pipeline.FlushLayout(_viewSize);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.CompositeFrame();
     }
 
     public SemanticsNode PumpSemantics()

@@ -925,6 +925,7 @@ public sealed class ProxyBoxLayoutParityTests
 
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
             if (semantics)
             {
                 _pipeline.FlushSemantics();

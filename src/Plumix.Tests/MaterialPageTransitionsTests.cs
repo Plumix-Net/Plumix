@@ -614,6 +614,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispatch(PointerEvent @event)

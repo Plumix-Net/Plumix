@@ -198,6 +198,7 @@ public sealed class ScrollPipelineTests
 
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(["second", "first"], paintOrder);
     }
@@ -1725,7 +1726,8 @@ public sealed class ScrollPipelineTests
 
         public ViewWidgetHarness(Widget rootWidget)
         {
-            _root = new RootWidget(child: rootWidget).Attach(_owner);
+            _root = new RootWidget(
+                child: new Directionality(TextDirection.Ltr, rootWidget)).Attach(_owner);
             _owner.FlushBuild();
         }
 
@@ -1738,6 +1740,7 @@ public sealed class ScrollPipelineTests
             root.FlushLayout();
             root.FlushCompositingBits();
             root.FlushPaint();
+            root.CompositeFrame();
             _owner.FinalizeTree();
         }
 
@@ -1771,6 +1774,7 @@ public sealed class ScrollPipelineTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -1796,7 +1800,7 @@ public sealed class ScrollPipelineTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void Update(Widget newWidget)

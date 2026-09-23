@@ -186,6 +186,16 @@ public class PaintingContext : ClipContext
         AppendLayer(childOffsetLayer);
     }
 
+    /// <summary>
+    /// Adds a composition callback to the current container layer, called when the layer tree it is
+    /// part of is composited or detached. Returns a callback that removes it.
+    /// </summary>
+    /// <remarks>Flutter's <c>PaintingContext.addCompositionCallback</c>.</remarks>
+    public Action AddCompositionCallback(CompositionCallback callback)
+    {
+        return _containerLayer.AddCompositionCallback(callback);
+    }
+
     /// <summary>Adds a composited leaf layer to the recording.</summary>
     /// <remarks>Flutter's <c>PaintingContext.addLayer</c>.</remarks>
     public void AddLayer(Layer layer)

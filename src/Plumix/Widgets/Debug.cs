@@ -17,6 +17,50 @@ public delegate void RebuildDirtyWidgetCallback(Element e, bool builtOnce);
 /// </summary>
 public static class WidgetsDebug
 {
+    /// <summary>Dart's debugCheckHasDirectionality.</summary>
+    public static bool DebugCheckHasDirectionality(
+        BuildContext context,
+        string? why = null,
+        string? hint = null,
+        string? alternative = null)
+    {
+        if (!Constants.KDebugMode
+            || context.Widget is Directionality
+            || context.GetElementForInheritedWidgetOfExactType<Directionality>() is not null)
+        {
+            return true;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("No Directionality widget found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a Directionality "
+                + $"widget ancestor{(why is null ? string.Empty : $" {why}")}.\n"),
+        };
+        if (hint is not null)
+        {
+            information.Add(new ErrorHint(hint));
+        }
+
+        information.Add(context.DescribeWidget(
+            "The specific widget that could not find a Directionality ancestor was"));
+        information.Add(context.DescribeOwnershipChain("The ownership chain for the affected widget is"));
+        information.Add(new ErrorHint(
+            "Typically, the Directionality widget is introduced by the MaterialApp "
+            + "or WidgetsApp widget at the top of your application widget tree. It "
+            + "determines the ambient reading direction and is used, for example, to "
+            + "determine how to lay out text, how to interpret \"start\" and \"end\" "
+            + "values, and to resolve EdgeInsetsDirectional, "
+            + "AlignmentDirectional, and other *Directional objects."));
+        if (alternative is not null)
+        {
+            information.Add(new ErrorHint(alternative));
+        }
+
+        throw new FlutterError(information);
+    }
+
     /// <summary>Dart's <c>debugPrintRebuildDirtyWidgets</c>: log every widget as it rebuilds.</summary>
     public static bool DebugPrintRebuildDirtyWidgets { get; set; }
 

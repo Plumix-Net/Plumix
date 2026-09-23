@@ -308,7 +308,7 @@ public sealed class PopScopeTests : IDisposable
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void VisitChildren(Action<Element> visitor)

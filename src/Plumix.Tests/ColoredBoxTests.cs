@@ -119,6 +119,7 @@ public sealed class ColoredBoxTests
         pipeline.FlushLayout(size);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         return pipeline.RootLayer;
     }
 

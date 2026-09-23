@@ -141,6 +141,7 @@ public sealed class PipelineOwnerTreeTests
         log.Clear();
 
         root.FlushPaint();
+        root.CompositeFrame();
         Assert.Equal(["paint parent", "paint child"], log);
     }
 

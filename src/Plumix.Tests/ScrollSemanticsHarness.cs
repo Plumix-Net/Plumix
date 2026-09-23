@@ -50,6 +50,7 @@ internal sealed class ScrollSemanticsHarness
         _pipeline.FlushLayout(size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.CompositeFrame();
         _pipeline.FlushSemantics();
     }
 

@@ -50,6 +50,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         Layout(size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.CompositeFrame();
     }
 
     public SemanticsNode? PumpAndGetSemantics(Size size)

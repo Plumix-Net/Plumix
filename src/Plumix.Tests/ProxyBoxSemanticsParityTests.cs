@@ -86,7 +86,7 @@ public sealed class ProxyBoxSemanticsParityTests
         leader.Attach(new object());
 
         var follower = new RenderFollowerLayer(link, child: new RenderSizedBox(new Size(1.0, 1.0)));
-        Layout(follower, new Size(200.0, 200.0));
+        LayoutOnly(follower, new Size(200.0, 200.0));
         var hitTestResult = new BoxHitTestResult();
         Assert.True(follower.HitTest(hitTestResult, default));
     }
@@ -103,7 +103,7 @@ public sealed class ProxyBoxSemanticsParityTests
             link,
             showWhenUnlinked: false,
             child: new RenderSizedBox(new Size(1.0, 1.0)));
-        Layout(follower, new Size(200.0, 200.0));
+        LayoutOnly(follower, new Size(200.0, 200.0));
         var hitTestResult = new BoxHitTestResult();
         // The follower is still hit testable because there is a leader layer.
         Assert.True(follower.HitTest(hitTestResult, default));
@@ -596,11 +596,21 @@ public sealed class ProxyBoxSemanticsParityTests
         return pipeline;
     }
 
+    // rendering_tester.dart's `layout` pumps only to `EnginePhase.layout`.
+    private static void LayoutOnly(RenderBox root, Size size)
+    {
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = root };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(size);
+    }
+
     private static void PumpFrame(PipelineOwner pipeline, Size size)
     {
         pipeline.FlushLayout(size);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private static void AssertOffset(Point expected, Point actual)

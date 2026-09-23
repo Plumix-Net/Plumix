@@ -551,11 +551,13 @@ public sealed class MaterialSelectionTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
             Scheduler.PumpFrameForTests();
             _owner.FlushBuild();
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose()

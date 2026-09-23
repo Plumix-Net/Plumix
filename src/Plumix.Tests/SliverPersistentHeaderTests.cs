@@ -568,6 +568,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             _pipeline.FlushLayout(new Size(300, ViewportExtent));
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void ScrollTo(double offset) => _controller.JumpTo(offset);

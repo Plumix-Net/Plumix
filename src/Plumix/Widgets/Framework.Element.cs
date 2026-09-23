@@ -2422,14 +2422,14 @@ public class InheritedElement : ProxyElement
     }
 
     /// <summary>Returns the dependencies value recorded for <paramref name="dependent"/>.</summary>
-    public object? GetDependencies(Element dependent)
+    public virtual object? GetDependencies(Element dependent)
     {
         _dependents.TryGetValue(dependent, out object? dependencies);
         return dependencies;
     }
 
     /// <summary>Sets the value returned by <see cref="GetDependencies"/> for <paramref name="dependent"/>.</summary>
-    public void SetDependencies(Element dependent, object? value)
+    public virtual void SetDependencies(Element dependent, object? value)
     {
         _dependents[dependent] = value;
     }

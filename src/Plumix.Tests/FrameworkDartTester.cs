@@ -250,6 +250,7 @@ internal sealed class FrameworkDartTester : IDisposable
         pipeline.FlushLayout();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         _owner.FinalizeTree();
     }
 

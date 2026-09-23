@@ -204,6 +204,7 @@ public sealed class BasicWidgetProxyTests
         pipeline.FlushLayout(new Size(30, 80));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         // Dart's `pushTransform` records the rotation onto the canvas: no layer, one picture.
         Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));

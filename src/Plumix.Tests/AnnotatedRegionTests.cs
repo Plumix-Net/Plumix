@@ -179,6 +179,7 @@ public sealed class AnnotatedRegionTests
         pipeline.FlushLayout(new Size(100, 80));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal("first", pipeline.RootLayer.Find<string>(new Point(20, 20)));
         Assert.Null(pipeline.RootLayer.Find<string>(new Point(120, 20)));
@@ -188,6 +189,7 @@ public sealed class AnnotatedRegionTests
         annotated.Sized = false;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal("second", pipeline.RootLayer.Find<string>(new Point(120, 20)));
         Assert.IsType<AnnotatedRegionLayer<string>>(Assert.Single(pipeline.RootLayer.Children));

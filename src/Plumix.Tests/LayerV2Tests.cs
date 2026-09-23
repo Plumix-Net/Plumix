@@ -26,6 +26,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(4, 6, 40, 24), clipLayer.ClipRect);
@@ -47,6 +48,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         // Dart's non-compositing branch records the clip into the picture instead of a clip layer.
         Layer child = Assert.Single(pipeline.RootLayer.Children);
@@ -120,6 +122,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var clipLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(5, 7, 44, 26), clipLayer.ClipRRect.Rect);
@@ -183,6 +186,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(80, 40));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var firstLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(0, 0, 80, 40), firstLayer.ClipRRect.Rect);
@@ -191,6 +195,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(200, 40));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var secondLayer = Assert.IsType<ClipRRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(0, 0, 200, 40), secondLayer.ClipRRect.Rect);
@@ -212,6 +217,7 @@ public sealed class LayerV2Tests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var opacityLayer = Assert.IsType<OpacityLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(107, opacityLayer.Alpha);

@@ -1461,6 +1461,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         pipeline.FlushLayout();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.False(renderObject.DebugNeedsPaint);
         Assert.Same(layer, renderObject.DebugLayer);
     }
@@ -1490,6 +1491,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         {
             pipeline.FlushCompositingBits();
             pipeline.FlushPaint();
+            pipeline.CompositeFrame();
         }
 
         return pipeline;

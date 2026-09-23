@@ -504,7 +504,15 @@ public sealed class MaterialSliverAppBarTests
             _owner.FlushBuild();
         }
         public RenderView RenderView { get; }
-        public void Pump(Size size) { _owner.FlushBuild(); _pipeline.RequestLayout(); _pipeline.FlushLayout(size); _pipeline.FlushCompositingBits(); _pipeline.FlushPaint(); }
+        public void Pump(Size size)
+        {
+            _owner.FlushBuild();
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
+        }
         public void Dispose() => _root.UnmountRoot();
 
         private sealed class RootElement : Element, IRenderObjectHost

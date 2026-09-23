@@ -384,6 +384,7 @@ public sealed class InlineSpanTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public RenderParagraph RequireParagraph()

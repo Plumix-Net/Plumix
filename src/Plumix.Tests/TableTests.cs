@@ -1049,6 +1049,7 @@ public sealed class TableTests
         pipeline.FlushLayout(viewSize);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private static void SetAlignment(RenderBox box, TableCellVerticalAlignment alignment)

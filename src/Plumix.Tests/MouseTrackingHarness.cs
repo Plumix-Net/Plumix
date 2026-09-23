@@ -47,6 +47,7 @@ internal sealed class MouseTrackingHarness : IDisposable
         _pipeline.FlushLayout(_size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.CompositeFrame();
     }
 
     /// <summary>

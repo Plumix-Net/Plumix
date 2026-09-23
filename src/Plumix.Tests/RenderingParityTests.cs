@@ -453,6 +453,7 @@ public sealed class RenderingParityTests
         pipeline.FlushLayout(new Size(220, viewportHeight));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         return CountPictureCommandsRecursive(pipeline.RootLayer);
     }

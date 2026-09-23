@@ -658,6 +658,7 @@ public sealed class SemanticsDataTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
             SemanticsNode? root = _pipeline.SemanticsOwner!.RootNode;

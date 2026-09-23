@@ -751,6 +751,7 @@ public sealed class MaterialAppBarTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose()

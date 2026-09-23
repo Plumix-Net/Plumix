@@ -1103,6 +1103,7 @@ public sealed class MaterialSliderTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
@@ -1146,7 +1147,7 @@ public sealed class MaterialSliderTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void Update(Widget newWidget)
@@ -1229,7 +1230,7 @@ public sealed class MaterialSliderTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

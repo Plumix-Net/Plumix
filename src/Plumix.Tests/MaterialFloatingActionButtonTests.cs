@@ -1176,6 +1176,7 @@ public sealed class MaterialFloatingActionButtonTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         /// Runs Dart's `Material` elevation animation to completion: the first frame establishes the
@@ -1212,7 +1213,7 @@ public sealed class MaterialFloatingActionButtonTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void Update(Widget newWidget)
@@ -1274,7 +1275,7 @@ public sealed class MaterialFloatingActionButtonTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

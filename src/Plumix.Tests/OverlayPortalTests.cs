@@ -650,6 +650,7 @@ public sealed class OverlayPortalTests
             Pump();
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public SemanticsNode FlushSemantics()
@@ -665,6 +666,7 @@ public sealed class OverlayPortalTests
             Pump();
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void HitTest(BoxHitTestResult result, Point position)

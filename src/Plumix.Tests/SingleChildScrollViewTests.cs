@@ -112,6 +112,7 @@ public sealed class SingleChildScrollViewTests
         pipeline.FlushLayout(new Size(100, 100));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         pipeline.FlushSemantics();
         first.SetPixels(25);
         Assert.False(viewport.NeedsLayout);

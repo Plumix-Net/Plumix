@@ -1066,6 +1066,7 @@ public sealed class DraggableScrollableSheetTests
             _pipeline.FlushLayout(new Size(ScreenWidth, ScreenHeight));
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         /// <summary>
@@ -1240,7 +1241,8 @@ public sealed class DraggableScrollableSheetTests
             public void UpdateChildWidget(Widget widget)
             {
                 _childWidget = widget;
-                Owner!.BuildScope(this, () => _child = UpdateChild(_child, _childWidget, Slot));
+                Owner!.BuildScope(this, () => _child = UpdateChild(
+                    _child, new Directionality(Plumix.UI.TextDirection.Ltr, _childWidget), Slot));
             }
 
             protected override void OnMount()
@@ -1252,7 +1254,7 @@ public sealed class DraggableScrollableSheetTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, _childWidget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, _childWidget), Slot);
             }
 
             public override void Update(Widget newWidget)

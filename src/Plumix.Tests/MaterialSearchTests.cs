@@ -995,6 +995,7 @@ public sealed class MaterialSearchTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
             _pipeline.FlushSemantics();
         }
 

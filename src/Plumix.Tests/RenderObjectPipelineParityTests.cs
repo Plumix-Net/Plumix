@@ -144,6 +144,7 @@ public class RenderObjectPipelineParityTests
         pipeline.FlushLayout(new Size(100, 100));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var orphan = new SizeRenderBox(new Size(10, 10));
         orphan.MarkNeedsPaint();
@@ -199,6 +200,7 @@ public class RenderObjectPipelineParityTests
         pipeline.FlushLayout(new Size(100, 100));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Layer? firstLayer = boundary.DebugLayer;
         Assert.NotNull(firstLayer);

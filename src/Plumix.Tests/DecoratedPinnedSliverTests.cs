@@ -61,6 +61,7 @@ public sealed class DecoratedPinnedSliverTests
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(expectedOrder.Split(','), order);
         (Point offset, Size size) = Assert.Single(calls);
@@ -87,6 +88,7 @@ public sealed class DecoratedPinnedSliverTests
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         (Point offset, Size size) = Assert.Single(calls);
         Assert.Equal(new Point(0, -40), offset);

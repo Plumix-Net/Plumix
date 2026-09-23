@@ -276,7 +276,9 @@ public sealed class LayoutBuilderTests
         }));
         Mount(root, owner);
 
-        var element = Assert.IsType<LayoutBuilderElement>(root.ChildElement);
+        Element? layoutBuilderChild = null;
+        root.ChildElement!.VisitChildren(child => layoutBuilderChild = child);
+        var element = Assert.IsType<LayoutBuilderElement>(layoutBuilderChild);
         var renderObject = Assert.IsType<RenderLayoutBuilder>(element.RenderObject);
         var constraints = new BoxConstraints(MaxWidth: 100, MaxHeight: 100);
         renderObject.Layout(constraints);
@@ -632,7 +634,7 @@ public sealed class LayoutBuilderTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

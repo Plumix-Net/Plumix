@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -5,7 +6,7 @@ using Plumix.Gestures;
 using Plumix.UI;
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 
 namespace Plumix.Rendering;
 
@@ -71,13 +72,26 @@ public sealed class AnnotationResult<T> where T : notnull
     }
 }
 
+/// <summary>Signature of the callback added in <see cref="Layer.AddCompositionCallback"/>.</summary>
+/// <remarks>Flutter's <c>CompositionCallback</c>.</remarks>
+public delegate void CompositionCallback(Layer layer);
+
 public abstract class Layer : DiagnosticableTree
 {
+    private readonly Dictionary<int, Action> _callbacks = [];
+    private static int _nextCallbackId;
+    internal int _compositionCallbackCount;
+    private bool _debugMutationsLocked;
     internal readonly LayerHandle<Layer> _parentHandle = new();
     private int _refCount;
     private bool _debugDisposed;
+    internal ContainerLayer? _parent;
+    internal bool _needsAddToScene = true;
     private object? _owner;
     private IDisposable? _engineLayer;
+    internal int _depth;
+    internal Layer? _nextSibling;
+    internal Layer? _previousSibling;
 
     [ThreadStatic]
     private static BackdropCapture? _magnifierBackdrop;
@@ -91,15 +105,46 @@ public abstract class Layer : DiagnosticableTree
     [ThreadStatic]
     private static bool _backdropCaptureStopped;
 
-    public ContainerLayer? Parent { get; internal set; }
+    /// <summary>Whether this layer or any of its descendants have a composition callback.</summary>
+    /// <remarks>Flutter's <c>Layer.subtreeHasCompositionCallbacks</c>.</remarks>
+    public bool SubtreeHasCompositionCallbacks => _compositionCallbackCount > 0;
+
+    /// <summary>This layer's parent in the layer tree.</summary>
+    public ContainerLayer? Parent => _parent;
 
     public object? Owner => _owner;
 
     public bool Attached => _owner != null;
 
+    /// <summary>
+    /// The depth of this layer in the layer tree: always greater than its parent's depth.
+    /// </summary>
+    /// <remarks>Flutter's <c>Layer.depth</c>. It only ever grows, including when the layer is removed.</remarks>
+    public int Depth => _depth;
+
+    /// <summary>This layer's next sibling in the parent layer's child list.</summary>
+    public Layer? NextSibling => _nextSibling;
+
+    /// <summary>This layer's previous sibling in the parent layer's child list.</summary>
+    public Layer? PreviousSibling => _previousSibling;
+
+    /// <summary>
+    /// Whether this layer must be added to the scene on every composite, even when nothing about it
+    /// changed.
+    /// </summary>
+    /// <remarks>Flutter's <c>Layer.alwaysNeedsAddToScene</c>.</remarks>
+    protected internal virtual bool AlwaysNeedsAddToScene => false;
+
     public bool DebugDisposed => _debugDisposed;
 
     public int DebugHandleCount => _refCount;
+
+    /// <summary>
+    /// Whether this layer or any of its descendants changed since it was last added to the scene; null
+    /// outside debug builds.
+    /// </summary>
+    /// <remarks>Flutter's <c>Layer.debugSubtreeNeedsAddToScene</c>.</remarks>
+    public bool? DebugSubtreeNeedsAddToScene => Constants.KDebugMode ? _needsAddToScene : null;
 
     internal virtual bool ContainsMagnifier => false;
 
@@ -260,6 +305,140 @@ public abstract class Layer : DiagnosticableTree
                && position.Y < rect.Bottom;
     }
 
+    /// <remarks>Flutter's <c>Layer._updateSubtreeCompositionObserverCount</c>.</remarks>
+    internal void UpdateSubtreeCompositionObserverCount(int delta)
+    {
+        Debug.Assert(delta != 0);
+        _compositionCallbackCount += delta;
+        Debug.Assert(_compositionCallbackCount >= 0);
+        _parent?.UpdateSubtreeCompositionObserverCount(delta);
+    }
+
+    /// <remarks>Flutter's <c>Layer._fireCompositionCallbacks</c>.</remarks>
+    internal virtual void FireCompositionCallbacks(bool includeChildren)
+    {
+        if (_callbacks.Count == 0)
+        {
+            return;
+        }
+
+        foreach (Action callback in _callbacks.Values.ToList())
+        {
+            callback();
+        }
+    }
+
+    /// <summary>
+    /// Adds a callback for when the layer tree that this layer is part of gets composited, or when it is
+    /// detached and will not be rendered again. Returns a callback that removes it.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>Layer.addCompositionCallback</c>. The callback must not mutate the layer tree; doing
+    /// so asserts in debug builds.
+    /// </remarks>
+    public Action AddCompositionCallback(CompositionCallback callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        UpdateSubtreeCompositionObserverCount(1);
+        int callbackId = _nextCallbackId += 1;
+        _callbacks[callbackId] = () =>
+        {
+            if (Constants.KDebugMode)
+            {
+                _debugMutationsLocked = true;
+            }
+
+            callback(this);
+            if (Constants.KDebugMode)
+            {
+                _debugMutationsLocked = false;
+            }
+        };
+        return () =>
+        {
+            if (Constants.KDebugMode && !(DebugDisposed || _callbacks.ContainsKey(callbackId)))
+            {
+                throw new AssertionError("A composition callback was removed twice.");
+            }
+
+            _callbacks.Remove(callbackId);
+            UpdateSubtreeCompositionObserverCount(-1);
+        };
+    }
+
+    /// <remarks>Dart's <c>ContainerLayer.dispose</c> clears the library-private <c>_callbacks</c>.</remarks>
+    internal void ClearCompositionCallbacks()
+    {
+        _callbacks.Clear();
+    }
+
+    /// <summary>Whether this layer, and all of its descendants, can be rasterized to an image.</summary>
+    /// <remarks>Flutter's <c>Layer.supportsRasterization</c>.</remarks>
+    public virtual bool SupportsRasterization() => true;
+
+    /// <summary>Describes the clip that this layer would apply to its children, if any.</summary>
+    /// <remarks>Flutter's <c>Layer.describeClipBounds</c>.</remarks>
+    public virtual Rect? DescribeClipBounds() => null;
+
+    /// <remarks>Flutter's <c>Layer._debugMutationsLocked</c> assert.</remarks>
+    internal void DebugAssertMutationsUnlocked()
+    {
+        if (Constants.KDebugMode && _debugMutationsLocked)
+        {
+            throw new AssertionError(
+                "A layer tree was mutated from inside a composition callback, which is not allowed.");
+        }
+    }
+
+    /// <summary>Mark that this layer has changed and <see cref="AddToScene"/> needs to be called.</summary>
+    /// <remarks>Flutter's <c>Layer.markNeedsAddToScene</c>.</remarks>
+    protected internal void MarkNeedsAddToScene()
+    {
+        DebugAssertMutationsUnlocked();
+        if (Constants.KDebugMode && AlwaysNeedsAddToScene)
+        {
+            throw new AssertionError(
+                $"{GetType().Name} with alwaysNeedsAddToScene set called markNeedsAddToScene.\n"
+                + "The layer's alwaysNeedsAddToScene is set to true, and therefore it should not call "
+                + "markNeedsAddToScene.");
+        }
+
+        if (Constants.KDebugMode && _debugDisposed)
+        {
+            throw new AssertionError("A disposed layer cannot be marked as needing to be added to the scene.");
+        }
+
+        // Already marked. Short-circuit.
+        if (_needsAddToScene)
+        {
+            return;
+        }
+
+        _needsAddToScene = true;
+    }
+
+    /// <summary>Mark that this layer is in sync with the engine.</summary>
+    /// <remarks>Flutter's <c>Layer.debugMarkClean</c>; only has an effect in debug builds.</remarks>
+    public void DebugMarkClean()
+    {
+        DebugAssertMutationsUnlocked();
+        if (Constants.KDebugMode)
+        {
+            _needsAddToScene = false;
+        }
+    }
+
+    /// <summary>
+    /// Traverses the layer subtree rooted at this layer and determines whether it needs
+    /// <see cref="AddToScene"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>Layer.updateSubtreeNeedsAddToScene</c>.</remarks>
+    public virtual void UpdateSubtreeNeedsAddToScene()
+    {
+        DebugAssertMutationsUnlocked();
+        _needsAddToScene = _needsAddToScene || AlwaysNeedsAddToScene;
+    }
+
     public virtual void Attach(object owner)
     {
         ArgumentNullException.ThrowIfNull(owner);
@@ -279,48 +458,72 @@ public abstract class Layer : DiagnosticableTree
         }
 
         _owner = null;
+        Debug.Assert(_parent == null || Attached == _parent.Attached);
     }
 
+    /// <summary>
+    /// Override this method to recompute the depth of this layer's children.
+    /// </summary>
+    /// <remarks>Flutter's <c>Layer.redepthChildren</c>; a leaf layer has no children to redepth.</remarks>
+    protected internal virtual void RedepthChildren()
+    {
+    }
+
+    /// <summary>Removes this layer from its parent layer's child list.</summary>
+    /// <remarks>Flutter's <c>Layer.remove</c>.</remarks>
     public virtual void Remove()
     {
-        Parent?.Remove(this);
+        DebugAssertMutationsUnlocked();
+        _parent?.RemoveChild(this);
     }
 
     protected internal virtual void Dispose()
     {
+        DebugAssertMutationsUnlocked();
         if (_debugDisposed)
         {
             throw new AssertionError(
-                "Layers must only be disposed once. This is typically handled by LayerHandle.");
+                "Layers must only be disposed once. This is typically handled by LayerHandle and "
+                + "createHandle. Subclasses should not directly call dispose.");
         }
 
         if (_refCount != 0)
         {
             throw new AssertionError(
-                $"Do not directly call Dispose on a {GetType().Name}. Instead, use LayerHandle.Layer = null.");
+                $"Do not directly call dispose on a {GetType().Name}. Instead, use createHandle and "
+                + "LayerHandle.dispose.");
         }
 
-        EngineLayer = null;
         _debugDisposed = true;
+        _engineLayer?.Dispose();
+        _engineLayer = null;
     }
 
+    /// <summary>The engine-side object this layer retained from its last <see cref="AddToScene"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>Layer.engineLayer</c>. Setting it disposes the previous value and, unless this layer or
+    /// its parent always needs to be added to the scene, marks the parent as needing to be added.
+    /// </remarks>
     protected internal IDisposable? EngineLayer
     {
         get => _engineLayer;
         set
         {
+            DebugAssertMutationsUnlocked();
             if (_debugDisposed)
             {
                 throw new AssertionError("A disposed layer cannot retain an engine layer.");
             }
 
-            if (ReferenceEquals(_engineLayer, value))
-            {
-                return;
-            }
-
             _engineLayer?.Dispose();
             _engineLayer = value;
+            if (!AlwaysNeedsAddToScene)
+            {
+                if (_parent != null && !_parent.AlwaysNeedsAddToScene)
+                {
+                    _parent.MarkNeedsAddToScene();
+                }
+            }
         }
     }
 
@@ -331,6 +534,7 @@ public abstract class Layer : DiagnosticableTree
 
     internal void Unref()
     {
+        DebugAssertMutationsUnlocked();
         if (_refCount <= 0)
         {
             throw new AssertionError("A layer handle released a layer with no references.");
@@ -343,7 +547,30 @@ public abstract class Layer : DiagnosticableTree
         }
     }
 
-    internal abstract void AddToScene(DrawingContext context, Point offset);
+    /// <summary>
+    /// Override this method to upload this layer to the scene: to <paramref name="context"/>, drawn at
+    /// the accumulated <paramref name="offset"/> of its ancestors.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>Layer.addToScene(SceneBuilder)</c>. Plumix draws into an Avalonia drawing context
+    /// instead of building an engine scene, and passes the ancestors' untransformed offsets down instead
+    /// of pushing them. A null <paramref name="context"/> is a headless composite: every layer still runs
+    /// its composition-time bookkeeping (<see cref="FollowerLayer"/>'s transform,
+    /// <see cref="TransformLayer"/>'s effective transform) but draws nothing. See docs/ai/DIVERGENCES.md.
+    /// </remarks>
+    internal abstract void AddToScene(DrawingContext? context, Point offset);
+
+    /// <remarks>
+    /// Flutter's <c>Layer._addToSceneWithRetainedRendering</c>. Plumix redraws the whole layer tree into
+    /// its drawing context every composite, so a clean layer is never added retained; the dirty flag is
+    /// still cleared the way Dart clears it.
+    /// </remarks>
+    internal void AddToSceneWithRetainedRendering(DrawingContext? context, Point offset)
+    {
+        DebugAssertMutationsUnlocked();
+        AddToScene(context, offset);
+        _needsAddToScene = false;
+    }
 
     internal virtual void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
     {
@@ -382,19 +609,21 @@ public abstract class Layer : DiagnosticableTree
         properties.Add(new DiagnosticsProperty<object>(
             "owner",
             Owner,
-            defaultValue: DiagnosticsDefaults.NullValue,
-            level: DiagnosticLevel.Debug));
+            level: _parent != null ? DiagnosticLevel.Hidden : DiagnosticLevel.Info,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<object>(
             "creator",
             DebugCreator,
             defaultValue: DiagnosticsDefaults.NullValue,
             level: DiagnosticLevel.Debug));
-        properties.Add(new DiagnosticsProperty<IDisposable>(
-            "engine layer",
-            EngineLayer,
-            defaultValue: DiagnosticsDefaults.NullValue,
-            level: DiagnosticLevel.Debug));
-        properties.Add(new IntProperty("handles", DebugHandleCount, level: DiagnosticLevel.Debug));
+        if (_engineLayer != null)
+        {
+            properties.Add(new DiagnosticsProperty<string>(
+                "engine layer",
+                Diagnostics.DescribeIdentity(_engineLayer)));
+        }
+
+        properties.Add(new DiagnosticsProperty<int>("handles", DebugHandleCount));
     }
 
     /// <inheritdoc />
@@ -414,104 +643,434 @@ public abstract class Layer : DiagnosticableTree
 public class ContainerLayer : Layer
 {
     private readonly List<Layer> _children = [];
+    private Layer? _firstChild;
+    private Layer? _lastChild;
 
+    /// <summary>The children of this layer in paint order.</summary>
+    /// <remarks>
+    /// Plumix-only indexed view over the <see cref="FirstChild"/>/<see cref="Layer.NextSibling"/> chain.
+    /// </remarks>
     public IReadOnlyList<Layer> Children => _children;
+
+    /// <summary>The first composited layer in this layer's child list.</summary>
+    public Layer? FirstChild => _firstChild;
+
+    /// <summary>The last composited layer in this layer's child list.</summary>
+    public Layer? LastChild => _lastChild;
 
     /// <summary>Whether this layer has any children.</summary>
     /// <remarks>Flutter's <c>ContainerLayer.hasChildren</c>.</remarks>
-    public bool HasChildren => _children.Count > 0;
+    public bool HasChildren => _firstChild != null;
 
     internal override bool ContainsMagnifier => _children.Any(static child => child.ContainsMagnifier);
 
     internal override bool ContainsBackdropFilter => _children.Any(static child => child.ContainsBackdropFilter);
 
-    public void Append(Layer child)
+    /// <remarks>Flutter's <c>ContainerLayer._fireCompositionCallbacks</c>.</remarks>
+    internal override void FireCompositionCallbacks(bool includeChildren)
     {
-        ArgumentNullException.ThrowIfNull(child);
-        if (child.Parent != null || child.Attached)
+        base.FireCompositionCallbacks(includeChildren);
+        if (!includeChildren)
         {
-            throw new AssertionError("A layer must be detached and parentless before it can be appended.");
+            return;
         }
 
-        child.Parent = this;
-        _children.Add(child);
-        child._parentHandle.Layer = child;
-        if (Attached)
+        Layer? child = FirstChild;
+        while (child != null)
         {
-            child.Attach(Owner!);
+            child.FireCompositionCallbacks(includeChildren);
+            child = child.NextSibling;
         }
     }
 
-    public void Remove(Layer child)
+    /// <inheritdoc />
+    public override bool SupportsRasterization()
     {
-        if (_children.Remove(child))
+        for (Layer? child = LastChild; child != null; child = child.PreviousSibling)
         {
-            child.Parent = null;
-            if (child.Attached)
+            if (!child.SupportsRasterization())
             {
-                child.Detach();
+                return false;
             }
-
-            child._parentHandle.Layer = null;
         }
+
+        return true;
     }
 
-    public void RemoveAllChildren()
+    /// <summary>Composites this layer tree.</summary>
+    /// <remarks>
+    /// Flutter's <c>ContainerLayer.buildScene</c>: updates the subtree's dirty flags, adds this layer to the
+    /// scene, fires the composition callbacks and marks this layer clean. Plumix has no engine scene to
+    /// return; a null <paramref name="context"/> composites headlessly (see <see cref="Layer.AddToScene"/>).
+    /// </remarks>
+    public void BuildScene(DrawingContext? context)
     {
-        foreach (Layer child in _children)
+        UpdateSubtreeNeedsAddToScene();
+        AddToScene(context, default);
+        if (SubtreeHasCompositionCallbacks)
         {
-            child.Parent = null;
-            if (child.Attached)
-            {
-                child.Detach();
-            }
-
-            child._parentHandle.Layer = null;
+            FireCompositionCallbacks(includeChildren: true);
         }
 
-        _children.Clear();
+        // Clearing the flag _after_ calling addToScene, not _before_. This is because
+        // subclasses may call addChildrenToScene, which may mark this layer as dirty.
+        _needsAddToScene = false;
     }
 
-    public override void Attach(object owner)
+    private bool DebugUltimatePreviousSiblingOf(Layer child, Layer? equals)
     {
-        base.Attach(owner);
-        foreach (Layer child in _children)
+        Debug.Assert(child.Attached == Attached);
+        while (child.PreviousSibling != null)
         {
-            child.Attach(owner);
+            Debug.Assert(!ReferenceEquals(child.PreviousSibling, child));
+            child = child.PreviousSibling;
+            Debug.Assert(child.Attached == Attached);
         }
+
+        return ReferenceEquals(child, equals);
     }
 
-    public override void Detach()
+    private bool DebugUltimateNextSiblingOf(Layer child, Layer? equals)
     {
-        base.Detach();
-        foreach (Layer child in _children)
+        Debug.Assert(child.Attached == Attached);
+        while (child._nextSibling != null)
         {
-            child.Detach();
+            Debug.Assert(!ReferenceEquals(child._nextSibling, child));
+            child = child._nextSibling;
+            Debug.Assert(child.Attached == Attached);
         }
+
+        return ReferenceEquals(child, equals);
     }
 
     protected internal override void Dispose()
     {
         RemoveAllChildren();
+        ClearCompositionCallbacks();
         base.Dispose();
     }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    /// <inheritdoc />
+    public override void UpdateSubtreeNeedsAddToScene()
+    {
+        base.UpdateSubtreeNeedsAddToScene();
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            child.UpdateSubtreeNeedsAddToScene();
+            _needsAddToScene = _needsAddToScene || child._needsAddToScene;
+            child = child.NextSibling;
+        }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        for (Layer? child = LastChild; child != null; child = child.PreviousSibling)
+        {
+            bool isAbsorbed = child.FindAnnotations(result, localPosition, onlyFirst);
+            if (isAbsorbed)
+            {
+                return true;
+            }
+
+            if (onlyFirst && result.Entries.Count > 0)
+            {
+                return isAbsorbed;
+            }
+        }
+
+        return false;
+    }
+
+    public override void Attach(object owner)
+    {
+        DebugAssertMutationsUnlocked();
+        base.Attach(owner);
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            child.Attach(owner);
+            child = child.NextSibling;
+        }
+    }
+
+    public override void Detach()
+    {
+        DebugAssertMutationsUnlocked();
+        base.Detach();
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            child.Detach();
+            child = child.NextSibling;
+        }
+
+        FireCompositionCallbacks(includeChildren: false);
+    }
+
+    /// <summary>Adds the given layer to the end of this layer's child list.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.append</c>.</remarks>
+    public void Append(Layer child)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        DebugAssertMutationsUnlocked();
+        if (Constants.KDebugMode)
+        {
+            if (ReferenceEquals(child, this)
+                || ReferenceEquals(child, FirstChild)
+                || ReferenceEquals(child, LastChild)
+                || child.Parent != null
+                || child.Attached
+                || child.NextSibling != null
+                || child.PreviousSibling != null
+                || child._parentHandle.Layer != null)
+            {
+                throw new AssertionError("A layer must be detached and parentless before it can be appended.");
+            }
+
+            DebugAssertNotAncestor(child);
+        }
+
+        AdoptChild(child);
+        child._previousSibling = LastChild;
+        if (LastChild != null)
+        {
+            LastChild._nextSibling = child;
+        }
+
+        _lastChild = child;
+        _firstChild ??= child;
+        _children.Add(child);
+        child._parentHandle.Layer = child;
+        Debug.Assert(child.Attached == Attached);
+    }
+
+    private void DebugAssertNotAncestor(Layer child)
+    {
+        Layer node = this;
+        while (node.Parent != null)
+        {
+            node = node.Parent;
+        }
+
+        if (ReferenceEquals(node, child))
+        {
+            throw new AssertionError("A layer cannot be appended to one of its own descendants.");
+        }
+    }
+
+    /// <remarks>Flutter's <c>ContainerLayer._adoptChild</c>.</remarks>
+    private void AdoptChild(Layer child)
+    {
+        DebugAssertMutationsUnlocked();
+        if (!AlwaysNeedsAddToScene)
+        {
+            MarkNeedsAddToScene();
+        }
+
+        if (child._compositionCallbackCount != 0)
+        {
+            UpdateSubtreeCompositionObserverCount(child._compositionCallbackCount);
+        }
+
+        Debug.Assert(child._parent == null);
+        if (Constants.KDebugMode)
+        {
+            DebugAssertNotAncestor(child);
+        }
+
+        child._parent = this;
+        if (Attached)
+        {
+            child.Attach(Owner!);
+        }
+
+        RedepthChild(child);
+    }
+
+    /// <inheritdoc />
+    protected internal override void RedepthChildren()
+    {
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            RedepthChild(child);
+            child = child.NextSibling;
+        }
+    }
+
+    /// <summary>Adjust the depth of the given child to be greater than this layer's own depth.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.redepthChild</c>.</remarks>
+    protected void RedepthChild(Layer child)
+    {
+        Debug.Assert(ReferenceEquals(child.Owner, Owner));
+        if (child._depth <= _depth)
+        {
+            child._depth = _depth + 1;
+            child.RedepthChildren();
+        }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>ContainerLayer._removeChild</c>, the implementation of <see cref="Layer.Remove"/>.
+    /// </remarks>
+    internal void RemoveChild(Layer child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        Debug.Assert(child.Attached == Attached);
+        Debug.Assert(DebugUltimatePreviousSiblingOf(child, equals: FirstChild));
+        Debug.Assert(DebugUltimateNextSiblingOf(child, equals: LastChild));
+        Debug.Assert(child._parentHandle.Layer != null);
+        if (child._previousSibling == null)
+        {
+            Debug.Assert(ReferenceEquals(_firstChild, child));
+            _firstChild = child._nextSibling;
+        }
+        else
+        {
+            child._previousSibling._nextSibling = child.NextSibling;
+        }
+
+        if (child._nextSibling == null)
+        {
+            Debug.Assert(ReferenceEquals(LastChild, child));
+            _lastChild = child.PreviousSibling;
+        }
+        else
+        {
+            child._nextSibling._previousSibling = child.PreviousSibling;
+        }
+
+        Debug.Assert((FirstChild == null) == (LastChild == null));
+        Debug.Assert(FirstChild == null || FirstChild.Attached == Attached);
+        Debug.Assert(LastChild == null || LastChild.Attached == Attached);
+        Debug.Assert(FirstChild == null || DebugUltimateNextSiblingOf(FirstChild, equals: LastChild));
+        Debug.Assert(LastChild == null || DebugUltimatePreviousSiblingOf(LastChild, equals: FirstChild));
+        child._previousSibling = null;
+        child._nextSibling = null;
+        _children.Remove(child);
+        DropChild(child);
+        child._parentHandle.Layer = null;
+        Debug.Assert(!child.Attached);
+    }
+
+    /// <remarks>Flutter's <c>ContainerLayer._dropChild</c>.</remarks>
+    private void DropChild(Layer child)
+    {
+        DebugAssertMutationsUnlocked();
+        if (!AlwaysNeedsAddToScene)
+        {
+            MarkNeedsAddToScene();
+        }
+
+        if (child._compositionCallbackCount != 0)
+        {
+            UpdateSubtreeCompositionObserverCount(-child._compositionCallbackCount);
+        }
+
+        Debug.Assert(ReferenceEquals(child._parent, this));
+        Debug.Assert(child.Attached == Attached);
+        child._parent = null;
+        if (Attached)
+        {
+            child.Detach();
+        }
+    }
+
+    /// <summary>Removes the given child layer, if it is a child of this layer.</summary>
+    /// <remarks>Plumix-only convenience for <c>child.remove()</c> that tolerates a non-child.</remarks>
+    public void Remove(Layer child)
+    {
+        if (ReferenceEquals(child.Parent, this))
+        {
+            child.Remove();
+        }
+    }
+
+    /// <summary>Removes all of this layer's children from its child list.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.removeAllChildren</c>.</remarks>
+    public void RemoveAllChildren()
+    {
+        DebugAssertMutationsUnlocked();
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            Layer? next = child.NextSibling;
+            child._previousSibling = null;
+            child._nextSibling = null;
+            Debug.Assert(child.Attached == Attached);
+            DropChild(child);
+            child._parentHandle.Layer = null;
+            child = next;
+        }
+
+        _firstChild = null;
+        _lastChild = null;
+        _children.Clear();
+    }
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
         AddChildrenToScene(context, offset);
     }
 
-    protected void AddChildrenToScene(DrawingContext context, Point offset)
+    /// <summary>Uploads all of this layer's children to the scene.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.addChildrenToScene</c>.</remarks>
+    protected void AddChildrenToScene(DrawingContext? context, Point offset)
     {
-        for (int index = 0; index < _children.Count; index++)
+        Layer? child = FirstChild;
+        while (child != null)
         {
             if (BackdropCaptureStopped)
             {
                 return;
             }
 
-            _children[index].AddToScene(context, offset);
+            child.AddToSceneWithRetainedRendering(context, offset);
+            child = child.NextSibling;
         }
+    }
+
+    /// <summary>
+    /// Applies the transform that would be applied when compositing the given child to the given matrix.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>ContainerLayer.applyTransform</c>. Valid only immediately after this layer was added to
+    /// the scene; a container that does not move its children adds nothing.
+    /// </remarks>
+    public virtual void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        Debug.Assert(child != null);
+        ArgumentNullException.ThrowIfNull(transform);
+    }
+
+    /// <summary>Returns the descendants of this layer in depth-first order.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.depthFirstIterateChildren</c>.</remarks>
+    public List<Layer> DepthFirstIterateChildren()
+    {
+        if (FirstChild == null)
+        {
+            return [];
+        }
+
+        var children = new List<Layer>();
+        Layer? child = FirstChild;
+        while (child != null)
+        {
+            children.Add(child);
+            if (child is ContainerLayer container)
+            {
+                children.AddRange(container.DepthFirstIterateChildren());
+            }
+
+            child = child.NextSibling;
+        }
+
+        return children;
     }
 
     internal override void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
@@ -522,36 +1081,27 @@ public class ContainerLayer : Layer
         }
     }
 
-    protected internal override bool FindAnnotations<T>(
-        AnnotationResult<T> result,
-        Point localPosition,
-        bool onlyFirst)
-    {
-        ArgumentNullException.ThrowIfNull(result);
-        for (int index = _children.Count - 1; index >= 0; index--)
-        {
-            bool isAbsorbed = _children[index].FindAnnotations(result, localPosition, onlyFirst);
-            if (isAbsorbed)
-            {
-                return true;
-            }
-
-            if (onlyFirst && result.Entries.Count > 0)
-            {
-                return false;
-            }
-        }
-
-        return false;
-    }
-
     /// <inheritdoc />
     public override List<DiagnosticsNode> DebugDescribeChildren()
     {
         var children = new List<DiagnosticsNode>();
-        for (int index = 0; index < _children.Count; index++)
+        if (FirstChild == null)
         {
-            children.Add(_children[index].ToDiagnosticsNode(name: $"child {index + 1}"));
+            return children;
+        }
+
+        Layer? child = FirstChild;
+        int count = 1;
+        while (true)
+        {
+            children.Add(child.ToDiagnosticsNode(name: $"child {count}"));
+            if (ReferenceEquals(child, LastChild))
+            {
+                break;
+            }
+
+            count += 1;
+            child = child.NextSibling!;
         }
 
         return children;
@@ -567,13 +1117,10 @@ public class ContainerLayer : Layer
 public sealed class LayerLink
 {
     private LeaderLayer? _leader;
-    private RenderLeaderLayer? _renderLeader;
 
     public LeaderLayer? Leader => _leader;
 
     public Size? LeaderSize { get; set; }
-
-    internal RenderLeaderLayer? RenderLeader => _renderLeader;
 
     // Dart's `_debugPreviousLeaders`: while a link moves between leaders inside one frame (flutter#96959),
     // the leader it left is parked here and must have detached by the end of the frame.
@@ -633,33 +1180,19 @@ public sealed class LayerLink
             debugLabel: "LayerLink.leadersCleanUpCheck");
     }
 
-    internal void RegisterRenderLeader(RenderLeaderLayer leader)
-    {
-        if (_renderLeader != null && !ReferenceEquals(_renderLeader, leader))
-        {
-            throw new InvalidOperationException(
-                "A LayerLink cannot be attached to more than one RenderLeaderLayer at the same time.");
-        }
-
-        _renderLeader = leader;
-    }
-
-    internal void UnregisterRenderLeader(RenderLeaderLayer leader)
-    {
-        if (ReferenceEquals(_renderLeader, leader))
-        {
-            _renderLeader = null;
-        }
-    }
-
     /// <summary>Dart's <c>LayerLink.toString</c>.</summary>
     public override string ToString() =>
         $"{Diagnostics.DescribeIdentity(this)}({(_leader != null ? "<linked>" : "<dangling>")})";
 }
 
 /// <summary>
-/// A composited anchor layer followed by <see cref="FollowerLayer"/> instances sharing its link.
+/// A composited layer that can be followed by a <see cref="FollowerLayer"/>.
 /// </summary>
+/// <remarks>
+/// Flutter's <c>LeaderLayer</c>. This layer collapses the accumulated offset into a transform and passes
+/// <see cref="Point"/> zero to its child layers in <see cref="AddToScene"/>, so the follower can compute
+/// its transform from the layer chain alone.
+/// </remarks>
 public sealed class LeaderLayer : ContainerLayer
 {
     private LayerLink _link;
@@ -671,6 +1204,11 @@ public sealed class LeaderLayer : ContainerLayer
         _offset = offset;
     }
 
+    /// <summary>The object with which this layer should register.</summary>
+    /// <remarks>
+    /// The link will be established when this layer is attached, and will be cleared when this layer is
+    /// detached.
+    /// </remarks>
     public LayerLink Link
     {
         get => _link;
@@ -691,10 +1229,7 @@ public sealed class LeaderLayer : ContainerLayer
         }
     }
 
-    /// <remarks>
-    /// Dart's setter also calls <c>markNeedsAddToScene</c>; Plumix re-adds the whole layer tree to the
-    /// scene every composite, so there is no retained-scene flag to clear.
-    /// </remarks>
+    /// <summary>Offset from parent in the parent's coordinate system.</summary>
     public Point Offset
     {
         get => _offset;
@@ -706,22 +1241,10 @@ public sealed class LeaderLayer : ContainerLayer
             }
 
             _offset = value;
-        }
-    }
-
-    /// <summary>
-    /// Applies the translation by <see cref="Offset"/> this layer gives its children to
-    /// <paramref name="transform"/>.
-    /// </summary>
-    /// <remarks>
-    /// Dart's <c>LeaderLayer.applyTransform</c> override. Plumix's <see cref="ContainerLayer"/> has no
-    /// <c>applyTransform</c> yet, so this is not virtual.
-    /// </remarks>
-    public void ApplyTransform(Layer? child, Matrix4 transform)
-    {
-        if (Offset != default)
-        {
-            transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+            if (!AlwaysNeedsAddToScene)
+            {
+                MarkNeedsAddToScene();
+            }
         }
     }
 
@@ -737,17 +1260,36 @@ public sealed class LeaderLayer : ContainerLayer
         base.Detach();
     }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        AddChildrenToScene(context, offset + Offset);
-    }
-
     protected internal override bool FindAnnotations<T>(
         AnnotationResult<T> result,
         Point localPosition,
         bool onlyFirst)
     {
         return base.FindAnnotations(result, localPosition - Offset, onlyFirst);
+    }
+
+    /// <remarks>
+    /// Dart pushes a translation transform when <see cref="Offset"/> is non-zero; Plumix passes the offset
+    /// down with the accumulated scene offset instead (see <see cref="Layer.AddToScene"/>).
+    /// </remarks>
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        AddChildrenToScene(context, offset + Offset);
+    }
+
+    /// <summary>
+    /// Applies the transform that would be applied when compositing the given child to the given matrix.
+    /// </summary>
+    /// <remarks>
+    /// See <see cref="ContainerLayer.ApplyTransform"/> for details. The <paramref name="child"/> argument may
+    /// be null, as the same transform is applied to all children.
+    /// </remarks>
+    public override void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        if (Offset != default)
+        {
+            transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+        }
     }
 
     /// <inheritdoc />
@@ -760,54 +1302,70 @@ public sealed class LeaderLayer : ContainerLayer
 }
 
 /// <summary>
-/// A composited layer that transforms its children into a linked leader's coordinate space.
+/// A layer that applies a transformation which causes its children to be positioned relative to the
+/// <see cref="LeaderLayer"/> registered with <see cref="Link"/>.
 /// </summary>
+/// <remarks>
+/// Flutter's <c>FollowerLayer</c>. The transform is established while compositing, from the layer chain
+/// between the leader, the follower and their common ancestor, so the leader must be composited before
+/// the follower.
+/// </remarks>
 public sealed class FollowerLayer : ContainerLayer
 {
+    private Point? _lastOffset;
+    private Matrix4? _lastTransform;
+    private Matrix4? _invertedTransform;
+    private bool _inverseDirty = true;
+
     public FollowerLayer(
         LayerLink link,
         bool showWhenUnlinked = true,
         Point unlinkedOffset = default,
-        Matrix4? linkedTransform = null)
+        Point linkedOffset = default)
     {
         Link = link ?? throw new ArgumentNullException(nameof(link));
         ShowWhenUnlinked = showWhenUnlinked;
         UnlinkedOffset = unlinkedOffset;
-        LinkedTransform = linkedTransform;
+        LinkedOffset = linkedOffset;
     }
 
+    /// <summary>The link to the <see cref="LeaderLayer"/>.</summary>
     public LayerLink Link { get; set; }
 
-    public bool ShowWhenUnlinked { get; set; }
+    /// <summary>
+    /// Whether to show the layer's contents when the <see cref="Link"/> does not point to a
+    /// <see cref="LeaderLayer"/>.
+    /// </summary>
+    public bool? ShowWhenUnlinked { get; set; }
 
-    public Point UnlinkedOffset { get; set; }
+    /// <summary>
+    /// Offset from parent in the parent's coordinate system, used when the layer is not linked to a
+    /// <see cref="LeaderLayer"/>.
+    /// </summary>
+    public Point? UnlinkedOffset { get; set; }
 
-    public Matrix4? LinkedTransform { get; set; }
+    /// <summary>
+    /// Offset from the origin of the leader layer to the origin of the child layers, used when the layer is
+    /// linked to a <see cref="LeaderLayer"/>.
+    /// </summary>
+    public Point? LinkedOffset { get; set; }
 
-    public Matrix4? GetLastTransform()
+    private Point? TransformOffset(Point localPosition)
     {
-        return Link.Leader != null ? LinkedTransform : null;
-    }
-
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        Matrix4? linkedTransform = GetLastTransform();
-        if (linkedTransform is null)
+        if (_inverseDirty)
         {
-            if (ShowWhenUnlinked)
-            {
-                AddChildrenToScene(context, offset + UnlinkedOffset);
-            }
-
-            return;
+            _invertedTransform = Matrix4.TryInvert(GetLastTransform()!);
+            _inverseDirty = false;
         }
 
-        Point sceneOffset = offset + UnlinkedOffset;
-        using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
-        using (context.PushTransform(linkedTransform.ToAvaloniaMatrix()))
+        if (_invertedTransform == null)
         {
-            AddChildrenToScene(context, default);
+            return null;
         }
+
+        var vector = new Vector4(localPosition.X, localPosition.Y, 0.0, 1.0);
+        Vector4 result = _invertedTransform.Transform(vector);
+        return new Point(result[0] - LinkedOffset!.Value.X, result[1] - LinkedOffset!.Value.Y);
     }
 
     protected internal override bool FindAnnotations<T>(
@@ -815,21 +1373,263 @@ public sealed class FollowerLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        Matrix4? transform = GetLastTransform();
-        if (transform is null)
+        if (Link.Leader == null)
         {
-            return ShowWhenUnlinked
-                && base.FindAnnotations(result, localPosition - UnlinkedOffset, onlyFirst);
+            if (ShowWhenUnlinked!.Value)
+            {
+                return base.FindAnnotations(result, localPosition - UnlinkedOffset!.Value, onlyFirst);
+            }
+
+            return false;
         }
 
-        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(transform));
-        if (inverse is null)
+        Point? transformedOffset = TransformOffset(localPosition);
+        if (transformedOffset == null)
         {
             return false;
         }
 
-        Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - UnlinkedOffset);
-        return base.FindAnnotations(result, transformedPosition, onlyFirst);
+        return base.FindAnnotations(result, transformedOffset.Value, onlyFirst);
+    }
+
+    /// <summary>
+    /// The transform that was used during the last composition phase, or null if the link was not
+    /// established or the layer was not composited yet.
+    /// </summary>
+    /// <remarks>
+    /// The returned transform maps from the coordinate space of this layer's children to that of the render
+    /// object that pushed it, whose paint offset was <see cref="UnlinkedOffset"/>.
+    /// </remarks>
+    public Matrix4? GetLastTransform()
+    {
+        if (_lastTransform == null)
+        {
+            return null;
+        }
+
+        Matrix4 result = Matrix4.TranslationValues(-_lastOffset!.Value.X, -_lastOffset!.Value.Y, 0.0);
+        result.Multiply(_lastTransform);
+        return result;
+    }
+
+    /// <summary>
+    /// Call <see cref="ContainerLayer.ApplyTransform"/> for each layer in the provided list.
+    /// </summary>
+    /// <remarks>
+    /// The list is in reverse order (deepest first). The first layer is not used for applying the
+    /// transform, but only as the child of the next layer.
+    /// </remarks>
+    private static Matrix4 CollectTransformForLayerChain(List<ContainerLayer?> layers)
+    {
+        // Initialize our result matrix.
+        Matrix4 result = Matrix4.Identity();
+        // Apply each layer to the matrix in turn, starting from the last layer, and providing the previous
+        // layer as the child.
+        for (int index = layers.Count - 1; index > 0; index -= 1)
+        {
+            layers[index]?.ApplyTransform(layers[index - 1], result);
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Find the common ancestor of two layers <paramref name="a"/> and <paramref name="b"/> by searching
+    /// towards the root of the tree, and append each ancestor of <paramref name="a"/> or
+    /// <paramref name="b"/> visited along the path to <paramref name="ancestorsA"/> and
+    /// <paramref name="ancestorsB"/> respectively.
+    /// </summary>
+    /// <remarks>Returns null if <paramref name="a"/> and <paramref name="b"/> do not share a common ancestor.</remarks>
+    private static Layer? PathsToCommonAncestor(
+        Layer? a,
+        Layer? b,
+        List<ContainerLayer?> ancestorsA,
+        List<ContainerLayer?> ancestorsB)
+    {
+        // No common ancestor found.
+        if (a == null || b == null)
+        {
+            return null;
+        }
+
+        if (ReferenceEquals(a, b))
+        {
+            return a;
+        }
+
+        if (a.Depth < b.Depth)
+        {
+            ancestorsB.Add(b.Parent);
+            return PathsToCommonAncestor(a, b.Parent, ancestorsA, ancestorsB);
+        }
+
+        if (a.Depth > b.Depth)
+        {
+            ancestorsA.Add(a.Parent);
+            return PathsToCommonAncestor(a.Parent, b, ancestorsA, ancestorsB);
+        }
+
+        ancestorsA.Add(a.Parent);
+        ancestorsB.Add(b.Parent);
+        return PathsToCommonAncestor(a.Parent, b.Parent, ancestorsA, ancestorsB);
+    }
+
+    private static bool DebugCheckLeaderBeforeFollower(
+        List<ContainerLayer?> leaderToCommonAncestor,
+        List<ContainerLayer?> followerToCommonAncestor)
+    {
+        if (followerToCommonAncestor.Count <= 1)
+        {
+            // Follower is the common ancestor, ergo the leader must come AFTER the follower.
+            return false;
+        }
+
+        if (leaderToCommonAncestor.Count <= 1)
+        {
+            // Leader is the common ancestor, ergo the leader must come BEFORE the follower.
+            return true;
+        }
+
+        // Common ancestor is neither the leader nor the follower.
+        ContainerLayer leaderSubtreeBelowAncestor = leaderToCommonAncestor[^2]!;
+        ContainerLayer followerSubtreeBelowAncestor = followerToCommonAncestor[^2]!;
+
+        Layer? sibling = leaderSubtreeBelowAncestor;
+        while (sibling != null)
+        {
+            if (ReferenceEquals(sibling, followerSubtreeBelowAncestor))
+            {
+                return true;
+            }
+
+            sibling = sibling.NextSibling;
+        }
+
+        // The follower subtree didn't come after the leader subtree.
+        return false;
+    }
+
+    /// <summary>
+    /// Populate <c>_lastTransform</c> given the current state of the tree.
+    /// </summary>
+    private void EstablishTransform()
+    {
+        _lastTransform = null;
+        LeaderLayer? leader = Link.Leader;
+        // Check to see if we are linked.
+        if (leader == null)
+        {
+            return;
+        }
+
+        // If we're linked, check the link is valid.
+        if (Constants.KDebugMode && !ReferenceEquals(leader.Owner, Owner))
+        {
+            throw new AssertionError(
+                "Linked LeaderLayer anchor is not in the same layer tree as the FollowerLayer.");
+        }
+
+        // Stores [leader, ..., commonAncestor] after calling PathsToCommonAncestor.
+        List<ContainerLayer?> forwardLayers = [leader];
+        // Stores [this (follower), ..., commonAncestor] after calling PathsToCommonAncestor.
+        List<ContainerLayer?> inverseLayers = [this];
+
+        Layer? ancestor = PathsToCommonAncestor(leader, this, forwardLayers, inverseLayers);
+        if (Constants.KDebugMode && ancestor == null)
+        {
+            throw new AssertionError("LeaderLayer and FollowerLayer do not have a common ancestor.");
+        }
+
+        if (Constants.KDebugMode && !DebugCheckLeaderBeforeFollower(forwardLayers, inverseLayers))
+        {
+            throw new AssertionError(
+                "LeaderLayer anchor must come before FollowerLayer in paint order, but the reverse was true.");
+        }
+
+        Matrix4 forwardTransform = CollectTransformForLayerChain(forwardLayers);
+        // Further transforms the coordinate system to a hypothetical child (null) of the leader layer, to
+        // account for the leader's additional paint offset and layer offset (LeaderLayer.Offset).
+        leader.ApplyTransform(null, forwardTransform);
+        forwardTransform.TranslateByDouble(LinkedOffset!.Value.X, LinkedOffset!.Value.Y, 0, 1);
+
+        Matrix4 inverseTransform = CollectTransformForLayerChain(inverseLayers);
+
+        if (inverseTransform.Invert() == 0.0)
+        {
+            // We are in a degenerate transform, so there's not much we can do.
+            return;
+        }
+
+        // Combine the matrices and store the result.
+        inverseTransform.Multiply(forwardTransform);
+        _lastTransform = inverseTransform;
+        _inverseDirty = true;
+    }
+
+    /// <remarks>
+    /// This layer's transform depends on where its leader is, which can change without this layer being
+    /// marked dirty, so it is recomputed on every composite.
+    /// </remarks>
+    protected internal override bool AlwaysNeedsAddToScene => true;
+
+    /// <remarks>
+    /// Dart pushes <c>_lastTransform</c>, or a translation by <see cref="UnlinkedOffset"/> when unlinked;
+    /// Plumix first pushes the ancestors' accumulated <paramref name="offset"/>, which Dart's ancestors
+    /// have already pushed.
+    /// </remarks>
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        Debug.Assert(ShowWhenUnlinked != null);
+        if (Link.Leader == null && !ShowWhenUnlinked!.Value)
+        {
+            _lastTransform = null;
+            _lastOffset = null;
+            _inverseDirty = true;
+            EngineLayer = null;
+            return;
+        }
+
+        EstablishTransform();
+        Matrix4 transform;
+        if (_lastTransform != null)
+        {
+            _lastOffset = UnlinkedOffset;
+            transform = _lastTransform;
+        }
+        else
+        {
+            _lastOffset = null;
+            transform = Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, .0);
+        }
+
+        if (context == null)
+        {
+            AddChildrenToScene(null, default);
+        }
+        else
+        {
+            using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+            using (context.PushTransform(transform.ToAvaloniaMatrix()))
+            {
+                AddChildrenToScene(context, default);
+            }
+        }
+
+        _inverseDirty = true;
+    }
+
+    /// <inheritdoc />
+    public override void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        Debug.Assert(child != null);
+        if (_lastTransform != null)
+        {
+            transform.Multiply(_lastTransform);
+        }
+        else
+        {
+            transform.Multiply(Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, 0));
+        }
     }
 
     /// <inheritdoc />
@@ -922,8 +1722,14 @@ public sealed class MagnifierLayer : ContainerLayer
 
     internal override bool ContainsMagnifier => true;
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            AddChildrenToScene(null, offset);
+            return;
+        }
+
         if (CapturingMagnifierBackdrop || CapturingBackdrop)
         {
             return;
@@ -1077,13 +1883,30 @@ public sealed class MagnifierLayer : ContainerLayer
     }
 }
 
+/// <summary>A layer that is displayed at an offset from its parent layer.</summary>
+/// <remarks>Flutter's <c>OffsetLayer</c>.</remarks>
 public class OffsetLayer : ContainerLayer
 {
-    public Point Offset { get; set; }
+    private Point _offset;
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public OffsetLayer(Point offset = default)
     {
-        base.AddToScene(context, offset + Offset);
+        _offset = offset;
+    }
+
+    /// <summary>Offset from parent in the parent's coordinate system.</summary>
+    public Point Offset
+    {
+        get => _offset;
+        set
+        {
+            if (value != _offset)
+            {
+                MarkNeedsAddToScene();
+            }
+
+            _offset = value;
+        }
     }
 
     protected internal override bool FindAnnotations<T>(
@@ -1104,6 +1927,18 @@ public class OffsetLayer : ContainerLayer
     }
 
     /// <inheritdoc />
+    public override void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        Debug.Assert(child != null);
+        transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
+    }
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        AddChildrenToScene(context, offset + Offset);
+    }
+
+    /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
@@ -1114,8 +1949,36 @@ public class OffsetLayer : ContainerLayer
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed class OpacityLayer : OffsetLayer
 {
+    private int? _alpha;
+
+    public OpacityLayer(int? alpha = null, Point offset = default) : base(offset)
+    {
+        _alpha = alpha;
+    }
+
     /// <summary>The amount to multiply into the alpha channel, from 0 (transparent) to 255 (opaque).</summary>
-    public int? Alpha { get; set; }
+    public int? Alpha
+    {
+        get => _alpha;
+        set
+        {
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
+            if (value != _alpha)
+            {
+                if (value == 255 || _alpha == 255)
+                {
+                    EngineLayer = null;
+                }
+
+                _alpha = value;
+                MarkNeedsAddToScene();
+            }
+        }
+    }
 
     /// <summary>
     /// Plumix-only view of <see cref="Alpha"/> as a 0..1 fraction, for the render objects and debug
@@ -1127,9 +1990,24 @@ public sealed class OpacityLayer : OffsetLayer
         set => Alpha = (int)Math.Round(Math.Clamp(value, 0.0, 1.0) * 255.0);
     }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
-        if (Constants.KDebugMode && RenderingDebug.DisableOpacityLayers)
+        Debug.Assert(Alpha != null);
+        bool enabled = FirstChild != null;
+        if (!enabled)
+        {
+            // Ensure the engine layer is disposed.
+            EngineLayer = null;
+            // Don't add this layer if there's no child.
+            return;
+        }
+
+        if (Constants.KDebugMode)
+        {
+            enabled = enabled && !RenderingDebug.DisableOpacityLayers;
+        }
+
+        if (context == null || !enabled || Alpha!.Value >= 255)
         {
             base.AddToScene(context, offset);
             return;
@@ -1154,12 +2032,33 @@ public sealed class ColorFilterLayer : ContainerLayer
 {
     private WriteableBitmap? _filteredBitmap;
 
-    public ColorFilter? ColorFilter { get; set; }
+    private ColorFilter? _colorFilter;
+
+    public ColorFilter? ColorFilter
+    {
+        get => _colorFilter;
+        set
+        {
+            if (EqualityComparer<ColorFilter?>.Default.Equals(value, _colorFilter))
+            {
+                return;
+            }
+
+            _colorFilter = value;
+            MarkNeedsAddToScene();
+        }
+    }
 
     public Rect FilterBounds { get; set; }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            AddChildrenToScene(null, offset);
+            return;
+        }
+
         if (ColorFilter is null)
         {
             AddChildrenToScene(context, offset);
@@ -1200,12 +2099,33 @@ public sealed class ImageFilterLayer : OffsetLayer
 {
     private WriteableBitmap? _filteredBitmap;
 
-    public ImageFilter? ImageFilter { get; set; }
+    private ImageFilter? _imageFilter;
+
+    public ImageFilter? ImageFilter
+    {
+        get => _imageFilter;
+        set
+        {
+            if (EqualityComparer<ImageFilter?>.Default.Equals(value, _imageFilter))
+            {
+                return;
+            }
+
+            _imageFilter = value;
+            MarkNeedsAddToScene();
+        }
+    }
 
     public Rect FilterBounds { get; set; }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (ImageFilter is null)
         {
             base.AddToScene(context, offset);
@@ -1287,9 +2207,39 @@ public sealed class BackdropFilterLayer : ContainerLayer
 
     internal BackdropCapture? Backdrop { get; set; }
 
-    public ImageFilter? ImageFilter { get; set; }
+    private ImageFilter? _imageFilter;
 
-    public BlendMode BlendMode { get; set; } = BlendMode.SourceOver;
+    public ImageFilter? ImageFilter
+    {
+        get => _imageFilter;
+        set
+        {
+            if (EqualityComparer<ImageFilter?>.Default.Equals(value, _imageFilter))
+            {
+                return;
+            }
+
+            _imageFilter = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private BlendMode _blendMode = BlendMode.SourceOver;
+
+    public BlendMode BlendMode
+    {
+        get => _blendMode;
+        set
+        {
+            if (EqualityComparer<BlendMode>.Default.Equals(value, _blendMode))
+            {
+                return;
+            }
+
+            _blendMode = value;
+            MarkNeedsAddToScene();
+        }
+    }
 
     public BackdropKey? BackdropKey { get; set; }
 
@@ -1301,8 +2251,14 @@ public sealed class BackdropFilterLayer : ContainerLayer
         base.CollectBackdropFilters(filters);
     }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            AddChildrenToScene(null, offset);
+            return;
+        }
+
         if (IsBackdropCaptureTarget(this))
         {
             StopBackdropCapture();
@@ -1358,14 +2314,65 @@ public sealed class ShaderMaskLayer : ContainerLayer
 {
     private WriteableBitmap? _maskedBitmap;
 
-    public IBrush? Shader { get; set; }
+    private IBrush? _shader;
 
-    public Rect MaskRect { get; set; }
-
-    public BlendMode BlendMode { get; set; } = BlendMode.Modulate;
-
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public IBrush? Shader
     {
+        get => _shader;
+        set
+        {
+            if (EqualityComparer<IBrush?>.Default.Equals(value, _shader))
+            {
+                return;
+            }
+
+            _shader = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private Rect _maskRect;
+
+    public Rect MaskRect
+    {
+        get => _maskRect;
+        set
+        {
+            if (EqualityComparer<Rect>.Default.Equals(value, _maskRect))
+            {
+                return;
+            }
+
+            _maskRect = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private BlendMode _blendMode = BlendMode.Modulate;
+
+    public BlendMode BlendMode
+    {
+        get => _blendMode;
+        set
+        {
+            if (EqualityComparer<BlendMode>.Default.Equals(value, _blendMode))
+            {
+                return;
+            }
+
+            _blendMode = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        if (context == null)
+        {
+            AddChildrenToScene(null, offset);
+            return;
+        }
+
         if (Shader is null)
         {
             AddChildrenToScene(context, offset);
@@ -1408,12 +2415,56 @@ public sealed class ShaderMaskLayer : ContainerLayer
 
 public sealed class ClipRectLayer : ContainerLayer
 {
-    public Rect ClipRect { get; set; }
+    private Rect _clipRect;
 
-    public Clip ClipBehavior { get; set; } = Clip.HardEdge;
-
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public Rect ClipRect
     {
+        get => _clipRect;
+        set
+        {
+            if (EqualityComparer<Rect>.Default.Equals(value, _clipRect))
+            {
+                return;
+            }
+
+            _clipRect = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private Clip _clipBehavior = Clip.HardEdge;
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (Constants.KDebugMode && value == Clip.None)
+            {
+                throw new AssertionError("A ClipRectLayer cannot use Clip.none.");
+            }
+
+            if (EqualityComparer<Clip>.Default.Equals(value, _clipBehavior))
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    /// <inheritdoc />
+    public override Rect? DescribeClipBounds() => ClipRect;
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
         {
             base.AddToScene(context, offset);
@@ -1452,12 +2503,56 @@ public sealed class ClipRectLayer : ContainerLayer
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed class ClipRRectLayer : ContainerLayer
 {
-    public RRect ClipRRect { get; set; }
+    private RRect _clipRRect;
 
-    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
-
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public RRect ClipRRect
     {
+        get => _clipRRect;
+        set
+        {
+            if (EqualityComparer<RRect>.Default.Equals(value, _clipRRect))
+            {
+                return;
+            }
+
+            _clipRRect = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private Clip _clipBehavior = Clip.AntiAlias;
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (Constants.KDebugMode && value == Clip.None)
+            {
+                throw new AssertionError("A ClipRRectLayer cannot use Clip.none.");
+            }
+
+            if (EqualityComparer<Clip>.Default.Equals(value, _clipBehavior))
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    /// <inheritdoc />
+    public override Rect? DescribeClipBounds() => ClipRRect.Rect;
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
         {
             base.AddToScene(context, offset);
@@ -1492,12 +2587,56 @@ public sealed class ClipRRectLayer : ContainerLayer
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed class ClipRSuperellipseLayer : ContainerLayer
 {
-    public RSuperellipse ClipRSuperellipse { get; set; }
+    private RSuperellipse _clipRSuperellipse;
 
-    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
-
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public RSuperellipse ClipRSuperellipse
     {
+        get => _clipRSuperellipse;
+        set
+        {
+            if (EqualityComparer<RSuperellipse>.Default.Equals(value, _clipRSuperellipse))
+            {
+                return;
+            }
+
+            _clipRSuperellipse = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    private Clip _clipBehavior = Clip.AntiAlias;
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (Constants.KDebugMode && value == Clip.None)
+            {
+                throw new AssertionError("A ClipRSuperellipseLayer cannot use Clip.none.");
+            }
+
+            if (EqualityComparer<Clip>.Default.Equals(value, _clipBehavior))
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    /// <inheritdoc />
+    public override Rect? DescribeClipBounds() => ClipRSuperellipse.Rect;
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
         {
             base.AddToScene(context, offset);
@@ -1519,7 +2658,8 @@ public sealed class ClipRSuperellipseLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        return ClipRSuperellipse.Contains(localPosition)
+        // Dart hit tests the superellipse's bounding rectangle.
+        return ContainsRect(ClipRSuperellipse.Rect, localPosition)
             && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 
@@ -1544,15 +2684,50 @@ public sealed class ClipPathLayer : ContainerLayer
         set
         {
             ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(value, _clipPath))
+            {
+                return;
+            }
+
             _clipPath = value;
             _geometry = null;
+            MarkNeedsAddToScene();
         }
     }
 
-    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
+    private Clip _clipBehavior = Clip.AntiAlias;
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public Clip ClipBehavior
     {
+        get => _clipBehavior;
+        set
+        {
+            if (Constants.KDebugMode && value == Clip.None)
+            {
+                throw new AssertionError("A ClipPathLayer cannot use Clip.none.");
+            }
+
+            if (EqualityComparer<Clip>.Default.Equals(value, _clipBehavior))
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    /// <inheritdoc />
+    public override Rect? DescribeClipBounds() => _clipPath.GetBounds();
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
         {
             base.AddToScene(context, offset);
@@ -1603,8 +2778,14 @@ public sealed class ClipGeometryLayer : ContainerLayer
 
     public Point GeometryOffset { get; set; }
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            base.AddToScene(null, offset);
+            return;
+        }
+
         if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
         {
             base.AddToScene(context, offset);
@@ -1635,17 +2816,86 @@ public sealed class ClipGeometryLayer : ContainerLayer
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
-public sealed class TransformLayer : ContainerLayer
+/// <summary>A composited layer that applies a given transformation matrix to its children.</summary>
+/// <remarks>
+/// Flutter's <c>TransformLayer</c>. This class inherits from <see cref="OffsetLayer"/> to make it one of
+/// the layers that can be used at the root of a <see cref="RenderObject"/> hierarchy.
+/// </remarks>
+public sealed class TransformLayer : OffsetLayer
 {
-    public Matrix4 Transform { get; set; } = Matrix4.Identity();
+    private Matrix4? _transform;
+    private Matrix4? _lastEffectiveTransform;
+    private Matrix4? _invertedTransform;
+    private bool _inverseDirty = true;
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    public TransformLayer(Matrix4? transform = null, Point offset = default) : base(offset)
     {
-        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
-        using (context.PushTransform(Transform.ToAvaloniaMatrix()))
+        _transform = transform;
+    }
+
+    /// <summary>The matrix to apply.</summary>
+    /// <remarks>
+    /// Dart's field is nullable and starts null; Plumix starts from the identity matrix so an unset
+    /// transform composites as a no-op.
+    /// </remarks>
+    public Matrix4 Transform
+    {
+        get => _transform ??= Matrix4.Identity();
+        set
         {
-            base.AddToScene(context, new Point(0, 0));
+            ArgumentNullException.ThrowIfNull(value);
+            if (Constants.KDebugMode && !value.Storage.All(double.IsFinite))
+            {
+                throw new AssertionError("A TransformLayer transform must have finite components.");
+            }
+
+            if (value == _transform)
+            {
+                return;
+            }
+
+            _transform = value;
+            _inverseDirty = true;
+            MarkNeedsAddToScene();
         }
+    }
+
+    internal override void AddToScene(DrawingContext? context, Point offset)
+    {
+        _lastEffectiveTransform = Transform;
+        if (Offset != default)
+        {
+            _lastEffectiveTransform = Matrix4.TranslationValues(Offset.X, Offset.Y, 0.0);
+            _lastEffectiveTransform.Multiply(Transform);
+        }
+
+        if (context == null)
+        {
+            AddChildrenToScene(null, default);
+            return;
+        }
+
+        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+        using (context.PushTransform(_lastEffectiveTransform.ToAvaloniaMatrix()))
+        {
+            AddChildrenToScene(context, default);
+        }
+    }
+
+    private Point? TransformOffset(Point localPosition)
+    {
+        if (_inverseDirty)
+        {
+            _invertedTransform = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
+            _inverseDirty = false;
+        }
+
+        if (_invertedTransform == null)
+        {
+            return null;
+        }
+
+        return MatrixUtils.TransformPoint(_invertedTransform, localPosition);
     }
 
     protected internal override bool FindAnnotations<T>(
@@ -1653,13 +2903,27 @@ public sealed class TransformLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
-        if (inverse is null)
+        Point? transformedOffset = TransformOffset(localPosition);
+        if (transformedOffset == null)
         {
             return false;
         }
 
-        return base.FindAnnotations(result, MatrixUtils.TransformPoint(inverse, localPosition), onlyFirst);
+        return base.FindAnnotations(result, transformedOffset.Value, onlyFirst);
+    }
+
+    /// <inheritdoc />
+    public override void ApplyTransform(Layer? child, Matrix4 transform)
+    {
+        Debug.Assert(child != null);
+        if (_lastEffectiveTransform == null)
+        {
+            transform.Multiply(Transform);
+        }
+        else
+        {
+            transform.Multiply(_lastEffectiveTransform);
+        }
     }
 
     /// <inheritdoc />
@@ -1681,19 +2945,63 @@ public sealed class PictureLayer : Layer
     /// <summary>The bounds that were used for the canvas that drew this layer's <see cref="Picture"/>.</summary>
     public Rect CanvasBounds { get; }
 
+    private Picture? _picture;
+    private bool _isComplexHint;
+    private bool _willChangeHint;
+
     /// <summary>The picture recorded for this layer.</summary>
-    public Picture? Picture { get; set; }
+    public Picture? Picture
+    {
+        get => _picture;
+        set
+        {
+            if (Constants.KDebugMode && DebugDisposed)
+            {
+                throw new AssertionError("A disposed PictureLayer cannot take a picture.");
+            }
+
+            MarkNeedsAddToScene();
+            _picture = value;
+        }
+    }
 
     /// <summary>Hint that this layer's picture is complex enough to benefit from caching.</summary>
-    public bool IsComplexHint { get; set; }
+    public bool IsComplexHint
+    {
+        get => _isComplexHint;
+        set
+        {
+            if (value != _isComplexHint)
+            {
+                _isComplexHint = value;
+                MarkNeedsAddToScene();
+            }
+        }
+    }
 
     /// <summary>Hint that this layer's picture is likely to change in the next frame.</summary>
-    public bool WillChangeHint { get; set; }
+    public bool WillChangeHint
+    {
+        get => _willChangeHint;
+        set
+        {
+            if (value != _willChangeHint)
+            {
+                _willChangeHint = value;
+                MarkNeedsAddToScene();
+            }
+        }
+    }
 
     public bool IsEmpty => Picture is null || Picture.IsEmpty;
 
-    internal override void AddToScene(DrawingContext context, Point offset)
+    internal override void AddToScene(DrawingContext? context, Point offset)
     {
+        if (context == null)
+        {
+            return;
+        }
+
         Picture?.Playback(context, offset);
     }
 
@@ -1702,7 +3010,11 @@ public sealed class PictureLayer : Layer
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<Rect>("paint bounds", CanvasBounds));
-        properties.Add(new DiagnosticsProperty<bool>("isComplexHint", IsComplexHint, defaultValue: false));
-        properties.Add(new DiagnosticsProperty<bool>("willChangeHint", WillChangeHint, defaultValue: false));
+        properties.Add(new DiagnosticsProperty<string>("picture", Diagnostics.DescribeIdentity(_picture)));
+        string isComplex = IsComplexHint ? "true" : "false";
+        string willChange = WillChangeHint ? "true" : "false";
+        properties.Add(new DiagnosticsProperty<string>(
+            "raster cache hints",
+            $"isComplex = {isComplex}, willChange = {willChange}"));
     }
 }

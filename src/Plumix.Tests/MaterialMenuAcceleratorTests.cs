@@ -458,6 +458,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
             Scheduler.PumpFrameForTests();
         }
 

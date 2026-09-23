@@ -25,6 +25,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Same(pipeline.RootLayer, renderView._layer);
     }
@@ -44,11 +45,13 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var replacement = new OffsetLayer();
         pipeline.ReplaceRootLayer(replacement);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Same(replacement, pipeline.RootLayer);
         Assert.NotEmpty(replacement.Children);
@@ -69,6 +72,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
 
@@ -76,6 +80,7 @@ public sealed class CompositingLayerTests
         pipeline.ReplaceRootLayer(sameRootLayer);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
     }
@@ -96,6 +101,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Single(pipeline.RootLayer.Children);
         var boundaryLayer = Assert.IsType<OffsetLayer>(pipeline.RootLayer.Children[0]);
@@ -123,6 +129,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, parent.PaintCount);
         Assert.Equal(1, boundary.PaintCount);
@@ -131,6 +138,7 @@ public sealed class CompositingLayerTests
         parent.TriggerRepaint();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(2, parent.PaintCount);
         Assert.Equal(1, boundary.PaintCount);
@@ -154,6 +162,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, parent.PaintCount);
         Assert.Equal(1, boundary.PaintCount);
@@ -162,6 +171,7 @@ public sealed class CompositingLayerTests
         boundary.TriggerRepaint();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, parent.PaintCount);
         Assert.Equal(2, boundary.PaintCount);
@@ -184,6 +194,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, boundary.PaintCount);
         Assert.Equal(1, leaf.PaintCount);
@@ -192,6 +203,7 @@ public sealed class CompositingLayerTests
         boundary.TriggerLayerPropertyUpdate();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, boundary.PaintCount);
         Assert.Equal(1, leaf.PaintCount);
@@ -214,6 +226,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, boundary.PaintCount);
         Assert.Equal(1, leaf.PaintCount);
@@ -222,6 +235,7 @@ public sealed class CompositingLayerTests
         boundary.TriggerRepaintAndLayerPropertyUpdate();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(2, boundary.PaintCount);
         Assert.Equal(2, leaf.PaintCount);
@@ -244,6 +258,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
         var opacityLayer = Assert.IsType<OpacityLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -254,6 +269,7 @@ public sealed class CompositingLayerTests
         opacity.Opacity = 0.25;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
         Assert.Equal(64, opacityLayer.Alpha);
@@ -331,6 +347,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
         var filterLayer = Assert.IsType<ImageFilterLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -342,6 +359,7 @@ public sealed class CompositingLayerTests
         transform.FilterQuality = FilterQuality.High;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         // Dart reuses the `ImageFilterLayer` and swaps its `imageFilter`; the subtree repaints because
         // the transform is not a repaint boundary.
@@ -397,6 +415,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
         var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
@@ -405,6 +424,7 @@ public sealed class CompositingLayerTests
         clipper.Rect = new Rect(3, 5, 20, 12);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var updatedLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Same(clipLayer, updatedLayer);
@@ -428,12 +448,14 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
 
         coloredBox.Color = Colors.CadetBlue;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, leaf.PaintCount);
     }
@@ -454,6 +476,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         var boundaryLayer = Assert.IsType<OffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
         pipeline.RootLayer.Remove(boundaryLayer);
@@ -462,6 +485,7 @@ public sealed class CompositingLayerTests
         boundary.TriggerRepaint();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         // Flutter's `_skippedPaintingOnLayer` walks up only as far as the first ancestor whose own
         // layer is still attached — the one that detached us — and leaves the decision to repaint to
@@ -471,6 +495,7 @@ public sealed class CompositingLayerTests
 
         root.MarkNeedsPaint();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(2, boundary.PaintCount);
         Assert.Equal(2, leaf.PaintCount);
@@ -494,6 +519,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Contains(pipeline.RootLayer.Children, static layer => layer is OffsetLayer);
         Assert.Equal(1, toggle.PaintCount);
@@ -502,6 +528,7 @@ public sealed class CompositingLayerTests
         toggle.IsBoundary = false;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.DoesNotContain(pipeline.RootLayer.Children, static layer => layer is OffsetLayer);
         Assert.Equal(2, toggle.PaintCount);
@@ -525,6 +552,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.DoesNotContain(pipeline.RootLayer.Children, static layer => layer is OffsetLayer);
         Assert.Equal(1, toggle.PaintCount);
@@ -533,6 +561,7 @@ public sealed class CompositingLayerTests
         toggle.IsBoundary = true;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Contains(pipeline.RootLayer.Children, static layer => layer is OffsetLayer);
         Assert.Equal(2, toggle.PaintCount);

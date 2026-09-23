@@ -621,6 +621,7 @@ public sealed class AnimatedListTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose() => _root.UnmountRoot();
@@ -648,7 +649,7 @@ public sealed class AnimatedListTests : IDisposable
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
             }
 
             public override void ForgetChild(Element child)

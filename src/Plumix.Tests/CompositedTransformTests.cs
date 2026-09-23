@@ -96,6 +96,7 @@ public sealed class CompositedTransformTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(new Size(40, 20), link.LeaderSize);
         Assert.NotNull(link.Leader);
@@ -126,6 +127,7 @@ public sealed class CompositedTransformTests
         pipeline.FlushLayout(new Size(20, 10));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Null(link.Leader);
         Assert.Equal(Matrix4.Identity(), follower.GetCurrentTransform());
@@ -174,6 +176,7 @@ public sealed class CompositedTransformTests
         pipeline.FlushLayout(new Size(300, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(target.TryGetTransformFromRoot(out Matrix4 leaderToRoot));
         Assert.True(follower.TryGetTransformFromRoot(out Matrix4 followerToRoot));
@@ -198,12 +201,14 @@ public sealed class CompositedTransformTests
         pipeline.FlushLayout(new Size(32, 18));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(new Size(32, 18), firstLink.LeaderSize);
         Assert.NotNull(firstLink.Leader);
 
         target.Link = secondLink;
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Null(firstLink.LeaderSize);
         Assert.Null(firstLink.Leader);

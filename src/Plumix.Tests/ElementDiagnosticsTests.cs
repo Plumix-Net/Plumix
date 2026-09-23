@@ -668,6 +668,7 @@ public sealed class ElementDiagnosticsTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public Element? FindElement(Func<Element, bool> predicate)

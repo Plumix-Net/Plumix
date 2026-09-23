@@ -162,6 +162,7 @@ public class ViewportPortTests
         PipelineOwner pipeline = Layout(viewport, new Size(100, 200));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(["second", "first"], paints);
         Assert.Equal([first, second], viewport.ChildrenInHitTestOrder.ToList());
 
@@ -170,6 +171,7 @@ public class ViewportPortTests
         pipeline.RequestPaint();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(["first", "second"], paints);
         Assert.Equal([second, first], viewport.ChildrenInHitTestOrder.ToList());
     }

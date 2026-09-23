@@ -55,6 +55,7 @@ public sealed class FlowRepaintBoundaryTests
         pipeline.FlushLayout(new Size(80, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(1, first.PaintCount);
         Assert.Equal(0, second.PaintCount);
@@ -91,6 +92,7 @@ public sealed class FlowRepaintBoundaryTests
         pipeline.FlushLayout(new Size(80, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         int layoutCount = child.LayoutCount;
         int delegatePaintCount = flowDelegate.PaintCount;
 
@@ -98,6 +100,7 @@ public sealed class FlowRepaintBoundaryTests
 
         Assert.True(pipeline.NeedsPaint);
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(layoutCount, child.LayoutCount);
         Assert.Equal(delegatePaintCount + 1, flowDelegate.PaintCount);
     }
@@ -116,6 +119,7 @@ public sealed class FlowRepaintBoundaryTests
         pipeline.FlushLayout(new Size(80, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         int layoutCount = child.LayoutCount;
         var repaintOnly = new TestFlowDelegate(
@@ -124,6 +128,7 @@ public sealed class FlowRepaintBoundaryTests
             shouldRepaint: true);
         flow.Delegate = repaintOnly;
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(layoutCount, child.LayoutCount);
         Assert.Equal(1, repaintOnly.PaintCount);
 
@@ -136,6 +141,7 @@ public sealed class FlowRepaintBoundaryTests
         pipeline.FlushLayout(new Size(80, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.Equal(layoutCount + 1, child.LayoutCount);
         Assert.Equal(new Size(12, 12), child.Size);
         Assert.Equal(0, relayout.ShouldRepaintCallCount);
@@ -179,6 +185,7 @@ public sealed class FlowRepaintBoundaryTests
         pipeline.FlushLayout(new Size(24, 16));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(boundary.IsRepaintBoundary);
         Assert.Equal(new Size(24, 16), boundary.Size);

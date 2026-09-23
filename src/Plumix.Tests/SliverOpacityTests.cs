@@ -105,6 +105,7 @@ public sealed class SliverOpacityTests : IDisposable
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.False(opacity.NeedsCompositing);
         Assert.Equal(0, box.PaintCount);
@@ -113,6 +114,7 @@ public sealed class SliverOpacityTests : IDisposable
         opacity.Opacity = 0.4;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);
@@ -122,6 +124,7 @@ public sealed class SliverOpacityTests : IDisposable
         opacity.Opacity = 0.0;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.False(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);
@@ -144,6 +147,7 @@ public sealed class SliverOpacityTests : IDisposable
         pipeline.FlushLayout(new Size(100, 60));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.False(opacity.NeedsCompositing);
         Assert.Equal(0, box.PaintCount);
@@ -151,6 +155,7 @@ public sealed class SliverOpacityTests : IDisposable
         controller.SetValue(0.5);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.True(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);
@@ -160,6 +165,7 @@ public sealed class SliverOpacityTests : IDisposable
         controller.SetValue(0.0);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.False(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);

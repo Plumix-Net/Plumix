@@ -9,11 +9,10 @@ namespace Plumix.Rendering;
 // - flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderLeaderLayer, RenderFollowerLayer)
 // - flutter/packages/flutter/lib/src/rendering/layer.dart (LayerLink, LeaderLayer, FollowerLayer)
 
-/// <remarks>
-/// Flutter's <c>RenderLeaderLayer</c>. The attach/detach registration with
-/// <see cref="LayerLink"/> is Plumix-only: the follower resolves the leader's transform at paint time
-/// from the leader render object instead of at composition time (see docs/ai/DIVERGENCES.md).
-/// </remarks>
+/// <summary>
+/// Provides an anchor for a <see cref="RenderFollowerLayer"/>.
+/// </summary>
+/// <remarks>Flutter's <c>RenderLeaderLayer</c>.</remarks>
 public class RenderLeaderLayer : RenderProxyBox
 {
     private LayerLink _link;
@@ -38,12 +37,6 @@ public class RenderLeaderLayer : RenderProxyBox
             }
 
             _link.LeaderSize = null;
-            if (Attached)
-            {
-                _link.UnregisterRenderLeader(this);
-                value.RegisterRenderLeader(this);
-            }
-
             _link = value;
             if (_previousLayoutSize != null)
             {
@@ -55,18 +48,6 @@ public class RenderLeaderLayer : RenderProxyBox
     }
 
     public override bool AlwaysNeedsCompositing => true;
-
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        _link.RegisterRenderLeader(this);
-    }
-
-    protected override void OnDetach()
-    {
-        _link.UnregisterRenderLeader(this);
-        base.OnDetach();
-    }
 
     protected override void PerformLayout()
     {
@@ -105,12 +86,15 @@ public class RenderLeaderLayer : RenderProxyBox
     }
 }
 
+/// <summary>
+/// Transform the child so that its origin is <see cref="Offset"/> from the origin of the
+/// <see cref="RenderLeaderLayer"/> with the same <see cref="LayerLink"/>.
+/// </summary>
 /// <remarks>
-/// Flutter's <c>RenderFollowerLayer</c>. Dart hands <see cref="FollowerLayer"/> a linked offset and the
-/// layer derives the transform while compositing; Plumix computes the same transform here at paint
-/// time from the linked leader render object and stores it in <see cref="FollowerLayer.LinkedTransform"/>
-/// (see docs/ai/DIVERGENCES.md). Dart's non-null <c>Alignment.topLeft</c> anchor defaults are
-/// <c>null</c> parameters because <see cref="Alignment"/> is a struct with no constant top-left value.
+/// Flutter's <c>RenderFollowerLayer</c>. The transform is established by <see cref="FollowerLayer"/> while
+/// compositing, so <see cref="GetCurrentTransform"/> reports the last composited frame. Dart's non-null
+/// <c>Alignment.topLeft</c> anchor defaults are <c>null</c> parameters because <see cref="Alignment"/> is
+/// a struct with no constant top-left value.
 /// </remarks>
 public class RenderFollowerLayer : RenderProxyBox
 {
@@ -227,6 +211,11 @@ public class RenderFollowerLayer : RenderProxyBox
         set => base.Layer = value;
     }
 
+    /// <summary>The current transform from this render object to its linked leader.</summary>
+    /// <remarks>
+    /// The value is only valid after this render object was composited; it is the identity before that
+    /// and while unlinked.
+    /// </remarks>
     public Matrix4 GetCurrentTransform()
     {
         return Layer?.GetLastTransform() ?? Matrix4.Identity();
@@ -268,22 +257,21 @@ public class RenderFollowerLayer : RenderProxyBox
         Point effectiveLinkedOffset = leaderSize == null
             ? Offset
             : LeaderAnchor.AlongSize(leaderSize.Value) - FollowerAnchor.AlongSize(Size) + Offset;
-        Matrix4? linkedTransform = ComputeLinkedTransform(effectiveLinkedOffset);
         FollowerLayer? layer = Layer;
         if (layer == null)
         {
             layer = new FollowerLayer(
                 link: Link,
                 showWhenUnlinked: ShowWhenUnlinked,
-                unlinkedOffset: offset,
-                linkedTransform: linkedTransform);
+                linkedOffset: effectiveLinkedOffset,
+                unlinkedOffset: offset);
             Layer = layer;
         }
         else
         {
             layer.Link = Link;
             layer.ShowWhenUnlinked = ShowWhenUnlinked;
-            layer.LinkedTransform = linkedTransform;
+            layer.LinkedOffset = effectiveLinkedOffset;
             layer.UnlinkedOffset = offset;
         }
 
@@ -299,33 +287,6 @@ public class RenderFollowerLayer : RenderProxyBox
         {
             layer.DebugCreator = DebugCreator;
         }
-    }
-
-    /// <summary>
-    /// Plumix-only: the transform Dart's <c>FollowerLayer._establishTransform</c> derives from the layer
-    /// tree, computed from the render tree instead. It maps this box's coordinates to the leader's,
-    /// translated by <paramref name="linkedOffset"/>.
-    /// </summary>
-    private Matrix4? ComputeLinkedTransform(Point linkedOffset)
-    {
-        RenderLeaderLayer? leader = Link.RenderLeader;
-        if (leader == null
-            || !leader.TryGetTransformFromRoot(out Matrix4 leaderToRoot)
-            || !TryGetTransformFromRoot(out Matrix4 followerToRoot))
-        {
-            return null;
-        }
-
-        Matrix4 result = Matrix4.Copy(followerToRoot);
-        if (result.Invert() == 0.0)
-        {
-            // We are in a degenerate transform, so there's not much we can do.
-            return null;
-        }
-
-        result.Multiply(leaderToRoot);
-        result.TranslateByDouble(linkedOffset.X, linkedOffset.Y, 0, 1);
-        return result;
     }
 
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)

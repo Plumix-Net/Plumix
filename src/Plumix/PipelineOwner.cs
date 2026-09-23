@@ -779,6 +779,44 @@ public class PipelineOwner : DiagnosticableTree
         _needsPaint = false;
     }
 
+    /// <summary>
+    /// Composites the layer tree without drawing it: runs every layer's composition-time work
+    /// (<see cref="FollowerLayer"/> transforms, composition callbacks, dirty flags) the way the host's
+    /// <see cref="CompositeFrame(DrawingContext)"/> does.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RendererBinding.drawFrame</c> composites every registered <c>RenderView</c> after
+    /// flushing paint, and its test binding does so with a scene builder that renders nowhere. This is
+    /// that composite for tests and host-less trees that pump the pipeline by hand: it builds this owner's
+    /// root layer, then those of its child owners (one per nested <c>View</c>).
+    /// </remarks>
+    public void CompositeFrame()
+    {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        try
+        {
+            CompositeFrameHeadless();
+        }
+        finally
+        {
+            RenderingDebug.AdvanceRepaintColorForFrame();
+        }
+    }
+
+    private void CompositeFrameHeadless()
+    {
+        _rootLayer.BuildScene(null);
+        foreach (PipelineOwner child in _children.ToArray())
+        {
+            child.CompositeFrameHeadless();
+        }
+    }
+
+    /// <summary>Composites the layer tree into <paramref name="context"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderView.compositeFrame</c> (see docs/ai/DIVERGENCES.md: the host draws into an
+    /// Avalonia drawing context instead of rendering an engine scene).
+    /// </remarks>
     public void CompositeFrame(DrawingContext context)
     {
         bool hasBackdropFilters = _rootLayer.ContainsBackdropFilter;
@@ -791,7 +829,7 @@ public class PipelineOwner : DiagnosticableTree
 
             if (!_rootLayer.ContainsMagnifier)
             {
-                _rootLayer.AddToScene(context, new Point(0, 0));
+                _rootLayer.BuildScene(context);
                 return;
             }
 
@@ -800,7 +838,7 @@ public class PipelineOwner : DiagnosticableTree
             {
                 BackdropCapture backdrop = CaptureScene();
                 Layer.EndMagnifierBackdropCapture(backdrop);
-                _rootLayer.AddToScene(context, new Point(0, 0));
+                _rootLayer.BuildScene(context);
             }
             finally
             {

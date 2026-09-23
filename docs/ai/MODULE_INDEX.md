@@ -375,6 +375,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/DismissibleSizeChangedLayoutTests.cs`
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
+  - `src/Plumix.Tests/LayerTreeTests.cs`
 
 ### Core Animation and Transitions
 

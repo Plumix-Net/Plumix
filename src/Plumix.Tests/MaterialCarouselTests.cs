@@ -615,6 +615,7 @@ public sealed class MaterialCarouselTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         /// <summary>Replaces the carousel with a new configuration and lays out again.</summary>

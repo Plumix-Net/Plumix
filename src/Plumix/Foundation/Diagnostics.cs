@@ -130,6 +130,9 @@ public static class Diagnostics
             null => "null",
             bool flag => flag ? "true" : "false",
             string text => text,
+            // Dart's enum `toString` is `EnumType.member`.
+            Enum enumValue when Enum.IsDefined(enumValue.GetType(), enumValue) =>
+                $"{enumValue.GetType().Name}.{EnumName(enumValue)}",
             IFormattable formattable when value is not Enum =>
                 formattable.ToString(null, CultureInfo.InvariantCulture),
             _ => value.ToString() ?? string.Empty,

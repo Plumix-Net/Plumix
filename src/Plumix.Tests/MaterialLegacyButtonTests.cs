@@ -451,6 +451,7 @@ public sealed class MaterialLegacyButtonTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public void Dispose() => _root.UnmountRoot();
@@ -485,7 +486,7 @@ public sealed class MaterialLegacyButtonTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            Child = UpdateChild(Child, Widget, Slot);
+            Child = UpdateChild(Child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

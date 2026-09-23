@@ -500,6 +500,7 @@ public sealed class MaterialDrawerHeaderTests
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)

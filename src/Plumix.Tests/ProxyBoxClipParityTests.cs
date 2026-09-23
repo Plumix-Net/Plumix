@@ -857,6 +857,7 @@ public sealed class ProxyBoxClipParityTests
         pipeline.FlushLayout();
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private sealed class SizedRenderBox(Size size, bool hitSelf = false) : RenderBox

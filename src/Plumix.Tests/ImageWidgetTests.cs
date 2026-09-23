@@ -286,11 +286,13 @@ public sealed class ImageWidgetTests : IDisposable
         pipeline.FlushLayout(new Size(40, 20));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         opacity.Value = 0.4;
 
         Assert.True(pipeline.NeedsPaint);
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
         Assert.NotEmpty(pipeline.RootLayer.Children);
         var hitTest = new BoxHitTestResult();
         Assert.True(renderImage.HitTest(hitTest, new Point(10, 10)));
@@ -546,6 +548,7 @@ public sealed class ImageWidgetTests : IDisposable
             Pipeline.FlushLayout(size);
             Pipeline.FlushCompositingBits();
             Pipeline.FlushPaint();
+            Pipeline.CompositeFrame();
         }
 
         public void Dispose()

@@ -228,6 +228,7 @@ public sealed class SliverGroupTests
         pipeline.FlushLayout(size);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
     }
 
     private static SliverConstraints CreateConstraints(

@@ -3,9 +3,9 @@ using Plumix.UI;
 
 namespace Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (Directionality, approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart
 
-public sealed class Directionality : InheritedWidget
+public sealed class Directionality : UbiquitousInheritedWidget
 {
     public Directionality(
         TextDirection textDirection,
@@ -17,18 +17,27 @@ public sealed class Directionality : InheritedWidget
 
     public TextDirection TextDirection { get; }
 
-    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return ((Directionality)oldWidget).TextDirection != TextDirection;
-    }
-
     public static TextDirection Of(BuildContext context)
     {
-        return MaybeOf(context) ?? TextDirection.Ltr;
+        WidgetsDebug.DebugCheckHasDirectionality(context);
+        Directionality widget = context.DependOnInheritedWidgetOfExactType<Directionality>()!;
+        return widget.TextDirection;
     }
 
     public static TextDirection? MaybeOf(BuildContext context)
     {
         return context.DependOnInheritedWidgetOfExactType<Directionality>()?.TextDirection;
+    }
+
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return TextDirection != ((Directionality)oldWidget).TextDirection;
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection));
     }
 }

@@ -956,6 +956,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         pipeline.FlushLayout(new Size(40, 24));
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
+        pipeline.CompositeFrame();
 
         Assert.Equal(new Size(40, 24), physical.Size);
 
@@ -1264,7 +1265,8 @@ public sealed class ImplicitAnimationsTests : IDisposable
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
+            _child = UpdateChild(_child, new Directionality(
+                Plumix.UI.TextDirection.Ltr, _harnessChild ?? Widget), Slot);
         }
 
         public override void Update(Widget newWidget)

@@ -193,7 +193,8 @@ public sealed class CupertinoRefreshTests
     }
 
     // A sliver needs a viewport parent; Flutter's tests host the control in a CustomScrollView.
-    private static Widget InViewport(Widget sliver) => new Viewport(ViewportOffset.Zero(), [sliver]);
+    private static Widget InViewport(Widget sliver) => new Directionality(
+        TextDirection.Ltr, new Viewport(ViewportOffset.Zero(), [sliver]));
 
     private static RenderCupertinoSliverRefresh HostedSliver(CupertinoThemeTestHarness harness) =>
         Assert.IsType<RenderCupertinoSliverRefresh>(
