@@ -99,7 +99,18 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     protected internal Layer? Layer
     {
         get => _layerHandle.Layer;
-        set => _layerHandle.Layer = value;
+        set
+        {
+            if (Constants.KDebugMode && IsRepaintBoundary)
+            {
+                throw new AssertionError(
+                    "Attempted to set a layer to a repaint boundary render object.\n"
+                    + "The framework creates and assigns an OffsetLayer to a repaint "
+                    + "boundary automatically.");
+            }
+
+            _layerHandle.Layer = value;
+        }
     }
 
     /// <summary>The retained compositing layer, exposed for diagnostics and tests.</summary>

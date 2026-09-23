@@ -12,6 +12,30 @@ namespace Plumix.Tests;
 
 public sealed class RenderObjectLifecycleTests
 {
+    [DebugOnlyFact]
+    public void RepaintBoundary_CannotReplaceItsFrameworkOwnedLayer()
+    {
+        var boundary = new TestRepaintBoundaryBox();
+
+        AssertionError error = Assert.Throws<AssertionError>(() => boundary.SetRetainedLayer(new OpacityLayer()));
+
+        Assert.Contains("Attempted to set a layer to a repaint boundary render object.", error.Message);
+        Assert.Null(boundary.DebugLayer);
+        boundary.Dispose();
+    }
+
+    [Fact]
+    public void NonRepaintBoundary_CanOwnACompositedLayer()
+    {
+        var renderObject = new TestRenderBox();
+        var layer = new OpacityLayer();
+
+        renderObject.SetRetainedLayer(layer);
+
+        Assert.Same(layer, renderObject.DebugLayer);
+        renderObject.Dispose();
+    }
+
     [Fact]
     public void RenderObject_Dispose_ReleasesItsLayerAndMarksItDisposed()
     {
@@ -212,8 +236,13 @@ public sealed class RenderObjectLifecycleTests
         Assert.True(inner.DebugDisposed);
     }
 
-    private sealed class TestRenderBox : RenderBox
+    private class TestRenderBox : RenderBox
     {
+        public void SetRetainedLayer(Layer? layer)
+        {
+            Layer = layer;
+        }
+
         protected override void PerformLayout()
         {
             Size = Constraints.Smallest;
@@ -222,6 +251,11 @@ public sealed class RenderObjectLifecycleTests
         public override void Paint(PaintingContext ctx, Avalonia.Point offset)
         {
         }
+    }
+
+    private sealed class TestRepaintBoundaryBox : TestRenderBox
+    {
+        public override bool IsRepaintBoundary => true;
     }
 
     private sealed class TestEngineLayer : IDisposable
