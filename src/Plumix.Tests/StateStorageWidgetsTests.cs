@@ -281,8 +281,60 @@ public sealed class StateStorageWidgetsTests
             }));
         harness.Pump(new Size(40, 40));
 
-        var invalidOperation = Assert.IsType<InvalidOperationException>(exception);
-        Assert.Contains("SharedAppData.GetValue", invalidOperation.Message);
+        var error = Assert.IsType<FlutterError>(exception);
+        Assert.Contains("No SharedAppData widget found.", error.Message);
+        Assert.Contains("SharedAppData.getValue requires an SharedAppData widget ancestor.", error.Message);
+        Assert.Contains("The ownership chain for the affected widget is", error.Message);
+    }
+
+    [Fact]
+    public void SharedAppData_SetValueWithoutAncestor_ReportsFlutterDiagnostics()
+    {
+        Exception? exception = null;
+        using var harness = new WidgetRenderHarness(
+            new ContextProbe(context =>
+            {
+                exception = Record.Exception(() => SharedAppData.SetValue(context, "key", 1));
+            }));
+        harness.Pump(new Size(40, 40));
+
+        var error = Assert.IsType<FlutterError>(exception);
+        Assert.Contains("SharedAppData.setValue requires an SharedAppData widget ancestor.", error.Message);
+        Assert.Contains("The specific widget that could not find an SharedAppData ancestor was", error.Message);
+    }
+
+    [Fact]
+    public void SharedAppData_NearestAncestorShadowsOuterValue()
+    {
+        BuildContext? outerContext = null;
+        BuildContext? innerContext = null;
+        string? innerValue = null;
+        int innerBuilds = 0;
+        using var harness = new WidgetRenderHarness(
+            new SharedAppData(
+                new Builder(context =>
+                {
+                    outerContext = context;
+                    return new SharedAppData(
+                        new Builder(inner =>
+                        {
+                            innerContext = inner;
+                            innerBuilds += 1;
+                            innerValue = SharedAppData.GetValue(inner, "key", () => "inner");
+                            return new SizedBox(width: 1, height: 1);
+                        }));
+                })));
+        harness.Pump(new Size(40, 40));
+
+        SharedAppData.SetValue(outerContext!, "key", "outer");
+        harness.Pump(new Size(40, 40));
+        Assert.Equal("inner", innerValue);
+        Assert.Equal(1, innerBuilds);
+
+        SharedAppData.SetValue(innerContext!, "key", "updated");
+        harness.Pump(new Size(40, 40));
+        Assert.Equal("updated", innerValue);
+        Assert.Equal(2, innerBuilds);
     }
 
     private static Widget BuildStorageProbe(

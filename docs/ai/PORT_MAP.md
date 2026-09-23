@@ -515,7 +515,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/scrollbar.dart` | `src/Plumix/Widgets/Scrollbar.cs` | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/selectable_region.dart` | `src/Plumix/Widgets/Selection.cs`<br>`src/Plumix/Widgets/SelectionContainerDelegates.cs`<br>`src/Plumix/Widgets/SelectionListener.cs` | `src/Plumix.Tests/CupertinoTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/CupertinoTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialSelectionTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionThemeTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionTests.cs`<br>`src/Plumix.Tests/SelectionListenerTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs`<br>`src/Plumix.Tests/SelectionSubsystemTests.cs`<br>`src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_text_selection_controls_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_handles_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoTextSelectionControlsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionHandlesDemoPage.cs` |
 | `widgets/selection_container.dart` | `src/Plumix/Widgets/SelectionContainer.cs` | — | — |
-| `widgets/shared_app_data.dart` | `src/Plumix/Widgets/SharedAppData.cs` _(reference)_ | — | — |
+| `widgets/shared_app_data.dart` | `src/Plumix/Widgets/SharedAppData.cs` | — | — |
 | `widgets/shortcuts.dart` | `src/Plumix/Widgets/Shortcuts.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs`<br>`src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs` | — |
 | `widgets/single_child_scroll_view.dart` | `src/Plumix/Rendering/SingleChildViewport.cs`<br>`src/Plumix/Widgets/SingleChildScrollView.cs` | `src/Plumix.Tests/SingleChildScrollViewTests.cs` | — |
 | `widgets/size_changed_layout_notifier.dart` | `src/Plumix/Rendering/SizeChangedLayoutNotifier.cs`<br>`src/Plumix/Widgets/SizeChangedLayoutNotifier.cs` | — | — |
@@ -637,7 +637,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Widgets/Directionality.cs` — (reference) (Directionality, approximate)
 - `src/Plumix/Widgets/Icon.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Scrollable.cs` — (adapted)
-- `src/Plumix/Widgets/SharedAppData.cs` — (reference)
 - `src/Plumix/Widgets/TextClipboard.cs` — (reference) (adapted)
 
 ## Summary
@@ -646,5 +645,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 703
 - C# files without a marker: 48
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 24
+- C# files with a qualified (non-strict) marker: 23
 

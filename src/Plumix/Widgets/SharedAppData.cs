@@ -1,6 +1,6 @@
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/shared_app_data.dart (exact structure)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/shared_app_data.dart
 
 namespace Plumix.Widgets;
 
@@ -26,41 +26,48 @@ public sealed class SharedAppData : StatefulWidget
     {
         ArgumentNullException.ThrowIfNull(init);
         var model = InheritedModel<object>.InheritFrom<SharedAppModel>(context, key);
-        if (model == null)
-        {
-            throw MissingAncestor(nameof(GetValue));
-        }
-
-        return model.State.GetValue(key, init);
+        DebugHasSharedAppData(model, context, "getValue");
+        return model!.State.GetValue(key, init);
     }
 
     public static void SetValue<TKey, TValue>(BuildContext context, TKey key, TValue value)
         where TKey : notnull
     {
         var model = context.GetInheritedWidgetOfExactType<SharedAppModel>();
-        if (model == null)
-        {
-            throw MissingAncestor(nameof(SetValue));
-        }
-
-        model.State.SetValue(key, value);
+        DebugHasSharedAppData(model, context, "setValue");
+        model!.State.SetValue(key, value);
     }
 
-    private static InvalidOperationException MissingAncestor(string methodName)
+    private static bool DebugHasSharedAppData(SharedAppModel? model, BuildContext context, string methodName)
     {
-        return new InvalidOperationException(
-            $"SharedAppData.{methodName} requires a SharedAppData widget ancestor.");
+        if (Constants.KDebugMode && model is null)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("No SharedAppData widget found."),
+                new ErrorDescription(
+                    $"SharedAppData.{methodName} requires an SharedAppData widget ancestor.\n"),
+                context.DescribeWidget(
+                    "The specific widget that could not find an SharedAppData ancestor was"),
+                context.DescribeOwnershipChain("The ownership chain for the affected widget is"),
+                new ErrorHint(
+                    "Typically, the SharedAppData widget is introduced by the MaterialApp "
+                    + "or WidgetsApp widget at the top of your application widget tree. It "
+                    + "provides a key/value map of data that is shared with the entire "
+                    + "application."),
+            ]);
+        }
+
+        return true;
     }
 
     private sealed class SharedAppDataState : State<SharedAppData>
     {
         private Dictionary<object, object?> _data = [];
 
-        private SharedAppData CurrentWidget => (SharedAppData)StateWidget;
-
         public override Widget Build(BuildContext context)
         {
-            return new SharedAppModel(this, _data, CurrentWidget.Child);
+            return new SharedAppModel(this, _data, Widget.Child);
         }
 
         public TValue GetValue<TKey, TValue>(TKey key, Func<TValue> init)
