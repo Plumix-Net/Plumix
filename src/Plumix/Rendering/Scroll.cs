@@ -1,9 +1,11 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport.dart
+// Dart parity source: flutter/packages/flutter/lib/src/painting/basic_types.dart (AxisDirection)
 
 namespace Plumix.Rendering;
 
@@ -68,22 +70,10 @@ public static class ScrollDirectionUtils
         };
     }
 
-    public static Axis AxisDirectionToAxis(AxisDirection direction)
-    {
-        return direction switch
-        {
-            AxisDirection.Up => Axis.Vertical,
-            AxisDirection.Down => Axis.Vertical,
-            AxisDirection.Left => Axis.Horizontal,
-            AxisDirection.Right => Axis.Horizontal,
-            _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null)
-        };
-    }
+    public static Axis AxisDirectionToAxis(AxisDirection direction) => BasicTypes.AxisDirectionToAxis(direction);
 
-    public static bool AxisDirectionIsReversed(AxisDirection direction)
-    {
-        return direction == AxisDirection.Up || direction == AxisDirection.Left;
-    }
+    public static bool AxisDirectionIsReversed(AxisDirection direction) =>
+        BasicTypes.AxisDirectionIsReversed(direction);
 
     public static AxisDirection DefaultAxisDirection(Axis axis)
     {

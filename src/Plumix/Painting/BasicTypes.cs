@@ -1,4 +1,9 @@
-﻿namespace Plumix.Painting;
+﻿using Plumix.Rendering;
+using Plumix.UI;
+
+// Dart parity source: flutter/packages/flutter/lib/src/painting/basic_types.dart
+
+namespace Plumix.Painting;
 
 /// The description of the difference between two objects, in the context of how
 /// it will affect the rendering.
@@ -57,4 +62,43 @@ public enum VerticalDirection
     Down
 }
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/painting/basic_types.dart (approximate)
+/// The top-level axis and direction helpers in Flutter's painting/basic_types.dart.
+public static class BasicTypes
+{
+    public static Axis FlipAxis(Axis direction) => direction switch
+    {
+        Axis.Horizontal => Axis.Vertical,
+        Axis.Vertical => Axis.Horizontal,
+        _ => throw new ArgumentOutOfRangeException(nameof(direction), direction, null),
+    };
+
+    public static Axis AxisDirectionToAxis(AxisDirection axisDirection) => axisDirection switch
+    {
+        AxisDirection.Up or AxisDirection.Down => Axis.Vertical,
+        AxisDirection.Left or AxisDirection.Right => Axis.Horizontal,
+        _ => throw new ArgumentOutOfRangeException(nameof(axisDirection), axisDirection, null),
+    };
+
+    public static AxisDirection TextDirectionToAxisDirection(TextDirection textDirection) => textDirection switch
+    {
+        TextDirection.Rtl => AxisDirection.Left,
+        TextDirection.Ltr => AxisDirection.Right,
+        _ => throw new ArgumentOutOfRangeException(nameof(textDirection), textDirection, null),
+    };
+
+    public static AxisDirection FlipAxisDirection(AxisDirection axisDirection) => axisDirection switch
+    {
+        AxisDirection.Up => AxisDirection.Down,
+        AxisDirection.Right => AxisDirection.Left,
+        AxisDirection.Down => AxisDirection.Up,
+        AxisDirection.Left => AxisDirection.Right,
+        _ => throw new ArgumentOutOfRangeException(nameof(axisDirection), axisDirection, null),
+    };
+
+    public static bool AxisDirectionIsReversed(AxisDirection axisDirection) => axisDirection switch
+    {
+        AxisDirection.Up or AxisDirection.Left => true,
+        AxisDirection.Down or AxisDirection.Right => false,
+        _ => throw new ArgumentOutOfRangeException(nameof(axisDirection), axisDirection, null),
+    };
+}

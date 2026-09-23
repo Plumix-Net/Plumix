@@ -87,7 +87,7 @@ public class Viewport : MultiChildRenderObjectWidget
     /// <remarks>Flutter's <c>textDirectionToAxisDirection</c>.</remarks>
     internal static AxisDirection TextDirectionToAxisDirection(TextDirection textDirection)
     {
-        return textDirection == TextDirection.Rtl ? AxisDirection.Left : AxisDirection.Right;
+        return Plumix.Painting.BasicTypes.TextDirectionToAxisDirection(textDirection);
     }
 
     public override Element CreateElement() => new ViewportElement(this);
