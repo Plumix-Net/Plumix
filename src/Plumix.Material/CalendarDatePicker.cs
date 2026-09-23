@@ -291,7 +291,7 @@ public sealed class CalendarDatePicker : StatefulWidget
 
         private void ToggleMode()
         {
-            Feedback.ForTap();
+            _ = Feedback.ForTap(Context);
             SetState(() =>
             {
                 _mode = _mode == DatePickerMode.Day ? DatePickerMode.Year : DatePickerMode.Day;
@@ -355,7 +355,7 @@ public sealed class CalendarDatePicker : StatefulWidget
 
         private void HandleDayChanged(DateTime date)
         {
-            Feedback.ForTap();
+            _ = Feedback.ForTap(Context);
             SetState(() =>
             {
                 _selectedDate = date;

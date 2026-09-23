@@ -416,7 +416,7 @@ public sealed class RawTooltipState : State<RawTooltip>
         bool tooltipCreated = Controller.Status == AnimationStatus.Dismissed;
         if (tooltipCreated && CurrentWidget.EnableFeedback)
         {
-            Feedback.ForTap();
+            _ = Feedback.ForTap(Context);
         }
 
         CurrentWidget.OnTriggered?.Invoke();
@@ -430,7 +430,7 @@ public sealed class RawTooltipState : State<RawTooltip>
         bool tooltipCreated = Controller.Status == AnimationStatus.Dismissed;
         if (tooltipCreated && CurrentWidget.EnableFeedback)
         {
-            Feedback.ForLongPress();
+            _ = Feedback.ForLongPress(Context);
         }
 
         CurrentWidget.OnTriggered?.Invoke();

@@ -30,6 +30,7 @@ public sealed class GestureRecognizerDemoPageState : State
     private readonly List<string> _longPressLog = [];
     private readonly List<string> _scaleLog = [];
     private readonly List<string> _multiTapLog = [];
+    private readonly List<string> _feedbackLog = [];
     private DragStartBehavior _dragStartBehavior = DragStartBehavior.Start;
     private bool _onlyAcceptDragOnThreshold;
     private MultitouchDragStrategy _multitouchDragStrategy = MultitouchDragStrategy.LatestPointer;
@@ -112,6 +113,12 @@ public sealed class GestureRecognizerDemoPageState : State
                     color: Colors.DimGray),
                 BuildMultiTapSurface(),
                 BuildLog("Independent tap events", _multiTapLog),
+                new Text(
+                    "Tap or long-press to send the platform's sound or haptic feedback before the handler runs.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildFeedbackSurface(),
+                BuildLog("Feedback callbacks", _feedbackLog),
             ]));
     }
 
@@ -268,6 +275,21 @@ public sealed class GestureRecognizerDemoPageState : State
                     "Tap or hold with several fingers",
                     fontSize: 14,
                     color: Color.Parse("#FF31506F")))));
+    }
+
+    private Widget BuildFeedbackSurface()
+    {
+        return new Builder(context => new GestureDetector(
+            behavior: HitTestBehavior.Opaque,
+            onTap: Feedback.WrapForTap(() => Log(_feedbackLog, "tap"), context),
+            onLongPress: Feedback.WrapForLongPress(() => Log(_feedbackLog, "long press"), context),
+            child: new Container(
+                height: 96,
+                color: Color.Parse("#FFF4F7FA"),
+                child: new Center(child: new Text(
+                    "Tap or hold for feedback",
+                    fontSize: 14,
+                    color: Color.Parse("#FF31506F"))))));
     }
 
     private static Widget BuildLog(string title, List<string> lines)

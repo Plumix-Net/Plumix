@@ -7,11 +7,36 @@ public sealed record SemanticsAnnouncement(
     string Message,
     TextDirection TextDirection);
 
-public abstract record SemanticsEvent(string Type, int? NodeId);
+public abstract record SemanticsEvent(string Type, int? NodeId)
+{
+    public virtual IReadOnlyDictionary<string, object?> GetDataMap() =>
+        new Dictionary<string, object?>();
+
+    public Dictionary<string, object?> ToMap()
+    {
+        var result = new Dictionary<string, object?>
+        {
+            ["type"] = Type,
+            ["data"] = GetDataMap(),
+        };
+        if (NodeId is int nodeId)
+        {
+            result["nodeId"] = nodeId;
+        }
+
+        return result;
+    }
+}
 
 public sealed record TapSemanticEvent(int? NodeId = null) : SemanticsEvent("tap", NodeId);
 
-public sealed record TooltipSemanticEvent(string Message) : SemanticsEvent("tooltip", NodeId: null);
+public sealed record LongPressSemanticsEvent(int? NodeId = null) : SemanticsEvent("longPress", NodeId);
+
+public sealed record TooltipSemanticEvent(string Message) : SemanticsEvent("tooltip", NodeId: null)
+{
+    public override IReadOnlyDictionary<string, object?> GetDataMap() =>
+        new Dictionary<string, object?> { ["message"] = Message };
+}
 
 public static class SemanticsService
 {
@@ -43,6 +68,7 @@ public static class SemanticsService
     {
         ArgumentNullException.ThrowIfNull(semanticsEvent);
         _semanticsEventRequested?.Invoke(semanticsEvent);
+        _ = SystemChannels.Accessibility.Send(semanticsEvent.ToMap());
     }
 
     public static void Tooltip(string message)

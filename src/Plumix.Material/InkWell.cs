@@ -408,7 +408,10 @@ public class InkResponse : StatefulWidget
         {
             ConfirmSplash();
             SetPressed(false);
-            if (CurrentWidget.OnTap is not null && CurrentWidget.EnableFeedback) Feedback.ForTap();
+            if (CurrentWidget.OnTap is not null && CurrentWidget.EnableFeedback)
+            {
+                _ = Feedback.ForTap(Context);
+            }
             CurrentWidget.OnTap?.Invoke();
         }
 
@@ -429,7 +432,10 @@ public class InkResponse : StatefulWidget
         private void HandleLongPress()
         {
             ConfirmSplash();
-            if (CurrentWidget.OnLongPress is not null && CurrentWidget.EnableFeedback) Feedback.ForLongPress();
+            if (CurrentWidget.OnLongPress is not null && CurrentWidget.EnableFeedback)
+            {
+                _ = Feedback.ForLongPress(Context);
+            }
             CurrentWidget.OnLongPress?.Invoke();
         }
 
@@ -589,7 +595,7 @@ public class InkResponse : StatefulWidget
             ConfirmSplash();
             if (CurrentWidget.EnableFeedback)
             {
-                Feedback.ForTap();
+                _ = Feedback.ForTap(Context);
             }
             CurrentWidget.OnTap?.Invoke();
 

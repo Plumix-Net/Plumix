@@ -442,7 +442,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/editable_text.dart` | `src/Plumix/Widgets/TextInput.cs` | `src/Plumix.Tests/TextInputServiceTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs` | — |
 | `widgets/expansible.dart` | `src/Plumix/Widgets/Expansible.cs` | — | — |
 | `widgets/fade_in_image.dart` | `src/Plumix/Widgets/FadeInImage.cs` | — | — |
-| `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` _(reference) (approximate)_ | — | — |
+| `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` | `src/Plumix.Tests/FeedbackTests.cs` | — |
 | `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusScopeTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs`<br>`src/Plumix.Tests/SemanticsAccessibilityFocusBlockTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/FocusScope.cs` | `src/Plumix.Tests/FocusScopeTests.cs` | — |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | `dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
@@ -626,7 +626,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/Layer.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/LayoutHelper.cs` — (reference) (adapted helper logic)
 - `src/Plumix/Scheduler.cs` — (adapted)
-- `src/Plumix/UI/Feedback.cs` — (reference) (approximate)
 - `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
 - `src/Plumix/UI/SystemChrome.cs` — (reference) (approximate)
 - `src/Plumix/UI/TextLayoutFallback.cs` — (reference) (adapted fallback for host-less test environments)
@@ -643,5 +642,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 705
 - C# files without a marker: 48
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 21
+- C# files with a qualified (non-strict) marker: 20
 

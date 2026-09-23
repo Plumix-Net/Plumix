@@ -19,6 +19,7 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
   final List<String> _longPressLog = <String>[];
   final List<String> _scaleLog = <String>[];
   final List<String> _multiTapLog = <String>[];
+  final List<String> _feedbackLog = <String>[];
   DragStartBehavior _dragStartBehavior = DragStartBehavior.start;
   bool _onlyAcceptDragOnThreshold = false;
   MultitouchDragStrategy _multitouchDragStrategy =
@@ -118,6 +119,12 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
           ),
           _buildMultiTapSurface(),
           _buildLog('Independent tap events', _multiTapLog),
+          const Text(
+            "Tap or long-press to send the platform's sound or haptic feedback before the handler runs.",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildFeedbackSurface(),
+          _buildLog('Feedback callbacks', _feedbackLog),
         ],
       ),
     );
@@ -349,6 +356,29 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
           child: Text(
             'Tap or hold with several fingers',
             style: TextStyle(fontSize: 14, color: Color(0xFF31506F)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFeedbackSurface() {
+    return Builder(
+      builder: (BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: Feedback.wrapForTap(() => _log(_feedbackLog, 'tap'), context),
+        onLongPress: Feedback.wrapForLongPress(
+          () => _log(_feedbackLog, 'long press'),
+          context,
+        ),
+        child: Container(
+          height: 96,
+          color: const Color(0xFFF4F7FA),
+          child: const Center(
+            child: Text(
+              'Tap or hold for feedback',
+              style: TextStyle(fontSize: 14, color: Color(0xFF31506F)),
+            ),
           ),
         ),
       ),

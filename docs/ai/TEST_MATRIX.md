@@ -12,6 +12,7 @@ Document rules:
 
 | Area | Primary tests | What is covered | Typical gap to watch |
 | --- | --- | --- | --- |
+| Widget feedback (`widgets/feedback.dart`) | `src/Plumix.Tests/FeedbackTests.cs` | Tap and long-press semantics events, accessibility-channel payloads, platform sound/haptic branches, null wrappers and feedback-before-callback order. | Native sound and haptic output remains host-specific. |
 | Painting basic types (`painting/basic_types.dart`) | `src/Plumix.Tests/BasicTypesTests.cs` | Enum order and all axis, axis-direction and text-direction conversions. | No widget or paint behavior lives in this source file. |
 | Alignment geometry | `src/Plumix.Tests/AlignmentGeometryTests.cs` | Physical, directional and mixed arithmetic, interpolation, resolution, placement, value equality and vertical-text diagnostics. | — |
 | Listenables and change notification (`foundation/change_notifier.dart`) | `src/Plumix.Tests/ChangeNotifierTests.cs` | Duplicate listeners, removals/additions during dispatch, recursive notification, both defragmentation paths, caught/reported listener errors, debug disposal contracts, arbitrary merge iterables, value equality and allocation events. | `ChangeNotifier` can only be inherited in C#; Dart also applies it as a mixin. |
