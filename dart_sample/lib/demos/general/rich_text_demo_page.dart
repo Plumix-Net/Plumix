@@ -45,6 +45,7 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
           'Tapped the link span $_taps times',
           style: const TextStyle(fontSize: 14, color: Colors.grey),
         ),
+        _buildPaintedParagraph(),
         _buildInlineWidgetParagraph(),
         _buildAlignmentRow(),
         _buildDefaultTextStyleParagraph(),
@@ -74,6 +75,38 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
             const TextSpan(text: ' secret?'),
           ],
         ),
+      ),
+    );
+  }
+
+  static Widget _buildPaintedParagraph() {
+    return Container(
+      color: const Color(0xFFFDF6E3),
+      padding: const EdgeInsets.all(12),
+      child: Text.rich(
+        TextSpan(
+          text: 'A ',
+          children: <InlineSpan>[
+            const TextSpan(
+              text: 'highlighted',
+              style: TextStyle(backgroundColor: Color(0xFFFFE8A3)),
+            ),
+            const TextSpan(text: ' word, a '),
+            TextSpan(
+              text: 'painted',
+              style: TextStyle(
+                foreground: Paint()..color = const Color(0xFFE63946),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const TextSpan(text: ' one, and tabular figures: '),
+            const TextSpan(
+              text: '1111 / 8888',
+              style: TextStyle(fontFeatures: <FontFeature>[FontFeature.tabularFigures()]),
+            ),
+          ],
+        ),
+        style: const TextStyle(fontSize: 16, color: Color(0xFF1D3557)),
       ),
     );
   }
