@@ -72,6 +72,9 @@ public sealed record ScrollableDetails(
 
 public class ScrollBehavior
 {
+    // scroll_configuration.dart: _kDefaultGlowColor.
+    private static readonly Avalonia.Media.Color DefaultGlowColor = Avalonia.Media.Color.FromUInt32(0xFFFFFFFF);
+
     private static readonly ScrollPhysics BouncingPhysics =
         new BouncingScrollPhysics(parent: new RangeMaintainingScrollPhysics());
 
@@ -122,7 +125,16 @@ public class ScrollBehavior
 
     public virtual Widget BuildOverscrollIndicator(BuildContext context, Widget child, ScrollableDetails details)
     {
-        return child;
+        // When modifying this function, consider modifying the implementation in
+        // the Material and Cupertino subclasses as well.
+        return GetPlatform(context) switch
+        {
+            TargetPlatform.Android or TargetPlatform.Fuchsia => new GlowingOverscrollIndicator(
+                axisDirection: details.Direction,
+                color: DefaultGlowColor,
+                child: child),
+            _ => child,
+        };
     }
 
     public virtual GestureVelocityTrackerBuilder VelocityTrackerBuilder(BuildContext context)

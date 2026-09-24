@@ -265,6 +265,25 @@ internal sealed class PagePosition(
 
     public int InitialPage { get; } = initialPage;
 
+    /// <summary>
+    /// Dart's <c>_PagePosition.ensureVisible</c>: drops <paramref name="targetRenderObject"/>.
+    /// </summary>
+    /// <remarks>
+    /// Since the page position is intended to cover the available space within its viewport, it stops
+    /// trying to move the target render object to the center; otherwise it could end up changing which
+    /// page is visible and moving the target out of the viewport.
+    /// </remarks>
+    public override Task EnsureVisible(
+        RenderObject target,
+        double alignment = 0.0,
+        TimeSpan duration = default,
+        Curve? curve = null,
+        ScrollPositionAlignmentPolicy alignmentPolicy = ScrollPositionAlignmentPolicy.Explicit,
+        RenderObject? targetRenderObject = null)
+    {
+        return base.EnsureVisible(target, alignment, duration, curve, alignmentPolicy);
+    }
+
     /// <summary>The page held while the viewport has no extent to derive an offset from.</summary>
     public double? CachedPage
     {
@@ -369,6 +388,12 @@ internal sealed class PagePosition(
                 _pageToUseOnStartup = page;
             }
         }
+    }
+
+    /// <summary>Persists the current page, not the pixel offset, for state restoration.</summary>
+    protected override void SaveOffset()
+    {
+        Context.SaveOffset(_cachedPage ?? GetPageFromPixels(Pixels, ViewportDimension));
     }
 
     public override void RestoreOffset(double offset, bool initialRestore = false)

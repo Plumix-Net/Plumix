@@ -380,8 +380,10 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 child: new ScrollConfiguration(
                     // Android is pinned explicitly: the glow indicator belongs to clamping physics,
                     // and the host platform default would otherwise supply bouncing physics, which
-                    // absorb the overscroll instead of reporting it.
+                    // absorb the overscroll instead of reporting it. `overscroll: false` keeps the
+                    // Android behavior from wrapping a second, default glow indicator inside this one.
                     behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android).CopyWith(
+                        overscroll: false,
                         dragDevices: new HashSet<PointerDeviceKind>
                         {
                             PointerDeviceKind.Mouse,

@@ -160,7 +160,8 @@ public sealed class SelectableRegion : StatefulWidget
     public override State CreateState() => new SelectableRegionState();
 }
 
-public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionRegistrar
+public sealed class SelectableRegionState
+    : State<SelectableRegion>, ITextSelectionDelegate, ISelectionRegistrar
 {
     /// Dart's `_kLongPressSelectionDevices`.
     private static readonly IReadOnlySet<PointerDeviceKind> LongPressSelectionDevices =
@@ -496,6 +497,51 @@ public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionR
         }
     }
 
+    // -- TextSelectionDelegate overrides (deprecated in Dart, kept for the legacy toolbar) --------
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public bool CutEnabled => false;
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public bool PasteEnabled => false;
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public TextEditingValue TextEditingValue { get; set; } = new("_");
+
+    void ITextSelectionDelegate.SelectAll(SelectionChangedCause cause) => SelectAll(cause);
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public void CopySelection(SelectionChangedCause cause)
+    {
+        CopySelection();
+        ClearSelection();
+        SetChangingThenFinalize();
+    }
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public void CutSelection(SelectionChangedCause cause)
+    {
+        System.Diagnostics.Debug.Assert(false, "SelectableRegion cannot cut.");
+    }
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public void UserUpdateTextEditingValue(TextEditingValue value, SelectionChangedCause? cause)
+    {
+        // SelectableRegion maintains its own state.
+    }
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public void PasteText(SelectionChangedCause cause)
+    {
+        System.Diagnostics.Debug.Assert(false, "SelectableRegion cannot paste.");
+    }
+
+    [Obsolete("Use `contextMenuBuilder` instead. This feature was deprecated after v3.3.0-0.5.pre.")]
+    public void BringIntoView(TextPosition position)
+    {
+        // SelectableRegion must be in view at this point.
+    }
+
     // -- Selection primitives ---------------------------------------------------
 
     private void SelectStartTo(Point offset, bool continuous = false, TextGranularity? granularity = null)
@@ -699,7 +745,7 @@ public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionR
             onEndHandleDragEnd: OnAnyDragEnd,
             selectionEndpoints: SelectionEndpoints,
             selectionControls: Current.SelectionControls,
-            selectionDelegate: null,
+            selectionDelegate: this,
             clipboardStatus: null,
             startHandleLayerLink: _startHandleLayerLink,
             endHandleLayerLink: _endHandleLayerLink,
@@ -1491,7 +1537,10 @@ public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionR
 
     private void HandleFocusChanged()
     {
-        if (_attachedFocusNode?.HasFocus == false)
+        // Dart only clears the selection when focus is lost while the application is running: on
+        // desktop, switching to another window makes the app inactive, and the selection must
+        // survive until the user comes back.
+        if (_attachedFocusNode?.HasFocus == false && Scheduler.LifecycleState == AppLifecycleState.Resumed)
         {
             ClearSelection();
             SetChangingThenFinalize();

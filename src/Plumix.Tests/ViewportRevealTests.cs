@@ -436,32 +436,6 @@ public sealed class ViewportRevealTests
         Assert.True(result.IsCompletedSuccessfully);
     }
 
-    [Fact]
-    public void EnsureVisible_RejectsANonFiniteAlignmentAndANegativeDuration()
-    {
-        var target = new SizedBoxKeyProbe();
-        var controller = new ScrollController();
-        var harness = new WidgetRenderHarness(
-            new ListView(controller: controller, children: BuildTiles(20, target, index: 4)));
-        harness.Pump(new Size(300, 200));
-
-        BuildContext context = target.RequireContext();
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () =>
-            {
-                Task ignored = Scrollable.EnsureVisible(context, alignment: double.NaN);
-                Assert.NotNull(ignored);
-            });
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () =>
-            {
-                Task ignored = Scrollable.EnsureVisible(context, duration: TimeSpan.FromMilliseconds(-1));
-                Assert.NotNull(ignored);
-            });
-
-        controller.Dispose();
-    }
-
     // Flutter: "Nested Viewports showOnScreen" — the inner viewport reveals the target and the outer
     // one then reveals the inner viewport's new rectangle.
     [Fact]

@@ -1355,7 +1355,7 @@ public sealed class ScrollPipelineTests
 
         (IScrollContext context, ScrollPosition? oldPosition) = Assert.Single(controller.Calls);
         Assert.Null(oldPosition);
-        Scrollable.ScrollableState state = Assert.IsAssignableFrom<Scrollable.ScrollableState>(context);
+        ScrollableState state = Assert.IsAssignableFrom<ScrollableState>(context);
         Assert.Same(state, Scrollable.MaybeOf(controller.PrimaryPosition!.Context.NotificationContext!));
         Assert.Same(state.Position, controller.PrimaryPosition);
         ScrollPosition first = controller.PrimaryPosition!;

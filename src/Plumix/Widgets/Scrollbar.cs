@@ -1417,7 +1417,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
                 : AxisDirection.Left;
         }
 
-        Scrollable.ScrollableState? state = Scrollable.MaybeOf(position.Context.NotificationContext!);
+        ScrollableState? state = Scrollable.MaybeOf(position.Context.NotificationContext!);
         var intent = new ScrollIntent(direction: scrollDirection, type: ScrollIncrementType.Page);
         if (state is null)
         {

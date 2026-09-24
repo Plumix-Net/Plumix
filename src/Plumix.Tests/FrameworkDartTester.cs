@@ -23,7 +23,7 @@ namespace Plumix.Tests;
 /// pending until <see cref="TakeException"/>, any further one is unexpected, and either left over at
 /// the end of the test fails it.
 /// </remarks>
-internal sealed class FrameworkDartTester : IDisposable
+internal sealed partial class FrameworkDartTester : IDisposable
 {
     private static int _nextViewId = 7000;
     private static int _nextPointer = 7000;
@@ -34,18 +34,31 @@ internal sealed class FrameworkDartTester : IDisposable
     private readonly Action<TimeSpan> _drawFrame;
     private FlutterErrorDetails? _pending;
     private TimeSpan _clock;
+    private readonly FakeGestureTimers? _timers;
     private RootElement _root;
     private bool _disposed;
 
-    public FrameworkDartTester()
+    /// <param name="fakeGestureTimers">
+    /// Runs the gesture recognizers' timers (long press, double tap, ...) on the pump clock, the way
+    /// <c>testWidgets</c> runs them under <c>FakeAsync</c>.
+    /// </param>
+    /// <param name="devicePixelRatio">
+    /// The view's ratio; the logical size stays 800x600. flutter_test's own view runs at 3.0.
+    /// </param>
+    public FrameworkDartTester(bool fakeGestureTimers = false, double devicePixelRatio = 1.0)
     {
         GestureBinding.Instance.ResetForTests();
-        View = new FlutterView(new Size(800, 600), 1.0, Interlocked.Increment(ref _nextViewId));
+        _timers = fakeGestureTimers ? new FakeGestureTimers() : null;
+        View = new FlutterView(
+            new Size(800 * devicePixelRatio, 600 * devicePixelRatio),
+            devicePixelRatio,
+            Interlocked.Increment(ref _nextViewId));
         _previousOnError = FlutterError.OnError;
         FlutterError.OnError = HandleError;
         _drawFrame = _ => DrawFrame();
         double seconds = Math.Max(Scheduler.CurrentSeconds, Scheduler.CurrentSystemFrameTimeStamp.TotalSeconds);
         _clock = TimeSpan.FromSeconds(seconds + 1.0);
+        GestureBinding.Instance.SamplingClock = new TestSamplingClock(this);
 
         // The Dart binding already has a root element when a test starts, so every pumpWidget goes
         // through the update path inside a frame. Bootstrap one here for the same reason.
@@ -73,6 +86,7 @@ internal sealed class FrameworkDartTester : IDisposable
     public void Pump(TimeSpan? duration = null)
     {
         _clock += duration ?? TimeSpan.Zero;
+        _timers?.Elapse(duration ?? TimeSpan.Zero);
         Scheduler.AddPersistentFrameCallback(_drawFrame);
         try
         {
@@ -225,6 +239,9 @@ internal sealed class FrameworkDartTester : IDisposable
         finally
         {
             FlutterError.OnError = _previousOnError;
+            _timers?.Dispose();
+            HardwareKeyboard.Instance.ClearState();
+            GestureBinding.Instance.SamplingClock = new SamplingClock();
         }
 
         if (leftover is not null || unexpected.Count > 0)
@@ -241,6 +258,17 @@ internal sealed class FrameworkDartTester : IDisposable
 
     private Widget Wrap(Widget widget) => new View(View, widget);
 
+    /// <summary>
+    /// flutter_test's <c>_TestSamplingClock</c>: sampling and velocity-tracking stopwatches follow the
+    /// pump clock, so a slow machine cannot make a fling look like it stopped.
+    /// </summary>
+    private sealed class TestSamplingClock(FrameworkDartTester tester) : SamplingClock
+    {
+        public override DateTime Now() => EventTimeOrigin + tester._clock;
+
+        public override DartStopwatch Stopwatch() => new(() => tester._clock);
+    }
+
     private void DrawFrame()
     {
         // Dart's WidgetsBinding.drawFrame: build, the render pipeline, then finalizeTree. A throw
@@ -251,6 +279,7 @@ internal sealed class FrameworkDartTester : IDisposable
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
         pipeline.CompositeFrame();
+        pipeline.FlushSemantics();
         _owner.FinalizeTree();
     }
 

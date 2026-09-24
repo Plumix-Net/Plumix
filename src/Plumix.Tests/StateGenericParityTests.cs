@@ -12,7 +12,7 @@ public sealed class StateGenericParityTests
     public void BuiltInStatesRejectTheWrongWidgetAcrossDirectAndSharedBases()
     {
         AssertWrongState(() => new FormState());
-        AssertWrongState(() => new Scrollable.ScrollableState());
+        AssertWrongState(() => new ScrollableState());
         AssertWrongState(() => new RawMenuAnchorState());
         AssertWrongState(() => new FormFieldState<string>());
     }

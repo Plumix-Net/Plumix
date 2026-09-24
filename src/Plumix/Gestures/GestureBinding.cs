@@ -10,11 +10,17 @@ using Plumix.UI;
 namespace Plumix.Gestures;
 
 /// <summary>Clock used to place touch samples between input and presentation frames.</summary>
+/// <remarks>
+/// Flutter's <c>SamplingClock</c>. Tests replace it so that sampling and velocity tracking follow a
+/// fake clock, the way flutter_test's <c>_TestSamplingClock</c> does.
+/// </remarks>
 public class SamplingClock
 {
+    /// <summary>The current date and time.</summary>
     public virtual DateTime Now() => DateTime.UtcNow;
 
-    public virtual Stopwatch Stopwatch() => new();
+    /// <summary>A new stopwatch that uses the current time as reported by this clock.</summary>
+    public virtual DartStopwatch Stopwatch() => new();
 }
 
 public sealed class GestureBinding : IHitTestTarget
@@ -34,7 +40,7 @@ public sealed class GestureBinding : IHitTestTarget
     private readonly Dictionary<int, RenderView> _resamplerRoots = [];
     private Timer? _resamplingTimer;
     private DateTime _frameTime;
-    private Stopwatch? _frameTimeAge;
+    private DartStopwatch? _frameTimeAge;
     private bool _frameCallbackScheduled;
     private int _resamplingGeneration;
     private bool _samplingResampledEvents;
@@ -182,7 +188,7 @@ public sealed class GestureBinding : IHitTestTarget
 
                 _frameCallbackScheduled = false;
                 _frameTime = SamplingClock.Now();
-                _frameTimeAge?.Restart();
+                _frameTimeAge?.Reset();
                 if (ResamplingEnabled)
                 {
                     SampleResampledEvents();

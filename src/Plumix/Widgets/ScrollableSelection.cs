@@ -15,12 +15,12 @@ namespace Plumix.Widgets;
 /// </summary>
 /// <remarks>
 /// Only built when the scrollable has an ancestor <see cref="ISelectionRegistrar"/>; see
-/// <c>Scrollable.ScrollableState.Build</c>.
+/// <c>ScrollableState.Build</c>.
 /// </remarks>
 internal sealed class ScrollableSelectionHandler : StatefulWidget
 {
     public ScrollableSelectionHandler(
-        Scrollable.ScrollableState state,
+        ScrollableState state,
         ScrollPosition position,
         Widget child,
         ISelectionRegistrar registrar,
@@ -32,7 +32,7 @@ internal sealed class ScrollableSelectionHandler : StatefulWidget
         Registrar = registrar ?? throw new ArgumentNullException(nameof(registrar));
     }
 
-    public Scrollable.ScrollableState State { get; }
+    public ScrollableState State { get; }
 
     public ScrollPosition Position { get; }
 
@@ -88,7 +88,7 @@ internal sealed class ScrollableSelectionHandlerState : State<ScrollableSelectio
 /// <remarks>
 /// <para>
 /// Every drag location it stores is expressed relative to the scroll origin — the raw global
-/// position plus <see cref="Scrollable.ScrollableState.DeltaToScrollOrigin"/> — so it survives
+/// position plus <see cref="ScrollableState.DeltaToScrollOrigin"/> — so it survives
 /// scrolling; the current delta is subtracted again whenever an event is dispatched onward.
 /// </para>
 /// <para>
@@ -111,7 +111,6 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     private readonly Dictionary<ISelectable, double> _selectableEndEdgeUpdateRecords = [];
 
     private bool _scheduledLayoutChange;
-    private bool _disposed;
     private Point? _currentDragStartRelatedToOrigin;
     private Point? _currentDragEndRelatedToOrigin;
 
@@ -120,7 +119,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
 
     private ScrollPosition _position;
 
-    public ScrollableSelectionContainerDelegate(Scrollable.ScrollableState state, ScrollPosition position)
+    public ScrollableSelectionContainerDelegate(ScrollableState state, ScrollPosition position)
     {
         State = state ?? throw new ArgumentNullException(nameof(state));
         _position = position ?? throw new ArgumentNullException(nameof(position));
@@ -130,7 +129,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         _position.AddListener(ScheduleLayoutChange);
     }
 
-    public Scrollable.ScrollableState State { get; }
+    public ScrollableState State { get; }
 
     internal bool IsAutoScrollingForTests => _autoScroller.IsAutoScrolling;
 
@@ -154,7 +153,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
     /// after the frame that the change produced.
     private void ScheduleLayoutChange()
     {
-        if (_scheduledLayoutChange || _disposed)
+        if (_scheduledLayoutChange)
         {
             return;
         }
@@ -162,14 +161,14 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         _scheduledLayoutChange = true;
         Scheduler.AddPostFrameCallback(_ =>
         {
-            if (!_scheduledLayoutChange || _disposed)
+            if (!_scheduledLayoutChange)
             {
                 return;
             }
 
             _scheduledLayoutChange = false;
             LayoutDidChange();
-        });
+        }, debugLabel: "ScrollableSelectionContainer.layoutDidChange");
     }
 
     protected override void DidChangeSelectables()
@@ -360,7 +359,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         {
             selectable = Selectables[CurrentSelectionEndIndex];
             edge = selectable.Value.EndSelectionPoint;
-            lineHeight = selectable.Value.EndSelectionPoint?.LineHeight;
+            lineHeight = selectable.Value.EndSelectionPoint!.LineHeight;
         }
         else
         {
@@ -481,7 +480,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         var box = (RenderBox)State.Context.FindRenderObject()!;
         Point localPosition = box.GlobalToLocal(globalPosition);
         var rect = new Rect(0, 0, box.Size.Width, box.Size.Height);
-        return rect.Contains(localPosition);
+        return SelectionUtils.RectContains(rect, localPosition);
     }
 
     private static Rect DragTargetFromEvent(SelectionEdgeUpdateEvent @event)
@@ -561,13 +560,6 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         _selectableStartEdgeUpdateRecords.Clear();
         _selectableEndEdgeUpdateRecords.Clear();
         _scheduledLayoutChange = false;
-        _disposed = true;
-
-        // Dart leaves the listener attached, because the `ScrollPosition` is torn down with the
-        // scrollable and never notifies again. A Plumix position does notify while it is being
-        // detached, which would schedule a layout change into an already-disposed delegate, so the
-        // subscription is dropped here instead. Same observable behavior, different teardown order.
-        _position.RemoveListener(ScheduleLayoutChange);
         _autoScroller.StopAutoScroll();
         base.Dispose();
     }
@@ -583,8 +575,8 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         new(center.X - (width / 2), center.Y - (height / 2), width, height);
 
     /// Dart's free function `_getDeltaToScrollOrigin`, which the delegate uses in place of the
-    /// identical <see cref="Scrollable.ScrollableState.DeltaToScrollOrigin"/> getter.
-    internal static Point GetDeltaToScrollOrigin(Scrollable.ScrollableState scrollableState)
+    /// identical <see cref="ScrollableState.DeltaToScrollOrigin"/> getter.
+    internal static Point GetDeltaToScrollOrigin(ScrollableState scrollableState)
     {
         return scrollableState.AxisDirection switch
         {

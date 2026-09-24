@@ -893,7 +893,7 @@ internal sealed class FixedExtentScrollable : Scrollable
 }
 
 /// <summary>Dart's private <c>_FixedExtentScrollableState</c>.</summary>
-internal sealed class FixedExtentScrollableState : Scrollable.ScrollableState
+internal sealed class FixedExtentScrollableState : ScrollableState
 {
     /// <summary>The item extent of the <see cref="FixedExtentScrollable"/> this state belongs to.</summary>
     public double ItemExtent => ((FixedExtentScrollable)StateWidget).ItemExtent;

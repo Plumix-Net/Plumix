@@ -119,14 +119,24 @@ public class TwoDimensionalScrollable : StatefulWidget
     /// <summary>The state of the closest enclosing <see cref="TwoDimensionalScrollable"/>.</summary>
     public static TwoDimensionalScrollableState Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException(
-                   "TwoDimensionalScrollable.of() was called with a context that does not contain a "
-                   + "TwoDimensionalScrollable widget.\n"
-                   + "No TwoDimensionalScrollable widget ancestor could be found starting from the "
-                   + "context that was passed to TwoDimensionalScrollable.of(). This can happen "
-                   + "because you are using a widget that looks for a TwoDimensionalScrollable "
-                   + "ancestor, but no such ancestor exists.");
+        TwoDimensionalScrollableState? scrollableState = MaybeOf(context);
+        if (scrollableState is null)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    "TwoDimensionalScrollable.of() was called with a context that does not contain a "
+                    + "TwoDimensionalScrollable widget.\n"),
+                new ErrorDescription(
+                    "No TwoDimensionalScrollable widget ancestor could be found starting from the "
+                    + "context that was passed to TwoDimensionalScrollable.of(). This can happen "
+                    + "because you are using a widget that looks for a TwoDimensionalScrollable "
+                    + "ancestor, but no such ancestor exists.\n"
+                    + $"The context used was:\n  {context}"),
+            ]);
+        }
+
+        return scrollableState;
     }
 }
 
@@ -153,9 +163,9 @@ internal sealed class TwoDimensionalScrollableScope : InheritedWidget
 /// <summary>State for a <see cref="TwoDimensionalScrollable"/>.</summary>
 public class TwoDimensionalScrollableState : State<TwoDimensionalScrollable>
 {
-    private readonly GlobalObjectKey<Scrollable.ScrollableState> _verticalOuterScrollableKey =
+    private readonly GlobalObjectKey<ScrollableState> _verticalOuterScrollableKey =
         new(new object());
-    private readonly GlobalObjectKey<Scrollable.ScrollableState> _horizontalInnerScrollableKey =
+    private readonly GlobalObjectKey<ScrollableState> _horizontalInnerScrollableKey =
         new(new object());
 
     private ScrollController? _verticalFallbackController;
@@ -164,7 +174,7 @@ public class TwoDimensionalScrollableState : State<TwoDimensionalScrollable>
     private TwoDimensionalScrollable CurrentWidget => (TwoDimensionalScrollable)StateWidget;
 
     /// <summary>The <see cref="ScrollableState"/> of the vertical axis.</summary>
-    public Scrollable.ScrollableState VerticalScrollable
+    public ScrollableState VerticalScrollable
     {
         get
         {
@@ -174,7 +184,7 @@ public class TwoDimensionalScrollableState : State<TwoDimensionalScrollable>
     }
 
     /// <summary>The <see cref="ScrollableState"/> of the horizontal axis.</summary>
-    public Scrollable.ScrollableState HorizontalScrollable
+    public ScrollableState HorizontalScrollable
     {
         get
         {
@@ -300,7 +310,7 @@ public class TwoDimensionalScrollableState : State<TwoDimensionalScrollable>
 internal sealed class VerticalOuterDimension : Scrollable
 {
     public VerticalOuterDimension(
-        GlobalObjectKey<Scrollable.ScrollableState> horizontalKey,
+        GlobalObjectKey<ScrollableState> horizontalKey,
         ViewportBuilder viewportBuilder,
         AxisDirection axisDirection,
         ScrollController? controller = null,
@@ -332,12 +342,12 @@ internal sealed class VerticalOuterDimension : Scrollable
 
     public DiagonalDragBehavior DiagonalDragBehavior { get; }
 
-    public GlobalObjectKey<Scrollable.ScrollableState> HorizontalKey { get; }
+    public GlobalObjectKey<ScrollableState> HorizontalKey { get; }
 
     public override State CreateState() => new VerticalOuterDimensionState();
 }
 
-internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
+internal sealed class VerticalOuterDimensionState : ScrollableState
 {
     private Axis? _lockedAxis;
     private Point? _lastDragOffset;
@@ -346,11 +356,11 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
 
     private DiagonalDragBehavior DiagonalDragBehavior => TypedWidget.DiagonalDragBehavior;
 
-    private Scrollable.ScrollableState HorizontalScrollable => TypedWidget.HorizontalKey.CurrentState!;
+    private ScrollableState HorizontalScrollable => TypedWidget.HorizontalKey.CurrentState!;
 
     /// <inheritdoc />
     /// <remarks>Implemented in <see cref="HorizontalInnerDimensionState"/> instead.</remarks>
-    private protected override (IReadOnlyList<Task> Futures, Scrollable.ScrollableState Next) PerformEnsureVisible(
+    private protected override (IReadOnlyList<Task> Futures, ScrollableState Next) PerformEnsureVisible(
         RenderObject renderObject,
         double alignment,
         TimeSpan duration,
@@ -359,7 +369,7 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
         RenderObject? targetRenderObject)
     {
         Debug.Fail(
-            "The PerformEnsureVisible method was called for the vertical scrollable of a "
+            "The _performEnsureVisible method was called for the vertical scrollable of a "
             + "TwoDimensionalScrollable. This should not happen as the horizontal scrollable handles "
             + "both axes.");
         return ([], this);
@@ -434,15 +444,13 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
             LocalPosition: details.LocalPosition,
             Delta: new Point(0.0, details.Delta.Y),
             PrimaryDelta: details.Delta.Y,
-            SourceTimeStampUtc: details.SourceTimeStampUtc,
-            Kind: details.Kind);
+            SourceTimeStampUtc: details.SourceTimeStampUtc);
         var horizontalDragDetails = new DragUpdateDetails(
             GlobalPosition: details.GlobalPosition,
             LocalPosition: details.LocalPosition,
             Delta: new Point(details.Delta.X, 0.0),
             PrimaryDelta: details.Delta.X,
-            SourceTimeStampUtc: details.SourceTimeStampUtc,
-            Kind: details.Kind);
+            SourceTimeStampUtc: details.SourceTimeStampUtc);
 
         switch (DiagonalDragBehavior)
         {
@@ -490,14 +498,10 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
         double dy = details.Velocity.PixelsPerSecond.Y;
         var verticalDragDetails = new DragEndDetails(
             velocity: new Velocity(new Vector(0.0, dy)),
-            primaryVelocity: dy,
-            globalPosition: details.GlobalPosition,
-            localPosition: details.LocalPosition);
+            primaryVelocity: dy);
         var horizontalDragDetails = new DragEndDetails(
             velocity: new Velocity(new Vector(dx, 0.0)),
-            primaryVelocity: dx,
-            globalPosition: details.GlobalPosition,
-            localPosition: details.LocalPosition);
+            primaryVelocity: dx);
 
         if (DiagonalDragBehavior != DiagonalDragBehavior.None)
         {
@@ -552,7 +556,7 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
                         instance.MaxFlingVelocity = ResolvedPhysics?.MaxFlingVelocity;
                         instance.VelocityTrackerBuilder = Configuration.VelocityTrackerBuilder(Context);
                         instance.DragStartBehavior = CurrentWidget.DragStartBehavior;
-                        instance.GestureSettings = MediaQuery.MaybeGestureSettingsOf(Context);
+                        instance.GestureSettings = _mediaQueryGestureSettings;
                     }),
         };
 
@@ -580,7 +584,7 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
 internal sealed class HorizontalInnerDimension : Scrollable
 {
     public HorizontalInnerDimension(
-        GlobalObjectKey<Scrollable.ScrollableState> verticalOuterKey,
+        GlobalObjectKey<ScrollableState> verticalOuterKey,
         ViewportBuilder viewportBuilder,
         AxisDirection axisDirection,
         ScrollController? controller = null,
@@ -610,20 +614,20 @@ internal sealed class HorizontalInnerDimension : Scrollable
         DiagonalDragBehavior = diagonalDragBehavior;
     }
 
-    public GlobalObjectKey<Scrollable.ScrollableState> VerticalOuterKey { get; }
+    public GlobalObjectKey<ScrollableState> VerticalOuterKey { get; }
 
     public DiagonalDragBehavior DiagonalDragBehavior { get; }
 
     public override State CreateState() => new HorizontalInnerDimensionState();
 }
 
-internal sealed class HorizontalInnerDimensionState : Scrollable.ScrollableState
+internal sealed class HorizontalInnerDimensionState : ScrollableState
 {
-    private Scrollable.ScrollableState _verticalScrollable = null!;
+    private ScrollableState _verticalScrollable = null!;
 
     private HorizontalInnerDimension TypedWidget => (HorizontalInnerDimension)CurrentWidget;
 
-    private GlobalObjectKey<Scrollable.ScrollableState> VerticalOuterKey => TypedWidget.VerticalOuterKey;
+    private GlobalObjectKey<ScrollableState> VerticalOuterKey => TypedWidget.VerticalOuterKey;
 
     private DiagonalDragBehavior DiagonalDragBehavior => TypedWidget.DiagonalDragBehavior;
 
@@ -640,7 +644,7 @@ internal sealed class HorizontalInnerDimensionState : Scrollable.ScrollableState
     /// Reveals the target on both axes and hands the walk back to the vertical scrollable, so the
     /// enclosing scrollables are found from its context rather than visiting this one twice.
     /// </remarks>
-    private protected override (IReadOnlyList<Task> Futures, Scrollable.ScrollableState Next) PerformEnsureVisible(
+    private protected override (IReadOnlyList<Task> Futures, ScrollableState Next) PerformEnsureVisible(
         RenderObject renderObject,
         double alignment,
         TimeSpan duration,

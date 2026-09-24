@@ -1437,7 +1437,7 @@ public sealed class MaterialTabsTests
     {
         var scrollables = new List<Element>();
         CollectElements<Scrollable>(WidgetRenderHarness.RootElementFor(harness.RenderView), scrollables);
-        var state = (Scrollable.ScrollableState)((StatefulElement)Assert.Single(scrollables)).State;
+        var state = (ScrollableState)((StatefulElement)Assert.Single(scrollables)).State;
         return Assert.IsType<PagePosition>(state.Position);
     }
 

@@ -748,7 +748,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
             return _autoScroller;
         }
 
-        Scrollable.ScrollableState scrollable = Context.FindAncestorStateOfType<Scrollable.ScrollableState>()
+        ScrollableState scrollable = Context.FindAncestorStateOfType<ScrollableState>()
             ?? throw new InvalidOperationException("A SliverReorderableList requires a Scrollable ancestor.");
         _autoScroller = new EdgeDraggingAutoScroller(
             scrollable,

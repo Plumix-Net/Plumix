@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Scrollable is a strict port: top-level `ScrollableState`, Dart asserts/fallbacks, tests (scrollable.dart).
+- Breaking: `SamplingClock.Stopwatch` returns a `DartStopwatch`; VelocityTracker reads the binding clock (binding.dart).
+- Breaking: `ScrollBehavior.BuildOverscrollIndicator` adds the glow on Android and Fuchsia (scroll_configuration.dart).
+- PageView restores its page instead of the pixel offset and keeps the page on ensureVisible (widgets/page_view.dart).
 - Breaking: Pointer events are a strict port: all fields, fixed values, copyWith, transformed, toString (events.dart).
 - Breaking: GestureBinding queues cancellation, adds touch resampling and queries native hits (gestures/binding.dart).
 - Breaking: `DefaultTextStyle.Of` returns the inherited widget with Dart fallback and merge behavior (widgets/text.dart).

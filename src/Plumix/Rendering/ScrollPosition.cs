@@ -154,7 +154,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     /// Returns true if the number of dimensions is not zero, which means the scroll view has been
     /// laid out at least once.
     /// </remarks>
-    public bool HaveDimensions => _haveDimensions;
+    public virtual bool HaveDimensions => _haveDimensions;
 
     /// <summary>The direction in which the scroll view scrolls.</summary>
     public abstract AxisDirection AxisDirection { get; }
@@ -618,7 +618,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     /// The innermost object the caller actually wants revealed, when <paramref name="target"/> is an
     /// enclosing scrollable's render object rather than the original target.
     /// </param>
-    public Task EnsureVisible(
+    public virtual Task EnsureVisible(
         RenderObject target,
         double alignment = 0.0,
         TimeSpan duration = default,
@@ -865,7 +865,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     /// <summary>
     /// Provides a heuristic to determine if expensive frame-bound tasks should be deferred.
     /// </summary>
-    public bool RecommendDeferredLoading(BuildContext context)
+    public virtual bool RecommendDeferredLoading(BuildContext context)
     {
         Debug.Assert(CurrentActivity != null);
         return Physics.RecommendDeferredLoading(

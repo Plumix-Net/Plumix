@@ -541,7 +541,7 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
             return eligibleNodes;
         }
 
-        Scrollable.ScrollableState? focusedScrollable = Scrollable.MaybeOf(focusedContext, axis);
+        ScrollableState? focusedScrollable = Scrollable.MaybeOf(focusedContext, axis);
         if (focusedScrollable == null)
         {
             return eligibleNodes;
@@ -689,10 +689,10 @@ public abstract class DirectionalFocusTraversalPolicy : FocusTraversalPolicy
             {
                 FocusNode lastNode = policyData.History[^1].Node;
                 policyData.History.RemoveAt(policyData.History.Count - 1);
-                Scrollable.ScrollableState? lastScrollable = lastNode.Context is { } lastContext
+                ScrollableState? lastScrollable = lastNode.Context is { } lastContext
                     ? Scrollable.MaybeOf(lastContext)
                     : null;
-                Scrollable.ScrollableState? currentScrollable =
+                ScrollableState? currentScrollable =
                     FocusManager.Instance.PrimaryFocus?.Context is { } currentContext
                         ? Scrollable.MaybeOf(currentContext)
                         : null;

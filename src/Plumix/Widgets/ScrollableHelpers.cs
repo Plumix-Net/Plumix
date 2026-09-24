@@ -91,7 +91,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
     /// account. Defaults are 80% of the viewport for a page and 50 logical pixels for a line.
     /// </summary>
     public static double CalculateScrollIncrement(
-        Scrollable.ScrollableState state,
+        ScrollableState state,
         ScrollIncrementType type = ScrollIncrementType.Line)
     {
         if (state.IncrementCalculator is { } calculator)
@@ -107,7 +107,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
     }
 
     /// <summary>The signed increment for the intent, accounting for the scrollable's axis.</summary>
-    public static double GetDirectionalIncrement(Scrollable.ScrollableState state, ScrollIntent intent)
+    public static double GetDirectionalIncrement(ScrollableState state, ScrollIntent intent)
     {
         if (ScrollDirectionUtils.AxisDirectionToAxis(intent.Direction)
             != ScrollDirectionUtils.AxisDirectionToAxis(state.AxisDirection))
@@ -126,7 +126,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
             return null;
         }
 
-        Scrollable.ScrollableState? state = Scrollable.MaybeOf(buildContext);
+        ScrollableState? state = Scrollable.MaybeOf(buildContext);
         if (state is null)
         {
             ScrollController? primary = PrimaryScrollController.MaybeOf(buildContext);
@@ -170,13 +170,13 @@ public sealed class EdgeDraggingAutoScroller
 {
     private const double OverDragMax = 20.0;
 
-    private readonly Scrollable.ScrollableState _scrollable;
+    private readonly ScrollableState _scrollable;
     private readonly Action? _onScrollViewScrolled;
     private Rect _dragTargetRelatedToScrollOrigin;
     private bool _scrolling;
 
     public EdgeDraggingAutoScroller(
-        Scrollable.ScrollableState scrollable,
+        ScrollableState scrollable,
         double velocityScalar,
         Action? onScrollViewScrolled = null)
     {
@@ -191,7 +191,7 @@ public sealed class EdgeDraggingAutoScroller
     }
 
     /// <summary>The <see cref="Widgets.Scrollable"/> this auto scroller drives.</summary>
-    public Scrollable.ScrollableState Scrollable => _scrollable;
+    public ScrollableState Scrollable => _scrollable;
 
     /// <summary>The velocity scalar per pixel over scroll, in logical pixels per second.</summary>
     public double VelocityScalar { get; }

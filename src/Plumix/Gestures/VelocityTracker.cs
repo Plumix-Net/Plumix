@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/velocity_tracker.dart
@@ -21,7 +22,7 @@ public class VelocityTracker
     private const int HorizonMilliseconds = 100;
     private const int MinimumSampleSize = 3;
     private readonly PointAtTime?[] _samples = new PointAtTime?[HistorySize];
-    private readonly Stopwatch _sinceLastSample = new();
+    private DartStopwatch? _stopwatch;
     private int _index;
 
     public VelocityTracker(PointerDeviceKind kind)
@@ -30,6 +31,9 @@ public class VelocityTracker
     }
 
     public PointerDeviceKind Kind { get; }
+
+    // Time difference since the last sample was added.
+    private DartStopwatch SinceLastSample => _stopwatch ??= GestureBinding.Instance.SamplingClock.Stopwatch();
 
     public virtual void AddPosition(DateTime timestampUtc, Point position)
     {
@@ -40,7 +44,7 @@ public class VelocityTracker
 
     public virtual VelocityEstimate? GetVelocityEstimate()
     {
-        if (_sinceLastSample.ElapsedMilliseconds > AssumePointerMoveStoppedMilliseconds)
+        if (SinceLastSample.ElapsedMilliseconds > AssumePointerMoveStoppedMilliseconds)
         {
             return StoppedEstimate();
         }
@@ -114,9 +118,13 @@ public class VelocityTracker
             : new Velocity(estimate.PixelsPerSecond);
     }
 
-    protected bool HasStopped => _sinceLastSample.ElapsedMilliseconds > AssumePointerMoveStoppedMilliseconds;
+    protected bool HasStopped => SinceLastSample.ElapsedMilliseconds > AssumePointerMoveStoppedMilliseconds;
 
-    protected void RestartSampleClock() => _sinceLastSample.Restart();
+    protected void RestartSampleClock()
+    {
+        SinceLastSample.Start();
+        SinceLastSample.Reset();
+    }
 
     protected static VelocityEstimate StoppedEstimate()
     {

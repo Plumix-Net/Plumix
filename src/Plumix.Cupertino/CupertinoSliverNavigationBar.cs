@@ -333,7 +333,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
 internal sealed class CupertinoSliverNavigationBarState : State<CupertinoSliverNavigationBar>
 {
     private NavigationBarStaticComponentsKeys _keys = null!;
-    private Scrollable.ScrollableState? _scrollableState;
+    private ScrollableState? _scrollableState;
     private Widget? _effectiveMiddle;
     private Plumix.AnimationController _animationController = null!;
     private Plumix.CurvedAnimation _searchAnimation = null!;

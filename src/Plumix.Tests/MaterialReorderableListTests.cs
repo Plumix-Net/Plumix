@@ -191,14 +191,14 @@ public sealed class MaterialReorderableListTests
 
         using WidgetRenderHarness harness = new(Wrap(Build("first")));
         harness.Pump(new Size(120, 80));
-        Scrollable.ScrollableState initial = harness.FindState<Scrollable.ScrollableState>();
+        ScrollableState initial = harness.FindState<ScrollableState>();
         initial.Position.JumpTo(40.0);
         harness.Pump(new Size(120, 80));
 
         harness.UpdateWidget(Wrap(Build("second")));
         harness.Pump(new Size(120, 80));
 
-        Scrollable.ScrollableState restored = harness.FindState<Scrollable.ScrollableState>();
+        ScrollableState restored = harness.FindState<ScrollableState>();
         Assert.NotSame(initial, restored);
         Assert.Equal(40.0, restored.Position.Pixels);
     }

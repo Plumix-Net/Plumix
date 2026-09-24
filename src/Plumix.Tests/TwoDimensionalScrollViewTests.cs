@@ -73,7 +73,7 @@ public sealed class TwoDimensionalScrollViewTests
         var harness = new TwoDimensionalRenderHarness(new SizedBox());
         harness.Pump(Surface);
 
-        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+        FlutterError error = Assert.Throws<FlutterError>(
             () => TwoDimensionalScrollable.Of(harness.RootContext));
         Assert.Contains(
             "TwoDimensionalScrollable.of() was called with a context that does not contain a "

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
@@ -18,19 +19,15 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
     public ScrollSemantics(
         ScrollPosition position,
         bool allowImplicitScrolling,
-        AxisDirection axisDirection,
+        Axis axis,
         int? semanticChildCount,
         Widget? child = null,
         Key? key = null) : base(child, key)
     {
-        if (semanticChildCount is < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(semanticChildCount));
-        }
-
+        Debug.Assert(semanticChildCount is null or >= 0);
         Position = position;
         AllowImplicitScrolling = allowImplicitScrolling;
-        AxisDirection = axisDirection;
+        Axis = axis;
         SemanticChildCount = semanticChildCount;
     }
 
@@ -38,7 +35,7 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
 
     public bool AllowImplicitScrolling { get; }
 
-    public AxisDirection AxisDirection { get; }
+    public Axis Axis { get; }
 
     public int? SemanticChildCount { get; }
 
@@ -47,7 +44,7 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
         return new RenderScrollSemantics(
             position: Position,
             allowImplicitScrolling: AllowImplicitScrolling,
-            axisDirection: AxisDirection,
+            axis: Axis,
             semanticChildCount: SemanticChildCount);
     }
 
@@ -55,7 +52,7 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
     {
         var scrollSemantics = (RenderScrollSemantics)renderObject;
         scrollSemantics.AllowImplicitScrolling = AllowImplicitScrolling;
-        scrollSemantics.AxisDirection = AxisDirection;
+        scrollSemantics.Axis = Axis;
         scrollSemantics.Position = Position;
         scrollSemantics.SemanticChildCount = SemanticChildCount;
     }
@@ -79,21 +76,19 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
     public RenderScrollSemantics(
         ScrollPosition position,
         bool allowImplicitScrolling,
-        AxisDirection axisDirection,
+        Axis axis,
         int? semanticChildCount,
         RenderBox? child = null)
     {
         _position = position;
         _allowImplicitScrolling = allowImplicitScrolling;
         _semanticChildCount = semanticChildCount;
-        AxisDirection = axisDirection;
+        Axis = axis;
         Child = child;
         _position.AddListener(MarkNeedsSemanticsUpdate);
     }
 
-    public AxisDirection AxisDirection { get; set; }
-
-    private Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
+    public Axis Axis { get; set; }
 
     public ScrollPosition Position
     {
@@ -185,19 +180,18 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
         if (children.Count == 0 || !children[0].IsTagged(RenderViewport.UseTwoPaneSemantics))
         {
             _innerNode = null;
-            node.UpdateWith(config, children);
+            base.AssembleSemanticsNode(node, config, children);
             return;
         }
 
-        _innerNode ??= Owner!.SemanticsOwner!.CreateDetachedNode();
-        _innerNode.Rect = node.Rect;
-        _innerNode.ShowOnScreenRequest = () => ShowOnScreen();
+        (_innerNode ??= new SemanticsNode(showOnScreen: () => ShowOnScreen())).Rect = node.Rect;
 
         int? firstVisibleIndex = null;
         var excluded = new List<SemanticsNode> { _innerNode };
         var included = new List<SemanticsNode>();
         foreach (SemanticsNode child in children)
         {
+            Debug.Assert(child.IsTagged(RenderViewport.UseTwoPaneSemantics));
             if (child.IsTagged(RenderViewport.ExcludeFromScrolling))
             {
                 excluded.Add(child);

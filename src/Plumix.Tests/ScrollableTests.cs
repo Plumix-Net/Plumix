@@ -32,7 +32,7 @@ public sealed class ScrollableTests
         harness.Pump(Surface);
 
         Assert.NotNull(itemContext);
-        Scrollable.ScrollableState? state = Scrollable.MaybeOf(itemContext!);
+        ScrollableState? state = Scrollable.MaybeOf(itemContext!);
         Assert.NotNull(state);
         Assert.Same(state, Scrollable.Of(itemContext!));
         Assert.Equal(AxisDirection.Down, state!.AxisDirection);
@@ -66,8 +66,8 @@ public sealed class ScrollableTests
             ])));
         harness.Pump(Surface);
 
-        Scrollable.ScrollableState vertical = Scrollable.Of(itemContext!, Axis.Vertical);
-        Scrollable.ScrollableState horizontal = Scrollable.Of(itemContext!, Axis.Horizontal);
+        ScrollableState vertical = Scrollable.Of(itemContext!, Axis.Vertical);
+        ScrollableState horizontal = Scrollable.Of(itemContext!, Axis.Horizontal);
         Assert.NotSame(vertical, horizontal);
         Assert.Equal(AxisDirection.Down, vertical.AxisDirection);
         Assert.Equal(AxisDirection.Right, horizontal.AxisDirection);
@@ -93,7 +93,7 @@ public sealed class ScrollableTests
     public void Of_ResolvesFromAScrollNotificationContext()
     {
         using var controller = new ScrollController();
-        Scrollable.ScrollableState? fromNotification = null;
+        ScrollableState? fromNotification = null;
         using var harness = new RestorationHarness(Wrap(new NotificationListener<ScrollNotification>(
             onNotification: notification =>
             {
@@ -123,7 +123,7 @@ public sealed class ScrollableTests
         controller.JumpTo(120);
         harness.Pump(Surface);
 
-        Scrollable.ScrollableState state = Scrollable.Of(itemContext!);
+        ScrollableState state = Scrollable.Of(itemContext!);
         Assert.Equal(new Point(0, 120), state.DeltaToScrollOrigin);
     }
 

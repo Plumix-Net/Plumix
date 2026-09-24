@@ -89,7 +89,7 @@ public sealed class ScrollableSelectionTests
         controller.JumpTo(120);
         PumpFully(harness);
 
-        Scrollable.ScrollableState state = Scrollable.Of(itemContext!);
+        ScrollableState state = Scrollable.Of(itemContext!);
         Assert.Equal(
             new Point(dx, dy),
             ScrollableSelectionContainerDelegate.GetDeltaToScrollOrigin(state));
@@ -458,7 +458,7 @@ public sealed class ScrollableSelectionTests
             Element handler = FindDescendantElement<ScrollableSelectionHandler>(harness)!;
             var handlerState = (ScrollableSelectionHandlerState)((StatefulElement)handler).State;
             Element scrollableElement = FindDescendantElement<Scrollable>(harness)!;
-            var scrollableState = (Scrollable.ScrollableState)((StatefulElement)scrollableElement).State;
+            var scrollableState = (ScrollableState)((StatefulElement)scrollableElement).State;
             var box = (RenderBox)scrollableState.Context.FindRenderObject()!;
             return new SelectionRig(
                 harness,

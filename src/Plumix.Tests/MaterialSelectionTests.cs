@@ -352,10 +352,19 @@ public sealed class MaterialSelectionTests
         Assert.True(focusNode.HasFocus);
         Assert.Equal("long pressed", state.SelectedContent?.PlainText);
 
-        focusNode.Unfocus();
-        harness.Pump(new Size(320, 160));
-        Assert.True(string.IsNullOrEmpty(state.SelectedContent?.PlainText));
-        Assert.False(state.ContextMenuIsVisible);
+        // As in Dart, the selection only dismisses when unfocused while the app is resumed.
+        Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        try
+        {
+            focusNode.Unfocus();
+            harness.Pump(new Size(320, 160));
+            Assert.True(string.IsNullOrEmpty(state.SelectedContent?.PlainText));
+            Assert.False(state.ContextMenuIsVisible);
+        }
+        finally
+        {
+            Scheduler.ResetInternalState();
+        }
     }
 
     [Fact]
