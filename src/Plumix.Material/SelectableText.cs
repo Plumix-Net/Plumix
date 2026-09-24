@@ -141,7 +141,7 @@ internal sealed class SelectableTextState : State<SelectableText>
     {
         var theme = Theme.Of(context);
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-        var defaultStyle = DefaultTextStyle.Of(context);
+        var defaultStyle = DefaultTextStyle.Of(context).Style;
         // Dart's `_SelectableTextState.build` platform switch: iOS/macOS resolve against the ambient
         // `CupertinoTheme`, every other platform against the color scheme. `TextSelectionTheme` is
         // not read here — it arrives as the `DefaultSelectionStyle` the theme widgets insert.

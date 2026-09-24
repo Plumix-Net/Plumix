@@ -153,7 +153,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         controller.Show(nestedContext!, context =>
         {
             menuContext = context;
-            inheritedFontSize = DefaultTextStyle.Of(context).FontSize;
+            inheritedFontSize = DefaultTextStyle.Of(context).Style.FontSize;
             return new Positioned(left: 30, top: 40, width: 120, height: 25, child: new Text("menu"));
         });
         harness.Pump();

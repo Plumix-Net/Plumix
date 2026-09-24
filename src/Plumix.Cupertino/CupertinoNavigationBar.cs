@@ -761,7 +761,7 @@ internal sealed class BackChevron : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         TextDirection textDirection = Directionality.Of(context);
-        TextStyle textStyle = DefaultTextStyle.Of(context);
+        TextStyle textStyle = DefaultTextStyle.Of(context).Style;
 
         // Replicate the Icon logic here to get a tightly sized icon and add custom non-square padding.
         var backChevron = CupertinoIcons.Back;

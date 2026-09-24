@@ -4689,7 +4689,7 @@ public sealed class MaterialScaffoldTests
         public override Widget Build(BuildContext context)
         {
             _capture(new ActionContextSnapshot(
-                TextStyle: DefaultTextStyle.Of(context),
+                TextStyle: DefaultTextStyle.Of(context).Style,
                 IconThemeData: IconTheme.Of(context)));
             return new SizedBox(width: 8, height: 8);
         }

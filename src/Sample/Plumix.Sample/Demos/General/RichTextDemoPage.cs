@@ -49,6 +49,7 @@ public sealed class RichTextDemoPageState : State
                 new Text("Tapped the link span " + _taps + " times", fontSize: 14, color: Colors.DimGray),
                 BuildInlineWidgetParagraph(),
                 BuildAlignmentRow(),
+                BuildDefaultTextStyleParagraph(),
                 BuildOverflowAndStrut(),
             ]);
     }
@@ -139,6 +140,27 @@ public sealed class RichTextDemoPageState : State
                         color: textColor,
                         strutStyle: new StrutStyle(FontSize: 16, Height: 2, ForceStrutHeight: true)),
                 ]));
+    }
+
+    private static Widget BuildDefaultTextStyleParagraph()
+    {
+        return new Container(
+            color: Color.Parse("#FFF5F0FF"),
+            padding: new Thickness(12),
+            child: new DefaultTextStyle(
+                style: new TextStyle(FontSize: 16, Color: Color.Parse("#FF1D3557")),
+                overflow: TextOverflow.Ellipsis,
+                maxLines: 1,
+                child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                    spacing: 4,
+                    children:
+                    [
+                        new Text("DefaultTextStyle supplies the size, color, and one-line ellipsis."),
+                        DefaultTextStyle.Merge(
+                            style: new TextStyle(FontWeight: FontWeight.Bold),
+                            child: new Text("A merged style keeps the inherited color and line limit.")),
+                    ])));
     }
 
     private static InlineSpan BuildBadge(PlaceholderAlignment alignment, string color)

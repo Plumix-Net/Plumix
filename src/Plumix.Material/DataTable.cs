@@ -446,7 +446,7 @@ public sealed class DataTable : StatelessWidget
                 mainAxisAlignment: alignment,
                 textDirection: column.Numeric ? TextDirection.Rtl : null,
                 children: content));
-        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Merge(style);
+        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Style.Merge(style);
         Alignment cellAlignment = column.Numeric
             ? Alignment.CenterRight
             : textDirection == TextDirection.Rtl
@@ -498,7 +498,7 @@ public sealed class DataTable : StatelessWidget
                 textDirection: column.Numeric ? TextDirection.Rtl : null,
                 children: [new Expanded(label), new Icon(Icons.Edit, size: 18.0)]);
         }
-        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Merge(style);
+        TextStyle effectiveStyle = DefaultTextStyle.Of(context).Style.Merge(style);
         if (cell.Placeholder && style.Color.HasValue)
         {
             effectiveStyle = effectiveStyle.CopyWith(color: WithOpacity(style.Color.Value, 0.60));

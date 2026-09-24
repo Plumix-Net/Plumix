@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `DefaultTextStyle.Of` returns the inherited widget with Dart fallback and merge behavior (widgets/text.dart).
 - Breaking: Headless frame microtasks drain after composite; layout builds flush their full scope (framework.dart).
 - Breaking: Editing and selection use async platform clipboard data and status (widgets/editable_text.dart).
 - Clipboard gains Flutter's async platform-channel API and desktop host handling (services/clipboard.dart).

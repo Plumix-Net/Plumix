@@ -83,7 +83,7 @@ public sealed class MenuAcceleratorLabel : StatefulWidget
         }
 
         IReadOnlyList<string> characters = GetTextElements(label);
-        TextStyle defaultStyle = DefaultTextStyle.Of(context);
+        TextStyle defaultStyle = DefaultTextStyle.Of(context).Style;
         var children = new List<InlineSpan>(3);
         if (index > 0)
         {

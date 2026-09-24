@@ -305,7 +305,7 @@ public sealed class Text : StatelessWidget
 
     private TextStyle ResolveEffectiveStyle(BuildContext context)
     {
-        TextStyle ambientStyle = DefaultTextStyle.Of(context);
+        TextStyle ambientStyle = DefaultTextStyle.Of(context).Style;
         TextStyle inline = new(
             FontFamily: FontFamily,
             FontSize: FontSize,

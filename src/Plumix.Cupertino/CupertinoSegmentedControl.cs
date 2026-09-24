@@ -150,7 +150,7 @@ internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegment
                 selected: EqualityComparer<T?>.Default.Equals(CurrentWidget.GroupValue, value),
                 child: new Center(child: CurrentWidget.Children[value]));
             child = new DefaultTextStyle(
-                style: DefaultTextStyle.Of(context).CopyWith(color: textColor),
+                style: DefaultTextStyle.Of(context).Style.CopyWith(color: textColor),
                 child: child);
             child = new IconTheme(
                 data: new IconThemeData(Color: textColor),

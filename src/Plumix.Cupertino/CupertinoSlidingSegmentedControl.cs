@@ -612,7 +612,7 @@ internal sealed class SlidingSegmentState<T> : State<SlidingSegment<T>> where T 
                           && Current.Enabled
                           && !Current.IsMomentary;
         bool shouldHighlight = Current.Highlighted && !Current.IsMomentary;
-        TextStyle style = DefaultTextStyle.Of(context).Merge(new TextStyle(
+        TextStyle style = DefaultTextStyle.Of(context).Style.Merge(new TextStyle(
             FontSize: 13.0,
             FontWeight: shouldHighlight ? FontWeight.DemiBold : FontWeight.Medium,
             Color: Current.Enabled ? null : DisabledContentColor));

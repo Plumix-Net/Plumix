@@ -13,6 +13,154 @@ namespace Plumix.Tests;
 public sealed class TextWidgetTests
 {
     [Fact]
+    public void OfReturnsTheInheritedWidgetAndFallbackHasDartDefaults()
+    {
+        DefaultTextStyle fallback = DefaultTextStyle.Fallback();
+        Assert.Equal(new TextStyle(), fallback.Style);
+        Assert.Null(fallback.TextAlign);
+        Assert.True(fallback.SoftWrap);
+        Assert.Equal(TextOverflow.Clip, fallback.Overflow);
+        Assert.Null(fallback.MaxLines);
+        Assert.Equal(TextWidthBasis.Parent, fallback.TextWidthBasis);
+        Assert.Null(fallback.TextHeightBehavior);
+        Assert.Throws<FlutterError>(() =>
+            ((StatelessWidget)fallback.Child).Build(null!));
+
+        DefaultTextStyle? noAncestor = null;
+        var fallbackOwner = TestBuildOwner.Create();
+        var fallbackRoot = new TestRootElement(new Builder(context =>
+        {
+            noAncestor = DefaultTextStyle.Of(context);
+            return new Text("fallback");
+        }));
+        fallbackRoot.Attach(fallbackOwner);
+        fallbackOwner.BuildScope(fallbackRoot, () => fallbackRoot.Mount(parent: null, newSlot: null));
+        fallbackOwner.FlushBuild();
+        Assert.Equal(new TextStyle(), noAncestor!.Style);
+        Assert.True(noAncestor.SoftWrap);
+
+        DefaultTextStyle? observed = null;
+        var owner = TestBuildOwner.Create();
+        var inherited = new DefaultTextStyle(
+            style: new TextStyle(FontSize: 18, Color: Colors.Red),
+            textAlign: TextAlign.Center,
+            softWrap: false,
+            overflow: TextOverflow.Fade,
+            maxLines: 2,
+            textWidthBasis: TextWidthBasis.LongestLine,
+            textHeightBehavior: new TextHeightBehavior(false, true),
+            child: new Builder(context =>
+            {
+                observed = DefaultTextStyle.Of(context);
+                return new Text("inherited");
+            }));
+        var root = new TestRootElement(inherited);
+        root.Attach(owner);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        owner.FlushBuild();
+
+        Assert.Same(inherited, observed);
+        Assert.Equal(TextAlign.Center, observed!.TextAlign);
+        Assert.Equal(2, observed.MaxLines);
+    }
+
+    [Fact]
+    public void MergeUsesParentStyleAndOverridesEverySuppliedProperty()
+    {
+        DefaultTextStyle? observed = null;
+        var owner = TestBuildOwner.Create();
+        var root = new TestRootElement(new DefaultTextStyle(
+            style: new TextStyle(FontSize: 20, Color: Colors.Black),
+            textAlign: TextAlign.Left,
+            softWrap: false,
+            overflow: TextOverflow.Ellipsis,
+            maxLines: 2,
+            textWidthBasis: TextWidthBasis.LongestLine,
+            textHeightBehavior: new TextHeightBehavior(false, false),
+            child: DefaultTextStyle.Merge(
+                style: new TextStyle(Color: Colors.Red, FontWeight: FontWeight.Bold),
+                textAlign: TextAlign.Center,
+                softWrap: true,
+                overflow: TextOverflow.Fade,
+                maxLines: 3,
+                textWidthBasis: TextWidthBasis.Parent,
+                textHeightBehavior: new TextHeightBehavior(true, true),
+                child: new Builder(context =>
+                {
+                    observed = DefaultTextStyle.Of(context);
+                    return new Text("merged");
+                }))));
+        root.Attach(owner);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        owner.FlushBuild();
+
+        Assert.NotNull(observed);
+        Assert.Equal(new TextStyle(FontSize: 20, Color: Colors.Red, FontWeight: FontWeight.Bold), observed.Style);
+        Assert.Equal(TextAlign.Center, observed.TextAlign);
+        Assert.True(observed.SoftWrap);
+        Assert.Equal(TextOverflow.Fade, observed.Overflow);
+        Assert.Equal(3, observed.MaxLines);
+        Assert.Equal(TextWidthBasis.Parent, observed.TextWidthBasis);
+        Assert.Equal(new TextHeightBehavior(true, true), observed.TextHeightBehavior);
+    }
+
+    [Fact]
+    public void MergeKeepsUnspecifiedPropertiesAndCannotClearMaxLines()
+    {
+        DefaultTextStyle? observed = null;
+        var owner = TestBuildOwner.Create();
+        var root = new TestRootElement(new DefaultTextStyle(
+            style: new TextStyle(FontSize: 20, Color: Colors.Black),
+            softWrap: false,
+            overflow: TextOverflow.Ellipsis,
+            maxLines: 2,
+            child: DefaultTextStyle.Merge(
+                style: new TextStyle(FontWeight: FontWeight.Bold),
+                child: new Builder(context =>
+                {
+                    observed = DefaultTextStyle.Of(context);
+                    return new Text("merged");
+                }))));
+        root.Attach(owner);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        owner.FlushBuild();
+
+        Assert.Equal(20, observed!.Style.FontSize);
+        Assert.Equal(Colors.Black, observed.Style.Color);
+        Assert.Equal(FontWeight.Bold, observed.Style.FontWeight);
+        Assert.False(observed.SoftWrap);
+        Assert.Equal(TextOverflow.Ellipsis, observed.Overflow);
+        Assert.Equal(2, observed.MaxLines);
+    }
+
+    [Fact]
+    public void NotifyAndWrapFollowEveryInheritedField()
+    {
+        var child = new Text("child");
+        var original = new DefaultTextStyle(new TextStyle(FontSize: 12), child);
+        Assert.False(original.UpdateShouldNotify(new DefaultTextStyle(new TextStyle(FontSize: 12), child)));
+        var withFallback = new DefaultTextStyle(
+            new TextStyle(FontSize: 12, FontFamilyFallback: ["Arial", "Sans"]), child);
+        Assert.False(withFallback.UpdateShouldNotify(new DefaultTextStyle(
+            new TextStyle(FontSize: 12, FontFamilyFallback: ["Arial", "Sans"]), child)));
+        Assert.True(original.UpdateShouldNotify(new DefaultTextStyle(new TextStyle(FontSize: 13), child)));
+        Assert.True(original.UpdateShouldNotify(new DefaultTextStyle(
+            new TextStyle(FontSize: 12), child, overflow: TextOverflow.Fade)));
+
+        var source = new DefaultTextStyle(
+            style: new TextStyle(FontSize: 17),
+            child: child,
+            maxLines: 2,
+            textWidthBasis: TextWidthBasis.LongestLine);
+        var replacement = new Text("replacement");
+        var wrapped = Assert.IsType<DefaultTextStyle>(source.Wrap(null!, replacement));
+        Assert.Same(replacement, wrapped.Child);
+        Assert.Equal(source.Style, wrapped.Style);
+        Assert.Equal(source.MaxLines, wrapped.MaxLines);
+        Assert.Equal(source.TextWidthBasis, wrapped.TextWidthBasis);
+    }
+
+    [Fact]
     public void TextWidget_CreatesAndUpdatesRenderParagraph_WithTextLayoutOptions()
     {
         var owner = TestBuildOwner.Create();
