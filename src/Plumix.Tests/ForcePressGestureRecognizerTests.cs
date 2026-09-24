@@ -42,12 +42,10 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
             PointerDeviceKind.Touch,
             new Point(10.0, 10.0),
             PointerButtons.Primary,
-            DateTime.UnixEpoch)
-        {
-            Pressure = pressure,
-            PressureMin = pressureMin,
-            PressureMax = pressureMax,
-        };
+            DateTime.UnixEpoch,
+            pressure: pressure,
+            pressureMin: pressureMin,
+            pressureMax: pressureMax);
     }
 
     private static PointerMoveEvent Move(
@@ -63,13 +61,10 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
             PointerDeviceKind.Touch,
             position ?? new Point(10.0, 10.0),
             PointerButtons.Primary,
-            down: true,
-            DateTime.UnixEpoch)
-        {
-            Pressure = pressure,
-            PressureMin = pressureMin,
-            PressureMax = pressureMax,
-        };
+            DateTime.UnixEpoch,
+            pressure: pressure,
+            pressureMin: pressureMin,
+            pressureMax: pressureMax);
         return delta == default ? @event : (PointerMoveEvent)@event.WithDelta(delta);
     }
 

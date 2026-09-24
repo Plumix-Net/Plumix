@@ -116,5 +116,5 @@ public sealed class PointerEventResamplerTests
         new(7, PointerDeviceKind.Touch, default, PointerButtons.Primary, timestamp);
 
     private static PointerMoveEvent Move(double x, DateTime timestamp) =>
-        new(7, PointerDeviceKind.Touch, new Point(x, 0), PointerButtons.Primary, down: true, timestamp);
+        new(7, PointerDeviceKind.Touch, new Point(x, 0), PointerButtons.Primary, timestamp);
 }

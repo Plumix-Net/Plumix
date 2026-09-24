@@ -4478,7 +4478,6 @@ public sealed class MaterialScaffoldTests
                 kind: PointerDeviceKind.Mouse,
                 position: position,
                 buttons: PointerButtons.Primary,
-                down: true,
                 timestampUtc: timestampUtc ?? DateTime.UtcNow));
     }
 

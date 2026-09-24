@@ -52,7 +52,6 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             kind,
             position,
             PointerButtons.Primary,
-            down: true,
             DateTime.UnixEpoch.AddMilliseconds(milliseconds));
     }
 

@@ -92,21 +92,21 @@ internal sealed class MouseTrackingHarness : IDisposable
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)
-        => new(device, kind, position, timestampUtc: DateTime.UtcNow) { ViewId = viewId };
+        => new(device, kind, position, timestampUtc: DateTime.UtcNow, viewId: viewId);
 
     public static PointerRemovedEvent Removed(
         Point position,
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)
-        => new(device, kind, position, timestampUtc: DateTime.UtcNow) { ViewId = viewId };
+        => new(device, kind, position, timestampUtc: DateTime.UtcNow, viewId: viewId);
 
     public static PointerHoverEvent Hover(
         Point position,
         int device = 1,
         PointerDeviceKind kind = PointerDeviceKind.Mouse,
         int viewId = 0)
-        => new(device, kind, position, PointerButtons.None, DateTime.UtcNow) { ViewId = viewId };
+        => new(device, kind, position, PointerButtons.None, DateTime.UtcNow, viewId: viewId);
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost
     {

@@ -1026,7 +1026,6 @@ public sealed class MaterialSwitchTests
                 kind: PointerDeviceKind.Mouse,
                 position: position,
                 buttons: PointerButtons.Primary,
-                down: true,
                 timestampUtc: DateTime.UtcNow));
     }
 

@@ -1649,7 +1649,6 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             PointerDeviceKind.Touch,
             downPosition + moved,
             PointerButtons.Primary,
-            down: true,
             DateTime.UtcNow));
         tester.Up(pointer, downPosition + moved);
 
@@ -1684,12 +1683,11 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             tester,
             new PointerAddedEvent(mouse, PointerDeviceKind.Mouse, downPosition, timestampUtc: DateTime.UtcNow));
         Send(tester, new PointerScrollEvent(
-            mouse,
             PointerDeviceKind.Mouse,
             downPosition,
-            PointerButtons.None,
             new Point(0.0, 20.0),
-            DateTime.UtcNow));
+            DateTime.UtcNow,
+            device: mouse));
         PointerEvent signal = Assert.Single(events);
         AssertPoint(localDownPosition, signal.LocalPosition);
         Assert.Equal(downPosition, signal.Position);

@@ -44,7 +44,7 @@ public sealed partial class DragGestureRecognizerTests : IDisposable
         double milliseconds = 0.0)
     {
         var @event = new PointerMoveEvent(
-            pointer, kind, position, buttons, down: true, DateTime.UnixEpoch.AddMilliseconds(milliseconds));
+            pointer, kind, position, buttons, DateTime.UnixEpoch.AddMilliseconds(milliseconds));
         return (PointerMoveEvent)@event.WithDelta(delta);
     }
 

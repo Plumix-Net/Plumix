@@ -47,7 +47,7 @@ public sealed class MultitapGestureTests : IDisposable
     private static PointerMoveEvent Move(int pointer, Point position)
     {
         return new PointerMoveEvent(
-            pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, down: true, DateTime.UnixEpoch);
+            pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, DateTime.UnixEpoch);
     }
 
     private static PointerCancelEvent Cancel(int pointer, Point position)

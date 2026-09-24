@@ -132,7 +132,7 @@ public sealed class MouseRegionTests : IDisposable
         Assert.Equal(["enter"], _log);
 
         harness.SendPointer(new PointerMoveEvent(
-            1, PointerDeviceKind.Mouse, new Point(400, 400), PointerButtons.Primary, down: true, DateTime.UtcNow));
+            1, PointerDeviceKind.Mouse, new Point(400, 400), PointerButtons.Primary, DateTime.UtcNow));
         Assert.Equal(["enter", "exit"], _log);
     }
 

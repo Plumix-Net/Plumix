@@ -278,21 +278,18 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
                 PointerDeviceKind.Mouse,
                 new Point(19, 11.5),
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds(30)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
                 new Point(28, 13),
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds(60)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerMoveEvent(
                 31,
                 PointerDeviceKind.Mouse,
                 new Point(37, 14.5),
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds(90)));
             GestureBinding.Instance.HandlePointerEvent(renderView, new PointerUpEvent(
                 31,
@@ -366,7 +363,6 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
                 PointerDeviceKind.Mouse,
                 positions[index],
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds((index + 1) * 150)));
         }
     }

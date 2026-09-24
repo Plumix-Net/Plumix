@@ -47,7 +47,6 @@ public sealed class ScrollPipelineTests
                 PointerDeviceKind.Touch,
                 new Point(80, 100),
                 PointerButtons.Primary,
-                true,
                 now.AddMilliseconds(16)));
         Scheduler.FlushMicrotasks();
 
@@ -1003,10 +1002,9 @@ public sealed class ScrollPipelineTests
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerScrollEvent(
-                pointer: 811,
+                device: 811,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(80, 100),
-                buttons: PointerButtons.None,
                 scrollDelta: new Point(0, 60),
                 timestampUtc: DateTime.UtcNow));
         Assert.Equal(0.0, position.Pixels);
@@ -1432,8 +1430,7 @@ public sealed class ScrollPipelineTests
             GestureBinding.Instance.HandlePointerEvent(
                 harness.RenderView,
                 new PointerMoveEvent(
-                    821, PointerDeviceKind.Touch, new Point(80, 170), PointerButtons.Primary, true,
-                    now.AddMilliseconds(16)));
+                    821, PointerDeviceKind.Touch, new Point(80, 170), PointerButtons.Primary, now.AddMilliseconds(16)));
             Assert.IsType<DragScrollActivity>(controller.PrimaryPosition!.Activity);
             Assert.True(ignorePointer.Ignoring);
 
@@ -1443,7 +1440,10 @@ public sealed class ScrollPipelineTests
                 GestureBinding.Instance.HandlePointerEvent(
                     harness.RenderView,
                     new PointerMoveEvent(
-                        821, PointerDeviceKind.Touch, new Point(80, 200 - (step * 30)), PointerButtons.Primary, true,
+                        821,
+                        PointerDeviceKind.Touch,
+                        new Point(80, 200 - (step * 30)),
+                        PointerButtons.Primary,
                         now.AddMilliseconds(16 * step)));
             }
 
@@ -1665,7 +1665,6 @@ public sealed class ScrollPipelineTests
                     PointerDeviceKind.Touch,
                     position,
                     PointerButtons.Primary,
-                    true,
                     now.AddMilliseconds(stepMilliseconds * step)));
         }
 

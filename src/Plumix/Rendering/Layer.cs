@@ -2886,7 +2886,7 @@ public sealed class TransformLayer : OffsetLayer
     {
         if (_inverseDirty)
         {
-            _invertedTransform = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
+            _invertedTransform = Matrix4.TryInvert(PointerEvent.RemovePerspectiveTransform(Transform));
             _inverseDirty = false;
         }
 

@@ -43,7 +43,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         PointerButtons buttons = PointerButtons.Primary)
     {
         return new PointerMoveEvent(
-            pointer, PointerDeviceKind.Touch, position, buttons, down: true, DateTime.UnixEpoch);
+            pointer, PointerDeviceKind.Touch, position, buttons, DateTime.UnixEpoch);
     }
 
     private static PointerUpEvent Up(int pointer, Point position)
@@ -220,7 +220,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
         try
         {
             PointerDownEvent down = Down(
-                5, new Point(10.0, 10.0), PointerButtons.Secondary | PointerButtons.Middle);
+                5, new Point(10.0, 10.0), PointerButtons.Secondary | PointerButtons.Tertiary);
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
@@ -246,7 +246,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
             recognizer.AddPointer(down);
             _binding.GestureArena.Close(5);
             Route(down);
-            Route(Move(5, new Point(10.0, 10.0), PointerButtons.Middle));
+            Route(Move(5, new Point(10.0, 10.0), PointerButtons.Tertiary));
 
             Assert.Equal(["down", "cancel"], log);
 
@@ -341,7 +341,7 @@ public sealed class LongPressGestureRecognizerTests : IDisposable
                 log);
 
             log.Clear();
-            PointerDownEvent tertiary = Down(6, new Point(10.0, 10.0), PointerButtons.Middle);
+            PointerDownEvent tertiary = Down(6, new Point(10.0, 10.0), PointerButtons.Tertiary);
             recognizer.AddPointer(tertiary);
             _binding.GestureArena.Close(6);
             Route(tertiary);

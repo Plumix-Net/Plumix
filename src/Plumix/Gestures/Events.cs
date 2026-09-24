@@ -4,12 +4,57 @@ using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/events.dart
 // Dart declares these as top-level functions in `events.dart`; C# needs a containing type, so they
-// live on `PointerEventUtils`. The event classes themselves are in `Plumix/UI/PointerEvents.cs`.
+// live on `PointerEventUtils`. The event classes themselves (with the static
+// `PointerEvent.transformPosition`/`transformDeltaViaPositions`/`removePerspectiveTransform`) are in
+// `Plumix/UI/PointerEvents.cs`, and the `k*Button` constants are members of `PointerButtons`.
 
 namespace Plumix.Gestures;
 
 public static class PointerEventUtils
 {
+    /// <summary>
+    /// The largest unsigned value a Dart VM small integer holds, <c>kMaxUnsignedSMI</c> from
+    /// <c>foundation/_bitfield_io.dart</c>; <see cref="NthMouseButton"/> masks with it.
+    /// </summary>
+    private const long MaxUnsignedSmi = 0x3FFFFFFFFFFFFFFF;
+
+    /// <summary>
+    /// The bit of the <paramref name="number"/>th mouse button, counting the primary button as 1.
+    /// Dart's <c>nthMouseButton</c>; <paramref name="number"/> is at most 62.
+    /// </summary>
+    public static PointerButtons NthMouseButton(int number)
+    {
+        return (PointerButtons)(((long)PointerButtons.PrimaryMouse << (number - 1)) & MaxUnsignedSmi);
+    }
+
+    /// <summary>
+    /// The bit of the <paramref name="number"/>th stylus button, counting the button closest to the
+    /// tip as 1. Dart's <c>nthStylusButton</c>; <paramref name="number"/> is at most 62.
+    /// </summary>
+    public static PointerButtons NthStylusButton(int number)
+    {
+        return (PointerButtons)(((long)PointerButtons.PrimaryStylus << (number - 1)) & MaxUnsignedSmi);
+    }
+
+    /// <summary>
+    /// Returns the button of <paramref name="buttons"/> with the smallest integer: the lowest set
+    /// bit, or <see cref="PointerButtons.None"/> when no bit is set. Dart's <c>smallestButton</c>.
+    /// </summary>
+    public static PointerButtons SmallestButton(PointerButtons buttons)
+    {
+        long value = (long)buttons;
+        return (PointerButtons)(value & -value);
+    }
+
+    /// <summary>
+    /// Returns whether <paramref name="buttons"/> contains one and only one button. Dart's
+    /// <c>isSingleButton</c>.
+    /// </summary>
+    public static bool IsSingleButton(PointerButtons buttons)
+    {
+        return buttons != PointerButtons.None && SmallestButton(buttons) == buttons;
+    }
+
     /// <summary>
     /// Returns the distance a pointer of the given kind must travel before the framework is
     /// confident the gesture is not a tap.
@@ -41,40 +86,6 @@ public static class PointerEventUtils
         return kind == PointerDeviceKind.Mouse
             ? GestureConstants.PrecisePointerScaleSlop
             : GestureConstants.ScaleSlop;
-    }
-
-    /// <summary>
-    /// Transforms a delta expressed in one coordinate space into another by transforming both ends
-    /// of the delta and subtracting. A null transform leaves the delta untouched.
-    /// </summary>
-    public static Point TransformDeltaViaPositions(
-        Point untransformedEndPosition,
-        Point untransformedDelta,
-        Matrix4? transform,
-        Point? transformedEndPosition = null)
-    {
-        if (transform is not { } matrix)
-        {
-            return untransformedDelta;
-        }
-
-        Point end = transformedEndPosition ?? MatrixUtils.TransformPoint(matrix, untransformedEndPosition);
-        Point start = MatrixUtils.TransformPoint(matrix, untransformedEndPosition - untransformedDelta);
-        return end - start;
-    }
-
-    /// <summary>
-    /// A copy of <paramref name="transform"/> with the z row and column reset to <c>(0, 0, 1, 0)</c>,
-    /// so it can be inverted for hit testing without the perspective divide flattening the plane.
-    /// </summary>
-    /// <remarks>Flutter's <c>PointerEvent.removePerspectiveTransform</c>.</remarks>
-    public static Matrix4 RemovePerspectiveTransform(Matrix4 transform)
-    {
-        var vector = new Vector4(0.0, 0.0, 1.0, 0.0);
-        Matrix4 result = transform.Clone();
-        result.SetColumn(2, vector);
-        result.SetRow(2, vector);
-        return result;
     }
 
     /// <summary>The straight-line length of the offset, Dart's `Offset.distance`.</summary>

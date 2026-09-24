@@ -275,7 +275,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
 | `gestures/debug.dart` | `src/Plumix/Gestures/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragGestureRecognizerParityTests.cs`<br>`src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
-| `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` _(reference) (approximate)_ | — | — |
+| `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` | `src/Plumix.Tests/PointerEventsTests.cs` | — |
 | `gestures/force_press.dart` | `src/Plumix/Gestures/ForcePress.cs` | `src/Plumix.Tests/ForcePressGestureRecognizerTests.cs` | — |
 | `gestures/gesture_details.dart` | `src/Plumix/Gestures/GestureDetails.cs` | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
@@ -627,7 +627,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/RenderView.cs` — (reference) (approximate)
 - `src/Plumix/RendererBinding.cs` — (reference) (adapted)
 - `src/Plumix/Scheduler.cs` — (adapted)
-- `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
 - `src/Plumix/UI/SystemChrome.cs` — (reference) (approximate)
 - `src/Plumix/UI/TextLayoutFallback.cs` — (reference) (adapted fallback for host-less test environments)
 - `src/Plumix/WidgetHost.cs` — (reference) (host integration, adapted)
@@ -641,5 +640,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 708
 - C# files without a marker: 51
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 13
+- C# files with a qualified (non-strict) marker: 12
 

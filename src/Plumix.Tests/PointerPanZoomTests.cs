@@ -139,7 +139,7 @@ public sealed class PointerPanZoomTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerDownEvent(
             1, PointerDeviceKind.Trackpad, position, PointerButtons.Primary, DateTime.UnixEpoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerMoveEvent(
-            1, PointerDeviceKind.Trackpad, position, PointerButtons.Primary, down: true, DateTime.UnixEpoch));
+            1, PointerDeviceKind.Trackpad, position, PointerButtons.Primary, DateTime.UnixEpoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerUpEvent(
             1, PointerDeviceKind.Trackpad, position, PointerButtons.None, DateTime.UnixEpoch));
         Assert.Throws<ArgumentOutOfRangeException>(() => new PointerCancelEvent(
@@ -152,10 +152,8 @@ public sealed class PointerPanZoomTests
         var position = new Point(1, 2);
         Assert.NotNull(new PointerHoverEvent(
             1, PointerDeviceKind.Trackpad, position, PointerButtons.None, DateTime.UnixEpoch));
-        Assert.NotNull(new PointerScrollEvent(
-            1, PointerDeviceKind.Trackpad, position, PointerButtons.None, default, DateTime.UnixEpoch));
-        Assert.NotNull(new PointerScrollInertiaCancelEvent(
-            1, PointerDeviceKind.Trackpad, position, PointerButtons.None, DateTime.UnixEpoch));
+        Assert.NotNull(new PointerScrollEvent(PointerDeviceKind.Trackpad, position, default, DateTime.UnixEpoch));
+        Assert.NotNull(new PointerScrollInertiaCancelEvent(PointerDeviceKind.Trackpad, position, DateTime.UnixEpoch));
     }
 
     [Fact]

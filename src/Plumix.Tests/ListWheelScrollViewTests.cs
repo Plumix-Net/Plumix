@@ -1504,7 +1504,6 @@ public sealed class ListWheelScrollViewTests
                 PointerDeviceKind.Touch,
                 position,
                 PointerButtons.Primary,
-                true,
                 now.AddMilliseconds(stepMilliseconds * index)));
             // Flutter's flingFrom pumps a frame whenever a frame interval has elapsed, which is what
             // lets the wheel learn its extents while the finger is still down.
@@ -1625,7 +1624,6 @@ public sealed class ListWheelScrollViewTests
                 PointerDeviceKind.Touch,
                 _logicalPosition,
                 PointerButtons.Primary,
-                true,
                 _time));
         }
 

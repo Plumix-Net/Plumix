@@ -804,7 +804,6 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
             kind: PointerDeviceKind.Touch,
             position: position,
             buttons: PointerButtons.Primary,
-            down: true,
             timestampUtc: DateTime.UtcNow));
 
     private static void DispatchPointerUp(GestureBinding binding, RenderView view, int pointer, Point position) =>

@@ -150,7 +150,11 @@ public sealed class PointerEventResampler
                     _position = position;
                 }
 
-                callback(@event.Resampled(position, default, pointerIdentifier, sampleTime));
+                callback(@event.CopyWith(
+                    position: position,
+                    delta: default(Point),
+                    pointer: pointerIdentifier,
+                    timestampUtc: sampleTime).MarkResampled());
             }
 
             _queuedEvents.Dequeue();
@@ -169,35 +173,77 @@ public sealed class PointerEventResampler
         }
     }
 
-    private PointerEvent ToMoveOrHoverEvent(
-        PointerEvent source,
+    private static PointerEvent ToHoverEvent(PointerEvent @event, Point position, Point delta, DateTime timeStamp)
+    {
+        return new PointerHoverEvent(
+            viewId: @event.ViewId,
+            timestampUtc: timeStamp,
+            kind: @event.Kind,
+            device: @event.Device,
+            position: position,
+            delta: delta,
+            buttons: @event.Buttons,
+            obscured: @event.Obscured,
+            pressureMin: @event.PressureMin,
+            pressureMax: @event.PressureMax,
+            distance: @event.Distance,
+            distanceMax: @event.DistanceMax,
+            size: @event.Size,
+            radiusMajor: @event.RadiusMajor,
+            radiusMinor: @event.RadiusMinor,
+            radiusMin: @event.RadiusMin,
+            radiusMax: @event.RadiusMax,
+            orientation: @event.Orientation,
+            tilt: @event.Tilt,
+            synthesized: @event.Synthesized,
+            embedderId: @event.EmbedderId);
+    }
+
+    private static PointerEvent ToMoveEvent(
+        PointerEvent @event,
         Point position,
         Point delta,
-        DateTime sampleTime,
+        int pointerIdentifier,
+        DateTime timeStamp,
+        PointerButtons buttons)
+    {
+        return new PointerMoveEvent(
+            viewId: @event.ViewId,
+            timestampUtc: timeStamp,
+            pointer: pointerIdentifier,
+            kind: @event.Kind,
+            device: @event.Device,
+            position: position,
+            delta: delta,
+            buttons: buttons,
+            obscured: @event.Obscured,
+            pressure: @event.Pressure,
+            pressureMin: @event.PressureMin,
+            pressureMax: @event.PressureMax,
+            distanceMax: @event.DistanceMax,
+            size: @event.Size,
+            radiusMajor: @event.RadiusMajor,
+            radiusMinor: @event.RadiusMinor,
+            radiusMin: @event.RadiusMin,
+            radiusMax: @event.RadiusMax,
+            orientation: @event.Orientation,
+            tilt: @event.Tilt,
+            platformData: @event.PlatformData,
+            synthesized: @event.Synthesized,
+            embedderId: @event.EmbedderId);
+    }
+
+    private PointerEvent ToMoveOrHoverEvent(
+        PointerEvent @event,
+        Point position,
+        Point delta,
+        DateTime timeStamp,
         bool isDown,
         PointerButtons buttons)
     {
         PointerEvent result = isDown
-            ? new PointerMoveEvent(
-                _pointerIdentifier, source.Kind, position, buttons, down: true, sampleTime)
-            {
-                Device = source.Device,
-                ViewId = source.ViewId,
-                Pressure = source.Pressure,
-                PressureMin = source.PressureMin,
-                PressureMax = source.PressureMax,
-                Synthesized = source.Synthesized,
-            }
-            : new PointerHoverEvent(
-                _pointerIdentifier, source.Kind, position, source.Buttons, sampleTime)
-        {
-            Device = source.Device,
-            ViewId = source.ViewId,
-            Pressure = source.Pressure,
-            PressureMin = source.PressureMin,
-            PressureMax = source.PressureMax,
-            Synthesized = source.Synthesized,
-        };
-        return result.Resampled(position, delta, _pointerIdentifier, sampleTime);
+            ? ToMoveEvent(@event, position, delta, _pointerIdentifier, timeStamp, buttons)
+            : ToHoverEvent(@event, position, delta, timeStamp);
+        return result.MarkResampled();
     }
 }

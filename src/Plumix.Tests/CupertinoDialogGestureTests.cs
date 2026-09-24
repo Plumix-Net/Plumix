@@ -363,7 +363,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
 
     private static PointerMoveEvent Move(int pointer, Point position) =>
         new(pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary,
-            down: true, EventTime.AddMilliseconds(20));
+            EventTime.AddMilliseconds(20));
 
     private static PointerUpEvent Up(int pointer, Point position) =>
         new(pointer, PointerDeviceKind.Touch, position, PointerButtons.None, EventTime.AddMilliseconds(40));

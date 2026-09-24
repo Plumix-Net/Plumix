@@ -181,7 +181,7 @@ public sealed class CupertinoDialogTests : IDisposable
 
         harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: twoPosition,
-            buttons: PointerButtons.Primary, down: true, timestampUtc: DateTime.UtcNow));
+            buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
         harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: twoPosition,
             buttons: PointerButtons.None, timestampUtc: DateTime.UtcNow));

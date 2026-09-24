@@ -511,7 +511,6 @@ public sealed class CupertinoSliderTests : IDisposable
                 PointerDeviceKind.Touch,
                 position,
                 PointerButtons.Primary,
-                true,
                 Clock.AddMilliseconds(milliseconds)));
     }
 

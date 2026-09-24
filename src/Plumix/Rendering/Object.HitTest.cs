@@ -184,7 +184,7 @@ public class HitTestResult
                 "The third row and third column of a transform matrix for pointer events must be "
                 + "Vector4(0, 0, 1, 0) to ensure that a transformed point is directly under the "
                 + "pointing device. Did you forget to run the paint matrix through "
-                + $"PointerEventUtils.RemovePerspectiveTransform? The provided matrix is:\n{transform}");
+                + $"PointerEvent.RemovePerspectiveTransform? The provided matrix is:\n{transform}");
         }
 #endif
     }
@@ -231,7 +231,7 @@ public class BoxHitTestResult : HitTestResult
     {
         if (transform is not null)
         {
-            transform = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(transform));
+            transform = Matrix4.TryInvert(PointerEvent.RemovePerspectiveTransform(transform));
             if (transform is null)
             {
                 return false;
@@ -307,7 +307,7 @@ public class BoxHitTestResult : HitTestResult
         }
         else
         {
-            Matrix4? inverted = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(paintTransform!));
+            Matrix4? inverted = Matrix4.TryInvert(PointerEvent.RemovePerspectiveTransform(paintTransform!));
             if (inverted is null)
             {
                 // Dart asserts here and then dereferences the null inverse.

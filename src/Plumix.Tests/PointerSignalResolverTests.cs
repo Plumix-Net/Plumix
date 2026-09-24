@@ -11,13 +11,12 @@ namespace Plumix.Tests;
 
 public sealed class PointerSignalResolverTests
 {
-    private static PointerScrollEvent Scroll(Point position, Action<bool>? onRespond = null)
+    private static PointerScrollEvent Scroll(Point position, RespondPointerEventCallback? onRespond = null)
     {
         return new PointerScrollEvent(
-            pointer: 1,
+            device: 1,
             kind: PointerDeviceKind.Mouse,
             position: position,
-            buttons: PointerButtons.None,
             scrollDelta: new Point(0.0, 10.0),
             timestampUtc: DateTime.UnixEpoch,
             onRespond: onRespond);
@@ -50,7 +49,7 @@ public sealed class PointerSignalResolverTests
         var resolver = new PointerSignalResolver();
         var log = new List<string>();
         var scroll = Scroll(new Point(10.0, 10.0));
-        var transformed = (PointerScrollEvent)scroll.WithLocalCoordinates(new Point(1.0, 1.0), default);
+        var transformed = (PointerScrollEvent)scroll.Transformed(Matrix4.TranslationValues(-9.0, -9.0, 0.0));
 
         resolver.Register(transformed, _ => log.Add("inner"));
         resolver.Register(scroll, _ => log.Add("outer"));

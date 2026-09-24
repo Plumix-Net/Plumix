@@ -239,7 +239,6 @@ public sealed class MultiDragGestureRecognizerTests
                 PointerDeviceKind.Touch,
                 position,
                 PointerButtons.Primary,
-                down: true,
                 timestamp));
 
     private static void Up(

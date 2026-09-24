@@ -323,7 +323,6 @@ public class PlumixHost : Control
             kind: kind,
             position: position,
             buttons: buttons,
-            down: true,
             timestampUtc: DateTime.UtcNow));
     }
 
@@ -370,10 +369,9 @@ public class PlumixHost : Control
 
         bool allowPlatformDefault = true;
         DispatchPointerEvent(new PointerScrollEvent(
-            pointer: unchecked((int)e.Pointer.Id),
+            device: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
-            buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
             scrollDelta: new Point(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
             timestampUtc: DateTime.UtcNow,
             onRespond: allow => allowPlatformDefault = allow));
@@ -392,8 +390,6 @@ public class PlumixHost : Control
         DispatchPointerEvent(new PointerCancelEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            position: default,
-            buttons: PointerButtons.None,
             timestampUtc: DateTime.UtcNow));
     }
 
@@ -1473,7 +1469,17 @@ public class PlumixHost : Control
 
         if (properties.IsMiddleButtonPressed)
         {
-            buttons |= PointerButtons.Middle;
+            buttons |= PointerButtons.MiddleMouse;
+        }
+
+        if (properties.IsXButton1Pressed)
+        {
+            buttons |= PointerButtons.BackMouse;
+        }
+
+        if (properties.IsXButton2Pressed)
+        {
+            buttons |= PointerButtons.ForwardMouse;
         }
 
         return buttons;

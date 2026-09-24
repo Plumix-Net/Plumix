@@ -584,7 +584,6 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 PointerDeviceKind.Mouse,
                 position,
                 PointerButtons.Primary,
-                true,
                 DateTime.UtcNow.AddMilliseconds(16.0)));
     }
 

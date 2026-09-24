@@ -59,7 +59,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
         PointerButtons buttons = PointerButtons.Primary,
         PointerDeviceKind kind = PointerDeviceKind.Touch)
     {
-        return new PointerMoveEvent(pointer, kind, position, buttons, down: true, DateTime.UnixEpoch);
+        return new PointerMoveEvent(pointer, kind, position, buttons, DateTime.UnixEpoch);
     }
 
     private static PointerCancelEvent Cancel(int pointer, Point position)
@@ -602,7 +602,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
 
         try
         {
-            var down = Down(1, new Point(10.0, 10.0), buttons: PointerButtons.Middle);
+            var down = Down(1, new Point(10.0, 10.0), buttons: PointerButtons.Tertiary);
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
             Route(down);

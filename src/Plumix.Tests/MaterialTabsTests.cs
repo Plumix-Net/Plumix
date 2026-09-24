@@ -1091,7 +1091,7 @@ public sealed class MaterialTabsTests
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             44, PointerDeviceKind.Touch, new Point(260, 90), PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, true, now.AddMilliseconds(40)));
+            44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
         clock = Scheduler.CurrentSeconds;
@@ -1174,7 +1174,7 @@ public sealed class MaterialTabsTests
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             77, PointerDeviceKind.Touch, new Point(260, 90), PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            77, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, true, now.AddMilliseconds(40)));
+            77, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             77, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
 

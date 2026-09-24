@@ -164,7 +164,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressDown is null
                     && OnTertiaryLongPressCancel is null
                     && OnTertiaryLongPressStart is null
@@ -272,7 +272,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressDown is not null)
                 {
                     InvokeCallback("onTertiaryLongPressDown", () => OnTertiaryLongPressDown!(details));
@@ -307,7 +307,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressCancel is not null)
                 {
                     InvokeCallback("onTertiaryLongPressCancel", OnTertiaryLongPressCancel);
@@ -353,7 +353,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressStart is not null)
                 {
                     var details = new LongPressStartDetails(
@@ -399,7 +399,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressMoveUpdate is not null)
                 {
                     InvokeCallback(
@@ -449,7 +449,7 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryLongPressEnd is not null)
                 {
                     InvokeCallback("onTertiaryLongPressEnd", () => OnTertiaryLongPressEnd!(details));
@@ -505,6 +505,6 @@ public class LongPressGestureRecognizer : PrimaryPointerGestureRecognizer
     /// </summary>
     private static bool DefaultButtonAcceptBehavior(PointerButtons buttons)
     {
-        return buttons is PointerButtons.Primary or PointerButtons.Secondary or PointerButtons.Middle;
+        return buttons is PointerButtons.Primary or PointerButtons.Secondary or PointerButtons.Tertiary;
     }
 }

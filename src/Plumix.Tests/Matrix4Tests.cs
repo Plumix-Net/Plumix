@@ -90,7 +90,7 @@ public sealed class Matrix4Tests
     public void RemovePerspectiveTransform_ResetsTheZRowAndColumn()
     {
         Matrix4 perspective = MatrixUtils.CreateCylindricalProjectionTransform(radius: 100.0, angle: 0.5);
-        Matrix4 flattened = Plumix.Gestures.PointerEventUtils.RemovePerspectiveTransform(perspective);
+        Matrix4 flattened = Plumix.UI.PointerEvent.RemovePerspectiveTransform(perspective);
 
         Assert.Equal(0.0, flattened.Storage[2]);
         Assert.Equal(0.0, flattened.Storage[6]);

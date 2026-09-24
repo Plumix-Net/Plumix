@@ -625,14 +625,14 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
     private void CheckDrag(PointerMoveEvent @event)
     {
         // Plumix pointer events carry no per-event transform, so the delta transform is the
-        // identity; see `PointerEventUtils.TransformDeltaViaPositions`.
+        // identity; see `PointerEvent.TransformDeltaViaPositions`.
         Point movedLocally = GetDeltaForDetails(@event.LocalDelta);
-        _globalDistanceMoved += PointerEventUtils.TransformDeltaViaPositions(
+        _globalDistanceMoved += PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: @event.LocalPosition,
                 untransformedDelta: movedLocally,
                 transform: null)
             .Distance() * Math.Sign(GetPrimaryValueFromOffset(movedLocally) ?? 1);
-        _globalDistanceMovedAllAxes += PointerEventUtils.TransformDeltaViaPositions(
+        _globalDistanceMovedAllAxes += PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: @event.LocalPosition,
                 untransformedDelta: @event.LocalDelta,
                 transform: null)
@@ -674,7 +674,7 @@ public abstract class BaseTapAndDragGestureRecognizer : OneSequenceGestureRecogn
         {
             _currentPosition = OffsetPair.FromEventPosition(@event);
             Point correctedLocalPosition = _initialPosition.Local + localDelta;
-            Point globalUpdateDelta = PointerEventUtils.TransformDeltaViaPositions(
+            Point globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: correctedLocalPosition,
                 untransformedDelta: localDelta,
                 transform: null);

@@ -150,7 +150,7 @@ public sealed class MouseTrackerTests : IDisposable
         harness.SendPointer(new PointerDownEvent(1, PointerDeviceKind.Mouse, position, PointerButtons.Primary,
             DateTime.UtcNow));
         harness.SendPointer(new PointerMoveEvent(1, PointerDeviceKind.Mouse, position, PointerButtons.Primary,
-            true, DateTime.UtcNow));
+            DateTime.UtcNow));
         harness.SendPointer(new PointerUpEvent(1, PointerDeviceKind.Mouse, position, PointerButtons.None,
             DateTime.UtcNow));
 

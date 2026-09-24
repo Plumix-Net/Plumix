@@ -1288,7 +1288,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
     private static void DispatchDown(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
         binding.HandlePointerEvent(view, new PointerDownEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
     private static void DispatchMove(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
-        binding.HandlePointerEvent(view, new PointerMoveEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, true, time));
+        binding.HandlePointerEvent(
+            view,
+            new PointerMoveEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, time));
     private static void DispatchUp(GestureBinding binding, RenderView view, int pointer, Point position, DateTime time) =>
         binding.HandlePointerEvent(view, new PointerUpEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, time));
 

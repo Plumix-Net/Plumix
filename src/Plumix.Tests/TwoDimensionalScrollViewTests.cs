@@ -416,7 +416,6 @@ public sealed class TwoDimensionalScrollViewTests
                     PointerDeviceKind.Touch,
                     new Point(Center.X + offset.X, Center.Y + offset.Y),
                     PointerButtons.Primary,
-                    true,
                     now));
             step++;
         }

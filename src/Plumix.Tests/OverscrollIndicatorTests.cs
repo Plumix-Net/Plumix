@@ -412,7 +412,6 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 PointerDeviceKind.Mouse,
                 new Point(120, 120),
                 PointerButtons.Primary,
-                down: true,
                 now.AddMilliseconds(16)));
         binding.HandlePointerEvent(
             harness.RenderView,
@@ -421,7 +420,6 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 PointerDeviceKind.Mouse,
                 new Point(120, 210),
                 PointerButtons.Primary,
-                down: true,
                 now.AddMilliseconds(32)));
         PumpAnimation(harness, TimeSpan.FromMilliseconds(100));
 

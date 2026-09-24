@@ -666,7 +666,6 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                 PointerDeviceKind.Touch,
                 new Point(inside.X, inside.Y + 400.0),
                 PointerButtons.Primary,
-                false,
                 timestamp.AddMilliseconds(20.0)));
         for (int frame = 0; frame < 40; frame++)
         {
@@ -725,7 +724,6 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                 PointerDeviceKind.Touch,
                 new Point(inside.X, inside.Y + 400.0),
                 PointerButtons.Primary,
-                false,
                 timestamp.AddMilliseconds(20.0)));
         for (int frame = 0; frame < 30; frame++)
         {

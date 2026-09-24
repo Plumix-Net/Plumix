@@ -1156,7 +1156,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
     private static bool DebugValidateHitTestOffsets(Matrix4 transform, Point transformed, Point position)
     {
-        Matrix4? inverted = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(transform));
+        Matrix4? inverted = Matrix4.TryInvert(PointerEvent.RemovePerspectiveTransform(transform));
         if (inverted == null)
         {
             return DebugAssertValidHitTestOffsets("Null inverted transform", transformed, position);

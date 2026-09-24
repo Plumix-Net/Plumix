@@ -252,14 +252,9 @@ public sealed class GestureBinding : IHitTestTarget
         }
 
         var cancel = new PointerCancelEvent(
-            pointer,
-            PointerDeviceKind.Touch,
-            default,
-            PointerButtons.None,
-            DateTime.UnixEpoch)
-        {
-            ViewId = root.FlutterView.ViewId,
-        };
+            pointer: pointer,
+            timestampUtc: DateTime.UnixEpoch,
+            viewId: root.FlutterView.ViewId);
         bool wasEmpty = _pendingPointerEvents.Count == 0;
         _pendingPointerEvents.AddFirst((root, cancel));
         if (wasEmpty && !_flushingPointerEvents)
@@ -458,30 +453,36 @@ public sealed class GestureBinding : IHitTestTarget
         RendererBinding.Instance.ResetMouseTrackerForTests();
     }
 
+    /// <summary>
+    /// Gives a host-reported move or hover event the delta Flutter's engine would have computed: the
+    /// distance from the pointer's previous position. Every other event type has no settable delta
+    /// in Dart, so it is dispatched as reported; a down and a hover still record the position the
+    /// next move measures from.
+    /// </summary>
     private PointerEvent AttachDelta(PointerEvent @event)
     {
+        int pointer = @event.Pointer;
         if (@event.IsResampled)
         {
-            _lastPositions[@event.Pointer] = @event.Position;
+            _lastPositions[pointer] = @event.Position;
             return @event;
         }
 
-        if (@event is PointerSignalEvent or PointerAddedEvent or PointerRemovedEvent or PointerCancelEvent
-            or PointerPanZoomStartEvent or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent)
+        if (@event is not PointerMoveEvent and not PointerHoverEvent)
         {
-            return @event.WithDelta(default);
+            if (@event is PointerDownEvent)
+            {
+                _lastPositions[pointer] = @event.Position;
+            }
+
+            return @event;
         }
 
-        int pointer = @event.Pointer;
-        if (!_lastPositions.TryGetValue(pointer, out Point previousPosition))
-        {
-            _lastPositions[pointer] = @event.Position;
-            return @event.WithDelta(default);
-        }
-
-        Point delta = @event.Position - previousPosition;
+        Point delta = _lastPositions.TryGetValue(pointer, out Point previousPosition)
+            ? @event.Position - previousPosition
+            : default;
         _lastPositions[pointer] = @event.Position;
-        return @event.WithDelta(delta);
+        return delta == @event.Delta ? @event : @event.WithDelta(delta);
     }
 }
 

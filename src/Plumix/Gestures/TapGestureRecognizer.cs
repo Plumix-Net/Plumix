@@ -366,7 +366,7 @@ public class TapGestureRecognizer : BaseTapGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryTapDown is null
                     && OnTertiaryTapUp is null
                     && OnTertiaryTapCancel is null)
@@ -404,7 +404,7 @@ public class TapGestureRecognizer : BaseTapGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryTapDown is { } onTertiaryTapDown)
                 {
                     InvokeCallback("onTertiaryTapDown", () => onTertiaryTapDown(details));
@@ -446,7 +446,7 @@ public class TapGestureRecognizer : BaseTapGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryTapUp is { } onTertiaryTapUp)
                 {
                     InvokeCallback("onTertiaryTapUp", () => onTertiaryTapUp(details));
@@ -488,7 +488,7 @@ public class TapGestureRecognizer : BaseTapGestureRecognizer
                 }
 
                 break;
-            case PointerButtons.Middle:
+            case PointerButtons.Tertiary:
                 if (OnTertiaryTapCancel is { } onTertiaryTapCancel)
                 {
                     InvokeCallback(note + "onTertiaryTapCancel", onTertiaryTapCancel);

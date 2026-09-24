@@ -247,7 +247,7 @@ public sealed class CupertinoScrollbarTests
         var moved = new Point(start.X, start.Y + 40);
         DateTime moveTime = PressTime.AddSeconds(5);
         Dispatch(harness, new PointerMoveEvent(
-            71, PointerDeviceKind.Touch, moved, PointerButtons.Primary, true, moveTime));
+            71, PointerDeviceKind.Touch, moved, PointerButtons.Primary, moveTime));
         Assert.True(controller.PrimaryPosition!.Pixels > 0);
 
         Dispatch(harness, new PointerUpEvent(
@@ -290,7 +290,7 @@ public sealed class CupertinoScrollbarTests
             81, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         var moved = new Point(start.X + 20, start.Y);
         Dispatch(harness, new PointerMoveEvent(
-            81, PointerDeviceKind.Touch, moved, PointerButtons.Primary, true, PressTime.AddMilliseconds(20)));
+            81, PointerDeviceKind.Touch, moved, PointerButtons.Primary, PressTime.AddMilliseconds(20)));
 
         Assert.True(controller.PrimaryPosition!.Pixels > 20);
     }

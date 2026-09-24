@@ -391,7 +391,6 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             PointerDeviceKind.Touch,
             new Point(endX, 300.0),
             PointerButtons.Primary,
-            true,
             timestamp.AddMilliseconds(100.0)));
     }
 

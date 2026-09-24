@@ -181,7 +181,6 @@ public sealed class MaterialSelectionTests
             PointerDeviceKind.Mouse,
             new Point(90, 8),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             91,
@@ -259,7 +258,6 @@ public sealed class MaterialSelectionTests
             PointerDeviceKind.Mouse,
             new Point(80, 28),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             92,

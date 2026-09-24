@@ -735,7 +735,7 @@ public sealed class PageViewTests
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             91, PointerDeviceKind.Touch, from, PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            91, PointerDeviceKind.Touch, to, PointerButtons.Primary, true, now.AddMilliseconds(40)));
+            91, PointerDeviceKind.Touch, to, PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             91, PointerDeviceKind.Touch, to, PointerButtons.None, now.AddMilliseconds(50)));
     }

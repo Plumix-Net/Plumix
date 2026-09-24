@@ -175,13 +175,12 @@ public sealed class ScrollBehaviorParityTests
         GestureBinding binding,
         RenderView renderView,
         PointerDeviceKind kind,
-        Action<bool>? onRespond = null)
+        RespondPointerEventCallback? onRespond = null)
     {
         binding.HandlePointerEvent(renderView, new PointerScrollEvent(
-            pointer: 1,
+            device: 1,
             kind: kind,
             position: new Point(50, 50),
-            buttons: PointerButtons.None,
             scrollDelta: new Point(0, 20),
             timestampUtc: DateTime.UtcNow,
             onRespond: onRespond));

@@ -112,7 +112,6 @@ public sealed class MaterialTextFieldTests : IDisposable
             PointerDeviceKind.Mouse,
             new Point(90, 10),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             211,

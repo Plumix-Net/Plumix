@@ -303,7 +303,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
                     Matrix4? localToGlobalTransform = @event.Transform is null
                         ? null
                         : Matrix4.TryInvert(@event.Transform);
-                    _globalDistanceMoved += PointerEventUtils
+                    _globalDistanceMoved += PointerEvent
                             .TransformDeltaViaPositions(
                                 untransformedEndPosition: localPosition,
                                 untransformedDelta: movedLocally,
@@ -635,7 +635,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         {
             Matrix4? localToGlobal = transform is not null ? Matrix4.TryInvert(transform) : null;
             Point correctedLocalPosition = _initialPosition.Local + localUpdateDelta;
-            Point globalUpdateDelta = PointerEventUtils.TransformDeltaViaPositions(
+            Point globalUpdateDelta = PointerEvent.TransformDeltaViaPositions(
                 untransformedEndPosition: correctedLocalPosition,
                 untransformedDelta: localUpdateDelta,
                 transform: localToGlobal);

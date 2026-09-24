@@ -118,7 +118,6 @@ public sealed class TapAndDragGestureTests : IDisposable
             kind: PointerDeviceKind.Touch,
             position: new Point(25, 25),
             buttons: PointerButtons.Primary,
-            down: true,
             timestampUtc: DateTime.UtcNow));
         Up(pipeline, 1, new Point(25, 25));
 
@@ -380,7 +379,6 @@ public sealed class TapAndDragGestureTests : IDisposable
             kind: kind,
             position: position,
             buttons: PointerButtons.Primary,
-            down: true,
             timestampUtc: DateTime.UtcNow));
     }
 

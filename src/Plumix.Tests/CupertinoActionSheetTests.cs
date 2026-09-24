@@ -615,7 +615,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
     private static void PointerMove(CupertinoThemeTestHarness harness, Point position) =>
         harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: position,
-            buttons: PointerButtons.Primary, down: true, timestampUtc: DateTime.UtcNow));
+            buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
 
     private static void PointerUp(CupertinoThemeTestHarness harness, Point position) =>
         harness.HandlePointerEvent(new PointerUpEvent(

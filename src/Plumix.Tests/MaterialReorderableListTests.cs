@@ -861,7 +861,6 @@ public sealed class MaterialReorderableListTests
                 PointerDeviceKind.Mouse,
                 position,
                 PointerButtons.Primary,
-                down: true,
                 timestamp));
     }
 

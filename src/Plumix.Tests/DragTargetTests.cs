@@ -604,7 +604,6 @@ public sealed class DragTargetTests
             PointerDeviceKind.Mouse,
             new Point(120, 20),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(20)));
         harness.Pump();
 
@@ -688,7 +687,6 @@ public sealed class DragTargetTests
             PointerDeviceKind.Touch,
             new Point(100, 20),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(20)));
         harness.Pump();
 
@@ -702,7 +700,6 @@ public sealed class DragTargetTests
             PointerDeviceKind.Touch,
             new Point(180, 80),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(40)));
         harness.Dispatch(new PointerUpEvent(
             2,
@@ -772,7 +769,6 @@ public sealed class DragTargetTests
             PointerDeviceKind.Mouse,
             new Point(90, 70),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(40)));
         harness.Dispatch(new PointerUpEvent(
             4,
@@ -837,7 +833,6 @@ public sealed class DragTargetTests
             PointerDeviceKind.Mouse,
             new Point(100, 20),
             PointerButtons.Primary,
-            down: true,
             now.AddMilliseconds(20)));
         harness.Dispatch(new PointerUpEvent(
             5,

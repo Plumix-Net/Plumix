@@ -960,7 +960,6 @@ public sealed class MaterialSliderTests
                 kind: PointerDeviceKind.Mouse,
                 position: position,
                 buttons: PointerButtons.Primary,
-                down: true,
                 timestampUtc: DateTime.UtcNow));
     }
 

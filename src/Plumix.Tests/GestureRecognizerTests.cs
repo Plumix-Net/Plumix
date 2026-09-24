@@ -27,7 +27,7 @@ public sealed class GestureRecognizerTests : IDisposable
 
     private static PointerMoveEvent Move(int pointer = 5, Point? position = null) =>
         new(pointer, PointerDeviceKind.Touch, position ?? new Point(15, 15),
-            PointerButtons.Primary, down: true, DateTime.UnixEpoch);
+            PointerButtons.Primary, DateTime.UnixEpoch);
 
     private static PointerUpEvent Up(int pointer = 5) =>
         new(pointer, PointerDeviceKind.Touch, new Point(15, 15), PointerButtons.None, DateTime.UnixEpoch);

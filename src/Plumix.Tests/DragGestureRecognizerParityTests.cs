@@ -334,8 +334,12 @@ public sealed partial class DragGestureRecognizerTests
         if (synthesizedWobble)
         {
             var wobble = new PointerMoveEvent(
-                1, PointerDeviceKind.Touch, new Point(21, 1), PointerButtons.Primary, true,
-                DateTime.UnixEpoch.AddMilliseconds(30)) { Synthesized = true };
+                1,
+                PointerDeviceKind.Touch,
+                new Point(21, 1),
+                PointerButtons.Primary,
+                DateTime.UnixEpoch.AddMilliseconds(30),
+                synthesized: true);
             Route(wobble);
         }
 
@@ -638,7 +642,7 @@ public sealed partial class DragGestureRecognizerTests
         Route(pointer.Update(new Point(20, 30), new Point(10, 15), milliseconds: 10).Transformed(transform));
         var synthesized = new PointerPanZoomUpdateEvent(
             1, new Point(20, 30), DateTime.UnixEpoch.AddMilliseconds(20),
-            pan: new Point(12, 18), panDelta: new Point(2, 3)) { Synthesized = true };
+            pan: new Point(12, 18), panDelta: new Point(2, 3), synthesized: true);
         Route(synthesized.Transformed(transform));
         Assert.Equal(new[] { default(Point), new Point(10, 15) }, tracker.Positions);
         Route(pointer.End(new Point(20, 30)));

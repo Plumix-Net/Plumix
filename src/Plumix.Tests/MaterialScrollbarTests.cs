@@ -275,8 +275,7 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             9, PointerDeviceKind.Mouse, new Point(x, downY), PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.Primary, true,
-            PressTime.AddMilliseconds(20)));
+            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.Primary, PressTime.AddMilliseconds(20)));
         Dispatch(harness, new PointerUpEvent(
             9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.None,
             PressTime.AddMilliseconds(30)));
@@ -303,7 +302,10 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             11, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            11, PointerDeviceKind.Touch, new Point(start.X, start.Y + 2), PointerButtons.Primary, true,
+            11,
+            PointerDeviceKind.Touch,
+            new Point(start.X, start.Y + 2),
+            PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
         Assert.True(controller.Offset > 0);
@@ -326,7 +328,10 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             12, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            12, PointerDeviceKind.Touch, new Point(start.X, start.Y - 40), PointerButtons.Primary, true,
+            12,
+            PointerDeviceKind.Touch,
+            new Point(start.X, start.Y - 40),
+            PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
         Assert.Equal(0, controller.Offset);
@@ -356,7 +361,10 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             13, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            13, PointerDeviceKind.Touch, new Point(start.X, start.Y + 40), PointerButtons.Primary, true,
+            13,
+            PointerDeviceKind.Touch,
+            new Point(start.X, start.Y + 40),
+            PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
         Assert.Equal(0, controller.Offset);
 
@@ -408,7 +416,10 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(
             21, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
-            21, PointerDeviceKind.Touch, new Point(start.X, 235), PointerButtons.Primary, true,
+            21,
+            PointerDeviceKind.Touch,
+            new Point(start.X, 235),
+            PointerButtons.Primary,
             PressTime.AddMilliseconds(16)));
 
         Assert.True(controller.Offset > controller.PrimaryPosition!.MaxScrollExtent * 0.9);
@@ -472,7 +483,7 @@ public sealed class MaterialScrollbarTests
             15, PointerDeviceKind.Touch, justOutside, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             15, PointerDeviceKind.Touch, new Point(justOutside.X, justOutside.Y + 8),
-            PointerButtons.Primary, true, PressTime.AddMilliseconds(16)));
+            PointerButtons.Primary, PressTime.AddMilliseconds(16)));
         Assert.True(controller.Offset > 0);
     }
 
@@ -1144,7 +1155,7 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(92, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             92, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
-            down: true, timestampUtc: PressTime.AddMilliseconds(20)));
+            timestampUtc: PressTime.AddMilliseconds(20)));
         harness.Pump(ViewportSize);
         Rect after = RequirePainter(harness).Geometry!.Value.ThumbRect;
         Assert.Equal(horizontal ? before.X - 10 : before.Y - 10, horizontal ? after.X : after.Y, precision: 3);
@@ -1177,7 +1188,7 @@ public sealed class MaterialScrollbarTests
         Dispatch(harness, new PointerDownEvent(93, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
         Dispatch(harness, new PointerMoveEvent(
             93, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
-            down: true, timestampUtc: PressTime.AddMilliseconds(20)));
+            timestampUtc: PressTime.AddMilliseconds(20)));
         Assert.True(controller.Offset < 0);
         Dispatch(harness, new PointerUpEvent(
             93, PointerDeviceKind.Mouse, end, PointerButtons.None, PressTime.AddMilliseconds(40)));

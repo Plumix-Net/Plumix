@@ -363,7 +363,6 @@ public sealed class GesturePipelineTests
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(34, 10),
                     buttons: PointerButtons.Primary,
-                    down: true,
                     timestampUtc: DateTime.UtcNow));
 
             binding.HandlePointerEvent(
@@ -373,7 +372,6 @@ public sealed class GesturePipelineTests
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(70, 11),
                     buttons: PointerButtons.Primary,
-                    down: true,
                     timestampUtc: DateTime.UtcNow));
 
             binding.HandlePointerEvent(
@@ -435,7 +433,6 @@ public sealed class GesturePipelineTests
                 PointerDeviceKind.Touch,
                 new Point(20, 25),
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds(20)));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
                 10,
@@ -500,7 +497,6 @@ public sealed class GesturePipelineTests
                 PointerDeviceKind.Touch,
                 new Point(20, 45),
                 PointerButtons.Primary,
-                true,
                 start.AddMilliseconds(20)));
 
             Assert.Equal(new Point(20, expectedStartY), startPosition);
@@ -552,7 +548,6 @@ public sealed class GesturePipelineTests
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(34, 10),
                     buttons: PointerButtons.Primary,
-                    down: true,
                     timestampUtc: start.AddMilliseconds(30)));
 
             binding.HandlePointerEvent(
@@ -562,7 +557,6 @@ public sealed class GesturePipelineTests
                     kind: PointerDeviceKind.Mouse,
                     position: new Point(58, 10),
                     buttons: PointerButtons.Primary,
-                    down: true,
                     timestampUtc: start.AddMilliseconds(60)));
 
             binding.HandlePointerEvent(
@@ -641,7 +635,6 @@ public sealed class GesturePipelineTests
                         kind: PointerDeviceKind.Mouse,
                         position: new Point(10 + (24 * step), 10),
                         buttons: PointerButtons.Primary,
-                        down: true,
                         timestampUtc: start.AddMilliseconds(30 * step)));
             }
 
@@ -763,7 +756,12 @@ public sealed class GesturePipelineTests
 
             binding.HandlePointerEvent(
                 pipeline.Root,
-                new PointerMoveEvent(3, PointerDeviceKind.Mouse, new Point(90, 12), PointerButtons.Primary, down: true, DateTime.UtcNow));
+                new PointerMoveEvent(
+                    3,
+                    PointerDeviceKind.Mouse,
+                    new Point(90, 12),
+                    PointerButtons.Primary,
+                    DateTime.UtcNow));
 
             binding.HandlePointerEvent(
                 pipeline.Root,
@@ -772,7 +770,6 @@ public sealed class GesturePipelineTests
                     PointerDeviceKind.Mouse,
                     new Point(100, 12),
                     PointerButtons.Primary,
-                    down: true,
                     DateTime.UtcNow));
 
             binding.HandlePointerEvent(
@@ -817,10 +814,9 @@ public sealed class GesturePipelineTests
         binding.HandlePointerEvent(
             pipeline.Root,
             new PointerScrollEvent(
-                pointer: 44,
+                device: 44,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(30, 30),
-                buttons: PointerButtons.None,
                 scrollDelta: new Point(0, -1),
                 timestampUtc: DateTime.UtcNow));
 

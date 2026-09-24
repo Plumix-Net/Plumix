@@ -300,7 +300,6 @@ public sealed class HitTestResultTests
                 kind: PointerDeviceKind.Touch,
                 position: new Point(60, 50),
                 buttons: PointerButtons.Primary,
-                down: true,
                 timestampUtc: DateTime.UtcNow));
 
         // The 20 global pixels of travel are 10 local pixels under the 2x scale.
@@ -351,7 +350,6 @@ public sealed class HitTestResultTests
                 kind: PointerDeviceKind.Touch,
                 position: new Point(60, 20),
                 buttons: PointerButtons.Primary,
-                down: true,
                 timestampUtc: start.AddMilliseconds(16)));
 
         // 40 global pixels beat the 18-pixel touch slop even though they are 20 local pixels.

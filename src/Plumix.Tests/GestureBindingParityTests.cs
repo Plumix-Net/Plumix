@@ -193,6 +193,38 @@ public sealed class GestureBindingParityTests
         }
     }
 
+    [Fact]
+    public void HostEventsGetEngineDeltasOnlyOnMovesAndHovers()
+    {
+        GestureBinding binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        var received = new List<PointerEvent>();
+        RenderView root = BuildRoot(new RenderPointerListener(behavior: HitTestBehavior.Opaque));
+        PointerRoute route = received.Add;
+        binding.PointerRouter.AddGlobalRoute(route);
+
+        try
+        {
+            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Point(4, 4)));
+            binding.HandlePointerEvent(root, new PointerHoverEvent(7, PointerDeviceKind.Mouse, new Point(6, 5)));
+            binding.HandlePointerEvent(root, new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)));
+            binding.HandlePointerEvent(root, new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Point(13, 14)));
+            binding.HandlePointerEvent(root, new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(20, 20)));
+
+            // Dart's engine gives hover and move events the distance from the previous event of
+            // the pointer; down and up events cannot carry a delta at all.
+            Assert.Equal(
+                [default, new Point(2, 1), default, new Point(3, 4), default],
+                received.Select(@event => @event.Delta));
+            Assert.All(received, @event => Assert.Null(@event.Original));
+        }
+        finally
+        {
+            binding.PointerRouter.RemoveGlobalRoute(route);
+            binding.ResetForTests();
+        }
+    }
+
     private static RenderView BuildRoot(RenderBox child)
     {
         var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
