@@ -1160,6 +1160,12 @@ public class PlumixHost : Control
     {
         switch (call.Method)
         {
+            case "Clipboard.setData":
+                return SetClipboardDataAsync(call.Arguments);
+            case "Clipboard.getData":
+                return GetClipboardDataAsync(call.Arguments);
+            case "Clipboard.hasStrings":
+                return HasClipboardStringsAsync(call.Arguments);
             case "SystemSound.play":
                 OnFrameworkSystemSound(ParseSystemSoundType(call.Arguments as string));
                 return Task.FromResult<object?>(null);
@@ -1170,6 +1176,43 @@ public class PlumixHost : Control
                 // Dart: "calls to methods that are not implemented on the shell side are ignored".
                 throw new MissingPluginException(call.Method);
         }
+    }
+
+    private async Task<object?> SetClipboardDataAsync(object? arguments)
+    {
+        string? text = arguments is System.Collections.IDictionary data ? data["text"] as string : null;
+        TextClipboard.SetText(text);
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        if (clipboard is not null)
+        {
+            await clipboard.SetTextAsync(text);
+        }
+
+        return null;
+    }
+
+    private async Task<object?> GetClipboardDataAsync(object? format)
+    {
+        if (format is not "text/plain")
+        {
+            return null;
+        }
+
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        string? text = clipboard is null ? TextClipboard.GetText() : await clipboard.TryGetTextAsync();
+        return text is null ? null : new Dictionary<string, object?> { ["text"] = text };
+    }
+
+    private async Task<object?> HasClipboardStringsAsync(object? format)
+    {
+        if (format is not "text/plain")
+        {
+            return new Dictionary<string, object?> { ["value"] = false };
+        }
+
+        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        string? text = clipboard is null ? TextClipboard.GetText() : await clipboard.TryGetTextAsync();
+        return new Dictionary<string, object?> { ["value"] = text is not null };
     }
 
     private static SystemSoundType ParseSystemSoundType(string? type) => type switch

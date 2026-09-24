@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Clipboard gains Flutter's async platform-channel API and desktop host handling (services/clipboard.dart).
 - Breaking: RenderBox/BoxConstraints are a strict port: Dart asserts, messages, caches, lerp, toString (box.dart).
 - Diagnostics print Avalonia sizes and points as Dart's `Size(w, h)` and `Offset(x, y)` (foundation/diagnostics.dart).
 - Breaking: FollowerLayer resolves its transform while compositing; layers gain depth/siblings/callbacks (layer.dart).

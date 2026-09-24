@@ -1,4 +1,4 @@
-// Dart parity source (reference): flutter/packages/flutter/lib/src/services/clipboard.dart (adapted)
+// C#-only synchronous clipboard cache for the editing pipeline and headless tests.
 
 namespace Plumix.Widgets;
 

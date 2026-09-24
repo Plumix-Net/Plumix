@@ -25,7 +25,8 @@ public static class SystemChannels
 
     /// <summary>A JSON <see cref="MethodChannel"/> for invoking miscellaneous platform methods.</summary>
     /// <remarks>
-    /// Outgoing: <c>Clipboard.setData</c>, <c>Clipboard.getData</c>, <c>HapticFeedback.vibrate</c>,
+    /// Outgoing: <c>Clipboard.setData</c>, <c>Clipboard.getData</c>, <c>Clipboard.hasStrings</c>,
+    /// <c>HapticFeedback.vibrate</c>,
     /// <c>SystemSound.play</c>, <c>SystemChrome.setPreferredOrientations</c>,
     /// <c>SystemChrome.setApplicationSwitcherDescription</c>,
     /// <c>SystemChrome.setEnabledSystemUIOverlays</c>, <c>SystemChrome.setEnabledSystemUIMode</c>,
