@@ -395,6 +395,7 @@ public class PlumixHost : Control
 
     public override void Render(DrawingContext context)
     {
+        OnBuildBeforeLayout();
         _pipeline.FlushLayout(Bounds.Size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
@@ -441,6 +442,19 @@ public class PlumixHost : Control
     }
 
     protected virtual void OnDrawFrame(TimeSpan timestamp)
+    {
+    }
+
+    /// <summary>
+    /// Called right before every layout flush the host performs. Dart's <c>WidgetsBinding.drawFrame</c>
+    /// runs <c>buildScope</c> immediately before <c>super.drawFrame()</c> lays out, so layout never
+    /// meets a dirty widget. Plumix's host lays out from its own persistent callback, whose order
+    /// against the binding's build callback depends on which was registered first, and again from
+    /// Avalonia's <see cref="Render"/> pass, which runs on its own schedule after microtasks or input
+    /// may have dirtied widgets. <see cref="WidgetHost"/> rebuilds them here, so a lazy list that
+    /// creates children during layout never meets a dirty element outside its build scope.
+    /// </summary>
+    protected virtual void OnBuildBeforeLayout()
     {
     }
 
@@ -709,6 +723,7 @@ public class PlumixHost : Control
         }
 
         OnDrawFrame(timestamp);
+        OnBuildBeforeLayout();
         _pipeline.FlushLayout(Bounds.Size);
         _pipeline.FlushCompositingBits();
 
@@ -756,6 +771,7 @@ public class PlumixHost : Control
 
     internal void FlushPipelineForTests(Size? viewport = null)
     {
+        OnBuildBeforeLayout();
         _pipeline.FlushLayout(viewport ?? Bounds.Size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();

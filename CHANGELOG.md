@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- WidgetHost builds dirty widgets before every layout flush, including Avalonia's render pass (widgets/binding.dart).
 - Breaking: RenderEditable is a strict port over TextPainter: painters, offset, gestures, semantics (editable.dart).
 - EditableText drives RenderEditable with Dart's text span, spell check spans and caret runs (editable_text.dart).
 - Span dumps list their TextStyle; ValueNotifier and ViewportOffset print Dart names (painting/text_style.dart).

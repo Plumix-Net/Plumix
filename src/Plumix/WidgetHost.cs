@@ -68,6 +68,15 @@ public sealed class WidgetHost : PlumixHost
         }
     }
 
+    protected override void OnBuildBeforeLayout()
+    {
+        if (WidgetsBinding.IsImplicitView(RootFlutterView))
+        {
+            using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+            WidgetsBinding.Instance.DrawFrame();
+        }
+    }
+
     protected override void OnFinalizeFrame()
     {
         if (WidgetsBinding.IsImplicitView(RootFlutterView))

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -217,6 +218,80 @@ public sealed class FramePipelineTests
         finally
         {
             Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void WidgetHost_RenderPass_BuildsDirtyWidgetsBeforeLayingOutLazyList()
+    {
+        // Avalonia renders on its own schedule, so input and microtasks can dirty widgets after the
+        // scheduler frame. Before the fix, the render pass laid out without building: the list's
+        // child creation flushed its build scope, met the dirty widget outside it and threw, and the
+        // half-laid-out list left a child without a layout offset for semantics to crash on.
+        var controller = new ScrollController();
+        var probe = new RebuildCounter();
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        var host = new WidgetHost();
+        try
+        {
+            host.RootWidget = new Directionality(
+                Plumix.UI.TextDirection.Ltr,
+                new Column(children:
+                [
+                    probe,
+                    new SizedBox(
+                        height: 200,
+                        child: ListView.Builder(
+                            itemCount: 100,
+                            itemExtent: 40,
+                            controller: controller,
+                            itemBuilder: (_, index) => new Semantics(
+                                label: $"row {index}",
+                                child: new SizedBox(height: 40)))),
+                ]));
+            host.FlushPipelineForTests(new Size(300, 400));
+            Assert.Equal(1, probe.BuildCount);
+
+            probe.State!.Poke();
+            controller.JumpTo(1000);
+            host.FlushPipelineForTests(new Size(300, 400));
+
+            Assert.Empty(reported);
+            Assert.Equal(2, probe.BuildCount);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+            host.RootWidget = null;
+            Scheduler.PumpFrameForTests();
+        }
+    }
+
+    private sealed class RebuildCounter : StatefulWidget
+    {
+        public int BuildCount { get; set; }
+
+        public RebuildCounterState? State { get; set; }
+
+        public override State CreateState() => new RebuildCounterState();
+    }
+
+    private sealed class RebuildCounterState : State<RebuildCounter>
+    {
+        public override void InitState()
+        {
+            base.InitState();
+            Widget.State = this;
+        }
+
+        public void Poke() => SetState(() => { });
+
+        public override Widget Build(BuildContext context)
+        {
+            Widget.BuildCount += 1;
+            return new SizedBox(height: 20);
         }
     }
 
