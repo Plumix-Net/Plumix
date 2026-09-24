@@ -20,6 +20,13 @@ public sealed partial class Canvas
         BoxShadows boxShadows = default,
         bool isAntiAlias = true)
     {
+        DebugRecordCall(radiusX == 0 && radiusY == 0
+            ? new CanvasCall("drawRect", Rect: rect, Brush: brush, Pen: pen)
+            : new CanvasCall(
+                "drawRRect",
+                RRect: RRect.FromRectXY(rect, radiusX, radiusY),
+                Brush: brush,
+                Pen: pen));
         AddDrawCommand(context =>
         {
             using var renderOptions = context.PushRenderOptions(new RenderOptions
@@ -38,6 +45,11 @@ public sealed partial class Canvas
         BorderRadius borderRadius,
         BoxShadows boxShadows = default)
     {
+        DebugRecordCall(new CanvasCall(
+            "drawRRect",
+            RRect: RRect.FromRectAndCorners(rect, borderRadius),
+            Brush: brush,
+            Pen: pen));
         AddDrawCommand(context =>
         {
             var roundedRect = new RoundedRect(
@@ -63,9 +75,11 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawRRect.
     public void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
     {
+        DebugRecordCall(new CanvasCall("drawRRect", RRect: rrect, Brush: brush, Pen: pen));
         var path = new Path();
         path.AddRRect(rrect);
-        DrawPath(path, brush, pen);
+        Geometry? geometry = null;
+        AddDrawCommand(context => context.DrawGeometry(brush, pen, geometry ??= path.ToGeometry()));
     }
 
     // Dart parity source: dart:ui Canvas.drawRSuperellipse.
@@ -156,6 +170,7 @@ public sealed partial class Canvas
     public void DrawPath(Path path, IBrush? brush, IPen? pen)
     {
         ArgumentNullException.ThrowIfNull(path);
+        DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen));
 
         // The backend geometry is built on playback: recording must not need a render backend.
         Geometry? geometry = null;

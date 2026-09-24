@@ -60,7 +60,7 @@ public sealed class MaterialTextFieldTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderEditable>(harness.RenderView),
-            value => value.Text == "••••••");
+            value => value.PlainText == "••••••");
         Assert.False(FocusManager.Instance.HandleTextInput("x"));
         Assert.Equal("secret", controller.Text);
         var semantics = Assert.Single(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), value =>
@@ -318,8 +318,11 @@ public sealed class MaterialTextFieldTests : IDisposable
 
         RenderEditable editable = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
         Assert.Equal("wrold", service.LastText);
-        Assert.Single(editable.SuggestionSpans);
-        Assert.Equal(new TextRange(0, 5), editable.SuggestionSpans[0].Range);
+        // Received results switch the editable's span to the spell check tree
+        // (`buildTextSpanWithSpellCheckSuggestions`), one child per checked run.
+        var root = Assert.IsType<Plumix.Painting.TextSpan>(editable.Text);
+        Assert.Null(root.Text);
+        Assert.Equal("wrold", Assert.Single(root.Children!).ToPlainText());
     }
 
     [Fact]

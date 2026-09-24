@@ -391,7 +391,7 @@ public sealed class CustomSemanticsAction
 /// the parent can for example decide how to add the tagged node as a child.
 ///
 /// Tags are compared by identity, exactly as in Flutter: two tags with the same name are distinct.
-public sealed class SemanticsTag
+public class SemanticsTag
 {
     public SemanticsTag(string name)
     {

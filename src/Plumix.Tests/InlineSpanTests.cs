@@ -345,8 +345,11 @@ public sealed class InlineSpanTests
 
     private static double ScaleFactorOf(Widget widget)
     {
+        // Dart's `WidgetSpan.extractFromInlineSpan` tags each placeholder's semantics with its index.
         var parentData = Assert.IsType<WidgetSpanParentData>(widget);
-        return Assert.IsType<AutoScaleInlineWidget>(parentData.Child).TextScaleFactor;
+        var semantics = Assert.IsType<Semantics>(parentData.Child);
+        Assert.IsType<PlaceholderSpanIndexSemanticsTag>(semantics.Properties.TagForChildren);
+        return Assert.IsType<AutoScaleInlineWidget>(semantics.Child).TextScaleFactor;
     }
 
     /// A scaler whose output is not proportional, so the per-span font size the

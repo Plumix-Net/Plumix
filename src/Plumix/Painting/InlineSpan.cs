@@ -362,5 +362,6 @@ public abstract class InlineSpan : DiagnosticableTree, IEquatable<InlineSpan>
         base.DebugFillProperties(properties);
         ArgumentNullException.ThrowIfNull(properties);
         properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Whitespace;
+        Style?.DebugFillProperties(properties);
     }
 }

@@ -276,7 +276,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
     {
         Widget field = new TextField();
         RenderEditable editable = RenderField(theme, wrap is null ? field : wrap(field));
-        return (editable.CursorColor, editable.SelectionColor);
+        return (editable.CursorColor!.Value, editable.SelectionColor!.Value);
     }
 
     private static RenderEditable RenderField(ThemeData theme, Widget field)

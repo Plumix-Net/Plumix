@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 // Dart parity source: cupertino_ui/lib/src/desktop_text_selection.dart

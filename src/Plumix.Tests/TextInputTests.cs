@@ -155,29 +155,32 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_Multiline_EnterAndVerticalCaretNavigation_Work()
     {
-        var owner = TestBuildOwner.Create();
+        // Vertical caret movement reads the laid-out RenderEditable (Dart's
+        // `startVerticalCaretMovement`), so the field is pumped through a real render tree.
+        using var tester = new FrameworkDartTester();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        tester.PumpWidget(new Directionality(
+            Plumix.UI.TextDirection.Ltr,
             new EditableText(
                 controller: controller,
                 autofocus: true,
-                multiline: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+                multiline: true)));
+        tester.Pump();
 
         Assert.True(FocusManager.Instance.HandleTextInput("ab"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.True(FocusManager.Instance.HandleTextInput("cd"));
         Assert.Equal("ab\ncd", controller.Text);
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
+        tester.Pump();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
-        Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
+        // The run lands at the end of the first line, before the hard break: upstream, as Dart's
+        // `getPositionForOffset` reports it.
+        Assert.Equal(TextSelection.Collapsed(2, TextAffinity.Upstream), controller.Selection);
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
-        Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
+        Assert.Equal(TextSelection.Collapsed(5, TextAffinity.Upstream), controller.Selection);
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, shift: true)));
         Assert.Equal(2, controller.Selection.Start);

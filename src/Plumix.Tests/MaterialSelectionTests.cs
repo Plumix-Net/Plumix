@@ -118,11 +118,11 @@ public sealed class MaterialSelectionTests
 
         harness.Pump(new Size(320, 120));
         RenderEditable editable = FindEditables(harness.RenderView).Single();
-        Assert.Equal(21, editable.FontSize);
-        Assert.Equal(Colors.DarkGreen, ((SolidColorBrush)editable.Foreground).Color);
+        Assert.Equal(21, editable.Text!.Style!.FontSize);
+        Assert.Equal(Colors.DarkGreen, editable.Text.Style.Color);
         Assert.Equal(selection, editable.SelectionColor);
         Assert.Equal(cursor, editable.CursorColor);
-        Assert.True(editable.ShowCursor);
+        Assert.True(editable.ShowCursor.Value);
     }
 
     [Fact]
@@ -146,8 +146,8 @@ public sealed class MaterialSelectionTests
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         RenderEditable editable = FindEditables(harness.RenderView).Single();
-        Assert.Equal(0, editable.Selection.BaseOffset);
-        Assert.Equal(10, editable.Selection.ExtentOffset);
+        Assert.Equal(0, editable.Selection!.Value.BaseOffset);
+        Assert.Equal(10, editable.Selection!.Value.ExtentOffset);
         Assert.Equal(new TextSelection(0, 10), changedSelection);
         Assert.Equal(SelectionChangedCause.Keyboard, changedCause);
 
@@ -190,7 +190,7 @@ public sealed class MaterialSelectionTests
             now.AddMilliseconds(32)));
 
         RenderEditable editable = FindEditables(harness.RenderView).Single();
-        Assert.NotEqual(editable.Selection.BaseOffset, editable.Selection.ExtentOffset);
+        Assert.NotEqual(editable.Selection!.Value.BaseOffset, editable.Selection!.Value.ExtentOffset);
         Assert.Equal(SelectionChangedCause.Drag, cause);
     }
 

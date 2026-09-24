@@ -302,5 +302,5 @@ public class ValueNotifier<T> : ChangeNotifier, IValueListenable<T>
         }
     }
 
-    public override string ToString() => $"{Diagnostics.DescribeIdentity(this)}({Value})";
+    public override string ToString() => $"{Diagnostics.DescribeIdentity(this)}({Diagnostics.DescribeValue(Value)})";
 }

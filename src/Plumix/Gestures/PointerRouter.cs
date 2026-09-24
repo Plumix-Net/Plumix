@@ -93,6 +93,13 @@ public sealed class PointerRouter
     /// <summary>The number of global routes that have been registered.</summary>
     public int DebugGlobalRouteCount => _globalRoutes.Count;
 
+    /// <summary>Plumix-only: the number of routes registered for <paramref name="pointer"/>.</summary>
+    /// <remarks>Stands in for the route-counting <c>PointerRouter</c> spy of Flutter's
+    /// <c>editable_gesture_test.dart</c>, which subclasses the router.</remarks>
+    internal int DebugRouteCountFor(int pointer) => _routeMap.TryGetValue(pointer, out List<RouteEntry>? routes)
+        ? routes.Count
+        : 0;
+
     /// <summary>
     /// Calls the routes registered for this pointer event, in the order in which they were added.
     /// </summary>

@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: RenderEditable is a strict port over TextPainter: painters, offset, gestures, semantics (editable.dart).
+- EditableText drives RenderEditable with Dart's text span, spell check spans and caret runs (editable_text.dart).
+- Span dumps list their TextStyle; ValueNotifier and ViewportOffset print Dart names (painting/text_style.dart).
+- WidgetSpan extraction tags placeholder semantics with `PlaceholderSpanIndexSemanticsTag` (widgets/widget_span.dart).
+- RenderParagraph's paint transform translates inline children by their inline offset (rendering/paragraph.dart).
 - Breaking: Scrollable is a strict port: top-level `ScrollableState`, Dart asserts/fallbacks, tests (scrollable.dart).
 - Breaking: `SamplingClock.Stopwatch` returns a `DartStopwatch`; VelocityTracker reads the binding clock (binding.dart).
 - Breaking: `ScrollBehavior.BuildOverscrollIndicator` adds the glow on Android and Fuchsia (scroll_configuration.dart).

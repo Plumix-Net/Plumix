@@ -35,6 +35,30 @@ public sealed class TextParentData : ContainerBoxParentData<RenderBox>
     }
 }
 
+/// Used by the [RenderParagraph] and [RenderEditable] to map its rendering children to their
+/// corresponding semantics nodes.
+///
+/// The [RichText] and [EditableText] use this tag to mark the semantics nodes of their
+/// [PlaceholderSpan]s' children.
+public sealed class PlaceholderSpanIndexSemanticsTag : SemanticsTag
+{
+    /// Creates a semantics tag with the input `index`.
+    ///
+    /// Different [PlaceholderSpanIndexSemanticsTag]s with the same `index` are consider the same.
+    public PlaceholderSpanIndexSemanticsTag(int index)
+        : base($"PlaceholderSpanIndexSemanticsTag({index})")
+    {
+        Index = index;
+    }
+
+    /// The index of this tag.
+    public int Index { get; }
+
+    public override bool Equals(object? obj) => obj is PlaceholderSpanIndexSemanticsTag other && other.Index == Index;
+
+    public override int GetHashCode() => HashCode.Combine(typeof(PlaceholderSpanIndexSemanticsTag), Index);
+}
+
 /// Useful default behaviors for boxes whose children are inline placeholders
 /// inside a paragraph.
 ///
@@ -161,6 +185,23 @@ public static class RenderInlineChildrenContainerDefaults
         }
 
         return false;
+    }
+
+    /// Applies the transform that would be applied when painting the given child to the given
+    /// matrix: the child's inline offset, or a zero matrix when the child was not laid out.
+    ///
+    /// Dart's `RenderInlineChildrenContainerDefaults.defaultApplyPaintTransform`.
+    public static void DefaultApplyPaintTransform(RenderBox child, Matrix4 transform)
+    {
+        Point? offset = RequireParentData(child).InlineOffset;
+        if (offset is null)
+        {
+            transform.SetZero();
+        }
+        else
+        {
+            transform.TranslateByDouble(offset.Value.X, offset.Value.Y, 0.0, 1.0);
+        }
     }
 
     private static TextParentData RequireParentData(RenderBox child)

@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using System.Collections;
 using System.Globalization;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -33,6 +33,62 @@ public readonly record struct TextSelection(
 
     /// <summary>A selection that is not in the text.</summary>
     public static TextSelection Invalid => new(-1, -1);
+
+    /// <summary>Creates a collapsed selection at the given text position.</summary>
+    /// <remarks>Dart's <c>TextSelection.fromPosition</c>.</remarks>
+    public static TextSelection FromPosition(TextPosition position) =>
+        new(position.Offset, position.Offset, position.Affinity);
+
+    /// <summary>The position at which the selection originates.</summary>
+    /// <remarks>
+    /// Dart's <c>TextSelection.base</c>: the affinity points into the selection, or is the
+    /// selection's own affinity when it is collapsed or invalid.
+    /// </remarks>
+    public TextPosition Base
+    {
+        get
+        {
+            TextAffinity affinity;
+            if (!IsValid || BaseOffset == ExtentOffset)
+            {
+                affinity = Affinity;
+            }
+            else if (BaseOffset < ExtentOffset)
+            {
+                affinity = TextAffinity.Downstream;
+            }
+            else
+            {
+                affinity = TextAffinity.Upstream;
+            }
+
+            return new TextPosition(BaseOffset, affinity);
+        }
+    }
+
+    /// <summary>The position at which the selection terminates.</summary>
+    /// <remarks>Dart's <c>TextSelection.extent</c>.</remarks>
+    public TextPosition Extent
+    {
+        get
+        {
+            TextAffinity affinity;
+            if (!IsValid || BaseOffset == ExtentOffset)
+            {
+                affinity = Affinity;
+            }
+            else if (BaseOffset < ExtentOffset)
+            {
+                affinity = TextAffinity.Upstream;
+            }
+            else
+            {
+                affinity = TextAffinity.Downstream;
+            }
+
+            return new TextPosition(ExtentOffset, affinity);
+        }
+    }
 
     /// <summary>This selection viewed as a text range.</summary>
     /// <remarks>Dart's <c>TextSelection extends TextRange</c>; a C# record struct cannot derive from
@@ -367,6 +423,40 @@ public class TextEditingController : ChangeNotifier, IValueListenable<TextEditin
         _selection = normalizedSelection;
         _composing = normalizedComposing;
         NotifyListeners();
+    }
+
+    /// <summary>Builds a <see cref="TextSpan"/> from the current editing value.</summary>
+    /// <remarks>
+    /// Dart's <c>TextEditingController.buildTextSpan</c>. By default makes text in the composing range
+    /// appear as underlined. Descendants can override this method to customize the appearance of
+    /// text.
+    /// </remarks>
+    public virtual TextSpan BuildTextSpan(BuildContext context, TextStyle? style, bool withComposing)
+    {
+        TextEditingValue value = Value;
+        System.Diagnostics.Debug.Assert(
+            value.Composing is not { IsValid: true } || !withComposing || value.IsComposingRangeValid);
+        // If the composing range is out of range for the current text, ignore it to preserve the
+        // tree integrity, otherwise in release mode a RangeError will be thrown and this EditableText
+        // will be built with a broken subtree.
+        bool composingRegionOutOfRange = !value.IsComposingRangeValid || !withComposing;
+
+        if (composingRegionOutOfRange)
+        {
+            return new TextSpan(style: style, text: Text);
+        }
+
+        var underline = new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline);
+        TextStyle composingStyle = style?.Merge(underline) ?? underline;
+        TextRange composing = value.Composing!.Value;
+        return new TextSpan(
+            style: style,
+            children:
+            [
+                new TextSpan(text: composing.TextBefore(value.Text)),
+                new TextSpan(style: composingStyle, text: composing.TextInside(value.Text)),
+                new TextSpan(text: composing.TextAfter(value.Text)),
+            ]);
     }
 
     public bool SelectAll()
@@ -1315,8 +1405,10 @@ public sealed class EditableText : StatefulWidget
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
-        private double? _verticalNavigationX;
-        private int? _verticalNavigationColumn;
+        private VerticalCaretMovementRun? _verticalMovementRun;
+        private TextSelection? _runSelection;
+        private readonly ValueNotifier<bool> _cursorVisibilityNotifier = new(false);
+        private readonly ViewportOffset _viewportOffset = ViewportOffset.Zero();
         private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
         private readonly LayerLink _startHandleLayerLink = new();
         private readonly LayerLink _endHandleLayerLink = new();
@@ -1499,14 +1591,16 @@ public sealed class EditableText : StatefulWidget
         }
 
         /// <inheritdoc/>
-        /// <remarks>The floating cursor needs `RenderEditable`'s caret painting hooks, which the
-        /// editable render object does not expose yet.</remarks>
+        /// <remarks>Not wired yet: `RenderEditable.SetFloatingCursor` and
+        /// `CalculateBoundedFloatingCursorOffset` exist, but Dart's reset animation
+        /// (`_floatingCursorResetController`) is not ported (docs/ai/BACKLOG.md).</remarks>
         public void UpdateFloatingCursor(RawFloatingCursorPoint point)
         {
         }
 
         /// <inheritdoc/>
-        /// <remarks>Plumix has no autocorrection prompt rect painting.</remarks>
+        /// <remarks>Not wired yet: `RenderEditable.SetPromptRectRange` paints the rect, but the widget
+        /// has no `autocorrectionTextRectColor` (docs/ai/BACKLOG.md).</remarks>
         public void ShowAutocorrectionPromptRect(int start, int end)
         {
         }
@@ -1664,32 +1758,81 @@ public sealed class EditableText : StatefulWidget
             DetachController();
             DetachFocusNode(disposeOwned: true);
             _cursorTicker.Dispose();
+            _cursorVisibilityNotifier.Dispose();
+            _viewportOffset.Dispose();
 
             base.Dispose();
+        }
+
+        /// Whether the field shows its <see cref="EditableText.Placeholder"/> instead of its text.
+        private bool ShowPlaceholder =>
+            string.IsNullOrEmpty(_controller!.Text) && !string.IsNullOrEmpty(Widget.Placeholder);
+
+        /// The style the text is laid out with: <see cref="EditableText.Style"/> over the widget's
+        /// C#-only font size and text color.
+        private TextStyle EffectiveTextStyle(bool showPlaceholder)
+        {
+            TextStyle style = Widget.Style ?? new TextStyle();
+            return style with
+            {
+                FontSize = style.FontSize ?? Widget.FontSize,
+                Color = showPlaceholder ? Widget.PlaceholderColor : style.Color ?? Widget.TextColor,
+            };
+        }
+
+        /// Builds the text span the editable displays. Dart's `EditableTextState.buildTextSpan`:
+        /// obscured text is replaced by the obscuring character, received spell check results style the
+        /// misspelled words, and otherwise the controller builds the span, underlining the composing
+        /// region while the field is focused and editable. A shown placeholder is C#-only.
+        public TextSpan BuildTextSpan() => BuildTextSpan(ShowPlaceholder);
+
+        private TextSpan BuildTextSpan(bool showPlaceholder)
+        {
+            TextStyle style = EffectiveTextStyle(showPlaceholder);
+            if (showPlaceholder)
+            {
+                return new TextSpan(style: style, text: Widget.Placeholder);
+            }
+
+            TextEditingValue value = _controller!.Value;
+            if (Widget.ObscureText)
+            {
+                string text = string.Concat(Enumerable.Repeat(Widget.ObscuringCharacter, value.Text.Length));
+                return new TextSpan(style: style, text: text);
+            }
+
+            bool withComposing = !Widget.ReadOnly && _focusNode!.HasFocus;
+            if (_spellCheckResults is { } spellCheckResults
+                && Widget.SpellCheckConfiguration?.MisspelledTextStyle is { } misspelledTextStyle)
+            {
+                bool composingRegionOutOfRange = !value.IsComposingRangeValid || !withComposing;
+                return SpellCheckTextSpans.BuildTextSpanWithSpellCheckSuggestions(
+                    value,
+                    composingRegionOutOfRange,
+                    style,
+                    misspelledTextStyle,
+                    spellCheckResults);
+            }
+
+            return _controller.BuildTextSpan(Context, style, withComposing);
+        }
+
+        /// Dart's `EditableTextState._cursorColor`: the cursor color faded by the blink opacity.
+        private Color CursorColor(DefaultSelectionStyle selectionStyle)
+        {
+            Color cursorColor = Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor;
+            double effectiveOpacity = Math.Min(cursorColor.A / 255.0, _cursorOpacity);
+            return cursorColor.WithOpacity(effectiveOpacity);
         }
 
         public override Widget Build(BuildContext context)
         {
             DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-            string text = _controller!.Text;
-            bool showPlaceholder = string.IsNullOrEmpty(text) && !string.IsNullOrEmpty(Widget.Placeholder);
-            string renderedText = Widget.ObscureText
-                ? new string(Widget.ObscuringCharacter[0], text.Length)
-                : text;
-            string displayText = showPlaceholder ? Widget.Placeholder ?? string.Empty : renderedText;
-            var textColor = showPlaceholder ? Widget.PlaceholderColor : Widget.TextColor;
+            bool showPlaceholder = ShowPlaceholder;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
+            TextStyle style = EffectiveTextStyle(showPlaceholder);
+            _cursorVisibilityNotifier.Value = (Widget.ShowCursor ?? _focusNode.HasFocus) && !showPlaceholder;
 
-            TextStyle? style = Widget.Style;
-            if (Widget.StrutStyle is { } strut)
-            {
-                style = (style ?? new TextStyle()).CopyWith(
-                    fontFamily: strut.FontFamily,
-                    fontSize: strut.FontSize,
-                    fontWeight: strut.FontWeight,
-                    fontStyle: strut.FontStyle,
-                    height: strut.Height);
-            }
             Widget result = new Focus(
                 focusNode: _focusNode,
                 autofocus: Widget.Autofocus,
@@ -1699,47 +1842,48 @@ public sealed class EditableText : StatefulWidget
                 onTextComposition: HandleTextComposition,
                 onTextInputState: HandleTextInputState,
                 onTextSelectionChanged: HandleTextSelectionChanged,
-                child: new Container(
-                    color: backgroundColor,
-                    padding: Widget.Padding,
-                    child: new EditableRenderObjectWidget(
-                        text: displayText,
-                        selection: showPlaceholder ? TextSelection.Collapsed(0) : _controller.Selection,
-                        composing: showPlaceholder ? null : _controller.Composing,
-                        startHandleLayerLink: _startHandleLayerLink,
-                        endHandleLayerLink: _endHandleLayerLink,
-                        toolbarLayerLink: _toolbarLayerLink,
-                        fontFamily: style?.FontFamily,
-                        fontSize: style?.FontSize ?? Widget.FontSize,
-                        color: style?.Color ?? textColor,
-                        fontWeight: style?.FontWeight,
-                        fontStyle: style?.FontStyle,
-                        height: style?.Height,
-                        letterSpacing: style?.LetterSpacing,
-                        textAlign: Widget.TextAlign,
-                        textDirection: Widget.TextDirection ?? Directionality.Of(context),
-                        multiline: Widget.Multiline,
-                        selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor ?? default,
-                        cursorColor: Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor,
-                        minLines: Widget.MinLines,
-                        maxLines: Widget.MaxLines,
-                        expands: Widget.Expands,
-                        cursorWidth: Widget.CursorWidth,
-                        cursorHeight: Widget.CursorHeight,
-                        cursorRadius: Widget.CursorRadius,
-                        selectionHeightStyle: Widget.SelectionHeightStyle,
-                        selectionWidthStyle: Widget.SelectionWidthStyle,
-                        cursorOpacity: _cursorOpacity,
-                        cursorOffset: Widget.CursorOffset,
-                        paintCursorAboveText: Widget.PaintCursorAboveText,
-                        showCursor: (Widget.ShowCursor ?? _focusNode.HasFocus) && !showPlaceholder,
-                        suggestionSpans: _spellCheckResults?.SuggestionSpans,
-                        misspelledColor: Widget.SpellCheckConfiguration?.MisspelledTextStyle?.Color ?? Colors.Red,
-                        key: _editableRenderKey)));
-            if (Widget.ClipBehavior != Clip.None)
-            {
-                result = new ClipRect(clipBehavior: Widget.ClipBehavior, child: result);
-            }
+                child: new CompositedTransformTarget(
+                    link: _toolbarLayerLink,
+                    child: new Container(
+                        color: backgroundColor,
+                        padding: Widget.Padding,
+                        child: new EditableRenderObjectWidget(
+                            key: _editableRenderKey,
+                            inlineSpan: BuildTextSpan(showPlaceholder),
+                            value: showPlaceholder
+                                ? new TextEditingValue(selection: TextSelection.Collapsed(0))
+                                : _controller!.Value,
+                            startHandleLayerLink: _startHandleLayerLink,
+                            endHandleLayerLink: _endHandleLayerLink,
+                            cursorColor: CursorColor(selectionStyle),
+                            showCursor: _cursorVisibilityNotifier,
+                            forceLine: true,
+                            readOnly: Widget.ReadOnly,
+                            hasFocus: _focusNode.HasFocus,
+                            maxLines: Widget.MaxLines,
+                            minLines: Widget.MinLines,
+                            expands: Widget.Expands,
+                            strutStyle: Widget.StrutStyle?.InheritFromTextStyle(style)
+                                        ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true),
+                            selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor,
+                            textScaler: MediaQuery.TextScalerOf(context),
+                            textAlign: Widget.TextAlign,
+                            textDirection: Widget.TextDirection ?? Directionality.Of(context),
+                            obscuringCharacter: Widget.ObscuringCharacter,
+                            obscureText: Widget.ObscureText,
+                            offset: _viewportOffset,
+                            rendererIgnoresPointer: true,
+                            cursorWidth: Widget.CursorWidth,
+                            cursorHeight: Widget.CursorHeight,
+                            cursorRadius: Widget.CursorRadius == default ? null : Widget.CursorRadius,
+                            cursorOffset: Widget.CursorOffset,
+                            paintCursorAboveText: Widget.PaintCursorAboveText,
+                            selectionHeightStyle: Widget.SelectionHeightStyle,
+                            selectionWidthStyle: Widget.SelectionWidthStyle,
+                            enableInteractiveSelection: Widget.EnableInteractiveSelection,
+                            textSelectionDelegate: this,
+                            devicePixelRatio: MediaQuery.MaybeDevicePixelRatioOf(context) ?? 1.0,
+                            clipBehavior: Widget.ClipBehavior))));
             if (!Widget.RendererIgnoresPointer)
             {
                 result = new Listener(
@@ -2017,30 +2161,15 @@ public sealed class EditableText : StatefulWidget
 
         private int GetTextPosition(Point globalPosition)
         {
-            if (RenderEditable is { } renderEditable)
+            if (RenderEditable is { HasSize: true } renderEditable)
             {
-                return renderEditable.GetPositionForPoint(globalPosition).Offset;
+                return Math.Clamp(
+                    renderEditable.GetPositionForPoint(globalPosition).Offset,
+                    0,
+                    _controller!.Text.Length);
             }
 
-            TextEditingController controller = _controller!;
-            if (TryCreateTextLayout(_focusNode!, controller.Text, out TextLayout? layout, out Rect contentRect))
-            {
-                using (layout!)
-                {
-                    Point localPosition = new(
-                        Math.Clamp(globalPosition.X - contentRect.X, 0, Math.Max(0, contentRect.Width)),
-                        Math.Clamp(globalPosition.Y - contentRect.Y, 0, Math.Max(0, contentRect.Height)));
-                    return Math.Clamp(
-                        layout!.HitTestPoint(localPosition).TextPosition,
-                        0,
-                        controller.Text.Length);
-                }
-            }
-
-            double characterWidth = Math.Max(1.0, Widget.FontSize * 0.6);
-            int offset = (int)Math.Round(
-                Math.Max(0, globalPosition.X - contentRect.X) / characterWidth);
-            return Math.Clamp(offset, 0, controller.Text.Length);
+            return _controller!.Selection.Clamp(_controller.Text.Length).ExtentOffset;
         }
 
         private void SelectWordAt(
@@ -2226,8 +2355,7 @@ public sealed class EditableText : StatefulWidget
                     _ = controller.SelectAll();
                     _pendingSelectionCause = null;
                 }
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 return KeyEventResult.Handled;
             }
 
@@ -2238,8 +2366,7 @@ public sealed class EditableText : StatefulWidget
                     CopyToClipboard(controller.SelectedText);
                 }
 
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 return KeyEventResult.Handled;
             }
 
@@ -2257,8 +2384,7 @@ public sealed class EditableText : StatefulWidget
                     }
                 }
 
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 return KeyEventResult.Handled;
             }
 
@@ -2266,8 +2392,7 @@ public sealed class EditableText : StatefulWidget
             {
                 Scheduler.RunAsync(() => PasteFromClipboardAsync(SelectionChangedCause.Keyboard));
 
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 return KeyEventResult.Handled;
             }
 
@@ -2354,8 +2479,7 @@ public sealed class EditableText : StatefulWidget
 
             if (!keepVerticalNavigationX)
             {
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
             }
 
             if (textChanged)
@@ -2391,8 +2515,7 @@ public sealed class EditableText : StatefulWidget
                 : _controller.Insert(normalizedInput);
             if (changed)
             {
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
@@ -2414,8 +2537,7 @@ public sealed class EditableText : StatefulWidget
                 : _controller.SetComposing(limitedText);
             if (changed)
             {
-                _verticalNavigationX = null;
-                _verticalNavigationColumn = null;
+                _verticalMovementRun = null;
                 ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
@@ -2456,186 +2578,87 @@ public sealed class EditableText : StatefulWidget
             }
 
             controller.Selection = nextSelection;
-            _verticalNavigationX = null;
-            _verticalNavigationColumn = null;
+            _verticalMovementRun = null;
             return !previousSelection.Equals(controller.Selection);
         }
 
+        /// The caret rect of <paramref name="caretOffset"/> in root coordinates, for the IME and the
+        /// context menu anchors. Dart reads it from `renderEditable.getLocalRectForCaret` and the
+        /// editable's transform (`_updateCaretRectIfNeeded`, `contextMenuAnchors`).
         private Rect ResolveCursorRectangle(FocusNode node, int textLength, int caretOffset)
         {
-            if (TryCreateTextLayout(node, _controller!.Text, out var layout, out var contentRect))
+            int clampedCaretOffset = Math.Clamp(caretOffset, 0, textLength);
+            if (RenderEditable is { HasSize: true } renderEditable)
             {
-                using (layout!)
-                {
-                    int clampedCaretOffset = Math.Clamp(caretOffset, 0, textLength);
-                    var hitRect = layout!.HitTestTextPosition(clampedCaretOffset);
-                    double caretHeight = Math.Max(1, hitRect.Height);
-                    return new Rect(
-                        x: contentRect.X + hitRect.X,
-                        y: contentRect.Y + hitRect.Y,
-                        width: 1,
-                        height: caretHeight);
-                }
+                Rect localRect = renderEditable.GetLocalRectForCaret(new TextPosition(clampedCaretOffset));
+                Matrix4 transform = renderEditable.TryGetTransformFromRoot(out Matrix4 value)
+                    ? value
+                    : Matrix4.Identity();
+                return RenderObject.TransformRect(transform, localRect);
             }
 
-            int clampedCaretForFallback = Math.Clamp(caretOffset, 0, textLength);
-            double fallbackX = contentRect.X + Math.Min(contentRect.Width, clampedCaretForFallback * Math.Max(1, Widget.FontSize * 0.6));
-            double fallbackHeight = Math.Max(1, Math.Min(contentRect.Height, Widget.FontSize * 1.2));
-            return new Rect(fallbackX, contentRect.Y, 1, fallbackHeight);
+            // Not laid out yet: the field's own rect, inset by its padding, stands in for the caret.
+            Rect fieldRect = node.ResolveTraversalRect() ?? new Rect(0, 0, 1, 1);
+            return new Rect(
+                fieldRect.X + Widget.Padding.Left,
+                fieldRect.Y + Widget.Padding.Top,
+                1,
+                Math.Max(1, fieldRect.Height - Widget.Padding.Top - Widget.Padding.Bottom));
         }
 
+        /// Moves the caret one line up or down. Dart's `_UpdateTextSelectionVerticallyAction`: a
+        /// <see cref="VerticalCaretMovementRun"/> keeps the caret's horizontal position across
+        /// consecutive moves, and a move past the first or last line goes to the start or end of the
+        /// text.
         private bool MoveCaretVertical(bool moveDown, bool extendSelection)
         {
-            if (!Widget.Multiline)
+            if (!Widget.Multiline || RenderEditable is not { HasSize: true } renderEditable)
             {
                 return false;
             }
 
-            var controller = _controller!;
-            string text = controller.Text;
-            if (!TryCreateTextLayout(_focusNode!, text, out var layout, out _))
+            TextEditingController controller = _controller!;
+            TextEditingValue value = controller.Value;
+            TextSelection selection = value.Selection;
+            if (!Nullable.Equals(_runSelection, selection) || _verticalMovementRun is { IsValid: false })
             {
-                return MoveCaretVerticalByLineModel(controller, text, moveDown, extendSelection);
+                _verticalMovementRun = null;
+                _runSelection = null;
             }
 
-            using (layout!)
-            {
-                var clampedSelection = controller.Selection.Clamp(text.Length);
-                int caretOffset = clampedSelection.ExtentOffset;
-                var caretRect = layout!.HitTestTextPosition(caretOffset);
-                double maxX = Math.Max(0, layout.WidthIncludingTrailingWhitespace);
-                double targetX = Math.Clamp(_verticalNavigationX ?? caretRect.X, 0, maxX);
-                double probeDelta = Math.Max(1, caretRect.Height * 0.5);
-                double probeY = moveDown
-                    ? caretRect.Y + caretRect.Height + probeDelta
-                    : caretRect.Y - probeDelta;
-                var hit = layout.HitTestPoint(new Point(targetX, probeY));
-                int nextOffset = Math.Clamp(
-                    hit.CharacterHit.FirstCharacterIndex + hit.CharacterHit.TrailingLength,
-                    0,
-                    text.Length);
-                var nextSelection = extendSelection
-                    ? new TextSelection(clampedSelection.BaseOffset, nextOffset)
-                    : TextSelection.Collapsed(nextOffset);
-                var previousSelection = controller.Selection;
-                controller.Selection = nextSelection;
-                _verticalNavigationX = targetX;
-                _verticalNavigationColumn = null;
-                return !previousSelection.Equals(controller.Selection);
-            }
-        }
+            VerticalCaretMovementRun currentRun = _verticalMovementRun
+                                                  ?? renderEditable.StartVerticalCaretMovement(selection.Extent);
+            bool shouldMove = moveDown ? currentRun.MoveNext() : currentRun.MovePrevious();
+            TextPosition newExtent = shouldMove
+                ? currentRun.Current
+                : moveDown
+                    ? new TextPosition(value.Text.Length)
+                    : new TextPosition(0);
+            TextSelection newSelection = extendSelection
+                ? new TextSelection(selection.BaseOffset, newExtent.Offset, newExtent.Affinity)
+                : TextSelection.FromPosition(newExtent);
 
-        private bool MoveCaretVerticalByLineModel(
-            TextEditingController controller,
-            string text,
-            bool moveDown,
-            bool extendSelection)
-        {
-            var clampedSelection = controller.Selection.Clamp(text.Length);
-            int caretOffset = clampedSelection.ExtentOffset;
-            var lineStarts = new List<int> { 0 };
-            for (int index = 0; index < text.Length; index++)
+            TextSelection previousSelection = controller.Selection;
+            controller.Selection = newSelection;
+            if (controller.Selection.Equals(newSelection))
             {
-                if (text[index] == '\n')
-                {
-                    lineStarts.Add(index + 1);
-                }
+                _verticalMovementRun = currentRun;
+                _runSelection = newSelection;
             }
 
-            int currentLineIndex = 0;
-            for (int index = 1; index < lineStarts.Count; index++)
-            {
-                if (lineStarts[index] > caretOffset)
-                {
-                    break;
-                }
-
-                currentLineIndex = index;
-            }
-
-            int targetLineIndex = moveDown ? currentLineIndex + 1 : currentLineIndex - 1;
-            if (targetLineIndex < 0 || targetLineIndex >= lineStarts.Count)
-            {
-                return false;
-            }
-
-            int currentLineStart = lineStarts[currentLineIndex];
-            int currentLineEnd = currentLineIndex + 1 < lineStarts.Count
-                ? lineStarts[currentLineIndex + 1] - 1
-                : text.Length;
-            int currentLineColumn = Math.Clamp(caretOffset - currentLineStart, 0, currentLineEnd - currentLineStart);
-            int preferredColumn = _verticalNavigationColumn ?? currentLineColumn;
-
-            int targetLineStart = lineStarts[targetLineIndex];
-            int targetLineEnd = targetLineIndex + 1 < lineStarts.Count
-                ? lineStarts[targetLineIndex + 1] - 1
-                : text.Length;
-            int targetLineLength = Math.Max(0, targetLineEnd - targetLineStart);
-            int nextOffset = targetLineStart + Math.Min(preferredColumn, targetLineLength);
-            var nextSelection = extendSelection
-                ? new TextSelection(clampedSelection.BaseOffset, nextOffset)
-                : TextSelection.Collapsed(nextOffset);
-            var previousSelection = controller.Selection;
-            controller.Selection = nextSelection;
-            _verticalNavigationX = null;
-            _verticalNavigationColumn = preferredColumn;
             return !previousSelection.Equals(controller.Selection);
-        }
-
-        private bool TryCreateTextLayout(
-            FocusNode node,
-            string text,
-            out TextLayout? layout,
-            out Rect contentRect)
-        {
-            contentRect = ResolveContentRect(node);
-            double maxWidth = Widget.Multiline
-                ? Math.Max(1, contentRect.Width)
-                : double.PositiveInfinity;
-
-            try
-            {
-                layout = new TextLayout(
-                    text: text,
-                    typeface: new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.Normal, FontStretch.Normal),
-                    fontSize: Widget.FontSize,
-                    foreground: Brushes.Transparent,
-                    textWrapping: Widget.Multiline ? TextWrapping.Wrap : TextWrapping.NoWrap,
-                    maxWidth: maxWidth);
-                return true;
-            }
-            catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-            {
-                layout = null;
-                return false;
-            }
-        }
-
-        private Rect ResolveContentRect(FocusNode node)
-        {
-            var fieldRect = node.ResolveTraversalRect() ?? new Rect(
-                x: 0,
-                y: 0,
-                width: 1,
-                height: Math.Max(1, Widget.FontSize * 1.2 + Widget.Padding.Top + Widget.Padding.Bottom));
-            return new Rect(
-                x: fieldRect.X + Widget.Padding.Left,
-                y: fieldRect.Y + Widget.Padding.Top,
-                width: Math.Max(0, fieldRect.Width - Widget.Padding.Left - Widget.Padding.Right),
-                height: Math.Max(1, fieldRect.Height - Widget.Padding.Top - Widget.Padding.Bottom));
         }
 
         private void HandleControllerChanged()
         {
             TextSelection selection = _controller!.Selection;
-            if (RenderEditable is { } renderEditable)
+            if (RenderEditable is { HasSize: true } renderEditable)
             {
-                string renderedText = Widget.ObscureText
-                    ? new string(Widget.ObscuringCharacter[0], _controller.Text.Length)
-                    : _controller.Text;
-                renderEditable.Text = renderedText;
-                renderEditable.Selection = selection;
-                renderEditable.Composing = _controller.Composing;
+                // The selection overlay below reads the editable's geometry before the rebuild reaches
+                // the render object, so the new value is pushed ahead of `UpdateRenderObject`, which
+                // then sees no change.
+                renderEditable.Text = BuildTextSpan(ShowPlaceholder);
+                renderEditable.Selection = ShowPlaceholder ? TextSelection.Collapsed(0) : selection;
             }
             if (!_lastSelection.Equals(selection))
             {
@@ -2653,8 +2676,7 @@ public sealed class EditableText : StatefulWidget
 
         private void HandleFocusNodeChanged()
         {
-            _verticalNavigationX = null;
-            _verticalNavigationColumn = null;
+            _verticalMovementRun = null;
             bool hasFocus = _focusNode?.HasFocus == true;
             if (hasFocus)
             {
@@ -2871,155 +2893,215 @@ public sealed class EditableText : StatefulWidget
     }
 }
 
-internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
+/// <summary>The render object widget of <see cref="EditableText"/>: Dart's private <c>_Editable</c>,
+/// which configures a <see cref="RenderEditable"/> and hosts the widgets of the text's
+/// <see cref="WidgetSpan"/>s as its children.</summary>
+internal sealed class EditableRenderObjectWidget : MultiChildRenderObjectWidget
 {
     public EditableRenderObjectWidget(
-        string text,
-        TextSelection selection,
-        TextRange? composing,
+        InlineSpan inlineSpan,
+        TextEditingValue value,
         LayerLink startHandleLayerLink,
         LayerLink endHandleLayerLink,
-        LayerLink toolbarLayerLink,
-        FontFamily? fontFamily,
-        double fontSize,
-        Color color,
-        FontWeight? fontWeight,
-        FontStyle? fontStyle,
-        double? height,
-        double? letterSpacing,
-        TextAlign textAlign,
-        TextDirection textDirection,
-        bool multiline,
-        int? minLines,
+        ValueNotifier<bool> showCursor,
+        bool forceLine,
+        bool readOnly,
+        bool hasFocus,
         int? maxLines,
         bool expands,
-        Color selectionColor,
-        Color cursorColor,
+        TextScaler textScaler,
+        TextAlign textAlign,
+        TextDirection textDirection,
+        string obscuringCharacter,
+        bool obscureText,
+        ViewportOffset offset,
         double cursorWidth,
-        double? cursorHeight,
-        Radius cursorRadius,
-        BoxHeightStyle selectionHeightStyle,
-        BoxWidthStyle selectionWidthStyle,
-        double cursorOpacity,
         Point cursorOffset,
         bool paintCursorAboveText,
-        bool showCursor,
-        IReadOnlyList<SuggestionSpan>? suggestionSpans,
-        Color misspelledColor,
-        Key? key = null) : base(key)
+        ITextSelectionDelegate textSelectionDelegate,
+        double devicePixelRatio,
+        Clip clipBehavior,
+        Color? cursorColor = null,
+        Color? backgroundCursorColor = null,
+        TextHeightBehavior? textHeightBehavior = null,
+        TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
+        int? minLines = null,
+        StrutStyle? strutStyle = null,
+        Color? selectionColor = null,
+        string? locale = null,
+        bool rendererIgnoresPointer = false,
+        double? cursorHeight = null,
+        Radius? cursorRadius = null,
+        BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Tight,
+        BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Tight,
+        bool enableInteractiveSelection = true,
+        TextRange? promptRectRange = null,
+        Color? promptRectColor = null,
+        Key? key = null)
+        : base(WidgetSpan.ExtractFromInlineSpan(inlineSpan, textScaler), key)
     {
-        Text = text;
-        Selection = selection;
-        Composing = composing;
+        InlineSpan = inlineSpan;
+        Value = value;
+        CursorColor = cursorColor;
         StartHandleLayerLink = startHandleLayerLink;
         EndHandleLayerLink = endHandleLayerLink;
-        ToolbarLayerLink = toolbarLayerLink;
-        FontFamily = fontFamily;
-        FontSize = fontSize;
-        Color = color;
-        FontWeight = fontWeight;
-        FontStyle = fontStyle;
-        Height = height;
-        LetterSpacing = letterSpacing;
+        BackgroundCursorColor = backgroundCursorColor;
+        ShowCursor = showCursor;
+        ForceLine = forceLine;
+        ReadOnly = readOnly;
+        HasFocus = hasFocus;
+        MaxLines = maxLines;
+        MinLines = minLines;
+        Expands = expands;
+        StrutStyle = strutStyle;
+        SelectionColor = selectionColor;
+        TextScaler = textScaler;
         TextAlign = textAlign;
         TextDirection = textDirection;
-        Multiline = multiline;
-        MinLines = minLines;
-        MaxLines = maxLines;
-        Expands = expands;
-        SelectionColor = selectionColor;
-        CursorColor = cursorColor;
+        Locale = locale;
+        ObscuringCharacter = obscuringCharacter;
+        ObscureText = obscureText;
+        TextHeightBehavior = textHeightBehavior;
+        TextWidthBasis = textWidthBasis;
+        Offset = offset;
+        RendererIgnoresPointer = rendererIgnoresPointer;
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
         CursorRadius = cursorRadius;
-        SelectionHeightStyle = selectionHeightStyle;
-        SelectionWidthStyle = selectionWidthStyle;
-        CursorOpacity = cursorOpacity;
         CursorOffset = cursorOffset;
         PaintCursorAboveText = paintCursorAboveText;
-        ShowCursor = showCursor;
-        SuggestionSpans = suggestionSpans ?? [];
-        MisspelledColor = misspelledColor;
+        SelectionHeightStyle = selectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle;
+        EnableInteractiveSelection = enableInteractiveSelection;
+        TextSelectionDelegate = textSelectionDelegate;
+        DevicePixelRatio = devicePixelRatio;
+        PromptRectRange = promptRectRange;
+        PromptRectColor = promptRectColor;
+        ClipBehavior = clipBehavior;
     }
 
-    public string Text { get; }
-    public TextSelection Selection { get; }
-    public TextRange? Composing { get; }
+    public InlineSpan InlineSpan { get; }
+    public TextEditingValue Value { get; }
+    public Color? CursorColor { get; }
     public LayerLink StartHandleLayerLink { get; }
     public LayerLink EndHandleLayerLink { get; }
-    public LayerLink ToolbarLayerLink { get; }
-    public FontFamily? FontFamily { get; }
-    public double FontSize { get; }
-    public Color Color { get; }
-    public FontWeight? FontWeight { get; }
-    public FontStyle? FontStyle { get; }
-    public double? Height { get; }
-    public double? LetterSpacing { get; }
+    public Color? BackgroundCursorColor { get; }
+    public ValueNotifier<bool> ShowCursor { get; }
+    public bool ForceLine { get; }
+    public bool ReadOnly { get; }
+    public bool HasFocus { get; }
+    public int? MaxLines { get; }
+    public int? MinLines { get; }
+    public bool Expands { get; }
+    public StrutStyle? StrutStyle { get; }
+    public Color? SelectionColor { get; }
+    public TextScaler TextScaler { get; }
     public TextAlign TextAlign { get; }
     public TextDirection TextDirection { get; }
-    public bool Multiline { get; }
-    public int? MinLines { get; }
-    public int? MaxLines { get; }
-    public bool Expands { get; }
-    public Color SelectionColor { get; }
-    public Color CursorColor { get; }
+    public string? Locale { get; }
+    public string ObscuringCharacter { get; }
+    public bool ObscureText { get; }
+    public TextHeightBehavior? TextHeightBehavior { get; }
+    public TextWidthBasis TextWidthBasis { get; }
+    public ViewportOffset Offset { get; }
+    public bool RendererIgnoresPointer { get; }
     public double CursorWidth { get; }
     public double? CursorHeight { get; }
-    public Radius CursorRadius { get; }
-    public BoxHeightStyle SelectionHeightStyle { get; }
-    public BoxWidthStyle SelectionWidthStyle { get; }
-    public double CursorOpacity { get; }
+    public Radius? CursorRadius { get; }
     public Point CursorOffset { get; }
     public bool PaintCursorAboveText { get; }
-    public bool ShowCursor { get; }
-    public IReadOnlyList<SuggestionSpan> SuggestionSpans { get; }
-    public Color MisspelledColor { get; }
+    public BoxHeightStyle SelectionHeightStyle { get; }
+    public BoxWidthStyle SelectionWidthStyle { get; }
+    public bool EnableInteractiveSelection { get; }
+    public ITextSelectionDelegate TextSelectionDelegate { get; }
+    public double DevicePixelRatio { get; }
+    public TextRange? PromptRectRange { get; }
+    public Color? PromptRectColor { get; }
+    public Clip ClipBehavior { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        var render = new RenderEditable(StartHandleLayerLink, EndHandleLayerLink, ToolbarLayerLink);
-        Apply(render);
-        return render;
+        return new RenderEditable(
+            text: InlineSpan,
+            cursorColor: CursorColor,
+            startHandleLayerLink: StartHandleLayerLink,
+            endHandleLayerLink: EndHandleLayerLink,
+            backgroundCursorColor: BackgroundCursorColor,
+            showCursor: ShowCursor,
+            forceLine: ForceLine,
+            readOnly: ReadOnly,
+            hasFocus: HasFocus,
+            maxLines: MaxLines,
+            minLines: MinLines,
+            expands: Expands,
+            strutStyle: StrutStyle,
+            selectionColor: SelectionColor,
+            textScaler: TextScaler,
+            textAlign: TextAlign,
+            textDirection: TextDirection,
+            locale: Locale,
+            selection: Value.Selection,
+            offset: Offset,
+            ignorePointer: RendererIgnoresPointer,
+            obscuringCharacter: ObscuringCharacter,
+            obscureText: ObscureText,
+            textHeightBehavior: TextHeightBehavior,
+            textWidthBasis: TextWidthBasis,
+            cursorWidth: CursorWidth,
+            cursorHeight: CursorHeight,
+            cursorRadius: CursorRadius,
+            cursorOffset: CursorOffset,
+            paintCursorAboveText: PaintCursorAboveText,
+            selectionHeightStyle: SelectionHeightStyle,
+            selectionWidthStyle: SelectionWidthStyle,
+            enableInteractiveSelection: EnableInteractiveSelection,
+            textSelectionDelegate: TextSelectionDelegate,
+            devicePixelRatio: DevicePixelRatio,
+            promptRectRange: PromptRectRange,
+            promptRectColor: PromptRectColor,
+            clipBehavior: ClipBehavior);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        Apply((RenderEditable)renderObject);
-    }
-
-    private void Apply(RenderEditable render)
-    {
-        render.Text = Text;
-        render.Selection = Selection;
-        render.Composing = Composing;
+        var render = (RenderEditable)renderObject;
+        render.Text = InlineSpan;
+        render.CursorColor = CursorColor;
         render.StartHandleLayerLink = StartHandleLayerLink;
         render.EndHandleLayerLink = EndHandleLayerLink;
-        render.ToolbarLayerLink = ToolbarLayerLink;
-        render.FontFamily = FontFamily ?? Avalonia.Media.FontFamily.Default;
-        render.FontSize = FontSize;
-        render.Foreground = new SolidColorBrush(Color);
-        render.FontWeight = FontWeight ?? Avalonia.Media.FontWeight.Normal;
-        render.FontStyle = FontStyle ?? Avalonia.Media.FontStyle.Normal;
-        render.Height = Height;
-        render.LetterSpacing = LetterSpacing ?? 0.0;
+        render.BackgroundCursorColor = BackgroundCursorColor;
+        render.ShowCursor = ShowCursor;
+        render.ForceLine = ForceLine;
+        render.ReadOnly = ReadOnly;
+        render.HasFocus = HasFocus;
+        render.MaxLines = MaxLines;
+        render.MinLines = MinLines;
+        render.Expands = Expands;
+        render.StrutStyle = StrutStyle;
+        render.SelectionColor = SelectionColor;
+        render.TextScaler = TextScaler;
         render.TextAlign = TextAlign;
         render.TextDirection = TextDirection;
-        render.Multiline = Multiline;
-        render.MinLines = MinLines;
-        render.MaxLines = MaxLines;
-        render.Expands = Expands;
-        render.SelectionColor = SelectionColor;
-        render.CursorColor = CursorColor;
+        render.Locale = Locale;
+        render.Selection = Value.Selection;
+        render.Offset = Offset;
+        render.IgnorePointer = RendererIgnoresPointer;
+        render.TextHeightBehavior = TextHeightBehavior;
+        render.TextWidthBasis = TextWidthBasis;
+        render.ObscuringCharacter = ObscuringCharacter;
+        render.ObscureText = ObscureText;
         render.CursorWidth = CursorWidth;
         render.CursorHeight = CursorHeight;
         render.CursorRadius = CursorRadius;
+        render.CursorOffset = CursorOffset;
         render.SelectionHeightStyle = SelectionHeightStyle;
         render.SelectionWidthStyle = SelectionWidthStyle;
-        render.CursorOpacity = CursorOpacity;
-        render.CursorOffset = CursorOffset;
+        render.EnableInteractiveSelection = EnableInteractiveSelection;
+        render.TextSelectionDelegate = TextSelectionDelegate;
+        render.DevicePixelRatio = DevicePixelRatio;
         render.PaintCursorAboveText = PaintCursorAboveText;
-        render.ShowCursor = ShowCursor;
-        render.SuggestionSpans = SuggestionSpans;
-        render.MisspelledColor = MisspelledColor;
+        render.PromptRectColor = PromptRectColor;
+        render.ClipBehavior = ClipBehavior;
+        render.SetPromptRectRange(PromptRectRange);
     }
 }

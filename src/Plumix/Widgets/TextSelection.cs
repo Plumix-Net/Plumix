@@ -18,9 +18,6 @@ public enum TextSelectionHandleType
     Collapsed,
 }
 
-/// <summary>A visual endpoint of a text selection, in the coordinate space of the edited text.</summary>
-public readonly record struct TextSelectionPoint(Point Point, TextDirection? Direction);
-
 /// <summary>
 /// The parent data of a selection-toolbar item, tracking whether the item is on the visible page.
 /// </summary>

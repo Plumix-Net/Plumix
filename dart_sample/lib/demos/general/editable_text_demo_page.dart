@@ -10,6 +10,8 @@ class EditableTextDemoPage extends StatefulWidget {
 class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   late final TextEditingController _nameController;
   late final TextEditingController _notesController;
+  late final TextEditingController _pinController;
+  late final TextEditingController _caretController;
   bool _enabled = true;
   String _lastChange = '(none)';
 
@@ -18,12 +20,16 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     super.initState();
     _nameController = TextEditingController();
     _notesController = TextEditingController();
+    _pinController = TextEditingController();
+    _caretController = TextEditingController(text: 'Wide rounded caret');
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _notesController.dispose();
+    _pinController.dispose();
+    _caretController.dispose();
     super.dispose();
   }
 
@@ -113,6 +119,30 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
           'notes lines: $notesLineCount',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
+        const Text(
+          'PIN (obscured)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        _buildTextField(
+          controller: _pinController,
+          placeholder: 'Type a PIN',
+          obscureText: true,
+          onChanged: (String value) =>
+              setState(() => _lastChange = 'pin length = ${value.length}'),
+        ),
+        const Text(
+          'Caret (width 3, radius 2)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        _buildTextField(
+          controller: _caretController,
+          placeholder: '',
+          cursorWidth: 3,
+          cursorRadius: const Radius.circular(2),
+          cursorColor: const Color(0xFFD81B60),
+          onChanged: (String value) =>
+              setState(() => _lastChange = 'caret = $value'),
+        ),
         Text(
           "current: name='${_nameController.text}', notes='${_escapeMultiline(_notesController.text)}'",
           style: const TextStyle(fontSize: 12, color: Colors.black),
@@ -126,11 +156,19 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     required String placeholder,
     required ValueChanged<String> onChanged,
     bool multiline = false,
+    bool obscureText = false,
+    double cursorWidth = 2.0,
+    Radius? cursorRadius,
+    Color? cursorColor,
   }) {
     return TextField(
       controller: controller,
       enabled: _enabled,
       maxLines: multiline ? null : 1,
+      obscureText: obscureText,
+      cursorWidth: cursorWidth,
+      cursorRadius: cursorRadius,
+      cursorColor: cursorColor,
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: placeholder,

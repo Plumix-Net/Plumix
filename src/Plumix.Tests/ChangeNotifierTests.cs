@@ -281,7 +281,7 @@ public sealed class ChangeNotifierTests
         notifier.Value = 3.0;
 
         Assert.Equal([3.0], values);
-        Assert.StartsWith("ValueNotifier<Double>#", notifier.ToString(), StringComparison.Ordinal);
+        Assert.StartsWith("ValueNotifier<double>#", notifier.ToString(), StringComparison.Ordinal);
         Assert.EndsWith("(3)", notifier.ToString(), StringComparison.Ordinal);
     }
 

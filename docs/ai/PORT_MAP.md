@@ -345,7 +345,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/debug.dart` | `src/Plumix/Rendering/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `rendering/debug_overflow_indicator.dart` | `src/Plumix/Rendering/DebugOverflowIndicator.cs` | — | — |
 | `rendering/decorated_sliver.dart` | `src/Plumix/Rendering/DecoratedSliver.cs` | — | — |
-| `rendering/editable.dart` | `src/Plumix/Rendering/Editable.cs` | — | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs` |
+| `rendering/editable.dart` | `src/Plumix/Rendering/Editable.Painters.cs`<br>`src/Plumix/Rendering/Editable.cs` | `src/Plumix.Tests/RenderEditableDartParityTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs` |
 | `rendering/error.dart` | `src/Plumix/Rendering/Error.cs` | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/RenderErrorBoxTests.cs` | — |
 | `rendering/flex.dart` | `src/Plumix/Rendering/Flex.RenderFlex.cs`<br>`src/Plumix/Rendering/Flex.cs` | `src/Plumix.Tests/RenderFlexTests.cs` | `dart_sample/lib/demos/general/flex_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FlexDemoPage.cs` |
 | `rendering/flow.dart` | `src/Plumix/Rendering/Flow.cs` | `src/Plumix.Tests/FlowRepaintBoundaryTests.cs` | `dart_sample/lib/demos/general/flow_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FlowDemoPage.cs` |
@@ -637,7 +637,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 534
-- C# files carrying a marker: 708
+- C# files carrying a marker: 709
 - C# files without a marker: 52
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 11

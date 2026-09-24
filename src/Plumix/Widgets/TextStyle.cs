@@ -26,35 +26,130 @@ public sealed record TextStyle(
     Color? DecorationColor = null,
     Plumix.UI.TextDecorationStyle? DecorationStyle = null)
 {
-    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    /// <summary>Adds all properties prefixing property names with the optional
+    /// <paramref name="prefix"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>TextStyle.debugFillProperties</c>, over the fields this record carries: the
+    /// <c>inherit</c> flag leads (hidden at the fine level when nothing is specified), the decoration
+    /// is summarized in one message, and an unspecified style adds the
+    /// <c>&lt;all styles inherited&gt;</c> flag.
+    /// </remarks>
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties, string prefix = "")
     {
-        properties.Add(new ColorProperty("color", Color, defaultValue: null));
-        properties.Add(new StringProperty("family", FontFamily?.Name, quoted: false, defaultValue: null));
-        properties.Add(new IterableProperty<string>(
-            "familyFallback",
-            FontFamilyFallback,
-            defaultValue: null));
-        properties.Add(new DoubleProperty("size", FontSize, defaultValue: null));
-        properties.Add(new DiagnosticsProperty<FontWeight?>("weight", FontWeight, defaultValue: null));
-        properties.Add(new DiagnosticsProperty<FontStyle?>("style", FontStyle, defaultValue: null));
-        properties.Add(new DoubleProperty("letterSpacing", LetterSpacing, defaultValue: null));
-        properties.Add(new DoubleProperty("wordSpacing", WordSpacing, defaultValue: null));
-        properties.Add(new EnumProperty<TextBaseline>("baseline", TextBaseline, defaultValue: null));
-        properties.Add(new DoubleProperty("height", Height, unit: "x", defaultValue: null));
-        properties.Add(new EnumProperty<TextLeadingDistribution>(
-            "leadingDistribution",
+        // Dart's `defaultValue: null`.
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        var styles = new List<DiagnosticsNode>
+        {
+            new ColorProperty($"{prefix}color", Color, defaultValue: nullDefault),
+            new StringProperty($"{prefix}family", FontFamily?.Name, defaultValue: nullDefault, quoted: false),
+            new IterableProperty<string>($"{prefix}familyFallback", FontFamilyFallback, defaultValue: nullDefault),
+            new DoubleProperty($"{prefix}size", FontSize, defaultValue: nullDefault),
+        };
+        string? weightDescription = null;
+        if (FontWeight is { } fontWeight)
+        {
+            weightDescription = ((int)fontWeight).ToString(System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        // TODO(jacobr): switch this to use enumProperty which will either cause the weight description
+        // to change to w600 from 600 or require existing enumProperty to handle this special case.
+        styles.Add(new DiagnosticsProperty<FontWeight?>(
+            $"{prefix}weight",
+            FontWeight,
+            description: weightDescription,
+            defaultValue: nullDefault));
+        styles.Add(new EnumProperty<FontStyle>($"{prefix}style", FontStyle, defaultValue: nullDefault));
+        styles.Add(new DoubleProperty($"{prefix}letterSpacing", LetterSpacing, defaultValue: nullDefault));
+        styles.Add(new DoubleProperty($"{prefix}wordSpacing", WordSpacing, defaultValue: nullDefault));
+        styles.Add(new EnumProperty<TextBaseline>($"{prefix}baseline", TextBaseline, defaultValue: nullDefault));
+        styles.Add(new DoubleProperty($"{prefix}height", Height, unit: "x", defaultValue: nullDefault));
+        styles.Add(new EnumProperty<TextLeadingDistribution>(
+            $"{prefix}leadingDistribution",
             LeadingDistribution,
-            defaultValue: null));
-        properties.Add(new DiagnosticsProperty<bool>("inherit", Inherit));
-        properties.Add(new DiagnosticsProperty<Plumix.UI.TextDecoration?>(
-            "decoration",
-            Decoration,
-            defaultValue: null));
-        properties.Add(new ColorProperty("decorationColor", DecorationColor, defaultValue: null));
-        properties.Add(new EnumProperty<Plumix.UI.TextDecorationStyle>(
-            "decorationStyle",
-            DecorationStyle,
-            defaultValue: null));
+            defaultValue: nullDefault));
+        if (Decoration is not null || DecorationColor is not null || DecorationStyle is not null)
+        {
+            var decorationDescription = new List<string>();
+            if (DecorationStyle is { } decorationStyle)
+            {
+                decorationDescription.Add(Diagnostics.EnumName(decorationStyle));
+            }
+
+            // Hide decorationColor from the default text view as it is shown in the terse decoration
+            // summary as well.
+            styles.Add(new ColorProperty(
+                $"{prefix}decorationColor",
+                DecorationColor,
+                defaultValue: nullDefault,
+                level: DiagnosticLevel.Fine));
+
+            if (DecorationColor is { } decorationColor)
+            {
+                decorationDescription.Add(decorationColor.ToDartString());
+            }
+
+            // Intentionally collide with the property 'decoration' added below. Tools that show hidden
+            // properties could choose the first property matching the name to disambiguate.
+            styles.Add(new DiagnosticsProperty<Plumix.UI.TextDecoration?>(
+                $"{prefix}decoration",
+                Decoration,
+                defaultValue: nullDefault,
+                level: DiagnosticLevel.Hidden));
+            if (Decoration is { } decoration)
+            {
+                decorationDescription.Add(DescribeDecoration(decoration));
+            }
+
+            styles.Add(new MessageProperty($"{prefix}decoration", string.Join(" ", decorationDescription)));
+        }
+
+        bool styleSpecified = styles.Any(node => !node.IsFiltered(DiagnosticLevel.Info));
+        properties.Add(new DiagnosticsProperty<bool>(
+            $"{prefix}inherit",
+            Inherit,
+            level: !styleSpecified && Inherit ? DiagnosticLevel.Fine : DiagnosticLevel.Info));
+        foreach (DiagnosticsNode style in styles)
+        {
+            properties.Add(style);
+        }
+
+        if (!styleSpecified)
+        {
+            properties.Add(new FlagProperty(
+                "inherit",
+                Inherit,
+                ifTrue: $"{prefix}<all styles inherited>",
+                ifFalse: $"{prefix}<no style specified>"));
+        }
+    }
+
+    // Dart's `TextDecoration.toString`.
+    private static string DescribeDecoration(Plumix.UI.TextDecoration decoration)
+    {
+        if (decoration == Plumix.UI.TextDecoration.None)
+        {
+            return "TextDecoration.none";
+        }
+
+        var values = new List<string>();
+        if (decoration.HasFlag(Plumix.UI.TextDecoration.Underline))
+        {
+            values.Add("underline");
+        }
+
+        if (decoration.HasFlag(Plumix.UI.TextDecoration.Overline))
+        {
+            values.Add("overline");
+        }
+
+        if (decoration.HasFlag(Plumix.UI.TextDecoration.LineThrough))
+        {
+            values.Add("lineThrough");
+        }
+
+        return values.Count == 1
+            ? $"TextDecoration.{values[0]}"
+            : $"TextDecoration.combine([{string.Join(", ", values)}])";
     }
 
     public TextStyle CopyWith(

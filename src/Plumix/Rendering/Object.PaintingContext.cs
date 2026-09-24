@@ -127,7 +127,7 @@ public class PaintingContext : ClipContext
         RepaintCompositedChildInternal(child, debugAlsoPaintedParent, customContext);
     }
 
-    public void PaintChild(RenderObject child, Point offset)
+    public virtual void PaintChild(RenderObject child, Point offset)
     {
         ArgumentNullException.ThrowIfNull(child);
         if (Constants.KDebugMode)
@@ -319,7 +319,7 @@ public class PaintingContext : ClipContext
 
     /// <summary>Adds a composited layer and paints into it via <paramref name="painter"/>.</summary>
     /// <remarks>Flutter's <c>PaintingContext.pushLayer</c>.</remarks>
-    public void PushLayer(
+    public virtual void PushLayer(
         ContainerLayer childLayer,
         PaintingContextCallback painter,
         Point offset,
@@ -352,7 +352,7 @@ public class PaintingContext : ClipContext
 
     /// <summary>Clips using a rectangle, then paints.</summary>
     /// <remarks>Flutter's <c>PaintingContext.pushClipRect</c>.</remarks>
-    public ClipRectLayer? PushClipRect(
+    public virtual ClipRectLayer? PushClipRect(
         bool needsCompositing,
         Point offset,
         Rect clipRect,

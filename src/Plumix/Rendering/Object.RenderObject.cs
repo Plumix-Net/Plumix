@@ -1146,7 +1146,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
     }
 
-    public void MarkNeedsPaint()
+    public virtual void MarkNeedsPaint()
     {
         EnsureNotDisposedMutation();
         Debug.Assert(Owner is null || !Owner.DebugDoingPaint);

@@ -58,6 +58,7 @@ public sealed class WidgetSpan : PlaceholderSpan
         ArgumentNullException.ThrowIfNull(textScaler);
         var widgets = new List<Widget>();
         var fontSizeStack = new List<double> { TextDefaults.DefaultFontSize };
+        int index = 0;
 
         bool VisitSubtree(InlineSpan current)
         {
@@ -75,7 +76,9 @@ public sealed class WidgetSpan : PlaceholderSpan
                 double textScaleFactor = fontSize == 0 ? 0 : textScaler.Scale(fontSize) / fontSize;
                 widgets.Add(new WidgetSpanParentData(
                     widgetSpan,
-                    new AutoScaleInlineWidget(widgetSpan, textScaleFactor, widgetSpan.Child)));
+                    new Semantics(
+                        tagForChildren: new PlaceholderSpanIndexSemanticsTag(index++),
+                        child: new AutoScaleInlineWidget(widgetSpan, textScaleFactor, widgetSpan.Child))));
             }
 
             current.VisitDirectChildren(VisitSubtree);

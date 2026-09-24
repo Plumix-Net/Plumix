@@ -20,6 +20,8 @@ internal sealed class EditableTextDemoPageState : State
 {
     private TextEditingController _nameController = null!;
     private TextEditingController _notesController = null!;
+    private TextEditingController _pinController = null!;
+    private TextEditingController _caretController = null!;
     private bool _enabled = true;
     private string _lastChange = "(none)";
 
@@ -27,12 +29,16 @@ internal sealed class EditableTextDemoPageState : State
     {
         _nameController = new TextEditingController();
         _notesController = new TextEditingController();
+        _pinController = new TextEditingController();
+        _caretController = new TextEditingController("Wide rounded caret");
     }
 
     public override void Dispose()
     {
         _nameController.Dispose();
         _notesController.Dispose();
+        _pinController.Dispose();
+        _caretController.Dispose();
 
         base.Dispose();
     }
@@ -110,6 +116,21 @@ internal sealed class EditableTextDemoPageState : State
                     $"notes lines: {notesLineCount}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
+                new Text("PIN (obscured)", fontSize: 12, color: Colors.DimGray),
+                new EditableText(
+                    controller: _pinController,
+                    enabled: _enabled,
+                    obscureText: true,
+                    placeholder: "Type a PIN",
+                    onChanged: value => SetState(() => _lastChange = $"pin length = {value.Length}")),
+                new Text("Caret (width 3, radius 2)", fontSize: 12, color: Colors.DimGray),
+                new EditableText(
+                    controller: _caretController,
+                    enabled: _enabled,
+                    cursorWidth: 3,
+                    cursorRadius: Radius.Circular(2),
+                    cursorColor: Color.Parse("#FFD81B60"),
+                    onChanged: value => SetState(() => _lastChange = $"caret = {value}")),
                 new Text(
                     $"current: name='{_nameController.Text}', notes='{EscapeMultiline(_notesController.Text)}'",
                     fontSize: 12,

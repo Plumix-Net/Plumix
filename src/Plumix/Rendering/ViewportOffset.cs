@@ -130,7 +130,7 @@ public abstract class ViewportOffset : ChangeNotifier
     {
         var description = new List<string>();
         DebugFillDescription(description);
-        return $"{GetType().Name}#{GetHashCode():x}({string.Join(", ", description)})";
+        return $"{Diagnostics.DescribeIdentity(this)}({string.Join(", ", description)})";
     }
 
     /// <summary>Adds additional information to the given description for use by <see cref="ToString"/>.</summary>

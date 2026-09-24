@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Media.TextFormatting;
+using Plumix.Foundation;
 using Plumix.Rendering;
 
 namespace Plumix.UI;
@@ -42,6 +43,24 @@ internal readonly record struct CanvasCommand(
     internal static CanvasCommand ForRestore() => new(CanvasCommandKind.Restore, null, null);
 }
 
+/// <summary>
+/// Plumix-only: a debug description of one recorded canvas call, the counterpart of the entries
+/// flutter_test's <c>TestRecordingCanvas</c> keeps for its <c>paints</c> matcher.
+/// </summary>
+/// <remarks>Recorded only in debug builds; <see cref="Method"/> is the Dart method name
+/// (<c>drawRect</c>, <c>drawRRect</c>, <c>drawParagraph</c>, <c>clipRect</c>, ...).</remarks>
+internal readonly record struct CanvasCall(
+    string Method,
+    Rect? Rect = null,
+    RRect? RRect = null,
+    IBrush? Brush = null,
+    IPen? Pen = null,
+    Point? Offset = null)
+{
+    /// <summary>The fill color, when the call was made with a solid-color brush.</summary>
+    public Color? Color => Brush is ISolidColorBrush solid ? solid.Color : null;
+}
+
 /// <summary>An object representing a sequence of recorded graphical operations.</summary>
 /// <remarks>
 /// Dart's <c>ui.Picture</c>. Plumix records Avalonia draw calls rather than a Skia display list, so
@@ -52,10 +71,14 @@ public sealed class Picture
 {
     private readonly IReadOnlyList<CanvasCommand> _commands;
 
-    internal Picture(IReadOnlyList<CanvasCommand> commands)
+    internal Picture(IReadOnlyList<CanvasCommand> commands, IReadOnlyList<CanvasCall>? debugCalls = null)
     {
         _commands = commands;
+        DebugCalls = debugCalls ?? [];
     }
+
+    /// <summary>Plumix-only: the debug descriptions of the recorded calls, in order.</summary>
+    internal IReadOnlyList<CanvasCall> DebugCalls { get; }
 
     /// <summary>An empty picture, the state of a <see cref="PictureLayer"/> that never recorded.</summary>
     public static Picture Empty { get; } = new([]);
@@ -144,6 +167,7 @@ public sealed class Picture
 public sealed class PictureRecorder
 {
     private List<CanvasCommand>? _commands;
+    private List<CanvasCall>? _debugCalls;
     private Picture? _picture;
 
     /// <summary>Whether this object is currently recording commands.</summary>
@@ -157,8 +181,12 @@ public sealed class PictureRecorder
         }
 
         _commands = [];
+        _debugCalls = [];
         return _commands;
     }
+
+    /// <summary>The debug call log the canvas attached by <see cref="BeginRecording"/> appends to.</summary>
+    internal List<CanvasCall> DebugCallsForRecording => _debugCalls ??= [];
 
     /// <summary>Finishes recording and returns the picture that was recorded.</summary>
     public Picture EndRecording()
@@ -168,7 +196,7 @@ public sealed class PictureRecorder
             throw new InvalidOperationException("PictureRecorder.EndRecording was called more than once.");
         }
 
-        _picture = new Picture(_commands ?? []);
+        _picture = new Picture(_commands ?? [], _debugCalls);
         return _picture;
     }
 }
@@ -181,6 +209,7 @@ public sealed class PictureRecorder
 public sealed partial class Canvas
 {
     private readonly List<CanvasCommand> _commands;
+    private readonly List<CanvasCall> _debugCalls;
     private int _saveCount = 1;
 
     /// <summary>Creates a canvas for recording graphical operations into the given recorder.</summary>
@@ -188,6 +217,19 @@ public sealed partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(recorder);
         _commands = recorder.BeginRecording();
+        _debugCalls = recorder.DebugCallsForRecording;
+    }
+
+    /// <summary>Plumix-only: the debug descriptions of the calls recorded so far, in order.</summary>
+    internal IReadOnlyList<CanvasCall> DebugCalls => _debugCalls;
+
+    /// <summary>Plumix-only: appends a debug description of a call; a no-op outside debug builds.</summary>
+    internal void DebugRecordCall(CanvasCall call)
+    {
+        if (Constants.KDebugMode)
+        {
+            _debugCalls.Add(call);
+        }
     }
 
     /// <summary>Returns the number of items on the save stack.</summary>
@@ -275,6 +317,7 @@ public sealed partial class Canvas
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rectangle.</summary>
     public void ClipRect(Rect rect, bool doAntiAlias = true)
     {
+        DebugRecordCall(new CanvasCall("clipRect", Rect: rect));
         PushEdgeMode(doAntiAlias);
         _commands.Add(CanvasCommand.ForPush(context => context.PushClip(rect)));
     }
@@ -333,6 +376,7 @@ public sealed partial class Canvas
     public void DrawParagraph(Paragraph paragraph, Point offset)
     {
         ArgumentNullException.ThrowIfNull(paragraph);
+        DebugRecordCall(new CanvasCall("drawParagraph", Offset: offset));
         Action<DrawingContext>? draw = paragraph.CreateDrawAction(offset);
         AddDrawCommand(draw ?? (static _ => { }));
     }

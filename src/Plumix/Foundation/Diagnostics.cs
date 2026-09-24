@@ -54,6 +54,38 @@ public static class Diagnostics
     {
         ArgumentNullException.ThrowIfNull(type);
 
+        // The CLR spellings of Dart's core types (`System.Boolean` is Dart's `bool`, ...).
+        Type? nullableType = Nullable.GetUnderlyingType(type);
+        if (nullableType is not null)
+        {
+            return $"{DescribeType(nullableType)}?";
+        }
+
+        if (type == typeof(bool))
+        {
+            return "bool";
+        }
+
+        if (type == typeof(int) || type == typeof(long))
+        {
+            return "int";
+        }
+
+        if (type == typeof(double))
+        {
+            return "double";
+        }
+
+        if (type == typeof(string))
+        {
+            return "String";
+        }
+
+        if (type == typeof(object))
+        {
+            return "Object";
+        }
+
         if (!type.IsGenericType)
         {
             return type.Name;

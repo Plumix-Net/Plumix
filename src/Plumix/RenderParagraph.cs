@@ -710,6 +710,13 @@ public sealed partial class RenderParagraph : RenderBox,
         PaintSelectionHandles(context, offset);
     }
 
+    /// <inheritdoc />
+    /// <remarks>Dart's <c>RenderParagraph.applyPaintTransform</c>: the inline child's offset.</remarks>
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        RenderInlineChildrenContainerDefaults.DefaultApplyPaintTransform((RenderBox)child, transform);
+    }
+
     // -- Hit testing ---------------------------------------------------------------------
 
     protected override bool HitTestSelf(Point position) => true;
