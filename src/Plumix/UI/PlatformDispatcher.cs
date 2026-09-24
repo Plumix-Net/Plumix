@@ -108,6 +108,9 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action<IReadOnlyList<FrameTiming>>? OnReportTimings { get; set; }
 
+    /// <summary>Engine-style query for whether a hit-test path contains a native platform view.</summary>
+    public Func<HitTestRequest, HitTestResponse>? OnHitTest { get; set; }
+
     /// <summary>Raised by <see cref="ScheduleFrame"/>; whoever drives frames arms itself here.</summary>
     /// <remarks>
     /// Flutter asks the engine for a vsync signal. Plumix has no engine, so the request is published

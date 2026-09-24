@@ -115,7 +115,8 @@ public sealed class RendererBindingTests
             Assert.DoesNotContain(firstResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));
             Assert.Contains(secondResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));
             Assert.DoesNotContain(secondResult.Path, entry => ReferenceEquals(entry.Target, firstTarget));
-            Assert.Empty(unknownResult.Path);
+            Assert.Single(unknownResult.Path);
+            Assert.Same(GestureBinding.Instance, unknownResult.Path[0].Target);
         }
         finally
         {

@@ -141,8 +141,8 @@ public sealed class RendererBinding
 
     /// <summary>Hit-tests the registered view identified by <paramref name="viewId"/>.</summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.hitTestInView</c>. Plumix dispatches binding-level pointer work
-    /// after the render-object path instead of appending the binding as the final hit-test entry.
+    /// Flutter's <c>RendererBinding.hitTestInView</c>: the gesture binding is the final target even
+    /// when the view id has no registered render view.
     /// </remarks>
     public HitTestResult HitTestInView(Point position, int viewId)
     {
@@ -152,6 +152,7 @@ public sealed class RendererBinding
             renderView.HitTest(result, position);
         }
 
+        result.Add(new HitTestEntry(GestureBinding.Instance));
         return result;
     }
 

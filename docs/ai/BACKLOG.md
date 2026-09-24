@@ -70,5 +70,5 @@ model the way Dart does — none is a straight delta absorb.
 
 | Dart file | Delta | Blocked on |
 | --- | --- | --- |
-| `gestures/binding.dart`, `gestures/hit_test.dart` | Engine hit-test query hook (`platformDispatcher.onHitTest`, `NativeHitTestTarget`). | No host exposes a native hit-test query. Land it with the host work in *Host-level gaps* above. |
+| `gestures/binding.dart`, `gestures/hit_test.dart` | The framework now exposes `PlatformDispatcher.OnHitTest` and `INativeHitTestTarget`, but no host calls the query for platform-view handoff. | Connect a host platform-view hit-test request to `OnHitTest` when native platform views land. |
 | `widgets/editable_text.dart` | Toolbar-on-screen scheduling (`_dataWhenToolbarShowScheduled`, the scroll-notification observer, the `schedulerPhase` switch). | The whole "re-show the toolbar once the selection scrolls back into view" mechanism is absent; `Scheduler.ScheduleFrameCallback` (the primitive it needs) shipped 2026-08-29. Port the mechanism, then pick the phase-dependent scheduling. |

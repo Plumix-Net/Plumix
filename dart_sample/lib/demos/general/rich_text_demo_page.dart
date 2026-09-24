@@ -47,6 +47,7 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
         ),
         _buildInlineWidgetParagraph(),
         _buildAlignmentRow(),
+        _buildDefaultTextStyleParagraph(),
         _buildOverflowAndStrut(),
       ],
     );
@@ -121,7 +122,8 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
   }
 
   static Widget _buildOverflowAndStrut() {
-    const longText = 'Overflowing text can fade out, end with an ellipsis, or be clipped at the box edge.';
+    const longText =
+        'Overflowing text can fade out, end with an ellipsis, or be clipped at the box edge.';
     const textStyle = TextStyle(fontSize: 16, color: Color(0xFF1D3557));
     return Container(
       color: const Color(0xFFEAF4EA),
@@ -146,9 +148,40 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
           Text(
             'A forced strut keeps\nboth lines 32 px apart.',
             style: textStyle,
-            strutStyle: StrutStyle(fontSize: 16, height: 2, forceStrutHeight: true),
+            strutStyle: StrutStyle(
+              fontSize: 16,
+              height: 2,
+              forceStrutHeight: true,
+            ),
           ),
         ],
+      ),
+    );
+  }
+
+  static Widget _buildDefaultTextStyleParagraph() {
+    return Container(
+      color: const Color(0xFFF5F0FF),
+      padding: const EdgeInsets.all(12),
+      child: DefaultTextStyle(
+        style: const TextStyle(fontSize: 16, color: Color(0xFF1D3557)),
+        overflow: TextOverflow.ellipsis,
+        maxLines: 1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 4,
+          children: <Widget>[
+            const Text(
+              'DefaultTextStyle supplies the size, color, and one-line ellipsis.',
+            ),
+            DefaultTextStyle.merge(
+              style: const TextStyle(fontWeight: FontWeight.bold),
+              child: const Text(
+                'A merged style keeps the inherited color and line limit.',
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -156,11 +189,7 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
   static InlineSpan _buildBadge(PlaceholderAlignment alignment, Color color) {
     return WidgetSpan(
       alignment: alignment,
-      child: SizedBox(
-        width: 18,
-        height: 18,
-        child: ColoredBox(color: color),
-      ),
+      child: SizedBox(width: 18, height: 18, child: ColoredBox(color: color)),
     );
   }
 }

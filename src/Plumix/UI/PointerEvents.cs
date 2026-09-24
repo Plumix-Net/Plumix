@@ -46,7 +46,7 @@ public abstract class PointerEvent
         TimestampUtc = timestampUtc;
     }
 
-    public int Pointer { get; }
+    public int Pointer { get; private set; }
 
     /// <summary>
     /// Unique identifier for the pointing device that produced this event. Dart's
@@ -76,9 +76,9 @@ public abstract class PointerEvent
 
     public bool Down { get; }
 
-    public DateTime TimestampUtc { get; }
+    public DateTime TimestampUtc { get; private set; }
 
-    public Point Position { get; }
+    public Point Position { get; private set; }
 
     public Point LocalPosition { get; private set; }
 
@@ -119,6 +119,8 @@ public abstract class PointerEvent
     /// `PointerEvent.synthesized`; synthesized moves are excluded from velocity tracking.
     /// </summary>
     public bool Synthesized { get; init; }
+
+    internal bool IsResampled { get; private set; }
 
     /// <summary>
     /// The transform that maps this event's global coordinates into the local space of the object
@@ -211,6 +213,20 @@ public abstract class PointerEvent
         clone.Delta = delta;
         clone.LocalDelta = delta;
         clone.Original = Original ?? this;
+        return clone;
+    }
+
+    internal PointerEvent Resampled(Point position, Point delta, int pointer, DateTime timestampUtc)
+    {
+        var clone = (PointerEvent)MemberwiseClone();
+        clone.Position = position;
+        clone.LocalPosition = position;
+        clone.Delta = delta;
+        clone.LocalDelta = delta;
+        clone.Pointer = pointer;
+        clone.TimestampUtc = timestampUtc;
+        clone.Original = Original ?? this;
+        clone.IsResampled = true;
         return clone;
     }
 

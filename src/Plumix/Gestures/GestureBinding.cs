@@ -1,29 +1,51 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/binding.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/gestures/binding.dart
+// The host supplies logical pointer events directly; engine packet conversion remains platform glue.
 
 namespace Plumix.Gestures;
 
-public sealed class GestureBinding
+/// <summary>Clock used to place touch samples between input and presentation frames.</summary>
+public class SamplingClock
 {
+    public virtual DateTime Now() => DateTime.UtcNow;
+
+    public virtual Stopwatch Stopwatch() => new();
+}
+
+public sealed class GestureBinding : IHitTestTarget
+{
+    private static readonly TimeSpan SamplingInterval = TimeSpan.FromTicks(166670);
+    private static readonly TimeSpan DefaultSamplingOffset = TimeSpan.FromMilliseconds(-38);
+
     internal static event Action<PointerEvent>? PointerEventReceived;
 
     public static GestureBinding Instance { get; } = new();
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
     private readonly Dictionary<int, Point> _lastPositions = [];
+    private readonly Dictionary<int, RenderView> _pointerRoots = [];
+    private readonly LinkedList<(RenderView Root, PointerEvent Event)> _pendingPointerEvents = [];
+    private readonly Dictionary<int, PointerEventResampler> _resamplers = [];
+    private readonly Dictionary<int, RenderView> _resamplerRoots = [];
+    private Timer? _resamplingTimer;
+    private DateTime _frameTime;
+    private Stopwatch? _frameTimeAge;
+    private bool _frameCallbackScheduled;
+    private int _resamplingGeneration;
+    private bool _samplingResampledEvents;
+    private bool _flushingPointerEvents;
 
     private GestureBinding()
     {
+        PlatformDispatcher.Instance.OnHitTest = HandleHitTest;
     }
 
-    /// <summary>
-    /// Compatibility forward to Dart's <c>RendererBinding.initMouseTracker</c>; a test may pass its
-    /// own tracker.
-    /// </summary>
+    /// <summary>Compatibility forward to Dart's <c>RendererBinding.initMouseTracker</c>.</summary>
     public void InitMouseTracker(MouseTracker? tracker = null)
     {
         RendererBinding.Instance.InitMouseTracker(tracker);
@@ -33,124 +55,404 @@ public sealed class GestureBinding
 
     public GestureArenaManager GestureArena { get; } = new();
 
-    /// <summary>
-    /// Dart's `pointerSignalResolver`: the resolver used for determining which widget handles a
-    /// pointer signal event.
-    /// </summary>
     public PointerSignalResolver PointerSignalResolver { get; } = new();
 
-    /// <summary>
-    /// Compatibility forward to Dart's <c>RendererBinding.mouseTracker</c>.
-    /// </summary>
     public MouseTracker MouseTracker => RendererBinding.Instance.MouseTracker;
 
+    public bool ResamplingEnabled { get; set; }
+
+    public TimeSpan SamplingOffset { get; set; } = DefaultSamplingOffset;
+
+    public SamplingClock SamplingClock { get; set; } = new();
+
+    /// <summary>
+    /// Receives a logical pointer event from the host. A reentrant event waits in the same queue
+    /// as Dart's engine packet events, so a cancellation requested during a down event goes first.
+    /// </summary>
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(root);
+        ArgumentNullException.ThrowIfNull(@event);
+        if (ResamplingEnabled)
+        {
+            if (@event.Kind == PointerDeviceKind.Touch)
+            {
+                if (!_resamplers.TryGetValue(@event.Device, out PointerEventResampler? resampler))
+                {
+                    resampler = new PointerEventResampler();
+                    _resamplers[@event.Device] = resampler;
+                }
+
+                _resamplerRoots[@event.Device] = root;
+                resampler.AddEvent(@event);
+            }
+            else
+            {
+                _pendingPointerEvents.AddLast((root, @event));
+                FlushPointerEventQueue();
+            }
+
+            SampleResampledEvents();
+            return;
+        }
+
+        StopResampling();
+        _pendingPointerEvents.AddLast((root, @event));
+        FlushPointerEventQueue();
+    }
+
+    private void SampleResampledEvents()
+    {
+        if (_samplingResampledEvents)
+        {
+            return;
+        }
+
+        _samplingResampledEvents = true;
+        try
+        {
+            SampleResampledEventsCore();
+        }
+        finally
+        {
+            _samplingResampledEvents = false;
+        }
+    }
+
+    private void SampleResampledEventsCore()
+    {
+        if (_resamplers.Count == 0)
+        {
+            StopResamplingTimer();
+            _frameTime = default;
+            _frameTimeAge = null;
+            _frameCallbackScheduled = false;
+            _resamplingGeneration++;
+            return;
+        }
+
+        if (_frameTime == default)
+        {
+            _frameTime = SamplingClock.Now();
+            _frameTimeAge = SamplingClock.Stopwatch();
+            _frameTimeAge.Start();
+        }
+
+        _resamplingTimer ??= new Timer(
+            _ => Scheduler.ScheduleMicrotask(HandleSampleTimeChanged),
+            null,
+            SamplingInterval,
+            SamplingInterval);
+
+        long intervals = _frameTimeAge!.Elapsed.Ticks / SamplingInterval.Ticks;
+        DateTime sampleTime = _frameTime
+            + TimeSpan.FromTicks(intervals * SamplingInterval.Ticks)
+            + SamplingOffset;
+        DateTime nextSampleTime = sampleTime + SamplingInterval;
+        foreach ((int device, PointerEventResampler resampler) in _resamplers.ToArray())
+        {
+            RenderView root = _resamplerRoots[device];
+            resampler.Sample(sampleTime, nextSampleTime, @event => QueueResampledEvent(root, @event));
+            if (!resampler.HasPendingEvents && !resampler.IsDown)
+            {
+                _resamplers.Remove(device);
+                _resamplerRoots.Remove(device);
+            }
+        }
+
+        if (_resamplers.Count == 0)
+        {
+            StopResamplingTimer();
+            _frameTime = default;
+            _frameTimeAge = null;
+            _frameCallbackScheduled = false;
+            _resamplingGeneration++;
+        }
+        else if (!_frameCallbackScheduled)
+        {
+            _frameCallbackScheduled = true;
+            int generation = _resamplingGeneration;
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (generation != _resamplingGeneration)
+                {
+                    return;
+                }
+
+                _frameCallbackScheduled = false;
+                _frameTime = SamplingClock.Now();
+                _frameTimeAge?.Restart();
+                if (ResamplingEnabled)
+                {
+                    SampleResampledEvents();
+                }
+            }, debugLabel: "Resampler.startTimer");
+        }
+    }
+
+    private void HandleSampleTimeChanged()
+    {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        if (ResamplingEnabled)
+        {
+            SampleResampledEvents();
+        }
+        else
+        {
+            StopResampling();
+        }
+    }
+
+    private void QueueResampledEvent(RenderView root, PointerEvent @event)
+    {
+        _pendingPointerEvents.AddLast((root, @event));
+        FlushPointerEventQueue();
+    }
+
+    private void StopResampling()
+    {
+        if (_resamplers.Count == 0 && _resamplingTimer is null)
+        {
+            return;
+        }
+
+        _resamplingGeneration++;
+        _frameCallbackScheduled = false;
+        (RenderView Root, PointerEventResampler Resampler)[] pending = _resamplers
+            .Select(pair => (_resamplerRoots[pair.Key], pair.Value))
+            .ToArray();
+        _resamplers.Clear();
+        _resamplerRoots.Clear();
+        foreach ((RenderView root, PointerEventResampler resampler) in pending)
+        {
+            resampler.Stop(@event => QueueResampledEvent(root, @event));
+        }
+
+        _frameTime = default;
+        _frameTimeAge = null;
+        StopResamplingTimer();
+    }
+
+    private void StopResamplingTimer()
+    {
+        _resamplingTimer?.Dispose();
+        _resamplingTimer = null;
+    }
+
+    /// <summary>
+    /// Schedules Dart's <c>cancelPointer</c> before the next queued event. When no event is being
+    /// dispatched, the cancellation is delivered in a microtask.
+    /// </summary>
+    public void CancelPointer(int pointer)
+    {
+        if (!_pointerRoots.TryGetValue(pointer, out RenderView? root))
+        {
+            return;
+        }
+
+        var cancel = new PointerCancelEvent(
+            pointer,
+            PointerDeviceKind.Touch,
+            default,
+            PointerButtons.None,
+            DateTime.UnixEpoch)
+        {
+            ViewId = root.FlutterView.ViewId,
+        };
+        bool wasEmpty = _pendingPointerEvents.Count == 0;
+        _pendingPointerEvents.AddFirst((root, cancel));
+        if (wasEmpty && !_flushingPointerEvents)
+        {
+            Scheduler.ScheduleMicrotask(FlushPointerEventQueue);
+        }
+    }
+
+    private void FlushPointerEventQueue()
+    {
+        if (_flushingPointerEvents)
+        {
+            return;
+        }
+
+        _flushingPointerEvents = true;
+        try
+        {
+            while (_pendingPointerEvents.First is { } first)
+            {
+                _pendingPointerEvents.RemoveFirst();
+                HandlePointerEventImmediately(first.Value.Root, first.Value.Event);
+            }
+        }
+        finally
+        {
+            _flushingPointerEvents = false;
+        }
+    }
+
+    private void HandlePointerEventImmediately(RenderView root, PointerEvent @event)
+    {
         PointerEventReceived?.Invoke(@event);
-        var eventWithDelta = AttachDelta(@event);
-        HitTestResult? hitTestResult = null;
+        PointerEvent eventWithDelta = AttachDelta(@event);
+        HitTestResult? result = null;
 
-        switch (@event)
+        if (@event is PointerDownEvent or PointerSignalEvent or PointerHoverEvent or PointerPanZoomStartEvent)
         {
-            case PointerDownEvent or PointerPanZoomStartEvent:
+            result = HitTestInView(root, @event.Position);
+            if (@event is PointerDownEvent or PointerPanZoomStartEvent)
             {
-                var result = new BoxHitTestResult();
-                root.HitTest(result, @event.Position);
+                if (_hitTests.ContainsKey(@event.Pointer))
+                {
+                    throw new AssertionError("A pointer down unexpectedly already has a hit test result.");
+                }
+
                 _hitTests[@event.Pointer] = result;
-                hitTestResult = result;
-                break;
-            }
-            // A pan/zoom update carries `Down == false`, so Dart gives it its own arm alongside the
-            // moves; it reuses the path cached when the gesture started.
-            case PointerMoveEvent or PointerUpEvent or PointerCancelEvent
-                or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent:
-            {
-                _hitTests.TryGetValue(@event.Pointer, out hitTestResult);
-                break;
-            }
-            case PointerHoverEvent:
-            {
-                var result = new BoxHitTestResult();
-                root.HitTest(result, @event.Position);
-                hitTestResult = result;
-                break;
-            }
-            case PointerSignalEvent:
-            {
-                var result = new BoxHitTestResult();
-                root.HitTest(result, @event.Position);
-                hitTestResult = result;
-                break;
+                _pointerRoots[@event.Pointer] = root;
             }
         }
-
-        DispatchEvent(eventWithDelta, hitTestResult);
-
-        if (eventWithDelta is PointerSignalEvent signalEvent)
+        else if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
         {
-            // Dart's GestureBinding.handleEvent: signals resolve to their first registered
-            // handler once the framework has finished dispatching the event.
-            PointerSignalResolver.Resolve(signalEvent);
+            _hitTests.Remove(@event.Pointer, out result);
+            _pointerRoots.Remove(@event.Pointer);
+            _lastPositions.Remove(@event.Pointer);
+        }
+        else if (@event.Down || @event is PointerMoveEvent or PointerPanZoomUpdateEvent)
+        {
+            _hitTests.TryGetValue(@event.Pointer, out result);
         }
 
+        if (result is not null || @event is PointerAddedEvent or PointerRemovedEvent)
+        {
+            DispatchEvent(eventWithDelta, result);
+        }
+
+        // A default arena win is a microtask in Dart, after every target and router saw the event.
+        GestureArena.FlushDefaultResolutions();
+    }
+
+    private HitTestResult HitTestInView(RenderView root, Point position)
+    {
+        var result = new BoxHitTestResult();
+        root.HitTest(result, position);
+        result.Add(new HitTestEntry(this));
+        return result;
+    }
+
+    /// <summary>Delivers events to hit-test targets, reporting one target's failure and continuing.</summary>
+    public void DispatchEvent(PointerEvent @event, HitTestResult? hitTestResult)
+    {
+        MouseTracker.UpdateWithEvent(@event, @event is PointerMoveEvent ? null : hitTestResult);
+        if (hitTestResult is null)
+        {
+            try
+            {
+                PointerRouter.Route(@event);
+            }
+            catch (Exception exception)
+            {
+                ReportDispatchError(exception, @event, null);
+            }
+
+            return;
+        }
+
+        foreach (HitTestEntry entry in hitTestResult.Path)
+        {
+            try
+            {
+                entry.Target.HandleEvent(@event.Transformed(entry.Transform), entry);
+            }
+            catch (Exception exception)
+            {
+                ReportDispatchError(exception, @event, entry);
+            }
+        }
+    }
+
+    /// <summary>Dart's final binding-level hit-test target.</summary>
+    public void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        PointerRouter.Route(@event);
         if (@event is PointerDownEvent or PointerPanZoomStartEvent)
         {
             GestureArena.Close(@event.Pointer);
         }
-
-        if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
+        else if (@event is PointerUpEvent or PointerPanZoomEndEvent)
         {
             GestureArena.Sweep(@event.Pointer);
-            _hitTests.Remove(@event.Pointer);
-            _lastPositions.Remove(@event.Pointer);
         }
-
-        // Dart's `_resolveByDefault` runs in a microtask, i.e. after the whole event has been
-        // dispatched; draining here reproduces that ordering.
-        GestureArena.FlushDefaultResolutions();
-    }
-
-    public void DispatchEvent(PointerEvent @event, HitTestResult? hitTestResult)
-    {
-        // Dart's `RendererBinding.dispatchEvent` updates the tracker before the path dispatch, so a
-        // nested region's enter (back to front) precedes its hover (front to back). A move reuses
-        // the cached down-path, which is not a valid hover hit test, so the tracker re-runs its own.
-        MouseTracker.UpdateWithEvent(@event, @event is PointerMoveEvent ? null : hitTestResult);
-        if (hitTestResult != null)
+        else if (@event is PointerSignalEvent signal)
         {
-            foreach (var entry in hitTestResult.Path)
-            {
-                entry.Target.HandleEvent(@event.Transformed(entry.Transform), entry);
-            }
+            PointerSignalResolver.Resolve(signal);
         }
-
-        PointerRouter.Route(@event);
     }
 
-    /// <summary>
-    /// Schedules the once-per-frame device update. Dart's
-    /// `RendererBinding._scheduleMouseTrackerUpdate`, called after every produced frame so a region
-    /// that moved, appeared or disappeared during it still produces its enter and exit events.
-    /// </summary>
+    private static void ReportDispatchError(Exception exception, PointerEvent @event, HitTestEntry? entry)
+    {
+        FlutterError.ReportError(new FlutterErrorDetailsForPointerEventDispatcher(
+            exception,
+            stack: exception.StackTrace,
+            context: new ErrorDescription(
+                entry is null
+                    ? "while dispatching a non-hit-tested pointer event"
+                    : "while dispatching a pointer event"),
+            @event: @event,
+            hitTestEntry: entry,
+            informationCollector: () =>
+            {
+                List<DiagnosticsNode> properties =
+                [
+                    new DiagnosticsProperty<PointerEvent>(
+                        "Event",
+                        @event,
+                        style: DiagnosticsTreeStyle.ErrorProperty),
+                ];
+                if (entry is not null)
+                {
+                    properties.Add(new DiagnosticsProperty<IHitTestTarget>(
+                        "Target",
+                        entry.Target,
+                        style: DiagnosticsTreeStyle.ErrorProperty));
+                }
+
+                return properties;
+            }));
+    }
+
     public void ScheduleMouseTrackerUpdate()
     {
         RendererBinding.Instance.ScheduleMouseTrackerUpdate();
     }
 
-    /// <summary>
-    /// Compatibility forward to Dart's <c>RendererBinding.hitTestInView</c>.
-    /// </summary>
     public HitTestResult HitTestInView(Point position, int viewId)
     {
         return RendererBinding.Instance.HitTestInView(position, viewId);
     }
 
+    private HitTestResponse HandleHitTest(HitTestRequest request)
+    {
+        HitTestResult result = HitTestInView(request.Offset, request.ViewId);
+        return new HitTestResponse(result.Path.Any(entry => entry.Target is INativeHitTestTarget));
+    }
+
     internal void ResetForTests()
     {
+        _resamplingGeneration++;
+        StopResamplingTimer();
+        _resamplers.Clear();
+        _resamplerRoots.Clear();
+        _frameTime = default;
+        _frameTimeAge = null;
+        _frameCallbackScheduled = false;
+        _samplingResampledEvents = false;
+        ResamplingEnabled = false;
+        SamplingOffset = DefaultSamplingOffset;
+        SamplingClock = new SamplingClock();
         _hitTests.Clear();
         _lastPositions.Clear();
+        _pointerRoots.Clear();
+        _pendingPointerEvents.Clear();
+        _flushingPointerEvents = false;
         PointerRouter.Reset();
         GestureArena.Reset();
         RendererBinding.Instance.ResetMouseTrackerForTests();
@@ -158,25 +460,56 @@ public sealed class GestureBinding
 
     private PointerEvent AttachDelta(PointerEvent @event)
     {
-        // Signals carry their own scroll delta, and a pan/zoom gesture reports movement through
-        // `PanDelta`; Dart leaves `delta` at zero for both.
-        // An added or removed pointer reports no movement either, and Dart's synthesized exit on
-        // disconnect is asserted to carry a zero delta.
-        if (@event is PointerSignalEvent or PointerAddedEvent or PointerRemovedEvent
+        if (@event.IsResampled)
+        {
+            _lastPositions[@event.Pointer] = @event.Position;
+            return @event;
+        }
+
+        if (@event is PointerSignalEvent or PointerAddedEvent or PointerRemovedEvent or PointerCancelEvent
             or PointerPanZoomStartEvent or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent)
         {
             return @event.WithDelta(default);
         }
 
         int pointer = @event.Pointer;
-        if (!_lastPositions.TryGetValue(pointer, out var previousPosition))
+        if (!_lastPositions.TryGetValue(pointer, out Point previousPosition))
         {
             _lastPositions[pointer] = @event.Position;
             return @event.WithDelta(default);
         }
 
-        var delta = @event.Position - previousPosition;
+        Point delta = @event.Position - previousPosition;
         _lastPositions[pointer] = @event.Position;
         return @event.WithDelta(delta);
     }
+}
+
+/// <summary>Dart's error details for one failing pointer event target.</summary>
+public sealed class FlutterErrorDetailsForPointerEventDispatcher : FlutterErrorDetails
+{
+    public FlutterErrorDetailsForPointerEventDispatcher(
+        object exception,
+        string? stack = null,
+        string? library = "gesture library",
+        DiagnosticsNode? context = null,
+        PointerEvent? @event = null,
+        HitTestEntry? hitTestEntry = null,
+        InformationCollector? informationCollector = null,
+        bool silent = false)
+        : base(
+            exception,
+            stack,
+            library,
+            context,
+            informationCollector: informationCollector,
+            silent: silent)
+    {
+        Event = @event;
+        HitTestEntry = hitTestEntry;
+    }
+
+    public PointerEvent? Event { get; }
+
+    public HitTestEntry? HitTestEntry { get; }
 }
