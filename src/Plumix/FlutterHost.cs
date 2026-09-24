@@ -186,13 +186,6 @@ public class PlumixHost : Control
             return;
         }
 
-        if (IsPasteShortcut(e))
-        {
-            e.Handled = true;
-            Scheduler.RunAsync(() => HandleSystemPasteShortcutAsync());
-            return;
-        }
-
         if (HotReloadManager.IsManualReassembleAvailable
             && e.Key == Key.R
             && e.KeyModifiers.HasFlag(KeyModifiers.Shift)
@@ -207,11 +200,6 @@ public class PlumixHost : Control
         if (DispatchHostKeyEvent(e, isDown: true))
         {
             e.Handled = true;
-            if (IsCopyOrCutShortcut(e))
-            {
-                Scheduler.RunAsync(() => PushFrameworkClipboardToSystemAsync());
-            }
-
             return;
         }
 
@@ -1181,7 +1169,6 @@ public class PlumixHost : Control
     private async Task<object?> SetClipboardDataAsync(object? arguments)
     {
         string? text = arguments is System.Collections.IDictionary data ? data["text"] as string : null;
-        TextClipboard.SetText(text);
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
         if (clipboard is not null)
         {
@@ -1199,7 +1186,7 @@ public class PlumixHost : Control
         }
 
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        string? text = clipboard is null ? TextClipboard.GetText() : await clipboard.TryGetTextAsync();
+        string? text = clipboard is null ? null : await clipboard.TryGetTextAsync();
         return text is null ? null : new Dictionary<string, object?> { ["text"] = text };
     }
 
@@ -1211,7 +1198,7 @@ public class PlumixHost : Control
         }
 
         var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        string? text = clipboard is null ? TextClipboard.GetText() : await clipboard.TryGetTextAsync();
+        string? text = clipboard is null ? null : await clipboard.TryGetTextAsync();
         return new Dictionary<string, object?> { ["value"] = text is not null };
     }
 
@@ -1453,57 +1440,11 @@ public class PlumixHost : Control
         }
     }
 
-    private static bool IsPasteShortcut(KeyEventArgs e)
-    {
-        return (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
-               && e.Key == Key.V;
-    }
-
     private static bool IsReassembleShortcut(KeyEventArgs e)
     {
         return (e.KeyModifiers.HasFlag(KeyModifiers.Control) || e.KeyModifiers.HasFlag(KeyModifiers.Meta))
                && e.KeyModifiers.HasFlag(KeyModifiers.Shift)
                && e.Key == Key.R;
-    }
-
-    private static bool IsCopyOrCutShortcut(KeyEventArgs e)
-    {
-        if (!e.KeyModifiers.HasFlag(KeyModifiers.Control) && !e.KeyModifiers.HasFlag(KeyModifiers.Meta))
-        {
-            return false;
-        }
-
-        return e.Key is Key.C or Key.X;
-    }
-
-    private async Task HandleSystemPasteShortcutAsync()
-    {
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard != null)
-        {
-            string? systemText = await clipboard.TryGetTextAsync();
-            if (!string.IsNullOrEmpty(systemText))
-            {
-                TextClipboard.SetText(systemText);
-            }
-        }
-
-        string textToPaste = TextClipboard.GetText() ?? string.Empty;
-        if (!string.IsNullOrEmpty(textToPaste))
-        {
-            _ = FrameworkFocusManager.Instance.HandleTextInput(textToPaste);
-        }
-    }
-
-    private async Task PushFrameworkClipboardToSystemAsync()
-    {
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        if (clipboard == null)
-        {
-            return;
-        }
-
-        await clipboard.SetTextAsync(TextClipboard.CurrentText);
     }
 
     private PointerDownEvent ToPointerDownEvent(PointerPressedEventArgs e)

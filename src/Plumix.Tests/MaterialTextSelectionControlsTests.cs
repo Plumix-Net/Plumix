@@ -139,16 +139,26 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
     public void LegacyToolbar_HidesPasteUntilTheClipboardIsKnownAndPasteable()
     {
         var @delegate = new FakeSelectionDelegate(new TextEditingValue("hello", new TextSelection(1, 3)));
+        var pending = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SystemChannels.Platform.SetPlatformMethodCallHandler(call => call.Method == "Clipboard.hasStrings"
+            ? pending.Task
+            : Task.FromResult<object?>(null));
+        try
+        {
+            var status = new ClipboardStatusNotifier();
+            using var unknown = BuildToolbarHarness(@delegate, status);
+            unknown.Pump(new Size(400, 300));
+            Assert.Empty(unknown.FindWidgets<TextSelectionToolbar>());
 
-        using var unknown = BuildToolbarHarness(@delegate, new ClipboardStatusNotifier());
-        unknown.Pump(new Size(400, 300));
-        Assert.Empty(unknown.FindWidgets<TextSelectionToolbar>());
-
-        using var notPasteable = BuildToolbarHarness(
-            @delegate,
-            new ClipboardStatusNotifier(ClipboardStatus.NotPasteable));
-        notPasteable.Pump(new Size(400, 300));
-        Assert.Equal(["Cut", "Copy", "Select all"], ToolbarLabels(notPasteable));
+            pending.SetResult(new Dictionary<string, object?> { ["value"] = false });
+            Assert.True(EventLoopPump.SpinUntil(() => status.Value == ClipboardStatus.NotPasteable));
+            unknown.Pump(new Size(400, 300));
+            Assert.Equal(["Cut", "Copy", "Select all"], ToolbarLabels(unknown));
+        }
+        finally
+        {
+            SystemChannels.Platform.SetPlatformMethodCallHandler(null);
+        }
     }
 
     [Fact]

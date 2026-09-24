@@ -426,7 +426,7 @@ public sealed class SelectableRegionState : State<SelectableRegion>, ISelectionR
             return;
         }
 
-        TextClipboard.SetText(data.PlainText);
+        Scheduler.RunAsync(() => Clipboard.SetData(new ClipboardData(data.PlainText)));
     }
 
     /// Shows the selection handles, creating the overlay when the geometry allows it.

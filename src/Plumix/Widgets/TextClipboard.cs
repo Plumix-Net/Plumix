@@ -1,4 +1,4 @@
-// C#-only synchronous clipboard cache for the editing pipeline and headless tests.
+// C#-only compatibility cache. Framework editing and selection use UI.Clipboard.
 
 namespace Plumix.Widgets;
 

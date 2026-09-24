@@ -152,25 +152,37 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
     [Fact]
     public void MobileLegacyToolbar_ListensForClipboardAvailabilityAndBuildsNothingWithoutActions()
     {
-        var clipboard = new ClipboardStatusNotifier();
-        var @delegate = new FakeSelectionDelegate(new TextEditingValue("hello", new TextSelection(1, 3)));
-        using var harness = BuildMobileToolbarHarness(@delegate, clipboard);
+        var pending = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SystemChannels.Platform.SetPlatformMethodCallHandler(call => call.Method == "Clipboard.hasStrings"
+            ? pending.Task
+            : Task.FromResult<object?>(null));
+        try
+        {
+            var clipboard = new ClipboardStatusNotifier();
+            var @delegate = new FakeSelectionDelegate(new TextEditingValue("hello", new TextSelection(1, 3)));
+            using var harness = BuildMobileToolbarHarness(@delegate, clipboard);
 
-        harness.Pump(new Size(320.0, 240.0));
-        Assert.Empty(harness.FindWidgets<CupertinoTextSelectionToolbar>());
+            harness.Pump(new Size(320.0, 240.0));
+            Assert.Empty(harness.FindWidgets<CupertinoTextSelectionToolbar>());
 
-        clipboard.Value = ClipboardStatus.NotPasteable;
-        harness.Pump(new Size(320.0, 240.0));
-        Assert.Equal(["Cut", "Copy"], MobileToolbarLabels(harness));
+            pending.SetResult(new Dictionary<string, object?> { ["value"] = false });
+            Assert.True(EventLoopPump.SpinUntil(() => clipboard.Value == ClipboardStatus.NotPasteable));
+            harness.Pump(new Size(320.0, 240.0));
+            Assert.Equal(["Cut", "Copy"], MobileToolbarLabels(harness));
 
-        var disabledDelegate = new FakeSelectionDelegate(
-            new TextEditingValue("hello", new TextSelection(0, 5)),
-            enabled: false);
-        using var disabled = BuildMobileToolbarHarness(
-            disabledDelegate,
-            new ClipboardStatusNotifier(ClipboardStatus.Pasteable));
-        disabled.Pump(new Size(320.0, 240.0));
-        Assert.Empty(disabled.FindWidgets<CupertinoTextSelectionToolbar>());
+            var disabledDelegate = new FakeSelectionDelegate(
+                new TextEditingValue("hello", new TextSelection(0, 5)),
+                enabled: false);
+            using var disabled = BuildMobileToolbarHarness(
+                disabledDelegate,
+                new ClipboardStatusNotifier(ClipboardStatus.Pasteable));
+            disabled.Pump(new Size(320.0, 240.0));
+            Assert.Empty(disabled.FindWidgets<CupertinoTextSelectionToolbar>());
+        }
+        finally
+        {
+            SystemChannels.Platform.SetPlatformMethodCallHandler(null);
+        }
     }
 
     [Fact]

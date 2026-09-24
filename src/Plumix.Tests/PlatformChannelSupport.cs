@@ -33,3 +33,36 @@ internal sealed class MockMethodCallHandler : IDisposable
 
     public void Dispose() => _channel.SetPlatformMethodCallHandler(null);
 }
+
+internal sealed class MockClipboardPlatform : IDisposable
+{
+    private readonly MockMethodCallHandler _handler;
+
+    public MockClipboardPlatform(string? text = null)
+    {
+        Text = text;
+        _handler = new MockMethodCallHandler(SystemChannels.Platform, HandleCall);
+    }
+
+    public string? Text { get; set; }
+
+    public IReadOnlyList<MethodCall> Calls => _handler.Log;
+
+    private object? HandleCall(MethodCall call)
+    {
+        switch (call.Method)
+        {
+            case "Clipboard.setData":
+                Text = ((System.Collections.IDictionary)call.Arguments!)["text"] as string;
+                return null;
+            case "Clipboard.getData":
+                return Text is null ? null : new Dictionary<string, object?> { ["text"] = Text };
+            case "Clipboard.hasStrings":
+                return new Dictionary<string, object?> { ["value"] = !string.IsNullOrEmpty(Text) };
+            default:
+                throw new MissingPluginException(call.Method);
+        }
+    }
+
+    public void Dispose() => _handler.Dispose();
+}

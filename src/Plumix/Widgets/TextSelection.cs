@@ -5,6 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/text_selection.dart
+// Dart parity source: flutter/packages/flutter/lib/src/services/text_input.dart (TextSelectionDelegate)
 
 namespace Plumix.Widgets;
 
@@ -37,9 +38,10 @@ public enum ClipboardStatus
 }
 
 /// <summary>Tracks whether the clipboard currently holds pasteable content.</summary>
-public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<ClipboardStatus>
+public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<ClipboardStatus>, WidgetsBindingObserver
 {
     private ClipboardStatus _value;
+    private bool _disposed;
 
     public ClipboardStatusNotifier(ClipboardStatus value = ClipboardStatus.Unknown)
     {
@@ -61,16 +63,77 @@ public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<C
         }
     }
 
-    public void Update()
+    public async Task Update()
     {
-        Value = string.IsNullOrEmpty(TextClipboard.GetText())
-            ? ClipboardStatus.NotPasteable
-            : ClipboardStatus.Pasteable;
+        if (_disposed)
+        {
+            return;
+        }
+
+        bool hasStrings;
+        try
+        {
+            hasStrings = await Clipboard.HasStrings();
+        }
+        catch (Exception exception)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                stack: exception.StackTrace,
+                library: "widgets library",
+                context: new ErrorDescription("while checking if the clipboard has strings")));
+            if (!_disposed)
+            {
+                Value = ClipboardStatus.Unknown;
+            }
+            return;
+        }
+
+        if (!_disposed)
+        {
+            Value = hasStrings ? ClipboardStatus.Pasteable : ClipboardStatus.NotPasteable;
+        }
+    }
+
+    public override void AddListener(Action listener)
+    {
+        if (!HasListeners)
+        {
+            WidgetsBinding.Instance.AddObserver(this);
+        }
+        if (Value == ClipboardStatus.Unknown)
+        {
+            Scheduler.RunAsync(Update);
+        }
+        base.AddListener(listener);
+    }
+
+    public override void RemoveListener(Action listener)
+    {
+        base.RemoveListener(listener);
+        if (!_disposed && !HasListeners)
+        {
+            WidgetsBinding.Instance.RemoveObserver(this);
+        }
+    }
+
+    public void DidChangeAppLifecycleState(AppLifecycleState state)
+    {
+        if (state == AppLifecycleState.Resumed)
+        {
+            Scheduler.RunAsync(Update);
+        }
+    }
+
+    public override void Dispose()
+    {
+        WidgetsBinding.Instance.RemoveObserver(this);
+        _disposed = true;
+        base.Dispose();
     }
 }
 
 /// <summary>The editing surface a selection toolbar and its handles act on.</summary>
-// Dart parity source: flutter/packages/flutter/lib/src/services/text_input.dart (TextSelectionDelegate)
 public interface ITextSelectionDelegate
 {
     TextEditingValue TextEditingValue { get; }
@@ -90,6 +153,12 @@ public interface ITextSelectionDelegate
     void CopySelection(SelectionChangedCause cause);
 
     void PasteText(SelectionChangedCause cause);
+
+    Task PasteTextAsync(SelectionChangedCause cause)
+    {
+        PasteText(cause);
+        return Task.CompletedTask;
+    }
 
     void SelectAll(SelectionChangedCause cause);
 
@@ -179,7 +248,7 @@ public abstract class TextSelectionControls
     [Obsolete("Use a contextMenuBuilder instead. This feature was deprecated after Flutter v3.3.0-0.5.pre.")]
     public virtual void HandlePaste(ITextSelectionDelegate @delegate)
     {
-        @delegate.PasteText(SelectionChangedCause.Toolbar);
+        Scheduler.RunAsync(() => @delegate.PasteTextAsync(SelectionChangedCause.Toolbar));
     }
 
     /// <summary>Selects the whole document. Does not hide the toolbar.</summary>

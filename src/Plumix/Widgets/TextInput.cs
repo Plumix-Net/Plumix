@@ -1322,6 +1322,8 @@ public sealed class EditableText : StatefulWidget
         private readonly LayerLink _endHandleLayerLink = new();
         private readonly LayerLink _toolbarLayerLink = new();
         private readonly ClipboardStatusNotifier _clipboardStatus = new();
+        private bool _clipboardStatusObserved;
+        private bool _showToolbarWhenClipboardResolved;
         private TextSelectionOverlay? _selectionOverlay;
         private SpellCheckResults? _spellCheckResults;
         private int _spellCheckRequest;
@@ -1354,6 +1356,10 @@ public sealed class EditableText : StatefulWidget
                                           && controller.Selection.End == controller.Text.Length;
                 var items = new List<ContextMenuButtonItem>();
                 ToolbarOptions options = Widget.ToolbarOptions;
+                if (options.Paste && !Widget.ReadOnly && _clipboardStatus.Value == ClipboardStatus.Unknown)
+                {
+                    return items;
+                }
                 if (options.Cut && !Widget.ReadOnly && !Widget.ObscureText && hasSelection)
                 {
                     items.Add(new ContextMenuButtonItem(CutAndHide, ContextMenuButtonType.Cut));
@@ -1362,7 +1368,7 @@ public sealed class EditableText : StatefulWidget
                 {
                     items.Add(new ContextMenuButtonItem(CopyAndHide, ContextMenuButtonType.Copy));
                 }
-                if (options.Paste && !Widget.ReadOnly && !string.IsNullOrEmpty(TextClipboard.GetText()))
+                if (options.Paste && !Widget.ReadOnly && _clipboardStatus.Value == ClipboardStatus.Pasteable)
                 {
                     items.Add(new ContextMenuButtonItem(PasteAndHide, ContextMenuButtonType.Paste));
                 }
@@ -1650,6 +1656,10 @@ public sealed class EditableText : StatefulWidget
             _currentAutofillScope = null;
             _selectionOverlay?.Dispose();
             _selectionOverlay = null;
+            if (_clipboardStatusObserved)
+            {
+                _clipboardStatus.RemoveListener(HandleClipboardStatusChanged);
+            }
             _clipboardStatus.Dispose();
             DetachController();
             DetachFocusNode(disposeOwned: true);
@@ -1764,20 +1774,27 @@ public sealed class EditableText : StatefulWidget
 
         public bool ShowToolbar()
         {
-            if (!Widget.EnableInteractiveSelection
-                || Widget.ContextMenuBuilder is null
-                || ContextMenuButtonItems.Count == 0)
+            if (!Widget.EnableInteractiveSelection || Widget.ContextMenuBuilder is null)
             {
                 return false;
             }
 
             TextSelectionOverlay overlay = EnsureSelectionOverlay();
+            Scheduler.RunAsync(_clipboardStatus.Update);
+            if (ContextMenuButtonItems.Count == 0)
+            {
+                _showToolbarWhenClipboardResolved = _clipboardStatus.Value == ClipboardStatus.Unknown;
+                return false;
+            }
+
+            _showToolbarWhenClipboardResolved = false;
             overlay.ShowToolbar();
             return overlay.ToolbarIsVisible;
         }
 
         public void HideToolbar(bool hideHandles = true)
         {
+            _showToolbarWhenClipboardResolved = false;
             _selectionOverlay?.HideToolbar();
             if (hideHandles) _selectionOverlay?.HideHandles();
         }
@@ -1845,7 +1862,10 @@ public sealed class EditableText : StatefulWidget
 
         public void CopySelection(SelectionChangedCause cause) => CopyAndHide();
 
-        public void PasteText(SelectionChangedCause cause) => PasteAndHide();
+        public void PasteText(SelectionChangedCause cause) =>
+            Scheduler.RunAsync(() => PasteTextAsync(cause));
+
+        public Task PasteTextAsync(SelectionChangedCause cause) => PasteFromClipboardAsync(cause);
 
         public void SelectAll(SelectionChangedCause cause)
         {
@@ -2065,10 +2085,10 @@ public sealed class EditableText : StatefulWidget
         private void CutAndHide()
         {
             TextEditingController controller = _controller!;
-            if (!Widget.ReadOnly && !controller.Selection.IsCollapsed)
+            if (!Widget.ReadOnly && !Widget.ObscureText && !controller.Selection.IsCollapsed)
             {
                 TextEditingValue oldValue = controller.Value;
-                TextClipboard.SetText(controller.SelectedText);
+                CopyToClipboard(controller.SelectedText);
                 _pendingSelectionCause = SelectionChangedCause.Toolbar;
                 if (controller.DeleteBackward())
                 {
@@ -2083,29 +2103,79 @@ public sealed class EditableText : StatefulWidget
         private void CopyAndHide()
         {
             TextEditingController controller = _controller!;
-            if (!controller.Selection.IsCollapsed)
+            if (!Widget.ObscureText && !controller.Selection.IsCollapsed)
             {
-                TextClipboard.SetText(controller.SelectedText);
+                CopyToClipboard(controller.SelectedText);
             }
             HideToolbar();
         }
 
         private void PasteAndHide()
         {
-            string value = TextClipboard.GetText() ?? string.Empty;
-            if (!Widget.ReadOnly && !string.IsNullOrEmpty(value))
+            Scheduler.RunAsync(() => PasteFromClipboardAsync(SelectionChangedCause.Toolbar));
+        }
+
+        private void CopyToClipboard(string text)
+        {
+            Scheduler.RunAsync(async () =>
             {
-                TextEditingController controller = _controller!;
-                TextEditingValue oldValue = controller.Value;
-                _pendingSelectionCause = SelectionChangedCause.Toolbar;
-                if (controller.Insert(LimitInsertion(value)))
+                try
                 {
-                    ApplyInputFormatters(oldValue);
-                    Widget.OnChanged?.Invoke(controller.Text);
+                    await Clipboard.SetData(new ClipboardData(text));
                 }
-                _pendingSelectionCause = null;
+                catch (Exception exception)
+                {
+                    ReportClipboardError(exception, "while copying selection to clipboard");
+                }
+            });
+            Scheduler.RunAsync(_clipboardStatus.Update);
+        }
+
+        private async Task PasteFromClipboardAsync(SelectionChangedCause cause)
+        {
+            if (Widget.ReadOnly || !Widget.EnableInteractiveSelection || !_controller!.Selection.IsValid)
+            {
+                return;
             }
-            HideToolbar();
+
+            ClipboardData? data;
+            try
+            {
+                data = await Clipboard.GetData(Clipboard.KTextPlain);
+            }
+            catch (Exception exception)
+            {
+                ReportClipboardError(exception, "while pasting text to EditableText");
+                return;
+            }
+
+            if (!Mounted || Widget.ReadOnly || data?.Text is not string text || !_controller!.Selection.IsValid)
+            {
+                return;
+            }
+
+            TextEditingController controller = _controller;
+            TextEditingValue oldValue = controller.Value;
+            _pendingSelectionCause = cause;
+            if (controller.Insert(LimitInsertion(text)))
+            {
+                ApplyInputFormatters(oldValue);
+                Widget.OnChanged?.Invoke(controller.Text);
+            }
+            _pendingSelectionCause = null;
+            if (cause == SelectionChangedCause.Toolbar)
+            {
+                HideToolbar();
+            }
+        }
+
+        private static void ReportClipboardError(Exception exception, string context)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                stack: exception.StackTrace,
+                library: "widgets library",
+                context: new ErrorDescription(context)));
         }
 
         private void SelectAllAndHide()
@@ -2150,9 +2220,12 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyA))
             {
-                _pendingSelectionCause = SelectionChangedCause.Keyboard;
-                _ = controller.SelectAll();
-                _pendingSelectionCause = null;
+                if (Widget.EnableInteractiveSelection)
+                {
+                    _pendingSelectionCause = SelectionChangedCause.Keyboard;
+                    _ = controller.SelectAll();
+                    _pendingSelectionCause = null;
+                }
                 _verticalNavigationX = null;
                 _verticalNavigationColumn = null;
                 return KeyEventResult.Handled;
@@ -2160,9 +2233,9 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyC))
             {
-                if (!controller.Selection.IsCollapsed)
+                if (Widget.EnableInteractiveSelection && !Widget.ObscureText && !controller.Selection.IsCollapsed)
                 {
-                    TextClipboard.SetText(controller.SelectedText);
+                    CopyToClipboard(controller.SelectedText);
                 }
 
                 _verticalNavigationX = null;
@@ -2172,9 +2245,10 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyX))
             {
-                if (!controller.Selection.IsCollapsed)
+                if (Widget.EnableInteractiveSelection && !Widget.ReadOnly && !Widget.ObscureText
+                    && !controller.Selection.IsCollapsed)
                 {
-                    TextClipboard.SetText(controller.SelectedText);
+                    CopyToClipboard(controller.SelectedText);
                     textChanged = !Widget.ReadOnly && controller.DeleteBackward();
                     if (textChanged)
                     {
@@ -2190,19 +2264,7 @@ public sealed class EditableText : StatefulWidget
 
             if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyV))
             {
-                string pasteText = TextClipboard.GetText() ?? string.Empty;
-                if (!Widget.ReadOnly && !string.IsNullOrEmpty(pasteText))
-                {
-                    pasteText = LimitInsertion(pasteText);
-                    textChanged = controller.Composing.HasValue
-                        ? controller.CommitComposing(pasteText)
-                        : controller.Insert(pasteText);
-                    if (textChanged)
-                    {
-                        ApplyInputFormatters(valueBeforeKey);
-                        Widget.OnChanged?.Invoke(controller.Text);
-                    }
-                }
+                Scheduler.RunAsync(() => PasteFromClipboardAsync(SelectionChangedCause.Keyboard));
 
                 _verticalNavigationX = null;
                 _verticalNavigationColumn = null;
@@ -2734,7 +2796,9 @@ public sealed class EditableText : StatefulWidget
             RenderEditable renderEditable = RenderEditable
                 ?? throw new InvalidOperationException("EditableText must be laid out before showing selection UI.");
             if (_selectionOverlay is not null) return _selectionOverlay;
-            _clipboardStatus.Update();
+            _clipboardStatus.AddListener(HandleClipboardStatusChanged);
+            _clipboardStatusObserved = true;
+            Scheduler.RunAsync(_clipboardStatus.Update);
             _selectionOverlay = new TextSelectionOverlay(
                 value: _controller!.Value,
                 context: Context,
@@ -2751,6 +2815,24 @@ public sealed class EditableText : StatefulWidget
                     : context => Widget.ContextMenuBuilder(context, this),
                 magnifierConfiguration: Widget.MagnifierConfiguration);
             return _selectionOverlay;
+        }
+
+        private void HandleClipboardStatusChanged()
+        {
+            if (!Mounted)
+            {
+                return;
+            }
+
+            SetState(static () => { });
+            if (_showToolbarWhenClipboardResolved && _clipboardStatus.Value != ClipboardStatus.Unknown)
+            {
+                _showToolbarWhenClipboardResolved = false;
+                if (ContextMenuButtonItems.Count > 0)
+                {
+                    _selectionOverlay?.ShowToolbar();
+                }
+            }
         }
 
         /// Dart's `EditableText._isPasswordInput`: spell check never runs on password input,

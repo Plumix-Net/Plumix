@@ -37,7 +37,7 @@ public sealed class MaterialSelectionTests
     [Fact]
     public void SelectionArea_ContextMenuItemsTrackSelectionAndInvokeCopy()
     {
-        TextClipboard.ResetForTests();
+        using var clipboard = new MockClipboardPlatform();
         var key = new LabeledGlobalKey<SelectionAreaState>("context-menu-area");
         using var harness = new WidgetRenderHarness(Root(
             new SelectionArea(
@@ -58,27 +58,30 @@ public sealed class MaterialSelectionTests
         Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.X));
         copy.OnPressed!.Invoke();
 
-        Assert.Equal("copy me", TextClipboard.GetText());
+        Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "copy me"));
         Assert.False(state.ContextMenuIsVisible);
     }
 
     [Fact]
     public void EditableText_ContextMenuItemsFollowReadOnlyAndClipboardPolicies()
     {
-        TextClipboard.ResetForTests();
-        TextClipboard.SetText("paste");
+        using var clipboard = new MockClipboardPlatform("paste");
         var key = new LabeledGlobalKey<EditableText.EditableTextState>("editable-menu");
         var controller = new TextEditingController("alpha beta", new TextSelection(0, 5));
         using var harness = new WidgetRenderHarness(Root(
-            new EditableText(
-                key: key,
-                controller: controller,
-                contextMenuBuilder: (_, state) => new SizedBox(
-                    child: new Text(state.ContextMenuButtonItems.Count.ToString()))),
+            new Navigator(new BuilderPageRoute(_ =>
+                new EditableText(
+                    key: key,
+                    controller: controller,
+                    contextMenuBuilder: (_, state) => new SizedBox(
+                        child: new Text(state.ContextMenuButtonItems.Count.ToString()))))),
             ThemeData.Light));
         harness.Pump(new Size(320, 120));
+        key.CurrentState!.ShowToolbar();
+        Assert.True(EventLoopPump.SpinUntil(() => key.CurrentState.ContextMenuButtonItems
+            .Any(item => item.Type == ContextMenuButtonType.Paste)));
 
-        IReadOnlyList<ContextMenuButtonItem> items = key.CurrentState!.ContextMenuButtonItems;
+        IReadOnlyList<ContextMenuButtonItem> items = key.CurrentState.ContextMenuButtonItems;
         Assert.Equal(
             [
                 ContextMenuButtonType.Cut,
@@ -90,7 +93,7 @@ public sealed class MaterialSelectionTests
 
         ContextMenuButtonItem cut = items[0];
         cut.OnPressed!.Invoke();
-        Assert.Equal("alpha", TextClipboard.GetText());
+        Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "alpha"));
         Assert.Equal(" beta", controller.Text);
     }
 
@@ -125,6 +128,7 @@ public sealed class MaterialSelectionTests
     [Fact]
     public void SelectableText_SelectAllAndCopyUseReadOnlyKeyboardFlow()
     {
+        using var clipboard = new MockClipboardPlatform();
         TextSelection? changedSelection = null;
         SelectionChangedCause? changedCause = null;
         using var harness = new WidgetRenderHarness(Root(
@@ -148,7 +152,7 @@ public sealed class MaterialSelectionTests
         Assert.Equal(SelectionChangedCause.Keyboard, changedCause);
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
-        Assert.Equal("alpha beta", TextClipboard.GetText());
+        Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "alpha beta"));
     }
 
     [Fact]
@@ -194,6 +198,7 @@ public sealed class MaterialSelectionTests
     [Fact]
     public void SelectionArea_SelectAllAggregatesTextSubtreeAndExposesState()
     {
+        using var clipboard = new MockClipboardPlatform();
         var key = new LabeledGlobalKey<SelectionAreaState>("area");
         SelectedContent? selected = null;
         using var harness = new WidgetRenderHarness(Root(
@@ -219,7 +224,7 @@ public sealed class MaterialSelectionTests
         Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].Selections.Single().ExtentOffset);
 
         key.CurrentState.SelectableRegion.CopySelection();
-        Assert.Equal("first second", TextClipboard.GetText());
+        Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "first second"));
         key.CurrentState.SelectableRegion.ClearSelection();
         Assert.Null(key.CurrentState.SelectableRegion.SelectedContent);
     }

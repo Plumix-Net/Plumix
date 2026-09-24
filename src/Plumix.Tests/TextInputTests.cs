@@ -17,13 +17,11 @@ public sealed class TextInputTests : IDisposable
     public TextInputTests()
     {
         FocusManager.Instance.ResetForTests();
-        TextClipboard.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        TextClipboard.ResetForTests();
     }
 
     [Fact]
@@ -486,6 +484,7 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_ClipboardShortcuts_CopyCutPaste_Work()
     {
+        using var clipboard = new MockClipboardPlatform();
         var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var root = new TestRootElement(
@@ -500,15 +499,102 @@ public sealed class TextInputTests : IDisposable
         Assert.True(FocusManager.Instance.HandleTextInput("alpha"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
-        Assert.Equal("alpha", TextClipboard.GetText());
+        Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "alpha"));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX, control: true)));
         Assert.Equal(string.Empty, controller.Text);
-        Assert.Equal("alpha", TextClipboard.GetText());
+        Assert.Equal("alpha", clipboard.Text);
 
-        TextClipboard.SetText("beta");
+        clipboard.Text = "beta";
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
-        Assert.Equal("beta", controller.Text);
+        Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "beta"));
+        Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
+    }
+
+    [Fact]
+    public void EditableText_PasteWaitsForPlatformClipboardAndUsesItsLatestText()
+    {
+        var reply = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        SystemChannels.Platform.SetPlatformMethodCallHandler(call => call.Method switch
+        {
+            "Clipboard.getData" => reply.Task,
+            _ => Task.FromResult<object?>(null),
+        });
+        try
+        {
+            var owner = TestBuildOwner.Create();
+            var controller = new TextEditingController("before");
+            var root = new TestRootElement(new EditableText(controller: controller, autofocus: true));
+            root.Attach(owner);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+            owner.FlushBuild();
+
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
+            Assert.Equal("before", controller.Text);
+
+            reply.SetResult(new Dictionary<string, object?> { ["text"] = " after" });
+            Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "before after"));
+            Assert.Equal(TextSelection.Collapsed(12), controller.Selection);
+        }
+        finally
+        {
+            SystemChannels.Platform.SetPlatformMethodCallHandler(null);
+        }
+    }
+
+    [Theory]
+    [InlineData(true, false, true)]
+    [InlineData(false, true, true)]
+    [InlineData(false, false, false)]
+    public void EditableText_ClipboardShortcutsRespectEditingPolicies(
+        bool readOnly,
+        bool obscureText,
+        bool enableInteractiveSelection)
+    {
+        using var clipboard = new MockClipboardPlatform("external");
+        var owner = TestBuildOwner.Create();
+        var controller = new TextEditingController("alpha", new TextSelection(0, 5));
+        var root = new TestRootElement(new EditableText(
+            controller: controller,
+            autofocus: true,
+            readOnly: readOnly,
+            obscureText: obscureText,
+            enableInteractiveSelection: enableInteractiveSelection));
+        root.Attach(owner);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        owner.FlushBuild();
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX, control: true)));
+        Assert.Equal("alpha", controller.Text);
+        Assert.Equal("external", clipboard.Text);
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
+        Assert.Equal(obscureText || !enableInteractiveSelection ? "external" : "alpha", clipboard.Text);
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
+        if (readOnly || !enableInteractiveSelection)
+        {
+            Assert.Equal("alpha", controller.Text);
+        }
+        else
+        {
+            Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "external"));
+        }
+    }
+
+    [Fact]
+    public void EditableText_PasteReplacesReversedSelectionAndCollapsesAfterInsertedText()
+    {
+        using var clipboard = new MockClipboardPlatform("xy");
+        var owner = TestBuildOwner.Create();
+        var controller = new TextEditingController("abcdef", new TextSelection(5, 2));
+        var root = new TestRootElement(new EditableText(controller: controller, autofocus: true));
+        root.Attach(owner);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        owner.FlushBuild();
+
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
+        Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "abxyf"));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
     }
 

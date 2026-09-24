@@ -439,24 +439,71 @@ public sealed class SelectionOverlayTests : IDisposable
     }
 
     [Fact]
-    public void ClipboardStatusNotifier_UpdatesFromTheClipboardAndNotifiesOnce()
+    public async Task ClipboardStatusNotifier_UpdatesFromTheClipboardAndNotifiesOnce()
     {
+        using var clipboard = new MockClipboardPlatform();
         var notifier = new ClipboardStatusNotifier();
         int notifications = 0;
         notifier.AddListener(() => notifications++);
+        Assert.True(EventLoopPump.SpinUntil(() => notifier.Value == ClipboardStatus.NotPasteable));
 
-        TextClipboard.SetText("copied");
-        notifier.Update();
+        clipboard.Text = "copied";
+        await EventLoopPump.WaitFor(notifier.Update());
         Assert.Equal(ClipboardStatus.Pasteable, notifier.Value);
         Assert.Equal(1, notifications);
 
-        notifier.Update();
+        await EventLoopPump.WaitFor(notifier.Update());
         Assert.Equal(1, notifications);
 
-        TextClipboard.SetText(string.Empty);
-        notifier.Update();
+        clipboard.Text = string.Empty;
+        await EventLoopPump.WaitFor(notifier.Update());
         Assert.Equal(ClipboardStatus.NotPasteable, notifier.Value);
         Assert.Equal(2, notifications);
+        notifier.Dispose();
+    }
+
+    [Fact]
+    public async Task ClipboardStatusNotifier_ReportsPlatformFailureAndCanRetry()
+    {
+        using var platform = new MockMethodCallHandler(
+            SystemChannels.Platform,
+            _ => throw new InvalidOperationException("clipboard unavailable"));
+        var errors = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        try
+        {
+            FlutterError.OnError = errors.Add;
+            var notifier = new ClipboardStatusNotifier();
+            await EventLoopPump.WaitFor(notifier.Update());
+            Assert.Equal(ClipboardStatus.Unknown, notifier.Value);
+            Assert.Contains(errors, error => error.Context?.ToString()?.Contains("clipboard has strings") == true);
+
+            platform.Respond = _ => new Dictionary<string, object?> { ["value"] = true };
+            await EventLoopPump.WaitFor(notifier.Update());
+            Assert.Equal(ClipboardStatus.Pasteable, notifier.Value);
+            notifier.Dispose();
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+    }
+
+    [Fact]
+    public void ClipboardStatusNotifier_RefreshesWhenTheAppResumes()
+    {
+        using var clipboard = new MockClipboardPlatform();
+        var notifier = new ClipboardStatusNotifier();
+        Action listener = () => { };
+        notifier.AddListener(listener);
+        Assert.True(EventLoopPump.SpinUntil(() => notifier.Value == ClipboardStatus.NotPasteable));
+
+        clipboard.Text = "new content";
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        Assert.True(EventLoopPump.SpinUntil(() => notifier.Value == ClipboardStatus.Pasteable));
+
+        notifier.RemoveListener(listener);
+        notifier.Dispose();
     }
 
     private static DragStartDetails TouchDragStart(Point position)
