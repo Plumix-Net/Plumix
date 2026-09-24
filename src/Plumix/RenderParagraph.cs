@@ -424,52 +424,50 @@ public sealed partial class RenderParagraph : RenderBox,
     public FontFamily FontFamily
     {
         get => RootStyle.FontFamily ?? Avalonia.Media.FontFamily.Default;
-        set => UpdateRootStyle(RootStyle with { FontFamily = value ?? Avalonia.Media.FontFamily.Default });
+        set => UpdateRootStyle(RootStyle.CopyWith(fontFamily: value ?? Avalonia.Media.FontFamily.Default));
     }
 
     public FontStyle FontStyle
     {
         get => RootStyle.FontStyle ?? Avalonia.Media.FontStyle.Normal;
-        set => UpdateRootStyle(RootStyle with { FontStyle = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(fontStyle: value));
     }
 
     public FontWeight FontWeight
     {
         get => RootStyle.FontWeight ?? Avalonia.Media.FontWeight.Normal;
-        set => UpdateRootStyle(RootStyle with { FontWeight = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(fontWeight: value));
     }
 
     public double FontSize
     {
         get => RootStyle.FontSize ?? TextDefaults.DefaultFontSize;
-        set => UpdateRootStyle(RootStyle with { FontSize = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(fontSize: value));
     }
 
     public IBrush Foreground
     {
         get => new SolidColorBrush(RootStyle.Color ?? Colors.Black);
-        set => UpdateRootStyle(RootStyle with
-        {
-            Color = value is ISolidColorBrush solid ? solid.Color : Colors.Black,
-        });
+        set => UpdateRootStyle(RootStyle.CopyWith(
+            color: value is ISolidColorBrush solid ? solid.Color : Colors.Black));
     }
 
     public double? Height
     {
         get => RootStyle.Height;
-        set => UpdateRootStyle(RootStyle with { Height = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(height: value));
     }
 
     public double LetterSpacing
     {
         get => RootStyle.LetterSpacing ?? 0;
-        set => UpdateRootStyle(RootStyle with { LetterSpacing = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(letterSpacing: value));
     }
 
     public Plumix.UI.TextDecoration? TextDecoration
     {
         get => RootStyle.Decoration;
-        set => UpdateRootStyle(RootStyle with { Decoration = value });
+        set => UpdateRootStyle(RootStyle.CopyWith(decoration: value));
     }
 
     // -- Layout --------------------------------------------------------------------

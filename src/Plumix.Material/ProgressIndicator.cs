@@ -1840,7 +1840,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
 
     private static PenLineCap ResolveTrackLineCap(StrokeCap? strokeCap)
     {
-        return ToPenLineCap(strokeCap ?? Plumix.Material.StrokeCap.Round);
+        return ToPenLineCap(strokeCap ?? Plumix.UI.StrokeCap.Round);
     }
 
     private static PenLineCap ResolveIndicatorLineCap(double? resolvedValue, StrokeCap? strokeCap, bool useYear2023)
@@ -1863,9 +1863,9 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
     {
         return strokeCap switch
         {
-            Plumix.Material.StrokeCap.Butt => PenLineCap.Flat,
-            Plumix.Material.StrokeCap.Round => PenLineCap.Round,
-            Plumix.Material.StrokeCap.Square => PenLineCap.Square,
+            Plumix.UI.StrokeCap.Butt => PenLineCap.Flat,
+            Plumix.UI.StrokeCap.Round => PenLineCap.Round,
+            Plumix.UI.StrokeCap.Square => PenLineCap.Square,
             _ => PenLineCap.Flat
         };
     }

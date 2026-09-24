@@ -558,7 +558,7 @@ public sealed class TextStyleTween : Plumix.Tween<TextStyle>
         End = end;
     }
 
-    public override TextStyle Lerp(TextStyle a, TextStyle b, double t) => TextStyle.Lerp(a, b, t);
+    public override TextStyle Lerp(TextStyle a, TextStyle b, double t) => TextStyle.Lerp(a, b, t)!;
 }
 
 public sealed class SliverFadeTransition : SingleChildRenderObjectWidget

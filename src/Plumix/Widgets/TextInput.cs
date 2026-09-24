@@ -1773,11 +1773,9 @@ public sealed class EditableText : StatefulWidget
         private TextStyle EffectiveTextStyle(bool showPlaceholder)
         {
             TextStyle style = Widget.Style ?? new TextStyle();
-            return style with
-            {
-                FontSize = style.FontSize ?? Widget.FontSize,
-                Color = showPlaceholder ? Widget.PlaceholderColor : style.Color ?? Widget.TextColor,
-            };
+            return style.CopyWith(
+                fontSize: style.FontSize ?? Widget.FontSize,
+                color: showPlaceholder ? Widget.PlaceholderColor : style.Color ?? Widget.TextColor);
         }
 
         /// Builds the text span the editable displays. Dart's `EditableTextState.buildTextSpan`:

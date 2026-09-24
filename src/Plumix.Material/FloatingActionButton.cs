@@ -442,10 +442,8 @@ public sealed class FloatingActionButton : StatelessWidget
                           ?? defaults.IconSize;
         TextStyle extendedTextStyle = (ExtendedTextStyle
                                        ?? floatingActionButtonTheme.ExtendedTextStyle
-                                       ?? defaults.ExtendedTextStyle) with
-        {
-            Color = foregroundColor
-        };
+                                       ?? defaults.ExtendedTextStyle).CopyWith(
+            color: foregroundColor);
         MaterialTapTargetSize tapTargetSize = MaterialTapTargetSize ?? theme.MaterialTapTargetSize;
         bool enableFeedback = EnableFeedback
                               ?? floatingActionButtonTheme.EnableFeedback
@@ -715,7 +713,7 @@ internal sealed record FloatingActionButtonDefaults(
                 top: 0,
                 end: 20,
                 bottom: 0),
-            ExtendedTextStyle: theme.TextTheme.LabelLarge with { LetterSpacing = 1.2 },
+            ExtendedTextStyle: theme.TextTheme.LabelLarge.CopyWith(letterSpacing: 1.2),
             EnableFeedback: true);
     }
 

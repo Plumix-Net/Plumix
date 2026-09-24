@@ -360,11 +360,19 @@ public sealed class MaterialColorSchemeTests
             textTheme: new TextTheme(
                 bodyMedium: new TextStyle(FontFamily: new FontFamily("Body Override"))));
 
-        Assert.Equal(new FontFamily("App Font"), theme.TextTheme.TitleLarge.FontFamily);
-        Assert.Equal(fallback, theme.TextTheme.TitleLarge.FontFamilyFallback);
+        // Dart's `TextStyle` prefixes the family and every fallback with `packages/<package>/`.
+        Assert.Equal(new FontFamily("packages/fonts.package/App Font"), theme.TextTheme.TitleLarge.FontFamily);
+        Assert.Equal(
+            ["packages/fonts.package/Fallback One", "packages/fonts.package/Fallback Two"],
+            theme.TextTheme.TitleLarge.FontFamilyFallback);
         Assert.Equal("fonts.package", theme.TextTheme.TitleLarge.Package);
-        Assert.Equal(new FontFamily("Body Override"), theme.TextTheme.BodyMedium.FontFamily);
-        Assert.Equal(new FontFamily("App Font"), theme.PrimaryTextTheme.BodyMedium.FontFamily);
+        // `merge` takes the override's family but keeps the applied package (`other._package ?? _package`).
+        Assert.Equal(
+            new FontFamily("packages/fonts.package/Body Override"),
+            theme.TextTheme.BodyMedium.FontFamily);
+        Assert.Equal(
+            new FontFamily("packages/fonts.package/App Font"),
+            theme.PrimaryTextTheme.BodyMedium.FontFamily);
     }
 
     [Fact]

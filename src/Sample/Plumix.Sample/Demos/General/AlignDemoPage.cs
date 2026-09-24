@@ -88,7 +88,7 @@ internal sealed class AlignDemoPageState : State
             LetterSpacing: 1.5);
         _explicitTextStyleAnimation = new DerivedAnimation<TextStyle>(
             _explicitTransitionsController,
-            value => TextStyle.Lerp(textStyleBegin, textStyleEnd, value));
+            value => TextStyle.Lerp(textStyleBegin, textStyleEnd, value)!);
         _explicitDecorationAnimation = new DecorationTween(
             begin: new BoxDecoration(
                 Color: Color.Parse("#FF315A7D"),

@@ -165,12 +165,10 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             string label = Current.Text ?? GetButtonLabel(context, Current.ButtonItem!);
             Widget textWidget = new Text(
                 label,
-                style: ToolbarButtonFontStyle with
-                {
-                    Color = Current.OnPressed is not null
+                style: ToolbarButtonFontStyle.CopyWith(
+                    color: Current.OnPressed is not null
                         ? ToolbarTextColor.ResolveFrom(context)
-                        : CupertinoColors.InactiveGray.ResolveFrom(context),
-                },
+                        : CupertinoColors.InactiveGray.ResolveFrom(context)),
                 overflow: TextOverflow.Ellipsis);
             if (Current.ButtonItem?.Type != ContextMenuButtonType.LiveTextInput)
             {
@@ -334,7 +332,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
         {
             Widget child = Current.Child ?? new Text(
                 Current.Text ?? CupertinoTextSelectionToolbarButton.GetButtonLabel(context, Current.ButtonItem!),
-                style: ToolbarButtonFontStyle with { Color = ResolveTextColor(context) },
+                style: ToolbarButtonFontStyle.CopyWith(color: ResolveTextColor(context)),
                 overflow: TextOverflow.Ellipsis);
             CupertinoDynamicColor? backgroundColor = _isHovered
                 ? CupertinoTheme.Of(context).PrimaryColor

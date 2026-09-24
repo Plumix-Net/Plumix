@@ -1,18 +1,12 @@
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/progress_indicator_theme.dart
-
-public enum StrokeCap
-{
-    Butt,
-    Round,
-    Square,
-}
 
 public sealed partial record ProgressIndicatorThemeData(
     Color? Color = null,

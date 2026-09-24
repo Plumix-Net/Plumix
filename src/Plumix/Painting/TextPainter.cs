@@ -631,7 +631,7 @@ public sealed class TextPainter : IDisposable
     private Paragraph CreateLayoutTemplate()
     {
         var builder = new ParagraphBuilder(CreateParagraphStyle(TextAlign.Left));
-        ParagraphTextStyle? textStyle = _text?.Style?.GetTextStyle(_textScaler);
+        ParagraphTextStyle? textStyle = _text?.Style?.GetTextStyle(textScaler: _textScaler);
         if (textStyle is not null)
         {
             builder.PushStyle(textStyle);

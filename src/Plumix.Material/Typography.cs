@@ -183,37 +183,30 @@ public record TextTheme
             labelMedium: ApplyStyle(LabelMedium, bodyColor),
             labelSmall: ApplyStyle(LabelSmall, bodyColor));
 
+        // Dart applies to non-null styles only; Plumix fills an unset style with `EmptyStyle`.
         TextStyle ApplyStyle(TextStyle style, Color? color)
         {
-            double? fontSize = style.FontSize;
-            double? letterSpacing = style.LetterSpacing;
-            double? wordSpacing = style.WordSpacing;
-            double? height = style.Height;
-            fontSize = fontSize.HasValue
-                ? (fontSize.Value * fontSizeFactor) + fontSizeDelta
-                : null;
-            letterSpacing = letterSpacing.HasValue
-                ? (letterSpacing.Value * letterSpacingFactor) + letterSpacingDelta
-                : null;
-            wordSpacing = wordSpacing.HasValue
-                ? (wordSpacing.Value * wordSpacingFactor) + wordSpacingDelta
-                : null;
-            height = height.HasValue
-                ? (height.Value * heightFactor) + heightDelta
-                : null;
+            if (ReferenceEquals(style, EmptyStyle))
+            {
+                return style;
+            }
 
-            return style.CopyWith(
-                fontFamily: fontFamily,
-                fontFamilyFallback: fontFamilyFallback,
-                package: package,
-                fontSize: fontSize,
+            return style.Apply(
                 color: color,
-                height: height,
-                letterSpacing: letterSpacing,
-                wordSpacing: wordSpacing,
                 decoration: decoration,
                 decorationColor: decorationColor,
-                decorationStyle: decorationStyle);
+                decorationStyle: decorationStyle,
+                fontFamily: fontFamily,
+                fontFamilyFallback: fontFamilyFallback,
+                fontSizeFactor: fontSizeFactor,
+                fontSizeDelta: fontSizeDelta,
+                letterSpacingDelta: letterSpacingDelta,
+                letterSpacingFactor: letterSpacingFactor,
+                wordSpacingDelta: wordSpacingDelta,
+                wordSpacingFactor: wordSpacingFactor,
+                heightFactor: heightFactor,
+                heightDelta: heightDelta,
+                package: package);
         }
     }
 
@@ -248,31 +241,7 @@ public record TextTheme
 
     public static TextTheme PrimaryOf(BuildContext context) => Theme.Of(context).PrimaryTextTheme;
 
-    private static TextStyle MergeStyle(TextStyle current, TextStyle other)
-    {
-        if (!other.Inherit)
-        {
-            return other;
-        }
-
-        return new TextStyle(
-            FontFamily: other.FontFamily ?? current.FontFamily,
-            FontFamilyFallback: other.FontFamilyFallback ?? current.FontFamilyFallback,
-            Package: other.Package ?? current.Package,
-            FontSize: other.FontSize ?? current.FontSize,
-            Color: other.Color ?? current.Color,
-            FontWeight: other.FontWeight ?? current.FontWeight,
-            FontStyle: other.FontStyle ?? current.FontStyle,
-            Height: other.Height ?? current.Height,
-            LetterSpacing: other.LetterSpacing ?? current.LetterSpacing,
-            WordSpacing: other.WordSpacing ?? current.WordSpacing,
-            Inherit: current.Inherit,
-            TextBaseline: other.TextBaseline ?? current.TextBaseline,
-            LeadingDistribution: other.LeadingDistribution ?? current.LeadingDistribution,
-            Decoration: other.Decoration ?? current.Decoration,
-            DecorationColor: other.DecorationColor ?? current.DecorationColor,
-            DecorationStyle: other.DecorationStyle ?? current.DecorationStyle);
-    }
+    private static TextStyle MergeStyle(TextStyle current, TextStyle other) => current.Merge(other);
 }
 
 public sealed record MaterialTextTheme : TextTheme

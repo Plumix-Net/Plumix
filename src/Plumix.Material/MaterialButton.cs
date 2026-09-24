@@ -137,10 +137,8 @@ public sealed class MaterialButton : StatelessWidget
             onLongPress: OnLongPress,
             onHighlightChanged: OnHighlightChanged,
             mouseCursor: MouseCursor,
-            textStyle: theme.TextTheme.LabelLarge with
-            {
-                Color = buttonTheme.GetTextColor(this, theme)
-            },
+            textStyle: theme.TextTheme.LabelLarge.CopyWith(
+                color: buttonTheme.GetTextColor(this, theme)),
             fillColor: buttonTheme.GetFillColor(this, theme),
             focusColor: FocusColor ?? buttonTheme.GetFocusColor(this, theme),
             hoverColor: HoverColor ?? buttonTheme.GetHoverColor(this, theme),
@@ -367,7 +365,7 @@ public sealed class RawMaterialButton : StatefulWidget
                     elevation: EffectiveElevation,
                     textStyle: widget.TextStyle is null
                         ? null
-                        : widget.TextStyle with { Color = effectiveTextColor },
+                        : widget.TextStyle.CopyWith(color: effectiveTextColor),
                     shape: effectiveShape,
                     color: widget.FillColor,
                     // For compatibility during the M3 migration the default shadow needs to be passed.

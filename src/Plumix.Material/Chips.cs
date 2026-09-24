@@ -807,7 +807,7 @@ public sealed class RawChip : StatefulWidget
             var defaults = ResolveDefaults(context, theme, widget);
             var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? new Thickness(4);
             var baseLabelStyle = chipTheme.LabelStyle ?? defaults.LabelStyle ?? theme.TextTheme.BodyLarge;
-            var labelStyle = MergeTextStyles(baseLabelStyle, widget.LabelStyle);
+            var labelStyle = baseLabelStyle.Merge(widget.LabelStyle);
             // Dart: the chip starts at 8px on each side and interpolates to 4px as text scaling
             // approaches 2, staying at 4px beyond that.
             double effectiveTextScale = ButtonStyleButton.EffectiveTextScale(context, labelStyle.FontSize ?? 14);
@@ -839,10 +839,8 @@ public sealed class RawChip : StatefulWidget
             Color? surfaceTintColor = widget.SurfaceTintColor
                                       ?? chipTheme.SurfaceTintColor
                                       ?? defaults.SurfaceTintColor;
-            TextStyle resolvedLabelStyle = labelStyle with
-            {
-                Color = ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme)
-            };
+            TextStyle resolvedLabelStyle = labelStyle.CopyWith(
+                color: ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme));
 
             Widget label = new DefaultTextStyle(
                 style: resolvedLabelStyle,
@@ -1330,19 +1328,6 @@ public sealed class RawChip : StatefulWidget
             }
 
             return shape is OutlinedBorder outlinedDefault ? outlinedDefault.CopyWith(defaults.Side) : shape;
-        }
-
-        private static TextStyle MergeTextStyles(TextStyle baseStyle, TextStyle? overrideStyle)
-        {
-            if (overrideStyle is null) return baseStyle;
-            return new TextStyle(
-                FontFamily: overrideStyle.FontFamily ?? baseStyle.FontFamily,
-                FontSize: overrideStyle.FontSize ?? baseStyle.FontSize,
-                Color: overrideStyle.Color ?? baseStyle.Color,
-                FontWeight: overrideStyle.FontWeight ?? baseStyle.FontWeight,
-                FontStyle: overrideStyle.FontStyle ?? baseStyle.FontStyle,
-                Height: overrideStyle.Height ?? baseStyle.Height,
-                LetterSpacing: overrideStyle.LetterSpacing ?? baseStyle.LetterSpacing);
         }
 
         private void HandleSelectionTick()

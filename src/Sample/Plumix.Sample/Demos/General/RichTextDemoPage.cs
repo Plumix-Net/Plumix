@@ -47,6 +47,7 @@ public sealed class RichTextDemoPageState : State
                     color: Colors.DimGray),
                 BuildStyledParagraph(),
                 new Text("Tapped the link span " + _taps + " times", fontSize: 14, color: Colors.DimGray),
+                BuildPaintedParagraph(),
                 BuildInlineWidgetParagraph(),
                 BuildAlignmentRow(),
                 BuildDefaultTextStyleParagraph(),
@@ -74,6 +75,33 @@ public sealed class RichTextDemoPageState : State
                             recognizer: _tapRecognizer),
                         new TextSpan(text: " secret?"),
                     ])));
+    }
+
+    private static Widget BuildPaintedParagraph()
+    {
+        return new Container(
+            color: Color.Parse("#FFFDF6E3"),
+            padding: new Thickness(12),
+            child: Text.Rich(
+                new TextSpan(
+                    text: "A ",
+                    children:
+                    [
+                        new TextSpan(
+                            text: "highlighted",
+                            style: new TextStyle(BackgroundColor: Color.Parse("#FFFFE8A3"))),
+                        new TextSpan(text: " word, a "),
+                        new TextSpan(
+                            text: "painted",
+                            style: new TextStyle(
+                                Foreground: new Paint { Color = Color.Parse("#FFE63946") },
+                                FontWeight: FontWeight.Bold)),
+                        new TextSpan(text: " one, and tabular figures: "),
+                        new TextSpan(
+                            text: "1111 / 8888",
+                            style: new TextStyle(FontFeatures: [Plumix.UI.FontFeature.TabularFigures()])),
+                    ]),
+                style: new TextStyle(FontSize: 16, Color: Color.Parse("#FF1D3557"))));
     }
 
     private static Widget BuildInlineWidgetParagraph()

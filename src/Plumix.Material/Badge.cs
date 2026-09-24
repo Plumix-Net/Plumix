@@ -109,10 +109,8 @@ public sealed class Badge : StatelessWidget
         Widget badge;
         if (hasLabel)
         {
-            var style = (TextStyle ?? badgeTheme.TextStyle ?? theme.TextTheme.LabelSmall) with
-            {
-                Color = textColor,
-            };
+            var style = (TextStyle ?? badgeTheme.TextStyle ?? theme.TextTheme.LabelSmall).CopyWith(
+                color: textColor);
             badge = new DefaultTextStyle(
                 style: style,
                 child: new ClipRRect(

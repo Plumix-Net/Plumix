@@ -322,14 +322,12 @@ public sealed class Text : StatelessWidget
         {
             var familyNames = new List<string> { Avalonia.Media.FontFamily.Default.Name };
             familyNames.AddRange(fallback);
-            effective = effective with { FontFamily = new FontFamily(string.Join(',', familyNames)) };
+            effective = effective.CopyWith(fontFamily: new FontFamily(string.Join(',', familyNames)));
         }
 
-        return effective with
-        {
-            FontSize = effective.FontSize ?? TextDefaults.DefaultFontSize,
-            Color = effective.Color ?? Colors.Black,
-            Decoration = ResolveDecoration() ?? effective.Decoration,
-        };
+        return effective.CopyWith(
+            fontSize: effective.FontSize ?? TextDefaults.DefaultFontSize,
+            color: effective.Color ?? Colors.Black,
+            decoration: ResolveDecoration() ?? effective.Decoration);
     }
 }

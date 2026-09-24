@@ -535,7 +535,28 @@ internal sealed class ParagraphTextSource : ITextSource
             typeface,
             style.FontSize,
             ResolveDecorations(style),
-            new SolidColorBrush(style.Color));
+            style.Foreground is { } foreground ? PaintBrush(foreground) : new SolidColorBrush(style.Color),
+            style.Background is { } background ? PaintBrush(background) : null,
+            fontFeatures: ResolveFontFeatures(style.FontFeatures));
+    }
+
+    // A `Paint` reaches Avalonia as its shader, or else as a solid brush of its color.
+    private static IBrush PaintBrush(Paint paint) => paint.Shader ?? new SolidColorBrush(paint.Color);
+
+    private static FontFeatureCollection? ResolveFontFeatures(IReadOnlyList<FontFeature>? features)
+    {
+        if (features is not { Count: > 0 })
+        {
+            return null;
+        }
+
+        var collection = new FontFeatureCollection();
+        foreach (FontFeature feature in features)
+        {
+            collection.Add(new Avalonia.Media.FontFeature { Tag = feature.Feature, Value = feature.Value });
+        }
+
+        return collection;
     }
 
     private static TextDecorationCollection? ResolveDecorations(ResolvedTextStyle style)

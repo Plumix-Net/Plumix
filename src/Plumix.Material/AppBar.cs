@@ -483,28 +483,24 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
             TextStyle toolbarTextStyle = widget.ToolbarTextStyle
                                          ?? appBarTheme.ToolbarTextStyle
-                                         ?? defaults.ToolbarTextStyle! with { Color = foregroundColor };
+                                         ?? defaults.ToolbarTextStyle!.CopyWith(color: foregroundColor);
             TextStyle titleTextStyle = widget.TitleTextStyle
                                        ?? appBarTheme.TitleTextStyle
-                                       ?? defaults.TitleTextStyle! with { Color = foregroundColor };
+                                       ?? defaults.TitleTextStyle!.CopyWith(color: foregroundColor);
 
             if (widget.ToolbarOpacity != 1.0)
             {
                 double opacity = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(widget.ToolbarOpacity);
                 if (titleTextStyle.Color.HasValue)
                 {
-                    titleTextStyle = titleTextStyle with
-                    {
-                        Color = WithOpacity(titleTextStyle.Color.Value, opacity),
-                    };
+                    titleTextStyle = titleTextStyle.CopyWith(
+                        color: WithOpacity(titleTextStyle.Color.Value, opacity));
                 }
 
                 if (toolbarTextStyle.Color.HasValue)
                 {
-                    toolbarTextStyle = toolbarTextStyle with
-                    {
-                        Color = WithOpacity(toolbarTextStyle.Color.Value, opacity),
-                    };
+                    toolbarTextStyle = toolbarTextStyle.CopyWith(
+                        color: WithOpacity(toolbarTextStyle.Color.Value, opacity));
                 }
 
                 overallIconTheme = overallIconTheme.CopyWith(

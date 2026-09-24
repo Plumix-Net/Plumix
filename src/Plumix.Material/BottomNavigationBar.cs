@@ -515,7 +515,7 @@ internal sealed class BottomNavigationTileLabel : StatelessWidget
         TextStyle customStyle = TextStyle.Lerp(
             UnselectedLabelStyle ?? new TextStyle(),
             SelectedLabelStyle ?? new TextStyle(),
-            Animation.Value);
+            Animation.Value)!;
 
         double scale = new DoubleTween(
             begin: (unselectedFontSize ?? 0.0) / (selectedFontSize ?? 1.0),

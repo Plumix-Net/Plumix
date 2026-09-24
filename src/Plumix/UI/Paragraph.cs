@@ -59,7 +59,159 @@ public sealed record ParagraphTextStyle(
     double? Height = null,
     TextLeadingDistribution? LeadingDistribution = null,
     string? Locale = null,
-    Color? BackgroundColor = null);
+    Paint? Background = null,
+    Paint? Foreground = null,
+    IReadOnlyList<Rendering.Shadow>? Shadows = null,
+    IReadOnlyList<FontFeature>? FontFeatures = null,
+    IReadOnlyList<FontVariation>? FontVariations = null)
+{
+    /// Dart's `ui.TextStyle ==`: paints compare by identity, lists element by element.
+    public bool Equals(ParagraphTextStyle? other)
+    {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
+        return other is not null
+               && other.Color == Color
+               && other.Decoration == Decoration
+               && other.DecorationColor == DecorationColor
+               && other.DecorationStyle == DecorationStyle
+               && other.DecorationThickness == DecorationThickness
+               && other.FontWeight == FontWeight
+               && other.FontStyle == FontStyle
+               && other.TextBaseline == TextBaseline
+               && Equals(other.FontFamily, FontFamily)
+               && other.FontSize == FontSize
+               && other.LetterSpacing == LetterSpacing
+               && other.WordSpacing == WordSpacing
+               && other.Height == Height
+               && other.LeadingDistribution == LeadingDistribution
+               && string.Equals(other.Locale, Locale, StringComparison.Ordinal)
+               && ReferenceEquals(other.Background, Background)
+               && ReferenceEquals(other.Foreground, Foreground)
+               && ListEquals(other.Shadows, Shadows)
+               && ListEquals(other.FontFamilyFallback, FontFamilyFallback)
+               && ListEquals(other.FontFeatures, FontFeatures)
+               && ListEquals(other.FontVariations, FontVariations);
+    }
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(Color);
+        hash.Add(Decoration);
+        hash.Add(DecorationColor);
+        hash.Add(DecorationStyle);
+        hash.Add(FontWeight);
+        hash.Add(FontStyle);
+        hash.Add(TextBaseline);
+        hash.Add(FontFamily);
+        hash.Add(FontSize);
+        hash.Add(LetterSpacing);
+        hash.Add(WordSpacing);
+        hash.Add(Height);
+        hash.Add(LeadingDistribution);
+        hash.Add(Locale);
+        hash.Add(Background);
+        hash.Add(Foreground);
+        hash.Add(DecorationThickness);
+        return hash.ToHashCode();
+    }
+
+    /// Dart's `ui.TextStyle.toString`: every field in encoding order, `unspecified` when unset.
+    public override string ToString()
+    {
+        const string unspecified = "unspecified";
+        string heightText = Height is { } height
+            ? (height == TextDefaults.TextHeightNone ? "kTextHeightNone" : $"{Number(height)}x")
+            : unspecified;
+        string fontFamilyText = FontFamily is { } family && family.Name.Length > 0 ? family.Name : unspecified;
+        string fallbackText = FontFamilyFallback is { Count: > 0 } fallback ? DartList(fallback) : unspecified;
+        string decorationColorText = DecorationColor is { } decorationColor
+            ? decorationColor.ToDartString()
+            : unspecified;
+        return "TextStyle("
+               + $"color: {(Color is { } color ? color.ToDartString() : unspecified)}, "
+               + $"decoration: {(Decoration is { } decoration ? DescribeDecoration(decoration) : unspecified)}, "
+               + $"decorationColor: {decorationColorText}, "
+               + $"decorationStyle: {(DecorationStyle is { } decorationStyle ? Enum(decorationStyle) : unspecified)}, "
+               + $"decorationThickness: {(DecorationThickness is { } thickness ? Number(thickness) : unspecified)}, "
+               + $"fontWeight: {(FontWeight is { } weight ? DescribeFontWeight(weight) : unspecified)}, "
+               + $"fontStyle: {(FontStyle is { } fontStyle ? Enum(fontStyle) : unspecified)}, "
+               + $"textBaseline: {(TextBaseline is { } baseline ? Enum(baseline) : unspecified)}, "
+               + $"fontFamily: {fontFamilyText}, "
+               + $"fontFamilyFallback: {fallbackText}, "
+               + $"fontSize: {(FontSize is { } fontSize ? Number(fontSize) : unspecified)}, "
+               + $"letterSpacing: {(LetterSpacing is { } letter ? $"{Number(letter)}x" : unspecified)}, "
+               + $"wordSpacing: {(WordSpacing is { } word ? $"{Number(word)}x" : unspecified)}, "
+               + $"height: {heightText}, "
+               + $"leadingDistribution: {(LeadingDistribution is { } leading ? Enum(leading) : unspecified)}, "
+               + $"locale: {Locale ?? unspecified}, "
+               + $"background: {(Background is { } background ? background.ToString() : unspecified)}, "
+               + $"foreground: {(Foreground is { } foreground ? foreground.ToString() : unspecified)}, "
+               + $"shadows: {(Shadows is { } shadows ? DartList(shadows) : unspecified)}, "
+               + $"fontFeatures: {(FontFeatures is { } features ? DartList(features) : unspecified)}, "
+               + $"fontVariations: {(FontVariations is { } variations ? DartList(variations) : unspecified)}"
+               + ")";
+    }
+
+    /// dart:ui `FontWeight.toString`.
+    internal static string DescribeFontWeight(FontWeight weight)
+    {
+        int value = (int)weight;
+        return value % 100 != 0
+            ? $"FontWeight({value.ToString(CultureInfo.InvariantCulture)})"
+            : $"FontWeight.w{value.ToString(CultureInfo.InvariantCulture)}";
+    }
+
+    /// dart:ui `TextDecoration.toString`.
+    internal static string DescribeDecoration(TextDecoration decoration)
+    {
+        if (decoration == TextDecoration.None)
+        {
+            return "TextDecoration.none";
+        }
+
+        var values = new List<string>();
+        if (decoration.HasFlag(TextDecoration.Underline))
+        {
+            values.Add("underline");
+        }
+
+        if (decoration.HasFlag(TextDecoration.Overline))
+        {
+            values.Add("overline");
+        }
+
+        if (decoration.HasFlag(TextDecoration.LineThrough))
+        {
+            values.Add("lineThrough");
+        }
+
+        return values.Count == 1
+            ? $"TextDecoration.{values[0]}"
+            : $"TextDecoration.combine([{string.Join(", ", values)}])";
+    }
+
+    private static string DartList<T>(IReadOnlyList<T> values) => $"[{string.Join(", ", values)}]";
+
+    private static string Number(double value) => Rendering.DartFormat.Number(value);
+
+    private static string Enum<TEnum>(TEnum value)
+        where TEnum : struct, System.Enum => Rendering.DartFormat.Enum(value);
+
+    private static bool ListEquals<T>(IReadOnlyList<T>? a, IReadOnlyList<T>? b)
+    {
+        if (a is null)
+        {
+            return b is null;
+        }
+
+        return b is not null && a.SequenceEqual(b);
+    }
+}
 
 /// Dart's `ui.StrutStyle`: the minimum line height a paragraph applies to every line.
 public sealed record ParagraphStrutStyle(

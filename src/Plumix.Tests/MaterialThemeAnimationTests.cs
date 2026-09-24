@@ -395,7 +395,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         {
             return other is null
                 ? this
-                : new TextThemeExtension(TextStyle.Lerp(Style, other.Style, t));
+                : new TextThemeExtension(TextStyle.Lerp(Style, other.Style, t)!);
         }
     }
 

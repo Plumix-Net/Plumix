@@ -157,7 +157,11 @@ internal sealed record ResolvedTextStyle(
     double Height,
     TextLeadingDistribution? LeadingDistribution,
     string? Locale,
-    Color? BackgroundColor)
+    Paint? Background,
+    Paint? Foreground,
+    IReadOnlyList<Rendering.Shadow>? Shadows,
+    IReadOnlyList<FontFeature>? FontFeatures,
+    IReadOnlyList<FontVariation>? FontVariations)
 {
     /// The default text style the engine derives from a paragraph style.
     ///
@@ -182,6 +186,10 @@ internal sealed record ResolvedTextStyle(
             style.Height ?? TextDefaults.TextHeightNone,
             null,
             style.Locale,
+            null,
+            null,
+            null,
+            null,
             null);
     }
 
@@ -204,7 +212,11 @@ internal sealed record ResolvedTextStyle(
             style.Height ?? Height,
             style.LeadingDistribution ?? LeadingDistribution,
             style.Locale ?? Locale,
-            style.BackgroundColor ?? BackgroundColor);
+            style.Background ?? Background,
+            style.Foreground ?? Foreground,
+            style.Shadows ?? Shadows,
+            style.FontFeatures ?? FontFeatures,
+            style.FontVariations ?? FontVariations);
     }
 }
 

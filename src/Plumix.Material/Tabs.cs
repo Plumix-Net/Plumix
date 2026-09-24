@@ -214,8 +214,8 @@ internal sealed class TabStyle : AnimatedWidget
             .Merge(UnselectedLabelStyle ?? tabBarTheme.UnselectedLabelStyle ?? LabelStyle)
             .CopyWith(inherit: true);
         TextStyle textStyle = IsSelected
-            ? TextStyle.Lerp(selectedStyle, unselectedStyle, Animation.Value)
-            : TextStyle.Lerp(unselectedStyle, selectedStyle, Animation.Value);
+            ? TextStyle.Lerp(selectedStyle, unselectedStyle, Animation.Value)!
+            : TextStyle.Lerp(unselectedStyle, selectedStyle, Animation.Value)!;
 
         Color defaultIconColor = themeData.ColorScheme.Brightness == Brightness.Light
             ? DefaultIconDarkColor

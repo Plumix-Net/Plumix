@@ -538,7 +538,7 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
             elevation: resolvedElevation,
             textStyle: resolvedTextStyle is null
                 ? null
-                : resolvedTextStyle with { Color = resolvedForegroundColor },
+                : resolvedTextStyle.CopyWith(color: resolvedForegroundColor),
             shape: inkShape,
             color: resolvedBackgroundColor,
             shadowColor: resolvedShadowColor,

@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/demos/material/refresh_indicator_demo_page.dart (exact sample parity)

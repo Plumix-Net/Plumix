@@ -281,11 +281,9 @@ public sealed class TooltipState : State<Tooltip>
         Color background = _theme.Brightness == Brightness.Dark
             ? Color.FromArgb(0xE6, 0xFF, 0xFF, 0xFF)
             : Color.FromArgb(0xE6, 0x61, 0x61, 0x61);
-        TextStyle defaultTextStyle = _theme.TextTheme.BodyMedium with
-        {
-            Color = foreground,
-            FontSize = desktop ? 12 : 14,
-        };
+        TextStyle defaultTextStyle = _theme.TextTheme.BodyMedium.CopyWith(
+            color: foreground,
+            fontSize: desktop ? 12 : 14);
         BoxConstraints constraints = CurrentWidget.Constraints
                                      ?? _tooltipTheme.Constraints
                                      ?? new BoxConstraints(

@@ -180,7 +180,7 @@ public class TextSpan : InlineSpan, IHitTestTarget, IMouseTrackerAnnotation
         bool hasStyle = Style is not null;
         if (hasStyle)
         {
-            builder.PushStyle(Style!.GetTextStyle(scaler));
+            builder.PushStyle(Style!.GetTextStyle(textScaler: scaler));
         }
 
         if (Text is not null)

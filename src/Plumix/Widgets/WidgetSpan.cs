@@ -112,7 +112,7 @@ public sealed class WidgetSpan : PlaceholderSpan
         bool hasStyle = Style is not null;
         if (hasStyle)
         {
-            builder.PushStyle(Style!.GetTextStyle(textScaler ?? TextScaler.NoScaling));
+            builder.PushStyle(Style!.GetTextStyle(textScaler: textScaler ?? TextScaler.NoScaling));
         }
 
         if (builder.PlaceholderCount >= dimensions.Count)

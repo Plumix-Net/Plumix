@@ -434,7 +434,7 @@ public sealed class Material : StatefulWidget
                 shadow,
                 elevation,
                 shape,
-                Plumix.Widgets.TextStyle.Lerp(begin.TextStyle, end.TextStyle, clampedT));
+                Plumix.Widgets.TextStyle.Lerp(begin.TextStyle, end.TextStyle, clampedT)!);
         }
     }
 }

@@ -1621,7 +1621,7 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
             base.Dispose();
         }
 
-        private TextStyle Evaluate(double t) => TextStyle.Lerp(_begin, _end, t);
+        private TextStyle Evaluate(double t) => TextStyle.Lerp(_begin, _end, t)!;
 
         private void HandleChanged() => SetState(() => { });
 
