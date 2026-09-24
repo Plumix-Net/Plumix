@@ -451,7 +451,6 @@ public class PipelineOwner : DiagnosticableTree
     public void FlushLayout()
     {
         FlushLayoutCore(null);
-        FlushMicrotasksOutsideFrame();
     }
 
     /// <summary>
@@ -465,20 +464,6 @@ public class PipelineOwner : DiagnosticableTree
     public void FlushLayout(Size rootSize)
     {
         FlushLayoutCore(rootSize);
-        FlushMicrotasksOutsideFrame();
-    }
-
-    /// <summary>
-    /// Layout builds widgets (<c>LayoutBuilder</c> and friends), and those builds queue microtasks —
-    /// an autofocus request, for example. Inside a frame the scheduler drains the queue once the frame
-    /// ends; when the pipeline is driven directly, the event-loop turn ends here instead.
-    /// </summary>
-    private static void FlushMicrotasksOutsideFrame()
-    {
-        if (Scheduler.Phase == SchedulerPhase.Idle)
-        {
-            Scheduler.FlushMicrotasks();
-        }
     }
 
     private void FlushLayoutCore(Size? rootSize)
@@ -800,6 +785,10 @@ public class PipelineOwner : DiagnosticableTree
         finally
         {
             RenderingDebug.AdvanceRepaintColorForFrame();
+            if (Scheduler.Phase == SchedulerPhase.Idle)
+            {
+                Scheduler.FlushMicrotasks();
+            }
         }
     }
 

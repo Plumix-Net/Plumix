@@ -68,23 +68,6 @@ public sealed class BuildScope
     internal string DebugDirtyElementsNeedsResortingDescription =>
         _dirtyElementsNeedsResorting is { } value ? (value ? "true" : "false") : "null";
 
-    /// <summary>
-    /// Empties the dirty list without rebuilding anything, so the caller can re-queue the entries it
-    /// still wants. Plumix-only, used by <see cref="BuildOwner.BuildScopeDuringLayout"/>.
-    /// </summary>
-    internal void TakeDirtyElements()
-    {
-        foreach (Element element in _dirtyElements)
-        {
-            if (ReferenceEquals(element.BuildScope, this))
-            {
-                element.InDirtyList = false;
-            }
-        }
-
-        _dirtyElements.Clear();
-    }
-
     /// <summary>Dart's <c>BuildScope._scheduleBuildFor</c>.</summary>
     internal void ScheduleBuildFor(Element element)
     {

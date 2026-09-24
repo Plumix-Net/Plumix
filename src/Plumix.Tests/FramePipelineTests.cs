@@ -185,6 +185,41 @@ public sealed class FramePipelineTests
         }
     }
 
+    [Fact]
+    public void HeadlessPump_DrainsBuildMicrotasksAfterComposite()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var owner = new BuildOwner(focusManager: FocusManager.Instance);
+            var element = new ProbeElement();
+            element.Attach(owner);
+            owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
+
+            bool microtaskRan = false;
+            element.OnRebuild = () => Scheduler.ScheduleMicrotask(() => microtaskRan = true);
+            element.MarkNeedsBuild();
+            owner.FlushBuild();
+            Assert.False(microtaskRan);
+
+            var renderView = new RenderView(new FlutterView(new Size(80, 40)));
+            var pipeline = new PipelineOwner(renderView);
+            pipeline.Attach(renderView);
+            pipeline.FlushLayout();
+            pipeline.FlushCompositingBits();
+            pipeline.FlushPaint();
+            Assert.False(microtaskRan);
+
+            pipeline.CompositeFrame();
+            Assert.True(microtaskRan);
+            element.UnmountRoot();
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
     private sealed class ProbeWidget : Widget
     {
         public override Element CreateElement()
@@ -196,6 +231,8 @@ public sealed class FramePipelineTests
     private sealed class ProbeElement : Element
     {
         public int RebuildCount { get; private set; }
+
+        public Action? OnRebuild { get; set; }
 
         public ProbeElement() : base(new ProbeWidget())
         {
@@ -214,6 +251,7 @@ public sealed class FramePipelineTests
         {
             base.PerformRebuild();
             RebuildCount += 1;
+            OnRebuild?.Invoke();
         }
     }
 

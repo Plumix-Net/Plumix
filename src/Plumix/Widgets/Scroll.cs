@@ -1442,7 +1442,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     public void CreateChild(int index, RenderBox? after)
     {
         Debug.Assert(_currentlyUpdatingChildIndex is null);
-        Owner!.BuildScopeDuringLayout(
+        Owner!.BuildScope(
             this,
             () =>
             {
@@ -1479,7 +1479,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         int index = TypedRenderObject.IndexOf(child);
         Debug.Assert(_currentlyUpdatingChildIndex is null);
         Debug.Assert(index >= 0);
-        Owner!.BuildScopeDuringLayout(
+        Owner!.BuildScope(
             this,
             () =>
             {

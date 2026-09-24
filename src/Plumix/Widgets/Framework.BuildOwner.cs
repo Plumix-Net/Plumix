@@ -295,45 +295,6 @@ public sealed class BuildOwner
     }
 
     /// <summary>
-    /// Runs <paramref name="callback"/> as a build scope rooted at <paramref name="context"/> from
-    /// inside a layout pass, flushing only the elements the callback itself dirtied.
-    /// </summary>
-    /// <remarks>
-    /// Dart's <c>BuildOwner.buildScope</c> flushes the whole dirty list, which is safe there because
-    /// a frame builds before it lays out and nothing dirties an element in between. Plumix drains the
-    /// scheduler microtask queue at the pump boundary, so `FocusManager.MarkNeedsUpdate` and friends
-    /// can leave elements dirty when layout starts. Rebuilding one of those mid-layout re-dirties a
-    /// render subtree whose ancestor is already being laid out; that ancestor then clears its own
-    /// flag and the subtree stays dirty under a clean parent. Deferring the pre-existing entries to
-    /// the next build keeps the lazy child mutation itself faithful to Dart. `LayoutBuilder` needs no
-    /// such deferral: it owns a <see cref="Widgets.BuildScope"/>, so its list only ever holds its own
-    /// descendants.
-    /// </remarks>
-    internal void BuildScopeDuringLayout(Element context, Action callback)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        ArgumentNullException.ThrowIfNull(callback);
-
-        BuildScope buildScope = context.BuildScope;
-        Element[] deferred = [.. buildScope.DirtyElements];
-        buildScope.TakeDirtyElements();
-        try
-        {
-            BuildScope(context, callback);
-        }
-        finally
-        {
-            foreach (Element element in deferred)
-            {
-                if (element.IsActive && ReferenceEquals(element.Owner, this) && element.Dirty)
-                {
-                    element.BuildScope.ScheduleBuildFor(element);
-                }
-            }
-        }
-    }
-
-    /// <summary>
     /// Plumix-only harness pump: runs the transient frame callbacks, flushes the root build scope and
     /// finalizes the tree, the way a frame does between its build and post-frame phases.
     /// </summary>
@@ -354,9 +315,8 @@ public sealed class BuildOwner
         // A harness pump has no render phase of its own to finalize after, so it finalizes here.
         FinalizeTree();
 
-        // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
-        // BuildScope directly and drains microtasks after the frame in Scheduler.HandleFrame.
-        Scheduler.FlushMicrotasks();
+        // The harness finishes its render frame in PipelineOwner.CompositeFrame. Microtasks
+        // scheduled during build must wait until then, as they do in a production frame.
     }
 
     // Debug-only global-key bookkeeping. Dart keeps the same structures on BuildOwner and reads them

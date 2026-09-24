@@ -1401,7 +1401,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         }
 
         // Dart's layout builder elements rebuild their child inside `owner.buildScope`.
-        Owner!.BuildScopeDuringLayout(this, () =>
+        Owner!.BuildScope(this, () =>
         {
             Widget built = LayoutWidget.Builder(this, info)
                 ?? throw new InvalidOperationException("OverlayPortal.WithLayoutBuilder must return a widget.");
