@@ -500,7 +500,7 @@ internal sealed class RenderLargeTitle : RenderShiftedBox
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
-        double? distance = Child?.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? distance = Child?.GetDistanceToActualBaseline(baseline);
         if (distance == null)
         {
             return null;

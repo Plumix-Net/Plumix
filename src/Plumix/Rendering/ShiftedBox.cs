@@ -95,7 +95,7 @@ public abstract class RenderShiftedBox : RenderBox, IRenderObjectSingleChildCont
             return base.ComputeDistanceToActualBaseline(baseline);
         }
 
-        double? result = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? result = child.GetDistanceToActualBaseline(baseline);
         var childParentData = (BoxParentData)child.parentData!;
         return result + childParentData.offset.Y;
     }
@@ -846,7 +846,7 @@ public sealed class RenderSizedOverflowBox : RenderAligningShiftedBox
             return base.ComputeDistanceToActualBaseline(baseline);
         }
 
-        double? result = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? result = child.GetDistanceToActualBaseline(baseline);
         if (result is null)
         {
             return base.ComputeDistanceToActualBaseline(baseline);

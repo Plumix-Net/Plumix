@@ -200,7 +200,13 @@ internal sealed class RenderOverlayTheater : RenderBox,
                 parentData.offset = _alignment.AlongOffset(Size, child.Size);
             }
 
-            _hasVisualOverflow |= ChildOverflows(child, parentData.offset);
+            // A non-positioned child is laid out tight to the theater at the origin, so only a
+            // positioned child can overflow. (A deferred layout box is never positioned, and Dart's
+            // `_RenderDeferredLayoutBox.layout` ignores `parentUsesSize`, so its size is not ours to read.)
+            if (parentData.IsPositioned)
+            {
+                _hasVisualOverflow |= ChildOverflows(child, parentData.offset);
+            }
         }
 
         if (hadVisualOverflow != _hasVisualOverflow)
@@ -222,7 +228,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         if (!parentData.IsPositioned)
         {
             child.Layout(nonPositionedChildConstraints, parentUsesSize: true);
-            parentData.offset = alignment.AlongOffset(hostSize, child.Size);
+            parentData.offset = default;
         }
         else
         {
@@ -738,7 +744,7 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
             return null;
         }
 
-        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = child.GetDistanceToActualBaseline(baseline);
         return childBaseline is null
             ? null
             : childBaseline + ((StackParentData)child.parentData!).offset.Y;
@@ -943,7 +949,7 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
             return null;
         }
 
-        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = child.GetDistanceToActualBaseline(baseline);
         return childBaseline is null
             ? null
             : childBaseline + ((StackParentData)child.parentData!).offset.Y;

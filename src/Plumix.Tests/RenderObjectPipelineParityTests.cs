@@ -179,12 +179,27 @@ public class RenderObjectPipelineParityTests
 
         FlutterError nan = Assert.Throws<FlutterError>(
             () => new BoxConstraints(MinHeight: double.NaN).DebugAssertIsValid());
-        Assert.Contains("NaN values in MinHeight", nan.Message, StringComparison.Ordinal);
+        Assert.Contains("BoxConstraints has a NaN value in minHeight.", nan.Message, StringComparison.Ordinal);
+
+        FlutterError nans = Assert.Throws<FlutterError>(
+            () => new BoxConstraints(MinWidth: double.NaN, MaxWidth: double.NaN, MinHeight: double.NaN)
+                .DebugAssertIsValid());
+        Assert.Contains(
+            "BoxConstraints has NaN values in minWidth, maxWidth, and minHeight.",
+            nans.Message,
+            StringComparison.Ordinal);
+
+        FlutterError twoNans = Assert.Throws<FlutterError>(
+            () => new BoxConstraints(MinWidth: double.NaN, MaxHeight: double.NaN).DebugAssertIsValid());
+        Assert.Contains(
+            "BoxConstraints has NaN values in minWidth and maxHeight.",
+            twoNans.Message,
+            StringComparison.Ordinal);
 
         FlutterError applied = Assert.Throws<FlutterError>(
             () => new BoxConstraints(MinWidth: double.PositiveInfinity, MaxWidth: double.PositiveInfinity)
                 .DebugAssertIsValid(isAppliedConstraint: true));
-        Assert.Contains("an infinite minimum width constraint", applied.Message, StringComparison.Ordinal);
+        Assert.Contains("BoxConstraints forces an infinite width.", applied.Message, StringComparison.Ordinal);
 
         Assert.True(new BoxConstraints(0, 100, 0, 100).DebugAssertIsValid(isAppliedConstraint: true));
     }

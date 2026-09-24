@@ -165,16 +165,17 @@ public sealed class RenderEditable : RenderBox
 
     public override bool AlwaysNeedsCompositing => true;
 
-    protected override void PerformLayout()
+    /// <summary>Lays the text out for <paramref name="constraints"/> and returns the resulting size.</summary>
+    private Size ComputeLayoutSize(BoxConstraints constraints, out TextLayout? layout)
     {
         double caretMargin = _cursorWidth + 1.0;
-        double availableWidth = double.IsFinite(Constraints.MaxWidth)
-            ? Math.Max(0.0, Constraints.MaxWidth - caretMargin)
+        double availableWidth = double.IsFinite(constraints.MaxWidth)
+            ? Math.Max(0.0, constraints.MaxWidth - caretMargin)
             : double.PositiveInfinity;
         double layoutWidth = _multiline ? availableWidth : double.PositiveInfinity;
         try
         {
-            _layout = new TextLayout(
+            layout = new TextLayout(
                 text: _text,
                 typeface: new Typeface(_fontFamily, _fontStyle, _fontWeight),
                 fontSize: _fontSize,
@@ -188,34 +189,82 @@ public sealed class RenderEditable : RenderBox
                 lineHeight: PreferredLineHeight,
                 letterSpacing: _letterSpacing,
                 maxLines: _maxLines ?? 0);
-            double width = _forceLine && double.IsFinite(Constraints.MaxWidth)
-                ? Constraints.MaxWidth
-                : _layout.WidthIncludingTrailingWhitespace + caretMargin;
+            double width = _forceLine && double.IsFinite(constraints.MaxWidth)
+                ? constraints.MaxWidth
+                : layout.WidthIncludingTrailingWhitespace + caretMargin;
             double minHeight = PreferredLineHeight * (_minLines ?? 0);
             double maxHeight = _maxLines.HasValue
                 ? PreferredLineHeight * _maxLines.Value
                 : double.PositiveInfinity;
-            double height = _expands && double.IsFinite(Constraints.MaxHeight)
-                ? Constraints.MaxHeight
-                : Math.Clamp(Math.Max(_layout.Height, minHeight), 0.0, maxHeight);
-            Size = Constraints.Constrain(new Size(width, height));
+            double height = _expands && double.IsFinite(constraints.MaxHeight)
+                ? constraints.MaxHeight
+                : Math.Clamp(Math.Max(layout.Height, minHeight), 0.0, maxHeight);
+            return constraints.Constrain(new Size(width, height));
         }
         catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
         {
-            _layout = null;
+            layout = null;
             Size estimated = TextLayoutFallback.EstimateTextSize(
                 _text,
                 _fontSize,
                 availableWidth,
                 _height,
                 _letterSpacing);
-            double estimatedHeight = _expands && double.IsFinite(Constraints.MaxHeight)
-                ? Constraints.MaxHeight
+            double estimatedHeight = _expands && double.IsFinite(constraints.MaxHeight)
+                ? constraints.MaxHeight
                 : Math.Max(estimated.Height, PreferredLineHeight * (_minLines ?? 0));
-            Size = Constraints.Constrain(new Size(
-                _forceLine && double.IsFinite(Constraints.MaxWidth) ? Constraints.MaxWidth : estimated.Width,
+            return constraints.Constrain(new Size(
+                _forceLine && double.IsFinite(constraints.MaxWidth) ? constraints.MaxWidth : estimated.Width,
                 estimatedHeight));
         }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderEditable.computeDryLayout</c>: the size <see cref="PerformLayout"/> would
+    /// give itself, computed over a throwaway text layout.
+    /// </remarks>
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => ComputeLayoutSize(constraints, out _);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderEditable.computeDistanceToActualBaseline</c>: the first line's baseline of the
+    /// laid-out text.
+    /// </remarks>
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) =>
+        FirstLineBaseline(_layout);
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderEditable.computeDryBaseline</c>: the first line's baseline of the text laid out
+    /// for <paramref name="constraints"/>.
+    /// </remarks>
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        ComputeLayoutSize(constraints, out TextLayout? layout);
+        return FirstLineBaseline(layout);
+    }
+
+    /// <summary>
+    /// The first line's baseline; Avalonia exposes a single baseline metric, so both
+    /// <see cref="TextBaseline"/> values read it (as in <c>AvaloniaParagraph</c>). Without a font
+    /// manager the estimate centers a 0.75-ascent glyph box in the preferred line height, the way
+    /// <c>HeadlessParagraph</c> does.
+    /// </summary>
+    private double FirstLineBaseline(TextLayout? layout)
+    {
+        if (layout is { TextLines.Count: > 0 })
+        {
+            return layout.TextLines[0].Baseline;
+        }
+
+        double halfLeading = (PreferredLineHeight - _fontSize) / 2.0;
+        return halfLeading + (_fontSize * 0.75);
+    }
+
+    protected override void PerformLayout()
+    {
+        Size = ComputeLayoutSize(Constraints, out _layout);
 
         _startHandleLeader.Layout(BoxConstraints.Tight(new Size()), parentUsesSize: true);
         _endHandleLeader.Layout(BoxConstraints.Tight(new Size()), parentUsesSize: true);

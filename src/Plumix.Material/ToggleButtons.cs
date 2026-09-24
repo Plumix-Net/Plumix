@@ -668,7 +668,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
             return null;
         }
 
-        double? childBaseline = Child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = Child.GetDistanceToActualBaseline(baseline);
         return childBaseline + ChildPadding.Top;
     }
 

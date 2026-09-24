@@ -23,7 +23,7 @@ public class SliverParentDataTests
         Assert.Equal(typeof(ParentData), typeof(SliverPhysicalParentData).BaseType);
         Assert.False(typeof(IContainerParentDataMixin<RenderSliver>).IsAssignableFrom(physical.GetType()));
         Assert.Equal("layoutOffset=None", logical.ToString());
-        Assert.Equal("paintOffset=0, 0", physical.ToString());
+        Assert.Equal("paintOffset=Offset(0.0, 0.0)", physical.ToString());
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class SliverParentDataTests
         physical.CrossAxisFlex = 2;
 
         Assert.Equal("layoutOffset=12.5", logical.ToString());
-        Assert.Equal("paintOffset=3, 7", physical.ToString());
+        Assert.Equal("paintOffset=Offset(3.0, 7.0)", physical.ToString());
         Assert.Equal(2, physical.CrossAxisFlex);
         Assert.Equal(physical.PaintOffset, physical.PaintOffset);
         physical.PaintOffset = new Point(9, 11);

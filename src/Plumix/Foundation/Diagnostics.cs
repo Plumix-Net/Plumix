@@ -130,6 +130,9 @@ public static class Diagnostics
             null => "null",
             bool flag => flag ? "true" : "false",
             string text => text,
+            // dart:ui's `Size.toString` and `Offset.toString`; Avalonia's own spell them `w, h`.
+            Avalonia.Size size => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})",
+            Avalonia.Point offset => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})",
             // Dart's enum `toString` is `EnumType.member`.
             Enum enumValue when Enum.IsDefined(enumValue.GetType(), enumValue) =>
                 $"{enumValue.GetType().Name}.{EnumName(enumValue)}",
@@ -138,6 +141,9 @@ public static class Diagnostics
             _ => value.ToString() ?? string.Empty,
         };
     }
+
+    /// <summary>Dart's <c>toStringAsFixed(1)</c>.</summary>
+    private static string Fixed(double value) => value.ToString("F1", CultureInfo.InvariantCulture);
 
     private static string ToLowerCamelCase(string name)
     {

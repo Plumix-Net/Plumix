@@ -63,7 +63,7 @@ public sealed class RenderingParityTests
     {
         var constraints = new BoxConstraints(MinWidth: 10, MaxWidth: 100, MinHeight: 20, MaxHeight: 200);
 
-        Assert.Equal("BoxConstraints(10≤w≤100, 20≤h≤200)", constraints.ToString());
+        Assert.Equal("BoxConstraints(10.0<=w<=100.0, 20.0<=h<=200.0)", constraints.ToString());
     }
 
     [Fact]
@@ -358,8 +358,9 @@ public sealed class RenderingParityTests
         protected override void PerformLayout()
         {
             LayoutCount += 1;
+            // parentUsesSize: false makes the child a relayout boundary, so its size is not ours to read.
             _child.Layout(Constraints, parentUsesSize: false);
-            Size = Constraints.Constrain(_child.Size);
+            Size = Constraints.Biggest;
             ((BoxParentData)_child.parentData!).offset = new Point(0, 0);
         }
 

@@ -690,7 +690,7 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         double? result = null;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
-            double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+            double? childBaseline = child.GetDistanceToActualBaseline(baseline);
             if (!childBaseline.HasValue)
             {
                 continue;

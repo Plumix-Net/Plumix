@@ -493,7 +493,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
-        double? childBaseline = Label.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = Label.GetDistanceToActualBaseline(baseline);
         return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Label).offset.Y : null;
     }
 

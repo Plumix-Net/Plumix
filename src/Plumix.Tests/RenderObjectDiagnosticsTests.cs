@@ -367,12 +367,12 @@ public sealed class RenderObjectDiagnosticsTests
     public void ParentData_ToString_MatchesFlutter()
     {
         Assert.Equal("<none>", new ParentData().ToString());
-        Assert.Equal("offset=0, 0", new BoxParentData().ToString());
-        Assert.Equal("not positioned; offset=0, 0", new StackParentData().ToString());
+        Assert.Equal("offset=Offset(0.0, 0.0)", new BoxParentData().ToString());
+        Assert.Equal("not positioned; offset=Offset(0.0, 0.0)", new StackParentData().ToString());
         Assert.Equal(
-            "top=1.0; left=2.0; offset=0, 0",
+            "top=1.0; left=2.0; offset=Offset(0.0, 0.0)",
             new StackParentData { Top = 1, Left = 2 }.ToString());
-        Assert.Equal("paintOffset=0, 0", new SliverPhysicalParentData().ToString());
+        Assert.Equal("paintOffset=Offset(0.0, 0.0)", new SliverPhysicalParentData().ToString());
         Assert.Equal("layoutOffset=None", new SliverLogicalParentData().ToString());
         Assert.Equal("layoutOffset=12.5", new SliverLogicalParentData { LayoutOffset = 12.5 }.ToString());
         Assert.Equal(
@@ -386,7 +386,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal(
             "crossAxisOffset=4; index=null; layoutOffset=None",
             new SliverGridParentData { CrossAxisOffset = 4 }.ToString());
-        Assert.Equal("offset=0, 0; id=", new MultiChildLayoutParentData().ToString());
+        Assert.Equal("offset=Offset(0.0, 0.0); id=", new MultiChildLayoutParentData().ToString());
     }
 
     // ---------- Layer tree ----------
@@ -402,7 +402,7 @@ public sealed class RenderObjectDiagnosticsTests
 
         Assert.Equal(["child 1", "child 2"], children.Select(node => node.Name));
         Assert.Contains(
-            "offset: 1, 2",
+            "offset: Offset(1.0, 2.0)",
             root.ToStringDeep(minLevel: DiagnosticLevel.Info),
             StringComparison.Ordinal);
         Assert.Contains(

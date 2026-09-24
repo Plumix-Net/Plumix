@@ -337,7 +337,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `physics/utils.dart` | `src/Plumix/Physics/PhysicsUtils.cs` | — | — |
 | `rendering/animated_size.dart` | `src/Plumix/Rendering/AnimatedSize.cs` | — | — |
 | `rendering/binding.dart` | `src/Plumix/FlutterHost.cs` _(reference) (host integration, adapted)_<br>`src/Plumix/RendererBinding.cs` _(reference) (adapted)_<br>`src/Plumix/Rendering/Debug.Binding.cs`<br>`src/Plumix/WidgetHost.cs` _(reference) (host integration, adapted)_ | `src/Plumix.Tests/FlutterHostInputTests.cs`<br>`src/Plumix.Tests/FlutterHostMetricsTests.cs`<br>`src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RendererBindingTests.cs` | — |
-| `rendering/box.dart` | `src/Plumix/Rendering/Box.RenderBox.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/Box.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/LayoutHelper.cs` _(reference) (adapted helper logic)_<br>`src/Plumix/Rendering/Object.HitTest.cs` | `src/Plumix.Tests/BoxFitTests.cs`<br>`src/Plumix.Tests/BoxShadowTests.cs`<br>`src/Plumix.Tests/ColoredBoxTests.cs`<br>`src/Plumix.Tests/DecoratedBoxTests.cs`<br>`src/Plumix.Tests/FittedBoxTests.cs`<br>`src/Plumix.Tests/FractionallySizedBoxTests.cs`<br>`src/Plumix.Tests/OverflowBoxTests.cs`<br>`src/Plumix.Tests/ProxyBoxClipParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxLayoutParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxSemanticsParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxTransformParityTests.cs`<br>`src/Plumix.Tests/RenderErrorBoxTests.cs`<br>`src/Plumix.Tests/ShiftedBoxTests.cs`<br>`src/Plumix.Tests/SliverMultiBoxAdaptorTests.cs`<br>`src/Plumix.Tests/UnconstrainedLimitedBoxTests.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`<br>`dart_sample/lib/demos/general/decorated_box_demo_page.dart`<br>`dart_sample/lib/demos/general/fitted_box_demo_page.dart`<br>`dart_sample/lib/demos/general/fractionally_sized_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/unconstrained_limited_box_demo_page.dart`<br>`dart_sample/lib/demos/material/checkbox_list_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DecoratedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FittedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FractionallySizedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/OverflowBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/UnconstrainedLimitedBoxDemoPage.cs` |
+| `rendering/box.dart` | `src/Plumix/Rendering/Box.RenderBox.cs`<br>`src/Plumix/Rendering/Box.cs`<br>`src/Plumix/Rendering/Object.HitTest.cs` | `src/Plumix.Tests/BoxConstraintsTests.cs`<br>`src/Plumix.Tests/BoxFitTests.cs`<br>`src/Plumix.Tests/BoxShadowTests.cs`<br>`src/Plumix.Tests/BoxTests.cs`<br>`src/Plumix.Tests/ColoredBoxTests.cs`<br>`src/Plumix.Tests/DecoratedBoxTests.cs`<br>`src/Plumix.Tests/FittedBoxTests.cs`<br>`src/Plumix.Tests/FractionallySizedBoxTests.cs`<br>`src/Plumix.Tests/OverflowBoxTests.cs`<br>`src/Plumix.Tests/ProxyBoxClipParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxLayoutParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxSemanticsParityTests.cs`<br>`src/Plumix.Tests/ProxyBoxTransformParityTests.cs`<br>`src/Plumix.Tests/RenderErrorBoxTests.cs`<br>`src/Plumix.Tests/ShiftedBoxTests.cs`<br>`src/Plumix.Tests/SliverMultiBoxAdaptorTests.cs`<br>`src/Plumix.Tests/UnconstrainedLimitedBoxTests.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`<br>`dart_sample/lib/demos/general/decorated_box_demo_page.dart`<br>`dart_sample/lib/demos/general/fitted_box_demo_page.dart`<br>`dart_sample/lib/demos/general/fractionally_sized_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/unconstrained_limited_box_demo_page.dart`<br>`dart_sample/lib/demos/material/checkbox_list_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DecoratedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FittedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FractionallySizedBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/OverflowBoxDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/UnconstrainedLimitedBoxDemoPage.cs` |
 | `rendering/custom_layout.dart` | `src/Plumix/Rendering/CustomMultiChildLayout.cs` | `src/Plumix.Tests/CustomMultiChildLayoutTests.cs` | `dart_sample/lib/demos/general/custom_multi_child_layout_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomMultiChildLayoutDemoPage.cs` |
 | `rendering/custom_paint.dart` | `src/Plumix/Rendering/CustomPaint.cs` | — | — |
 | `rendering/debug.dart` | `src/Plumix/Rendering/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
@@ -350,6 +350,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/image.dart` | `src/Plumix/Rendering/Image.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs` | `dart_sample/lib/demos/general/image_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` |
 | `rendering/image_filter_config.dart` | `src/Plumix/Rendering/ImageFilterConfig.cs` | — | — |
 | `rendering/layer.dart` | `src/Plumix/Rendering/CompositedTransform.cs`<br>`src/Plumix/Rendering/Layer.cs` | `src/Plumix.Tests/CompositedTransformTests.cs`<br>`src/Plumix.Tests/CompositingLayerTests.cs`<br>`src/Plumix.Tests/LayerTreeTests.cs`<br>`src/Plumix.Tests/LayerV2Tests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CompositedTransformDemoPage.cs` |
+| `rendering/layout_helper.dart` | `src/Plumix/Rendering/LayoutHelper.cs` | — | — |
 | `rendering/list_body.dart` | `src/Plumix/Rendering/ListBody.cs` | — | — |
 | `rendering/list_wheel_viewport.dart` | `src/Plumix/Rendering/ListWheelViewport.cs` | — | — |
 | `rendering/mouse_tracker.dart` | `src/Plumix/Rendering/MouseTracker.cs` | `src/Plumix.Tests/MouseTrackerTests.cs` | — |
@@ -602,6 +603,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix/UI/TextBox.cs`
 - `src/Plumix/UI/UnicodeText.cs`
+- `src/Plumix/UI/ViewConstraints.cs`
 - `src/Plumix/UI/ViewFocus.cs`
 - `src/Plumix/Widgets/FlutterView.cs`
 - `src/Plumix/Widgets/InkSplash.cs`
@@ -621,9 +623,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/PipelineOwner.cs` — (host integration extras)
 - `src/Plumix/RenderView.cs` — (reference) (approximate)
 - `src/Plumix/RendererBinding.cs` — (reference) (adapted)
-- `src/Plumix/Rendering/Box.RenderBox.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Box.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/LayoutHelper.cs` — (reference) (adapted helper logic)
 - `src/Plumix/Scheduler.cs` — (adapted)
 - `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
 - `src/Plumix/UI/SystemChrome.cs` — (reference) (approximate)
@@ -636,9 +635,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 531
+- Flutter files mapped: 532
 - C# files carrying a marker: 706
-- C# files without a marker: 48
+- C# files without a marker: 49
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 18
+- C# files with a qualified (non-strict) marker: 15
 

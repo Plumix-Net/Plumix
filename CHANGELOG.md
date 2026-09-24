@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: RenderBox/BoxConstraints are a strict port: Dart asserts, messages, caches, lerp, toString (box.dart).
+- Diagnostics print Avalonia sizes and points as Dart's `Size(w, h)` and `Offset(x, y)` (foundation/diagnostics.dart).
 - Breaking: FollowerLayer resolves its transform while compositing; layers gain depth/siblings/callbacks (layer.dart).
 - Diagnostics print enum values the way Dart does, as `Type.member` (foundation/diagnostics.dart).
 - Breaking: Directionality requires an ancestor and uses Flutter's ubiquitous dependency updates (widgets/basic.dart).

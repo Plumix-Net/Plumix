@@ -501,63 +501,37 @@ public interface IRenderBoxContainerDefaultsMixin<TChild, TParentData>
     bool DefaultHitTestChildren(BoxHitTestResult result, Point position);
 }
 
+/// <summary>
+/// Generic mixin for render objects with a list of children.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>RenderBoxContainerDefaultsMixin</c> (<c>rendering/box.dart</c>): useful default
+/// behaviors for a <see cref="RenderBox"/> whose children are managed by the container mixin. C# has no
+/// mixins, so a render object composes this class and forwards to it.
+/// </remarks>
 public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject owner)
     : ContainerRenderObjectMixin<TChild, TParentData>(owner),
         IRenderBoxContainerDefaultsMixin<TChild, TParentData>
     where TChild : RenderBox
     where TParentData : ContainerBoxParentData<TChild>
 {
-    /// Paints each child by walking the child list forwards.
-    ///
-    /// See also:
-    ///
-    ///  * [defaultHitTestChildren], which implements hit-testing of the children
-    ///    in a manner appropriate for this painting strategy.
-    public void DefaultPaint(PaintingContext ctx, Point offset)
-    {
-        var child = FirstChild;
+    private readonly RenderObject _owner = owner;
 
-        while (child != null)
-        {
-            var childParentData = (TParentData)child.parentData!;
-
-            ctx.PaintChild(child, childParentData.offset + offset);
-
-            child = childParentData.nextSibling;
-        }
-    }
-
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
-    {
-        var child = LastChild;
-        while (child != null)
-        {
-            var childParentData = (TParentData)child.parentData!;
-            RenderBox hitChild = child;
-            bool isHit = result.AddWithPaintOffset(
-                childParentData.offset,
-                position,
-                (hitResult, transformed) => hitChild.HitTest(hitResult, transformed));
-            if (isHit)
-            {
-                return true;
-            }
-
-            child = childParentData.previousSibling;
-        }
-
-        return false;
-    }
-
-    /// Returns the baseline of the first child that has one, offset by that
-    /// child's position along the vertical axis.
+    /// <summary>
+    /// Returns the baseline of the first child with a baseline.
+    /// </summary>
+    /// <remarks>
+    /// Useful when the children are displayed vertically in the same order they appear in the child
+    /// list. Call it only from an override of <c>ComputeDistanceToActualBaseline</c>.
+    /// </remarks>
     public double? DefaultComputeDistanceToFirstActualBaseline(TextBaseline baseline)
     {
-        var child = FirstChild;
+        DebugAssertLaidOut();
+        TChild? child = FirstChild;
         while (child != null)
         {
             var childParentData = (TParentData)child.parentData!;
-            double? result = child.GetDistanceToBaseline(baseline, onlyReal: true);
+            double? result = child.GetDistanceToActualBaseline(baseline);
             if (result != null)
             {
                 return result.Value + childParentData.offset.Y;
@@ -569,26 +543,100 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
         return null;
     }
 
-    /// Returns the smallest offset baseline among the children that have one.
+    /// <summary>Returns the minimum baseline value among every child.</summary>
+    /// <remarks>
+    /// Useful when the vertical position of the children isn't determined by the order in the child
+    /// list. Call it only from an override of <c>ComputeDistanceToActualBaseline</c>.
+    /// </remarks>
     public double? DefaultComputeDistanceToHighestActualBaseline(TextBaseline baseline)
     {
-        double? minBaseline = null;
-        var child = FirstChild;
+        DebugAssertLaidOut();
+        BaselineOffset minBaseline = BaselineOffset.NoBaseline;
+        TChild? child = FirstChild;
         while (child != null)
         {
             var childParentData = (TParentData)child.parentData!;
-            double? candidate = child.GetDistanceToBaseline(baseline, onlyReal: true);
-            if (candidate != null)
-            {
-                double offsetCandidate = candidate.Value + childParentData.offset.Y;
-                minBaseline = minBaseline == null
-                    ? offsetCandidate
-                    : Math.Min(minBaseline.Value, offsetCandidate);
-            }
-
+            BaselineOffset candidate =
+                new BaselineOffset(child.GetDistanceToActualBaseline(baseline)) + childParentData.offset.Y;
+            minBaseline = minBaseline.MinOf(candidate);
             child = childParentData.nextSibling;
         }
 
-        return minBaseline;
+        return minBaseline.Offset;
+    }
+
+    /// <summary>Performs a hit test on each child by walking the child list backwards.</summary>
+    /// <remarks>
+    /// Stops walking once after the first child reports that it contains the given point. Returns
+    /// whether any children contain the given point.
+    /// </remarks>
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
+    {
+        TChild? child = LastChild;
+        while (child != null)
+        {
+            // The x, y parameters have the top left of the node's box as the origin.
+            var childParentData = (TParentData)child.parentData!;
+            RenderBox hitChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                childParentData.offset,
+                position,
+                (hitResult, transformed) =>
+                {
+                    if (Constants.KDebugMode && transformed != position - childParentData.offset)
+                    {
+                        throw new AssertionError();
+                    }
+
+                    return hitChild.HitTest(hitResult, transformed);
+                });
+            if (isHit)
+            {
+                return true;
+            }
+
+            child = childParentData.previousSibling;
+        }
+
+        return false;
+    }
+
+    /// <summary>Paints each child by walking the child list forwards.</summary>
+    public void DefaultPaint(PaintingContext ctx, Point offset)
+    {
+        TChild? child = FirstChild;
+        while (child != null)
+        {
+            var childParentData = (TParentData)child.parentData!;
+            ctx.PaintChild(child, childParentData.offset + offset);
+            child = childParentData.nextSibling;
+        }
+    }
+
+    /// <summary>Returns a list containing the children of this render object.</summary>
+    /// <remarks>
+    /// This function is useful when you need random-access to the children of this render object. If
+    /// you're accessing the children in order, consider walking the child list directly.
+    /// </remarks>
+    public List<TChild> GetChildrenAsList()
+    {
+        var result = new List<TChild>();
+        TChild? child = FirstChild;
+        while (child != null)
+        {
+            var childParentData = (TParentData)child.parentData!;
+            result.Add(child);
+            child = childParentData.nextSibling;
+        }
+
+        return result;
+    }
+
+    private void DebugAssertLaidOut()
+    {
+        if (Constants.KDebugMode && _owner.DebugNeedsLayout)
+        {
+            throw new AssertionError();
+        }
     }
 }

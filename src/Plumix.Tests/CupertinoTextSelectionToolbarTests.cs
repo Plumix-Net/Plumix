@@ -382,7 +382,8 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         {
             Child = new FixedHitRenderBox(new Size(60.0, 56.0)),
         };
-        shape.Layout(BoxConstraints.Tight(new Size(20.0, 49.0)));
+        // Loose: the shape is one arrow shorter than its child, so tight constraints could not be met.
+        shape.Layout(BoxConstraints.Loose(new Size(20.0, 49.0)));
 
         Plumix.UI.Path path = shape.ClipPath(shape.Child!, shape.ShapeRRect(shape.Child!));
         Assert.Equal(shape.ShapeRRect(shape.Child!).Rect, path.GetBounds());

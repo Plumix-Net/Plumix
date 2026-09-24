@@ -323,23 +323,21 @@ public sealed class ProxyBoxLayoutParityTests
 
         string dump = FrameworkDartTester.IgnoringHashCodes(limited.ToStringDeep(minLevel: DiagnosticLevel.Info));
 
-        // Dart's dump of the overflow box, from its `└─child: RenderLimitedBox` line down, re-prefixed. The
-        // lines owned by these render objects are compared verbatim; `Offset`/`Size`/`BoxConstraints` values
-        // print through their own (non-proxy_box.dart) `ToString`, so only their presence is checked.
-        string[] lines = dump.Split('\n');
-        Assert.Equal("RenderLimitedBox#00000 relayoutBoundary=up1 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE", lines[0]);
-        Assert.StartsWith(" │ parentData: offset=", lines[1], StringComparison.Ordinal);
-        Assert.EndsWith(" (can use size)", lines[1], StringComparison.Ordinal);
-        Assert.StartsWith(" │ constraints: ", lines[2], StringComparison.Ordinal);
-        Assert.StartsWith(" │ size: ", lines[3], StringComparison.Ordinal);
-        Assert.Equal(" │ maxWidth: 100.0", lines[4]);
-        Assert.Equal(" │ maxHeight: 200.0", lines[5]);
-        Assert.Equal(" │", lines[6]);
-        Assert.Equal(" └─child: RenderConstrainedBox#00000 relayoutBoundary=up2 NEEDS-PAINT", lines[7]);
-        Assert.Equal("     parentData: <none> (can use size)", lines[8]);
-        Assert.StartsWith("     constraints: ", lines[9], StringComparison.Ordinal);
-        Assert.StartsWith("     size: ", lines[10], StringComparison.Ordinal);
-        Assert.StartsWith("     additionalConstraints: ", lines[11], StringComparison.Ordinal);
+        // Dart's dump of the overflow box, from its `└─child: RenderLimitedBox` line down, re-prefixed.
+        Assert.Equal(
+            "RenderLimitedBox#00000 relayoutBoundary=up1 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE\n"
+            + " │ parentData: offset=Offset(350.0, 200.0) (can use size)\n"
+            + " │ constraints: BoxConstraints(unconstrained)\n"
+            + " │ size: Size(100.0, 200.0)\n"
+            + " │ maxWidth: 100.0\n"
+            + " │ maxHeight: 200.0\n"
+            + " │\n"
+            + " └─child: RenderConstrainedBox#00000 relayoutBoundary=up2 NEEDS-PAINT\n"
+            + "     parentData: <none> (can use size)\n"
+            + "     constraints: BoxConstraints(0.0<=w<=100.0, 0.0<=h<=200.0)\n"
+            + "     size: Size(100.0, 200.0)\n"
+            + "     additionalConstraints: BoxConstraints(w=300.0, h=400.0)\n",
+            dump);
     }
 
     [Fact]

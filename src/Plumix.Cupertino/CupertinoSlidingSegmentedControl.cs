@@ -1068,7 +1068,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
                 continue;
             }
 
-            double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+            double? childBaseline = child.GetDistanceToActualBaseline(baseline);
             if (childBaseline.HasValue)
             {
                 result = !result.HasValue ? childBaseline : Math.Min(result.Value, childBaseline.Value);

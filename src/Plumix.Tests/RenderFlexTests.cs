@@ -786,7 +786,7 @@ public sealed class RenderFlexTests
 
         // Both children are centred in a 40-tall flex, so their offsets are zero and the
         // highest (smallest) baseline wins.
-        Assert.Equal(10.0, flex.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+        Assert.Equal(10.0, flex.ProbeBaseline(TextBaseline.Alphabetic));
     }
 
     [Fact]
@@ -824,7 +824,7 @@ public sealed class RenderFlexTests
 
         Layout(flex, constraints);
 
-        Assert.Equal(110.0, flex.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+        Assert.Equal(110.0, flex.ProbeBaseline(TextBaseline.Alphabetic));
     }
 
     // ---------- Intrinsics ----------

@@ -312,7 +312,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Object.RenderObject.cs`
   - `src/Plumix/Rendering/Object.RenderObject.Diagnostics.cs` (render-tree dumps: `ToStringDeep`,
     `DebugFillProperties`, `DebugDescribeChildren`; `PipelineOwner.DebugDumpRenderTree` prints one)
-  - `src/Plumix/Rendering/Box.RenderBox.cs`
+  - `src/Plumix/Rendering/Box.RenderBox.cs`, `Box.cs` (`BoxConstraints`, `BaselineOffset`; strict
+    `box.dart` port, tests in `src/Plumix.Tests/BoxTests.cs` and `BoxConstraintsTests.cs`)
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
   - `src/Plumix/Widgets/Basic.cs`
   - `src/Plumix/Widgets/ConstraintsTransformBox.cs`

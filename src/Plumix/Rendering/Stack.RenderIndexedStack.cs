@@ -48,7 +48,7 @@ public sealed class RenderIndexedStack : RenderStack
         }
 
         var childParentData = (StackParentData)child.parentData!;
-        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = child.GetDistanceToActualBaseline(baseline);
         return childBaseline.HasValue ? childBaseline.Value + childParentData.offset.Y : null;
     }
 

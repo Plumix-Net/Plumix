@@ -938,7 +938,7 @@ public sealed class FrameworkDartParityTests
     }
 
     // Flutter: framework_test.dart: "Element diagnostics"
-    [Fact(Skip = "Parity gap: BoxConstraints.ToString lacks Dart's biggest/unconstrained forms (box.dart).")]
+    [Fact]
     public void ElementDiagnostics()
     {
         using var tester = new FrameworkDartTester();
@@ -967,7 +967,9 @@ public sealed class FrameworkDartParityTests
             + "│└LimitedBox(maxWidth: 0.0, maxHeight: 0.0, renderObject: RenderLimitedBox#00000 relayoutBoundary=up1)\n"
             + "│ └ConstrainedBox(BoxConstraints(biggest), renderObject: RenderConstrainedBox#00000 "
             + "relayoutBoundary=up2)\n"
-            + $"├ColoredBox(color: {Green}, renderObject: RenderColoredBox#00000 relayoutBoundary=up1)\n"
+            // dart:ui's `Color.toString` for `Color(0xff00ff00)`.
+            + "├ColoredBox(color: Color(alpha: 1.0000, red: 0.0000, green: 1.0000, blue: 0.0000, "
+            + "colorSpace: ColorSpace.sRGB), renderObject: RenderColoredBox#00000 relayoutBoundary=up1)\n"
             + "│└Container\n"
             + "│ └LimitedBox(maxWidth: 0.0, maxHeight: 0.0, renderObject: RenderLimitedBox#00000 "
             + "relayoutBoundary=up2)\n"

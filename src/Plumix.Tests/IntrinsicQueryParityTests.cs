@@ -73,16 +73,20 @@ public sealed class IntrinsicQueryParityTests
         Assert.Equal(2, child.DryLayoutCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderBox_DryLayoutRejectsReadingWetSize()
     {
         var box = new SizeReadingDryBox();
         box.Layout(BoxConstraints.Tight(new Size(20, 10)));
 
-        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+        Plumix.Foundation.AssertionError error = Assert.Throws<Plumix.Foundation.AssertionError>(
             () => box.GetDryLayout(BoxConstraints.Tight(new Size(30, 15))));
 
-        Assert.Contains("Size was accessed", error.Message, StringComparison.Ordinal);
+        Assert.Contains(
+            "RenderBox.size accessed in SizeReadingDryBox.computeDryLayout. The computeDryLayout method must not "
+            + "access the RenderBox's own size",
+            error.Message,
+            StringComparison.Ordinal);
     }
 
     [Fact]

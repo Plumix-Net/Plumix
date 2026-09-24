@@ -438,7 +438,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(
             errors,
             failure => ((Exception)failure.Exception!).Message.Contains(
-                "differs from the baseline location computed by ComputeDryBaseline",
+                "differs from the baseline location computed by computeDryBaseline",
                 StringComparison.Ordinal));
     }
 

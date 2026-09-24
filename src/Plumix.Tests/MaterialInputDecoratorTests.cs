@@ -265,9 +265,9 @@ public sealed class MaterialInputDecoratorTests
         Rect input = DecoratorHarness.RectOf(decorator.InputBox);
 
         // Both are baseline-aligned onto the decorator's single text baseline.
-        double hintBaseline = decorator.HintBox!.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true)!.Value;
+        double hintBaseline = decorator.HintBox!.ProbeBaseline(TextBaseline.Alphabetic)!.Value;
         double inputBaseline =
-            decorator.InputBox!.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true)!.Value;
+            decorator.InputBox!.ProbeBaseline(TextBaseline.Alphabetic)!.Value;
         Assert.Equal(input.Top + inputBaseline, hint.Top + hintBaseline, precision: 6);
         Assert.Equal(input.Left, hint.Left, precision: 6);
         Assert.Equal(input.Width, hint.Width, precision: 6);

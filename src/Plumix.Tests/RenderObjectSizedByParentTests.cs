@@ -79,16 +79,16 @@ public sealed class RenderObjectSizedByParentTests
         using var renderErrors = RenderErrorRethrowScope.Enter();
         var box = new SetsSizeInPerformLayoutRenderBox();
 
-        AssertionError error = Assert.Throws<AssertionError>(
+        FlutterError error = Assert.Throws<FlutterError>(
             () => Layout(box, BoxConstraints.Loose(new Size(100, 80))));
 
         Assert.Contains("RenderBox size setter called incorrectly.", error.Message, StringComparison.Ordinal);
         Assert.Contains(
-            "It appears that the size setter was called from PerformLayout().",
+            "It appears that the size setter was called from performLayout().",
             error.Message,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Because this RenderBox has SizedByParent set to true, it must set its size in PerformResize().",
+            "Because this RenderBox has sizedByParent set to true, it must set its size in performResize().",
             error.Message,
             StringComparison.Ordinal);
     }
@@ -103,7 +103,7 @@ public sealed class RenderObjectSizedByParentTests
         // debug half; this covers the elided half in every configuration.
         if (Constants.KDebugMode)
         {
-            Assert.Throws<AssertionError>(() => box.SetSizeOutsideLayout(new Size(1, 1)));
+            Assert.Throws<FlutterError>(() => box.SetSizeOutsideLayout(new Size(1, 1)));
             return;
         }
 
@@ -116,7 +116,7 @@ public sealed class RenderObjectSizedByParentTests
     {
         var box = new ProbeRenderBox(sizedByParent: false);
 
-        AssertionError error = Assert.Throws<AssertionError>(() => box.SetSizeOutsideLayout(new Size(1, 1)));
+        FlutterError error = Assert.Throws<FlutterError>(() => box.SetSizeOutsideLayout(new Size(1, 1)));
 
         Assert.Contains("RenderBox size setter called incorrectly.", error.Message, StringComparison.Ordinal);
         Assert.Contains(
@@ -124,7 +124,7 @@ public sealed class RenderObjectSizedByParentTests
             error.Message,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Because this RenderBox has SizedByParent set to false, it must set its size in PerformLayout().",
+            "Because this RenderBox has sizedByParent set to false, it must set its size in performLayout().",
             error.Message,
             StringComparison.Ordinal);
     }
@@ -135,14 +135,14 @@ public sealed class RenderObjectSizedByParentTests
         using var renderErrors = RenderErrorRethrowScope.Enter();
         var box = new MissingPerformLayoutRenderBox();
 
-        AssertionError error = Assert.Throws<AssertionError>(
+        FlutterError error = Assert.Throws<FlutterError>(
             () => Layout(box, BoxConstraints.Loose(new Size(100, 80))));
 
         Assert.Contains(
-            "MissingPerformLayoutRenderBox did not implement PerformLayout().",
+            "MissingPerformLayoutRenderBox did not implement performLayout().",
             error.Message,
             StringComparison.Ordinal);
-        Assert.Contains("set SizedByParent to true", error.Message, StringComparison.Ordinal);
+        Assert.Contains("set sizedByParent to true", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -335,6 +335,8 @@ public sealed class RenderObjectSizedByParentTests
     [DebugOnlyFact]
     public void RenderViewport_RejectsUnboundedSpaceOnEitherAxis()
     {
+        // A dry layout that throws leaves Dart's `_computingThisDryLayout` set (there is no
+        // try/finally), so every probe needs its own viewport.
         var vertical = new RenderViewport(offset: ViewportOffset.Zero());
         AssertionError unboundedHeight = Assert.Throws<AssertionError>(
             () => vertical.GetDryLayout(new BoxConstraints(MaxWidth: 100)));
@@ -343,6 +345,7 @@ public sealed class RenderObjectSizedByParentTests
             unboundedHeight.Message,
             StringComparison.Ordinal);
 
+        vertical = new RenderViewport(offset: ViewportOffset.Zero());
         AssertionError unboundedWidth = Assert.Throws<AssertionError>(
             () => vertical.GetDryLayout(new BoxConstraints(MaxHeight: 80)));
         Assert.Contains(

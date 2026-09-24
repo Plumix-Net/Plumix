@@ -427,7 +427,27 @@ public sealed class ProxyBoxParityTests
         // size is adopted verbatim; the proxy does not re-apply its own constraints on top.
         var child = new OversizedBox(new Size(140, 90));
         var proxy = new RenderOpacity(child: child);
-        LayoutRoot(proxy, new Size(100, 60));
+        var errors = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = errors.Add;
+        try
+        {
+            LayoutRoot(proxy, new Size(100, 60));
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+
+        // The size setter still stores the size before `debugAssertDoesMeetConstraints` reports it.
+        if (Constants.KDebugMode)
+        {
+            Assert.Contains(
+                errors,
+                details => ((Exception)details.Exception!).Message.StartsWith(
+                    "OversizedBox does not meet its constraints.",
+                    StringComparison.Ordinal));
+        }
 
         Assert.Equal(new Size(140, 90), child.Size);
         Assert.Equal(new Size(140, 90), proxy.Size);
@@ -440,7 +460,7 @@ public sealed class ProxyBoxParityTests
         var proxy = new RenderOpacity(child: child);
         LayoutRoot(proxy, new Size(100, 100));
 
-        Assert.Equal(12.0, proxy.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+        Assert.Equal(12.0, proxy.ProbeBaseline(TextBaseline.Alphabetic));
     }
 
     [Fact]

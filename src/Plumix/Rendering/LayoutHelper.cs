@@ -1,69 +1,81 @@
-﻿using System.Diagnostics;
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/box.dart (adapted helper logic)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layout_helper.dart
 
 namespace Plumix.Rendering;
 
-/// A collection of static functions to layout a [RenderBox] child with the
-/// given set of [BoxConstraints].
-///
-/// All of the functions adhere to the [ChildLayouter] signature.
+/// <summary>
+/// The signature for a function that takes a <see cref="RenderBox"/> and returns the <see cref="Size"/>
+/// that the <see cref="RenderBox"/> would have if it were laid out with the given
+/// <see cref="BoxConstraints"/>.
+/// </summary>
+/// <remarks>
+/// The methods of <see cref="ChildLayoutHelper"/> adhere to this signature.
+/// </remarks>
+public delegate Size ChildLayouter(RenderBox child, BoxConstraints constraints);
+
+/// <summary>
+/// The signature for a function that takes a <see cref="RenderBox"/> and returns the baseline offset
+/// of that <see cref="RenderBox"/> if it were laid out with the given <see cref="BoxConstraints"/>.
+/// </summary>
+/// <remarks>
+/// The methods of <see cref="ChildLayoutHelper"/> adhere to this signature.
+/// </remarks>
+public delegate double? ChildBaselineGetter(RenderBox child, BoxConstraints constraints, TextBaseline baseline);
+
+/// <summary>
+/// A collection of static functions to layout a <see cref="RenderBox"/> child with the given set of
+/// <see cref="BoxConstraints"/>.
+/// </summary>
+/// <remarks>All of the functions adhere to the <see cref="ChildLayouter"/> signature.</remarks>
 public static class ChildLayoutHelper
 {
-  /// Returns the [Size] that the [RenderBox] would have if it were to
-  /// be laid out with the given [BoxConstraints].
-  ///
-  /// This method calls [RenderBox.getDryLayout] on the given [RenderBox].
-  ///
-  /// This method should only be called by the parent of the provided
-  /// [RenderBox] child as it binds parent and child together (if the child
-  /// is marked as dirty, the child will also be marked as dirty).
-  ///
-  /// See also:
-  ///
-  ///  * [layoutChild], which actually lays out the child with the given
-  ///    constraints.
+    /// <summary>
+    /// Returns the <see cref="Size"/> that the <see cref="RenderBox"/> would have if it were to be laid
+    /// out with the given <see cref="BoxConstraints"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method calls <see cref="RenderBox.GetDryLayout"/> on the given <see cref="RenderBox"/>. It
+    /// should only be called by the parent of the provided child as it binds parent and child together
+    /// (if the child is marked as dirty, the child will also be marked as dirty).
+    /// </remarks>
     public static Size DryLayoutChild(RenderBox child, BoxConstraints constraints)
     {
         return child.GetDryLayout(constraints);
     }
 
-  /// Lays out the [RenderBox] with the given constraints and returns its
-  /// [Size].
-  ///
-  /// This method calls [RenderBox.layout] on the given [RenderBox] with
-  /// `parentUsesSize` set to true to receive its [Size].
-  ///
-  /// This method should only be called by the parent of the provided
-  /// [RenderBox] child as it binds parent and child together (if the child
-  /// is marked as dirty, the child will also be marked as dirty).
-  ///
-  /// See also:
-  ///
-  ///  * [dryLayoutChild], which does not perform a real layout of the child.
+    /// <summary>
+    /// Lays out the <see cref="RenderBox"/> with the given constraints and returns its
+    /// <see cref="Size"/>.
+    /// </summary>
+    /// <remarks>
+    /// This method calls <see cref="RenderObject.Layout"/> on the given <see cref="RenderBox"/> with
+    /// <c>parentUsesSize</c> set to true to receive its <see cref="Size"/>.
+    /// </remarks>
     public static Size LayoutChild(RenderBox child, BoxConstraints constraints)
     {
         child.Layout(constraints, parentUsesSize: true);
         return child.Size;
     }
 
-  /// Convenience function that calls [RenderBox.getDryBaseline].
-    public static double? GetDryBaseline(
-        RenderBox child,
-        BoxConstraints constraints,
-        TextBaseline baseline)
+    /// <summary>Convenience function that calls <see cref="RenderBox.GetDryBaseline"/>.</summary>
+    public static double? GetDryBaseline(RenderBox child, BoxConstraints constraints, TextBaseline baseline)
     {
         return child.GetDryBaseline(constraints, baseline);
     }
 
-  /// Convenience function that calls [RenderBox.getDistanceToBaseline].
-  ///
-  /// The given `child` must be already laid out with `constraints`.
+    /// <summary>Convenience function that calls <see cref="RenderBox.GetDistanceToBaseline"/>.</summary>
+    /// <remarks>The given <paramref name="child"/> must be already laid out with
+    /// <paramref name="constraints"/>.</remarks>
     public static double? GetBaseline(RenderBox child, BoxConstraints constraints, TextBaseline baseline)
     {
-        Debug.Assert(child.Constraints == constraints);
+        if (Constants.KDebugMode && (child.DebugNeedsLayout || child.Constraints != constraints))
+        {
+            throw new AssertionError();
+        }
+
         return child.GetDistanceToBaseline(baseline, onlyReal: true);
     }
 }

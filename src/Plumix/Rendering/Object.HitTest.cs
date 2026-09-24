@@ -289,35 +289,29 @@ public class BoxHitTestResult : HitTestResult
         Matrix4? paintTransform = null,
         Matrix4? rawTransform = null)
     {
+        if (Constants.KDebugMode
+            && !((paintOffset is null && paintTransform is null && rawTransform is not null)
+                 || (paintOffset is null && paintTransform is not null && rawTransform is null)
+                 || (paintOffset is not null && paintTransform is null && rawTransform is null)))
+        {
+            throw new AssertionError("Exactly one transform or offset argument must be provided.");
+        }
+
         if (paintOffset is { } offset)
         {
-            if (paintTransform is not null || rawTransform is not null)
-            {
-                throw new ArgumentException("Exactly one transform or offset argument must be provided.");
-            }
-
             PushOffset(new Point(-offset.X, -offset.Y));
         }
         else if (rawTransform is not null)
         {
-            if (paintTransform is not null)
-            {
-                throw new ArgumentException("Exactly one transform or offset argument must be provided.");
-            }
-
             PushTransform(rawTransform);
         }
         else
         {
-            if (paintTransform is null)
-            {
-                throw new ArgumentException("Exactly one transform or offset argument must be provided.");
-            }
-
-            Matrix4? inverted = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(paintTransform));
+            Matrix4? inverted = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(paintTransform!));
             if (inverted is null)
             {
-                throw new ArgumentException("paintTransform must be invertible.", nameof(paintTransform));
+                // Dart asserts here and then dereferences the null inverse.
+                throw new AssertionError("paintTransform must be invertible.");
             }
 
             PushTransform(inverted);
@@ -334,5 +328,5 @@ public sealed class BoxHitTestEntry(RenderBox target, Point localPosition) : Hit
     /// <summary>The position of the hit test in the local coordinates of the target.</summary>
     public Point LocalPosition { get; } = localPosition;
 
-    public override string ToString() => $"{Diagnostics.DescribeIdentity(Target)}@{LocalPosition}";
+    public override string ToString() => $"{Diagnostics.DescribeIdentity(Target)}@{DartFormat.Offset(LocalPosition)}";
 }

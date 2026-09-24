@@ -509,6 +509,7 @@ public sealed class MaterialCarouselTests
     [Fact]
     public void CarouselView_WeightedRequiresPositiveWeights()
     {
+        using var buildErrors = RenderErrorRethrowScope.Enter();
         using CarouselHarness empty = new(CarouselView.Weighted([], Items(2)));
         Assert.Throws<InvalidOperationException>(empty.Pump);
 

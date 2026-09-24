@@ -563,7 +563,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         }
 
         return ParentDataOf(_input).offset.Y
-               + (_input.GetDistanceToBaseline(baseline, onlyReal: true) ?? _input.Size.Height);
+               + (_input.GetDistanceToActualBaseline(baseline) ?? _input.Size.Height);
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints) =>

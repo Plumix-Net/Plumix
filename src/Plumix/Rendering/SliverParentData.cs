@@ -54,7 +54,7 @@ public class SliverPhysicalParentData : ParentData
     }
 
     /// <inheritdoc />
-    public override string ToString() => $"paintOffset={PaintOffset}";
+    public override string ToString() => $"paintOffset={DartFormat.Offset(PaintOffset)}";
 }
 
 /// <summary>Physical parent data for a sliver in a doubly-linked child list.</summary>

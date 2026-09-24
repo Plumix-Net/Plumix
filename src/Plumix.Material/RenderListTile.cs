@@ -317,7 +317,7 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
-        double? childBaseline = Title.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = Title.GetDistanceToActualBaseline(baseline);
         return childBaseline.HasValue ? childBaseline.Value + ParentDataOf(Title).offset.Y : null;
     }
 

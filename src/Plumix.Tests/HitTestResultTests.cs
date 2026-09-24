@@ -219,7 +219,7 @@ public sealed class HitTestResultTests
         Assert.Empty(result.Path);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void AddWithOutOfBandPosition_AcceptsExactlyOneTransformArgument()
     {
         var result = new BoxHitTestResult();
@@ -233,12 +233,12 @@ public sealed class HitTestResultTests
             paintOffset: new Point(5, 7)));
         Assert.Equal(Matrix4.TranslationValues(-5, -7, 0), result.Path[0].Transform);
 
-        Assert.Throws<ArgumentException>(() => result.AddWithOutOfBandPosition(
+        Assert.Throws<Plumix.Foundation.AssertionError>(() => result.AddWithOutOfBandPosition(
             _ => true,
             paintOffset: new Point(1, 1),
             rawTransform: Matrix4.Identity()));
 
-        Assert.Throws<ArgumentException>(() => result.AddWithOutOfBandPosition(_ => true));
+        Assert.Throws<Plumix.Foundation.AssertionError>(() => result.AddWithOutOfBandPosition(_ => true));
     }
 
     [Fact]

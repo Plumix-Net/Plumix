@@ -79,6 +79,24 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <remarks>Flutter's <c>RenderObject.debugDisposed</c>.</remarks>
     public bool DebugDisposed => _debugDisposed;
 
+    /// <summary>
+    /// Whether the intrinsic dimension methods are being exercised by the framework's debug checks
+    /// rather than by the render tree itself.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.debugCheckingIntrinsics</c>: while it is set, render objects must not
+    /// mark themselves dirty or rely on the intrinsic, dry layout and baseline caches. Per-thread, like
+    /// <see cref="DebugActiveLayout"/>: a render tree belongs to one thread.
+    /// </remarks>
+    public static bool DebugCheckingIntrinsics
+    {
+        get => _debugCheckingIntrinsics;
+        set => _debugCheckingIntrinsics = value;
+    }
+
+    [ThreadStatic]
+    private static bool _debugCheckingIntrinsics;
+
     /// <summary>The render object currently computing layout, if any.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugActiveLayout</c>.</remarks>
     public static RenderObject? DebugActiveLayout => _debugActiveLayout;
@@ -1514,39 +1532,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
 
         return true;
-    }
-
-    public Point LocalToGlobal(Point point, RenderObject? ancestor = null)
-    {
-        return MatrixUtils.TransformPoint(GetTransformTo(ancestor), point);
-    }
-
-    /// <remarks>
-    /// Flutter's <c>RenderBox.globalToLocal</c>: an unprojection rather than a plain inverse point
-    /// transform, so a perspective transform maps back onto the z = 0 plane the way it was drawn from.
-    /// </remarks>
-    public Point GlobalToLocal(Point point, RenderObject? ancestor = null)
-    {
-        Matrix4 transform = GetTransformTo(ancestor);
-        double determinant = transform.Invert();
-        if (determinant == 0.0)
-        {
-            // The determinant is zero, so the transform maps the whole plane onto a line or a point.
-            return default;
-        }
-
-        Vector3 localScreenOrigin = transform.PerspectiveTransform(new Vector3(0.0, 0.0, 0.0));
-        Vector3 localViewDirection =
-            transform.PerspectiveTransform(new Vector3(0.0, 0.0, 1.0)) - localScreenOrigin;
-        if (localViewDirection.Z == 0.0)
-        {
-            return default;
-        }
-
-        Vector3 localScreenPoint = transform.PerspectiveTransform(new Vector3(point.X, point.Y, 0.0));
-        Vector3 localPoint =
-            localScreenPoint - (localViewDirection * (localScreenPoint.Z / localViewDirection.Z));
-        return new Point(localPoint.X, localPoint.Y);
     }
 
     /// <summary>

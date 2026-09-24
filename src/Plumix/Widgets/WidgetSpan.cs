@@ -346,7 +346,7 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
     {
-        double? childBaseline = Child?.GetDistanceToBaseline(baseline, onlyReal: true);
+        double? childBaseline = Child?.GetDistanceToActualBaseline(baseline);
         return childBaseline is null ? base.ComputeDistanceToActualBaseline(baseline) : _scale * childBaseline.Value;
     }
 
