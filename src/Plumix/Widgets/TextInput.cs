@@ -927,7 +927,7 @@ public sealed record ContentInsertionConfiguration(
     IReadOnlyList<string>? AllowedMimeTypes = null,
     Action<string>? OnContentInserted = null);
 
-public sealed class EditableText : StatefulWidget
+public sealed partial class EditableText : StatefulWidget
 {
     public EditableText(
         TextEditingController controller,
@@ -1003,6 +1003,11 @@ public sealed class EditableText : StatefulWidget
         bool scribbleEnabled = true,
         bool stylusHandwritingEnabled = true,
         Clip clipBehavior = Clip.HardEdge,
+        Color? backgroundCursorColor = null,
+        Color? autocorrectionTextRectColor = null,
+        ScrollBehavior? scrollBehavior = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -1094,6 +1099,11 @@ public sealed class EditableText : StatefulWidget
         ScribbleEnabled = scribbleEnabled;
         StylusHandwritingEnabled = stylusHandwritingEnabled;
         ClipBehavior = clipBehavior;
+        BackgroundCursorColor = backgroundCursorColor;
+        AutocorrectionTextRectColor = autocorrectionTextRectColor;
+        ScrollBehavior = scrollBehavior;
+        DragStartBehavior = dragStartBehavior;
+        RestorationId = restorationId;
     }
 
     public TextEditingController Controller { get; }
@@ -1198,6 +1208,27 @@ public sealed class EditableText : StatefulWidget
     public bool ScribbleEnabled { get; }
     public bool StylusHandwritingEnabled { get; }
     public Clip ClipBehavior { get; }
+
+    /// <summary>The color of the regular cursor while the floating cursor is shown (Dart's
+    /// <c>backgroundCursorColor</c>, typically <c>CupertinoColors.inactiveGray</c>).</summary>
+    /// <remarks>Dart declares it <c>required</c>; Plumix keeps it optional like the widget's other
+    /// C#-defaulted colors, and a null color paints no background caret.</remarks>
+    public Color? BackgroundCursorColor { get; }
+
+    /// <summary>The color of the rect the iOS keyboard asks for before autocorrecting a range;
+    /// null disables painting it.</summary>
+    public Color? AutocorrectionTextRectColor { get; }
+
+    /// <summary>The <see cref="Widgets.ScrollBehavior"/> of the field's own <see cref="Scrollable"/>.
+    /// Null copies the inherited behavior with scrollbars only when multiline and no overscroll.
+    /// </summary>
+    public ScrollBehavior? ScrollBehavior { get; }
+
+    /// <summary>How the field's <see cref="Scrollable"/> starts a drag.</summary>
+    public DragStartBehavior DragStartBehavior { get; }
+
+    /// <summary>Restoration id of the field's <see cref="Scrollable"/> (its scroll offset).</summary>
+    public string? RestorationId { get; }
 
     /// <summary>Pass as <c>autofillHints</c> to disable autofill, the way Dart passes <c>null</c>.
     /// </summary>
@@ -1396,8 +1427,8 @@ public sealed class EditableText : StatefulWidget
             : new ToolbarOptions();
     }
 
-    public sealed class EditableTextState
-        : State<EditableText>, ITextSelectionDelegate, IAutofillClient, ITextInputClient
+    public sealed partial class EditableTextState
+        : State<EditableText>, ITextSelectionDelegate, IAutofillClient, ITextInputClient, WidgetsBindingObserver
     {
         private AutofillGroupState? _currentAutofillScope;
         private TextInputConnection? _textInputConnection;
@@ -1408,8 +1439,34 @@ public sealed class EditableText : StatefulWidget
         private VerticalCaretMovementRun? _verticalMovementRun;
         private TextSelection? _runSelection;
         private readonly ValueNotifier<bool> _cursorVisibilityNotifier = new(false);
-        private readonly ViewportOffset _viewportOffset = ViewportOffset.Zero();
         private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
+        private RenderEditable? _renderEditable;
+        private readonly GlobalKey<ScrollableState> _scrollableKey =
+            new LabeledGlobalKey<ScrollableState>("EditableText scrollable");
+        private ScrollController? _internalScrollController;
+        private bool _showCaretOnScreenScheduled;
+        private double _lastBottomViewInset;
+        private bool _observingMetrics;
+        private TextRange? _currentPromptRectRange;
+        private Point? _startCaretCenter;
+        private TextPosition? _lastTextPosition;
+        private Point? _pointOffsetOrigin;
+        private Point? _lastBoundedOffset;
+        private AnimationController? _floatingCursorResetController;
+        private ScrollNotificationObserverState? _scrollNotificationObserver;
+        private (TextEditingValue Value, Rect SelectionBounds)? _dataWhenToolbarShowScheduled;
+        private bool _listeningToScrollNotificationObserver;
+        private bool _showToolbarOnScreenScheduled;
+        private Orientation? _lastOrientation;
+        private readonly bool _platformSupportsFadeOnScroll = PlatformDefaults.TargetPlatform switch
+        {
+            TargetPlatform.Android or TargetPlatform.IOS => true,
+            _ => false,
+        };
+
+        private static readonly TimeSpan CaretAnimationDuration = TimeSpan.FromMilliseconds(100);
+        private static readonly Curve CaretAnimationCurve = Curves.FastOutSlowIn;
+        private static readonly TimeSpan FloatingCursorResetTime = TimeSpan.FromMilliseconds(125);
         private readonly LayerLink _startHandleLayerLink = new();
         private readonly LayerLink _endHandleLayerLink = new();
         private readonly LayerLink _toolbarLayerLink = new();
@@ -1554,8 +1611,38 @@ public sealed class EditableText : StatefulWidget
                 return;
             }
 
+            TextEditingValue oldValue = controller.Value;
+            bool textChanged = !string.Equals(oldValue.Text, value.Text, StringComparison.Ordinal);
+            SelectionChangedCause cause;
+            if (textChanged || !Nullable.Equals(oldValue.Composing, value.Composing))
+            {
+                if (textChanged)
+                {
+                    HideToolbar(hideHandles: false);
+                }
+
+                _currentPromptRectRange = null;
+                cause = SelectionChangedCause.Keyboard;
+            }
+            else
+            {
+                // Only the selection moved: the platform's handwriting, its floating cursor, or keys.
+                cause = _textInputConnection?.ScribbleInProgress ?? false
+                    ? SelectionChangedCause.StylusHandwriting
+                    : _pointOffsetOrigin is not null
+                        ? SelectionChangedCause.ForcePress
+                        : SelectionChangedCause.Keyboard;
+            }
+
+            _pendingSelectionCause = cause;
             controller.Value = value;
-            Widget.OnChanged?.Invoke(controller.Text);
+            _pendingSelectionCause = null;
+            if (textChanged)
+            {
+                Widget.OnChanged?.Invoke(controller.Text);
+            }
+
+            ScheduleShowCaretOnScreen(withAnimation: true);
         }
 
         /// <inheritdoc/>
@@ -1591,21 +1678,6 @@ public sealed class EditableText : StatefulWidget
         }
 
         /// <inheritdoc/>
-        /// <remarks>Not wired yet: `RenderEditable.SetFloatingCursor` and
-        /// `CalculateBoundedFloatingCursorOffset` exist, but Dart's reset animation
-        /// (`_floatingCursorResetController`) is not ported (docs/ai/BACKLOG.md).</remarks>
-        public void UpdateFloatingCursor(RawFloatingCursorPoint point)
-        {
-        }
-
-        /// <inheritdoc/>
-        /// <remarks>Not wired yet: `RenderEditable.SetPromptRectRange` paints the rect, but the widget
-        /// has no `autocorrectionTextRectColor` (docs/ai/BACKLOG.md).</remarks>
-        public void ShowAutocorrectionPromptRect(int start, int end)
-        {
-        }
-
-        /// <inheritdoc/>
         void ITextInputClient.ShowToolbar() => ShowToolbar();
 
         private IAutofillClient EffectiveAutofillClient => Widget.AutofillClient ?? this;
@@ -1624,6 +1696,12 @@ public sealed class EditableText : StatefulWidget
             _textInputConnection = NeedsAutofill && _currentAutofillScope != null
                 ? _currentAutofillScope.Attach(this, configuration)
                 : UI.TextInput.Attach(this, configuration);
+            if (RenderEditable is { HasSize: true, Attached: true })
+            {
+                UpdateSizeAndTransform();
+            }
+
+            SchedulePeriodicPostFrameCallbacks();
             _textInputConnection.SetEditingState(CurrentTextEditingValue);
             _textInputConnection.Show();
             if (NeedsAutofill)
@@ -1655,6 +1733,7 @@ public sealed class EditableText : StatefulWidget
         {
             base.DidChangeDependencies();
             UpdateAutofillRegistration();
+            DidChangeDependenciesForContextMenu();
         }
 
         public override void InitState()
@@ -1745,6 +1824,9 @@ public sealed class EditableText : StatefulWidget
 
         public override void Dispose()
         {
+            _internalScrollController?.Dispose();
+            _floatingCursorResetController?.Dispose();
+            _floatingCursorResetController = null;
             CloseInputConnection();
             _currentAutofillScope?.Unregister(AutofillId);
             _currentAutofillScope = null;
@@ -1758,8 +1840,9 @@ public sealed class EditableText : StatefulWidget
             DetachController();
             DetachFocusNode(disposeOwned: true);
             _cursorTicker.Dispose();
+            StopObservingMetrics();
             _cursorVisibilityNotifier.Dispose();
-            _viewportOffset.Dispose();
+            DisposeScrollNotificationObserver();
 
             base.Dispose();
         }
@@ -1840,11 +1923,11 @@ public sealed class EditableText : StatefulWidget
                 onTextComposition: HandleTextComposition,
                 onTextInputState: HandleTextInputState,
                 onTextSelectionChanged: HandleTextSelectionChanged,
-                child: new CompositedTransformTarget(
-                    link: _toolbarLayerLink,
-                    child: new Container(
-                        color: backgroundColor,
-                        padding: Widget.Padding,
+                child: new Container(
+                    color: backgroundColor,
+                    padding: Widget.Padding,
+                    child: BuildScrollable(context, offset => new CompositedTransformTarget(
+                        link: _toolbarLayerLink,
                         child: new EditableRenderObjectWidget(
                             key: _editableRenderKey,
                             inlineSpan: BuildTextSpan(showPlaceholder),
@@ -1869,7 +1952,7 @@ public sealed class EditableText : StatefulWidget
                             textDirection: Widget.TextDirection ?? Directionality.Of(context),
                             obscuringCharacter: Widget.ObscuringCharacter,
                             obscureText: Widget.ObscureText,
-                            offset: _viewportOffset,
+                            offset: offset,
                             rendererIgnoresPointer: true,
                             cursorWidth: Widget.CursorWidth,
                             cursorHeight: Widget.CursorHeight,
@@ -1881,7 +1964,10 @@ public sealed class EditableText : StatefulWidget
                             enableInteractiveSelection: Widget.EnableInteractiveSelection,
                             textSelectionDelegate: this,
                             devicePixelRatio: MediaQuery.MaybeDevicePixelRatioOf(context) ?? 1.0,
-                            clipBehavior: Widget.ClipBehavior))));
+                            clipBehavior: Widget.ClipBehavior,
+                            backgroundCursorColor: Widget.BackgroundCursorColor,
+                            promptRectRange: _currentPromptRectRange,
+                            promptRectColor: Widget.AutocorrectionTextRectColor)))));
             if (!Widget.RendererIgnoresPointer)
             {
                 result = new Listener(
@@ -1905,13 +1991,16 @@ public sealed class EditableText : StatefulWidget
                         ?? SystemMouseCursors.Text,
                 child: result);
 
-            return new Semantics(
-                label: Widget.SemanticsLabel,
-                textField: true,
-                enabled: Widget.Enabled ? true : null,
-                focused: _focusNode.HasFocus ? true : null,
-                onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
-                child: result);
+            return new EditableTextCompositionCallback(
+                compositeCallback: CompositeCallback,
+                enabled: HasInputConnection,
+                child: new Semantics(
+                    label: Widget.SemanticsLabel,
+                    textField: true,
+                    enabled: Widget.Enabled ? true : null,
+                    focused: _focusNode.HasFocus ? true : null,
+                    onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
+                    child: result));
         }
 
         public bool ShowToolbar()
@@ -1931,11 +2020,18 @@ public sealed class EditableText : StatefulWidget
 
             _showToolbarWhenClipboardResolved = false;
             overlay.ShowToolbar();
-            return overlay.ToolbarIsVisible;
+            if (!overlay.ToolbarIsVisible)
+            {
+                return false;
+            }
+
+            ListenToParentScrollsIfNeeded();
+            return true;
         }
 
         public void HideToolbar(bool hideHandles = true)
         {
+            DisposeScrollNotificationObserver();
             _showToolbarWhenClipboardResolved = false;
             _selectionOverlay?.HideToolbar();
             if (hideHandles) _selectionOverlay?.HideHandles();
@@ -1962,6 +2058,7 @@ public sealed class EditableText : StatefulWidget
         public void UserUpdateTextEditingValue(TextEditingValue value, SelectionChangedCause? cause)
         {
             TextEditingController controller = _controller!;
+            ScheduleShowCaretForUserUpdate(controller.Value, value);
             if (cause.HasValue)
             {
                 _pendingSelectionCause = cause.Value;
@@ -2000,9 +2097,9 @@ public sealed class EditableText : StatefulWidget
             }
         }
 
-        public void CutSelection(SelectionChangedCause cause) => CutAndHide();
+        public void CutSelection(SelectionChangedCause cause) => CutAndHide(cause);
 
-        public void CopySelection(SelectionChangedCause cause) => CopyAndHide();
+        public void CopySelection(SelectionChangedCause cause) => CopyAndHide(cause);
 
         public void PasteText(SelectionChangedCause cause) =>
             Scheduler.RunAsync(() => PasteTextAsync(cause));
@@ -2011,9 +2108,40 @@ public sealed class EditableText : StatefulWidget
 
         public void SelectAll(SelectionChangedCause cause)
         {
+            TextEditingValue oldValue = _controller!.Value;
             _pendingSelectionCause = cause;
-            _ = _controller!.SelectAll();
+            _ = _controller.SelectAll();
             _pendingSelectionCause = null;
+            ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
+            if (cause != SelectionChangedCause.Toolbar)
+            {
+                return;
+            }
+
+            // Dart's `selectAll(toolbar)`: desktop hides the menu, and every platform but Apple's
+            // reveals the end of the selection.
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Linux:
+                case TargetPlatform.Windows:
+                    HideToolbar();
+                    break;
+            }
+
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.Android:
+                case TargetPlatform.Fuchsia:
+                case TargetPlatform.Linux:
+                case TargetPlatform.Windows:
+                    if (RenderEditable is { HasSize: true } && EffectiveScrollController.HasClients)
+                    {
+                        BringIntoView(_controller.Selection.Extent);
+                    }
+
+                    break;
+            }
         }
 
         private void AttachController(TextEditingController controller)
@@ -2209,30 +2337,45 @@ public sealed class EditableText : StatefulWidget
             SetSelection(new TextSelection(start, end), cause);
         }
 
-        private void CutAndHide()
+        private void CutAndHide() => CutAndHide(SelectionChangedCause.Toolbar);
+
+        private void CutAndHide(SelectionChangedCause cause)
         {
             TextEditingController controller = _controller!;
             if (!Widget.ReadOnly && !Widget.ObscureText && !controller.Selection.IsCollapsed)
             {
                 TextEditingValue oldValue = controller.Value;
                 CopyToClipboard(controller.SelectedText);
-                _pendingSelectionCause = SelectionChangedCause.Toolbar;
+                _pendingSelectionCause = cause;
                 if (controller.DeleteBackward())
                 {
+                    ScheduleShowCaretForUserUpdate(oldValue, controller.Value);
                     ApplyInputFormatters(oldValue);
                     Widget.OnChanged?.Invoke(controller.Text);
                 }
                 _pendingSelectionCause = null;
+                if (cause == SelectionChangedCause.Toolbar)
+                {
+                    BringSelectionIntoViewAfterFrame();
+                }
             }
             HideToolbar();
         }
 
-        private void CopyAndHide()
+        private void CopyAndHide() => CopyAndHide(SelectionChangedCause.Toolbar);
+
+        private void CopyAndHide(SelectionChangedCause cause)
         {
             TextEditingController controller = _controller!;
             if (!Widget.ObscureText && !controller.Selection.IsCollapsed)
             {
                 CopyToClipboard(controller.SelectedText);
+                if (cause == SelectionChangedCause.Toolbar
+                    && RenderEditable is { HasSize: true }
+                    && EffectiveScrollController.HasClients)
+                {
+                    BringIntoView(controller.Selection.Extent);
+                }
             }
             HideToolbar();
         }
@@ -2286,12 +2429,14 @@ public sealed class EditableText : StatefulWidget
             _pendingSelectionCause = cause;
             if (controller.Insert(LimitInsertion(text)))
             {
+                ScheduleShowCaretForUserUpdate(oldValue, controller.Value);
                 ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(controller.Text);
             }
             _pendingSelectionCause = null;
             if (cause == SelectionChangedCause.Toolbar)
             {
+                BringSelectionIntoViewAfterFrame();
                 HideToolbar();
             }
         }
@@ -2307,9 +2452,7 @@ public sealed class EditableText : StatefulWidget
 
         private void SelectAllAndHide()
         {
-            _pendingSelectionCause = SelectionChangedCause.Toolbar;
-            _controller!.SelectAll();
-            _pendingSelectionCause = null;
+            SelectAll(SelectionChangedCause.Toolbar);
             HideToolbar();
         }
 
@@ -2317,9 +2460,15 @@ public sealed class EditableText : StatefulWidget
             TextSelection selection,
             SelectionChangedCause cause)
         {
+            TextSelection oldSelection = _controller!.Selection;
             _pendingSelectionCause = cause;
-            _controller!.Selection = selection;
+            _controller.Selection = selection;
             _pendingSelectionCause = null;
+            if (!oldSelection.Equals(_controller.Selection)
+                || cause is SelectionChangedCause.LongPress or SelectionChangedCause.Keyboard)
+            {
+                BringIntoViewBySelectionState(oldSelection, _controller.Selection, cause);
+            }
         }
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
@@ -2352,6 +2501,7 @@ public sealed class EditableText : StatefulWidget
                     _pendingSelectionCause = SelectionChangedCause.Keyboard;
                     _ = controller.SelectAll();
                     _pendingSelectionCause = null;
+                    RevealKeyboardSelection(valueBeforeKey, controller.Value);
                 }
                 _verticalMovementRun = null;
                 return KeyEventResult.Handled;
@@ -2377,6 +2527,7 @@ public sealed class EditableText : StatefulWidget
                     textChanged = !Widget.ReadOnly && controller.DeleteBackward();
                     if (textChanged)
                     {
+                        ScheduleShowCaretForUserUpdate(valueBeforeKey, controller.Value);
                         ApplyInputFormatters(valueBeforeKey);
                         Widget.OnChanged?.Invoke(controller.Text);
                     }
@@ -2482,6 +2633,15 @@ public sealed class EditableText : StatefulWidget
 
             if (textChanged)
             {
+                ScheduleShowCaretForUserUpdate(valueBeforeKey, controller.Value);
+            }
+            else
+            {
+                RevealKeyboardSelection(valueBeforeKey, controller.Value);
+            }
+
+            if (textChanged)
+            {
                 ApplyInputFormatters(valueBeforeKey);
                 Widget.OnChanged?.Invoke(controller.Text);
             }
@@ -2514,6 +2674,8 @@ public sealed class EditableText : StatefulWidget
             if (changed)
             {
                 _verticalMovementRun = null;
+                _currentPromptRectRange = null;
+                ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
                 ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
@@ -2536,6 +2698,9 @@ public sealed class EditableText : StatefulWidget
             if (changed)
             {
                 _verticalMovementRun = null;
+                _currentPromptRectRange = null;
+
+                ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
                 ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
@@ -2575,9 +2740,18 @@ public sealed class EditableText : StatefulWidget
                 return false;
             }
 
+            _pendingSelectionCause = SelectionChangedCause.Keyboard;
             controller.Selection = nextSelection;
+            _pendingSelectionCause = null;
             _verticalMovementRun = null;
-            return !previousSelection.Equals(controller.Selection);
+            bool selectionChanged = !previousSelection.Equals(controller.Selection);
+            if (selectionChanged)
+            {
+                // The platform IME moved the selection: Dart's `updateEditingValue`.
+                ScheduleShowCaretOnScreen(withAnimation: true);
+            }
+
+            return selectionChanged;
         }
 
         /// The caret rect of <paramref name="caretOffset"/> in root coordinates, for the IME and the
@@ -2654,9 +2828,15 @@ public sealed class EditableText : StatefulWidget
             {
                 // The selection overlay below reads the editable's geometry before the rebuild reaches
                 // the render object, so the new value is pushed ahead of `UpdateRenderObject`, which
-                // then sees no change.
+                // then sees no change. Dart never has new text in the render object between frames, so
+                // the painter is laid out right away: a hover hit test or an IME geometry query can
+                // arrive before the next layout and read it.
                 renderEditable.Text = BuildTextSpan(ShowPlaceholder);
                 renderEditable.Selection = ShowPlaceholder ? TextSelection.Collapsed(0) : selection;
+                if (renderEditable.Attached)
+                {
+                    renderEditable.ComputeTextMetricsIfNeeded();
+                }
             }
             if (!_lastSelection.Equals(selection))
             {
@@ -2686,11 +2866,18 @@ public sealed class EditableText : StatefulWidget
                     _ = _controller!.SelectAll();
                 }
                 OpenInputConnection();
+                StartObservingMetrics();
+                if (!Widget.ReadOnly)
+                {
+                    ScheduleShowCaretOnScreen(withAnimation: true);
+                }
             }
             else
             {
                 _selectionOverlay?.Hide();
                 CloseInputConnection();
+                StopObservingMetrics();
+                _currentPromptRectRange = null;
             }
             _hadFocus = hasFocus;
             UpdateCursorTicker();
@@ -2808,8 +2995,11 @@ public sealed class EditableText : StatefulWidget
 
         public void ShowHandles() => EnsureSelectionOverlay().ShowHandles();
 
+        /// Dart's `late final renderEditable`: found once through the editable's key, then kept, so a
+        /// callback that runs while the element is inactive (the floating cursor's reset tick, a
+        /// post-frame callback) still reaches it.
         private RenderEditable? RenderEditable =>
-            _editableRenderKey.CurrentContext?.FindRenderObject() as RenderEditable;
+            _renderEditable ??= _editableRenderKey.CurrentContext?.FindRenderObject() as RenderEditable;
 
         private TextSelectionOverlay EnsureSelectionOverlay()
         {

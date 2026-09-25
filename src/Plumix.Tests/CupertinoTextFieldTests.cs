@@ -133,7 +133,8 @@ public sealed class CupertinoTextFieldTests : IDisposable
         BoxDecoration defaultDecoration = Assert.IsType<BoxDecoration>(
             Assert.Single(disabled.FindWidgets<DecoratedBox>()).Decoration);
         Assert.Equal(Color.FromUInt32(0xFFFAFAFA), defaultDecoration.Color);
-        Assert.True(Assert.Single(disabled.FindWidgets<IgnorePointer>()).Ignoring);
+        // The EditableText's own Scrollable carries a keyed IgnorePointer of its own.
+        Assert.True(Assert.Single(disabled.FindWidgets<IgnorePointer>(), widget => widget.Key is null).Ignoring);
 
         var custom = new BoxDecoration(Color: Color.FromUInt32(0xFF123456));
         using var overridden = new CupertinoThemeTestHarness(Wrap(new CupertinoTextField(

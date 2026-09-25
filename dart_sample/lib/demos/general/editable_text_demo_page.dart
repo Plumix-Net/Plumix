@@ -12,6 +12,8 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   late final TextEditingController _notesController;
   late final TextEditingController _pinController;
   late final TextEditingController _caretController;
+  late final TextEditingController _longLineController;
+  late final TextEditingController _scrollingNotesController;
   bool _enabled = true;
   String _lastChange = '(none)';
 
@@ -22,6 +24,13 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _notesController = TextEditingController();
     _pinController = TextEditingController();
     _caretController = TextEditingController(text: 'Wide rounded caret');
+    _longLineController = TextEditingController(
+      text:
+          'This single line is far wider than its field, so typing at the end scrolls to the caret',
+    );
+    _scrollingNotesController = TextEditingController(
+      text: 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8',
+    );
   }
 
   @override
@@ -30,6 +39,8 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _notesController.dispose();
     _pinController.dispose();
     _caretController.dispose();
+    _longLineController.dispose();
+    _scrollingNotesController.dispose();
     super.dispose();
   }
 
@@ -143,6 +154,35 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
           onChanged: (String value) =>
               setState(() => _lastChange = 'caret = $value'),
         ),
+        const Text(
+          'Long line (scrolls to the caret)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: SizedBox(
+            width: 220,
+            child: _buildTextField(
+              controller: _longLineController,
+              placeholder: '',
+              onChanged: (String value) =>
+                  setState(() => _lastChange = 'long line = $value'),
+            ),
+          ),
+        ),
+        const Text(
+          'Notes (3 lines, scrolls)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        _buildTextField(
+          controller: _scrollingNotesController,
+          placeholder: '',
+          multiline: true,
+          maxLines: 3,
+          onChanged: (String value) => setState(
+            () => _lastChange = 'scrolling notes = ${_escapeMultiline(value)}',
+          ),
+        ),
         Text(
           "current: name='${_nameController.text}', notes='${_escapeMultiline(_notesController.text)}'",
           style: const TextStyle(fontSize: 12, color: Colors.black),
@@ -156,6 +196,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     required String placeholder,
     required ValueChanged<String> onChanged,
     bool multiline = false,
+    int? maxLines,
     bool obscureText = false,
     double cursorWidth = 2.0,
     Radius? cursorRadius,
@@ -164,7 +205,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     return TextField(
       controller: controller,
       enabled: _enabled,
-      maxLines: multiline ? null : 1,
+      maxLines: maxLines ?? (multiline ? null : 1),
       obscureText: obscureText,
       cursorWidth: cursorWidth,
       cursorRadius: cursorRadius,

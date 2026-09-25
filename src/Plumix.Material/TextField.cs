@@ -319,6 +319,9 @@ public sealed class TextField : StatefulWidget
                 magnifierConfiguration: Current.MagnifierConfiguration,
                 onSelectionChanged: Current.OnSelectionChanged,
                 rendererIgnoresPointer: true,
+                backgroundCursorColor: CupertinoColors.InactiveGray.Value,
+                autocorrectionTextRectColor: theme.Platform == TargetPlatform.IOS ? selectionColor : null,
+                restorationId: "editable",
                 key: _editableTextKey);
 
             if (multiline && !Current.Expands)

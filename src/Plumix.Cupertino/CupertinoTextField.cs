@@ -793,6 +793,10 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             scribbleEnabled: Current.ScribbleEnabled,
             stylusHandwritingEnabled: Current.StylusHandwritingEnabled,
             clipBehavior: Current.ClipBehavior,
+            backgroundCursorColor: CupertinoDynamicColor.Resolve(CupertinoColors.InactiveGray, context),
+            autocorrectionTextRectColor: selectionColor,
+            dragStartBehavior: Current.DragStartBehavior,
+            restorationId: "editable",
             key: _editableTextKey);
 
         Widget content = hasAttachments

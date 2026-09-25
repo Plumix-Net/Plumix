@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- EditableText lays out text it pushes ahead, so a hover hit test right after typing can't throw (editable_text.dart).
+- Breaking: EditableText scrolls in its own Scrollable: caret on screen, IME geometry (editable_text.dart).
+- EditableText floating cursor, autocorrection prompt rect, context menu hidden while scrolling (editable_text.dart).
 - Breaking: RendererBinding is a strict port: drawFrame, first-frame deferral, view semantics (rendering/binding.dart).
 - Breaking: SemanticsBinding owns semantics-enabled state and action listeners; events carry a view id (binding.dart).
 - Service extension registry with the rendering, `timeDilation` and `Flutter.Frame` entries (foundation/binding.dart).

@@ -188,6 +188,32 @@ public sealed class TextInputTests : IDisposable
     }
 
     [Fact]
+    public void EditableText_HitTestBetweenTypingAndTheNextLayout_ReadsALaidOutPainter()
+    {
+        // The controller listener pushes the new text into the RenderEditable before the rebuild
+        // (C#-only); a hover hit test that arrives before the next frame used to find the painter
+        // invalidated and throw "Text layout not available".
+        using var tester = new FrameworkDartTester();
+        var controller = new TextEditingController("hello");
+        var focusNode = new FocusNode();
+        tester.PumpWidget(new Directionality(
+            Plumix.UI.TextDirection.Ltr,
+            new Align(
+                alignment: Alignment.TopLeft,
+                child: new SizedBox(
+                    width: 200,
+                    child: new EditableText(controller: controller, focusNode: focusNode)))));
+        focusNode.RequestFocus();
+        tester.Pump();
+
+        Assert.True(FocusManager.Instance.HandleTextInput("a"));
+        var result = new BoxHitTestResult();
+        tester.RenderView.HitTest(result, new Avalonia.Point(10, 10));
+
+        Assert.Contains(result.Path, entry => entry.Target is RenderEditable);
+    }
+
+    [Fact]
     public void TextEditingController_WordNavigationAndDeletion_Work()
     {
         const string initialText = "alpha beta_gamma delta";

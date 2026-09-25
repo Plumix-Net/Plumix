@@ -22,6 +22,8 @@ internal sealed class EditableTextDemoPageState : State
     private TextEditingController _notesController = null!;
     private TextEditingController _pinController = null!;
     private TextEditingController _caretController = null!;
+    private TextEditingController _longLineController = null!;
+    private TextEditingController _scrollingNotesController = null!;
     private bool _enabled = true;
     private string _lastChange = "(none)";
 
@@ -31,6 +33,10 @@ internal sealed class EditableTextDemoPageState : State
         _notesController = new TextEditingController();
         _pinController = new TextEditingController();
         _caretController = new TextEditingController("Wide rounded caret");
+        _longLineController = new TextEditingController(
+            "This single line is far wider than its field, so typing at the end scrolls to the caret");
+        _scrollingNotesController = new TextEditingController(
+            "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8");
     }
 
     public override void Dispose()
@@ -39,6 +45,8 @@ internal sealed class EditableTextDemoPageState : State
         _notesController.Dispose();
         _pinController.Dispose();
         _caretController.Dispose();
+        _longLineController.Dispose();
+        _scrollingNotesController.Dispose();
 
         base.Dispose();
     }
@@ -131,6 +139,22 @@ internal sealed class EditableTextDemoPageState : State
                     cursorRadius: Radius.Circular(2),
                     cursorColor: Color.Parse("#FFD81B60"),
                     onChanged: value => SetState(() => _lastChange = $"caret = {value}")),
+                new Text("Long line (scrolls to the caret)", fontSize: 12, color: Colors.DimGray),
+                new Align(
+                    alignment: Alignment.CenterLeft,
+                    child: new SizedBox(
+                        width: 220,
+                        child: new EditableText(
+                            controller: _longLineController,
+                            enabled: _enabled,
+                            onChanged: value => SetState(() => _lastChange = $"long line = {value}")))),
+                new Text("Notes (3 lines, scrolls)", fontSize: 12, color: Colors.DimGray),
+                new EditableText(
+                    controller: _scrollingNotesController,
+                    enabled: _enabled,
+                    multiline: true,
+                    maxLines: 3,
+                    onChanged: value => SetState(() => _lastChange = $"scrolling notes = {EscapeMultiline(value)}")),
                 new Text(
                     $"current: name='{_nameController.Text}', notes='{EscapeMultiline(_notesController.Text)}'",
                     fontSize: 12,
