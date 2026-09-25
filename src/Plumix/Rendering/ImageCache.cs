@@ -1,3 +1,6 @@
+using Plumix.Developer;
+using Plumix.Foundation;
+
 namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/image_cache.dart
@@ -30,20 +33,40 @@ public sealed class ImageCache
         set
         {
             if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+            lock (_sync)
+            {
+                if (value == _maximumSize) return;
+            }
+
+            TimelineTask? debugTimelineTask = null;
+            if (!Constants.KReleaseMode)
+            {
+                debugTimelineTask = new TimelineTask();
+                debugTimelineTask.Start(
+                    "ImageCache.setMaximumSize",
+                    arguments: new Dictionary<string, object?> { ["value"] = value });
+            }
+
             if (value == 0)
             {
                 lock (_sync) _maximumSize = value;
                 Clear();
-                return;
+            }
+            else
+            {
+                List<CachedImage> evicted;
+                lock (_sync)
+                {
+                    _maximumSize = value;
+                    evicted = CheckCacheSizeLocked(debugTimelineTask);
+                }
+                DisposeAll(evicted);
             }
 
-            List<CachedImage> evicted;
-            lock (_sync)
+            if (!Constants.KReleaseMode)
             {
-                _maximumSize = value;
-                evicted = TrimLocked();
+                debugTimelineTask!.Finish();
             }
-            DisposeAll(evicted);
         }
     }
 
@@ -53,20 +76,40 @@ public sealed class ImageCache
         set
         {
             if (value < 0) throw new ArgumentOutOfRangeException(nameof(value));
+            lock (_sync)
+            {
+                if (value == _maximumSizeBytes) return;
+            }
+
+            TimelineTask? debugTimelineTask = null;
+            if (!Constants.KReleaseMode)
+            {
+                debugTimelineTask = new TimelineTask();
+                debugTimelineTask.Start(
+                    "ImageCache.setMaximumSizeBytes",
+                    arguments: new Dictionary<string, object?> { ["value"] = value });
+            }
+
             if (value == 0)
             {
                 lock (_sync) _maximumSizeBytes = value;
                 Clear();
-                return;
+            }
+            else
+            {
+                List<CachedImage> evicted;
+                lock (_sync)
+                {
+                    _maximumSizeBytes = value;
+                    evicted = CheckCacheSizeLocked(debugTimelineTask);
+                }
+                DisposeAll(evicted);
             }
 
-            List<CachedImage> evicted;
-            lock (_sync)
+            if (!Constants.KReleaseMode)
             {
-                _maximumSizeBytes = value;
-                evicted = TrimLocked();
+                debugTimelineTask!.Finish();
             }
-            DisposeAll(evicted);
         }
     }
 
@@ -116,15 +159,40 @@ public sealed class ImageCache
         ArgumentNullException.ThrowIfNull(key);
         ArgumentNullException.ThrowIfNull(loader);
 
+        TimelineTask? debugTimelineTask = null;
+        if (!Constants.KReleaseMode)
+        {
+            debugTimelineTask = new TimelineTask();
+            debugTimelineTask.Start(
+                "ImageCache.putIfAbsent",
+                arguments: new Dictionary<string, object?> { ["key"] = key.ToString() });
+        }
+
+        List<CachedImage> touchEvicted = [];
+        CachedImage? touchRejected = null;
+        ImageStreamCompleter? liveCompleter = null;
         lock (_sync)
         {
+            // Nothing needs to be done because the image hasn't loaded yet.
             if (_pendingImages.TryGetValue(key, out var pending))
             {
+                if (!Constants.KReleaseMode)
+                {
+                    debugTimelineTask!.Finish(new Dictionary<string, object?> { ["result"] = "pending" });
+                }
+
                 return pending.Completer;
             }
 
+            // Remove the provider from the list so that we can move it to the recently used position
+            // below.
             if (_cache.TryGetValue(key, out var cached))
             {
+                if (!Constants.KReleaseMode)
+                {
+                    debugTimelineTask!.Finish(new Dictionary<string, object?> { ["result"] = "keepAlive" });
+                }
+
                 TouchLocked(cached);
                 TrackLiveImageLocked(key, cached.Completer, cached.SizeBytes);
                 return cached.Completer;
@@ -132,6 +200,8 @@ public sealed class ImageCache
 
             if (_liveImages.TryGetValue(key, out var live))
             {
+                // Dart's `_touch`: an image of known size that fits is kept alive, then the cache is
+                // trimmed back under its limits.
                 if (live.SizeBytes.HasValue)
                 {
                     var resurrected = new CachedImage(
@@ -143,15 +213,29 @@ public sealed class ImageCache
                     {
                         _cache[key] = resurrected;
                         _currentSizeBytes += resurrected.SizeBytes;
+                        touchEvicted = CheckCacheSizeLocked(debugTimelineTask);
                     }
                     else
                     {
                         _lru.Remove(resurrected.Node);
-                        resurrected.Dispose();
+                        touchRejected = resurrected;
                     }
                 }
-                return live.Completer;
+
+                liveCompleter = live.Completer;
             }
+        }
+
+        if (liveCompleter is not null)
+        {
+            touchRejected?.Dispose();
+            DisposeAll(touchEvicted);
+            if (!Constants.KReleaseMode)
+            {
+                debugTimelineTask!.Finish(new Dictionary<string, object?> { ["result"] = "keepAlive" });
+            }
+
+            return liveCompleter;
         }
 
         ImageStreamCompleter completer;
@@ -161,9 +245,25 @@ public sealed class ImageCache
         }
         catch (Exception exception)
         {
+            var stackTrace = new System.Diagnostics.StackTrace(exception, true);
+            if (!Constants.KReleaseMode)
+            {
+                debugTimelineTask!.Finish(new Dictionary<string, object?>
+                {
+                    ["result"] = "error",
+                    ["error"] = exception.ToString(),
+                    ["stackTrace"] = stackTrace.ToString(),
+                });
+            }
+
             if (onError is null) throw;
-            onError(exception, new System.Diagnostics.StackTrace(exception, true));
+            onError(exception, stackTrace);
             return null;
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            debugTimelineTask!.Start("listener");
         }
 
         bool trackPending = false;
@@ -171,7 +271,7 @@ public sealed class ImageCache
         ImageStreamListener? listener = null;
         int listenedOnce = 0;
         listener = new ImageStreamListener(
-            OnImage: (image, _) =>
+            OnImage: (image, syncCall) =>
             {
                 if (Interlocked.Exchange(ref listenedOnce, 1) != 0)
                 {
@@ -179,9 +279,23 @@ public sealed class ImageCache
                     return;
                 }
 
-                CompletePending(key, completer, pendingImage, image, trackPending);
+                long sizeBytes = image.SizeBytes;
+                CompletePending(key, completer, pendingImage, image, trackPending, debugTimelineTask);
                 completer.RemoveListener(listener!);
                 image.Dispose();
+                if (!Constants.KReleaseMode)
+                {
+                    debugTimelineTask!.Finish(new Dictionary<string, object?>
+                    {
+                        ["syncCall"] = syncCall ? "true" : "false",
+                        ["sizeInBytes"] = sizeBytes,
+                    });
+                    debugTimelineTask.Finish(new Dictionary<string, object?>
+                    {
+                        ["currentSizeBytes"] = CurrentSizeBytes,
+                        ["currentSize"] = CurrentSize,
+                    });
+                }
             });
         pendingImage = new PendingImage(completer, listener);
 
@@ -235,14 +349,39 @@ public sealed class ImageCache
         live?.Dispose();
         if (pending is not null)
         {
+            if (!Constants.KReleaseMode)
+            {
+                Timeline.InstantSync(
+                    "ImageCache.evict",
+                    arguments: new Dictionary<string, object?> { ["type"] = "pending" });
+            }
+
             pending.RemoveListener();
             return true;
         }
         if (cached is not null)
         {
+            if (!Constants.KReleaseMode)
+            {
+                Timeline.InstantSync(
+                    "ImageCache.evict",
+                    arguments: new Dictionary<string, object?>
+                    {
+                        ["type"] = "keepAlive",
+                        ["sizeInBytes"] = cached.SizeBytes,
+                    });
+            }
+
             cached.Dispose();
             return true;
         }
+        if (!Constants.KReleaseMode)
+        {
+            Timeline.InstantSync(
+                "ImageCache.evict",
+                arguments: new Dictionary<string, object?> { ["type"] = "miss" });
+        }
+
         return false;
     }
 
@@ -252,6 +391,19 @@ public sealed class ImageCache
         CachedImage[] cached;
         lock (_sync)
         {
+            if (!Constants.KReleaseMode)
+            {
+                Timeline.InstantSync(
+                    "ImageCache.clear",
+                    arguments: new Dictionary<string, object?>
+                    {
+                        ["pendingImages"] = _pendingImages.Count,
+                        ["keepAliveImages"] = _cache.Count,
+                        ["liveImages"] = _liveImages.Count,
+                        ["currentSizeInBytes"] = _currentSizeBytes,
+                    });
+            }
+
             pending = [.. _pendingImages.Values];
             cached = [.. _cache.Values];
             _pendingImages.Clear();
@@ -280,7 +432,8 @@ public sealed class ImageCache
         ImageStreamCompleter completer,
         PendingImage? pending,
         ImageInfo image,
-        bool trackPending)
+        bool trackPending,
+        TimelineTask? timelineTask)
     {
         List<CachedImage> evicted = [];
         CachedImage? rejected = null;
@@ -294,7 +447,7 @@ public sealed class ImageCache
                 {
                     _cache[key] = cached;
                     _currentSizeBytes += cached.SizeBytes;
-                    evicted = TrimLocked();
+                    evicted = CheckCacheSizeLocked(timelineTask);
                 }
                 else
                 {
@@ -350,8 +503,18 @@ public sealed class ImageCache
         _lru.AddLast(image.Node);
     }
 
-    private List<CachedImage> TrimLocked()
+    /// <remarks>
+    /// Dart's <c>_checkCacheSize</c>: evicts least recently used images until the cache is back under
+    /// its limits. The evicted images are returned so they are disposed outside the lock.
+    /// </remarks>
+    private List<CachedImage> CheckCacheSizeLocked(TimelineTask? timelineTask)
     {
+        var finishArgs = new Dictionary<string, object?>();
+        if (!Constants.KReleaseMode)
+        {
+            timelineTask!.Start("checkCacheSize");
+        }
+
         List<CachedImage> evicted = [];
         while (_cache.Count > _maximumSize || _currentSizeBytes > _maximumSizeBytes)
         {
@@ -361,7 +524,19 @@ public sealed class ImageCache
             _lru.RemoveFirst();
             _currentSizeBytes -= image.SizeBytes;
             evicted.Add(image);
+            if (!Constants.KReleaseMode)
+            {
+                finishArgs[key.ToString() ?? "null"] = image.SizeBytes;
+            }
         }
+
+        if (!Constants.KReleaseMode)
+        {
+            finishArgs["endCacheSize"] = _cache.Count;
+            finishArgs["endSizeBytes"] = _currentSizeBytes;
+            timelineTask!.Finish(finishArgs);
+        }
+
         return evicted;
     }
 

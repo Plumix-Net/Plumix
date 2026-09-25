@@ -100,16 +100,16 @@ public static partial class RenderingDebug
 
     /// <summary>Adds timeline events for every <see cref="RenderObject"/> layout.</summary>
     /// <remarks>
-    /// Flutter's <c>debugProfileLayoutsEnabled</c>. Plumix has no <c>dart:developer</c>
-    /// <c>Timeline</c>, so the flag is carried but no events are emitted yet; see
-    /// <c>docs/ai/DIVERGENCES.md</c>.
+    /// Flutter's <c>debugProfileLayoutsEnabled</c>. The events go to <see cref="FlutterTimeline"/>; this
+    /// also reports every nested intrinsic, dry-layout and dry-baseline computation instead of only the
+    /// outermost one.
     /// </remarks>
     public static bool ProfileLayoutsEnabled { get; set; }
 
     /// <summary>Adds timeline events for every <see cref="RenderObject"/> painted.</summary>
     /// <remarks>
-    /// Flutter's <c>debugProfilePaintsEnabled</c>. See <see cref="ProfileLayoutsEnabled"/> for why
-    /// no events are emitted yet; <see cref="OnProfilePaint"/> is the ported callback equivalent.
+    /// Flutter's <c>debugProfilePaintsEnabled</c>. The events go to <see cref="FlutterTimeline"/>;
+    /// <see cref="OnProfilePaint"/> is the in-process callback equivalent.
     /// </remarks>
     public static bool ProfilePaintsEnabled { get; set; }
 

@@ -128,6 +128,32 @@ public static class WidgetsDebug
     /// <summary>Dart's <c>debugEnhanceBuildTimelineArguments</c>: adds widget properties to build events.</summary>
     public static bool DebugEnhanceBuildTimelineArguments { get; set; }
 
+    /// <summary>
+    /// Whether <paramref name="widget"/> was created by the application rather than by the framework
+    /// or a package.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>debugIsWidgetLocalCreation</c> (<c>widget_inspector.dart</c>), which reads the creation
+    /// location the <c>--track-widget-creation</c> kernel transformer records. Plumix has no creation
+    /// location tracking, so this answers <see langword="false"/> — what Dart answers when that
+    /// transformer is off (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    public static bool DebugIsWidgetLocalCreation(Widget widget)
+    {
+        ArgumentNullException.ThrowIfNull(widget);
+        return false;
+    }
+
+    /// <remarks>
+    /// Dart's private <c>_isProfileBuildsEnabledFor</c> (<c>framework.dart</c>): whether building
+    /// <paramref name="widget"/> is reported to the timeline.
+    /// </remarks>
+    internal static bool IsProfileBuildsEnabledFor(Widget widget)
+    {
+        return DebugProfileBuildsEnabled
+            || (DebugProfileBuildsEnabledUserWidgets && DebugIsWidgetLocalCreation(widget));
+    }
+
     /// <summary>Dart's <c>debugHighlightDeprecatedWidgets</c>: paints deprecated widgets in a bright colour.</summary>
     public static bool DebugHighlightDeprecatedWidgets { get; set; }
 

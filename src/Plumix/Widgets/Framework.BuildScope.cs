@@ -98,6 +98,16 @@ public sealed class BuildScope
     {
         DebugAssertions.Assert(element.InDirtyList);
         DebugAssertions.Assert(ReferenceEquals(element.BuildScope, this));
+        // Dart reads `element.widget` unconditionally here; Plumix can also reach this with an element
+        // `UnmountRoot` made defunct while it was still dirty (see `docs/ai/DIVERGENCES.md`), which
+        // has no widget, so the widget is only read when build profiling is on.
+        bool isTimelineTracked = !Constants.KReleaseMode
+            && (WidgetsDebug.DebugProfileBuildsEnabled || WidgetsDebug.DebugProfileBuildsEnabledUserWidgets)
+            && WidgetsDebug.IsProfileBuildsEnabledFor(element.Widget);
+        if (isTimelineTracked)
+        {
+            Element.DebugStartWidgetTimelineBlock(element.Widget);
+        }
 
         try
         {
@@ -119,6 +129,11 @@ public sealed class BuildScope
                     information.Add(element.DescribeElement("The element being rebuilt at the time was"));
                     return information;
                 });
+        }
+
+        if (isTimelineTracked)
+        {
+            FlutterTimeline.FinishSync();
         }
     }
 

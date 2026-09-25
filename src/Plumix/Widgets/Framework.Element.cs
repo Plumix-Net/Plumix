@@ -592,7 +592,18 @@ public abstract class Element : DiagnosticableTree, BuildContext
                     UpdateSlotForChild(child, newSlot);
                 }
 
+                bool isTimelineTracked = !Constants.KReleaseMode && WidgetsDebug.IsProfileBuildsEnabledFor(newWidget);
+                if (isTimelineTracked)
+                {
+                    DebugStartWidgetTimelineBlock(newWidget);
+                }
+
                 child.Update(newWidget);
+                if (isTimelineTracked)
+                {
+                    FlutterTimeline.FinishSync();
+                }
+
                 DebugAssertions.Assert(ReferenceEquals(child.Widget, newWidget));
                 if (Constants.KDebugMode)
                 {
@@ -605,11 +616,15 @@ public abstract class Element : DiagnosticableTree, BuildContext
             {
                 DeactivateChild(child);
                 DebugAssertions.Assert(child.Parent is null);
+                // The [debugProfileBuildsEnabled] code for this branch is inside [inflateWidget], since
+                // some [Element]s call [inflateWidget] directly instead of going through [updateChild].
                 newChild = InflateWidget(newWidget, newSlot);
             }
         }
         else
         {
+            // The [debugProfileBuildsEnabled] code for this branch is inside [inflateWidget], since
+            // some [Element]s call [inflateWidget] directly instead of going through [updateChild].
             newChild = InflateWidget(newWidget, newSlot);
         }
 
@@ -1017,35 +1032,65 @@ public abstract class Element : DiagnosticableTree, BuildContext
     /// </summary>
     public virtual Element InflateWidget(Widget newWidget, object? newSlot)
     {
-        Element? inactiveChild = newWidget.Key is GlobalKey key ? RetakeInactiveElement(key, newWidget) : null;
-        Element newChild = inactiveChild ?? newWidget.CreateElement();
-        if (Constants.KDebugMode)
+        bool isTimelineTracked = !Constants.KReleaseMode && WidgetsDebug.IsProfileBuildsEnabledFor(newWidget);
+        if (isTimelineTracked)
         {
-            DebugCheckForCycles(newChild);
+            DebugStartWidgetTimelineBlock(newWidget);
         }
 
         try
         {
-            if (inactiveChild != null)
+            Element? inactiveChild = newWidget.Key is GlobalKey key ? RetakeInactiveElement(key, newWidget) : null;
+            Element newChild = inactiveChild ?? newWidget.CreateElement();
+            if (Constants.KDebugMode)
             {
-                DebugAssertions.Assert(inactiveChild.Parent == null);
-                inactiveChild.ActivateWithParent(this, newSlot);
-                Element? updatedChild = UpdateChild(inactiveChild, newWidget, newSlot);
-                DebugAssertions.Assert(ReferenceEquals(inactiveChild, updatedChild));
-                return updatedChild!;
+                DebugCheckForCycles(newChild);
             }
 
-            newChild.Mount(this, newSlot);
-            DebugAssertions.Assert(newChild._lifecycleState == ElementLifecycleState.Active);
-            return newChild;
+            try
+            {
+                if (inactiveChild != null)
+                {
+                    DebugAssertions.Assert(inactiveChild.Parent == null);
+                    inactiveChild.ActivateWithParent(this, newSlot);
+                    Element? updatedChild = UpdateChild(inactiveChild, newWidget, newSlot);
+                    DebugAssertions.Assert(ReferenceEquals(inactiveChild, updatedChild));
+                    return updatedChild!;
+                }
+
+                newChild.Mount(this, newSlot);
+                DebugAssertions.Assert(newChild._lifecycleState == ElementLifecycleState.Active);
+                return newChild;
+            }
+            catch (Exception)
+            {
+                // Attempt to do some clean-up if activation or mount fails, to leave the tree in a
+                // reasonable state.
+                DeactivateFailedChildSilently(newChild);
+                throw;
+            }
         }
-        catch (Exception)
+        finally
         {
-            // Attempt to do some clean-up if activation or mount fails, to leave the tree in a
-            // reasonable state.
-            DeactivateFailedChildSilently(newChild);
-            throw;
+            if (isTimelineTracked)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
+    }
+
+    // The `FlutterTimeline.startSync('${newWidget.runtimeType}', ...)` block shared by `updateChild`,
+    // `inflateWidget` and `BuildScope._tryRebuild`.
+    internal static void DebugStartWidgetTimelineBlock(Widget widget)
+    {
+        Dictionary<string, object?>? debugTimelineArguments = null;
+        if (Constants.KDebugMode && WidgetsDebug.DebugEnhanceBuildTimelineArguments)
+        {
+            debugTimelineArguments =
+                FlutterTimeline.ToTimelineArguments(widget.ToDiagnosticsNode().ToTimelineArguments());
+        }
+
+        FlutterTimeline.StartSync(Diagnostics.DescribeType(widget.GetType()), arguments: debugTimelineArguments);
     }
 
     /// <summary>Dart's <c>Element._debugCheckForCycles</c>.</summary>

@@ -692,11 +692,24 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
 
     private async Task InitLicensesAsync()
     {
+        long debugFlowId = -1;
+        if (Constants.KDebugMode)
+        {
+            Developer.Flow flow = Developer.Flow.Begin();
+            Developer.Timeline.TimeSync("_initLicenses()", () => { }, flow: flow);
+            debugFlowId = flow.Id;
+        }
+
         foreach (var license in CurrentWidget.LicenseEntries)
         {
             if (!Mounted)
             {
                 return;
+            }
+
+            if (Constants.KDebugMode)
+            {
+                Developer.Timeline.TimeSync("_initLicenses()", () => { }, flow: Developer.Flow.Step(debugFlowId));
             }
 
             var paragraphs = await Scheduler.ScheduleTask(
@@ -739,6 +752,10 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
         }
 
         SetState(() => _loaded = true);
+        if (Constants.KDebugMode)
+        {
+            Developer.Timeline.TimeSync("Build scheduled", () => { }, flow: Developer.Flow.End(debugFlowId));
+        }
     }
 
     public override Widget Build(BuildContext context)

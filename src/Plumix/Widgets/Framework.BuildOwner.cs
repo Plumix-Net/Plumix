@@ -1,3 +1,4 @@
+using System.Globalization;
 using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
@@ -240,6 +241,24 @@ public sealed class BuildOwner
             DebugBuilding = true;
         }
 
+        if (!Constants.KReleaseMode)
+        {
+            Dictionary<string, object?>? debugTimelineArguments = null;
+            if (Constants.KDebugMode && WidgetsDebug.DebugEnhanceBuildTimelineArguments)
+            {
+                debugTimelineArguments = new Dictionary<string, object?>
+                {
+                    ["build scope dirty count"] =
+                        buildScope.DirtyElements.Count.ToString(CultureInfo.InvariantCulture),
+                    ["build scope dirty list"] = "[" + string.Join(", ", buildScope.DirtyElements) + "]",
+                    ["lock level"] = _debugStateLockLevel.ToString(CultureInfo.InvariantCulture),
+                    ["scope context"] = context?.ToString() ?? "null",
+                };
+            }
+
+            FlutterTimeline.StartSync("BUILD", arguments: debugTimelineArguments);
+        }
+
         using IDisposable buildPhase = Scheduler.BuildScope();
         try
         {
@@ -279,6 +298,11 @@ public sealed class BuildOwner
         {
             buildScope.Building = false;
             _scheduledFlushDirtyElements = false;
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
+
             DebugAssertions.Assert(!Constants.KDebugMode || DebugBuilding);
             if (Constants.KDebugMode)
             {
@@ -551,6 +575,11 @@ public sealed class BuildOwner
     /// </summary>
     public void FinalizeTree()
     {
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("FINALIZE TREE");
+        }
+
         try
         {
             // This unregisters the GlobalKeys.
@@ -575,7 +604,15 @@ public sealed class BuildOwner
         }
         catch (Exception exception)
         {
+            // Since the tree is in a broken state, adding the ErrorWidget would cause more exceptions.
             FrameworkErrors.ReportException(new ErrorSummary("while finalizing the widget tree"), exception);
+        }
+        finally
+        {
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
     }
 
@@ -668,8 +705,23 @@ public sealed class BuildOwner
     /// </summary>
     public void Reassemble(Element root)
     {
-        DebugAssertions.Assert(root.Parent == null);
-        DebugAssertions.Assert(ReferenceEquals(root.Owner, this));
-        root.Reassemble();
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("Preparing Hot Reload (widgets)");
+        }
+
+        try
+        {
+            DebugAssertions.Assert(root.Parent == null);
+            DebugAssertions.Assert(ReferenceEquals(root.Owner, this));
+            root.Reassemble();
+        }
+        finally
+        {
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
+        }
     }
 }

@@ -11,8 +11,7 @@ namespace Plumix.Rendering;
 /// <remarks>
 /// Flutter's <c>RenderBox</c>. Two debug mechanisms take a different shape here (see
 /// <c>docs/ai/DIVERGENCES.md</c>): Dart's <c>_DebugSize</c> subclass of <c>Size</c> becomes a flag
-/// captured next to the size, because Avalonia's <see cref="Size"/> is a sealed value type, and the
-/// intrinsic caches emit no timeline events until <c>FlutterTimeline</c> is ported.
+/// captured next to the size, because Avalonia's <see cref="Size"/> is a sealed value type.
 /// </remarks>
 public abstract class RenderBox : RenderObject
 {
@@ -39,6 +38,14 @@ public abstract class RenderBox : RenderObject
     [ThreadStatic]
     private static bool _debugDoingBaseline;
 
+    /// <remarks>Flutter's <c>RenderBox._debugIntrinsicsDepth</c>.</remarks>
+    [ThreadStatic]
+    private static int _debugIntrinsicsDepth;
+
+    // C#-only test hook: like Dart, a computation that throws leaves the depth raised; a Dart test
+    // file gets a fresh isolate, a Plumix test the same thread.
+    internal static void DebugResetIntrinsicsDepthForTests() => _debugIntrinsicsDepth = 0;
+
     private readonly LayoutCacheStorage _layoutCacheStorage = new();
 
     private bool _computingThisDryLayout;
@@ -64,9 +71,10 @@ public abstract class RenderBox : RenderObject
     }
 
     private TOutput ComputeIntrinsics<TInput, TOutput>(
-        Func<LayoutCacheStorage, TInput, Func<TInput, TOutput>, TOutput> memoize,
+        ICachedLayoutCalculation<TInput, TOutput> type,
         TInput input,
         Func<TInput, TOutput> computer)
+        where TInput : notnull
     {
         // performResize should not depend on anything except the incoming constraints.
         DebugAssert(DebugCheckingIntrinsics || !DebugDoingThisResize);
@@ -74,7 +82,46 @@ public abstract class RenderBox : RenderObject
         // The debug-mode intrinsic checks must not affect who gets marked dirty, so they bypass the
         // caches entirely.
         bool shouldCache = !(Constants.KDebugMode && DebugCheckingIntrinsics);
-        return shouldCache ? memoize(_layoutCacheStorage, input, computer) : computer(input);
+        return shouldCache ? ComputeWithTimeline(type, input, computer) : computer(input);
+    }
+
+    /// <remarks>Flutter's <c>RenderBox._computeWithTimeline</c>.</remarks>
+    private TOutput ComputeWithTimeline<TInput, TOutput>(
+        ICachedLayoutCalculation<TInput, TOutput> type,
+        TInput input,
+        Func<TInput, TOutput> computer)
+        where TInput : notnull
+    {
+        Dictionary<string, object?>? debugTimelineArguments = null;
+        if (Constants.KDebugMode)
+        {
+            Dictionary<string, object?> arguments = RenderingDebug.EnhanceLayoutTimelineArguments
+                ? FlutterTimeline.ToTimelineArguments(ToDiagnosticsNode().ToTimelineArguments())!
+                : [];
+            debugTimelineArguments = type.DebugFillTimelineArguments(arguments, input);
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            if (RenderingDebug.ProfileLayoutsEnabled || _debugIntrinsicsDepth == 0)
+            {
+                FlutterTimeline.StartSync(type.EventLabel(this), arguments: debugTimelineArguments);
+            }
+
+            _debugIntrinsicsDepth += 1;
+        }
+
+        TOutput result = type.Memoize(_layoutCacheStorage, input, computer);
+        if (!Constants.KReleaseMode)
+        {
+            _debugIntrinsicsDepth -= 1;
+            if (RenderingDebug.ProfileLayoutsEnabled || _debugIntrinsicsDepth == 0)
+            {
+                FlutterTimeline.FinishSync();
+            }
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -84,7 +131,7 @@ public abstract class RenderBox : RenderObject
     public double GetMinIntrinsicWidth(double height)
     {
         DebugCheckIntrinsicArgument(height, "height", "getMinIntrinsicWidth");
-        return ComputeIntrinsics(IntrinsicDimension.MinWidth.Memoize, height, ComputeMinIntrinsicWidth);
+        return ComputeIntrinsics(IntrinsicDimension.MinWidth, height, ComputeMinIntrinsicWidth);
     }
 
     /// <summary>Computes the value returned by <see cref="GetMinIntrinsicWidth"/>.</summary>
@@ -97,7 +144,7 @@ public abstract class RenderBox : RenderObject
     public double GetMaxIntrinsicWidth(double height)
     {
         DebugCheckIntrinsicArgument(height, "height", "getMaxIntrinsicWidth");
-        return ComputeIntrinsics(IntrinsicDimension.MaxWidth.Memoize, height, ComputeMaxIntrinsicWidth);
+        return ComputeIntrinsics(IntrinsicDimension.MaxWidth, height, ComputeMaxIntrinsicWidth);
     }
 
     /// <summary>Computes the value returned by <see cref="GetMaxIntrinsicWidth"/>.</summary>
@@ -110,7 +157,7 @@ public abstract class RenderBox : RenderObject
     public double GetMinIntrinsicHeight(double width)
     {
         DebugCheckIntrinsicArgument(width, "width", "getMinIntrinsicHeight");
-        return ComputeIntrinsics(IntrinsicDimension.MinHeight.Memoize, width, ComputeMinIntrinsicHeight);
+        return ComputeIntrinsics(IntrinsicDimension.MinHeight, width, ComputeMinIntrinsicHeight);
     }
 
     /// <summary>Computes the value returned by <see cref="GetMinIntrinsicHeight"/>.</summary>
@@ -123,7 +170,7 @@ public abstract class RenderBox : RenderObject
     public double GetMaxIntrinsicHeight(double width)
     {
         DebugCheckIntrinsicArgument(width, "width", "getMaxIntrinsicHeight");
-        return ComputeIntrinsics(IntrinsicDimension.MaxHeight.Memoize, width, ComputeMaxIntrinsicHeight);
+        return ComputeIntrinsics(IntrinsicDimension.MaxHeight, width, ComputeMaxIntrinsicHeight);
     }
 
     /// <summary>Computes the value returned by <see cref="GetMaxIntrinsicHeight"/>.</summary>
@@ -139,7 +186,7 @@ public abstract class RenderBox : RenderObject
     /// </remarks>
     public Size GetDryLayout(BoxConstraints constraints)
     {
-        return ComputeIntrinsics(MemoizeDryLayout, constraints, ComputeDryLayoutGuarded);
+        return ComputeIntrinsics(DryLayout.Instance, constraints, ComputeDryLayoutGuarded);
     }
 
     private Size ComputeDryLayoutGuarded(BoxConstraints constraints)
@@ -188,7 +235,7 @@ public abstract class RenderBox : RenderObject
     public double? GetDryBaseline(BoxConstraints constraints, TextBaseline baseline)
     {
         double? baselineOffset = ComputeIntrinsics(
-            MemoizeBaseline,
+            Baseline.Instance,
             (Constraints: constraints, Baseline: baseline),
             ComputeDryBaselineGuarded).Offset;
         // This assert makes sure computeDryBaseline always gets called in debug mode, in case the
@@ -507,7 +554,7 @@ public abstract class RenderBox : RenderObject
     {
         DebugAssert(_debugDoingBaseline, BaselineCallingConventions);
         return ComputeIntrinsics(
-            MemoizeBaseline,
+            Baseline.Instance,
             (Constraints: Constraints, Baseline: baseline),
             pair => new BaselineOffset(ComputeDistanceToActualBaseline(pair.Baseline))).Offset;
     }
@@ -1155,32 +1202,83 @@ public abstract class RenderBox : RenderObject
             Math.Max(0.0, rect.Height - (delta * 2.0)));
     }
 
-    /// <remarks>Flutter's <c>_DryLayout.memoize</c>.</remarks>
-    private static Size MemoizeDryLayout(
-        LayoutCacheStorage cacheStorage,
-        BoxConstraints input,
-        Func<BoxConstraints, Size> computer)
+    /// <remarks>
+    /// Flutter's <c>_CachedLayoutCalculation</c>: how one kind of cached layout query is memoized and
+    /// reported to the timeline.
+    /// </remarks>
+    private interface ICachedLayoutCalculation<TInput, TOutput>
+        where TInput : notnull
     {
-        Dictionary<BoxConstraints, Size> cache = cacheStorage.CachedDryLayoutSizes ??= [];
-        return PutIfAbsent(cache, input, () => computer(input));
+        TOutput Memoize(LayoutCacheStorage cacheStorage, TInput input, Func<TInput, TOutput> computer);
+
+        // Debug information that will be used to generate the Timeline event for this type of
+        // calculation.
+        Dictionary<string, object?> DebugFillTimelineArguments(
+            Dictionary<string, object?> timelineArguments,
+            TInput input);
+
+        string EventLabel(RenderBox renderBox);
+    }
+
+    /// <remarks>Flutter's <c>_DryLayout</c>.</remarks>
+    private sealed class DryLayout : ICachedLayoutCalculation<BoxConstraints, Size>
+    {
+        public static readonly DryLayout Instance = new();
+
+        public Size Memoize(LayoutCacheStorage cacheStorage, BoxConstraints input, Func<BoxConstraints, Size> computer)
+        {
+            Dictionary<BoxConstraints, Size> cache = cacheStorage.CachedDryLayoutSizes ??= [];
+            return PutIfAbsent(cache, input, () => computer(input));
+        }
+
+        public Dictionary<string, object?> DebugFillTimelineArguments(
+            Dictionary<string, object?> timelineArguments,
+            BoxConstraints input)
+        {
+            timelineArguments["getDryLayout constraints"] = input.ToString();
+            return timelineArguments;
+        }
+
+        public string EventLabel(RenderBox renderBox) =>
+            $"{Diagnostics.DescribeType(renderBox.GetType())}.getDryLayout";
     }
 
     /// <remarks>
-    /// Flutter's <c>_Baseline.memoize</c>: one map per baseline kind, keyed by the constraints only, and
-    /// shared between the dry and the real baseline.
+    /// Flutter's <c>_Baseline</c>: one map per baseline kind, keyed by the constraints only, and shared
+    /// between the dry and the real baseline.
     /// </remarks>
-    private static BaselineOffset MemoizeBaseline(
-        LayoutCacheStorage cacheStorage,
-        (BoxConstraints Constraints, TextBaseline Baseline) input,
-        Func<(BoxConstraints Constraints, TextBaseline Baseline), BaselineOffset> computer)
+    private sealed class Baseline
+        : ICachedLayoutCalculation<(BoxConstraints Constraints, TextBaseline Baseline), BaselineOffset>
     {
-        Dictionary<BoxConstraints, BaselineOffset> cache = input.Baseline switch
+        public static readonly Baseline Instance = new();
+
+        public BaselineOffset Memoize(
+            LayoutCacheStorage cacheStorage,
+            (BoxConstraints Constraints, TextBaseline Baseline) input,
+            Func<(BoxConstraints Constraints, TextBaseline Baseline), BaselineOffset> computer)
         {
-            TextBaseline.Alphabetic => cacheStorage.CachedAlphabeticBaseline ??= [],
-            TextBaseline.Ideographic => cacheStorage.CachedIdeoBaseline ??= [],
-            _ => throw new ArgumentOutOfRangeException(nameof(input), input.Baseline, null),
-        };
-        return PutIfAbsent(cache, input.Constraints, () => computer(input));
+            Dictionary<BoxConstraints, BaselineOffset> cache = input.Baseline switch
+            {
+                TextBaseline.Alphabetic => cacheStorage.CachedAlphabeticBaseline ??= [],
+                TextBaseline.Ideographic => cacheStorage.CachedIdeoBaseline ??= [],
+                _ => throw new ArgumentOutOfRangeException(nameof(input), input.Baseline, null),
+            };
+            return PutIfAbsent(cache, input.Constraints, () => computer(input));
+        }
+
+        public Dictionary<string, object?> DebugFillTimelineArguments(
+            Dictionary<string, object?> timelineArguments,
+            (BoxConstraints Constraints, TextBaseline Baseline) input)
+        {
+            timelineArguments["baseline type"] = input.Baseline == TextBaseline.Alphabetic
+                ? "TextBaseline.alphabetic"
+                : "TextBaseline.ideographic";
+            timelineArguments["constraints"] = input.Constraints.ToString();
+            return timelineArguments;
+        }
+
+        public string EventLabel(RenderBox renderBox) =>
+            $"{Diagnostics.DescribeType(renderBox.GetType())}.getDryBaseline";
     }
 
     /// <summary>Dart's <c>Map.putIfAbsent</c>.</summary>
@@ -1209,7 +1307,7 @@ public abstract class RenderBox : RenderObject
     /// <remarks>
     /// Flutter's <c>_IntrinsicDimension</c> values, each carrying its <c>memoize</c> implementation.
     /// </remarks>
-    private sealed class IntrinsicDimension(IntrinsicDimensionKind kind)
+    private sealed class IntrinsicDimension(IntrinsicDimensionKind kind) : ICachedLayoutCalculation<double, double>
     {
         public static readonly IntrinsicDimension MinWidth = new(IntrinsicDimensionKind.MinWidth);
         public static readonly IntrinsicDimension MaxWidth = new(IntrinsicDimensionKind.MaxWidth);
@@ -1221,6 +1319,23 @@ public abstract class RenderBox : RenderObject
             Dictionary<(IntrinsicDimensionKind, double), double> cache = cacheStorage.CachedIntrinsicDimensions ??= [];
             return PutIfAbsent(cache, (kind, input), () => computer(input));
         }
+
+        public Dictionary<string, object?> DebugFillTimelineArguments(
+            Dictionary<string, object?> timelineArguments,
+            double input)
+        {
+            timelineArguments["intrinsics dimension"] = kind switch
+            {
+                IntrinsicDimensionKind.MinWidth => "minWidth",
+                IntrinsicDimensionKind.MaxWidth => "maxWidth",
+                IntrinsicDimensionKind.MinHeight => "minHeight",
+                _ => "maxHeight",
+            };
+            timelineArguments["intrinsics argument"] = BindingBase.DartDoubleToString(input);
+            return timelineArguments;
+        }
+
+        public string EventLabel(RenderBox renderBox) => $"{Diagnostics.DescribeType(renderBox.GetType())} intrinsics";
     }
 
     /// <remarks>Flutter's <c>_LayoutCacheStorage</c>.</remarks>

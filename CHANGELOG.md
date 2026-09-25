@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `FlutterTimeline` with `debugCollect` timings over a `dart:developer` Timeline/TimelineTask/Flow shim (timeline.dart).
+- Timeline events: frames, BUILD/LAYOUT/PAINT/SEMANTICS, per-widget/per-object profiling, intrinsics (object/box.dart).
+- Scheduler timeline: Frame/Animate/POST_FRAME, warm-up and lock-events tasks, `scheduleTask` flow (scheduler/binding).
+- Breaking: `scheduleWarmUpFrame` releases its event lock in a microtask after the frame, as Dart's `await` does.
+- ImageCache timeline tasks and instants; a resurrected live image now trims the cache (painting/image_cache.dart).
+- `Placeholder.debugFillProperties`, `CustomPainter.toString` (widgets/placeholder.dart, rendering/custom_paint.dart).
 - Breaking: (Text)SelectionOverlay are strict ports: `_getHandleDy`, handle drags, menus (widgets/text_selection.dart).
 - Breaking: EditableText cursor blinks on Dart's timer; `showCursor` defaults to `!readOnly` (editable_text.dart).
 - Breaking: EditableText toolbar, clipboard and button items follow Dart; ToolbarOptions off (editable_text.dart).

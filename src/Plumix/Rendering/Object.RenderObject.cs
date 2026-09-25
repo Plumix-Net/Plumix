@@ -504,6 +504,17 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     {
         ArgumentNullException.ThrowIfNull(constraints);
         EnsureNotDisposedMutation();
+        if (!Constants.KReleaseMode && RenderingDebug.ProfileLayoutsEnabled)
+        {
+            Dictionary<string, object?>? debugTimelineArguments = null;
+            if (Constants.KDebugMode && RenderingDebug.EnhanceLayoutTimelineArguments)
+            {
+                debugTimelineArguments = FlutterTimeline.ToTimelineArguments(ToDiagnosticsNode().ToTimelineArguments());
+            }
+
+            FlutterTimeline.StartSync(Diagnostics.DescribeType(GetType()), arguments: debugTimelineArguments);
+        }
+
         Debug.Assert(!DebugDoingThisResize);
         Debug.Assert(!DebugDoingThisLayout);
         Debug.Assert(!_debugMutationsLocked);
@@ -527,6 +538,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
                 _debugActiveLayout = debugSkippedActiveLayout;
                 DebugDoingThisLayout = false;
                 DebugDoingThisResize = false;
+            }
+
+            if (!Constants.KReleaseMode && RenderingDebug.ProfileLayoutsEnabled)
+            {
+                FlutterTimeline.FinishSync();
             }
 
             return;
@@ -580,6 +596,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         _needsLayout = false;
         MarkNeedsPaint();
+
+        if (!Constants.KReleaseMode && RenderingDebug.ProfileLayoutsEnabled)
+        {
+            FlutterTimeline.FinishSync();
+        }
     }
 
     /// <summary>
@@ -1579,6 +1600,17 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             return;
         }
 
+        if (!Constants.KReleaseMode && RenderingDebug.ProfilePaintsEnabled)
+        {
+            Dictionary<string, object?>? debugTimelineArguments = null;
+            if (Constants.KDebugMode && RenderingDebug.EnhancePaintTimelineArguments)
+            {
+                debugTimelineArguments = FlutterTimeline.ToTimelineArguments(ToDiagnosticsNode().ToTimelineArguments());
+            }
+
+            FlutterTimeline.StartSync(Diagnostics.DescribeType(GetType()), arguments: debugTimelineArguments);
+        }
+
         if (_needsCompositingBitsUpdate)
         {
             if (Parent is { } parent)
@@ -1649,6 +1681,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
             _debugActivePaint = debugLastActivePaint;
             _debugDoingThisPaint = false;
+        }
+
+        if (!Constants.KReleaseMode && RenderingDebug.ProfilePaintsEnabled)
+        {
+            FlutterTimeline.FinishSync();
         }
     }
 

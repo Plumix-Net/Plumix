@@ -242,7 +242,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/text_theme.dart` | `src/Plumix.Material/Typography.cs` | — | — |
 | `material_ui/theme.dart` | `src/Plumix.Material/Theme.cs` | — | — |
 | `material_ui/theme_data.dart` | `src/Plumix.Material/ThemeData.cs`<br>`src/Plumix.Material/ThemeExtension.cs` | — | — |
-| `material_ui/time.dart` | `src/Plumix.Material/Time.cs` | `src/Plumix.Tests/MaterialTimePickerDialogTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerThemeTests.cs` | — |
+| `material_ui/time.dart` | `src/Plumix.Material/Time.cs` | `src/Plumix.Tests/FlutterTimelineTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerDialogTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerThemeTests.cs`<br>`src/Plumix.Tests/TimelineTracingTests.cs` | — |
 | `material_ui/time_picker.dart` | `src/Plumix.Material/TimePickerDialog.cs` | `src/Plumix.Tests/MaterialTimePickerDialogTests.cs` | — |
 | `material_ui/time_picker_theme.dart` | `src/Plumix.Material/TimePickerTheme.cs` | — | — |
 | `material_ui/toggle_buttons.dart` | `src/Plumix.Material/ToggleButtons.cs` | — | — |
@@ -269,6 +269,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/print.dart` | `src/Plumix/Foundation/Print.cs` | `src/Plumix.Tests/PrintTests.cs` | — |
 | `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
 | `foundation/stack_frame.dart` | `src/Plumix/Foundation/StackFrame.cs` | `src/Plumix.Tests/StackFrameTests.cs` | — |
+| `foundation/timeline.dart` | `src/Plumix/Foundation/Timeline.cs` | `src/Plumix.Tests/FlutterTimelineTests.cs`<br>`src/Plumix.Tests/TimelineTracingTests.cs` | — |
 | `foundation/unicode.dart` | `src/Plumix/Foundation/Unicode.cs` | — | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` | `src/Plumix.Tests/GestureBindingParityTests.cs` | — |
@@ -569,6 +570,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 Either C#-only infrastructure (fine — say so in a header comment) or an undocumented port.
 
 - `src/Plumix/AndroidLifecycleChannel.cs`
+- `src/Plumix/Developer/Timeline.cs`
 - `src/Plumix/FlutterExtensions.cs`
 - `src/Plumix/Foundation/DartStopwatch.cs`
 - `src/Plumix/Foundation/Intl/DartDateTime.cs`
@@ -642,9 +644,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 539
-- C# files carrying a marker: 723
-- C# files without a marker: 55
+- Flutter files mapped: 540
+- C# files carrying a marker: 724
+- C# files without a marker: 56
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 9
 

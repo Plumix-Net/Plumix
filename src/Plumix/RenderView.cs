@@ -409,17 +409,32 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// </remarks>
     public void CompositeFrame()
     {
-        if (_layer is not OffsetLayer rootLayer)
+        if (!Constants.KReleaseMode)
         {
-            return;
+            FlutterTimeline.StartSync("COMPOSITING");
         }
 
-        bool hostRendered = FlutterView.HasRenderer;
-        FlutterView.Render(rootLayer);
-        if (!hostRendered)
+        try
         {
-            // A host advances the repaint rainbow when it draws the layer (PipelineOwner.CompositeFrame).
-            RenderingDebug.AdvanceRepaintColorForFrame();
+            if (_layer is not OffsetLayer rootLayer)
+            {
+                return;
+            }
+
+            bool hostRendered = FlutterView.HasRenderer;
+            FlutterView.Render(rootLayer);
+            if (!hostRendered)
+            {
+                // A host advances the repaint rainbow when it draws the layer (PipelineOwner.CompositeFrame).
+                RenderingDebug.AdvanceRepaintColorForFrame();
+            }
+        }
+        finally
+        {
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
     }
 

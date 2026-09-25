@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using Avalonia.Threading;
+using Plumix.Developer;
 using Plumix.Foundation;
 using Plumix.UI;
 
@@ -95,6 +96,7 @@ public static class Scheduler
     private static TaskCompletionSource? _nextFrameCompleter;
     private static DartPerformanceMode? _performanceMode;
     private static int _numPerformanceModeRequests;
+    private static TimelineTask? _frameTimelineTask = Constants.KReleaseMode ? null : new TimelineTask();
 
     static Scheduler()
     {
@@ -431,6 +433,13 @@ public static class Scheduler
         }
 
         _warmUpFrame = true;
+        TimelineTask? debugTimelineTask = null;
+        if (!Constants.KReleaseMode)
+        {
+            debugTimelineTask = new TimelineTask();
+            debugTimelineTask.Start("Warm-up frame");
+        }
+
         bool hadScheduledFrame = _hasScheduledFrame;
         PlatformDispatcher.Instance.ScheduleWarmUpFrame(
             () => HandleBeginFrame(null),
@@ -447,7 +456,26 @@ public static class Scheduler
 
         // Lock events so touch events etc don't insert themselves until the scheduled frame has
         // finished.
-        LockEvents(static () => EndOfFrame);
+        LockEvents(() =>
+        {
+            // Dart's `await endOfFrame`: the callback resumes in a microtask once the frame that
+            // completed the future has finished.
+            var resumed = new TaskCompletionSource();
+            EndOfFrame.ContinueWith(
+                _ => ScheduleMicrotask(() =>
+                {
+                    if (!Constants.KReleaseMode)
+                    {
+                        debugTimelineTask!.Finish();
+                    }
+
+                    resumed.SetResult();
+                }),
+                CancellationToken.None,
+                TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+            return resumed.Task;
+        });
     }
 
     /// <summary>Schedules a new frame unless one is already being produced.</summary>
@@ -492,6 +520,23 @@ public static class Scheduler
     public static void AddPostFrameCallback(Action<TimeSpan> callback, string debugLabel = "callback")
     {
         ArgumentNullException.ThrowIfNull(callback);
+
+        if (Constants.KDebugMode && SchedulerDebug.DebugTracePostFrameCallbacks)
+        {
+            Action<TimeSpan> originalCallback = callback;
+            callback = timeStamp =>
+            {
+                Timeline.StartSync(debugLabel);
+                try
+                {
+                    originalCallback(timeStamp);
+                }
+                finally
+                {
+                    Timeline.FinishSync();
+                }
+            };
+        }
 
         _postFrameCallbacks.Add(new PostFrameCallbackEntry(callback, debugLabel));
     }
@@ -738,11 +783,19 @@ public static class Scheduler
     /// Dart's `SchedulerBinding.scheduleTask`. Queues <paramref name="task"/> to run between frames in
     /// priority order, and completes the returned task with its result.
     /// </summary>
-    public static Task<T> ScheduleTask<T>(Func<T> task, Priority priority, string? debugLabel = null)
+    /// <remarks>
+    /// The <paramref name="debugLabel"/> and <paramref name="flow"/> are used to report the task to
+    /// the <see cref="Timeline"/>.
+    /// </remarks>
+    public static Task<T> ScheduleTask<T>(
+        Func<T> task,
+        Priority priority,
+        string? debugLabel = null,
+        Flow? flow = null)
     {
         ArgumentNullException.ThrowIfNull(task);
 
-        return ScheduleTask(() => Task.FromResult(task()), priority, debugLabel);
+        return ScheduleTask(() => Task.FromResult(task()), priority, debugLabel, flow);
     }
 
     /// <summary>
@@ -750,12 +803,16 @@ public static class Scheduler
     /// returned task completes only once the task's own task does, the way Dart's
     /// <c>Completer.complete(FutureOr&lt;T&gt;)</c> chains.
     /// </summary>
-    public static Task<T> ScheduleTask<T>(Func<Task<T>> task, Priority priority, string? debugLabel = null)
+    public static Task<T> ScheduleTask<T>(
+        Func<Task<T>> task,
+        Priority priority,
+        string? debugLabel = null,
+        Flow? flow = null)
     {
         ArgumentNullException.ThrowIfNull(task);
 
         bool isFirstTask = _taskQueue.Count == 0;
-        var entry = new TaskEntry<T>(task, priority.Value, _taskSequence++, debugLabel);
+        var entry = new TaskEntry<T>(task, priority.Value, _taskSequence++, debugLabel, flow);
         _taskQueue.Add(entry);
 
         // Dart uses a heap ordered by descending priority; the insertion sequence breaks ties so that
@@ -821,15 +878,27 @@ public static class Scheduler
     {
         ArgumentNullException.ThrowIfNull(callback);
 
+        TimelineTask? debugTimelineTask = null;
+        if (!Constants.KReleaseMode)
+        {
+            debugTimelineTask = new TimelineTask();
+            debugTimelineTask.Start("Lock events");
+        }
+
         Task future = callback();
         _lockCount++;
         return future.ContinueWith(
-            static _ =>
+            _ =>
             {
                 _lockCount--;
                 if (Locked)
                 {
                     return;
+                }
+
+                if (!Constants.KReleaseMode)
+                {
+                    debugTimelineTask!.Finish();
                 }
 
                 try
@@ -852,7 +921,7 @@ public static class Scheduler
     /// <summary>Called when the last <see cref="LockEvents"/> lock is released.</summary>
     /// <remarks>
     /// Dart's <c>SchedulerBinding.unlocked</c>, which re-arms the task queue that
-    /// <see cref="ScheduleTask{T}(Func{T}, Priority, string?)"/> left unserviced while locked.
+    /// <see cref="ScheduleTask{T}(Func{T}, Priority, string?, Flow?)"/> left unserviced while locked.
     /// </remarks>
     public static void Unlocked()
     {
@@ -936,6 +1005,7 @@ public static class Scheduler
     public static void HandleBeginFrame(TimeSpan? rawTimeStamp)
     {
         using FrameworkThreadScope scope = EnterFrameworkThread();
+        _frameTimelineTask?.Start("Frame");
         _firstRawTimeStampInEpoch ??= rawTimeStamp;
         _currentFrameTimeStamp = AdjustForEpoch(rawTimeStamp ?? _lastRawTimeStamp);
         if (rawTimeStamp is not null)
@@ -965,6 +1035,8 @@ public static class Scheduler
         _hasScheduledFrame = false;
         try
         {
+            // TRANSIENT FRAME CALLBACKS
+            _frameTimelineTask?.Start("Animate");
             Phase = SchedulerPhase.TransientCallbacks;
             Dictionary<int, FrameCallbackEntry> callbacks = _transientCallbacks;
             _transientCallbacks = [];
@@ -990,8 +1062,10 @@ public static class Scheduler
     {
         using FrameworkThreadScope scope = EnterFrameworkThread();
         TimeSpan timestamp = _currentFrameTimeStamp ?? AdjustForEpoch(_lastRawTimeStamp);
+        _frameTimelineTask?.Finish(); // end the "Animate" phase
         try
         {
+            // PERSISTENT FRAME CALLBACKS
             Phase = SchedulerPhase.PersistentCallbacks;
             BeginFrame?.Invoke(timestamp);
             foreach (Action<TimeSpan> callback in _persistentFrameCallbacks.ToArray())
@@ -1001,17 +1075,34 @@ public static class Scheduler
 
             DrawFrame?.Invoke(timestamp);
 
+            // POST-FRAME CALLBACKS
             Phase = SchedulerPhase.PostFrameCallbacks;
             PostFrameCallbackEntry[] localPostFrameCallbacks = [.. _postFrameCallbacks];
             _postFrameCallbacks.Clear();
-            foreach (PostFrameCallbackEntry entry in localPostFrameCallbacks)
+            if (!Constants.KReleaseMode)
             {
-                InvokeFrameCallback(entry.Callback, timestamp);
+                FlutterTimeline.StartSync("POST_FRAME");
+            }
+
+            try
+            {
+                foreach (PostFrameCallbackEntry entry in localPostFrameCallbacks)
+                {
+                    InvokeFrameCallback(entry.Callback, timestamp);
+                }
+            }
+            finally
+            {
+                if (!Constants.KReleaseMode)
+                {
+                    FlutterTimeline.FinishSync();
+                }
             }
         }
         finally
         {
             Phase = SchedulerPhase.Idle;
+            _frameTimelineTask?.Finish(); // end the Frame
             _handlingFrame = false;
             if (Constants.KDebugMode)
             {
@@ -1073,6 +1164,7 @@ public static class Scheduler
         _lastRawTimeStamp = TimeSpan.Zero;
         _debugFrameNumber = 0;
         _debugBanner = null;
+        _frameTimelineTask = Constants.KReleaseMode ? null : new TimelineTask();
         SchedulingStrategy = DefaultSchedulingStrategy;
         Phase = SchedulerPhase.Idle;
         _framesEnabled = true;
@@ -1464,7 +1556,7 @@ public static class Scheduler
     private sealed record PostFrameCallbackEntry(Action<TimeSpan> Callback, string DebugLabel);
 
     /// <summary>Dart's private `_TaskEntry`, split so the queue can hold entries of mixed result types.</summary>
-    private abstract class TaskEntry(int priority, int sequence, string? debugLabel)
+    private abstract class TaskEntry(int priority, int sequence, string? debugLabel, Flow? flow)
     {
         public int Priority { get; } = priority;
 
@@ -1472,19 +1564,42 @@ public static class Scheduler
 
         public string? DebugLabel { get; } = debugLabel;
 
+        public Flow? Flow { get; } = flow;
+
         public string? DebugStack { get; } = Constants.KDebugMode ? Environment.StackTrace : null;
 
-        public abstract void Run();
+        public void Run()
+        {
+            if (!Constants.KReleaseMode)
+            {
+                Timeline.TimeSync(
+                    DebugLabel ?? "Scheduled Task",
+                    RunTask,
+                    flow: Flow is not null ? Developer.Flow.Step(Flow.Id) : null);
+            }
+            else
+            {
+                RunTask();
+            }
+        }
+
+        // Dart's `completer.complete(task())`.
+        protected abstract void RunTask();
     }
 
-    private sealed class TaskEntry<T>(Func<Task<T>> task, int priority, int sequence, string? debugLabel)
-        : TaskEntry(priority, sequence, debugLabel)
+    private sealed class TaskEntry<T>(
+        Func<Task<T>> task,
+        int priority,
+        int sequence,
+        string? debugLabel,
+        Flow? flow)
+        : TaskEntry(priority, sequence, debugLabel, flow)
     {
         private readonly TaskCompletionSource<T> _completer = new();
 
         public Task<T> Completion => _completer.Task;
 
-        public override void Run()
+        protected override void RunTask()
         {
             Task<T> result;
             try

@@ -19,6 +19,10 @@ public abstract class CustomPainter : IDisposable
 
     internal IListenable? Repaint { get; }
 
+    /// <inheritdoc />
+    /// <remarks>Dart's <c>CustomPainter.toString</c>: the identity, then the repaint listenable.</remarks>
+    public override string ToString() => $"{Diagnostics.DescribeIdentity(this)}({Repaint?.ToString() ?? ""})";
+
     public abstract void Paint(PaintingContext context, Size size);
 
     public abstract bool ShouldRepaint(CustomPainter oldDelegate);

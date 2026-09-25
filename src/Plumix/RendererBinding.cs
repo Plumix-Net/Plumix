@@ -490,14 +490,28 @@ public sealed class RendererBinding
     /// frame that shows the result.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.performReassemble</c> (the <c>FlutterTimeline</c> section is not
-    /// ported; see <c>docs/ai/BACKLOG.md</c>).
+    /// Flutter's <c>RendererBinding.performReassemble</c>.
     /// </remarks>
     public async Task PerformReassemble()
     {
-        foreach (RenderView renderView in RenderViews.ToArray())
+        if (!Constants.KReleaseMode)
         {
-            renderView.Reassemble();
+            FlutterTimeline.StartSync("Preparing Hot Reload (layout)");
+        }
+
+        try
+        {
+            foreach (RenderView renderView in RenderViews.ToArray())
+            {
+                renderView.Reassemble();
+            }
+        }
+        finally
+        {
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
 
         Scheduler.ScheduleWarmUpFrame();

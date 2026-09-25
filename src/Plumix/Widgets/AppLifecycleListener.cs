@@ -106,16 +106,31 @@ public interface WidgetsBindingObserver
 
 public partial class WidgetsBinding
 {
-    private static readonly WidgetsBinding SharedInstance = new WidgetsFlutterBinding();
+    private static readonly WidgetsBinding SharedInstance;
     private readonly List<WidgetsBindingObserver> _observers = [];
     private readonly List<WidgetsBindingObserver> _backGestureObservers = [];
 
+    // The construction of the ambient binding is Dart's `BindingBase()` constructor: `initInstances`
+    // inside a "Framework initialization" timeline block that ends with the
+    // `Flutter.FrameworkInitialization` event.
     static WidgetsBinding()
     {
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("Framework initialization");
+        }
+
+        SharedInstance = new WidgetsFlutterBinding();
         // Only the ambient binding owns the platform channels; a locally constructed one (tests do this)
         // must not hijack them.
         SharedInstance.FocusManager.ListenToApplicationLifecycleChangesIfSupported();
         SharedInstance.InitInstances();
+
+        if (!Constants.KReleaseMode)
+        {
+            BindingBase.PostEvent("Flutter.FrameworkInitialization", new Dictionary<string, object?>());
+            FlutterTimeline.FinishSync();
+        }
     }
 
     public static WidgetsBinding Instance => SharedInstance;

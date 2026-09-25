@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 
 namespace Plumix.Widgets;
@@ -66,6 +67,15 @@ public sealed class Placeholder : StatelessWidget
     public double FallbackHeight { get; }
 
     public Widget? Child { get; }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new ColorProperty("color", Color, defaultValue: Color.FromUInt32(0xFF455A64)));
+        properties.Add(new DoubleProperty("strokeWidth", StrokeWidth, defaultValue: 2.0));
+        properties.Add(new DoubleProperty("fallbackWidth", FallbackWidth, defaultValue: 400.0));
+        properties.Add(new DoubleProperty("fallbackHeight", FallbackHeight, defaultValue: 400.0));
+    }
 
     public override Widget Build(BuildContext context)
     {

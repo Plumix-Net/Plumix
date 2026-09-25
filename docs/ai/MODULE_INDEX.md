@@ -239,6 +239,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
+  - `src/Plumix/Foundation/Timeline.cs` (`FlutterTimeline`), `src/Plumix/Developer/Timeline.cs` (`dart:developer`
+    `Timeline`/`TimelineTask`/`Flow` over the `Plumix-Timeline` `EventSource`)
   - `src/Plumix/FrameworkSynchronizationContext.cs`
   - `src/Plumix/PipelineOwner.cs`
   - `src/Plumix/RenderView.cs`

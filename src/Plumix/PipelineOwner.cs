@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -482,6 +483,23 @@ public class PipelineOwner : DiagnosticableTree
                 devicePixelRatio: devicePixelRatio);
         }
 
+        if (!Constants.KReleaseMode)
+        {
+            Dictionary<string, object?>? debugTimelineArguments = null;
+            if (Constants.KDebugMode && RenderingDebug.EnhanceLayoutTimelineArguments)
+            {
+                debugTimelineArguments = new Dictionary<string, object?>
+                {
+                    ["dirty count"] = _nodesNeedingLayout.Count.ToString(CultureInfo.InvariantCulture),
+                    ["dirty list"] = DebugDescribeDirtyList(_nodesNeedingLayout),
+                };
+            }
+
+            FlutterTimeline.StartSync(
+                "LAYOUT" + DebugRootSuffixForTimelineEventNames,
+                arguments: debugTimelineArguments);
+        }
+
         DebugDoingLayout = true;
         try
         {
@@ -507,8 +525,19 @@ public class PipelineOwner : DiagnosticableTree
             _shouldMergeDirtyNodes = false;
             DebugDoingLayout = false;
             _debugDoingChildLayout = false;
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
     }
+
+    // Dart's `_debugRootSuffixForTimelineEventNames`.
+    private string DebugRootSuffixForTimelineEventNames => _parent is null ? " (root)" : "";
+
+    // Dart's `'$_nodesNeedingLayout'` / `'$_nodesNeedingPaint'`: a list's `toString`.
+    private static string DebugDescribeDirtyList(IEnumerable<RenderObject> nodes) =>
+        "[" + string.Join(", ", nodes) + "]";
 
     private void FlushLayoutNodes(Size? rootSize)
     {
@@ -590,6 +619,11 @@ public class PipelineOwner : DiagnosticableTree
     public void FlushCompositingBits()
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("UPDATING COMPOSITING BITS" + DebugRootSuffixForTimelineEventNames);
+        }
+
         if (_needsCompositingBitsUpdate)
         {
             FlushCompositingBitsNodes();
@@ -603,6 +637,10 @@ public class PipelineOwner : DiagnosticableTree
         Debug.Assert(
             _nodesNeedingCompositingBitsUpdate.Count == 0,
             "Child PipelineOwners must not dirty nodes in their parent.");
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.FinishSync();
+        }
     }
 
     private void FlushCompositingBitsNodes()
@@ -651,6 +689,23 @@ public class PipelineOwner : DiagnosticableTree
     public void FlushPaint()
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        if (!Constants.KReleaseMode)
+        {
+            Dictionary<string, object?>? debugTimelineArguments = null;
+            if (Constants.KDebugMode && RenderingDebug.EnhancePaintTimelineArguments)
+            {
+                debugTimelineArguments = new Dictionary<string, object?>
+                {
+                    ["dirty count"] = _nodesNeedingPaint.Count.ToString(CultureInfo.InvariantCulture),
+                    ["dirty list"] = DebugDescribeDirtyList(_nodesNeedingPaint),
+                };
+            }
+
+            FlutterTimeline.StartSync(
+                "PAINT" + DebugRootSuffixForTimelineEventNames,
+                arguments: debugTimelineArguments);
+        }
+
         DebugDoingPaint = true;
         try
         {
@@ -671,6 +726,10 @@ public class PipelineOwner : DiagnosticableTree
         finally
         {
             DebugDoingPaint = false;
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
 
         _needsPaint = false;
@@ -939,6 +998,11 @@ public class PipelineOwner : DiagnosticableTree
             return;
         }
 
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("SEMANTICS" + DebugRootSuffixForTimelineEventNames);
+        }
+
         DebugDoingSemantics = true;
         try
         {
@@ -959,6 +1023,10 @@ public class PipelineOwner : DiagnosticableTree
         finally
         {
             DebugDoingSemantics = false;
+            if (!Constants.KReleaseMode)
+            {
+                FlutterTimeline.FinishSync();
+            }
         }
     }
 
@@ -979,6 +1047,11 @@ public class PipelineOwner : DiagnosticableTree
         _nodesNeedingSemantics.RemoveWhere(node =>
             node.Attached && ReferenceEquals(node.Owner, this) && !node.NeedsLayout);
 
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("Semantics.updateChildren");
+        }
+
         foreach (RenderObject node in nodesToProcess)
         {
             // A render object whose parent data is dirty is either blocked by a sibling or hidden by
@@ -990,6 +1063,16 @@ public class PipelineOwner : DiagnosticableTree
             }
 
             node.Semantics.UpdateChildren();
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.FinishSync();
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("Semantics.ensureGeometry");
         }
 
         // Phase 3: recompute the geometry of everything whose transform, clip or size may have moved.
@@ -1066,6 +1149,16 @@ public class PipelineOwner : DiagnosticableTree
             semantics.EnsureGeometry();
         }
 
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.FinishSync();
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.StartSync("Semantics.ensureSemanticsNode");
+        }
+
         // Phase 4: produce the semantics nodes, bottom-up.
         foreach (RenderObject node in nodesToProcess.Reverse())
         {
@@ -1107,6 +1200,11 @@ public class PipelineOwner : DiagnosticableTree
                     target.EnsureSemanticsNode(_semanticsOwner!);
                 }
             }
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            FlutterTimeline.FinishSync();
         }
 
         _semanticsOwner!.SendSemanticsUpdate();
