@@ -384,7 +384,7 @@ public sealed class RenderObjectDiagnosticsTests
             new SliverMultiBoxAdaptorParentData { Index = 3, KeepAlive = true, LayoutOffset = 7.5 }
                 .ToString());
         Assert.Equal(
-            "crossAxisOffset=4; index=null; layoutOffset=None",
+            "crossAxisOffset=4.0; index=null; layoutOffset=None",
             new SliverGridParentData { CrossAxisOffset = 4 }.ToString());
         Assert.Equal("offset=Offset(0.0, 0.0); id=", new MultiChildLayoutParentData().ToString());
     }

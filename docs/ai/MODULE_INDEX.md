@@ -526,6 +526,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Viewport.RenderViewport.cs`
   - `src/Plumix/Rendering/Viewport.Reveal.cs`
   - `src/Plumix/Rendering/Sliver.cs`
+  - `src/Plumix/Rendering/SliverList.cs`, `src/Plumix/Rendering/SliverGrid.cs`
   - `src/Plumix/Rendering/SliverPersistentHeaderReveal.cs`
   - `src/Plumix/Widgets/SliverHeaders.cs`
   - `src/Plumix/Rendering/SliverHeaders.cs`

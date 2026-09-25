@@ -1071,6 +1071,11 @@ internal sealed class BoxDecorationPainter : BoxPainter
                     boxShadows);
             }
         }
+        else if (borderRadius == BorderRadius.Zero && (fill != null || boxShadows.Count > 0))
+        {
+            // Dart's `_paintBox`: a rectangle without a border radius is a `drawRect`.
+            context.Canvas.DrawRectangle(fill ?? Brushes.Transparent, null, rect, boxShadows: boxShadows);
+        }
         else if (fill != null || boxShadows.Count > 0)
         {
             context.Canvas.DrawRectangle(

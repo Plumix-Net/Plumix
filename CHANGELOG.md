@@ -8,6 +8,14 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderSliverGrid.performLayout` is Dart's: garbage first, `overlap` overflow, no clamping (sliver_grid).
+- Breaking: grid delegates reverse the cross axis for RTL/`AxisDirection.left`, so RTL grids start at the right.
+- Breaking: grid delegates/layouts assert like Dart (`AssertionError`, debug only); `SliverGridGeometry` is a class.
+- Breaking: `SliverGridParentData.CrossAxisOffset` is `double?`; `ShouldRelayout` compares exactly (sliver_grid.dart).
+- `RenderSliverList` moved to its own strict file; grid/list classes are unsealed like Dart (sliver_list.dart).
+- Flutter's `grid_view_test`, `scrollable_grid_test`, `sliver_list_test` and sliver-cache grid tests ported.
+- Glow overscroll pull recedes on a timer and stops ticking when held, like `_GlowController` (overscroll_indicator).
+- `BoxDecoration` paints a rectangle without a border radius as `drawRect`, like `_paintBox` (box_decoration.dart).
 - Breaking: `SystemChrome` is a strict port over `flutter/platform`: orientations, UI modes (system_chrome.dart).
 - Breaking: `SystemUiOverlayStyle` has Dart's eight fields over `PlatformBrightness`; `SystemUiIconBrightness` is gone.
 - Breaking: `RenderView` samples the bar centres each composited frame, nav bar on Android only (rendering/view.dart).

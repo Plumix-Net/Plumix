@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/grid_view_demo_page.dart (exact sample parity)
@@ -20,7 +21,8 @@ public sealed class GridViewDemoPage : StatelessWidget
             [
                 new Text("GridView + SliverGrid", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "GridView uses SliverGrid with fixed-cross-axis delegate.",
+                    "GridView uses SliverGrid with fixed-cross-axis delegate. "
+                    + "The sliver strip below is right-to-left, so its tiles start at the right edge.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Expanded(
@@ -36,24 +38,28 @@ public sealed class GridViewDemoPage : StatelessWidget
                         addAutomaticKeepAlives: true)),
                 new SizedBox(
                     height: 170,
-                    child: new CustomScrollView(
-                        slivers:
-                        [
-                            new SliverPadding(
-                                padding: new Thickness(12, 0, 12, 10),
-                                sliver: SliverGrid.Builder(
-                                    itemCount: 12,
-                                    gridDelegate: new SliverGridDelegateWithMaxCrossAxisExtent(
-                                        maxCrossAxisExtent: 140,
-                                        crossAxisSpacing: 8,
-                                        mainAxisSpacing: 8,
-                                        childAspectRatio: 1.8),
-                                    itemBuilder: (_, index) => new Container(
-                                        color: index % 2 == 0 ? new Color(0xFFEAF4FF) : new Color(0xFFE8F5E9),
-                                        padding: new Thickness(8, 6),
-                                        child: new Text($"sliver tile #{index}", fontSize: 12, color: Colors.Black)),
-                                    addAutomaticKeepAlives: false)),
-                        ])),
+                    child: new Directionality(
+                        TextDirection.Rtl,
+                        new CustomScrollView(
+                            slivers:
+                            [
+                                new SliverPadding(
+                                    padding: new Thickness(12, 0, 12, 10),
+                                    sliver: SliverGrid.Builder(
+                                        itemCount: 12,
+                                        gridDelegate: new SliverGridDelegateWithMaxCrossAxisExtent(
+                                            maxCrossAxisExtent: 140,
+                                            crossAxisSpacing: 8,
+                                            mainAxisSpacing: 8,
+                                            childAspectRatio: 1.8),
+                                        itemBuilder: (_, index) => new Container(
+                                            color: index % 2 == 0 ? new Color(0xFFEAF4FF) : new Color(0xFFE8F5E9),
+                                            padding: new Thickness(8, 6),
+                                            child: new Text(
+                                                $"sliver tile #{index}",
+                                                fontSize: 12,
+                                                color: Colors.Black)))),
+                            ]))),
             ]);
     }
 }

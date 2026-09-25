@@ -18,7 +18,8 @@ class GridViewDemoPage extends StatelessWidget {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'GridView uses SliverGrid with fixed-cross-axis delegate.',
+          'GridView uses SliverGrid with fixed-cross-axis delegate. '
+          'The sliver strip below is right-to-left, so its tiles start at the right edge.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Expanded(
@@ -38,39 +39,42 @@ class GridViewDemoPage extends StatelessWidget {
         ),
         SizedBox(
           height: 170,
-          child: CustomScrollView(
-            slivers: <Widget>[
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
-                sliver: SliverGrid.builder(
-                  itemCount: 12,
-                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                    maxCrossAxisExtent: 140,
-                    crossAxisSpacing: 8,
-                    mainAxisSpacing: 8,
-                    childAspectRatio: 1.8,
-                  ),
-                  itemBuilder: (BuildContext context, int index) {
-                    return Container(
-                      color: index.isEven
-                          ? const Color(0xFFEAF4FF)
-                          : const Color(0xFFE8F5E9),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
-                      ),
-                      child: Text(
-                        'sliver tile #$index',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Colors.black,
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: CustomScrollView(
+              slivers: <Widget>[
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+                  sliver: SliverGrid.builder(
+                    itemCount: 12,
+                    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 140,
+                      crossAxisSpacing: 8,
+                      mainAxisSpacing: 8,
+                      childAspectRatio: 1.8,
+                    ),
+                    itemBuilder: (BuildContext context, int index) {
+                      return Container(
+                        color: index.isEven
+                            ? const Color(0xFFEAF4FF)
+                            : const Color(0xFFE8F5E9),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
                         ),
-                      ),
-                    );
-                  },
+                        child: Text(
+                          'sliver tile #$index',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],

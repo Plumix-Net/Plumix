@@ -612,7 +612,8 @@ internal sealed class GlowController : ChangeNotifier
     private double _phaseTargetOpacity;
     private double _phaseTargetSize;
     private double _pullDistance;
-    private double _pullHoldDeadline;
+    // Dart's `_pullRecedeTimer`: a pull holds for `_pullHoldTime`, then recedes over `_pullDecayTime`.
+    private GestureTimer? _pullRecedeTimer;
     private GlowState _state;
 
     public GlowController(Color color, Axis axis, ITickerProvider? vsync = null)
@@ -666,6 +667,8 @@ internal sealed class GlowController : ChangeNotifier
 
     public void AbsorbImpact(double velocity)
     {
+        _pullRecedeTimer?.Cancel();
+        _pullRecedeTimer = null;
         velocity = Math.Clamp(velocity, MinVelocity, MaxVelocity);
         _displacement = 0.5;
         _displacementTarget = 0.5;
@@ -696,7 +699,7 @@ internal sealed class GlowController : ChangeNotifier
             ? _glowSize
             : Math.Max(1.0 - 1.0 / denominator, _glowSize);
         _displacementTarget = Math.Clamp(crossAxisOffset / safeCrossExtent, 0.0, 1.0);
-        _pullHoldDeadline = Scheduler.CurrentSeconds + 0.167;
+        _pullRecedeTimer?.Cancel();
         BeginPhase(
             GlowState.Pull,
             _glowOpacity,
@@ -704,6 +707,7 @@ internal sealed class GlowController : ChangeNotifier
             _glowSize,
             targetSize,
             0.167);
+        _pullRecedeTimer = GestureTimer.Start(TimeSpan.FromMilliseconds(167), () => Recede(2.0));
     }
 
     public void ScrollEnd()
@@ -751,6 +755,7 @@ internal sealed class GlowController : ChangeNotifier
 
     public override void Dispose()
     {
+        _pullRecedeTimer?.Cancel();
         _ticker.Dispose();
         base.Dispose();
     }
@@ -813,9 +818,11 @@ internal sealed class GlowController : ChangeNotifier
             _ticker.Stop();
             NotifyListeners();
         }
-        else if (_state == GlowState.Pull && Scheduler.CurrentSeconds >= _pullHoldDeadline)
+        else if (_state == GlowState.Pull && Math.Abs(_displacementTarget - _displacement) <= 0.0001)
         {
-            Recede(2.0);
+            // A completed pull holds still until `_pullRecedeTimer` fires, as Dart's glow controller
+            // stops animating once `forward` completes.
+            _ticker.Stop();
         }
     }
 
@@ -825,6 +832,9 @@ internal sealed class GlowController : ChangeNotifier
         {
             return;
         }
+
+        _pullRecedeTimer?.Cancel();
+        _pullRecedeTimer = null;
 
         BeginPhase(
             GlowState.Recede,
