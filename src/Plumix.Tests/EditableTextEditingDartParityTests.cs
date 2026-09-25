@@ -567,14 +567,11 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
         {
             tester.Tap(outside);
             tester.Pump();
-            // Plumix's `Focus` still claims focus on pointer down (`docs/ai/BACKLOG.md`), which the
-            // route's scope does here; Dart's field keeps it because `onTapOutside` replaces the
-            // default unfocus.
-            _focusNode.RequestFocus();
-            tester.Pump();
         }
 
         Assert.Equal(3, tapOutsideCount);
+        // `onTapOutside` replaces the default unfocus, so the field keeps focus.
+        Assert.True(_focusNode.HasFocus);
     }
 
     [Fact]

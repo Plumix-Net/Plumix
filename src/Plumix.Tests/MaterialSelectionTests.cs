@@ -51,10 +51,11 @@ public sealed class MaterialSelectionTests
         Assert.Equal(ContextMenuButtonType.SelectAll, state.ContextMenuButtonItems[0].Type);
 
         state.SelectAll();
-        Assert.Equal(2, state.ContextMenuButtonItems.Count);
+        // The test platform is Android, where Dart puts share between copy and select all.
+        Assert.Equal(
+            [ContextMenuButtonType.Copy, ContextMenuButtonType.Share, ContextMenuButtonType.SelectAll],
+            state.ContextMenuButtonItems.Select(item => item.Type));
         ContextMenuButtonItem copy = state.ContextMenuButtonItems[0];
-        Assert.Equal(ContextMenuButtonType.Copy, copy.Type);
-        Assert.Equal(ContextMenuButtonType.SelectAll, state.ContextMenuButtonItems[1].Type);
         Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.X));
         copy.OnPressed!.Invoke();
 

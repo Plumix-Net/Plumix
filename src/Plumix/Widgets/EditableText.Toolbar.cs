@@ -1,5 +1,8 @@
+using System.Globalization;
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Painting;
+using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/editable_text.dart
@@ -112,6 +115,12 @@ public sealed partial class EditableText
         private readonly LiveTextInputStatusNotifier? _liveTextInputStatus =
             PlatformDefaults.IsWeb ? null : new LiveTextInputStatusNotifier();
 
+        // The text processing service used to retrieve the native text processing actions.
+        private readonly IProcessTextService _processTextService = new DefaultProcessTextService();
+
+        // The list of native text processing actions provided by the engine.
+        private readonly List<ProcessTextAction> _processTextActions = [];
+
         private AppLifecycleListener? _appLifecycleListener;
         private bool _justResumed;
 
@@ -194,6 +203,56 @@ public sealed partial class EditableText
                     default:
                         return value.Text.Length > 0
                                && !(value.Selection.Start == 0 && value.Selection.End == value.Text.Length);
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool LookUpEnabled
+        {
+            get
+            {
+                if (PlatformDefaults.TargetPlatform != TargetPlatform.IOS)
+                {
+                    return false;
+                }
+
+                return !Widget.ObscureText
+                       && !TextEditingValue.Selection.IsCollapsed
+                       && TextEditingValue.Selection.TextInside(TextEditingValue.Text).Trim().Length > 0;
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool SearchWebEnabled
+        {
+            get
+            {
+                if (PlatformDefaults.TargetPlatform != TargetPlatform.IOS)
+                {
+                    return false;
+                }
+
+                return !Widget.ObscureText
+                       && !TextEditingValue.Selection.IsCollapsed
+                       && TextEditingValue.Selection.TextInside(TextEditingValue.Text).Trim().Length > 0;
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool ShareEnabled
+        {
+            get
+            {
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.IOS:
+                        return !Widget.ObscureText
+                               && !TextEditingValue.Selection.IsCollapsed
+                               && TextEditingValue.Selection.TextInside(TextEditingValue.Text).Trim().Length > 0;
+                    default:
+                        return false;
                 }
             }
         }
@@ -310,15 +369,142 @@ public sealed partial class EditableText
             return items;
         }
 
+        /// <summary>Looks up the current selection, as in the "Look Up" edit menu button on iOS.
+        /// Dart's <c>lookUpSelection</c>.</summary>
+        /// <remarks>Currently this is only implemented for iOS. Throws an error if the selection is
+        /// empty or collapsed.</remarks>
+        public async Task LookUpSelection(SelectionChangedCause cause)
+        {
+            if (Constants.KDebugMode && Widget.ObscureText)
+            {
+                throw new AssertionError("'!widget.obscureText': is not true.");
+            }
+
+            string text = TextEditingValue.Selection.TextInside(TextEditingValue.Text);
+            if (Widget.ObscureText || text.Length == 0)
+            {
+                return;
+            }
+
+            await SystemChannels.Platform.InvokeMethod<object>("LookUp.invoke", text);
+        }
+
+        /// <summary>Launches a web search on the current selection, as in the "Search Web" edit menu
+        /// button on iOS. Dart's <c>searchWebForSelection</c>.</summary>
+        /// <remarks>Currently this is only implemented for iOS. When <c>cause</c> is
+        /// <see cref="SelectionChangedCause.Toolbar"/>, the toolbar is left shown, as in Dart.
+        /// </remarks>
+        public async Task SearchWebForSelection(SelectionChangedCause cause)
+        {
+            if (Constants.KDebugMode && Widget.ObscureText)
+            {
+                throw new AssertionError("'!widget.obscureText': is not true.");
+            }
+
+            if (Widget.ObscureText)
+            {
+                return;
+            }
+
+            string text = TextEditingValue.Selection.TextInside(TextEditingValue.Text);
+            if (text.Length > 0)
+            {
+                await SystemChannels.Platform.InvokeMethod<object>("SearchWeb.invoke", text);
+            }
+        }
+
+        /// <summary>Launches the share interface for the current selection, as in the "Share..."
+        /// edit menu button on iOS. Dart's <c>shareSelection</c>.</summary>
+        /// <remarks>Currently this is only implemented for iOS and Android.</remarks>
+        public async Task ShareSelection(SelectionChangedCause cause)
+        {
+            if (Constants.KDebugMode && Widget.ObscureText)
+            {
+                throw new AssertionError("'!widget.obscureText': is not true.");
+            }
+
+            if (Widget.ObscureText)
+            {
+                return;
+            }
+
+            string text = TextEditingValue.Selection.TextInside(TextEditingValue.Text);
+            if (text.Length > 0)
+            {
+                await SystemChannels.Platform.InvokeMethod<object>("Share.invoke", text);
+            }
+        }
+
+        /// <summary>Gets the line heights at the start and end of the selection for the given
+        /// editable text state. Dart's <c>getGlyphHeights</c>.</summary>
+        /// <remarks>When the text changed since the last layout, or the selection is invalid or
+        /// collapsed, both heights are <see cref="RenderEditable.PreferredLineHeight"/>.</remarks>
+        public (double StartGlyphHeight, double EndGlyphHeight) GetGlyphHeights()
+        {
+            TextSelection selection = TextEditingValue.Selection;
+            RenderEditable renderEditable = RenderEditableObject;
+
+            // Only calculate handle rects if the text in the previous frame is the same as the text
+            // in the current frame. This is done because widget.renderObject contains the
+            // renderEditable from the previous frame. If the text changed between the current and
+            // previous frames then widget.renderObject.getRectForComposingRange might fail. In cases
+            // where the current frame is different from the previous we fall back to
+            // renderObject.preferredLineHeight.
+            InlineSpan span = renderEditable.Text!;
+            string prevText = span.ToPlainText();
+            string currText = TextEditingValue.Text;
+            if (prevText != currText || !selection.IsValid || selection.IsCollapsed)
+            {
+                return (renderEditable.PreferredLineHeight, renderEditable.PreferredLineHeight);
+            }
+
+            string selectedGraphemes = selection.TextInside(currText);
+            int firstSelectedGraphemeExtent = StringInfo.GetNextTextElementLength(selectedGraphemes);
+            Rect? startCharacterRect = renderEditable.GetRectForComposingRange(
+                new TextRange(selection.Start, selection.Start + firstSelectedGraphemeExtent));
+            int[] graphemeStarts = StringInfo.ParseCombiningCharacters(selectedGraphemes);
+            int lastSelectedGraphemeExtent = selectedGraphemes.Length - graphemeStarts[^1];
+            Rect? endCharacterRect = renderEditable.GetRectForComposingRange(
+                new TextRange(selection.End - lastSelectedGraphemeExtent, selection.End));
+            return (
+                startCharacterRect?.Height ?? renderEditable.PreferredLineHeight,
+                endCharacterRect?.Height ?? renderEditable.PreferredLineHeight);
+        }
+
+        /// <summary>Returns the anchor points for the default context menu. Dart's
+        /// <c>contextMenuAnchors</c>.</summary>
+        /// <remarks>A secondary tap (right click) wins and yields its position as the only anchor;
+        /// otherwise the anchors come from
+        /// <see cref="TextSelectionToolbarAnchors.FromSelection"/>.</remarks>
+        public TextSelectionToolbarAnchors ContextMenuAnchors
+        {
+            get
+            {
+                RenderEditable renderEditable = RenderEditableObject;
+                if (renderEditable.LastSecondaryTapDownPosition is { } lastSecondaryTapDownPosition)
+                {
+                    return new TextSelectionToolbarAnchors(lastSecondaryTapDownPosition);
+                }
+
+                (double startGlyphHeight, double endGlyphHeight) = GetGlyphHeights();
+                TextSelection selection = TextEditingValue.Selection;
+                IReadOnlyList<TextSelectionPoint> points = renderEditable.GetEndpointsForSelection(selection);
+                return TextSelectionToolbarAnchors.FromSelection(
+                    renderBox: renderEditable,
+                    startGlyphHeight: startGlyphHeight,
+                    endGlyphHeight: endGlyphHeight,
+                    selectionEndpoints: points);
+            }
+        }
+
         /// <summary>
         /// Returns the <see cref="ContextMenuButtonItem"/>s for this field's context menu: the
         /// deprecated <see cref="ToolbarOptions"/> items when set, the platform's editable items
-        /// otherwise. Dart's <c>contextMenuButtonItems</c>.
+        /// otherwise, followed by the platform's text processing actions. Dart's
+        /// <c>contextMenuButtonItems</c>.
         /// </summary>
-        /// <remarks>Plumix has no look-up, search-web, share or text-processing services yet, so
-        /// those items are never offered (see <c>docs/ai/BACKLOG.md</c>).</remarks>
         public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems =>
-            ButtonItemsForToolbarOptions()
+            (ButtonItemsForToolbarOptions()
             ?? GetEditableButtonItems(
                 clipboardStatus: ClipboardStatus.Value,
                 onCopy: CopyEnabled ? () => CopySelection(SelectionChangedCause.Toolbar) : null,
@@ -327,12 +513,70 @@ public sealed partial class EditableText
                     ? () => PasteTextWithReportingForActions(SelectionChangedCause.Toolbar)
                     : null,
                 onSelectAll: SelectAllEnabled ? () => SelectAll(SelectionChangedCause.Toolbar) : null,
-                onLookUp: null,
-                onSearchWeb: null,
-                onShare: null,
+                onLookUp: LookUpEnabled
+                    ? () => Scheduler.RunAsync(() => LookUpSelection(SelectionChangedCause.Toolbar))
+                    : null,
+                onSearchWeb: SearchWebEnabled
+                    ? () => Scheduler.RunAsync(() => SearchWebForSelection(SelectionChangedCause.Toolbar))
+                    : null,
+                onShare: ShareEnabled
+                    ? () => Scheduler.RunAsync(() => ShareSelection(SelectionChangedCause.Toolbar))
+                    : null,
                 onLiveTextInput: LiveTextInputEnabled
                     ? () => StartLiveTextInput(SelectionChangedCause.Toolbar)
-                    : null);
+                    : null))
+            .Concat(TextProcessingActionButtonItems)
+            .ToList();
+
+        // Query the engine to initialize the list of text processing actions to show in the text
+        // selection toolbar.
+        private async Task InitProcessTextActions()
+        {
+            _processTextActions.Clear();
+            _processTextActions.AddRange(await _processTextService.QueryTextActions());
+        }
+
+        private List<ContextMenuButtonItem> TextProcessingActionButtonItems
+        {
+            get
+            {
+                var buttonItems = new List<ContextMenuButtonItem>();
+                TextSelection selection = TextEditingValue.Selection;
+                if (Widget.ObscureText || !selection.IsValid || selection.IsCollapsed)
+                {
+                    return buttonItems;
+                }
+
+                foreach (ProcessTextAction action in _processTextActions)
+                {
+                    buttonItems.Add(new ContextMenuButtonItem(
+                        label: action.Label,
+                        onPressed: () => Scheduler.RunAsync(async () =>
+                        {
+                            string selectedText = selection.TextInside(TextEditingValue.Text);
+                            if (selectedText.Length > 0)
+                            {
+                                string? processedText = await _processTextService.ProcessTextAction(
+                                    action.Id,
+                                    selectedText,
+                                    Widget.ReadOnly);
+                                // If an activity does not return a modified version, just hide the
+                                // toolbar. Otherwise use the result to replace the selected text.
+                                if (processedText is not null && AllowPaste)
+                                {
+                                    PasteTextCore(SelectionChangedCause.Toolbar, processedText);
+                                }
+                                else
+                                {
+                                    HideToolbar();
+                                }
+                            }
+                        })));
+                }
+
+                return buttonItems;
+            }
+        }
 
 #pragma warning disable CS0618 // Dart calls the deprecated legacy controls here too.
         private Action? SemanticsOnCopy(TextSelectionControls? controls)

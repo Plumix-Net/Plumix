@@ -8,7 +8,6 @@ namespace Plumix.Widgets;
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/widgets/context_menu_controller.dart
 // flutter/packages/flutter/lib/src/widgets/context_menu_button_item.dart
-// flutter/packages/flutter/lib/src/widgets/text_selection_toolbar_anchors.dart
 
 public enum ContextMenuButtonType
 {
@@ -42,10 +41,6 @@ public sealed class ContextMenuButtonItem
 
     public string? Label { get; }
 }
-
-public readonly record struct TextSelectionToolbarAnchors(
-    Point PrimaryAnchor,
-    Point? SecondaryAnchor = null);
 
 public delegate Widget EditableTextContextMenuBuilder(
     BuildContext context,

@@ -15,8 +15,7 @@ public sealed class StatefulComponentDartParityTests
     // ------------------------------------------------------------ stateful_component_test.dart
 
     // Flutter: stateful_component_test.dart: "Stateful widget smoke test"
-    [Fact(Skip = "Parity gap: Focus (via View's FocusTraversalGroup) adds a Listener, a second "
-        + "SingleChildRenderObjectElement Dart's _FocusState.build lacks (BACKLOG Focus row)")]
+    [Fact]
     public void StatefulWidgetSmokeTest()
     {
         using var tester = new FrameworkDartTester();

@@ -266,6 +266,15 @@ public interface ITextSelectionDelegate
 
     bool SelectAllEnabled => true;
 
+    /// <summary>Whether look up is enabled, true by default.</summary>
+    bool LookUpEnabled => true;
+
+    /// <summary>Whether search web is enabled, true by default.</summary>
+    bool SearchWebEnabled => true;
+
+    /// <summary>Whether share is enabled, true by default.</summary>
+    bool ShareEnabled => true;
+
     /// <summary>Whether Live Text input is enabled. Dart's <c>liveTextInputEnabled</c>, false by
     /// default.</summary>
     bool LiveTextInputEnabled => false;

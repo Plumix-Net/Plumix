@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `ProcessTextService`; EditableText/SelectableRegion text-processing menu items (services/process_text.dart).
+- EditableText Look Up, Search Web and Share menu items; SelectableRegion Share (editable_text.dart).
+- Breaking: context-menu anchors use `TextSelectionToolbarAnchors.fromSelection`, `getGlyphHeights` (editable_text).
+- Breaking: EditableText selection boxes default to `includeLineSpacingMiddle`/`max`, like Dart (editable_text.dart).
+- Breaking: `Focus` no longer requests focus on pointer down, as in Dart (widgets/focus_scope.dart).
 - Flutter's framework widget tests ported: GlobalKeys, reparenting, inherited, parent data, setState, build scope.
 - `UniqueWidget<T>` (widgets/unique_widget.dart).
 - Breaking: debug frames throw "Build scheduled during frame"; `DebugBuildingDirtyElements` (widgets/binding.dart).

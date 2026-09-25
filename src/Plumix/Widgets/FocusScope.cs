@@ -240,14 +240,6 @@ internal class FocusState : State<Focus>
 
     private protected FocusNode FocusNode => Widget.FocusNode ?? (_internalNode ??= CreateNode());
 
-    /// <summary>
-    /// The identity of the last pointer-down press a <see cref="Widgets.Focus"/> claimed. Click-to-focus
-    /// is a C#-only host adaptation (Flutter leaves it to the embedder), and hit-test dispatch runs
-    /// deepest-first, so without this guard a shallower ancestor would steal the focus its descendant
-    /// just took for the same press.
-    /// </summary>
-    private static PointerEvent? _lastClaimedPointerDown;
-
     public override void InitState()
     {
         InitNode();
@@ -389,10 +381,7 @@ internal class FocusState : State<Focus>
     public override Widget Build(BuildContext context)
     {
         FocusAttachment!.Reparent(parent: Widget.ParentNode);
-        Widget child = new Listener(
-            child: Widget.Child,
-            behavior: HitTestBehavior.Translucent,
-            onPointerDown: HandlePointerDown);
+        Widget child = Widget.Child;
         if (Widget.IncludeSemantics)
         {
             child = new Semantics(
@@ -411,23 +400,6 @@ internal class FocusState : State<Focus>
     }
 
     private void RequestSemanticFocus() => FocusNode.RequestFocus();
-
-    private void HandlePointerDown(PointerDownEvent @event)
-    {
-        if (!FocusNode.CanRequestFocus)
-        {
-            return;
-        }
-
-        PointerEvent identity = @event.Original ?? @event;
-        if (ReferenceEquals(_lastClaimedPointerDown, identity))
-        {
-            return;
-        }
-
-        _lastClaimedPointerDown = identity;
-        FocusNode.RequestFocus();
-    }
 }
 
 /// <summary>Dart parity source: <c>FocusScope</c>.</summary>

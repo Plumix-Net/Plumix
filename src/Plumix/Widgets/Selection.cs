@@ -128,8 +128,15 @@ public sealed class SelectableRegion : StatefulWidget
     {
         bool canCopy = selectionGeometry.Status == SelectionStatus.Uncollapsed;
         bool canSelectAll = selectionGeometry.HasContent;
-        bool platformCanShare = PlatformDefaults.TargetPlatform == TargetPlatform.Android
-                                && selectionGeometry.Status == SelectionStatus.Uncollapsed;
+        // The share button is not supported on the web.
+        bool platformCanShare = !Constants.KIsWeb
+            && PlatformDefaults.TargetPlatform switch
+            {
+                TargetPlatform.Android => selectionGeometry.Status == SelectionStatus.Uncollapsed,
+                // The share button should be shown on iOS, but on iPad it needs an anchor for the popup
+                // (flutter/flutter#141775).
+                _ => false,
+            };
         bool canShare = onShare is not null && platformCanShare;
         bool showShareBeforeSelectAll = PlatformDefaults.TargetPlatform == TargetPlatform.Android;
 
@@ -178,6 +185,12 @@ public sealed class SelectableRegionState
     private readonly LayerLink _toolbarLayerLink = new();
     private readonly StaticSelectionContainerDelegate _selectionDelegate = new();
     private readonly SelectableRegionSelectionStatusNotifier _selectionStatusNotifier = new();
+
+    // The text processing service used to retrieve the native text processing actions.
+    private readonly IProcessTextService _processTextService = new DefaultProcessTextService();
+
+    // The list of native text processing actions provided by the engine.
+    private readonly List<ProcessTextAction> _processTextActions = [];
 
     private SelectionOverlay? _selectionOverlay;
     private ISelectable? _selectable;
@@ -256,22 +269,19 @@ public sealed class SelectableRegionState
         {
             if (_lastSecondaryTapDownPosition is { } secondary)
             {
+                var anchors = new TextSelectionToolbarAnchors(secondary);
+                // Clear the state of _lastSecondaryTapDownPosition after use since a user may
+                // access ContextMenuAnchors and receive invalid anchors for their context menu.
                 _lastSecondaryTapDownPosition = null;
-                return new TextSelectionToolbarAnchors(secondary, secondary);
+                return anchors;
             }
 
-            IReadOnlyList<TextSelectionPoint> endpoints = SelectionEndpoints;
-            if (endpoints.Count == 0 || Context.FindRenderObject() is not RenderBox renderBox)
-            {
-                return new TextSelectionToolbarAnchors(default, default);
-            }
-
-            Matrix4 transform = renderBox.GetTransformTo(null);
-            Point primary = MatrixUtils.TransformPoint(
-                transform,
-                new Point(endpoints[0].Point.X, endpoints[0].Point.Y - StartGlyphHeight));
-            Point secondaryAnchor = MatrixUtils.TransformPoint(transform, endpoints[^1].Point);
-            return new TextSelectionToolbarAnchors(primary, secondaryAnchor);
+            var renderBox = (RenderBox)Context.FindRenderObject()!;
+            return TextSelectionToolbarAnchors.FromSelection(
+                renderBox: renderBox,
+                startGlyphHeight: StartGlyphHeight,
+                endGlyphHeight: EndGlyphHeight,
+                selectionEndpoints: SelectionEndpoints);
         }
     }
 
@@ -312,7 +322,56 @@ public sealed class SelectableRegionState
                         break;
                 }
             },
-            onShare: null);
+            onShare: () =>
+            {
+                Scheduler.RunAsync(ShareAsync);
+
+                // On Android, share should clear the selection.
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.Fuchsia:
+                        ClearSelection();
+                        SetChangingThenFinalize();
+                        break;
+                    case TargetPlatform.IOS:
+                        HideToolbar(hideHandles: false);
+                        break;
+                    default:
+                        HideToolbar();
+                        break;
+                }
+            }).Concat(TextProcessingActionButtonItems).ToList();
+
+    private List<ContextMenuButtonItem> TextProcessingActionButtonItems
+    {
+        get
+        {
+            var buttonItems = new List<ContextMenuButtonItem>();
+            SelectedContent? data = _selectable?.GetSelectedContent();
+            if (data is null)
+            {
+                return buttonItems;
+            }
+
+            foreach (ProcessTextAction action in _processTextActions)
+            {
+                buttonItems.Add(new ContextMenuButtonItem(
+                    label: action.Label,
+                    onPressed: () => Scheduler.RunAsync(async () =>
+                    {
+                        string selectedText = data.PlainText;
+                        if (selectedText.Length > 0)
+                        {
+                            await _processTextService.ProcessTextAction(action.Id, selectedText, true);
+                            HideToolbar();
+                        }
+                    })));
+            }
+
+            return buttonItems;
+        }
+    }
 
     public override void InitState()
     {
@@ -325,6 +384,15 @@ public sealed class SelectableRegionState
             new GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
                 () => new TapGestureRecognizer { DebugOwner = this },
                 instance => instance.OnSecondaryTapDown = HandleRightClickDown);
+        Scheduler.RunAsync(InitProcessTextActions);
+    }
+
+    // Query the engine to initialize the list of text processing actions to show in the text
+    // selection toolbar.
+    private async Task InitProcessTextActions()
+    {
+        _processTextActions.Clear();
+        _processTextActions.AddRange(await _processTextService.QueryTextActions());
     }
 
     public override void DidChangeDependencies()
@@ -428,6 +496,16 @@ public sealed class SelectableRegionState
         }
 
         Scheduler.RunAsync(() => Clipboard.SetData(new ClipboardData(data.PlainText)));
+    }
+
+    private async Task ShareAsync()
+    {
+        if (_selectable?.GetSelectedContent() is not { } data)
+        {
+            return;
+        }
+
+        await SystemChannels.Platform.InvokeMethod<object>("Share.invoke", data.PlainText);
     }
 
     /// Shows the selection handles, creating the overlay when the geometry allows it.

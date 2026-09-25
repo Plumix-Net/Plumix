@@ -1039,8 +1039,8 @@ public sealed partial class EditableText : StatefulWidget
         double cursorWidth = 1.0,
         double? cursorHeight = null,
         Radius? cursorRadius = null,
-        BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Tight,
-        BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Tight,
+        BoxHeightStyle? selectionHeightStyle = null,
+        BoxWidthStyle? selectionWidthStyle = null,
         bool cursorOpacityAnimates = false,
         Point? cursorOffset = null,
         bool paintCursorAboveText = false,
@@ -1141,8 +1141,8 @@ public sealed partial class EditableText : StatefulWidget
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
         CursorRadius = cursorRadius ?? Radius.Zero;
-        SelectionHeightStyle = selectionHeightStyle;
-        SelectionWidthStyle = selectionWidthStyle;
+        SelectionHeightStyle = selectionHeightStyle ?? EditableText.DefaultSelectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle ?? EditableText.DefaultSelectionWidthStyle;
         CursorOpacityAnimates = cursorOpacityAnimates;
         CursorOffset = cursorOffset ?? default;
         PaintCursorAboveText = paintCursorAboveText;
@@ -1498,6 +1498,38 @@ public sealed partial class EditableText : StatefulWidget
         return new EditableTextState();
     }
 
+    /// <summary>The default value for <see cref="SelectionHeightStyle"/>: <see cref="BoxHeightStyle.Max"/>
+    /// on the web, <see cref="BoxHeightStyle.IncludeLineSpacingMiddle"/> on every native platform.
+    /// Dart's <c>defaultSelectionHeightStyle</c>.</summary>
+    public static BoxHeightStyle DefaultSelectionHeightStyle =>
+        Constants.KIsWeb ? BoxHeightStyle.Max : BoxHeightStyle.IncludeLineSpacingMiddle;
+
+    /// <summary>The default value for <see cref="SelectionWidthStyle"/>: <see cref="BoxWidthStyle.Max"/>
+    /// on native platforms; on the web, <see cref="BoxWidthStyle.Max"/> for iOS and
+    /// <see cref="BoxWidthStyle.Tight"/> otherwise. Dart's <c>defaultSelectionWidthStyle</c>.</summary>
+    /// <remarks>Dart also answers <see cref="BoxWidthStyle.Max"/> for Safari on any web platform;
+    /// Plumix has no browser detection, so a desktop Safari gets <see cref="BoxWidthStyle.Tight"/>.
+    /// </remarks>
+    public static BoxWidthStyle DefaultSelectionWidthStyle
+    {
+        get
+        {
+            if (Constants.KIsWeb)
+            {
+                if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS)
+                {
+                    // On macOS web, the selection width behavior differs when running on Chrom(e|ium)
+                    // (blink) or Safari (webkit).
+                    return BoxWidthStyle.Max;
+                }
+
+                return BoxWidthStyle.Tight;
+            }
+
+            return BoxWidthStyle.Max;
+        }
+    }
+
     private static bool DefaultSelectAllOnFocus()
     {
         if (OperatingSystem.IsBrowser())
@@ -1579,29 +1611,6 @@ public sealed partial class EditableText : StatefulWidget
         }
         private bool _hadFocus;
         private bool _didAutoFocus;
-
-        public TextSelectionToolbarAnchors ContextMenuAnchors
-        {
-            get
-            {
-                TextEditingController controller = _controller!;
-                TextSelection selection = controller.Selection.Clamp(controller.Text.Length);
-                Rect start = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.Start);
-                Rect end = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.End);
-                if (RenderEditable?.LastSecondaryTapDownPosition is Point secondaryTapDown)
-                {
-                    return new TextSelectionToolbarAnchors(secondaryTapDown);
-                }
-
-                Point primary = new(
-                    (start.Center.X + end.Center.X) / 2.0,
-                    Math.Min(start.Top, end.Top));
-                Point secondary = new(
-                    (start.Center.X + end.Center.X) / 2.0,
-                    Math.Max(start.Bottom, end.Bottom));
-                return new TextSelectionToolbarAnchors(primary, secondary);
-            }
-        }
 
         public bool ContextMenuIsVisible => _selectionOverlay?.ToolbarIsVisible ?? false;
 
@@ -1804,8 +1813,7 @@ public sealed partial class EditableText : StatefulWidget
             _controller is null ? null : _controller.Value;
 
         /// <inheritdoc/>
-        /// <remarks>Plumix has no <c>ProcessTextService</c>-style private command surface, so this
-        /// is a no-op the way Flutter's own <c>EditableText</c> leaves it.</remarks>
+        /// <remarks>A no-op, the way Flutter's own <c>EditableText</c> leaves it.</remarks>
         public void PerformPrivateCommand(string action, IDictionary data)
         {
         }
@@ -1898,6 +1906,7 @@ public sealed partial class EditableText : StatefulWidget
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
             _appLifecycleListener = new AppLifecycleListener(onResume: OnResume);
+            Scheduler.RunAsync(InitProcessTextActions);
         }
 
         public override void DidUpdateWidget(EditableText oldWidget)
@@ -2639,8 +2648,8 @@ internal sealed class EditableRenderObjectWidget : MultiChildRenderObjectWidget
         bool rendererIgnoresPointer = false,
         double? cursorHeight = null,
         Radius? cursorRadius = null,
-        BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Tight,
-        BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Tight,
+        BoxHeightStyle? selectionHeightStyle = null,
+        BoxWidthStyle? selectionWidthStyle = null,
         bool enableInteractiveSelection = true,
         TextRange? promptRectRange = null,
         Color? promptRectColor = null,
@@ -2677,8 +2686,8 @@ internal sealed class EditableRenderObjectWidget : MultiChildRenderObjectWidget
         CursorRadius = cursorRadius;
         CursorOffset = cursorOffset;
         PaintCursorAboveText = paintCursorAboveText;
-        SelectionHeightStyle = selectionHeightStyle;
-        SelectionWidthStyle = selectionWidthStyle;
+        SelectionHeightStyle = selectionHeightStyle ?? EditableText.DefaultSelectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle ?? EditableText.DefaultSelectionWidthStyle;
         EnableInteractiveSelection = enableInteractiveSelection;
         TextSelectionDelegate = textSelectionDelegate;
         DevicePixelRatio = devicePixelRatio;

@@ -4590,16 +4590,7 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusListener);
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 19,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(12, 9)));
+        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
 
         owner.FlushBuild();
 
@@ -4673,16 +4664,7 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusListener);
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 41,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(10, 8)));
+        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
 
         owner.FlushBuild();
 
@@ -4721,16 +4703,7 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusListener);
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 42,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(10, 8)));
+        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
 
         owner.FlushBuild();
 
@@ -4774,16 +4747,7 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusListener);
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 43,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(10, 8)));
+        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
 
         owner.FlushBuild();
 
@@ -6017,35 +5981,6 @@ public sealed class MaterialButtonsTests
             }
 
             result = FindHoverPointerListener(child);
-        });
-
-        return result;
-    }
-
-    private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)
-    {
-        if (root is null)
-        {
-            return null;
-        }
-
-        if (root is RenderPointerListener listener
-            && listener.OnPointerDown != null
-            && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null)
-        {
-            return listener;
-        }
-
-        RenderPointerListener? result = null;
-        root.VisitChildren(child =>
-        {
-            if (result is not null)
-            {
-                return;
-            }
-
-            result = FindFocusPointerListener(child);
         });
 
         return result;

@@ -1,4 +1,6 @@
 using Plumix.UI;
+using Plumix.Widgets;
+using Xunit;
 
 namespace Plumix.Tests;
 
@@ -65,4 +67,38 @@ internal sealed class MockClipboardPlatform : IDisposable
     }
 
     public void Dispose() => _handler.Dispose();
+}
+
+/// <summary>
+/// Focuses the first <c>Focus</c> widget below <paramref name="root"/> through its node, the way
+/// Flutter's tests call <c>focusNode.requestFocus()</c>; Dart's <c>Focus</c> never takes focus from a
+/// pointer.
+/// </summary>
+internal static class FocusTestSupport
+{
+    public static FocusNode RequestFocusOnFirstFocus(Element root)
+    {
+        FocusNode? node = null;
+
+        void Visit(Element element)
+        {
+            if (node is not null)
+            {
+                return;
+            }
+
+            if (element.Widget is Focus)
+            {
+                element.VisitChildren(child => node ??= Focus.Of(child, scopeOk: true, createDependency: false));
+                return;
+            }
+
+            element.VisitChildren(Visit);
+        }
+
+        Visit(root);
+        Assert.NotNull(node);
+        node!.RequestFocus();
+        return node;
+    }
 }

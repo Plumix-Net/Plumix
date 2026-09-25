@@ -318,16 +318,7 @@ public sealed class MaterialFloatingActionButtonTests
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 704,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 8),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -369,16 +360,7 @@ public sealed class MaterialFloatingActionButtonTests
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 705,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 8),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -422,16 +404,7 @@ public sealed class MaterialFloatingActionButtonTests
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
-            var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(focusListener);
-            focusListener!.HandleEvent(
-                new PointerDownEvent(
-                    pointer: 706,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 8),
-                    buttons: PointerButtons.Primary,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(focusListener, new Point(10, 8)));
+            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -1046,34 +1019,6 @@ public sealed class MaterialFloatingActionButtonTests
             }
 
             result = FindHoverPointerListener(child);
-        });
-        return result;
-    }
-
-    private static RenderPointerListener? FindFocusPointerListener(RenderObject? root)
-    {
-        if (root is null)
-        {
-            return null;
-        }
-
-        if (root is RenderPointerListener listener
-            && listener.OnPointerDown != null
-            && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null)
-        {
-            return listener;
-        }
-
-        RenderPointerListener? result = null;
-        root.VisitChildren(child =>
-        {
-            if (result is not null)
-            {
-                return;
-            }
-
-            result = FindFocusPointerListener(child);
         });
         return result;
     }
