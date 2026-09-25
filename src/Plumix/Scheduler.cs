@@ -602,6 +602,20 @@ public static class Scheduler
         }
     }
 
+    /// <summary>
+    /// The number of microtasks queued and not yet run, flutter_test's <c>FakeAsync.microtaskCount</c>.
+    /// </summary>
+    internal static int MicrotaskCount
+    {
+        get
+        {
+            lock (MicrotaskSync)
+            {
+                return _microtasks.Count;
+            }
+        }
+    }
+
     /// <summary>Drains every microtask queued by <see cref="ScheduleMicrotask"/>.</summary>
     public static void FlushMicrotasks()
     {

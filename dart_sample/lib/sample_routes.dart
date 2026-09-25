@@ -161,6 +161,7 @@ class SampleRoutes {
   static const String flow = '/flow';
   static const String transform = '/transform';
   static const String compositedTransform = '/composited-transform';
+  static const String systemChrome = '/system-chrome';
   static const String image = '/image';
   static const String customMultiChildLayout = '/custom-multi-child-layout';
   static const String dismissibleSizeChangedLayout =

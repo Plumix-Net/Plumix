@@ -46,17 +46,14 @@ public class PlumixHost : Control
     private TopLevel? _attachedTopLevel;
     private IInsetsManager? _insetsManager;
     private IInputPane? _inputPane;
-    private bool _isSubscribedToSystemUiOverlayStyle;
-    private bool _isSubscribedToApplicationSwitcherDescription;
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToPlatformChannel;
     private bool _allowWindowClose;
     private bool _viewHasFocus;
     private ViewFocusDirection _requestedViewFocusDirection;
-    private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
-    private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
-        SystemChrome.CurrentApplicationSwitcherDescription;
+    private SystemUiOverlayStyle _currentSystemUiOverlayStyle = new();
+    private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription;
     private string _currentMouseCursorKind = SystemMouseCursors.Basic.Kind;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
@@ -421,7 +418,7 @@ public class PlumixHost : Control
         }
 
         _pipeline.CompositeFrame(context);
-        _pipeline.UpdateSystemUiOverlayStyle(Bounds.Size);
+        UpdateSystemChrome();
         FlushSemanticsAndNotify();
     }
 
@@ -430,8 +427,6 @@ public class PlumixHost : Control
         base.OnAttachedToVisualTree(e);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
         EnsureSchedulerSubscription();
-        AttachSystemUiOverlayStyleListener();
-        AttachApplicationSwitcherDescriptionListener();
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachPlatformChannelHandler();
@@ -455,8 +450,6 @@ public class PlumixHost : Control
         DetachFeedbackListener();
         DetachTextInputConfigurationListener();
         DetachMouseCursorListener();
-        DetachApplicationSwitcherDescriptionListener();
-        DetachSystemUiOverlayStyleListener();
         RemoveSchedulerSubscription();
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
         base.OnDetachedFromVisualTree(e);
@@ -822,7 +815,7 @@ public class PlumixHost : Control
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
         _pipeline.CompositeFrame();
-        _pipeline.UpdateSystemUiOverlayStyle(viewport ?? Bounds.Size);
+        UpdateSystemChrome();
         FlushSemanticsAndNotify();
     }
 
@@ -1018,52 +1011,6 @@ public class PlumixHost : Control
         return themeKey?.Contains("HighContrast", StringComparison.OrdinalIgnoreCase) == true;
     }
 
-    private void AttachSystemUiOverlayStyleListener()
-    {
-        if (_isSubscribedToSystemUiOverlayStyle)
-        {
-            return;
-        }
-
-        _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
-        SystemChrome.SystemUiOverlayStyleChanged += HandleSystemUiOverlayStyleChanged;
-        _isSubscribedToSystemUiOverlayStyle = true;
-    }
-
-    private void DetachSystemUiOverlayStyleListener()
-    {
-        if (!_isSubscribedToSystemUiOverlayStyle)
-        {
-            return;
-        }
-
-        SystemChrome.SystemUiOverlayStyleChanged -= HandleSystemUiOverlayStyleChanged;
-        _isSubscribedToSystemUiOverlayStyle = false;
-    }
-
-    private void AttachApplicationSwitcherDescriptionListener()
-    {
-        if (_isSubscribedToApplicationSwitcherDescription)
-        {
-            return;
-        }
-
-        _currentApplicationSwitcherDescription = SystemChrome.CurrentApplicationSwitcherDescription;
-        SystemChrome.ApplicationSwitcherDescriptionChanged += HandleApplicationSwitcherDescriptionChanged;
-        _isSubscribedToApplicationSwitcherDescription = true;
-    }
-
-    private void DetachApplicationSwitcherDescriptionListener()
-    {
-        if (!_isSubscribedToApplicationSwitcherDescription)
-        {
-            return;
-        }
-
-        SystemChrome.ApplicationSwitcherDescriptionChanged -= HandleApplicationSwitcherDescriptionChanged;
-        _isSubscribedToApplicationSwitcherDescription = false;
-    }
-
     /// <summary>
     /// Registers the platform side of Flutter's `flutter/mousecursor` channel. Dart's engine
     /// implements `activateSystemCursor`; here it maps the cursor kind onto Avalonia's cursor set.
@@ -1180,7 +1127,7 @@ public class PlumixHost : Control
     /// Registers this host as the platform side of <c>flutter/platform</c>. Flutter's platform side is
     /// the engine; in Plumix the host adapter answers the channel directly.
     /// </summary>
-    private void AttachPlatformChannelHandler()
+    private protected void AttachPlatformChannelHandler()
     {
         if (_isSubscribedToPlatformChannel)
         {
@@ -1217,6 +1164,23 @@ public class PlumixHost : Control
                 return Task.FromResult<object?>(null);
             case "HapticFeedback.vibrate":
                 OnFrameworkHapticFeedback(call.Arguments as string);
+                return Task.FromResult<object?>(null);
+            case "SystemChrome.setSystemUIOverlayStyle":
+                _currentSystemUiOverlayStyle =
+                    SystemUiOverlayStyle.FromMap((System.Collections.IDictionary)call.Arguments!);
+                ApplySystemUiOverlayStyle();
+                return Task.FromResult<object?>(null);
+            case "SystemChrome.setApplicationSwitcherDescription":
+                var description = (System.Collections.IDictionary)call.Arguments!;
+                _currentApplicationSwitcherDescription = new ApplicationSwitcherDescription(
+                    label: description["label"] as string,
+                    primaryColor: description["primaryColor"] switch
+                    {
+                        int value => value,
+                        long value => value,
+                        _ => null,
+                    });
+                ApplyApplicationSwitcherDescription();
                 return Task.FromResult<object?>(null);
             default:
                 // Dart: "calls to methods that are not implemented on the shell side are ignored".
@@ -1280,18 +1244,6 @@ public class PlumixHost : Control
     {
     }
 
-    private void HandleSystemUiOverlayStyleChanged(SystemUiOverlayStyle style)
-    {
-        _currentSystemUiOverlayStyle = style;
-        ApplySystemUiOverlayStyle();
-    }
-
-    private void HandleApplicationSwitcherDescriptionChanged(ApplicationSwitcherDescription description)
-    {
-        _currentApplicationSwitcherDescription = description;
-        ApplyApplicationSwitcherDescription();
-    }
-
     private void ApplyApplicationSwitcherDescription()
     {
         if (_currentApplicationSwitcherDescription == null)
@@ -1301,7 +1253,7 @@ public class PlumixHost : Control
 
         if (_attachedTopLevel is Window window)
         {
-            window.Title = _currentApplicationSwitcherDescription.Label;
+            window.Title = _currentApplicationSwitcherDescription.Label ?? string.Empty;
         }
 
         OnFrameworkApplicationSwitcherDescription(_currentApplicationSwitcherDescription);
@@ -1310,6 +1262,18 @@ public class PlumixHost : Control
     protected virtual void OnFrameworkApplicationSwitcherDescription(
         ApplicationSwitcherDescription description)
     {
+    }
+
+    /// <summary>
+    /// Runs <c>RenderView._updateSystemChrome</c> after this host's own composite, which Avalonia can
+    /// perform without a scheduler frame (a resize, for example).
+    /// </summary>
+    private void UpdateSystemChrome()
+    {
+        if (_pipeline.RootNode is RenderView { AutomaticSystemUiAdjustment: true } renderView)
+        {
+            renderView.UpdateSystemChrome();
+        }
     }
 
     private void ApplySystemUiOverlayStyle()
@@ -1326,7 +1290,7 @@ public class PlumixHost : Control
             _insetsManager.DisplayEdgeToEdgePreference = shouldDisplayEdgeToEdge;
         }
 
-        var fallbackSystemBarColor = style.StatusBarColor ?? style.NavigationBarColor;
+        var fallbackSystemBarColor = style.StatusBarColor ?? style.SystemNavigationBarColor;
         if (fallbackSystemBarColor != null)
         {
             if (_attachedTopLevel != null)
@@ -1337,16 +1301,16 @@ public class PlumixHost : Control
             _insetsManager.SystemBarColor = fallbackSystemBarColor!;
         }
 
-        var iconBrightness = style.StatusBarIconBrightness ?? style.NavigationBarIconBrightness;
+        var iconBrightness = style.StatusBarIconBrightness ?? style.SystemNavigationBarIconBrightness;
         if (iconBrightness.HasValue)
         {
-            var systemBarTheme = iconBrightness.Value == SystemUiIconBrightness.Dark
+            var systemBarTheme = iconBrightness.Value == PlatformBrightness.Dark
                 ? SystemBarTheme.Light
                 : SystemBarTheme.Dark;
             TrySetInsetsManagerSystemBarTheme(_insetsManager, systemBarTheme);
         }
 
-        TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.NavigationBarColor);
+        TryApplyAndroidSystemBarColors(_insetsManager, style.StatusBarColor, style.SystemNavigationBarColor);
     }
 
     private static bool ShouldDisplayEdgeToEdge(SystemUiOverlayStyle style)
@@ -1354,7 +1318,7 @@ public class PlumixHost : Control
         static bool IsTransparentOrUnset(Color? color) => color == null || color!.Alpha == 0;
 
         return IsTransparentOrUnset(style.StatusBarColor)
-               && IsTransparentOrUnset(style.NavigationBarColor);
+               && IsTransparentOrUnset(style.SystemNavigationBarColor);
     }
 
     private static void TrySetInsetsManagerSystemBarTheme(IInsetsManager insetsManager, SystemBarTheme theme)

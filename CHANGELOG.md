@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `SystemChrome` is a strict port over `flutter/platform`: orientations, UI modes (system_chrome.dart).
+- Breaking: `SystemUiOverlayStyle` has Dart's eight fields over `PlatformBrightness`; `SystemUiIconBrightness` is gone.
+- Breaking: `RenderView` samples the bar centres each composited frame, nav bar on Android only (rendering/view.dart).
+- `ServicesBinding` answers `SystemChrome.systemUIChange` and `System.requestAppExit` (services/binding.dart).
+- Breaking: `Title` asserts an opaque colour in debug mode only; `ApplicationSwitcherDescription` fields are nullable.
+- `TextPainter.Dispose` no longer throws in release builds (painting/text_painter.dart).
 - Breaking: framework `Color`/`ColorSpace` (dart:ui) replaces Avalonia's `Color` in every public API (painting.dart).
 - Breaking: `Color.lerp`, `alphaBlend`, `withOpacity` use dart:ui's exact math; 8-bit helper copies removed.
 - Breaking: `BoxShadow`/`Gradient` `ToString` print dart:ui's `Color(alpha: ..., colorSpace: ...)` spelling.

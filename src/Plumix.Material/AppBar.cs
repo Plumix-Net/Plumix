@@ -743,11 +743,12 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                 ? SystemUiOverlayStyle.Light
                 : SystemUiOverlayStyle.Dark;
 
-            // Leave the system navigation bar untouched, for backwards compatibility with Dart.
+            // For backward compatibility, create an overlay style without system navigation bar settings.
             return new SystemUiOverlayStyle(
-                StatusBarColor: backgroundColor,
-                StatusBarBrightness: style.StatusBarBrightness,
-                StatusBarIconBrightness: style.StatusBarIconBrightness);
+                statusBarColor: backgroundColor,
+                statusBarBrightness: style.StatusBarBrightness,
+                statusBarIconBrightness: style.StatusBarIconBrightness,
+                systemStatusBarContrastEnforced: style.SystemStatusBarContrastEnforced);
         }
 
         private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);

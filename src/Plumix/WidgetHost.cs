@@ -52,6 +52,10 @@ public sealed class WidgetHost : PlumixHost
 
     private void SetAsImplicitView()
     {
+        // The implicit view's host is the platform side of `flutter/platform` from here on, as the
+        // engine is before `runApp`: the first build already sends `SystemChrome` messages (the
+        // `Title` description), usually before the control is attached to a window.
+        AttachPlatformChannelHandler();
         WidgetsBinding.Instance.SetImplicitView(
             RootFlutterView,
             Pipeline,

@@ -241,7 +241,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     rendering service extensions), `src/Plumix/Rendering/Semantics.Binding.cs` (`SemanticsBinding`),
     `src/Plumix/Foundation/Binding.cs` (service-extension registry)
   - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
-  - `src/Plumix/UI/SystemChrome.cs`
+  - `src/Plumix/UI/SystemChrome.cs` (`SystemChrome` over `flutter/platform`, `SystemUiOverlayStyle`; sampled by
+    `RenderView.UpdateSystemChrome`, answered by the host adapter)
   - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
   - `src/Plumix/Foundation/Timeline.cs` (`FlutterTimeline`), `src/Plumix/Developer/Timeline.cs` (`dart:developer`
     `Timeline`/`TimelineTask`/`Flow` over the `Plumix-Timeline` `EventSource`)

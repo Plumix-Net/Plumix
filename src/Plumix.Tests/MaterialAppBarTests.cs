@@ -21,7 +21,7 @@ public sealed class MaterialAppBarTests
 {
     public MaterialAppBarTests()
     {
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
     }
 
     // ---------------------------------------------------------------- preferred size
@@ -192,20 +192,20 @@ public sealed class MaterialAppBarTests
     public void AppBar_SystemOverlayStyle_DerivesBrightnessFromTheBackground(bool useMaterial3)
     {
         SystemUiOverlayStyle onDark = OverlayStyleFor(Colors.Black, useMaterial3);
-        Assert.Equal(SystemUiIconBrightness.Dark, onDark.StatusBarBrightness);
-        Assert.Equal(SystemUiIconBrightness.Light, onDark.StatusBarIconBrightness);
+        Assert.Equal(PlatformBrightness.Dark, onDark.StatusBarBrightness);
+        Assert.Equal(PlatformBrightness.Light, onDark.StatusBarIconBrightness);
 
         SystemUiOverlayStyle onLight = OverlayStyleFor(Colors.White, useMaterial3);
-        Assert.Equal(SystemUiIconBrightness.Light, onLight.StatusBarBrightness);
-        Assert.Equal(SystemUiIconBrightness.Dark, onLight.StatusBarIconBrightness);
+        Assert.Equal(PlatformBrightness.Light, onLight.StatusBarBrightness);
+        Assert.Equal(PlatformBrightness.Dark, onLight.StatusBarIconBrightness);
 
         // M3 clears the status-bar color; M2 leaves it untouched.
         Assert.Equal(useMaterial3 ? MaterialColors.Transparent : null, onDark.StatusBarColor);
         Assert.Equal(useMaterial3 ? MaterialColors.Transparent : null, onLight.StatusBarColor);
 
         // The navigation bar is deliberately left alone.
-        Assert.Null(onDark.NavigationBarColor);
-        Assert.Null(onDark.NavigationBarIconBrightness);
+        Assert.Null(onDark.SystemNavigationBarColor);
+        Assert.Null(onDark.SystemNavigationBarIconBrightness);
     }
 
     // ---------------------------------------------------------------- scrolled under

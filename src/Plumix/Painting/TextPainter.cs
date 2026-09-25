@@ -1252,9 +1252,11 @@ public sealed class TextPainter : IDisposable
     /// After disposal this painter is unusable.
     public void Dispose()
     {
-        DebugAssert(!DebugDisposed, "!debugDisposed");
         if (Constants.KDebugMode)
         {
+            // Dart's `assert(!debugDisposed)`: the getter throws outside debug mode, so it is only
+            // read where the assert would run.
+            DebugAssert(!DebugDisposed, "!debugDisposed");
             _disposed = true;
             FoundationDebug.DebugMaybeDispatchDisposed(this);
         }

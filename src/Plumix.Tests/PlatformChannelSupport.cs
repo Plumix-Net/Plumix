@@ -36,6 +36,27 @@ internal sealed class MockMethodCallHandler : IDisposable
     public void Dispose() => _channel.SetPlatformMethodCallHandler(null);
 }
 
+/// <summary>Reads the <c>SystemChrome.*</c> calls a <see cref="MockMethodCallHandler"/> recorded.</summary>
+internal static class SystemChromeCalls
+{
+    /// <summary>
+    /// Asserts that the last <c>SystemChrome.setApplicationSwitcherDescription</c> call carried
+    /// <paramref name="label"/> and <paramref name="primaryColor"/>.
+    /// </summary>
+    public static void AssertLastApplicationSwitcherDescription(
+        this MockMethodCallHandler platform,
+        string? label,
+        long? primaryColor)
+    {
+        MethodCall call = platform.Log.Last(
+            call => call.Method == "SystemChrome.setApplicationSwitcherDescription");
+        var arguments = (System.Collections.IDictionary)call.Arguments!;
+        Assert.Equal(2, arguments.Count);
+        Assert.Equal(label, arguments["label"]);
+        Assert.Equal(primaryColor, arguments["primaryColor"] is { } value ? Convert.ToInt64(value) : null);
+    }
+}
+
 internal sealed class MockClipboardPlatform : IDisposable
 {
     private readonly MockMethodCallHandler _handler;

@@ -17,7 +17,7 @@ public sealed class MaterialScaffoldTests
 {
     public MaterialScaffoldTests()
     {
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
     }
 
     /// <summary>
@@ -2370,10 +2370,10 @@ public sealed class MaterialScaffoldTests
     {
         var owner = TestBuildOwner.Create();
         var themedStyle = new SystemUiOverlayStyle(
-            StatusBarColor: Colors.Crimson,
-            NavigationBarColor: Colors.DarkGreen,
-            StatusBarIconBrightness: SystemUiIconBrightness.Light,
-            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+            statusBarColor: Colors.Crimson,
+            systemNavigationBarColor: Colors.DarkGreen,
+            statusBarIconBrightness: PlatformBrightness.Light,
+            systemNavigationBarIconBrightness: PlatformBrightness.Light);
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),
@@ -2398,15 +2398,15 @@ public sealed class MaterialScaffoldTests
     {
         var owner = TestBuildOwner.Create();
         var themedStyle = new SystemUiOverlayStyle(
-            StatusBarColor: Colors.Crimson,
-            NavigationBarColor: Colors.DarkGreen,
-            StatusBarIconBrightness: SystemUiIconBrightness.Light,
-            NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+            statusBarColor: Colors.Crimson,
+            systemNavigationBarColor: Colors.DarkGreen,
+            statusBarIconBrightness: PlatformBrightness.Light,
+            systemNavigationBarIconBrightness: PlatformBrightness.Light);
         var widgetStyle = new SystemUiOverlayStyle(
-            StatusBarColor: Colors.Bisque,
-            NavigationBarColor: Colors.CadetBlue,
-            StatusBarIconBrightness: SystemUiIconBrightness.Dark,
-            NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
+            statusBarColor: Colors.Bisque,
+            systemNavigationBarColor: Colors.CadetBlue,
+            statusBarIconBrightness: PlatformBrightness.Dark,
+            systemNavigationBarIconBrightness: PlatformBrightness.Dark);
         var theme = ThemeData.Light with
         {
             AppBarTheme = new AppBarThemeData(SystemOverlayStyle: themedStyle),

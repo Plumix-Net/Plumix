@@ -262,6 +262,10 @@ public partial class WidgetsBinding
                         + exception);
                 }
             }
+
+            // Dart's `ServicesBinding._handleLifecycleMessage` calls this right after the binding's
+            // own `handleAppLifecycleStateChanged` for every generated state.
+            SystemChrome.HandleAppLifecycleStateChanged(generatedState);
         }
     }
 

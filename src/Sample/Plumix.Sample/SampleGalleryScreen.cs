@@ -165,6 +165,7 @@ internal static class SampleRoutes
     public const string Flow = "/flow";
     public const string Transform = "/transform";
     public const string CompositedTransform = "/composited-transform";
+    public const string SystemChrome = "/system-chrome";
     public const string Image = "/image";
     public const string CustomMultiChildLayout = "/custom-multi-child-layout";
     public const string DismissibleSizeChangedLayout = "/dismissible-size-changed-layout";
@@ -658,6 +659,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Composited transforms",
             "linked target/follower anchors + unlinked visibility",
             () => new CompositedTransformDemoPage()),
+        new(
+            SampleRoutes.SystemChrome,
+            "SystemChrome",
+            "Title description + AnnotatedRegion style + orientations + system UI modes",
+            () => new SystemChromeDemoPage()),
         new(
             SampleRoutes.Image,
             "Image controls",

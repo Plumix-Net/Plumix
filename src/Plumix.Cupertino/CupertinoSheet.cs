@@ -87,7 +87,8 @@ public sealed class CupertinoSheetTransition : StatefulWidget
         [
             new AnnotatedRegion<SystemUiOverlayStyle>(
                 value: new SystemUiOverlayStyle(
-                    StatusBarIconBrightness: SystemUiIconBrightness.Light),
+                    statusBarBrightness: PlatformBrightness.Dark,
+                    statusBarIconBrightness: PlatformBrightness.Light),
                 child: new SizedBox(
                     width: double.PositiveInfinity,
                     height: MediaQuery.SizeOf(context).Height * DefaultTopGap)),

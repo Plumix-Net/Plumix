@@ -579,13 +579,8 @@ public sealed class MaterialApp : StatefulWidget
             }
 
             theme ??= CurrentWidget.Theme ?? new ThemeData();
-            SystemUiIconBrightness iconBrightness = theme.Brightness == Brightness.Dark
-                ? SystemUiIconBrightness.Light
-                : SystemUiIconBrightness.Dark;
-            SystemChrome.SetSystemUiOverlayStyle(
-                new SystemUiOverlayStyle(
-                    StatusBarIconBrightness: iconBrightness,
-                    NavigationBarIconBrightness: iconBrightness));
+            SystemChrome.SetSystemUIOverlayStyle(
+                theme.Brightness == Brightness.Dark ? SystemUiOverlayStyle.Light : SystemUiOverlayStyle.Dark);
             return theme;
         }
 

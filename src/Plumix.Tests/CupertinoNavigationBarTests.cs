@@ -253,9 +253,9 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         {
             harness.Pump(new Size(400, 600));
             var region = Assert.Single(harness.FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>());
-            Assert.Equal(SystemUiIconBrightness.Dark, region.Value.StatusBarIconBrightness);
-            Assert.Null(region.Value.NavigationBarColor);
-            Assert.Null(region.Value.NavigationBarIconBrightness);
+            Assert.Equal(PlatformBrightness.Dark, region.Value.StatusBarIconBrightness);
+            Assert.Null(region.Value.SystemNavigationBarColor);
+            Assert.Null(region.Value.SystemNavigationBarIconBrightness);
         }
 
         // Dark background draws a light status bar (luminance < 0.179).
@@ -265,7 +265,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         {
             harness.Pump(new Size(400, 600));
             var region = Assert.Single(harness.FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>());
-            Assert.Equal(SystemUiIconBrightness.Light, region.Value.StatusBarIconBrightness);
+            Assert.Equal(PlatformBrightness.Light, region.Value.StatusBarIconBrightness);
         }
 
         // An explicit brightness overrides the luminance-derived value.
@@ -276,7 +276,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         {
             harness.Pump(new Size(400, 600));
             var region = Assert.Single(harness.FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>());
-            Assert.Equal(SystemUiIconBrightness.Dark, region.Value.StatusBarIconBrightness);
+            Assert.Equal(PlatformBrightness.Dark, region.Value.StatusBarIconBrightness);
         }
     }
 

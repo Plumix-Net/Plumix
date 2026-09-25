@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -15,55 +16,100 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 {
     public TitleDefaultSelectionStyleTests()
     {
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
+        SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
+        SystemChrome.ResetForTests();
     }
 
+    // title_test.dart: 'toString control test', 'should handle having no title'.
     [Fact]
-    public void Title_ValidatesOpaqueColorAndUpdatesApplicationSwitcherDescription()
+    public void Title_ToStringAndDefaultTitle()
     {
-        Assert.Throws<ArgumentException>(() => new Title(
-            color: Color.FromARGB(0x80, 0x11, 0x22, 0x33),
-            child: new SizedBox()));
+        var widget = new Title(color: new Color(0xFF00FF00), title: "Awesome app", child: new SizedBox());
+        _ = widget.ToString();
 
-        int notifications = 0;
-        SystemChrome.ApplicationSwitcherDescriptionChanged += _ => notifications++;
-        var owner = TestBuildOwner.Create();
-        var root = new TestRootElement(new Title(
-            title: "First",
-            color: Color.FromARGB(0xFF, 0x12, 0x34, 0x56),
-            child: new SizedBox()));
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        var untitled = new Title(color: new Color(0xFF00FF00), child: new SizedBox());
+        _ = untitled.ToString();
+        Assert.Equal(string.Empty, untitled.TitleText);
+        Assert.Equal(new Color(0xFF00FF00), untitled.Color);
+    }
 
-        Assert.Equal(
-            new ApplicationSwitcherDescription("First", 0xFF123456),
-            SystemChrome.CurrentApplicationSwitcherDescription);
-        Assert.Equal(1, notifications);
+    // title_test.dart: 'should not allow non-opaque color'.
+    [DebugOnlyFact]
+    public void Title_RejectsNonOpaqueColor()
+    {
+        Assert.Throws<AssertionError>(() => new Title(color: new Color(0x00000000), child: new SizedBox()));
+    }
 
-        root.Update(new Title(
-            title: "First",
-            color: Color.FromARGB(0xFF, 0x12, 0x34, 0x56),
-            child: new SizedBox()));
-        owner.FlushBuild();
-        Assert.Equal(1, notifications);
+    // title_test.dart: 'should not pass "null" to setApplicationSwitcherDescription'.
+    [Fact]
+    public void Title_SendsAnEmptyLabelRatherThanNull()
+    {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        using var tester = new FrameworkDartTester();
 
-        root.Update(new Title(
-            title: "Second",
-            color: Color.FromARGB(0xFF, 0x65, 0x43, 0x21),
-            child: new SizedBox()));
-        owner.FlushBuild();
-        Assert.Equal(
-            new ApplicationSwitcherDescription("Second", 0xFF654321),
-            SystemChrome.CurrentApplicationSwitcherDescription);
-        Assert.Equal(2, notifications);
+        tester.PumpWidget(new Title(color: new Color(0xFF00FF00), child: new SizedBox()));
 
-        root.UnmountRoot();
+        Assert.Equal(["SystemChrome.setApplicationSwitcherDescription"], platform.Methods);
+        platform.AssertLastApplicationSwitcherDescription(string.Empty, 4278255360);
+    }
+
+    // title_test.dart: 'should call setApplicationSwitcherDescription once when widget is rebuilt
+    // with same values'.
+    [Fact]
+    public void Title_RebuiltWithSameValues_SendsOnce()
+    {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        using var tester = new FrameworkDartTester();
+        var title = new Title(color: new Color(0xFF00FF00), child: new SizedBox());
+
+        tester.PumpWidget(title);
+        tester.PumpWidget(title);
+        tester.PumpWidget(title);
+
+        Assert.Single(platform.Log);
+        platform.AssertLastApplicationSwitcherDescription(string.Empty, 4278255360);
+    }
+
+    // title_test.dart: 'should call setApplicationSwitcherDescription again only when title or color
+    // changes'.
+    [Fact]
+    public void Title_SendsAgainOnlyWhenTitleOrColorChanges()
+    {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        using var tester = new FrameworkDartTester();
+        var title = new Title(title: "title", color: new Color(0xFF00FF00), child: new SizedBox());
+        var title2 = new Title(title: "title2", color: new Color(0xFF00FF02), child: new SizedBox());
+
+        tester.PumpWidget(title);
+        tester.PumpWidget(title);
+        tester.PumpWidget(title2);
+        tester.PumpWidget(title2);
+
+        Assert.Equal(2, platform.Log.Count);
+        var first = (System.Collections.IDictionary)platform.Log[0].Arguments!;
+        Assert.Equal("title", first["label"]);
+        Assert.Equal(4278255360L, first["primaryColor"]);
+        platform.AssertLastApplicationSwitcherDescription("title2", 4278255362);
+    }
+
+    // title_test.dart: 'Title does not crash at zero area'.
+    [Fact]
+    public void Title_DoesNotCrashAtZeroArea()
+    {
+        using var tester = new FrameworkDartTester();
+
+        tester.PumpWidget(new Directionality(
+            textDirection: TextDirection.Ltr,
+            child: new Center(
+                child: SizedBox.Shrink(
+                    child: new Title(color: new Color(0xFFFFFFFF), child: new Placeholder())))));
+
+        var box = (RenderBox)tester.ElementOfType<Title>().RenderObject!;
+        Assert.Equal(new Avalonia.Size(0, 0), box.Size);
     }
 
     [Fact]

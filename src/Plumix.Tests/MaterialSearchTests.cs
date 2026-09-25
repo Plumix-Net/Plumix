@@ -745,7 +745,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(Colors.White, resolved.AppBarTheme.BackgroundColor);
         Assert.Equal(MaterialColors.Grey, resolved.AppBarTheme.IconTheme?.Color);
         Assert.Equal(31, resolved.AppBarTheme.IconTheme?.Size);
-        Assert.Equal(SystemUiIconBrightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
+        Assert.Equal(PlatformBrightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
         Assert.Equal(InputBorder.None, resolved.InputDecorationTheme.Border);
     }
 

@@ -144,6 +144,7 @@ import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
 import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
+import 'demos/general/system_chrome_demo_page.dart';
 import 'demos/general/mouse_region_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
 import 'demos/cupertino/action_sheet_demo_page.dart';
@@ -1063,6 +1064,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Composited transforms',
       subtitle: 'linked target/follower anchors + unlinked visibility',
       builder: () => const CompositedTransformDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.systemChrome,
+      title: 'SystemChrome',
+      subtitle:
+          'Title description + AnnotatedRegion style + orientations + system UI modes',
+      builder: () => const SystemChromeDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.image,

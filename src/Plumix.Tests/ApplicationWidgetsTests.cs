@@ -21,16 +21,16 @@ public sealed class ApplicationWidgetsTests : IDisposable
     {
         Scheduler.ResetForTests();
         SystemNavigator.ResetForTests();
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
+        SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
         SystemNavigator.ResetForTests();
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
+        SystemChrome.ResetForTests();
     }
 
     [Fact]
@@ -268,6 +268,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     [Fact]
     public void WidgetsApp_ComposesRoutingBuilderLocalizationTitleAndApplicationInfrastructure()
     {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         var navigatorKey = new LabeledGlobalKey<NavigatorState>("app navigator");
         BuildContext? homeContext = null;
         Widget? builderChild = null;
@@ -313,9 +314,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.NotNull(TapRegion.MaybeOf(homeContext));
         Assert.NotNull(homeContext.DependOnInheritedWidgetOfExactType<UnmanagedRestorationScope>());
         Assert.Equal("ar", generatedTitleLocale);
-        Assert.Equal(
-            new ApplicationSwitcherDescription("localized", 0xFF112233),
-            SystemChrome.CurrentApplicationSwitcherDescription);
+        platform.AssertLastApplicationSwitcherDescription("localized", 0xFF112233);
         root.UnmountRoot();
     }
 
@@ -517,9 +516,8 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Same(DefaultMaterialLocalizations.Instance, materialLocalizations);
         Assert.Same(DefaultCupertinoLocalizations.Instance, cupertinoLocalizations);
         Assert.IsType<MaterialScrollBehavior>(scrollBehavior);
-        Assert.Equal(
-            SystemUiIconBrightness.Light,
-            SystemChrome.CurrentSystemUiOverlayStyle.StatusBarIconBrightness);
+        Scheduler.FlushMicrotasks();
+        Assert.Equal(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
         root.UnmountRoot();
     }
 

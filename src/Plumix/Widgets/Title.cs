@@ -14,9 +14,10 @@ public sealed class Title : StatefulWidget
         string title = "",
         Key? key = null) : base(key)
     {
-        if (color.Alpha != byte.MaxValue)
+        if (Constants.KDebugMode
+            && Math.Clamp((int)Math.Round(color.A * 255.0, MidpointRounding.AwayFromZero), 0, 255) != 0xFF)
         {
-            throw new ArgumentException("Title color must be opaque.", nameof(color));
+            throw new AssertionError("(color.a * 255.0).round().clamp(0, 255) == 0xFF");
         }
 
         Color = color;
@@ -63,15 +64,10 @@ public sealed class Title : StatefulWidget
 
         private void UpdateChrome()
         {
-            SystemChrome.SetApplicationSwitcherDescription(
+            _ = SystemChrome.SetApplicationSwitcherDescription(
                 new ApplicationSwitcherDescription(
-                    CurrentWidget.TitleText,
-                    ToArgb(CurrentWidget.Color)));
-        }
-
-        private static uint ToArgb(Color color)
-        {
-            return color.ToARGB32();
+                    label: CurrentWidget.TitleText,
+                    primaryColor: CurrentWidget.Color.Value));
         }
     }
 }

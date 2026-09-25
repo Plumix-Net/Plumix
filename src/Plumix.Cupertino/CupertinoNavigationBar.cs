@@ -135,12 +135,14 @@ internal static class NavBarStatics
             SystemUiOverlayStyle overlayStyle = newBrightness == PlatformBrightness.Dark
                 ? SystemUiOverlayStyle.Light
                 : SystemUiOverlayStyle.Dark;
-            // Flutter copies only the statusBar* fields so system navigation bar properties stay
-            // untouched.
+            // [SystemUiOverlayStyle.light] and [SystemUiOverlayStyle.dark] set some system
+            // navigation bar properties; for backward compatibility, create a style without them.
             result = new AnnotatedRegion<SystemUiOverlayStyle>(
                 value: new SystemUiOverlayStyle(
-                    StatusBarColor: overlayStyle.StatusBarColor,
-                    StatusBarIconBrightness: overlayStyle.StatusBarIconBrightness),
+                    statusBarColor: overlayStyle.StatusBarColor,
+                    statusBarBrightness: overlayStyle.StatusBarBrightness,
+                    statusBarIconBrightness: overlayStyle.StatusBarIconBrightness,
+                    systemStatusBarContrastEnforced: overlayStyle.SystemStatusBarContrastEnforced),
                 child: result);
         }
 

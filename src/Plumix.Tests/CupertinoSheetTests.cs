@@ -17,13 +17,13 @@ public sealed class CupertinoSheetTests : IDisposable
     public CupertinoSheetTests()
     {
         Scheduler.ResetForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
     }
 
     /// <summary>

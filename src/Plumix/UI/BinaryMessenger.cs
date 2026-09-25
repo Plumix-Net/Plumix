@@ -1,9 +1,14 @@
 using System.Diagnostics;
 using Plumix.Foundation;
+using Plumix.Widgets;
 
 namespace Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/binary_messenger.dart
+
+/// <summary>Signature for listening to changes in the <see cref="SystemUiMode"/>.</summary>
+/// <remarks>Set by <see cref="SystemChrome.SetSystemUIChangeCallback"/>.</remarks>
+public delegate Task SystemUiChangeCallback(bool systemOverlaysAreVisible);
 
 /// <summary>A function which decodes and handles a binary message received on a channel.</summary>
 /// <remarks>Returning <c>null</c> means "no reply".</remarks>
@@ -132,11 +137,70 @@ public class PlatformBinaryMessenger : BinaryMessenger
 /// </remarks>
 public class ServicesBinding
 {
+    private SystemUiChangeCallback? _systemUiChangeCallback;
+
+    /// <summary>
+    /// Dart's <c>ServicesBinding.initInstances</c>: the framework side of <c>flutter/platform</c>.
+    /// </summary>
+    /// <remarks>
+    /// The handler is registered on this binding's own messenger, because
+    /// <see cref="SystemChannels.Platform"/> resolves <see cref="Instance"/>, which is not assigned
+    /// yet while the binding is being constructed.
+    /// </remarks>
+    public ServicesBinding()
+    {
+        new MethodChannel(SystemChannels.Platform.Name, SystemChannels.Platform.Codec, DefaultBinaryMessenger)
+            .SetMethodCallHandler(HandlePlatformMessage);
+    }
+
     /// <summary>The ambient services binding.</summary>
     public static ServicesBinding Instance { get; set; } = new ServicesBinding();
 
     /// <summary>The messenger every channel uses unless it was given one explicitly.</summary>
     public virtual BinaryMessenger DefaultBinaryMessenger { get; } = new PlatformBinaryMessenger();
+
+    /// <summary>
+    /// Sets the callback for the <c>SystemChrome.systemUIChange</c> method call received on the
+    /// <see cref="SystemChannels.Platform"/> channel.
+    /// </summary>
+    /// <remarks>
+    /// This is typically not called directly. System UI changes that this method responds to are
+    /// associated with <see cref="SystemUiMode"/>s, which are configured using
+    /// <see cref="SystemChrome"/>. Use <see cref="SystemChrome.SetSystemUIChangeCallback"/> to
+    /// configure along with other <see cref="SystemChrome"/> settings.
+    /// </remarks>
+    public void SetSystemUiChangeCallback(SystemUiChangeCallback? callback)
+    {
+        _systemUiChangeCallback = callback;
+    }
+
+    /// <summary>Dart's private <c>ServicesBinding._handlePlatformMessage</c>.</summary>
+    /// <remarks>
+    /// The <c>ContextMenu.*</c> cases are not ported, because Plumix has no
+    /// <c>SystemContextMenuClient</c> (see <c>docs/ai/BACKLOG.md</c>). <c>System.requestAppExit</c>
+    /// is answered by <see cref="WidgetsBinding.HandleRequestAppExit"/>, which is Dart's override of
+    /// the services binding's method (the bindings are separate singletons in Plumix).
+    /// </remarks>
+    private async Task<object?> HandlePlatformMessage(MethodCall methodCall)
+    {
+        string method = methodCall.Method;
+        switch (method)
+        {
+            case "SystemChrome.systemUIChange":
+                var args = (System.Collections.IList)methodCall.Arguments!;
+                if (_systemUiChangeCallback is { } callback)
+                {
+                    await callback((bool)args[0]!);
+                }
+
+                return null;
+            case "System.requestAppExit":
+                AppExitResponse response = await WidgetsBinding.Instance.HandleRequestAppExit();
+                return new Dictionary<string, object?> { ["response"] = Diagnostics.EnumName(response) };
+            default:
+                throw new AssertionError($"Method \"{method}\" not handled.");
+        }
+    }
 
     internal static void ResetForTests()
     {

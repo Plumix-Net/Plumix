@@ -18,16 +18,16 @@ public sealed class CupertinoAppTests : IDisposable
     public CupertinoAppTests()
     {
         Scheduler.ResetForTests();
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
+        SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
         PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
         Scheduler.ResetForTests();
-        SystemChrome.ResetApplicationSwitcherDescriptionForTests();
-        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        SystemChrome.ResetForTests();
+        SystemChrome.ResetForTests();
     }
 
     [Fact]
@@ -67,6 +67,7 @@ public sealed class CupertinoAppTests : IDisposable
     [Fact]
     public void App_ComposesThemeSelectionLocalizationRoutingScrollAndSystemChrome()
     {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         Color lightPrimary = Color.FromARGB(0xFF, 10, 20, 30);
         Color darkPrimary = Color.FromARGB(0xFF, 40, 50, 60);
         var primary = CupertinoDynamicColor.WithBrightness(lightPrimary, darkPrimary);
@@ -104,11 +105,9 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.IsType<CupertinoScrollBehavior>(scrollBehavior);
         Assert.Equal(CupertinoUserInterfaceLevelData.Base, interfaceLevel);
         Assert.IsType<CupertinoPageRoute<object?>>(navigatorKey.CurrentState!.CurrentRoute);
-        Assert.Equal(SystemUiIconBrightness.Light,
-            SystemChrome.CurrentSystemUiOverlayStyle.StatusBarIconBrightness);
-        Assert.Equal(
-            new ApplicationSwitcherDescription("Cupertino shell", 0xFF28323C),
-            SystemChrome.CurrentApplicationSwitcherDescription);
+        Scheduler.FlushMicrotasks();
+        Assert.Equal(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
+        platform.AssertLastApplicationSwitcherDescription("Cupertino shell", 0xFF28323C);
         root.UnmountRoot();
     }
 
@@ -143,6 +142,7 @@ public sealed class CupertinoAppTests : IDisposable
     [Fact]
     public void App_ResolvesExplicitDynamicColorAgainstInstalledThemeBrightness()
     {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         Color lightColor = Color.FromARGB(0xFF, 1, 2, 3);
         Color darkColor = Color.FromARGB(0xFF, 4, 5, 6);
         var owner = TestBuildOwner.Create();
@@ -157,9 +157,7 @@ public sealed class CupertinoAppTests : IDisposable
 
         MountAndFlush(root, owner);
 
-        Assert.Equal(
-            new ApplicationSwitcherDescription("Dynamic title", 0xFF040506),
-            SystemChrome.CurrentApplicationSwitcherDescription);
+        platform.AssertLastApplicationSwitcherDescription("Dynamic title", 0xFF040506);
         root.UnmountRoot();
     }
 

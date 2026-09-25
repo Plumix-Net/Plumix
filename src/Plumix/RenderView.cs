@@ -202,7 +202,7 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
 
     /// <summary>
     /// Whether Flutter should automatically compute the desired system UI overlay style from the
-    /// painted <see cref="SystemUiOverlayStyle"/> annotations after each frame.
+    /// painted <see cref="SystemUiOverlayStyle"/> annotations after each composited frame.
     /// </summary>
     /// <remarks>Flutter's <c>RenderView.automaticSystemUiAdjustment</c>.</remarks>
     public bool AutomaticSystemUiAdjustment { get; set; } = true;
@@ -402,10 +402,10 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// </summary>
     /// <remarks>
     /// Flutter's <c>RenderView.compositeFrame</c>, which <c>RendererBinding.DrawFrame</c> calls for every
-    /// registered view. The root layer goes to <see cref="Widgets.FlutterView.Render"/>; a host renders it
-    /// into its Avalonia drawing context, which is also where it updates the system chrome (see
-    /// <c>docs/ai/DIVERGENCES.md</c>). A view that has not painted its first frame yet has no root layer
-    /// and is skipped, where Dart's <c>layer!</c> would throw.
+    /// registered view. The root layer goes to <see cref="Widgets.FlutterView.Render"/>; a host renders
+    /// it into its Avalonia drawing context, and the system chrome is updated from the painted
+    /// annotations once the scene is built. A view that has not painted its first frame yet has no
+    /// root layer and is skipped, where Dart's <c>layer!</c> would throw.
     /// </remarks>
     public void CompositeFrame()
     {
@@ -425,6 +425,15 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
             FlutterView.Render(rootLayer);
             if (!hostRendered)
             {
+                // Dart runs this between `buildScene` and `render`: the scene has to be built first,
+                // because a follower layer's `find` reads the transform the build computed. Without a
+                // host, `Render` has just built the scene; a host builds it in its own render pass
+                // and updates the system chrome there (PlumixHost.Render).
+                if (AutomaticSystemUiAdjustment)
+                {
+                    UpdateSystemChrome();
+                }
+
                 // A host advances the repaint rainbow when it draws the layer (PipelineOwner.CompositeFrame).
                 RenderingDebug.AdvanceRepaintColorForFrame();
             }
@@ -436,6 +445,94 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
                 FlutterTimeline.FinishSync();
             }
         }
+    }
+
+    /// <summary>
+    /// Takes the overlay style from the places where the system status bar and the system
+    /// navigation bar are drawn, and sends it to <see cref="SystemChrome"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's private <c>RenderView._updateSystemChrome</c>. The horizontal center of the screen
+    /// and the vertical centers of the status bar (top padding) and the navigation bar (bottom
+    /// padding) are sampled; only Android has a customizable navigation bar. Dart's root layer is a
+    /// <c>TransformLayer</c> carrying the device pixel ratio, so its <c>find</c> maps these physical
+    /// points through the inverse root transform; Plumix's root is an <see cref="OffsetLayer"/>
+    /// in logical pixels, so the mapping happens here. A host builds the scene in its own render
+    /// pass and calls this right after (<c>docs/ai/DIVERGENCES.md</c>, <c>FlutterHost</c> frame row).
+    /// </remarks>
+    internal void UpdateSystemChrome()
+    {
+        if (_layer is not OffsetLayer rootLayer || _rootTransform is null)
+        {
+            return;
+        }
+
+        double devicePixelRatio = Configuration.DevicePixelRatio;
+        // Dart's `paintBounds`: `Offset.zero & (size * configuration.devicePixelRatio)`.
+        var bounds = new Rect(0.0, 0.0, Size.Width * devicePixelRatio, Size.Height * devicePixelRatio);
+        Matrix4 toLogical = Matrix4.TryInvert(_rootTransform) ?? Matrix4.Identity();
+        // Center of the status bar.
+        Point top = MatrixUtils.TransformPoint(
+            toLogical,
+            new Point(bounds.Center.X, FlutterView.Padding.Top / 2.0));
+        // Center of the navigation bar. The "1" is subtracted from the bottom because available
+        // pixels are in the (0..bottom) range.
+        Point bottom = MatrixUtils.TransformPoint(
+            toLogical,
+            new Point(bounds.Center.X, bounds.Bottom - 1.0 - FlutterView.Padding.Bottom / 2.0));
+        SystemUiOverlayStyle? upperOverlayStyle = rootLayer.Find<SystemUiOverlayStyle>(top);
+        // Only android has a customizable system navigation bar.
+        SystemUiOverlayStyle? lowerOverlayStyle = null;
+        switch (PlatformDefaults.TargetPlatform)
+        {
+            case TargetPlatform.Android:
+                lowerOverlayStyle = rootLayer.Find<SystemUiOverlayStyle>(bottom);
+                break;
+            case TargetPlatform.Fuchsia:
+            case TargetPlatform.IOS:
+            case TargetPlatform.Linux:
+            case TargetPlatform.MacOS:
+            case TargetPlatform.Windows:
+                break;
+        }
+
+        // If there are no overlay style in the UI don't bother updating.
+        if (upperOverlayStyle is null && lowerOverlayStyle is null)
+        {
+            return;
+        }
+
+        // If both are not null, the upper provides the status bar properties and the lower provides
+        // the system navigation bar properties.
+        if (upperOverlayStyle is not null && lowerOverlayStyle is not null)
+        {
+            SystemChrome.SetSystemUIOverlayStyle(new SystemUiOverlayStyle(
+                statusBarBrightness: upperOverlayStyle.StatusBarBrightness,
+                statusBarIconBrightness: upperOverlayStyle.StatusBarIconBrightness,
+                statusBarColor: upperOverlayStyle.StatusBarColor,
+                systemStatusBarContrastEnforced: upperOverlayStyle.SystemStatusBarContrastEnforced,
+                systemNavigationBarColor: lowerOverlayStyle.SystemNavigationBarColor,
+                systemNavigationBarDividerColor: lowerOverlayStyle.SystemNavigationBarDividerColor,
+                systemNavigationBarIconBrightness: lowerOverlayStyle.SystemNavigationBarIconBrightness,
+                systemNavigationBarContrastEnforced: lowerOverlayStyle.SystemNavigationBarContrastEnforced));
+            return;
+        }
+
+        // If only one of the upper or the lower overlay style is not null, it provides all properties.
+        bool isAndroid = PlatformDefaults.TargetPlatform == TargetPlatform.Android;
+        SystemUiOverlayStyle definedOverlayStyle = (upperOverlayStyle ?? lowerOverlayStyle)!;
+        SystemChrome.SetSystemUIOverlayStyle(new SystemUiOverlayStyle(
+            statusBarBrightness: definedOverlayStyle.StatusBarBrightness,
+            statusBarIconBrightness: definedOverlayStyle.StatusBarIconBrightness,
+            statusBarColor: definedOverlayStyle.StatusBarColor,
+            systemStatusBarContrastEnforced: definedOverlayStyle.SystemStatusBarContrastEnforced,
+            systemNavigationBarColor: isAndroid ? definedOverlayStyle.SystemNavigationBarColor : null,
+            systemNavigationBarDividerColor:
+                isAndroid ? definedOverlayStyle.SystemNavigationBarDividerColor : null,
+            systemNavigationBarIconBrightness:
+                isAndroid ? definedOverlayStyle.SystemNavigationBarIconBrightness : null,
+            systemNavigationBarContrastEnforced:
+                isAndroid ? definedOverlayStyle.SystemNavigationBarContrastEnforced : null));
     }
 
     /// <summary>
