@@ -12,6 +12,32 @@ namespace Plumix.Rendering;
 public abstract record SemanticsSortKey(string? Name) : IComparable<SemanticsSortKey>
 {
     public abstract int CompareTo(SemanticsSortKey? other);
+
+    /// <summary>
+    /// Dart's <c>Diagnosticable.toString</c> for a sort key: the identity, then the properties that
+    /// differ from their defaults, e.g. <c>OrdinalSortKey#19df5(order: 1.0)</c>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>SemanticsSortKey</c> mixes in <c>Diagnosticable</c>; a C# record cannot derive from
+    /// it, so the one string the diagnostics read is spelled out here.
+    /// </remarks>
+    public sealed override string ToString()
+    {
+        List<string> properties = [];
+        DebugDescribeProperties(properties);
+        string identity = Diagnostics.DescribeIdentity(this);
+        return properties.Count == 0 ? identity : $"{identity}({string.Join(", ", properties)})";
+    }
+
+    /// <summary>Adds this key's non-default properties, as Dart's <c>debugFillProperties</c> does.</summary>
+    /// <remarks>Flutter's <c>SemanticsSortKey.debugFillProperties</c>: <c>name</c>, default <c>null</c>.</remarks>
+    protected virtual void DebugDescribeProperties(List<string> properties)
+    {
+        if (Name is not null)
+        {
+            properties.Add($"name: {Name}");
+        }
+    }
 }
 
 public sealed record OrdinalSortKey(double Order, string? GroupName = null)
@@ -31,6 +57,14 @@ public sealed record OrdinalSortKey(double Order, string? GroupName = null)
 
         int nameComparison = string.Compare(Name, ordinal.Name, StringComparison.Ordinal);
         return nameComparison != 0 ? nameComparison : Order.CompareTo(ordinal.Order);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>OrdinalSortKey.debugFillProperties</c>: <c>order</c>, default <c>null</c>.</remarks>
+    protected override void DebugDescribeProperties(List<string> properties)
+    {
+        base.DebugDescribeProperties(properties);
+        properties.Add($"order: {DoubleProperty.FormatDouble(Order)}");
     }
 }
 
@@ -271,10 +305,14 @@ public delegate void SemanticsActionHandler(object? args);
 /// One semantics action the platform asked the framework to perform.
 /// </summary>
 /// <remarks>
-/// Flutter's <c>ui.SemanticsActionEvent</c>, minus <c>viewId</c>: a Plumix
-/// <see cref="SemanticsOwner"/> already belongs to exactly one view.
+/// dart:ui's <c>SemanticsActionEvent</c>: the action, the view whose semantics tree the node belongs
+/// to, the node, and the action's arguments.
 /// </remarks>
-public sealed record SemanticsActionEvent(int NodeId, SemanticsActions Type, object? Arguments);
+public sealed record SemanticsActionEvent(
+    SemanticsActions Type,
+    int ViewId,
+    int NodeId,
+    object? Arguments = null);
 
 /// <summary>
 /// Signature for <see cref="SemanticsConfiguration.OnScrollToOffset"/>.
@@ -2461,6 +2499,10 @@ public sealed partial class SemanticsNode
         Flags = config.Flags;
         AreUserActionsBlocked = config.IsBlockingUserActions;
         Actions = config.EffectiveActions;
+        // Dart's `_actions` also holds the customAction handler that the custom actions install.
+        _declaredActions = config.CustomActionHandlers.Count > 0
+            ? [.. config.ActionHandlers.Keys.Append(SemanticsActions.CustomAction).Distinct()]
+            : [.. config.ActionHandlers.Keys];
         IndexInParent = config.IndexInParent;
         SortKey = config.SortKey;
         ScrollPosition = config.ScrollPosition;
@@ -2760,34 +2802,12 @@ public sealed partial class SemanticsOwner : ChangeNotifier
     /// </remarks>
     public Rect? GetRectOfSemanticsNode(int nodeId) => GetSemanticsNode(nodeId)?.GlobalRect;
 
-    /// <summary>
-    /// Runs <paramref name="listener"/> for every semantics action this owner is asked to perform,
-    /// before the action reaches its node.
-    /// </summary>
-    /// <remarks>Flutter's <c>SemanticsBinding.addSemanticsActionListener</c>.</remarks>
-    public void AddSemanticsActionListener(Action<SemanticsActionEvent> listener)
-    {
-        ArgumentNullException.ThrowIfNull(listener);
-        _actionListeners.Add(listener);
-    }
-
-    /// <remarks>Flutter's <c>SemanticsBinding.removeSemanticsActionListener</c>.</remarks>
-    public void RemoveSemanticsActionListener(Action<SemanticsActionEvent> listener)
-    {
-        ArgumentNullException.ThrowIfNull(listener);
-        _actionListeners.Remove(listener);
-    }
-
-    private readonly List<Action<SemanticsActionEvent>> _actionListeners = [];
-
     public bool PerformAction(int nodeId, SemanticsActions action, object? args = null)
     {
         if (action == SemanticsActions.None)
         {
             return false;
         }
-
-        NotifyActionListeners(new SemanticsActionEvent(nodeId, action, args));
 
         SemanticsActionHandler? handler = GetSemanticsActionHandlerForId(nodeId, action, args);
         if (handler is not null)
@@ -2834,25 +2854,6 @@ public sealed partial class SemanticsOwner : ChangeNotifier
     {
         ArgumentNullException.ThrowIfNull(action);
         return PerformAction(nodeId, SemanticsActions.CustomAction, CustomSemanticsAction.GetIdentifier(action));
-    }
-
-    private void NotifyActionListeners(SemanticsActionEvent actionEvent)
-    {
-        if (_actionListeners.Count == 0)
-        {
-            return;
-        }
-
-        // Listeners may register or unregister while the iteration is in progress, so Flutter walks a
-        // local copy and re-checks membership before each call.
-        Action<SemanticsActionEvent>[] localListeners = [.. _actionListeners];
-        foreach (Action<SemanticsActionEvent> listener in localListeners)
-        {
-            if (_actionListeners.Contains(listener))
-            {
-                listener(actionEvent);
-            }
-        }
     }
 
     /// <remarks>Flutter's private <c>SemanticsOwner._getSemanticsActionHandlerForId</c>.</remarks>

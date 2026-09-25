@@ -425,9 +425,17 @@ public sealed class GestureBinding : IHitTestTarget
         RendererBinding.Instance.ScheduleMouseTrackerUpdate();
     }
 
+    /// <summary>Hit-tests the view <paramref name="viewId"/> at <paramref name="position"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>HitTestable.hitTestInView</c> into a fresh <see cref="HitTestResult"/>, as
+    /// <c>GestureBinding._handlePointerEventImmediately</c> and the native hit-test query do it;
+    /// the renderer binding fills the result and adds this binding as the final entry.
+    /// </remarks>
     public HitTestResult HitTestInView(Point position, int viewId)
     {
-        return RendererBinding.Instance.HitTestInView(position, viewId);
+        var result = new HitTestResult();
+        RendererBinding.Instance.HitTestInView(result, position, viewId);
+        return result;
     }
 
     private HitTestResponse HandleHitTest(HitTestRequest request)
@@ -456,7 +464,7 @@ public sealed class GestureBinding : IHitTestTarget
         _flushingPointerEvents = false;
         PointerRouter.Reset();
         GestureArena.Reset();
-        RendererBinding.Instance.ResetMouseTrackerForTests();
+        RendererBinding.Instance.ResetForTests();
     }
 
     /// <summary>

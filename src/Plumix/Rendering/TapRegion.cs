@@ -27,12 +27,12 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
     protected override void OnAttach()
     {
         base.OnAttach();
-        Owner?.SemanticsOwner?.AddSemanticsActionListener(HandleSemanticsAction);
+        SemanticsBinding.Instance.AddSemanticsActionListener(HandleSemanticsAction);
     }
 
     protected override void OnDetach()
     {
-        Owner?.SemanticsOwner?.RemoveSemanticsActionListener(HandleSemanticsAction);
+        SemanticsBinding.Instance.RemoveSemanticsActionListener(HandleSemanticsAction);
         base.OnDetach();
     }
 
@@ -53,17 +53,20 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
             return;
         }
 
-        if (_registeredRegions.Count == 0 || Owner is not { } owner)
+        if (_registeredRegions.Count == 0)
         {
             return;
         }
 
-        if (owner.SemanticsOwner?.GetRectOfSemanticsNode(actionEvent.NodeId) is not { } globalRect)
+        Rect? globalRect = SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(
+            actionEvent.ViewId,
+            actionEvent.NodeId);
+        if (globalRect is null)
         {
             return;
         }
 
-        Point globalCenter = globalRect.Center;
+        Point globalCenter = globalRect.Value.Center;
         Point localPosition = GlobalToLocal(globalCenter);
 
         var hitResult = new BoxHitTestResult();

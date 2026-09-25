@@ -398,6 +398,32 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     }
 
     /// <summary>
+    /// Uploads the composited layer tree to the view.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderView.compositeFrame</c>, which <c>RendererBinding.DrawFrame</c> calls for every
+    /// registered view. The root layer goes to <see cref="Widgets.FlutterView.Render"/>; a host renders it
+    /// into its Avalonia drawing context, which is also where it updates the system chrome (see
+    /// <c>docs/ai/DIVERGENCES.md</c>). A view that has not painted its first frame yet has no root layer
+    /// and is skipped, where Dart's <c>layer!</c> would throw.
+    /// </remarks>
+    public void CompositeFrame()
+    {
+        if (_layer is not OffsetLayer rootLayer)
+        {
+            return;
+        }
+
+        bool hostRendered = FlutterView.HasRenderer;
+        FlutterView.Render(rootLayer);
+        if (!hostRendered)
+        {
+            // A host advances the repaint rainbow when it draws the layer (PipelineOwner.CompositeFrame).
+            RenderingDebug.AdvanceRepaintColorForFrame();
+        }
+    }
+
+    /// <summary>
     /// Registers a callback that paints on top of every <see cref="RenderView"/>, for debugging
     /// aids such as the widget inspector.
     /// </summary>

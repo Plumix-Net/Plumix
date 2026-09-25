@@ -6,6 +6,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
 using System.Reflection;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -102,7 +103,8 @@ public class PlumixHost : Control
         _pipeline.OnSemanticsOwnerCreated = () => (_pipeline.RootNode as RenderView)?.ScheduleInitialSemantics();
         _pipeline.OnSemanticsOwnerDisposed = () => (_pipeline.RootNode as RenderView)?.ClearSemantics();
         _pipeline.OnSemanticsUpdate = _view.UpdateSemantics;
-        _view.SemanticsUpdated += update => SemanticsUpdateProduced?.Invoke(update);
+        _view.SemanticsUpdated += HandleViewSemanticsUpdated;
+        _view.RenderRequested += HandleViewRenderRequested;
         _textInputClient = new PlumixTextInputMethodClient(this);
         _ownerThread = Thread.CurrentThread;
         _panZoom = new TrackpadPanZoomSynthesizer(DispatchPointerEvent);
@@ -399,6 +401,13 @@ public class PlumixHost : Control
         _pipeline.FlushLayout(Bounds.Size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        // Dart's `RendererBinding.drawFrame` sends nothing to the engine while the first frame is
+        // deferred; the host shows no frame instead of a half-initialized one.
+        if (!RendererBinding.Instance.SendFramesToEngine)
+        {
+            return;
+        }
+
         _pipeline.CompositeFrame(context);
         _pipeline.UpdateSystemUiOverlayStyle(Bounds.Size);
         FlushSemanticsAndNotify();
@@ -731,7 +740,7 @@ public class PlumixHost : Control
         {
             InvalidateVisual();
         }
-        else
+        else if (RendererBinding.Instance.SendFramesToEngine)
         {
             FlushSemanticsAndNotify();
         }
@@ -739,9 +748,18 @@ public class PlumixHost : Control
         OnFinalizeFrame();
     }
 
+    /// <summary>
+    /// Performs a semantics action the platform sent for a node of this host's view, and reports
+    /// whether a handler ran.
+    /// </summary>
+    /// <remarks>
+    /// The engine's <c>onSemanticsActionEvent</c> delivery: the <c>SemanticsBinding</c> action
+    /// listeners see the action first, then this host's semantics owner performs it — which is where
+    /// <c>RendererBinding.PerformSemanticsAction</c> routes an action for this view.
+    /// </remarks>
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
     {
-        return _pipeline.SemanticsOwner?.PerformAction(nodeId, action) ?? false;
+        return PerformSemanticsActionCore(nodeId, action, arguments: null);
     }
 
     /// <summary>
@@ -766,7 +784,23 @@ public class PlumixHost : Control
 
     public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
     {
-        return _pipeline.SemanticsOwner?.PerformCustomAction(nodeId, action) ?? false;
+        ArgumentNullException.ThrowIfNull(action);
+        return PerformSemanticsActionCore(
+            nodeId,
+            SemanticsActions.CustomAction,
+            CustomSemanticsAction.GetIdentifier(action));
+    }
+
+    private bool PerformSemanticsActionCore(int nodeId, SemanticsActions action, object? arguments)
+    {
+        if (action == SemanticsActions.None)
+        {
+            return false;
+        }
+
+        SemanticsBinding.Instance.NotifySemanticsActionListeners(
+            new SemanticsActionEvent(action, _view.ViewId, nodeId, arguments));
+        return _pipeline.SemanticsOwner?.PerformAction(nodeId, action, arguments) ?? false;
     }
 
     internal void FlushPipelineForTests(Size? viewport = null)
@@ -1444,11 +1478,32 @@ public class PlumixHost : Control
 
     private void FlushSemanticsAndNotify()
     {
-        bool hadPendingSemantics = _pipeline.PendingSemanticsNodeCount > 0;
         _pipeline.FlushSemantics();
-        if (hadPendingSemantics)
+    }
+
+    /// <summary>
+    /// Republishes every semantics update of this host's view, whichever pass flushed it — the
+    /// host's own or <c>RendererBinding.DrawFrame</c>'s flush of the pipeline owner tree.
+    /// </summary>
+    private void HandleViewSemanticsUpdated(SemanticsUpdate update)
+    {
+        SemanticsUpdateProduced?.Invoke(update);
+        SemanticsUpdated?.Invoke(_pipeline.SemanticsOwner?.RootNode);
+    }
+
+    /// <summary>
+    /// <c>FlutterView.render</c> for this host: <c>RendererBinding.DrawFrame</c> composited the view,
+    /// so the next Avalonia render pass draws its layer tree.
+    /// </summary>
+    private void HandleViewRenderRequested(OffsetLayer scene)
+    {
+        if (ReferenceEquals(Thread.CurrentThread, _ownerThread))
         {
-            SemanticsUpdated?.Invoke(_pipeline.SemanticsOwner?.RootNode);
+            InvalidateVisual();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(InvalidateVisual);
         }
     }
 

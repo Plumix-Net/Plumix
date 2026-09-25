@@ -183,6 +183,7 @@ public partial class WidgetsBinding
     /// <remarks>Flutter's <c>WidgetsBinding.handleTextScaleFactorChanged</c>.</remarks>
     public void HandleTextScaleFactorChanged()
     {
+        RendererBinding.Instance.HandleTextScaleFactorChanged();
         Dispatch(
             static observer => observer.DidChangeTextScaleFactor(),
             nameof(WidgetsBindingObserver.DidChangeTextScaleFactor));
@@ -192,6 +193,7 @@ public partial class WidgetsBinding
     /// <remarks>Flutter's <c>WidgetsBinding.handlePlatformBrightnessChanged</c>.</remarks>
     public void HandlePlatformBrightnessChanged()
     {
+        RendererBinding.Instance.HandlePlatformBrightnessChanged();
         Dispatch(
             static observer => observer.DidChangePlatformBrightness(),
             nameof(WidgetsBindingObserver.DidChangePlatformBrightness));

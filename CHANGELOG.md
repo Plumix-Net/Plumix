@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: RendererBinding is a strict port: drawFrame, first-frame deferral, view semantics (rendering/binding.dart).
+- Breaking: SemanticsBinding owns semantics-enabled state and action listeners; events carry a view id (binding.dart).
+- Service extension registry with the rendering, `timeDilation` and `Flutter.Frame` entries (foundation/binding.dart).
+- SemanticsNode diagnostics: `toStringDeep(childOrder)`, `debugDumpSemanticsTree` (semantics.dart).
+- Diagnostics print rects as Dart's `Rect.fromLTRB`; semantics flags list in Dart's order (foundation/diagnostics.dart).
 - Breaking: TextStyle is a strict port: Dart fields, apply, debugLabel, package fonts, lerp, equality (text_style.dart).
 - dart:ui `Paint`, `MaskFilter`, `FontFeature` and `FontVariation`; `StrokeCap` moves to core (ui/painting.dart).
 - WidgetHost builds dirty widgets before every layout flush, including Avalonia's render pass (widgets/binding.dart).

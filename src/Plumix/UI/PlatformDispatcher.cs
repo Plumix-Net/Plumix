@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.UI;
@@ -107,6 +108,61 @@ public sealed class PlatformDispatcher
     /// <c>Scheduler.AddTimingsCallback</c> owns it and multiplexes to the callbacks it holds.
     /// </remarks>
     public Action<IReadOnlyList<FrameTiming>>? OnReportTimings { get; set; }
+
+    /// <summary>Whether the user has requested that semantics be enabled for the application.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.semanticsEnabled</c>: typically set while an assistive technology
+    /// is running. The engine owns the value; a Plumix host reports it through
+    /// <see cref="UpdateSemanticsEnabled"/>.
+    /// </remarks>
+    public bool SemanticsEnabled { get; private set; }
+
+    /// <summary>A callback invoked when <see cref="SemanticsEnabled"/> changes.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onSemanticsEnabledChanged</c>; owned by <c>SemanticsBinding</c>.
+    /// </remarks>
+    public Action? OnSemanticsEnabledChanged { get; set; }
+
+    /// <summary>A callback invoked when the platform asks the framework to perform a semantics action.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onSemanticsActionEvent</c>; owned by <c>SemanticsBinding</c>.
+    /// </remarks>
+    public Action<SemanticsActionEvent>? OnSemanticsActionEvent { get; set; }
+
+    /// <summary>The last value passed to <see cref="SetSemanticsTreeEnabled"/>.</summary>
+    /// <remarks>Plumix-only observability; dart:ui hands the value straight to the engine.</remarks>
+    public bool SemanticsTreeEnabled { get; private set; }
+
+    /// <summary>Tells the platform whether the framework is producing a semantics tree.</summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.setSemanticsTreeEnabled</c>.</remarks>
+    public void SetSemanticsTreeEnabled(bool enabled)
+    {
+        SemanticsTreeEnabled = enabled;
+    }
+
+    /// <summary>
+    /// Records the platform's accessibility state, as the engine does, and invokes
+    /// <see cref="OnSemanticsEnabledChanged"/> when it changed.
+    /// </summary>
+    /// <remarks>The engine-side write of <c>semanticsEnabled</c>; hosts and tests call it.</remarks>
+    public void UpdateSemanticsEnabled(bool enabled)
+    {
+        if (SemanticsEnabled == enabled)
+        {
+            return;
+        }
+
+        SemanticsEnabled = enabled;
+        OnSemanticsEnabledChanged?.Invoke();
+    }
+
+    /// <summary>Delivers a platform semantics action to <see cref="OnSemanticsActionEvent"/>.</summary>
+    /// <remarks>The engine-side dispatch of <c>onSemanticsActionEvent</c>; hosts and tests call it.</remarks>
+    public void DispatchSemanticsActionEvent(SemanticsActionEvent action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        OnSemanticsActionEvent?.Invoke(action);
+    }
 
     /// <summary>Engine-style query for whether a hit-test path contains a native platform view.</summary>
     public Func<HitTestRequest, HitTestResponse>? OnHitTest { get; set; }

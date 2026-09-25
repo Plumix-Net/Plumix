@@ -99,6 +99,54 @@ public static class Scheduler
     static Scheduler()
     {
         PlatformDispatcher.Instance.FrameRequested += EnsureRunning;
+        // SchedulerBinding.initInstances.
+        if (!Constants.KReleaseMode)
+        {
+            AddTimingsCallback(static timings =>
+            {
+                foreach (FrameTiming timing in timings)
+                {
+                    ProfileFramePostEvent(timing);
+                }
+            });
+        }
+
+        InitServiceExtensions();
+    }
+
+    /// <summary>Registers the scheduler's service extensions.</summary>
+    /// <remarks>
+    /// Flutter's <c>SchedulerBinding.initServiceExtensions</c>: <c>ext.flutter.timeDilation</c>
+    /// reads and writes <see cref="TimeDilation"/> outside release builds.
+    /// </remarks>
+    private static void InitServiceExtensions()
+    {
+        if (!Constants.KReleaseMode)
+        {
+            BindingBase.RegisterNumericServiceExtension(
+                name: "timeDilation",
+                getter: static () => Task.FromResult(TimeDilation),
+                setter: static value =>
+                {
+                    TimeDilation = value;
+                    return Task.CompletedTask;
+                });
+        }
+    }
+
+    /// <summary>Posts a <c>Flutter.Frame</c> event describing <paramref name="frameTiming"/>.</summary>
+    /// <remarks>Flutter's private <c>SchedulerBinding._profileFramePostEvent</c>.</remarks>
+    private static void ProfileFramePostEvent(FrameTiming frameTiming)
+    {
+        BindingBase.PostEvent("Flutter.Frame", new Dictionary<string, object?>
+        {
+            ["number"] = frameTiming.FrameNumber,
+            ["startTime"] = frameTiming.TimestampInMicroseconds(FramePhase.BuildStart),
+            ["elapsed"] = (long)frameTiming.TotalSpan.TotalMicroseconds,
+            ["build"] = (long)frameTiming.BuildDuration.TotalMicroseconds,
+            ["raster"] = (long)frameTiming.RasterDuration.TotalMicroseconds,
+            ["vsyncOverhead"] = (long)frameTiming.VsyncOverhead.TotalMicroseconds,
+        });
     }
 
     /// <summary>
@@ -106,8 +154,8 @@ public static class Scheduler
     /// <see cref="AddPersistentFrameCallback"/>.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding</c> registers <c>drawFrame</c> as a persistent frame callback;
-    /// Plumix hosts attach here instead, because a host is not a binding.
+    /// Plumix-only. <c>RendererBinding</c> registers <c>drawFrame</c> as a persistent frame callback,
+    /// as Flutter's does; this event is for hosts that need to act before any persistent callback.
     /// </remarks>
     public static event Action<TimeSpan>? BeginFrame;
 

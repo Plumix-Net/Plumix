@@ -139,6 +139,16 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <remarks>Flutter's <c>RenderObject.debugSemantics</c>.</remarks>
     public SemanticsNode? SemanticsNode => _semantics.Built ? _semantics.CachedSemanticsNode : null;
 
+    /// <summary>
+    /// The semantics of this render object, outside release builds; <see langword="null"/> when it
+    /// is not on the semantics tree.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.debugSemantics</c>, with its <c>kReleaseMode</c> guard;
+    /// <see cref="SemanticsNode"/> is the same lookup without it.
+    /// </remarks>
+    public SemanticsNode? DebugSemantics => Constants.KReleaseMode ? null : SemanticsNode;
+
     public int? SemanticsNodeId => SemanticsNode?.Id;
 
     /// <summary>Sends an event from this object's unmerged semantics node or its first such ancestor.</summary>

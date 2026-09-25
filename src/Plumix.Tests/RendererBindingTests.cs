@@ -107,9 +107,12 @@ public sealed class RendererBindingTests
             firstOwner.FlushLayout(new Size(40, 40));
             secondOwner.FlushLayout(new Size(40, 40));
 
-            HitTestResult firstResult = binding.HitTestInView(new Point(10, 10), 1011);
-            HitTestResult secondResult = binding.HitTestInView(new Point(10, 10), 1012);
-            HitTestResult unknownResult = binding.HitTestInView(new Point(10, 10), 1013);
+            var firstResult = new HitTestResult();
+            var secondResult = new HitTestResult();
+            var unknownResult = new HitTestResult();
+            binding.HitTestInView(firstResult, new Point(10, 10), 1011);
+            binding.HitTestInView(secondResult, new Point(10, 10), 1012);
+            binding.HitTestInView(unknownResult, new Point(10, 10), 1013);
 
             Assert.Contains(firstResult.Path, entry => ReferenceEquals(entry.Target, firstTarget));
             Assert.DoesNotContain(firstResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));
@@ -158,25 +161,33 @@ public sealed class RendererBindingTests
     }
 
     [Fact]
-    public void SetSemanticsEnabled_CreatesAndDisposesSemanticsOwnersAcrossTheTree()
+    public void EnsureSemantics_CreatesAndDisposesSemanticsOwnersAcrossTheTree()
     {
+        // binding_pipeline_manifold_test.dart: "Turning global semantics on/off creates semantics
+        // owners in PipelineOwner tree".
         var child = new PipelineOwner(onSemanticsUpdate: static _ => { });
         PipelineOwner root = RendererBinding.Instance.RootPipelineOwner;
         root.AdoptChild(child);
+        SemanticsHandle? handle = null;
         try
         {
             Assert.Null(child.SemanticsOwner);
+            Assert.Null(root.SemanticsOwner);
 
-            RendererBinding.Instance.SetSemanticsEnabled(true);
-            Assert.True(RendererBinding.Instance.SemanticsEnabled);
+            handle = SemanticsBinding.Instance.EnsureSemantics();
+            Assert.True(SemanticsBinding.Instance.SemanticsEnabled);
             Assert.NotNull(child.SemanticsOwner);
+            Assert.NotNull(root.SemanticsOwner);
 
-            RendererBinding.Instance.SetSemanticsEnabled(false);
+            handle.Dispose();
+            handle = null;
+            Assert.False(SemanticsBinding.Instance.SemanticsEnabled);
             Assert.Null(child.SemanticsOwner);
+            Assert.Null(root.SemanticsOwner);
         }
         finally
         {
-            RendererBinding.Instance.SetSemanticsEnabled(false);
+            handle?.Dispose();
             root.DropChild(child);
         }
     }

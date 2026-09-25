@@ -31,7 +31,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly FlutterExceptionHandler? _previousOnError;
     private readonly List<FlutterErrorDetails> _unexpected = [];
-    private readonly Action<TimeSpan> _drawFrame;
+    private readonly Action _drawFrame;
     private FlutterErrorDetails? _pending;
     private TimeSpan _clock;
     private readonly FakeGestureTimers? _timers;
@@ -55,7 +55,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             Interlocked.Increment(ref _nextViewId));
         _previousOnError = FlutterError.OnError;
         FlutterError.OnError = HandleError;
-        _drawFrame = _ => DrawFrame();
+        _drawFrame = DrawFrame;
         double seconds = Math.Max(Scheduler.CurrentSeconds, Scheduler.CurrentSystemFrameTimeStamp.TotalSeconds);
         _clock = TimeSpan.FromSeconds(seconds + 1.0);
         GestureBinding.Instance.SamplingClock = new TestSamplingClock(this);
@@ -87,7 +87,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
     {
         _clock += duration ?? TimeSpan.Zero;
         _timers?.Elapse(duration ?? TimeSpan.Zero);
-        Scheduler.AddPersistentFrameCallback(_drawFrame);
+        RendererBinding binding = RendererBinding.Instance;
+        binding.EnsurePersistentFrameCallback();
+        binding.DrawFrameOverrideForTests = _drawFrame;
         try
         {
             Scheduler.HandleBeginFrame(_clock);
@@ -96,7 +98,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
         finally
         {
-            Scheduler.RemovePersistentFrameCallback(_drawFrame);
+            binding.DrawFrameOverrideForTests = null;
         }
     }
 
@@ -274,12 +276,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         // Dart's WidgetsBinding.drawFrame: build, the render pipeline, then finalizeTree. A throw
         // skips the rest of the frame and is reported by the scheduler's callback guard.
         _owner.BuildScope(_root);
-        PipelineOwner pipeline = RendererBinding.Instance.RootPipelineOwner;
-        pipeline.FlushLayout();
-        pipeline.FlushCompositingBits();
-        pipeline.FlushPaint();
-        pipeline.CompositeFrame();
-        pipeline.FlushSemantics();
+        RendererBinding.Instance.DrawFrame();
         _owner.FinalizeTree();
     }
 

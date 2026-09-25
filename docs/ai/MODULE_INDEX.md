@@ -233,7 +233,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/View.cs` (`View`/`RawView`/`ViewAnchor`/`ViewCollection` over `RenderTreeRootElement`)
   - `src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`
   - `src/Plumix/Widgets/FlutterView.cs`
-  - `src/Plumix/RendererBinding.cs` (root pipeline owner, `RenderView` registry, `HandleMetricsChanged`)
+  - `src/Plumix/RendererBinding.cs` (root pipeline owner, `RenderView` registry, `DrawFrame`, first-frame deferral,
+    rendering service extensions), `src/Plumix/Rendering/Semantics.Binding.cs` (`SemanticsBinding`),
+    `src/Plumix/Foundation/Binding.cs` (service-extension registry)
   - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
@@ -248,7 +250,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/FramePipelineTests.cs`
   - `src/Plumix.Tests/FrameworkThreadAffinityTests.cs`
   - `src/Plumix.Tests/ViewTests.cs`
-  - `src/Plumix.Tests/RendererBindingTests.cs`
+  - `src/Plumix.Tests/RendererBindingTests.cs`, `src/Plumix.Tests/RendererBindingDartParityTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/AppLifecycleListenerTests.cs`
 

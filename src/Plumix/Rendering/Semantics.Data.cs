@@ -274,7 +274,7 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
         properties.Add(new IterableProperty<string>("actions", actionSummary, ifEmpty: null));
         properties.Add(
             new IterableProperty<string?>("customActions", customSemanticsActionSummary, ifEmpty: null));
-        List<string> flagSummary = [.. DescribeEnumFlags(Flags)];
+        List<string> flagSummary = [.. DescribeFlags(Flags)];
         properties.Add(new IterableProperty<string>("flags", flagSummary, ifEmpty: null));
         properties.Add(new StringProperty("identifier", Identifier, defaultValue: string.Empty));
         properties.Add(new DiagnosticsProperty<object>(
@@ -337,6 +337,55 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
     /// <c>SemanticsAction.values</c>; Plumix models both as <c>[Flags]</c> enums, so the names come
     /// from the enum instead.
     /// </remarks>
+    /// <summary>Dart's <c>SemanticsFlags.toStrings()</c> for <paramref name="flags"/>, in Dart's order.</summary>
+    /// <remarks>Dart lists the flags in a fixed order that is not their bit order.</remarks>
+    internal static IEnumerable<string> DescribeFlags(SemanticsFlags flags)
+    {
+        foreach ((SemanticsFlags flag, string name) in FlagNamesInDartOrder)
+        {
+            if ((flags & flag) == flag)
+            {
+                yield return name;
+            }
+        }
+    }
+
+    private static readonly (SemanticsFlags Flag, string Name)[] FlagNamesInDartOrder =
+    [
+        (SemanticsFlags.HasCheckedState, "hasCheckedState"),
+        (SemanticsFlags.IsChecked, "isChecked"),
+        (SemanticsFlags.IsSelected, "isSelected"),
+        (SemanticsFlags.IsButton, "isButton"),
+        (SemanticsFlags.IsTextField, "isTextField"),
+        (SemanticsFlags.IsFocused, "isFocused"),
+        (SemanticsFlags.HasEnabledState, "hasEnabledState"),
+        (SemanticsFlags.IsEnabled, "isEnabled"),
+        (SemanticsFlags.IsInMutuallyExclusiveGroup, "isInMutuallyExclusiveGroup"),
+        (SemanticsFlags.IsHeader, "isHeader"),
+        (SemanticsFlags.IsObscured, "isObscured"),
+        (SemanticsFlags.ScopesRoute, "scopesRoute"),
+        (SemanticsFlags.NamesRoute, "namesRoute"),
+        (SemanticsFlags.IsHidden, "isHidden"),
+        (SemanticsFlags.IsImage, "isImage"),
+        (SemanticsFlags.IsLiveRegion, "isLiveRegion"),
+        (SemanticsFlags.HasToggledState, "hasToggledState"),
+        (SemanticsFlags.IsToggled, "isToggled"),
+        (SemanticsFlags.HasImplicitScrolling, "hasImplicitScrolling"),
+        (SemanticsFlags.IsMultiline, "isMultiline"),
+        (SemanticsFlags.IsReadOnly, "isReadOnly"),
+        (SemanticsFlags.IsFocusable, "isFocusable"),
+        (SemanticsFlags.IsAccessibilityFocusBlocked, "isAccessibilityFocusBlocked"),
+        (SemanticsFlags.IsLink, "isLink"),
+        (SemanticsFlags.IsSlider, "isSlider"),
+        (SemanticsFlags.IsKeyboardKey, "isKeyboardKey"),
+        (SemanticsFlags.IsCheckStateMixed, "isCheckStateMixed"),
+        (SemanticsFlags.HasExpandedState, "hasExpandedState"),
+        (SemanticsFlags.IsExpanded, "isExpanded"),
+        (SemanticsFlags.HasSelectedState, "hasSelectedState"),
+        (SemanticsFlags.HasRequiredState, "hasRequiredState"),
+        (SemanticsFlags.IsRequired, "isRequired"),
+    ];
+
     private static IEnumerable<string> DescribeEnumFlags<T>(T value)
         where T : struct, Enum
     {

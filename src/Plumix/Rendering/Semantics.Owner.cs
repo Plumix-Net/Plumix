@@ -54,6 +54,10 @@ public sealed partial class SemanticsOwner
 
     internal void AddDirtyNode(SemanticsNode node) => _dirtyNodes.Add(node);
 
+    /// <summary>Whether <paramref name="node"/> is waiting in this owner's dirty list.</summary>
+    /// <remarks>Dart's <c>owner._dirtyNodes.contains(node)</c>, read by the node's diagnostics.</remarks>
+    internal bool IsDirtyNode(SemanticsNode node) => _dirtyNodes.Contains(node);
+
     internal SemanticsNode? GetTraversalParentNode(object identifier) =>
         _traversalParentNodes.GetValueOrDefault(identifier);
 

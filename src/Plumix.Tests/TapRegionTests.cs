@@ -260,7 +260,9 @@ public sealed class TapRegionTests
         SemanticsNode? node = FindNode(semantics.RootNode, static candidate => candidate.Label == "inside");
         Assert.NotNull(node);
 
-        Assert.True(semantics.PerformAction(node!.Id, SemanticsActions.Tap));
+        // Delivered through the platform dispatcher, as tap_region_test.dart does: the semantics
+        // binding's listeners (the surface) see the action before the render tree performs it.
+        harness.DispatchSemanticsAction(SemanticsActions.Tap, node!.Id);
 
         // The accessibility tap hit-tests the surface at the node's centre, so the region that owns
         // the node counts as inside and every other registered region as outside.
@@ -269,7 +271,8 @@ public sealed class TapRegionTests
         Assert.Equal(1, outsideCalls);
 
         // Actions the surface does not care about leave the regions alone.
-        Assert.False(semantics.PerformAction(node.Id, SemanticsActions.Dismiss));
+        harness.DispatchSemanticsAction(SemanticsActions.Dismiss, node.Id);
+        Assert.Equal(1, targetTaps);
         Assert.Equal(1, insideCalls);
         Assert.Equal(1, outsideCalls);
     }
@@ -312,13 +315,24 @@ public sealed class TapRegionTests
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
-            _renderView = new RenderView(new FlutterView(new Size(800, 600)))
+            _renderView = new RenderView(new FlutterView(new Size(800, 600), viewId: HarnessViewId))
             {
                 Child = Assert.IsAssignableFrom<RenderBox>(_root.ChildElement?.RenderObject),
             };
             _pipeline = new PipelineOwner(_renderView);
             _pipeline.Attach(_renderView);
+            RendererBinding.Instance.AddRenderView(_renderView);
             Pump();
+        }
+
+        /// <summary>The view id the harness registers its render view under.</summary>
+        private const int HarnessViewId = 7301;
+
+        /// <summary>Delivers a semantics action the way the engine does.</summary>
+        public void DispatchSemanticsAction(SemanticsActions action, int nodeId)
+        {
+            PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
+                new SemanticsActionEvent(action, HarnessViewId, nodeId));
         }
 
         public void Dispatch(PointerEvent @event)
@@ -387,6 +401,7 @@ public sealed class TapRegionTests
 
         public void Dispose()
         {
+            RendererBinding.Instance.RemoveRenderView(_renderView);
             GestureBinding.Instance.ResetForTests();
             _root.UnmountRoot();
         }

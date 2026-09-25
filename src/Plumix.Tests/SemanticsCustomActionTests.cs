@@ -257,7 +257,7 @@ public sealed class SemanticsCustomActionTests
     }
 
     [Fact]
-    public void PerformAction_NotifiesActionListenersBeforeDispatch()
+    public void SemanticsActionEvent_NotifiesBindingListenersBeforeDispatch()
     {
         int tapCount = 0;
         var annotations = new RenderSemanticsAnnotations(
@@ -267,11 +267,12 @@ public sealed class SemanticsCustomActionTests
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
             textDirection: TextDirection.Ltr);
-        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = annotations };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600), viewId: 4201)) { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
+        RendererBinding.Instance.AddRenderView(renderView);
 
         SemanticsNode node = Assert.Single(pipeline.SemanticsOwner!.RootNode!.Children);
         var seen = new List<SemanticsActionEvent>();
@@ -283,22 +284,39 @@ public sealed class SemanticsCustomActionTests
             seen.Add(actionEvent);
         }
 
-        pipeline.SemanticsOwner!.AddSemanticsActionListener(Listener);
-        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.Tap));
-        Assert.Equal(1, tapCount);
-        SemanticsActionEvent observed = Assert.Single(seen);
-        Assert.Equal(node.Id, observed.NodeId);
-        Assert.Equal(SemanticsActions.Tap, observed.Type);
-        Assert.Null(observed.Arguments);
-        Assert.Equal([0], tapCountWhenNotified);
+        SemanticsBinding binding = SemanticsBinding.Instance;
+        binding.AddSemanticsActionListener(Listener);
+        try
+        {
+            PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
+                new SemanticsActionEvent(SemanticsActions.Tap, 4201, node.Id));
+            Assert.Equal(1, tapCount);
+            SemanticsActionEvent observed = Assert.Single(seen);
+            Assert.Equal(node.Id, observed.NodeId);
+            Assert.Equal(4201, observed.ViewId);
+            Assert.Equal(SemanticsActions.Tap, observed.Type);
+            Assert.Null(observed.Arguments);
+            Assert.Equal([0], tapCountWhenNotified);
 
-        // An action nothing handles is still reported.
-        Assert.False(pipeline.SemanticsOwner!.PerformAction(-1, SemanticsActions.LongPress));
-        Assert.Equal(2, seen.Count);
+            // An action nothing handles is still reported, and so is one for an unknown view.
+            PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
+                new SemanticsActionEvent(SemanticsActions.LongPress, 4201, -1));
+            PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
+                new SemanticsActionEvent(SemanticsActions.Tap, 4299, node.Id));
+            Assert.Equal(3, seen.Count);
+            Assert.Equal(1, tapCount);
 
-        pipeline.SemanticsOwner!.RemoveSemanticsActionListener(Listener);
-        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.Tap));
-        Assert.Equal(2, seen.Count);
+            binding.RemoveSemanticsActionListener(Listener);
+            PlatformDispatcher.Instance.DispatchSemanticsActionEvent(
+                new SemanticsActionEvent(SemanticsActions.Tap, 4201, node.Id));
+            Assert.Equal(3, seen.Count);
+            Assert.Equal(2, tapCount);
+        }
+        finally
+        {
+            binding.RemoveSemanticsActionListener(Listener);
+            RendererBinding.Instance.RemoveRenderView(renderView);
+        }
     }
 
     private static (SemanticsOwner Owner, SemanticsNode MergedNode) BuildMerged(

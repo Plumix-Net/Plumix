@@ -159,21 +159,22 @@ public sealed class RootRestorationScope : StatefulWidget
             }
 
             _isLoadingRootBucket = true;
+            RendererBinding.Instance.DeferFirstFrame();
             RestorationManager.Instance.GetRootBucket(bucket =>
             {
                 _isLoadingRootBucket = false;
-                if (!Mounted)
+                if (Mounted)
                 {
-                    return;
+                    RestorationManager.Instance.AddListener(ReplaceRootBucket);
+                    SetState(() =>
+                    {
+                        _rootBucket = bucket;
+                        _rootBucketValid = true;
+                        _okToRenderBlankContainer = false;
+                    });
                 }
 
-                RestorationManager.Instance.AddListener(ReplaceRootBucket);
-                SetState(() =>
-                {
-                    _rootBucket = bucket;
-                    _rootBucketValid = true;
-                    _okToRenderBlankContainer = false;
-                });
+                RendererBinding.Instance.AllowFirstFrame();
             });
         }
 

@@ -16,8 +16,9 @@ namespace Plumix.Widgets;
 /// dart:ui's <c>FlutterView</c>. Flutter's engine owns the metrics and writes them when the
 /// platform reports a change; a Plumix host does the same through <see cref="UpdateMetrics"/>, and
 /// a test supplies whatever metrics it needs the same way (Flutter's <c>TestFlutterView</c>).
-/// Rendering into the view (<c>render</c>) has no counterpart: the host composites its own
-/// <c>PipelineOwner</c>; the semantics feed (<c>updateSemantics</c>) is published through
+/// Rendering into the view (<see cref="Render"/>) hands over the root layer of a composited frame:
+/// a host that owns the view draws that layer from its own render pass, and a view no host backs
+/// composites it headlessly. The semantics feed (<c>updateSemantics</c>) is published through
 /// <see cref="SemanticsUpdated"/>.
 /// </remarks>
 public sealed class FlutterView
@@ -144,6 +145,33 @@ public sealed class FlutterView
     {
         ArgumentNullException.ThrowIfNull(update);
         SemanticsUpdated?.Invoke(update);
+    }
+
+    /// <summary>
+    /// Raised by <see cref="Render"/> with the root layer of the frame to show. A host that renders
+    /// the view subscribes and draws the layer from its next render pass.
+    /// </summary>
+    public event Action<OffsetLayer>? RenderRequested;
+
+    /// <summary>Whether a host renders this view, i.e. <see cref="RenderRequested"/> has a subscriber.</summary>
+    internal bool HasRenderer => RenderRequested is not null;
+
+    /// <summary>Updates the view's rendering with the frame whose root layer is <paramref name="scene"/>.</summary>
+    /// <remarks>
+    /// dart:ui's <c>FlutterView.render</c>. Dart's scene is already built when it arrives; a Plumix
+    /// layer builds its scene straight into the host's drawing context, so a view that no host renders
+    /// runs the layer tree's composition work headlessly instead.
+    /// </remarks>
+    public void Render(OffsetLayer scene)
+    {
+        ArgumentNullException.ThrowIfNull(scene);
+        if (RenderRequested is { } renderRequested)
+        {
+            renderRequested(scene);
+            return;
+        }
+
+        scene.BuildScene(null);
     }
 
     /// <inheritdoc />

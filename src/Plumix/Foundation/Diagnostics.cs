@@ -165,6 +165,8 @@ public static class Diagnostics
             // dart:ui's `Size.toString` and `Offset.toString`; Avalonia's own spell them `w, h`.
             Avalonia.Size size => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})",
             Avalonia.Point offset => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})",
+            Avalonia.Rect rect =>
+                $"Rect.fromLTRB({Fixed(rect.Left)}, {Fixed(rect.Top)}, {Fixed(rect.Right)}, {Fixed(rect.Bottom)})",
             // Dart's enum `toString` is `EnumType.member`.
             Enum enumValue when Enum.IsDefined(enumValue.GetType(), enumValue) =>
                 $"{enumValue.GetType().Name}.{EnumName(enumValue)}",
@@ -176,6 +178,10 @@ public static class Diagnostics
 
     /// <summary>Dart's <c>toStringAsFixed(1)</c>.</summary>
     private static string Fixed(double value) => value.ToString("F1", CultureInfo.InvariantCulture);
+
+    /// <summary>Dart's <c>double.toStringAsFixed(fractionDigits)</c>.</summary>
+    internal static string ToStringAsFixed(double value, int fractionDigits) =>
+        value.ToString("F" + fractionDigits.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 
     private static string ToLowerCamelCase(string name)
     {

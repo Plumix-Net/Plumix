@@ -11,7 +11,6 @@ namespace Plumix.Widgets;
 /// </summary>
 public partial class WidgetsBinding
 {
-    private readonly Action<TimeSpan> _drawFrameCallback;
     private BuildOwner _buildOwner;
     private RootElement? _rootElement;
     private PipelineOwner? _implicitPipelineOwner;
@@ -21,7 +20,6 @@ public partial class WidgetsBinding
     /// <summary>Creates a widget binding.</summary>
     public WidgetsBinding()
     {
-        _drawFrameCallback = _ => DrawFrame();
         _buildOwner = CreateBuildOwner();
     }
 
@@ -100,12 +98,29 @@ public partial class WidgetsBinding
         }
     }
 
-    /// <summary>Builds the binding-owned widget tree during the persistent frame phase.</summary>
+    /// <summary>
+    /// Pumps the build and rendering pipeline to generate a frame: rebuilds the dirty widgets, runs
+    /// <see cref="RendererBinding.DrawFrame"/>, then finalizes the element tree.
+    /// </summary>
     /// <remarks>
-    /// This is the build half of Flutter's <c>WidgetsBinding.drawFrame</c>. Avalonia paints later in
-    /// its control render pass, so the host finalizes the tree after its layout/compositing pass.
+    /// Flutter's <c>WidgetsBinding.drawFrame</c>, the override of <c>RendererBinding.drawFrame</c> that
+    /// the renderer binding's persistent frame callback reaches. The first-frame reporting half
+    /// (<c>firstFrameRasterized</c>, the <c>Flutter.FirstFrame</c> event) is not ported; see
+    /// <c>docs/ai/BACKLOG.md</c>.
     /// </remarks>
     public void DrawFrame()
+    {
+        BuildDirtyWidgets();
+        RendererBinding.Instance.DrawFrame();
+        FinalizeTree();
+    }
+
+    /// <summary>Rebuilds the dirty widgets of the binding-owned tree.</summary>
+    /// <remarks>
+    /// The <c>buildOwner.buildScope(rootElement)</c> step of <see cref="DrawFrame"/>. A host also runs
+    /// it right before a layout pass it drives outside a frame (Avalonia's render pass).
+    /// </remarks>
+    internal void BuildDirtyWidgets()
     {
         if (_rootElement is not null)
         {
@@ -155,7 +170,7 @@ public partial class WidgetsBinding
     internal void AttachRootWidgetSynchronously(Widget rootWidget)
     {
         AttachRootWidget(rootWidget);
-        DrawFrame();
+        BuildDirtyWidgets();
         FinalizeTree();
     }
 
@@ -191,9 +206,13 @@ public partial class WidgetsBinding
         }
     }
 
-    private void EnsureFrameCallback()
+    /// <summary>
+    /// Makes sure the renderer binding's persistent frame callback, which runs <see cref="DrawFrame"/>,
+    /// is registered; a test that reset the scheduler drops it.
+    /// </summary>
+    private static void EnsureFrameCallback()
     {
-        Scheduler.AddPersistentFrameCallback(_drawFrameCallback);
+        RendererBinding.Instance.EnsurePersistentFrameCallback();
     }
 }
 
