@@ -116,7 +116,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         DropdownMenuCloseBehavior closeBehavior = DropdownMenuCloseBehavior.All,
         int? maxLines = 1,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         double? cursorHeight = null,
         string? restorationId = null,
         MenuController? menuController = null,
@@ -215,7 +215,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
     public DropdownMenuCloseBehavior CloseBehavior { get; }
     public int? MaxLines { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public double? CursorHeight { get; }
     public string? RestorationId { get; }
     public MenuController? MenuController { get; }

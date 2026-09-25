@@ -931,7 +931,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                                     selectedTime: _selectedTime,
                                     style: hourStyle,
                                     autofocus: Current.AutofocusHour,
-                                    inputAction: TextInputAction.Next,
+                                    inputAction: TextInputActionType.Next,
                                     validator: ValidateHour,
                                     onSavedSubmitted: HandleHourSavedSubmitted,
                                     onChanged: HandleHourChanged,
@@ -959,7 +959,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                                     selectedTime: _selectedTime,
                                     style: hourStyle,
                                     autofocus: Current.AutofocusMinute,
-                                    inputAction: TextInputAction.Done,
+                                    inputAction: TextInputActionType.Done,
                                     validator: ValidateMinute,
                                     onSavedSubmitted: HandleMinuteSavedSubmitted,
                                     minuteLabelText: Current.MinuteLabelText,
@@ -1013,7 +1013,7 @@ internal sealed class HourTextField : StatelessWidget
         TimeOfDay selectedTime,
         TextStyle style,
         bool? autofocus,
-        TextInputAction inputAction,
+        TextInputActionType inputAction,
         FormFieldValidator<string> validator,
         Action<string?> onSavedSubmitted,
         Action<string> onChanged,
@@ -1035,7 +1035,7 @@ internal sealed class HourTextField : StatelessWidget
     public TimeOfDay SelectedTime { get; }
     public TextStyle Style { get; }
     public bool? Autofocus { get; }
-    public TextInputAction InputAction { get; }
+    public TextInputActionType InputAction { get; }
     public FormFieldValidator<string> Validator { get; }
     public Action<string?> OnSavedSubmitted { get; }
     public Action<string> OnChanged { get; }
@@ -1061,7 +1061,7 @@ internal sealed class MinuteTextField : StatelessWidget
         TimeOfDay selectedTime,
         TextStyle style,
         bool? autofocus,
-        TextInputAction inputAction,
+        TextInputActionType inputAction,
         FormFieldValidator<string> validator,
         Action<string?> onSavedSubmitted,
         string? minuteLabelText,
@@ -1081,7 +1081,7 @@ internal sealed class MinuteTextField : StatelessWidget
     public TimeOfDay SelectedTime { get; }
     public TextStyle Style { get; }
     public bool? Autofocus { get; }
-    public TextInputAction InputAction { get; }
+    public TextInputActionType InputAction { get; }
     public FormFieldValidator<string> Validator { get; }
     public Action<string?> OnSavedSubmitted { get; }
     public string? MinuteLabelText { get; }
@@ -1105,7 +1105,7 @@ internal sealed class HourMinuteTextField : StatefulWidget
         TimeOfDay selectedTime,
         bool isHour,
         bool? autofocus,
-        TextInputAction inputAction,
+        TextInputActionType inputAction,
         TextStyle style,
         string semanticHintText,
         FormFieldValidator<string> validator,
@@ -1129,7 +1129,7 @@ internal sealed class HourMinuteTextField : StatefulWidget
     public TimeOfDay SelectedTime { get; }
     public bool IsHour { get; }
     public bool? Autofocus { get; }
-    public TextInputAction InputAction { get; }
+    public TextInputActionType InputAction { get; }
     public TextStyle Style { get; }
     public string SemanticHintText { get; }
     public FormFieldValidator<string> Validator { get; }

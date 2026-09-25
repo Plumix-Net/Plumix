@@ -11,16 +11,6 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/search_anchor.dart
 
-public enum TextInputAction
-{
-    None,
-    Search,
-    Done,
-    Go,
-    Next,
-    Send,
-}
-
 public delegate Widget SearchAnchorChildBuilder(BuildContext context, SearchController controller);
 
 public delegate ValueTask<IReadOnlyList<Widget>> SuggestionsBuilder(BuildContext context, SearchController controller);
@@ -131,7 +121,7 @@ public class SearchAnchor : StatefulWidget
         Action<string>? viewOnSubmitted = null,
         Action? viewOnClose = null,
         Action? viewOnOpen = null,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         TextInputType? keyboardType = null,
         bool enabled = true,
         SmartDashesType? smartDashesType = null,
@@ -197,7 +187,7 @@ public class SearchAnchor : StatefulWidget
     public Action? ViewOnOpen { get; }
     public SearchAnchorChildBuilder Builder { get; }
     public SuggestionsBuilder SuggestionsBuilder { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public TextInputType? KeyboardType { get; }
     public bool Enabled { get; }
     public SmartDashesType? SmartDashesType { get; }
@@ -241,7 +231,7 @@ public class SearchAnchor : StatefulWidget
         bool? isFullScreen = null,
         SearchController? searchController = null,
         TextCapitalization? textCapitalization = null,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         TextInputType? keyboardType = null,
         Thickness? scrollPadding = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
@@ -503,7 +493,7 @@ public class SearchAnchor : StatefulWidget
         private readonly Action<string>? _viewOnSubmitted;
         private readonly Action? _viewOnOpen;
         private readonly Action? _viewOnClose;
-        private readonly TextInputAction? _textInputAction;
+        private readonly TextInputActionType? _textInputAction;
         private readonly TextInputType? _keyboardType;
         private readonly SmartDashesType? _smartDashesType;
         private readonly SmartQuotesType? _smartQuotesType;
@@ -544,7 +534,7 @@ public class SearchAnchor : StatefulWidget
             Action<string>? viewOnSubmitted,
             Action? viewOnOpen,
             Action? viewOnClose,
-            TextInputAction? textInputAction,
+            TextInputActionType? textInputAction,
             TextInputType? keyboardType,
             SmartDashesType? smartDashesType,
             SmartQuotesType? smartQuotesType,
@@ -806,7 +796,7 @@ internal sealed class SearchViewContent : StatefulWidget
         TextCapitalization? textCapitalization,
         Action<string>? viewOnChanged,
         Action<string>? viewOnSubmitted,
-        TextInputAction? textInputAction,
+        TextInputActionType? textInputAction,
         TextInputType? keyboardType,
         SmartDashesType? smartDashesType,
         SmartQuotesType? smartQuotesType,
@@ -871,7 +861,7 @@ internal sealed class SearchViewContent : StatefulWidget
     public TextCapitalization? TextCapitalization { get; }
     public Action<string>? ViewOnChanged { get; }
     public Action<string>? ViewOnSubmitted { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public TextInputType? KeyboardType { get; }
     public SmartDashesType? SmartDashesType { get; }
     public SmartQuotesType? SmartQuotesType { get; }
@@ -1172,7 +1162,7 @@ public sealed class SearchBar : StatefulWidget
         TextCapitalization? textCapitalization = null,
         bool enabled = true,
         bool autoFocus = false,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         TextInputType? keyboardType = null,
         Thickness? scrollPadding = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
@@ -1236,7 +1226,7 @@ public sealed class SearchBar : StatefulWidget
     public TextCapitalization? TextCapitalization { get; }
     public bool Enabled { get; }
     public bool AutoFocus { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public TextInputType? KeyboardType { get; }
     public Thickness ScrollPadding { get; }
     public EditableTextContextMenuBuilder ContextMenuBuilder { get; }

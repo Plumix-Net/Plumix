@@ -13,6 +13,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   late final TextEditingController _notesController;
   late final TextEditingController _pinController;
   late final TextEditingController _caretController;
+  late final TextEditingController _animatedCaretController;
   late final TextEditingController _longLineController;
   late final TextEditingController _scrollingNotesController;
   late final TextEditingController _undoableController;
@@ -27,6 +28,9 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _notesController = TextEditingController();
     _pinController = TextEditingController();
     _caretController = TextEditingController(text: 'Wide rounded caret');
+    _animatedCaretController = TextEditingController(
+      text: 'iOS-style fading caret',
+    );
     _longLineController = TextEditingController(
       text:
           'This single line is far wider than its field, so typing at the end scrolls to the caret',
@@ -44,6 +48,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _notesController.dispose();
     _pinController.dispose();
     _caretController.dispose();
+    _animatedCaretController.dispose();
     _longLineController.dispose();
     _scrollingNotesController.dispose();
     _undoableController.dispose();
@@ -138,7 +143,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         const Text(
-          'PIN (obscured)',
+          'PIN (obscured; mobile shows the last typed character briefly)',
           style: TextStyle(fontSize: 12, color: Colors.black54),
         ),
         _buildTextField(
@@ -160,6 +165,17 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
           cursorColor: const Color(0xFFD81B60),
           onChanged: (String value) =>
               setState(() => _lastChange = 'caret = $value'),
+        ),
+        const Text(
+          'Caret (opacity animates)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        _buildTextField(
+          controller: _animatedCaretController,
+          placeholder: '',
+          cursorOpacityAnimates: true,
+          onChanged: (String value) =>
+              setState(() => _lastChange = 'animated caret = $value'),
         ),
         const Text(
           'Long line (scrolls to the caret)',
@@ -247,6 +263,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     double cursorWidth = 2.0,
     Radius? cursorRadius,
     Color? cursorColor,
+    bool? cursorOpacityAnimates,
     UndoHistoryController? undoController,
     List<TextInputFormatter>? inputFormatters,
   }) {
@@ -260,6 +277,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
       cursorWidth: cursorWidth,
       cursorRadius: cursorRadius,
       cursorColor: cursorColor,
+      cursorOpacityAnimates: cursorOpacityAnimates,
       onChanged: onChanged,
       decoration: InputDecoration(
         hintText: placeholder,

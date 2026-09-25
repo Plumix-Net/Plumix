@@ -417,9 +417,8 @@ public sealed partial class EditableText
                         OnFloatingCursorResetTick();
                     }
 
-                    // Dart's `_stopCursorBlink(resetCharTicks: false)` and a fully opaque cursor.
-                    _cursorTicker.Stop();
-                    _cursorOpacity = 1.0;
+                    StopCursorBlink(resetCharTicks: false);
+                    CursorBlinkOpacityController.SetValue(1.0);
                     _pointOffsetOrigin = point.Offset;
                     Point startCaretCenter;
                     TextPosition currentTextPosition;
@@ -456,9 +455,10 @@ public sealed partial class EditableText
                     break;
                 }
                 case FloatingCursorDragState.End:
+                    // Resume cursor blinking.
                     if (_focusNode?.HasFocus == true)
                     {
-                        UpdateCursorTicker();
+                        StartCursorBlink();
                     }
 
                     if (_lastTextPosition is not null && _lastBoundedOffset is not null)
@@ -656,6 +656,11 @@ public sealed partial class EditableText
         /// unchanged; elsewhere the overlay only follows the scroll.
         private void HandleContextMenuOnScroll(ScrollNotification notification)
         {
+            if (WebContextMenuEnabled)
+            {
+                return;
+            }
+
             if (!_platformSupportsFadeOnScroll)
             {
                 _selectionOverlay?.UpdateForScroll();

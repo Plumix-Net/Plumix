@@ -24,6 +24,7 @@ internal sealed class EditableTextDemoPageState : State
     private TextEditingController _notesController = null!;
     private TextEditingController _pinController = null!;
     private TextEditingController _caretController = null!;
+    private TextEditingController _animatedCaretController = null!;
     private TextEditingController _longLineController = null!;
     private TextEditingController _scrollingNotesController = null!;
     private TextEditingController _undoableController = null!;
@@ -37,6 +38,7 @@ internal sealed class EditableTextDemoPageState : State
         _notesController = new TextEditingController();
         _pinController = new TextEditingController();
         _caretController = new TextEditingController("Wide rounded caret");
+        _animatedCaretController = new TextEditingController("iOS-style fading caret");
         _longLineController = new TextEditingController(
             "This single line is far wider than its field, so typing at the end scrolls to the caret");
         _scrollingNotesController = new TextEditingController(
@@ -51,6 +53,7 @@ internal sealed class EditableTextDemoPageState : State
         _notesController.Dispose();
         _pinController.Dispose();
         _caretController.Dispose();
+        _animatedCaretController.Dispose();
         _longLineController.Dispose();
         _scrollingNotesController.Dispose();
         _undoableController.Dispose();
@@ -132,7 +135,10 @@ internal sealed class EditableTextDemoPageState : State
                     $"notes lines: {notesLineCount}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
-                new Text("PIN (obscured)", fontSize: 12, color: Colors.DimGray),
+                new Text(
+                    "PIN (obscured; mobile shows the last typed character briefly)",
+                    fontSize: 12,
+                    color: Colors.DimGray),
                 new EditableText(
                     controller: _pinController,
                     enabled: _enabled,
@@ -147,6 +153,12 @@ internal sealed class EditableTextDemoPageState : State
                     cursorRadius: Radius.Circular(2),
                     cursorColor: Color.Parse("#FFD81B60"),
                     onChanged: value => SetState(() => _lastChange = $"caret = {value}")),
+                new Text("Caret (opacity animates)", fontSize: 12, color: Colors.DimGray),
+                new EditableText(
+                    controller: _animatedCaretController,
+                    enabled: _enabled,
+                    cursorOpacityAnimates: true,
+                    onChanged: value => SetState(() => _lastChange = $"animated caret = {value}")),
                 new Text("Long line (scrolls to the caret)", fontSize: 12, color: Colors.DimGray),
                 new Align(
                     alignment: Alignment.CenterLeft,

@@ -117,6 +117,8 @@ public sealed class MaterialSelectionTests
             theme));
 
         harness.Pump(new Size(320, 120));
+        // The autofocus request lands after the first frame; the focused cursor is then opaque.
+        harness.Pump(new Size(320, 120));
         RenderEditable editable = FindEditables(harness.RenderView).Single();
         Assert.Equal(21, editable.Text!.Style!.FontSize);
         Assert.Equal(Colors.DarkGreen, editable.Text.Style.Color);
@@ -318,6 +320,8 @@ public sealed class MaterialSelectionTests
                     ])),
             theme));
 
+        harness.Pump(new Size(320, 160));
+        // The autofocus request lands after the first frame; the focused cursor is then opaque.
         harness.Pump(new Size(320, 160));
 
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);

@@ -22,7 +22,7 @@ public abstract class SearchDelegate<T> : IDisposable
         TextStyle? searchFieldStyle = null,
         InputDecorationThemeData? searchFieldDecorationTheme = null,
         TextInputType? keyboardType = null,
-        TextInputAction textInputAction = TextInputAction.Search,
+        TextInputActionType textInputAction = TextInputActionType.Search,
         bool autocorrect = true,
         bool enableSuggestions = true)
     {
@@ -50,7 +50,7 @@ public abstract class SearchDelegate<T> : IDisposable
 
     public TextInputType? KeyboardType { get; }
 
-    public TextInputAction TextInputAction { get; }
+    public TextInputActionType TextInputAction { get; }
 
     public bool Autocorrect { get; }
 

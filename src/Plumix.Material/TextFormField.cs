@@ -19,7 +19,7 @@ public sealed class TextFormField : FormField<string>
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         bool readOnly = false,
         bool autofocus = false,
         string obscuringCharacter = "•",
@@ -127,7 +127,7 @@ public sealed class TextFormField : FormField<string>
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
     public TextInputType? KeyboardType { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public bool ReadOnly { get; }
     public bool Autofocus { get; }
     public string ObscuringCharacter { get; }
@@ -193,7 +193,7 @@ public sealed class TextFormField : FormField<string>
         TextAlign textAlign,
         TextDirection? textDirection,
         TextInputType? keyboardType,
-        TextInputAction? textInputAction,
+        TextInputActionType? textInputAction,
         bool readOnly,
         bool autofocus,
         string obscuringCharacter,

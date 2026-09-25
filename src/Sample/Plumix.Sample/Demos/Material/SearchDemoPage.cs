@@ -252,7 +252,7 @@ internal sealed class SearchDemoPageState : State
         public TermSearchDelegate(IReadOnlyList<string> terms, Action<string> onSelected) : base(
             searchFieldLabel: "Search framework terms",
             keyboardType: TextInputType.Text,
-            textInputAction: TextInputAction.Search,
+            textInputAction: TextInputActionType.Search,
             autocorrect: false,
             enableSuggestions: true)
         {

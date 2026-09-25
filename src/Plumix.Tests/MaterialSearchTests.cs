@@ -179,7 +179,7 @@ public sealed class MaterialSearchTests : IDisposable
             ThemeData.Light,
             new SearchBar(
                 keyboardType: TextInputType.EmailAddress,
-                textInputAction: TextInputAction.Done,
+                textInputAction: TextInputActionType.Done,
                 textCapitalization: TextCapitalization.Characters,
                 smartDashesType: SmartDashesType.Disabled,
                 smartQuotesType: SmartQuotesType.Disabled,
@@ -188,7 +188,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
         Assert.Equal(TextInputType.EmailAddress, field.KeyboardType);
-        Assert.Equal(TextInputAction.Done, field.TextInputAction);
+        Assert.Equal(TextInputActionType.Done, field.TextInputAction);
         Assert.Equal(TextCapitalization.Characters, field.TextCapitalization);
         Assert.Equal(SmartDashesType.Disabled, field.SmartDashesType);
         Assert.Equal(SmartQuotesType.Disabled, field.SmartQuotesType);
@@ -491,7 +491,7 @@ public sealed class MaterialSearchTests : IDisposable
             new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
                 searchController: controller,
                 textCapitalization: TextCapitalization.Sentences,
-                textInputAction: TextInputAction.Send,
+                textInputAction: TextInputActionType.Send,
                 keyboardType: TextInputType.Url,
                 smartDashesType: SmartDashesType.Disabled,
                 smartQuotesType: SmartQuotesType.Disabled,
@@ -507,7 +507,7 @@ public sealed class MaterialSearchTests : IDisposable
         TextField viewField = Assert.Single(harness.FindWidgets<TextField>());
         Assert.True(viewField.Autofocus);
         Assert.Equal(TextCapitalization.Sentences, viewField.TextCapitalization);
-        Assert.Equal(TextInputAction.Send, viewField.TextInputAction);
+        Assert.Equal(TextInputActionType.Send, viewField.TextInputAction);
         Assert.Equal(TextInputType.Url, viewField.KeyboardType);
         Assert.Equal(SmartDashesType.Disabled, viewField.SmartDashesType);
         Assert.Equal(SmartQuotesType.Disabled, viewField.SmartQuotesType);
@@ -678,7 +678,7 @@ public sealed class MaterialSearchTests : IDisposable
     {
         var searchDelegate = new TestSearchDelegate(
             keyboardType: TextInputType.EmailAddress,
-            textInputAction: TextInputAction.Done,
+            textInputAction: TextInputActionType.Done,
             autocorrect: false,
             enableSuggestions: false);
         var host = new SearchLaunchHost(searchDelegate, "mail");
@@ -694,7 +694,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
         Assert.Equal(TextInputType.EmailAddress, field.KeyboardType);
-        Assert.Equal(TextInputAction.Done, field.TextInputAction);
+        Assert.Equal(TextInputActionType.Done, field.TextInputAction);
         Assert.False(field.Autocorrect);
         Assert.False(field.EnableSuggestions);
         FocusTextInputState inputState = Assert.IsType<FocusTextInputState>(
@@ -719,7 +719,7 @@ public sealed class MaterialSearchTests : IDisposable
     {
         var searchDelegate = new TestSearchDelegate();
         Assert.Null(searchDelegate.KeyboardType);
-        Assert.Equal(TextInputAction.Search, searchDelegate.TextInputAction);
+        Assert.Equal(TextInputActionType.Search, searchDelegate.TextInputAction);
         Assert.True(searchDelegate.Autocorrect);
         Assert.True(searchDelegate.EnableSuggestions);
 
@@ -914,7 +914,7 @@ public sealed class MaterialSearchTests : IDisposable
             TextStyle? searchFieldStyle = null,
             InputDecorationThemeData? searchFieldDecorationTheme = null,
             TextInputType? keyboardType = null,
-            TextInputAction textInputAction = TextInputAction.Search,
+            TextInputActionType textInputAction = TextInputActionType.Search,
             bool autocorrect = true,
             bool enableSuggestions = true) : base(
             searchFieldLabel: "Find framework term",

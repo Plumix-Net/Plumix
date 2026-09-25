@@ -970,6 +970,14 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
                     new SizedBox(height: 1000),
                 ]))),
         ])));
+
+        // Dart long-presses the first word; the selection change creates the selection overlay
+        // that `showToolbar` needs.
+        RenderEditable editable = State(tester).RenderEditableObject;
+        editable.SelectWordsInRange(
+            from: editable.LocalToGlobal(new Point(1, 1)),
+            cause: SelectionChangedCause.LongPress);
+        tester.Pump();
         return (tester, controller, outer);
     }
 

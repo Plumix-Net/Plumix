@@ -472,7 +472,9 @@ public sealed class SelectableRegionState
             CreateSelectionOverlay();
         }
 
+#pragma warning disable CS0618 // The legacy toolbar still reads it.
         _selectionOverlay!.ToolbarLocation = location;
+#pragma warning restore CS0618
 
         if (Current.SelectionControls is not ITextSelectionHandleControls)
         {

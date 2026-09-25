@@ -93,7 +93,22 @@ public sealed partial class EditableText
                 }
 
                 _currentPromptRectRange = null;
+
+                bool revealObscuredInput = HasInputConnection
+                                           && Widget.ObscureText
+                                           && PlatformDispatcher.Instance.BrieflyShowPassword
+                                           && value.Text.Length == EditingValue.Text.Length + 1;
+
+                _obscureShowCharTicksPending = revealObscuredInput ? ObscureShowLatestCharCursorTicks : 0;
+                _obscureLatestCharIndex = revealObscuredInput ? EditingValue.Selection.BaseOffset : null;
                 FormatAndSetValue(value, SelectionChangedCause.Keyboard);
+            }
+
+            if (ShowBlinkingCursor && _cursorTimer is not null)
+            {
+                // To keep the cursor from blinking while typing, restart the timer here.
+                StopCursorBlink(resetCharTicks: false);
+                StartCursorBlink();
             }
 
             // Wherever the value is changed by the user, schedule a showCaretOnScreen to make sure
@@ -256,7 +271,7 @@ public sealed partial class EditableText
                     _focusNode.RequestFocus();
                     if (RenderEditable is { HasSize: true })
                     {
-                        _ = EnsureSelectionOverlay();
+                        _selectionOverlay ??= CreateSelectionOverlay();
                     }
                 }
 
@@ -309,7 +324,7 @@ public sealed partial class EditableText
             {
                 if (_selectionOverlay is null)
                 {
-                    _ = EnsureSelectionOverlay();
+                    _selectionOverlay = CreateSelectionOverlay();
                 }
                 else
                 {
@@ -335,13 +350,32 @@ public sealed partial class EditableText
                     library: "widgets",
                     context: new ErrorDescription($"while calling onSelectionChanged for {cause}")));
             }
+
+            // To keep the cursor from blinking while it moves, restart the timer here.
+            if (ShowBlinkingCursor && _cursorTimer is not null)
+            {
+                StopCursorBlink(resetCharTicks: false);
+                StartCursorBlink();
+            }
         }
 
         /// Dart's `_didChangeTextEditingValue`: the controller listener.
         private void DidChangeTextEditingValue()
         {
+            if (_focusNode!.HasFocus && !EditingValue.Selection.IsValid)
+            {
+                // If this field is focused and the selection is invalid, place the cursor at the
+                // end. Does not rely on HandleFocusNodeChanged because it makes selection handles
+                // visible on Android. Unregister as a listener to the text controller while making
+                // the change.
+                _controller!.RemoveListener(DidChangeTextEditingValue);
+                _controller.Selection = AdjustedSelectionWhenFocused()!.Value;
+                _controller.AddListener(DidChangeTextEditingValue);
+            }
+
             PushValueToRenderEditable();
             UpdateRemoteEditingValueIfNeeded();
+            StartOrStopCursorTimerIfNeeded();
             UpdateOrDisposeSelectionOverlayIfNeeded();
             // TODO(abarth): Teach RenderEditable about ValueNotifier<TextEditingValue> to avoid this
             // setState().
@@ -424,7 +458,7 @@ public sealed partial class EditableText
                 }
             }
 
-            Scheduler.RunAsync(_clipboardStatus.Update);
+            Scheduler.RunAsync(ClipboardStatus.Update);
         }
 
         /// <summary>Cuts the selected text to the clipboard. Dart's <c>cutSelection</c>.</summary>
@@ -457,7 +491,7 @@ public sealed partial class EditableText
                 HideToolbar();
             }
 
-            Scheduler.RunAsync(_clipboardStatus.Update);
+            Scheduler.RunAsync(ClipboardStatus.Update);
         }
 
         private void SetClipboard(string text, string errorContext)
@@ -603,64 +637,6 @@ public sealed partial class EditableText
         }
 
         // ------------------------------------------------------------------ toolbar
-
-        /// <summary>Toggles the visibility of the toolbar. Dart's <c>toggleToolbar</c>.</summary>
-        public void ToggleToolbar(bool hideHandles = true)
-        {
-            TextSelectionOverlay selectionOverlay = EnsureSelectionOverlay();
-            if (selectionOverlay.ToolbarIsVisible)
-            {
-                HideToolbar(hideHandles);
-            }
-            else
-            {
-                _ = ShowToolbar();
-            }
-        }
-
-        /// <summary>Shows the magnifier at the position given by <paramref name="positionToShow"/>,
-        /// if there is no magnifier visible; otherwise moves it.</summary>
-        public void ShowMagnifier(Point positionToShow)
-        {
-            if (_selectionOverlay is null)
-            {
-                return;
-            }
-
-            if (_selectionOverlay.MagnifierIsVisible)
-            {
-                _selectionOverlay.UpdateMagnifier(positionToShow);
-            }
-            else
-            {
-                _selectionOverlay.ShowMagnifier(positionToShow);
-            }
-        }
-
-        /// <summary>Hides the magnifier if it is visible.</summary>
-        public void HideMagnifier() => _selectionOverlay?.HideMagnifier();
-
-        /// <summary>
-        /// Shows the spell check suggestions toolbar for the misspelled word under the caret. Dart's
-        /// <c>showSpellCheckSuggestionsToolbar</c>; returns whether it was shown.
-        /// </summary>
-        public bool ShowSpellCheckSuggestionsToolbar()
-        {
-            if (!SpellCheckEnabled
-                || Widget.ReadOnly
-                || _selectionOverlay is null
-                || _spellCheckResults is null
-                || FindSuggestionSpanAtCursorIndex(TextEditingValue.Selection.ExtentOffset) is null
-                || Widget.SpellCheckConfiguration?.SpellCheckSuggestionsToolbarBuilder is not { } builder)
-            {
-                // Only attempt to show the spell check suggestions toolbar if there is a toolbar
-                // specified and spell check suggestions available to show.
-                return false;
-            }
-
-            _selectionOverlay.ShowSpellCheckSuggestionsToolbar(context => builder(context, this));
-            return true;
-        }
 
         /// <inheritdoc/>
         /// <remarks>Dart's <c>performSelector</c>: the macOS selector's intent is invoked from the

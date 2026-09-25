@@ -176,6 +176,14 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
         return _controller.Text.Length > 0;
     }
 
+    private void HandleSelectionHandleTapped()
+    {
+        if (_controller.Selection.IsCollapsed)
+        {
+            _editableTextKey.CurrentState!.ToggleToolbar();
+        }
+    }
+
     private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
     {
         bool willShowSelectionHandles = ShouldShowSelectionHandles(cause);
@@ -241,6 +249,7 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
         Widget result = new EditableText(
             controller: _controller,
             focusNode: _focusNode,
+            onSelectionHandleTapped: HandleSelectionHandleTapped,
             autofocus: Current.Autofocus,
             enabled: Current.EnableInteractiveSelection,
             multiline: Current.MaxLines != 1,
@@ -251,6 +260,7 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
             padding: new Thickness(0),
             style: style,
             readOnly: true,
+showCursor: Current.ShowCursor,
             textAlign: Current.TextAlign ?? TextAlign.Start,
             textDirection: Current.TextDirection,
             enableInteractiveSelection: Current.EnableInteractiveSelection,

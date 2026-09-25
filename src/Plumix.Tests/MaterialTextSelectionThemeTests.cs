@@ -170,17 +170,18 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
             SelectionHandleColor: Color.FromUInt32(0x00ffeedd));
         Color cursorColor = Color.FromUInt32(0x88888888);
 
+        // Neither field is focused, so the cursor is not blinking and is fully transparent.
         RenderEditable field = RenderField(
             theme,
             new TextSelectionTheme(widgetTheme, new TextField(cursorColor: cursorColor)));
-        Assert.Equal(cursorColor, field.CursorColor);
+        Assert.Equal(Color.FromArgb(0, cursorColor.R, cursorColor.G, cursorColor.B), field.CursorColor);
 
         RenderEditable selectable = RenderField(
             theme,
             new TextSelectionTheme(
                 widgetTheme,
-                new SelectableText("foobar", cursorColor: cursorColor, showCursor: true)));
-        Assert.Equal(cursorColor, selectable.CursorColor);
+                new SelectableText("foobar", cursorColor: cursorColor)));
+        Assert.Equal(Color.FromArgb(0, cursorColor.R, cursorColor.G, cursorColor.B), selectable.CursorColor);
     }
 
     [Fact]
@@ -226,13 +227,14 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
 
         RenderEditable errored = RenderField(
             theme,
-            new TextField(decoration: new InputDecoration(errorText: "nope")));
+            new TextField(autofocus: true, decoration: new InputDecoration(errorText: "nope")));
         Assert.Equal(theme.ColorScheme.Error, errored.CursorColor);
 
         Color cursorErrorColor = Color.FromUInt32(0xff00ff00);
         RenderEditable overridden = RenderField(
             theme,
             new TextField(
+                autofocus: true,
                 cursorColor: Colors.Blue,
                 cursorErrorColor: cursorErrorColor,
                 decoration: new InputDecoration(errorText: "nope")));
@@ -242,10 +244,10 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         var controller = new TextEditingController("abcd");
         RenderEditable intrinsic = RenderField(
             theme,
-            new TextField(controller: controller, maxLength: 2));
+            new TextField(controller: controller, maxLength: 2, autofocus: true));
         Assert.Equal(theme.ColorScheme.Error, intrinsic.CursorColor);
 
-        RenderEditable valid = RenderField(theme, new TextField(cursorColor: Colors.Blue));
+        RenderEditable valid = RenderField(theme, new TextField(cursorColor: Colors.Blue, autofocus: true));
         Assert.Equal(Colors.Blue, valid.CursorColor);
     }
 
@@ -265,7 +267,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
             theme,
             new CupertinoTheme(
                 new CupertinoThemeData(primaryColor: cupertinoPrimary),
-                new TextField()));
+                new TextField(autofocus: true)));
         Assert.Equal(cupertinoPrimary, overridden.CursorColor);
         Assert.Equal(WithOpacity(cupertinoPrimary, 0.40), overridden.SelectionColor);
     }
@@ -274,7 +276,8 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         ThemeData theme,
         Func<Widget, Widget>? wrap = null)
     {
-        Widget field = new TextField();
+        // Like Flutter's test, the field is focused so its cursor is blinking and fully opaque.
+        Widget field = new TextField(autofocus: true);
         RenderEditable editable = RenderField(theme, wrap is null ? field : wrap(field));
         return (editable.CursorColor!.Value, editable.SelectionColor!.Value);
     }
@@ -282,6 +285,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
     private static RenderEditable RenderField(ThemeData theme, Widget field)
     {
         using var harness = new WidgetRenderHarness(Wrap(theme, field));
+        harness.Pump(new Size(360, 160));
         harness.Pump(new Size(360, 160));
         return Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
     }

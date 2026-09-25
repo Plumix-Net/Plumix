@@ -219,6 +219,12 @@ public sealed class ContextMenuControllerTests : IDisposable
         focus.RequestFocus();
         harness.Pump();
         EditableText.EditableTextState state = key.CurrentState!;
+        // Like Dart, the toolbar needs the selection overlay a user selection change creates.
+        Assert.False(state.ShowToolbar());
+        state.UserUpdateTextEditingValue(
+            new TextEditingValue("select me", new TextSelection(0, 6)),
+            SelectionChangedCause.Tap);
+        harness.Pump();
         Assert.True(state.ShowToolbar());
         harness.Pump();
         Assert.True(state.ContextMenuIsVisible);

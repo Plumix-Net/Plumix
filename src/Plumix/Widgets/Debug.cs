@@ -61,6 +61,40 @@ public static class WidgetsDebug
         throw new FlutterError(information);
     }
 
+    /// <summary>Dart's <c>debugCheckHasOverlay</c>: throws a <see cref="FlutterError"/> in debug
+    /// builds when <paramref name="context"/> has no <see cref="Overlay"/> ancestor within the
+    /// closest <see cref="LookupBoundary"/>.</summary>
+    public static bool DebugCheckHasOverlay(BuildContext context)
+    {
+        if (!Constants.KDebugMode || LookupBoundary.FindAncestorWidgetOfExactType<Overlay>(context) is not null)
+        {
+            return true;
+        }
+
+        bool hiddenByBoundary = LookupBoundary.DebugIsHidingAncestorWidgetOfExactType<Overlay>(context);
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary(
+                $"No Overlay widget found{(hiddenByBoundary ? " within the closest LookupBoundary" : string.Empty)}."),
+        };
+        if (hiddenByBoundary)
+        {
+            information.Add(new ErrorDescription(
+                "There is an ancestor Overlay widget, but it is hidden by a LookupBoundary."));
+        }
+
+        information.Add(new ErrorDescription(
+            $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require an Overlay "
+            + "widget ancestor within the closest LookupBoundary.\n"
+            + "An overlay lets widgets float on top of other widget children."));
+        information.Add(new ErrorHint(
+            "To introduce an Overlay widget, you can either directly "
+            + "include one, or use a widget that contains an Overlay itself, "
+            + "such as a Navigator, WidgetApp, MaterialApp, or CupertinoApp."));
+        information.AddRange(context.DescribeMissingAncestor(typeof(Overlay)));
+        throw new FlutterError(information);
+    }
+
     /// <summary>Dart's <c>debugPrintRebuildDirtyWidgets</c>: log every widget as it rebuilds.</summary>
     public static bool DebugPrintRebuildDirtyWidgets { get; set; }
 

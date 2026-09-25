@@ -230,32 +230,57 @@ public sealed class SelectionOverlayTests : IDisposable
         overlay.Dispose();
     }
 
-    [Fact]
-    public void SelectionOverlay_EndpointChangeEmitsSelectionHapticOnlyWhileDragging()
+    // Dart: 'dragging handle or selecting word triggers haptic feedback on Android'
+    // (selectable_region_test.dart): the endpoints setter clicks through `HapticFeedback`.
+    [Theory]
+    [InlineData(TargetPlatform.Android)]
+    [InlineData(TargetPlatform.Fuchsia)]
+    [InlineData(TargetPlatform.IOS)]
+    [InlineData(TargetPlatform.Linux)]
+    [InlineData(TargetPlatform.MacOS)]
+    [InlineData(TargetPlatform.Windows)]
+    public void SelectionOverlay_EndpointChangeEmitsSelectionHapticOnlyWhileDragging(TargetPlatform platform)
     {
-        using var fixture = new OverlayFixture();
-        var feedback = new List<FeedbackType>();
-        Feedback.FeedbackTriggered += feedback.Add;
-        SelectionOverlay overlay = fixture.CreateOverlay(
-            startHandleType: TextSelectionHandleType.Left,
-            endHandleType: TextSelectionHandleType.Right);
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
+        {
+            using var channel = new MockMethodCallHandler(SystemChannels.Platform);
+            using var fixture = new OverlayFixture();
+            SelectionOverlay overlay = fixture.CreateOverlay(
+                startHandleType: TextSelectionHandleType.Left,
+                endHandleType: TextSelectionHandleType.Right);
 
-        overlay.ShowHandles();
-        fixture.Pump();
-        overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(1, 2), null)];
-        Assert.Empty(feedback);
+            overlay.ShowHandles();
+            fixture.Pump();
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(1, 2), null)];
+            Assert.Empty(channel.Log);
 
-        SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
-        startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Point(3, 3)));
-        overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(7, 9), null)];
+            SelectionHandleOverlay startHandle = fixture.FindWidgets<SelectionHandleOverlay>()[0];
+            startHandle.OnSelectionHandleDragStart!(TouchDragStart(new Point(3, 3)));
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(7, 9), null)];
 
-        Assert.Equal(
-            PlatformDefaults.TargetPlatform == TargetPlatform.Android
-                ? [FeedbackType.SelectionClick]
-                : Array.Empty<FeedbackType>(),
-            feedback);
+            if (platform == TargetPlatform.Android)
+            {
+                MethodCall call = Assert.Single(channel.Log);
+                Assert.Equal("HapticFeedback.vibrate", call.Method);
+                Assert.Equal("HapticFeedbackType.selectionClick", call.Arguments);
+            }
+            else
+            {
+                Assert.Empty(channel.Log);
+            }
 
-        overlay.Dispose();
+            // Equal endpoints neither rebuild nor click.
+            overlay.SelectionEndpoints = [new TextSelectionPoint(new Point(7, 9), null)];
+            Assert.True(channel.Log.Count <= 1);
+
+            overlay.Dispose();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Fact]
@@ -446,19 +471,21 @@ public sealed class SelectionOverlayTests : IDisposable
         int notifications = 0;
         notifier.AddListener(() => notifications++);
         Assert.True(EventLoopPump.SpinUntil(() => notifier.Value == ClipboardStatus.NotPasteable));
+        // Like Dart, the listener is added before the first update resolves, so it hears it.
+        Assert.Equal(1, notifications);
 
         clipboard.Text = "copied";
         await EventLoopPump.WaitFor(notifier.Update());
         Assert.Equal(ClipboardStatus.Pasteable, notifier.Value);
-        Assert.Equal(1, notifications);
+        Assert.Equal(2, notifications);
 
         await EventLoopPump.WaitFor(notifier.Update());
-        Assert.Equal(1, notifications);
+        Assert.Equal(2, notifications);
 
         clipboard.Text = string.Empty;
         await EventLoopPump.WaitFor(notifier.Update());
         Assert.Equal(ClipboardStatus.NotPasteable, notifier.Value);
-        Assert.Equal(2, notifications);
+        Assert.Equal(3, notifications);
         notifier.Dispose();
     }
 

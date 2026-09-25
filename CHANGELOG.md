@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: (Text)SelectionOverlay are strict ports: `_getHandleDy`, handle drags, menus (widgets/text_selection.dart).
+- Breaking: EditableText cursor blinks on Dart's timer; `showCursor` defaults to `!readOnly` (editable_text.dart).
+- Breaking: EditableText toolbar, clipboard and button items follow Dart; ToolbarOptions off (editable_text.dart).
+- EditableText briefly shows the last typed password character on mobile; `_justResumed` focus (editable_text.dart).
+- `Scribe`, `LiveText`, `BrowserContextMenu`; Android stylus handwriting starts on tap down (services/scribe.dart).
+- `LiveTextInputStatusNotifier`, web clipboard notifier, Live Text context-menu button (widgets/text_selection.dart).
+- Breaking: Material's `TextInputAction` enum is removed; fields take `TextInputActionType` (search_anchor.dart).
+- `PlatformDispatcher.BrieflyShowPassword` and `WidgetsDebug.DebugCheckHasOverlay` (dart:ui, widgets/debug.dart).
+- TextField `dragStartBehavior`, handle taps toggle the toolbar; SelectableText passes `showCursor` (text_field.dart).
 - Breaking: EditableText keys run through Actions and DefaultTextEditingShortcuts, not onKeyEvent (editable_text.dart).
 - Breaking: EditableText edits go through `_formatAndSetValue`, batch edits and the remote value (editable_text.dart).
 - Breaking: Enter goes to the platform plugin; `performAction` unfocuses and submits like Dart (editable_text.dart).

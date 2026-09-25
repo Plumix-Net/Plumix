@@ -223,10 +223,34 @@ public class TextSelectionGestureDetectorBuilder
         switch (PlatformDefaults.TargetPlatform)
         {
             case TargetPlatform.Android:
+                if (EditableText.Widget.StylusHandwritingEnabled)
+                {
+                    bool stylusEnabled = kind switch
+                    {
+                        PointerDeviceKind.Stylus or PointerDeviceKind.InvertedStylus =>
+                            EditableText.Widget.StylusHandwritingEnabled,
+                        _ => false,
+                    };
+                    if (stylusEnabled)
+                    {
+                        // Dart attaches no error handler to this future either.
+                        Scheduler.RunAsync(async () =>
+                        {
+                            bool isAvailable = await Scribe.IsFeatureAvailable();
+                            if (isAvailable)
+                            {
+                                RenderEditable.SelectPosition(SelectionChangedCause.StylusHandwriting);
+                                _ = Scribe.StartStylusHandwriting();
+                            }
+                        });
+                    }
+                }
+
+                // On mobile platforms the selection is set on tap up.
+                break;
             case TargetPlatform.Fuchsia:
             case TargetPlatform.IOS:
-                // On mobile platforms the selection is set on tap up. (Android starts stylus
-                // handwriting here through `Scribe`, which Plumix has no host for.)
+                // On mobile platforms the selection is set on tap up.
                 break;
             case TargetPlatform.MacOS:
                 EditableText.HideToolbar();

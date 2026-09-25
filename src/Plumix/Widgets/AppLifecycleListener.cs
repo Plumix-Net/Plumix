@@ -222,6 +222,9 @@ public partial class WidgetsBinding
         }
     }
 
+    /// <summary>Forgets the lifecycle state, as a fresh test binding starts without one.</summary>
+    internal void ResetLifecycleStateForTests() => LifecycleState = null;
+
     public void HandleAppLifecycleStateChanged(AppLifecycleState state)
     {
         foreach (AppLifecycleState generatedState in GenerateStateTransitions(LifecycleState, state))

@@ -31,7 +31,7 @@ public sealed class TextField : StatefulWidget
         TextAlignVertical? textAlignVertical = null,
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
-        TextInputAction? textInputAction = null,
+        TextInputActionType? textInputAction = null,
         TextCapitalization textCapitalization = TextCapitalization.None,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
@@ -69,8 +69,10 @@ public sealed class TextField : StatefulWidget
         SpellCheckConfiguration? spellCheckConfiguration = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         Key? key = null) : base(key)
     {
+        DragStartBehavior = dragStartBehavior;
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
             throw new ArgumentException("obscuringCharacter must contain exactly one UTF-16 character.", nameof(obscuringCharacter));
         if (maxLines.HasValue && maxLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(maxLines));
@@ -139,7 +141,7 @@ public sealed class TextField : StatefulWidget
     public TextAlignVertical? TextAlignVertical { get; }
     public TextDirection? TextDirection { get; }
     public TextInputType? KeyboardType { get; }
-    public TextInputAction? TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public TextCapitalization TextCapitalization { get; }
     public SmartDashesType? SmartDashesType { get; }
     public SmartQuotesType? SmartQuotesType { get; }
@@ -147,6 +149,10 @@ public sealed class TextField : StatefulWidget
     public bool EnableSuggestions { get; }
     public bool ReadOnly { get; }
     public bool Autofocus { get; }
+
+    /// <summary>Determines the way that drag start behavior is handled; passed to the
+    /// <see cref="EditableText"/>.</summary>
+    public DragStartBehavior DragStartBehavior { get; }
     public string ObscuringCharacter { get; }
     public bool ObscureText { get; }
     public int? MaxLines { get; }
@@ -286,6 +292,14 @@ public sealed class TextField : StatefulWidget
             return _controller!.Text.Length > 0;
         }
 
+        private void HandleSelectionHandleTapped()
+        {
+            if (_controller!.Selection.IsCollapsed)
+            {
+                _editableTextKey.CurrentState!.ToggleToolbar();
+            }
+        }
+
         private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
         {
             bool willShowSelectionHandles = ShouldShowSelectionHandles(cause);
@@ -359,6 +373,8 @@ public sealed class TextField : StatefulWidget
             Widget editable = new EditableText(
                 controller: _controller!,
                 focusNode: _focusNode,
+                onSelectionHandleTapped: HandleSelectionHandleTapped,
+                dragStartBehavior: Current.DragStartBehavior,
                 onChanged: Current.OnChanged,
                 autofocus: Current.Autofocus,
                 enabled: enabled,
@@ -382,7 +398,7 @@ public sealed class TextField : StatefulWidget
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
                 keyboardType: ResolveKeyboardType(Current.KeyboardType, multiline),
-                textInputAction: ResolveTextInputAction(Current.TextInputAction),
+                textInputAction: Current.TextInputAction,
                 textCapitalization: Current.TextCapitalization,
                 smartDashesType: Current.SmartDashesType,
                 smartQuotesType: Current.SmartQuotesType,
@@ -582,20 +598,6 @@ public sealed class TextField : StatefulWidget
             return keyboardType ?? (multiline ? TextInputType.Multiline : TextInputType.Text);
         }
 
-        private static TextInputActionType? ResolveTextInputAction(TextInputAction? textInputAction)
-        {
-            return textInputAction switch
-            {
-                null => null,
-                global::Plumix.Material.TextInputAction.None => TextInputActionType.None,
-                global::Plumix.Material.TextInputAction.Search => TextInputActionType.Search,
-                global::Plumix.Material.TextInputAction.Done => TextInputActionType.Done,
-                global::Plumix.Material.TextInputAction.Go => TextInputActionType.Go,
-                global::Plumix.Material.TextInputAction.Next => TextInputActionType.Next,
-                global::Plumix.Material.TextInputAction.Send => TextInputActionType.Send,
-                _ => TextInputActionType.Unspecified,
-            };
-        }
 
         private static Color ApplyOpacity(Color c, double opacity) => Color.FromArgb((byte)Math.Round(c.A * Math.Clamp(opacity, 0, 1)), c.R, c.G, c.B);
     }

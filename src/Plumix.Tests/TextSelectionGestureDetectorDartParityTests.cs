@@ -170,7 +170,10 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
 
     private readonly TextEditingController _controller = new();
 
-    private FrameworkDartTester PumpTextField(TargetPlatform platform, int? maxLines = 1)
+    private FrameworkDartTester PumpTextField(
+        TargetPlatform platform,
+        int? maxLines = 1,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start)
     {
         PlatformDefaults.DebugTargetPlatformOverride = platform;
         var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -179,7 +182,8 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
                 child: new Center(
                     child: new TextField(
                         controller: _controller,
-                        maxLines: maxLines)))));
+                        maxLines: maxLines,
+                        dragStartBehavior: dragStartBehavior)))));
         tester.Pump();
         return tester;
     }
@@ -347,7 +351,11 @@ public sealed class TextSelectionGestureDetectorDartParityTests : IDisposable
     {
         const string testValue = "abc def ghi";
         _controller.Text = testValue;
-        using FrameworkDartTester tester = PumpTextField(TargetPlatform.Android);
+        // Dart pumps this TextField with `dragStartBehavior: DragStartBehavior.down`: the drag starts
+        // on the collapsed handle, and only a down-behavior drag reports the move as an update.
+        using FrameworkDartTester tester = PumpTextField(
+            TargetPlatform.Android,
+            dragStartBehavior: DragStartBehavior.Down);
         Point ePos = TextOffsetToPosition(tester, testValue.IndexOf('e', StringComparison.Ordinal));
         Point gPos = TextOffsetToPosition(tester, testValue.IndexOf('g', StringComparison.Ordinal));
 

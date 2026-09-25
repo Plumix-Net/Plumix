@@ -902,7 +902,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
             keyboardType: TextInputType.Number,
             textAlign: TextAlign.End,
             maxLines: 2,
-            textInputAction: TextInputAction.Done,
+            textInputAction: TextInputActionType.Done,
             cursorHeight: 17,
             restorationId: "dropdown",
             inputFormatters: formatters,
@@ -913,7 +913,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal(TextInputType.Number, textField.KeyboardType);
         Assert.Equal(TextAlign.End, textField.TextAlign);
         Assert.Equal(2, textField.MaxLines);
-        Assert.Equal(TextInputAction.Done, textField.TextInputAction);
+        Assert.Equal(TextInputActionType.Done, textField.TextInputAction);
         Assert.Equal(17.0, textField.CursorHeight);
         Assert.Equal("dropdown", textField.RestorationId);
         Assert.Same(formatters, textField.InputFormatters);

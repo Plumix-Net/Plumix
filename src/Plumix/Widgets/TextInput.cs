@@ -34,6 +34,10 @@ public readonly record struct TextSelection(
     /// <summary>A selection that is not in the text.</summary>
     public static TextSelection Invalid => new(-1, -1);
 
+    /// <summary>The text inside this selection. Dart's <c>TextRange.textInside</c>, which
+    /// <c>TextSelection</c> inherits.</summary>
+    public string TextInside(string text) => text[Start..End];
+
     /// <summary>Creates a collapsed selection at the given text position.</summary>
     /// <remarks>Dart's <c>TextSelection.fromPosition</c>.</remarks>
     public static TextSelection FromPosition(TextPosition position) =>
@@ -967,12 +971,17 @@ public class TextEditingController : ChangeNotifier, IValueListenable<TextEditin
     }
 }
 
-/// <summary>Legacy switches controlling which editing commands appear in a text toolbar.</summary>
+/// <summary>Legacy switches controlling which editing commands appear in a text toolbar. Every
+/// switch defaults to false, like Dart's deprecated <c>ToolbarOptions</c>.</summary>
 public sealed record ToolbarOptions(
-    bool Copy = true,
-    bool Cut = true,
-    bool Paste = true,
-    bool SelectAll = true);
+    bool Copy = false,
+    bool Cut = false,
+    bool Paste = false,
+    bool SelectAll = false)
+{
+    /// <summary>An instance with no options set to true.</summary>
+    public static ToolbarOptions Empty { get; } = new();
+}
 
 /// <summary>Configures rich-content insertion offered by the platform text input service.</summary>
 public sealed record ContentInsertionConfiguration(
@@ -1042,6 +1051,7 @@ public sealed partial class EditableText : StatefulWidget
         TextMagnifierConfiguration? magnifierConfiguration = null,
         TextSelectionControls? selectionControls = null,
         bool showSelectionHandles = false,
+        Action? onSelectionHandleTapped = null,
         SpellCheckConfiguration? spellCheckConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         bool rendererIgnoresPointer = false,
@@ -1053,7 +1063,7 @@ public sealed partial class EditableText : StatefulWidget
         bool? enableInlinePrediction = null,
         ContentInsertionConfiguration? contentInsertionConfiguration = null,
         bool scribbleEnabled = true,
-        bool stylusHandwritingEnabled = true,
+        bool stylusHandwritingEnabled = DefaultStylusHandwritingEnabled,
         Clip clipBehavior = Clip.HardEdge,
         Color? backgroundCursorColor = null,
         Color? autocorrectionTextRectColor = null,
@@ -1138,11 +1148,14 @@ public sealed partial class EditableText : StatefulWidget
         PaintCursorAboveText = paintCursorAboveText;
         EnableInteractiveSelection = enableInteractiveSelection;
         SelectAllOnFocus = selectAllOnFocus ?? DefaultSelectAllOnFocus();
-        ToolbarOptions = toolbarOptions ?? DefaultToolbarOptions(readOnly, obscureText);
+        ToolbarOptions = selectionControls is ITextSelectionHandleControls && toolbarOptions is null
+            ? ToolbarOptions.Empty
+            : toolbarOptions ?? DefaultToolbarOptions(readOnly, obscureText);
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
         SelectionControls = selectionControls;
         ShowSelectionHandles = showSelectionHandles;
+        OnSelectionHandleTapped = onSelectionHandleTapped;
         SpellCheckConfiguration = spellCheckConfiguration;
         if (spellCheckConfiguration is { SpellCheckEnabled: true, MisspelledTextStyle: null })
         {
@@ -1303,6 +1316,13 @@ public sealed partial class EditableText : StatefulWidget
 
     /// <summary>How the field's <see cref="Scrollable"/> starts a drag.</summary>
     public DragStartBehavior DragStartBehavior { get; }
+
+    /// <summary>Called when the user taps on a selection handle. Dart's
+    /// <c>onSelectionHandleTapped</c>.</summary>
+    public Action? OnSelectionHandleTapped { get; }
+
+    /// <summary>The default value for <see cref="StylusHandwritingEnabled"/>.</summary>
+    public const bool DefaultStylusHandwritingEnabled = true;
 
     /// <summary>Restoration id of the field's <see cref="Scrollable"/> (its scroll offset).</summary>
     public string? RestorationId { get; }
@@ -1495,13 +1515,17 @@ public sealed partial class EditableText : StatefulWidget
         if (obscureText)
         {
             return readOnly
-                ? new ToolbarOptions(false, false, false, false)
-                : new ToolbarOptions(Copy: false, Cut: false, Paste: true, SelectAll: true);
+                // No point in even offering "Select All" in a read-only obscured field.
+                ? ToolbarOptions.Empty
+                // Writable, but obscured.
+                : new ToolbarOptions(SelectAll: true, Paste: true);
         }
 
         return readOnly
-            ? new ToolbarOptions(Copy: true, Cut: false, Paste: false, SelectAll: true)
-            : new ToolbarOptions();
+            // Read-only, not obscured.
+            ? new ToolbarOptions(SelectAll: true, Copy: true)
+            // Writable, not obscured.
+            : new ToolbarOptions(Copy: true, Cut: true, SelectAll: true, Paste: true);
     }
 
     public sealed partial class EditableTextState
@@ -1545,9 +1569,6 @@ public sealed partial class EditableText : StatefulWidget
         private readonly LayerLink _startHandleLayerLink = new();
         private readonly LayerLink _endHandleLayerLink = new();
         private readonly LayerLink _toolbarLayerLink = new();
-        private readonly ClipboardStatusNotifier _clipboardStatus = new();
-        private bool _clipboardStatusObserved;
-        private bool _showToolbarWhenClipboardResolved;
         private TextSelectionOverlay? _selectionOverlay;
         private SpellCheckResults? _spellCheckResults;
         private int _spellCheckRequest;
@@ -1556,56 +1577,8 @@ public sealed partial class EditableText : StatefulWidget
         {
             public Guid Id { get; } = id;
         }
-        private readonly Ticker _cursorTicker;
-        private double _cursorOpacity = 1.0;
         private bool _hadFocus;
-
-        public EditableTextState()
-        {
-            _cursorTicker = new Ticker(HandleCursorTick, "EditableText cursor");
-        }
-
-        public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems
-        {
-            get
-            {
-                TextEditingController controller = _controller!;
-                bool hasSelection = !controller.Selection.IsCollapsed;
-                bool selectionCoversAll = controller.Selection.Start == 0
-                                          && controller.Selection.End == controller.Text.Length;
-                var items = new List<ContextMenuButtonItem>();
-                ToolbarOptions options = Widget.ToolbarOptions;
-                if (options.Paste && !Widget.ReadOnly && _clipboardStatus.Value == ClipboardStatus.Unknown)
-                {
-                    return items;
-                }
-                if (options.Cut && !Widget.ReadOnly && !Widget.ObscureText && hasSelection)
-                {
-                    items.Add(new ContextMenuButtonItem(
-                        () => CutSelection(SelectionChangedCause.Toolbar),
-                        ContextMenuButtonType.Cut));
-                }
-                if (options.Copy && !Widget.ObscureText && hasSelection)
-                {
-                    items.Add(new ContextMenuButtonItem(
-                        () => CopySelection(SelectionChangedCause.Toolbar),
-                        ContextMenuButtonType.Copy));
-                }
-                if (options.Paste && !Widget.ReadOnly && _clipboardStatus.Value == ClipboardStatus.Pasteable)
-                {
-                    items.Add(new ContextMenuButtonItem(
-                        () => PasteText(SelectionChangedCause.Toolbar),
-                        ContextMenuButtonType.Paste));
-                }
-                if (options.SelectAll && !selectionCoversAll && controller.Text.Length > 0)
-                {
-                    items.Add(new ContextMenuButtonItem(
-                        () => SelectAll(SelectionChangedCause.Toolbar),
-                        ContextMenuButtonType.SelectAll));
-                }
-                return items;
-            }
-        }
+        private bool _didAutoFocus;
 
         public TextSelectionToolbarAnchors ContextMenuAnchors
         {
@@ -1904,14 +1877,27 @@ public sealed partial class EditableText : StatefulWidget
         {
             base.DidChangeDependencies();
             UpdateAutofillRegistration();
+
+            if (!_didAutoFocus && Widget.Autofocus)
+            {
+                // Dart autofocuses from a post-frame callback after `_flagInternalFocus()`; the
+                // Focus widget below autofocuses the node, so only the flag is set here (see
+                // docs/ai/DIVERGENCES.md).
+                _didAutoFocus = true;
+                FlagInternalFocus();
+            }
+
+            DidChangeDependenciesForCursor();
             DidChangeDependenciesForContextMenu();
         }
 
         public override void InitState()
         {
+            _liveTextInputStatus?.AddListener(OnChangedLiveTextInputStatus);
+            ClipboardStatus.AddListener(OnChangedClipboardStatus);
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
-            UpdateCursorTicker();
+            _appLifecycleListener = new AppLifecycleListener(onResume: OnResume);
         }
 
         public override void DidUpdateWidget(EditableText oldWidget)
@@ -1934,32 +1920,34 @@ public sealed partial class EditableText : StatefulWidget
                 _currentAutofillScope?.Register(EffectiveAutofillClient);
             }
 
-            // Only a null <-> non-null change of contextMenuBuilder invalidates the overlay. If
-            // only the identity of the closure changed (an inline lambda rebuilt every frame),
-            // the shown toolbar is rebuilt instead so its overlay entry picks up the new closure.
-            bool contextMenuPresenceChanged =
-                (Widget.ContextMenuBuilder is null) != (oldEditableText.ContextMenuBuilder is null);
-            if (!Widget.EnableInteractiveSelection || contextMenuPresenceChanged)
+            DidUpdateWidgetForSelectionOverlay(oldEditableText);
+            if (oldEditableText.ShowCursor != Widget.ShowCursor)
             {
-                HideToolbar();
+                StartOrStopCursorTimerIfNeeded();
             }
-            else if (_selectionOverlay is { ToolbarIsVisible: true }
-                     && oldEditableText.ContextMenuBuilder != Widget.ContextMenuBuilder)
+
+            UpdateClipboardStatusAfterWidgetUpdate();
+
+            if (PlatformDefaults.IsWeb && HasInputConnection && oldEditableText.ReadOnly != Widget.ReadOnly)
             {
-                // Deferred to the next frame because ShowToolbar() needs a laid-out render tree,
-                // and DidUpdateWidget runs before layout.
-                Scheduler.AddPostFrameCallback(_ =>
+                _textInputConnection!.UpdateConfig(EffectiveAutofillClient.TextInputConfiguration);
+            }
+
+            if (HasInputConnection)
+            {
+                bool obscureTextChanged = oldEditableText.ObscureText != Widget.ObscureText;
+                if (obscureTextChanged || !Equals(oldEditableText.KeyboardType, Widget.KeyboardType))
                 {
-                    if (Mounted && _selectionOverlay is { ToolbarIsVisible: true })
+                    if (obscureTextChanged)
                     {
-                        _selectionOverlay.ShowToolbar();
+                        // When obscureText is toggled, reset its state so the last character is not
+                        // visible between the state changes.
+                        _obscureShowCharTicksPending = 0;
+                        _obscureLatestCharIndex = null;
                     }
-                });
-            }
-            if (oldEditableText.CursorOpacityAnimates != Widget.CursorOpacityAnimates
-                || oldEditableText.ShowCursor != Widget.ShowCursor)
-            {
-                UpdateCursorTicker();
+
+                    _textInputConnection!.UpdateConfig(EffectiveAutofillClient.TextInputConfiguration);
+                }
             }
 
             // Spell check is re-inferred whenever an input that feeds IsPasswordInput changes.
@@ -2003,14 +1991,17 @@ public sealed partial class EditableText : StatefulWidget
             _currentAutofillScope = null;
             _selectionOverlay?.Dispose();
             _selectionOverlay = null;
-            if (_clipboardStatusObserved)
-            {
-                _clipboardStatus.RemoveListener(HandleClipboardStatusChanged);
-            }
-            _clipboardStatus.Dispose();
+            _liveTextInputStatus?.RemoveListener(OnChangedLiveTextInputStatus);
+            _liveTextInputStatus?.Dispose();
+            ClipboardStatus.RemoveListener(OnChangedClipboardStatus);
+            ClipboardStatus.Dispose();
+            _appLifecycleListener?.Dispose();
+            FocusManager.Instance.RemoveListener(ResetJustResumed);
             DetachController();
             DetachFocusNode(disposeOwned: true);
-            _cursorTicker.Dispose();
+            _cursorTimer?.Cancel();
+            _cursorTimer = null;
+            _backingCursorBlinkOpacityController?.Dispose();
             StopObservingMetrics();
             _cursorVisibilityNotifier.Dispose();
             DisposeScrollNotificationObserver();
@@ -2049,8 +2040,7 @@ public sealed partial class EditableText : StatefulWidget
             TextEditingValue value = _controller!.Value;
             if (Widget.ObscureText)
             {
-                string text = string.Concat(Enumerable.Repeat(Widget.ObscuringCharacter, value.Text.Length));
-                return new TextSpan(style: style, text: text);
+                return new TextSpan(style: style, text: BuildObscuredText(value.Text));
             }
 
             if (BuildTextSpanWithScribblePlaceholder(style) is { } placeholderSpan)
@@ -2078,7 +2068,8 @@ public sealed partial class EditableText : StatefulWidget
         private Color CursorColor(DefaultSelectionStyle selectionStyle)
         {
             Color cursorColor = Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor;
-            double effectiveOpacity = Math.Min(cursorColor.A / 255.0, _cursorOpacity);
+            _resolvedCursorColor = cursorColor;
+            double effectiveOpacity = Math.Min(cursorColor.A / 255.0, CursorBlinkOpacityController.Value);
             return cursorColor.WithOpacity(effectiveOpacity);
         }
 
@@ -2088,7 +2079,7 @@ public sealed partial class EditableText : StatefulWidget
             bool showPlaceholder = ShowPlaceholder;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
             TextStyle style = EffectiveTextStyle(showPlaceholder);
-            _cursorVisibilityNotifier.Value = (Widget.ShowCursor ?? _focusNode.HasFocus) && !showPlaceholder;
+            UpdateCursorVisibility();
 
             Widget BuildEditable(ViewportOffset offset) => new EditableRenderObjectWidget(
                 key: _editableRenderKey,
@@ -2134,9 +2125,9 @@ public sealed partial class EditableText : StatefulWidget
             Widget BuildViewport(ViewportOffset offset) => new CompositedTransformTarget(
                 link: _toolbarLayerLink,
                 child: new Semantics(
-                    onCopy: SemanticsOnCopy(),
-                    onCut: SemanticsOnCut(),
-                    onPaste: SemanticsOnPaste(),
+                    onCopy: SemanticsOnCopy(Widget.SelectionControls),
+                    onCut: SemanticsOnCut(Widget.SelectionControls),
+                    onPaste: SemanticsOnPaste(Widget.SelectionControls),
                     child: new ScribbleFocusable(
                         editableKey: _editableRenderKey,
                         enabled: StylusHandwritingEnabled,
@@ -2237,61 +2228,6 @@ public sealed partial class EditableText : StatefulWidget
                    || !Nullable.Equals(oldValue.Composing, newValue.Composing);
         }
 
-        private Action? SemanticsOnCopy() =>
-            Widget.SelectionEnabled && CopyEnabled && !TextEditingValue.Selection.IsCollapsed
-                ? () => CopySelection(SelectionChangedCause.Toolbar)
-                : null;
-
-        private Action? SemanticsOnCut() =>
-            Widget.SelectionEnabled && CutEnabled && !TextEditingValue.Selection.IsCollapsed
-                ? () => CutSelection(SelectionChangedCause.Toolbar)
-                : null;
-
-        private Action? SemanticsOnPaste() =>
-            Widget.SelectionEnabled && PasteEnabled && _clipboardStatus.Value == ClipboardStatus.Pasteable
-                ? () => PasteText(SelectionChangedCause.Toolbar)
-                : null;
-
-        public bool ShowToolbar()
-        {
-            if (!Widget.EnableInteractiveSelection || Widget.ContextMenuBuilder is null)
-            {
-                return false;
-            }
-
-            // Dart returns false while the toolbar is already showing.
-            if (_selectionOverlay is { ToolbarIsVisible: true })
-            {
-                return false;
-            }
-
-            TextSelectionOverlay overlay = EnsureSelectionOverlay();
-            Scheduler.RunAsync(_clipboardStatus.Update);
-            if (ContextMenuButtonItems.Count == 0)
-            {
-                _showToolbarWhenClipboardResolved = _clipboardStatus.Value == ClipboardStatus.Unknown;
-                return false;
-            }
-
-            _showToolbarWhenClipboardResolved = false;
-            overlay.ShowToolbar();
-            if (!overlay.ToolbarIsVisible)
-            {
-                return false;
-            }
-
-            ListenToParentScrollsIfNeeded();
-            return true;
-        }
-
-        public void HideToolbar(bool hideHandles = true)
-        {
-            DisposeScrollNotificationObserver();
-            _showToolbarWhenClipboardResolved = false;
-            _selectionOverlay?.HideToolbar();
-            if (hideHandles) _selectionOverlay?.HideHandles();
-        }
-
         /// <summary>Express interest in interacting with the keyboard. Dart's
         /// <c>requestKeyboard</c>: opens the input connection of a focused field, or focuses it.</summary>
         public void RequestKeyboard()
@@ -2308,14 +2244,6 @@ public sealed partial class EditableText : StatefulWidget
         }
 
         public TextEditingValue TextEditingValue => _controller!.Value;
-
-        public bool CutEnabled => !Widget.ReadOnly && !Widget.ObscureText;
-
-        public bool CopyEnabled => !Widget.ObscureText;
-
-        public bool PasteEnabled => !Widget.ReadOnly;
-
-        public bool SelectAllEnabled => Widget.EnableInteractiveSelection;
 
         private void AttachController(TextEditingController controller)
         {
@@ -2486,6 +2414,7 @@ public sealed partial class EditableText : StatefulWidget
         private void HandleFocusNodeChanged()
         {
             bool hasFocus = _focusNode?.HasFocus == true;
+            StartOrStopCursorTimerIfNeeded();
             if (hasFocus)
             {
                 OpenInputConnection();
@@ -2508,7 +2437,6 @@ public sealed partial class EditableText : StatefulWidget
                 _currentPromptRectRange = null;
             }
             _hadFocus = hasFocus;
-            UpdateCursorTicker();
             SetState(static () => { });
         }
 
@@ -2531,59 +2459,31 @@ public sealed partial class EditableText : StatefulWidget
         }
 
         /// Dart's `_adjustedSelectionWhenFocused`: a focus traversal into a one-line field selects
-        /// all of it where the platform does.
+        /// all of it where the platform does, unless the focus comes back after the app resumed; an
+        /// invalid selection becomes a caret at the end.
         private TextSelection? AdjustedSelectionWhenFocused()
         {
+            TextSelection? selection = null;
             bool shouldSelectAll = Widget.SelectAllOnFocus
                                    && Widget.SelectionEnabled
                                    && !Widget.Multiline
-                                   && !_nextFocusChangeIsInternal;
+                                   && !_nextFocusChangeIsInternal
+                                   && !_justResumed;
+            // Reset _justResumed as soon as it has been consumed.
+            _justResumed = false;
             if (shouldSelectAll)
             {
                 // On native web and desktop platforms, single line <input> tags select all when
                 // receiving focus.
-                return new TextSelection(0, EditingValue.Text.Length);
+                selection = new TextSelection(0, EditingValue.Text.Length);
+            }
+            else if (!EditingValue.Selection.IsValid)
+            {
+                // Place cursor at the end if the selection is invalid when we receive focus.
+                selection = TextSelection.Collapsed(EditingValue.Text.Length);
             }
 
-            return null;
-        }
-
-        private void UpdateCursorTicker()
-        {
-            bool shouldAnimate = Widget.CursorOpacityAnimates
-                                 && (Widget.ShowCursor ?? _focusNode?.HasFocus == true);
-            if (shouldAnimate && !_cursorTicker.IsActive)
-            {
-                _cursorOpacity = 1.0;
-                _cursorTicker.Start();
-            }
-            else if (!shouldAnimate && _cursorTicker.IsActive)
-            {
-                _cursorTicker.Stop();
-                _cursorOpacity = 1.0;
-            }
-        }
-
-        private void HandleCursorTick(TimeSpan elapsed)
-        {
-            double milliseconds = elapsed.TotalMilliseconds % 1000.0;
-            double opacity = milliseconds switch
-            {
-                <= 500.0 => 1.0,
-                < 650.0 => 1.0 - ((milliseconds - 500.0) / 150.0),
-                <= 850.0 => 0.0,
-                _ => (milliseconds - 850.0) / 150.0,
-            };
-            if (Math.Abs(opacity - _cursorOpacity) < 0.0001)
-            {
-                return;
-            }
-
-            _cursorOpacity = Math.Clamp(opacity, 0.0, 1.0);
-            if (Mounted)
-            {
-                SetState(static () => { });
-            }
+            return selection;
         }
 
         private string LimitInsertion(string insertion)
@@ -2657,57 +2557,11 @@ public sealed partial class EditableText : StatefulWidget
             HideToolbar();
         }
 
-        public void ShowHandles() => EnsureSelectionOverlay().ShowHandles();
-
         /// Dart's `late final renderEditable`: found once through the editable's key, then kept, so a
         /// callback that runs while the element is inactive (the floating cursor's reset tick, a
         /// post-frame callback) still reaches it.
         private RenderEditable? RenderEditable =>
             _renderEditable ??= _editableRenderKey.CurrentContext?.FindRenderObject() as RenderEditable;
-
-        private TextSelectionOverlay EnsureSelectionOverlay()
-        {
-            RenderEditable renderEditable = RenderEditable
-                ?? throw new InvalidOperationException("EditableText must be laid out before showing selection UI.");
-            if (_selectionOverlay is not null) return _selectionOverlay;
-            _clipboardStatus.AddListener(HandleClipboardStatusChanged);
-            _clipboardStatusObserved = true;
-            Scheduler.RunAsync(_clipboardStatus.Update);
-            _selectionOverlay = new TextSelectionOverlay(
-                value: _controller!.Value,
-                context: Context,
-                toolbarLayerLink: _toolbarLayerLink,
-                startHandleLayerLink: _startHandleLayerLink,
-                endHandleLayerLink: _endHandleLayerLink,
-                renderObject: renderEditable,
-                selectionControls: Widget.SelectionControls,
-                handlesVisible: Widget.ShowSelectionHandles,
-                selectionDelegate: this,
-                clipboardStatus: _clipboardStatus,
-                contextMenuBuilder: Widget.ContextMenuBuilder is null
-                    ? null
-                    : context => Widget.ContextMenuBuilder(context, this),
-                magnifierConfiguration: Widget.MagnifierConfiguration);
-            return _selectionOverlay;
-        }
-
-        private void HandleClipboardStatusChanged()
-        {
-            if (!Mounted)
-            {
-                return;
-            }
-
-            SetState(static () => { });
-            if (_showToolbarWhenClipboardResolved && _clipboardStatus.Value != ClipboardStatus.Unknown)
-            {
-                _showToolbarWhenClipboardResolved = false;
-                if (ContextMenuButtonItems.Count > 0)
-                {
-                    _selectionOverlay?.ShowToolbar();
-                }
-            }
-        }
 
         /// Dart's `EditableText._isPasswordInput`: spell check never runs on password input,
         /// whatever the [SpellCheckConfiguration] says.

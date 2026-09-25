@@ -156,6 +156,23 @@ public sealed class PlatformDispatcher
         OnSemanticsEnabledChanged?.Invoke();
     }
 
+    /// <summary>Whether the user has requested that obscured text fields briefly show the most
+    /// recently typed character.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.brieflyShowPassword</c>, <see langword="true"/> until the
+    /// platform's user settings say otherwise (Android's "Show passwords" setting).
+    /// </remarks>
+    public bool BrieflyShowPassword { get; private set; } = true;
+
+    /// <summary>Records the <c>brieflyShowPassword</c> user setting, as the engine's
+    /// <c>_updateUserSettingsData</c> does when the settings message carries the key.</summary>
+    /// <remarks>Like the engine, a change of this key alone notifies nobody; the next reader sees
+    /// it. Hosts and tests call it.</remarks>
+    public void UpdateBrieflyShowPassword(bool brieflyShowPassword)
+    {
+        BrieflyShowPassword = brieflyShowPassword;
+    }
+
     /// <summary>Delivers a platform semantics action to <see cref="OnSemanticsActionEvent"/>.</summary>
     /// <remarks>The engine-side dispatch of <c>onSemanticsActionEvent</c>; hosts and tests call it.</remarks>
     public void DispatchSemanticsActionEvent(SemanticsActionEvent action)
