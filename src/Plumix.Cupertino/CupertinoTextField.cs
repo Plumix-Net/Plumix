@@ -23,7 +23,7 @@ public sealed class CupertinoTextField : StatefulWidget
 {
     internal static readonly BoxDecoration DefaultRoundedBorderDecoration = new(
         Color: CupertinoColors.White,
-        Border: Border.All(Color.FromUInt32(0x33000000), width: 0.0),
+        Border: Border.All(new Color(0x33000000), width: 0.0),
         BorderRadius: BorderRadius.Circular(5.0));
 
     internal static readonly TextStyle DefaultPlaceholderStyle = new(
@@ -80,7 +80,7 @@ public sealed class CupertinoTextField : StatefulWidget
         double? cursorHeight = null,
         Radius? cursorRadius = null,
         bool cursorOpacityAnimates = true,
-        CupertinoDynamicColor? cursorColor = null,
+        Color? cursorColor = null,
         BoxHeightStyle? selectionHeightStyle = null,
         BoxWidthStyle? selectionWidthStyle = null,
         PlatformBrightness? keyboardAppearance = null,
@@ -231,7 +231,7 @@ public sealed class CupertinoTextField : StatefulWidget
         double? cursorHeight = null,
         Radius? cursorRadius = null,
         bool cursorOpacityAnimates = true,
-        CupertinoDynamicColor? cursorColor = null,
+        Color? cursorColor = null,
         BoxHeightStyle? selectionHeightStyle = null,
         BoxWidthStyle? selectionWidthStyle = null,
         PlatformBrightness? keyboardAppearance = null,
@@ -384,7 +384,7 @@ public sealed class CupertinoTextField : StatefulWidget
         double? cursorHeight,
         Radius? cursorRadius,
         bool cursorOpacityAnimates,
-        CupertinoDynamicColor? cursorColor,
+        Color? cursorColor,
         BoxHeightStyle? selectionHeightStyle,
         BoxWidthStyle? selectionWidthStyle,
         PlatformBrightness? keyboardAppearance,
@@ -546,7 +546,7 @@ public sealed class CupertinoTextField : StatefulWidget
     public double? CursorHeight { get; }
     public Radius CursorRadius { get; }
     public bool CursorOpacityAnimates { get; }
-    public CupertinoDynamicColor? CursorColor { get; }
+    public Color? CursorColor { get; }
     public BoxHeightStyle? SelectionHeightStyle { get; }
     public BoxWidthStyle? SelectionWidthStyle { get; }
     public PlatformBrightness? KeyboardAppearance { get; }
@@ -577,7 +577,7 @@ public sealed class CupertinoTextField : StatefulWidget
         DecorationColor: CupertinoColors.SystemRed.Color,
         DecorationStyle: global::Plumix.UI.TextDecorationStyle.Dotted);
 
-    public static Color KMisspelledSelectionColor { get; } = Color.FromUInt32(0x62FF9699);
+    public static Color KMisspelledSelectionColor { get; } = new Color(0x62FF9699);
 
     public static Widget DefaultSpellCheckSuggestionsToolbarBuilder(
         BuildContext context,
@@ -722,7 +722,7 @@ internal sealed class CupertinoTextFieldState
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
         TextStyle textStyle = ResolveTextStyle(theme);
         TextStyle placeholderStyle = ResolvePlaceholderStyle(context, textStyle);
-        Color primaryColor = theme.PrimaryColor.Value;
+        Color primaryColor = theme.PrimaryColor;
         Color cursorColor = CupertinoDynamicColor.MaybeResolve(Current.CursorColor, context)
                             ?? selectionStyle.CursorColor
                             ?? primaryColor;
@@ -752,7 +752,7 @@ internal sealed class CupertinoTextFieldState
             maxLines: Current.MaxLines,
             expands: Current.Expands,
             fontSize: textStyle.FontSize ?? 17.0,
-            textColor: textStyle.Color ?? CupertinoColors.Label.Value,
+            textColor: textStyle.Color ?? CupertinoColors.Label,
             backgroundColor: CupertinoColors.Transparent,
             focusedBackgroundColor: CupertinoColors.Transparent,
             cursorColor: cursorColor,
@@ -975,8 +975,8 @@ internal sealed class CupertinoTextFieldState
 
         string label = Current.ClearButtonSemanticLabel ?? CupertinoLocalizations.Of(context).ClearButtonLabel;
         Color color = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark
-            ? Color.FromUInt32(0x33FFFFFF)
-            : Color.FromUInt32(0x33000000);
+            ? new Color(0x33FFFFFF)
+            : new Color(0x33000000);
         return new Semantics(
             button: true,
             label: label,
@@ -1031,7 +1031,7 @@ internal sealed class CupertinoTextFieldState
             Color: Current.Enabled
                 ? dark ? CupertinoColors.Black : CupertinoColors.White
                 : DisabledBackground(context),
-            Border: Border.All(dark ? Color.FromUInt32(0x33FFFFFF) : Color.FromUInt32(0x33000000), 0.0),
+            Border: Border.All(dark ? new Color(0x33FFFFFF) : new Color(0x33000000), 0.0),
             BorderRadius: BorderRadius.Circular(5.0));
     }
 
@@ -1185,18 +1185,11 @@ internal sealed class CupertinoTextFieldState
     private static Color DisabledBackground(BuildContext context)
     {
         return CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark
-            ? Color.FromUInt32(0xFF050505)
-            : Color.FromUInt32(0xFFFAFAFA);
+            ? new Color(0xFF050505)
+            : new Color(0xFFFAFAFA);
     }
 
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        return Color.FromArgb(
-            (byte)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0)),
-            color.R,
-            color.G,
-            color.B);
-    }
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private static TextSelectionControls PlatformSelectionControls()
     {

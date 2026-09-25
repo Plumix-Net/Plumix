@@ -60,10 +60,10 @@ internal sealed class MouseRegionDemoPageState : State
             spacing: 12,
             children:
             [
-                BuildCursorSwatch("text", SystemMouseCursors.Text, Color.Parse("#FF00796B")),
-                BuildCursorSwatch("click", SystemMouseCursors.Click, Color.Parse("#FF1A73E8")),
-                BuildCursorSwatch("grab", SystemMouseCursors.Grab, Color.Parse("#FF8E24AA")),
-                BuildCursorSwatch("forbidden", SystemMouseCursors.Forbidden, Color.Parse("#FFD93025")),
+                BuildCursorSwatch("text", SystemMouseCursors.Text, new Color(0xFF00796B)),
+                BuildCursorSwatch("click", SystemMouseCursors.Click, new Color(0xFF1A73E8)),
+                BuildCursorSwatch("grab", SystemMouseCursors.Grab, new Color(0xFF8E24AA)),
+                BuildCursorSwatch("forbidden", SystemMouseCursors.Forbidden, new Color(0xFFD93025)),
             ]);
     }
 
@@ -88,9 +88,9 @@ internal sealed class MouseRegionDemoPageState : State
         return new Container(
             height: 180,
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F3F4"),
+                Color: new Color(0xFFF1F3F4),
                 Border: Rendering.Border.FromBorderSide(new BorderSide(
-                    color: Color.Parse("#FF9AA0A6"),
+                    color: new Color(0xFF9AA0A6),
                     width: 1)),
                 BorderRadius: BorderRadius.Circular(10)),
             child: new Stack(
@@ -117,7 +117,7 @@ internal sealed class MouseRegionDemoPageState : State
                             child: new Container(
                                 alignment: Alignment.Center,
                                 decoration: new BoxDecoration(
-                                    Color: Color.Parse("#FFFFCC80"),
+                                    Color: new Color(0xFFFFCC80),
                                     BorderRadius: BorderRadius.Circular(8)),
                                 child: new Text(
                                     _opaque ? "opaque: true" : "opaque: false",
@@ -137,7 +137,7 @@ internal sealed class MouseRegionDemoPageState : State
                     height: 40,
                     alignment: Alignment.Center,
                     decoration: new BoxDecoration(
-                        Color: Color.Parse("#FF3C4043"),
+                        Color: new Color(0xFF3C4043),
                         BorderRadius: BorderRadius.Circular(8)),
                     child: new Text(
                         "toggle the inner region's opaque flag",

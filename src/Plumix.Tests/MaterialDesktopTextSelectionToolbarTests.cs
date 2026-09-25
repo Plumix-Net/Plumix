@@ -119,7 +119,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(-0.15, paragraph.LetterSpacing);
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
-        Assert.Equal(Color.FromArgb(0xDE, 0x00, 0x00, 0x00),
+        Assert.Equal(Color.FromARGB(0xDE, 0x00, 0x00, 0x00),
             Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
 
         SemanticsNode actionNode = Assert.IsType<SemanticsNode>(FindSemantics(
@@ -580,10 +580,10 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             FindDescendants<RenderParagraph>(harness.RenderView),
             value => value.PlainText == "DELETE");
         Assert.Equal(
-            Color.Parse("#FF2196F3"),
+            new Color(0xFF2196F3),
             Assert.IsType<SolidColorBrush>(delete.Foreground).Color);
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), value =>
-            value.Color == Color.Parse("#FF9E9E9E"));
+            value.Color == new Color(0xFF9E9E9E));
     }
 
     private static RenderConstrainedBox FixedRenderBox(double width, double height)

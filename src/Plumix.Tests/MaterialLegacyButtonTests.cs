@@ -98,7 +98,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(4, raw.HoverElevation);
         Assert.Equal(8, raw.HighlightElevation);
         Assert.Equal(0, raw.DisabledElevation);
-        Assert.Equal(Color.FromArgb(0xDE, 0, 0, 0), raw.TextStyle?.Color);
+        Assert.Equal(Color.FromARGB(0xDE, 0, 0, 0), raw.TextStyle?.Color);
         Assert.Equal(ThemeData.Light.HighlightColor, raw.HighlightColor);
         Assert.Equal(ThemeData.Light.SplashColor, raw.SplashColor);
         Assert.NotNull(tapTarget);

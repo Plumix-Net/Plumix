@@ -234,7 +234,7 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
         // `CupertinoTheme`, every other platform against the color scheme. `TextSelectionTheme` is
         // not read here — it arrives as the `DefaultSelectionStyle` the theme widgets insert.
         Color primaryColor = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-            ? Cupertino.CupertinoTheme.Of(context).PrimaryColor.Value
+            ? Cupertino.CupertinoTheme.Of(context).PrimaryColor
             : theme.ColorScheme.Primary;
         Color cursorColor = Current.CursorColor
                             ?? selectionStyle.CursorColor
@@ -327,9 +327,5 @@ showCursor: Current.ShowCursor,
         _ownsFocusNode = false;
     }
 
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

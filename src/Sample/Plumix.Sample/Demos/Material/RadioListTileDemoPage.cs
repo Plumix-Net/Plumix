@@ -32,7 +32,7 @@ internal sealed class RadioListTileDemoPageState : State
                     "RadioGroup selection, toggleable clearing, radio scaling, and the affinity rule "
                     + "that puts the radio first on 'platform' — unlike the checkbox and switch tiles.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -41,19 +41,19 @@ internal sealed class RadioListTileDemoPageState : State
                             _enabled ? "Enabled" : "Disabled",
                             () => SetState(() => _enabled = !_enabled),
                             104,
-                            Color.Parse("#FFE9F0FF")),
+                            new Color(0xFFE9F0FF)),
                         ListTileControlDemos.ControlButton(
                             _affinity == ListTileControlAffinity.Trailing ? "Trailing" : "Platform",
                             () => SetState(() => _affinity = _affinity == ListTileControlAffinity.Trailing
                                 ? ListTileControlAffinity.Platform
                                 : ListTileControlAffinity.Trailing),
                             104,
-                            Color.Parse("#FFE9F7EF")),
+                            new Color(0xFFE9F7EF)),
                         ListTileControlDemos.ControlButton(
                             _adaptive ? "Adaptive" : "Material",
                             () => SetState(() => _adaptive = !_adaptive),
                             104,
-                            Color.Parse("#FFF8EFE2")),
+                            new Color(0xFFF8EFE2)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -63,22 +63,22 @@ internal sealed class RadioListTileDemoPageState : State
                             _toggleable ? "Toggleable" : "Sticky",
                             () => SetState(() => _toggleable = !_toggleable),
                             104,
-                            Color.Parse("#FFF3E5F5")),
+                            new Color(0xFFF3E5F5)),
                         ListTileControlDemos.ControlButton(
                             _scaled ? "Scale 1.5x" : "Scale 1.0x",
                             () => SetState(() => _scaled = !_scaled),
                             104,
-                            Color.Parse("#FFE0F2F1")),
+                            new Color(0xFFE0F2F1)),
                     ]),
                 new Text(
                     $"radio={_radioValue ?? "null"}, affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"toggleable={ListTileControlDemos.Lower(_toggleable)}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F9FC"),
+                        color: new Color(0xFFF7F9FC),
                         child: new RadioGroup<string>(
                             groupValue: _radioValue,
                             onChanged: value => SetState(() => _radioValue = value),
@@ -116,6 +116,6 @@ internal sealed class RadioListTileDemoPageState : State
                 secondary: new Icon(Icons.Done),
                 radioScaleFactor: _scaled ? 1.5 : 1.0,
                 selected: _radioValue == value,
-                selectedTileColor: Color.Parse("#FFE8DEF8"));
+                selectedTileColor: new Color(0xFFE8DEF8));
     }
 }

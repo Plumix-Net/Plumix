@@ -53,7 +53,7 @@ public sealed class CupertinoRadioTests
             value: "a",
             groupValue: "a",
             onChanged: log.Add,
-            activeColor: CupertinoColors.SystemGreen.Value)));
+            activeColor: CupertinoColors.SystemGreen)));
         Tap(harness);
         Assert.Empty(log);
 
@@ -271,8 +271,8 @@ public sealed class CupertinoRadioTests
         using var selected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { })));
         CupertinoRadioPainter selectedPainter = Painter(selected);
-        Assert.Equal(Color.FromUInt32(0xFF007AFF), selectedPainter.ActiveColor);
-        Assert.Equal(CupertinoColors.White, selectedPainter.FillColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF007AFF), selectedPainter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.White, selectedPainter.FillColor);
         Assert.Equal(CupertinoColors.White, selectedPainter.InactiveColor);
         // Selected and enabled: the border is dropped.
         Assert.Equal(CupertinoColors.Transparent, selectedPainter.BorderColor);
@@ -282,7 +282,7 @@ public sealed class CupertinoRadioTests
             new CupertinoRadio<string>(value: "a", groupValue: "b", onChanged: _ => { })));
         CupertinoRadioPainter unselectedPainter = Painter(unselected);
         Assert.Equal(CupertinoColors.White, unselectedPainter.InactiveColor);
-        Assert.Equal(Color.FromArgb(255, 209, 209, 214), unselectedPainter.BorderColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 209, 209, 214), unselectedPainter.BorderColor);
     }
 
     [Fact]
@@ -292,14 +292,14 @@ public sealed class CupertinoRadioTests
             new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { }),
             themeBrightness: PlatformBrightness.Dark));
         CupertinoRadioPainter selectedPainter = Painter(selected);
-        Assert.Equal(Color.FromArgb(255, 50, 100, 215), selectedPainter.ActiveColor);
-        Assert.Equal(Color.FromArgb(255, 222, 232, 248), selectedPainter.FillColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 50, 100, 215), selectedPainter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 222, 232, 248), selectedPainter.FillColor);
         Assert.Equal(PlatformBrightness.Dark, selectedPainter.Brightness);
 
         using var unselected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "b", onChanged: _ => { }),
             themeBrightness: PlatformBrightness.Dark));
-        Assert.Equal(Color.FromArgb(64, 0, 0, 0), Painter(unselected).BorderColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), Painter(unselected).BorderColor);
     }
 
     [Fact]
@@ -309,25 +309,25 @@ public sealed class CupertinoRadioTests
             new CupertinoRadio<string>(value: "a", groupValue: "a")));
         CupertinoRadioPainter lightPainter = Painter(light);
         Assert.False(lightPainter.IsActive);
-        Assert.Equal(Color.FromArgb(128, 255, 255, 255), lightPainter.ActiveColor);
-        Assert.Equal(Color.FromArgb(128, 255, 255, 255), lightPainter.InactiveColor);
-        Assert.Equal(Color.FromArgb(64, 0, 0, 0), lightPainter.FillColor);
-        Assert.Equal(Color.FromArgb(64, 0, 0, 0), lightPainter.BorderColor);
+        Assert.Equal(Color.FromARGB(128, 255, 255, 255), lightPainter.ActiveColor);
+        Assert.Equal(Color.FromARGB(128, 255, 255, 255), lightPainter.InactiveColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), lightPainter.FillColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), lightPainter.BorderColor);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoRadio<string>(value: "a", groupValue: "a"),
             themeBrightness: PlatformBrightness.Dark));
-        Assert.Equal(Color.FromArgb(64, 255, 255, 255), Painter(dark).FillColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 255, 255, 255), Painter(dark).FillColor);
         // The disabled border stays black in both brightnesses.
-        Assert.Equal(Color.FromArgb(64, 0, 0, 0), Painter(dark).BorderColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), Painter(dark).BorderColor);
     }
 
     [Fact]
     public void ActiveInactiveAndFillColors_OverrideTheDefaults()
     {
-        Color activeColor = Color.FromUInt32(0x0000000A);
-        Color fillColor = Color.FromUInt32(0x0000000B);
-        Color inactiveColor = Color.FromUInt32(0x0000000C);
+        Color activeColor = new Color(0x0000000A);
+        Color fillColor = new Color(0x0000000B);
+        Color inactiveColor = new Color(0x0000000C);
 
         using var unselected = new CupertinoThemeTestHarness(Wrap(new CupertinoRadio<string>(
             value: "a",
@@ -339,7 +339,7 @@ public sealed class CupertinoRadioTests
         CupertinoRadioPainter unselectedPainter = Painter(unselected);
         Assert.Equal(inactiveColor, unselectedPainter.InactiveColor);
         Assert.Equal(activeColor, unselectedPainter.ActiveColor);
-        Assert.Equal(Color.FromArgb(255, 209, 209, 214), unselectedPainter.BorderColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 209, 209, 214), unselectedPainter.BorderColor);
         // `fillColor` only paints the inner dot, which an unselected radio does not draw.
         Assert.Equal(CupertinoColors.White, unselectedPainter.FillColor);
 
@@ -396,7 +396,7 @@ public sealed class CupertinoRadioTests
             Assert.Equal(CupertinoColors.Transparent, painter.BorderColor);
             Color expected = HSLColor
                 .FromColor(CupertinoRadioPainter.WithOpacity(
-                    Color.FromUInt32(0xFF007AFF),
+                    new Color(0xFF007AFF),
                     CupertinoConstants.CupertinoFocusColorOpacity))
                 .WithLightness(CupertinoConstants.CupertinoFocusColorBrightness)
                 .WithSaturation(CupertinoConstants.CupertinoFocusColorSaturation)
@@ -404,7 +404,7 @@ public sealed class CupertinoRadioTests
             Assert.Equal(expected, painter.EffectiveFocusColor);
 
             var custom = new FocusNode();
-            Color testFocusColor = Color.FromUInt32(0x0000000A);
+            Color testFocusColor = new Color(0x0000000A);
             using var customHarness = new CupertinoThemeTestHarness(Wrap(
                 new CupertinoRadio<string>(
                     value: "a",

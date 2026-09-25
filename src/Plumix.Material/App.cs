@@ -24,7 +24,7 @@ public sealed class MaterialApp : StatefulWidget
     private static TextStyle ErrorTextStyle { get; } = new(
         FontFamily: new FontFamily("monospace"),
         FontSize: 48.0,
-        Color: Avalonia.Media.Color.FromArgb(0xD0, 0xFF, 0x00, 0x00),
+        Color: Color.FromARGB(0xD0, 0xFF, 0x00, 0x00),
         FontWeight: FontWeight.Black);
 
     public MaterialApp(
@@ -505,7 +505,7 @@ public sealed class MaterialApp : StatefulWidget
             if (CurrentWidget.DebugShowMaterialGrid)
             {
                 result = new GridPaper(
-                    color: Avalonia.Media.Color.FromArgb(0xE0, 0xF9, 0xBB, 0xE0),
+                    color: Color.FromARGB(0xE0, 0xF9, 0xBB, 0xE0),
                     interval: 8.0,
                     subdivisions: 1,
                     child: result);
@@ -589,10 +589,6 @@ public sealed class MaterialApp : StatefulWidget
             return theme;
         }
 
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * byte.MaxValue);
-            return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
     }
 }

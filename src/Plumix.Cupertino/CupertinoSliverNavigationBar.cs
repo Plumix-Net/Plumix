@@ -23,7 +23,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -67,7 +67,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -115,7 +115,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -163,7 +163,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -215,7 +215,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
         string? previousPageTitle,
         Widget? middle,
         Widget? trailing,
-        CupertinoDynamicColor? backgroundColor,
+        Color? backgroundColor,
         bool automaticBackgroundVisibility,
         bool enableBackgroundFilterBlur,
         PlatformBrightness? brightness,
@@ -297,7 +297,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
 
     public Border? Border { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public bool AutomaticBackgroundVisibility { get; }
 
@@ -325,7 +325,7 @@ public sealed class CupertinoSliverNavigationBar : StatefulWidget
     internal bool Searchable { get; }
 
     /// <summary>True if the navigation bar's background color has no transparency.</summary>
-    public bool Opaque => BackgroundColor != null && ((Color)BackgroundColor).A == 0xFF;
+    public bool Opaque => BackgroundColor != null && ((Color)BackgroundColor).Alpha == 0xFF;
 
     public override State CreateState() => new CupertinoSliverNavigationBarState();
 }

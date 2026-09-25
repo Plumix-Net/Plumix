@@ -78,11 +78,11 @@ public sealed class MaterialCardTests
     [Fact]
     public void Card_Material3DefaultsReadColorSchemeRolesDirectly()
     {
-        Color elevated = Color.Parse("#FF102030");
-        Color filled = Color.Parse("#FF203040");
-        Color outlined = Color.Parse("#FF304050");
-        Color outline = Color.Parse("#FF405060");
-        Color shadow = Color.Parse("#FF506070");
+        Color elevated = new Color(0xFF102030);
+        Color filled = new Color(0xFF203040);
+        Color outlined = new Color(0xFF304050);
+        Color outline = new Color(0xFF405060);
+        Color shadow = new Color(0xFF506070);
         var scheme = ThemeData.Light.ColorScheme.CopyWith(
             surfaceContainerLow: elevated,
             surfaceContainerHighest: filled,
@@ -121,7 +121,7 @@ public sealed class MaterialCardTests
     [Fact]
     public void Card_M2Variants_FallBackToElevatedM2Defaults()
     {
-        var cardColor = Color.Parse("#FFFAFAFA");
+        var cardColor = new Color(0xFFFAFAFA);
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -145,7 +145,7 @@ public sealed class MaterialCardTests
     [Fact]
     public void Card_ThemeDefaults_AreUsed_WhenWidgetValuesAreNull()
     {
-        var themeColor = Color.Parse("#FFEAF6FF");
+        var themeColor = new Color(0xFFEAF6FF);
         var theme = ThemeData.Light with
         {
             CardTheme = new CardThemeData(
@@ -177,9 +177,9 @@ public sealed class MaterialCardTests
     [Fact]
     public void Card_WidgetValues_OverrideCardThemes()
     {
-        var themeColor = Color.Parse("#FFEAF6FF");
-        var localThemeColor = Color.Parse("#FFFFF1D9");
-        var widgetColor = Color.Parse("#FFE8F5E9");
+        var themeColor = new Color(0xFFEAF6FF);
+        var localThemeColor = new Color(0xFFFFF1D9);
+        var widgetColor = new Color(0xFFE8F5E9);
         var theme = ThemeData.Light with
         {
             CardTheme = new CardThemeData(Color: themeColor)
@@ -297,7 +297,7 @@ public sealed class MaterialCardTests
     [Fact]
     public void Card_SurfaceTintColor_TintsBackgroundByElevation()
     {
-        var baseColor = Color.Parse("#FFF7F2FA");
+        var baseColor = new Color(0xFFF7F2FA);
         var tint = Colors.Red;
         using var harness = new WidgetRenderHarness(
             BuildThemedCard(new Card(
@@ -396,8 +396,8 @@ public sealed class MaterialCardTests
     {
         var theme = ThemeData.Light with
         {
-            CanvasColor = Color.Parse("#FFF7F2FA"),
-            CardColor = Color.Parse("#FFEAF6FF"),
+            CanvasColor = new Color(0xFFF7F2FA),
+            CardColor = new Color(0xFFEAF6FF),
         };
 
         using var canvasHarness = new WidgetRenderHarness(
@@ -533,7 +533,7 @@ public sealed class MaterialCardTests
     private static RenderDecoratedBox? FindMaterialDecoration(RenderObject? root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box => box.AsBoxDecoration.Color.HasValue);
+            .FirstOrDefault(box => box.AsBoxDecoration.Color != null);
     }
 
     private static IEnumerable<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
@@ -572,9 +572,9 @@ public sealed class MaterialCardTests
     {
         Assert.NotNull(surface.AsBoxDecoration.BoxShadows);
         var shadows = surface.AsBoxDecoration.BoxShadows!;
-        Assert.Equal(shadowColor.R, shadows[0].Color.R);
-        Assert.Equal(shadowColor.G, shadows[0].Color.G);
-        Assert.Equal(shadowColor.B, shadows[0].Color.B);
+        Assert.Equal(shadowColor.Red, shadows[0].Color.Red);
+        Assert.Equal(shadowColor.Green, shadows[0].Color.Green);
+        Assert.Equal(shadowColor.Blue, shadows[0].Color.Blue);
     }
 
     private sealed class WidgetRenderHarness : IDisposable

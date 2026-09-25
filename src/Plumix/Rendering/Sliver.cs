@@ -1589,7 +1589,7 @@ public abstract class RenderSliver : RenderObject
         }
 
         double strokeWidth = Math.Min(4.0, Geometry!.PaintExtent / 30.0);
-        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF33CC33)), strokeWidth);
+        var pen = new Pen(new SolidColorBrush(new Color(0xFF33CC33)), strokeWidth);
         double arrowExtent = Geometry!.PaintExtent;
         double padding = Math.Max(2.0, strokeWidth);
         SliverConstraints constraints = Constraints;

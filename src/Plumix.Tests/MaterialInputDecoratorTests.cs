@@ -940,11 +940,11 @@ public sealed class MaterialInputDecoratorTests
             helperMaxLines: 2);
 
         InputDecorationThemeData copy = theme.CopyWith(fillColor: Colors.Green);
-        Assert.Equal(Colors.Green, copy.FillColor!.DefaultValue);
+        Assert.Equal(Colors.Green, copy.FillColor);
         // Copying one field leaves the rest alone, and the original is never mutated.
-        Assert.Equal(Colors.Blue, copy.IconColor!.DefaultValue);
+        Assert.Equal(Colors.Blue, copy.IconColor);
         Assert.Equal(2, copy.HelperMaxLines);
-        Assert.Equal(Colors.Red, theme.FillColor!.DefaultValue);
+        Assert.Equal(Colors.Red, theme.FillColor);
 
         Assert.Equal(new InputDecorationThemeData(), new InputDecorationThemeData().CopyWith());
         Assert.Equal(
@@ -1045,7 +1045,7 @@ public sealed class MaterialInputDecoratorTests
                 isHovering: hovering,
                 child: new Text("value")));
             harness.Pump();
-            return StyleOf(harness, "Label").Color!.Value;
+            return StyleOf(harness, "Label").Color!;
         }
 
         Assert.Equal(colors.OnSurfaceVariant, LabelColor());
@@ -1200,10 +1200,10 @@ public sealed class MaterialInputDecoratorTests
             return Painter(harness);
         }
 
-        Assert.Equal(Color.FromArgb(0x0A, 0x00, 0x00, 0x00), Fill(light).FillColor);
-        Assert.Equal(Color.FromArgb(0x05, 0x00, 0x00, 0x00), Fill(light, enabled: false).FillColor);
-        Assert.Equal(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF), Fill(dark).FillColor);
-        Assert.Equal(Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF), Fill(dark, enabled: false).FillColor);
+        Assert.Equal(Color.FromARGB(0x0A, 0x00, 0x00, 0x00), Fill(light).FillColor);
+        Assert.Equal(Color.FromARGB(0x05, 0x00, 0x00, 0x00), Fill(light, enabled: false).FillColor);
+        Assert.Equal(Color.FromARGB(0x1A, 0xFF, 0xFF, 0xFF), Fill(dark).FillColor);
+        Assert.Equal(Color.FromARGB(0x0D, 0xFF, 0xFF, 0xFF), Fill(dark, enabled: false).FillColor);
 
         // M2 label/hint use hintColor, and the floating label switches on error/focus.
         using var inline = new DecoratorHarness(
@@ -1234,7 +1234,7 @@ public sealed class MaterialInputDecoratorTests
     public void InputDecorator_Material2IconColorsFollowFocusBeforeDisabled()
     {
         var light = ThemeData.Light with { UseMaterial3 = false };
-        Color unfocused = Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+        Color unfocused = Color.FromARGB(0x73, 0x00, 0x00, 0x00);
 
         (Color Prefix, Color Suffix) Resolve(bool focused = false, bool enabled = true, bool error = false)
         {

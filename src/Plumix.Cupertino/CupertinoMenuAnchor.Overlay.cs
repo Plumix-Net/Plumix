@@ -466,11 +466,7 @@ internal sealed class CupertinoMenuShadowPainter : CustomPainter
         var rect = new Rect(default, size);
         RSuperellipse roundedRect = RSuperellipse.FromRectAndRadius(rect, KRadius);
         double blurSigma = shadowAnimation * 50.0;
-        Color shadowColor = Color.FromArgb(
-            (byte)Math.Round(shadowAnimation * shadowAnimation * KShadowOpacity * 255.0),
-            0,
-            0,
-            10);
+        Color shadowColor = Plumix.UI.Color.FromRGBO(0, 0, 10, shadowAnimation * shadowAnimation * KShadowOpacity);
 
         var maskPath = new Plumix.UI.Path { FillType = PathFillType.EvenOdd };
         maskPath.AddRect(rect.Inflate(200.0));

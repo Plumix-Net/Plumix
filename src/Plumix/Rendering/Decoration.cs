@@ -511,7 +511,7 @@ public readonly record struct BorderSide
 
     public double StrokeOffset => Width * StrokeAlign;
 
-    public static BorderSide None => new(Color.FromRgb(0, 0, 0), 0.0, BorderStyle.None);
+    public static BorderSide None => new(Color.FromARGB(0xFF, 0, 0, 0), 0.0, BorderStyle.None);
 
     public BorderSide CopyWith(
         Color? color = null,
@@ -603,8 +603,8 @@ public readonly record struct BorderSide
             return new BorderSide(LerpColor(a.Color, b.Color, t), width, a.Style, a.StrokeAlign);
         }
 
-        Color colorA = a.Style == BorderStyle.Solid ? a.Color : Color.FromArgb(0, a.Color.R, a.Color.G, a.Color.B);
-        Color colorB = b.Style == BorderStyle.Solid ? b.Color : Color.FromArgb(0, b.Color.R, b.Color.G, b.Color.B);
+        Color colorA = a.Style == BorderStyle.Solid ? a.Color : a.Color.WithAlpha(0x00);
+        Color colorB = b.Style == BorderStyle.Solid ? b.Color : b.Color.WithAlpha(0x00);
         return new BorderSide(
             LerpColor(colorA, colorB, t),
             width,
@@ -612,11 +612,7 @@ public readonly record struct BorderSide
             a.StrokeAlign + ((b.StrokeAlign - a.StrokeAlign) * t));
     }
 
-    private static Color LerpColor(Color a, Color b, double t) => Color.FromArgb(
-        (byte)Math.Clamp(Math.Round(a.A + ((b.A - a.A) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.R + ((b.R - a.R) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.G + ((b.G - a.G) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.B + ((b.B - a.B) * t)), 0, 255));
+    private static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/shape_decoration.dart
@@ -791,9 +787,9 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         TextDirection? textDirection = configuration.TextDirection;
 
         IBrush? fill = _decoration.Gradient?.CreateShader(rect, textDirection);
-        if (fill is null && _decoration.Color.HasValue)
+        if (fill is null && _decoration.Color != null)
         {
-            fill = new SolidColorBrush(_decoration.Color.Value);
+            fill = new SolidColorBrush(_decoration.Color!);
         }
 
         RRect? outerRRect = TryResolveRRect(_decoration.Shape, rect, textDirection);
@@ -989,22 +985,8 @@ public sealed record BoxDecoration(
             Shape);
     }
 
-    internal static Color? LerpColor(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue) return null;
-        var from = a ?? Avalonia.Media.Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        var to = b ?? Avalonia.Media.Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return Avalonia.Media.Color.FromArgb(
-            LerpChannel(from.A, to.A, t),
-            LerpChannel(from.R, to.R, t),
-            LerpChannel(from.G, to.G, t),
-            LerpChannel(from.B, to.B, t));
-    }
+    internal static Color? LerpColor(Color? a, Color? b, double t) => Color.Lerp(a, b, t);
 
-    private static byte LerpChannel(byte a, byte b, double t)
-    {
-        return (byte)Math.Clamp((int)(a + ((b - a) * t)), byte.MinValue, byte.MaxValue);
-    }
 
     private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
     {
@@ -1065,9 +1047,9 @@ internal sealed class BoxDecorationPainter : BoxPainter
         BorderRadius borderRadius = _decoration.EffectiveBorderRadius;
         BoxShadows boxShadows = _decoration.BoxShadows.ToAvalonia();
         IBrush? fill = _decoration.Gradient?.CreateShader(rect, configuration.TextDirection);
-        if (fill is null && _decoration.Color.HasValue)
+        if (fill is null && _decoration.Color != null)
         {
-            fill = new SolidColorBrush(_decoration.Color.Value);
+            fill = new SolidColorBrush(_decoration.Color!);
         }
 
         if (_decoration.Shape == BoxShape.Circle)

@@ -38,9 +38,9 @@ internal sealed class CardDemoPageState : State
             UseMaterial3 = _useMaterial3,
             CardTheme = _useThemeOverrides
                 ? new CardThemeData(
-                    Color: Color.Parse("#FFF5F9EE"),
-                    ShadowColor: Color.Parse("#FF455A64"),
-                    SurfaceTintColor: Color.Parse("#FF6750A4"),
+                    Color: new Color(0xFFF5F9EE),
+                    ShadowColor: new Color(0xFF455A64),
+                    SurfaceTintColor: new Color(0xFF6750A4),
                     Elevation: 3,
                     Margin: new Thickness(8),
                     Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
@@ -59,7 +59,7 @@ internal sealed class CardDemoPageState : State
                     new Text(
                         "Card variants plus Material surfaces and mergeable slices with theme, mode, and clip probes.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -68,17 +68,17 @@ internal sealed class CardDemoPageState : State
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                             BuildControlButton(
                                 label: _clip ? "Clip on" : "Clip off",
                                 onTap: () => SetState(() => _clip = !_clip),
                                 width: 96,
-                                background: Color.Parse("#FFF0E8FF")),
+                                background: new Color(0xFFF0E8FF)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -88,12 +88,12 @@ internal sealed class CardDemoPageState : State
                                 label: _dense ? "Dense" : "Regular",
                                 onTap: () => SetState(() => _dense = !_dense),
                                 width: 98,
-                                background: Color.Parse("#FFF8EFE2")),
+                                background: new Color(0xFFF8EFE2)),
                             BuildControlButton(
                                 label: _borderOnForeground ? "Border front" : "Border back",
                                 onTap: () => SetState(() => _borderOnForeground = !_borderOnForeground),
                                 width: 118,
-                                background: Color.Parse("#FFE8F5E9")),
+                                background: new Color(0xFFE8F5E9)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -103,12 +103,12 @@ internal sealed class CardDemoPageState : State
                                 label: _mergeableSeparated ? "Merge slices" : "Separate slices",
                                 onTap: () => SetState(() => _mergeableSeparated = !_mergeableSeparated),
                                 width: 128,
-                                background: Color.Parse("#FFE3F2FD")),
+                                background: new Color(0xFFE3F2FD)),
                             BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetState,
                                 width: 88,
-                                background: Color.Parse("#FFF3E8D8")),
+                                background: new Color(0xFFF3E8D8)),
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, "
@@ -117,10 +117,10 @@ internal sealed class CardDemoPageState : State
                         + $"borderOnForeground={(_borderOnForeground ? "true" : "false")}, "
                         + $"separated={(_mergeableSeparated ? "true" : "false")}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(
                         child: new Container(
-                            color: Color.Parse("#FFF7F9FC"),
+                            color: new Color(0xFFF7F9FC),
                             child: new SingleChildScrollView(
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -172,9 +172,9 @@ internal sealed class CardDemoPageState : State
             margin: new Thickness(4),
             child: new MaterialSurface(
                 type: MaterialType.Card,
-                color: Color.Parse("#FFFFF8E1"),
+                color: new Color(0xFFFFF8E1),
                 elevation: _useThemeOverrides ? 5 : 2,
-                surfaceTintColor: _useMaterial3 ? Color.Parse("#FF6750A4") : Colors.Transparent,
+                surfaceTintColor: _useMaterial3 ? new Color(0xFF6750A4) : Colors.Transparent,
                 clipBehavior: _clip ? Clip.AntiAlias : Clip.None,
                 child: BuildCardBody(
                     title: "Material surface",
@@ -189,7 +189,7 @@ internal sealed class CardDemoPageState : State
             new MaterialSlice(
                 new ValueKey<string>("material-slice-first"),
                 BuildCardBody("First mergeable slice", "Slices join on a shared Material card surface."),
-                Color.Parse("#FFE8F5E9")),
+                new Color(0xFFE8F5E9)),
         };
         if (_mergeableSeparated)
         {
@@ -201,7 +201,7 @@ internal sealed class CardDemoPageState : State
             BuildCardBody(
                 "Second mergeable slice",
                 "The gap and adjoining corners animate when slices merge or separate."),
-            Color.Parse("#FFE3F2FD")));
+            new Color(0xFFE3F2FD)));
 
         return new Container(
             margin: new Thickness(4),
@@ -221,7 +221,7 @@ internal sealed class CardDemoPageState : State
                 children:
                 [
                     new Text(title, fontSize: 16, color: Colors.Black),
-                    new Text(body, fontSize: 13, color: Color.Parse("#FF607D8B")),
+                    new Text(body, fontSize: 13, color: new Color(0xFF607D8B)),
                 ]));
     }
 

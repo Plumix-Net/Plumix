@@ -552,7 +552,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
     {
         ArgumentNullException.ThrowIfNull(context);
         base.DebugPaintSize(context, offset);
-        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FF00)), 1.0);
+        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FF00)), 1.0);
         for (RenderSliver? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             Size size = Axis == Axis.Vertical

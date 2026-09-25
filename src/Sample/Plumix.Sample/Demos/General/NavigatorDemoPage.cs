@@ -27,14 +27,14 @@ public sealed class NavigatorDemoPage : StatelessWidget
                 BuildAction(
                     "Push blurred popup (ModalRoute.filter)",
                     () => Navigator.Of(context).Push(new SampleBlurredPopupRoute()),
-                    Color.Parse("#FFE0F2F1")),
+                    new Color(0xFFE0F2F1)),
                 BuildAction(
                     "PushNamed('/navigator/details?id=42&mode=string')",
                     () => Navigator.PushNamed(
                         context,
                         $"{SampleRoutes.NavigatorDetails}?id=42&mode=string",
                         arguments: "payload:string"),
-                    Color.Parse("#FFE8F5E9")),
+                    new Color(0xFFE8F5E9)),
                 BuildAction(
                     "PushNamed(RouteData.FromLocation(...))",
                     () => Navigator.PushNamed(
@@ -42,14 +42,14 @@ public sealed class NavigatorDemoPage : StatelessWidget
                         RouteData.FromLocation(
                             $"{SampleRoutes.NavigatorDetails}?id=7&mode=route-data",
                             arguments: "payload:route-data")),
-                    Color.Parse("#FFEAF4FF")),
+                    new Color(0xFFEAF4FF)),
                 BuildAction(
                     "PushReplacementNamed(details)",
                     () => Navigator.PushReplacementNamed(
                         context,
                         $"{SampleRoutes.NavigatorDetails}?id=99&mode=replacement",
                         arguments: "payload:replacement"),
-                    Color.Parse("#FFFFF3E0")),
+                    new Color(0xFFFFF3E0)),
                 BuildAction(
                     "PushNamedAndRemoveUntil(details, menu)",
                     () => Navigator.PushNamedAndRemoveUntil(
@@ -57,7 +57,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
                         $"{SampleRoutes.NavigatorDetails}?id=5&mode=remove-until",
                         route => route.Settings.Name == SampleRoutes.Menu,
                         arguments: "payload:remove-until"),
-                    Color.Parse("#FFF3E5F5")),
+                    new Color(0xFFF3E5F5)),
             ]);
     }
 
@@ -83,7 +83,7 @@ internal sealed class NavigatorOverlayProbe : StatelessWidget
         string opaque = route?.Opaque.ToString() ?? "-";
         string canPop = route?.CanPop.ToString() ?? "-";
         return new Container(
-            color: Color.Parse("#FFE8F0FE"),
+            color: new Color(0xFFE8F0FE),
             padding: new Thickness(10, 8),
             child: new Text(
                 $"Overlay: entries={entries} maintainState={maintainState} opaque={opaque} canPop={canPop}",
@@ -101,7 +101,7 @@ internal sealed class SampleBlurredPopupRoute : PopupRoute
 
     public override bool BarrierDismissible => true;
 
-    public override Color? BarrierColor => Color.FromArgb(0x33, 0, 0, 0);
+    public override Color? BarrierColor => Color.FromARGB(0x33, 0, 0, 0);
 
     public override string? BarrierLabel => "Dismiss";
 
@@ -166,7 +166,7 @@ internal sealed class NavigatorRouteAwareProbeState : State, RouteAware
     {
         string routeName = ModalRoute.MaybeOf(context)?.Settings.Name ?? "(null)";
         return new Container(
-            color: Color.Parse("#FFF1F8FF"),
+            color: new Color(0xFFF1F8FF),
             padding: new Thickness(10, 8),
             child: new Text(
                 $"RouteAware: name={routeName} didPush={_didPushCount} didPushNext={_didPushNextCount} didPopNext={_didPopNextCount} didPop={_didPopCount}",
@@ -233,7 +233,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                         RouteData.FromLocation(
                             $"{SampleRoutes.NavigatorDetails}?id={nextId}&mode=chain",
                             arguments: $"payload:chain:{nextId}")),
-                    background: Color.Parse("#FFEAF4FF"),
+                    background: new Color(0xFFEAF4FF),
                     foreground: Colors.Black,
                     fontSize: 12,
                     padding: new Thickness(10, 8)),
@@ -242,7 +242,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                     onTap: () => Navigator.PopUntil(
                         context,
                         route => route.Settings.Name == SampleRoutes.Menu),
-                    background: Color.Parse("#FFFFF3E0"),
+                    background: new Color(0xFFFFF3E0),
                     foreground: Colors.Black,
                     fontSize: 12,
                     padding: new Thickness(10, 8)),
@@ -255,7 +255,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                             Navigator.RemoveRouteBelow(context, currentRoute);
                         }
                     },
-                    background: Color.Parse("#FFF3E5F5"),
+                    background: new Color(0xFFF3E5F5),
                     foreground: Colors.Black,
                     fontSize: 12,
                     padding: new Thickness(10, 8)),
@@ -267,7 +267,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                             child: new CounterTapButton(
                                 label: "Start gesture",
                                 onTap: () => Navigator.StartUserGesture(context),
-                                background: Color.Parse("#FFE0F7FA"),
+                                background: new Color(0xFFE0F7FA),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -275,7 +275,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                             child: new CounterTapButton(
                                 label: "Stop gesture",
                                 onTap: () => Navigator.StopUserGesture(context),
-                                background: Color.Parse("#FFFFF9C4"),
+                                background: new Color(0xFFFFF9C4),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -283,7 +283,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                 new CounterTapButton(
                     label: "MaybePopFromUserGesture",
                     onTap: () => Navigator.MaybePopFromUserGesture(context),
-                    background: Color.Parse("#FFD7CCC8"),
+                    background: new Color(0xFFD7CCC8),
                     foreground: Colors.Black,
                     fontSize: 12,
                     padding: new Thickness(10, 8)),

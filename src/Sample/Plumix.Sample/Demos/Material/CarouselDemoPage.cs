@@ -20,7 +20,10 @@ public sealed class CarouselDemoPage : StatelessWidget
             children:
             [
                 new Text("CarouselView", fontSize: 20, color: Colors.Black),
-                new Text("Fixed and weighted Material 3 carousels with item snapping and CarouselViewTheme.", fontSize: 14, color: Color.Parse("#8A000000")),
+                new Text(
+                    "Fixed and weighted Material 3 carousels with item snapping and CarouselViewTheme.",
+                    fontSize: 14,
+                    color: new Color(0x8A000000)),
                 new Text("Fixed extent", fontSize: 14, color: Colors.Black),
                 new SizedBox(height: 132, child: new CarouselView(
                     itemExtent: 176,
@@ -48,7 +51,14 @@ public sealed class CarouselDemoPage : StatelessWidget
 
     private static IReadOnlyList<Widget> BuildItems()
     {
-        Color[] colors = [Color.Parse("#FF6750A4"), Color.Parse("#FF386A20"), Color.Parse("#FF006874"), Color.Parse("#FF9C4230"), Color.Parse("#FF525F7A")];
+        Color[] colors =
+        [
+            new Color(0xFF6750A4),
+            new Color(0xFF386A20),
+            new Color(0xFF006874),
+            new Color(0xFF9C4230),
+            new Color(0xFF525F7A),
+        ];
         List<Widget> items = [];
         for (int index = 0; index < colors.Length; index += 1)
         {

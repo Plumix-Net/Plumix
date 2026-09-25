@@ -105,7 +105,7 @@ public sealed class CupertinoSheetTests : IDisposable
                 clip => clip.BorderRadius.Resolve(TextDirection.Ltr).TopLeft == 12.0);
             Assert.Contains(
                 FindWidgets<ShapeDecoration>(harness.Root),
-                decoration => decoration.Color == Color.FromArgb(76, 60, 60, 67));
+                decoration => ColorMatchers.IsSameColorAs(decoration.Color, Color.FromARGB(76, 60, 60, 67)));
 
             MediaQuery bodyMedia = Assert.Single(
                 FindWidgets<MediaQuery>(harness.Root),

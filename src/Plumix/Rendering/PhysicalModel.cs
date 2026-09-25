@@ -128,7 +128,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
             child: child,
             elevation: elevation,
             color: color,
-            shadowColor: shadowColor ?? Color.FromUInt32(0xFF000000),
+            shadowColor: shadowColor ?? new Color(0xFF000000),
             clipBehavior: clipBehavior)
     {
         Debug.Assert(elevation >= 0.0);
@@ -231,7 +231,7 @@ public class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
         Canvas canvas = context.Canvas;
         if (Elevation != 0.0 && paintShadows)
         {
-            canvas.DrawShadow(offsetRRectAsPath, ShadowColor, Elevation, Color.A != 0xFF);
+            canvas.DrawShadow(offsetRRectAsPath, ShadowColor, Elevation, Color.Alpha != 0xFF);
         }
 
         bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;
@@ -294,7 +294,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
             child: child,
             elevation: elevation,
             color: color,
-            shadowColor: shadowColor ?? Color.FromUInt32(0xFF000000),
+            shadowColor: shadowColor ?? new Color(0xFF000000),
             clipBehavior: clipBehavior,
             clipper: clipper)
     {
@@ -357,7 +357,7 @@ public class RenderPhysicalShape : RenderPhysicalModelBase<Path>
         Canvas canvas = context.Canvas;
         if (Elevation != 0.0 && paintShadows)
         {
-            canvas.DrawShadow(offsetPath, ShadowColor, Elevation, Color.A != 0xFF);
+            canvas.DrawShadow(offsetPath, ShadowColor, Elevation, Color.Alpha != 0xFF);
         }
 
         bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;

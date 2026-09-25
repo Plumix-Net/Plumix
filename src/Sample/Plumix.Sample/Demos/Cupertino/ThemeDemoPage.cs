@@ -51,7 +51,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                 new Text(
                     "CupertinoDynamicColor resolves against brightness, accessibility contrast and interface elevation.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,34 +60,34 @@ internal sealed class CupertinoThemeDemoPageState : State
                             label: _dark ? "Brightness: dark" : "Brightness: light",
                             onTap: ToggleBrightness,
                             width: 168,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: _highContrast ? "Contrast: high" : "Contrast: normal",
                             onTap: ToggleHighContrast,
                             width: 160,
-                            background: Color.Parse("#FFEAE4FF")),
+                            background: new Color(0xFFEAE4FF)),
                         BuildControlButton(
                             label: _elevated ? "Level: elevated" : "Level: base",
                             onTap: ToggleElevation,
                             width: 148,
-                            background: Color.Parse("#FFE8F4E8")),
+                            background: new Color(0xFFE8F4E8)),
                     ]),
                 new Text(
                     $"brightness={(_dark ? "dark" : "light")}, highContrast={(_highContrast ? "true" : "false")}, level={(_elevated ? "elevated" : "base")}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 BuildProbe(context),
                 new Text("MaterialBasedCupertinoThemeData", fontSize: 20, color: Colors.Black),
                 new Text(
                     "A Material Theme installs a CupertinoTheme that defers to the Material ThemeData; "
                     + "ThemeData.cupertinoOverrideTheme preempts individual attributes.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 BuildControlButton(
                     label: _cupertinoOverride ? "Override: systemPink" : "Override: none (cascaded)",
                     onTap: ToggleCupertinoOverride,
                     width: 232,
-                    background: Color.Parse("#FFFDE7F3")),
+                    background: new Color(0xFFFDE7F3)),
                 BuildBridgeProbe(),
             ]);
     }
@@ -104,12 +104,12 @@ internal sealed class CupertinoThemeDemoPageState : State
                 new Expanded(BuildBridgeCard(
                     "ThemeData.light()",
                     new ThemeData(
-                        colorScheme: ColorScheme.Light(primary: Color.Parse("#FF2E7D32")),
+                        colorScheme: ColorScheme.Light(primary: new Color(0xFF2E7D32)),
                         cupertinoOverrideTheme: overrideTheme))),
                 new Expanded(BuildBridgeCard(
                     "ThemeData.dark()",
                     new ThemeData(
-                        colorScheme: ColorScheme.Dark(primary: Color.Parse("#FF80CBC4")),
+                        colorScheme: ColorScheme.Dark(primary: new Color(0xFF80CBC4)),
                         cupertinoOverrideTheme: overrideTheme))),
             ]);
     }
@@ -126,7 +126,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                     decoration: new BoxDecoration(
                         Color: theme.ScaffoldBackgroundColor,
                         BorderRadius: BorderRadius.Circular(12),
-                        Border: Border.FromBorderSide(new BorderSide(Color.Parse("#33000000"), 1))),
+                        Border: Border.FromBorderSide(new BorderSide(new Color(0x33000000), 1))),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                         spacing: 6,

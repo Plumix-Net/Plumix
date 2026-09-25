@@ -199,7 +199,7 @@ public sealed class DrawerControllerState : State<DrawerController>
         var drawerTheme = DrawerTheme.Of(context);
         Color baseScrimColor = CurrentWidget.ScrimColor
                                ?? drawerTheme.ScrimColor
-                               ?? Color.FromArgb(0x8A, 0, 0, 0);
+                               ?? Color.FromARGB(0x8A, 0, 0, 0);
         Color scrimColor = ApplyOpacity(baseScrimColor, _controller.Value);
         bool platformHasBackButton = PlatformDefaults.TargetPlatform == TargetPlatform.Android;
         var localizations = MaterialLocalizations.Of(context);
@@ -431,11 +431,7 @@ public sealed class DrawerControllerState : State<DrawerController>
         return platform is TargetPlatform.Windows or TargetPlatform.Linux or TargetPlatform.MacOS;
     }
 
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0)), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithValues(alpha: color.A * opacity);
 }
 
 internal sealed class DrawerControllerScope : InheritedWidget

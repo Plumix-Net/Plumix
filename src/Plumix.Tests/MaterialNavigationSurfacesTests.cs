@@ -175,12 +175,12 @@ public sealed class MaterialNavigationSurfacesTests
 
         Assert.Equal(70, midpoint.Height);
         Assert.Equal(2, midpoint.Elevation);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.BackgroundColor);
         Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
         Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.IndicatorShape).Width);
         Assert.Equal(15, midpoint.LabelTextStyle!.Resolve(states)!.FontSize);
         Assert.Equal(20, midpoint.IconTheme!.Resolve(states)!.Size);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.OverlayColor!.Resolve(states));
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.OverlayColor!.Resolve(states));
         Assert.Equal(new Thickness(0, 4, 0, 0), midpoint.LabelPadding);
         Assert.Equal(NavigationDestinationLabelBehavior.AlwaysShow, midpoint.LabelBehavior);
     }
@@ -204,7 +204,9 @@ public sealed class MaterialNavigationSurfacesTests
         ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
 
         Assert.Equal(70, midpoint.NavigationBarTheme.Height);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationBarTheme.IndicatorColor);
+        ColorMatchers.AssertSameColorAs(
+            Color.FromARGB(0xFF, 127, 127, 127),
+            midpoint.NavigationBarTheme.IndicatorColor);
     }
 
     [Fact]
@@ -417,11 +419,11 @@ public sealed class MaterialNavigationSurfacesTests
         IReadOnlySet<WidgetState> states = new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered };
 
         Assert.Equal(56, midpoint.TileHeight);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.BackgroundColor);
         Assert.Equal(2, midpoint.Elevation);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.ShadowColor);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.SurfaceTintColor);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.ShadowColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.SurfaceTintColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.IndicatorColor);
         Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
         Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.IndicatorShape).Width);
         Assert.Equal(begin.IndicatorSize, midpoint.IndicatorSize);
@@ -448,7 +450,9 @@ public sealed class MaterialNavigationSurfacesTests
         ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
 
         Assert.Equal(56, midpoint.NavigationDrawerTheme.TileHeight);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationDrawerTheme.IndicatorColor);
+        ColorMatchers.AssertSameColorAs(
+            Color.FromARGB(0xFF, 127, 127, 127),
+            midpoint.NavigationDrawerTheme.IndicatorColor);
     }
 
     [Fact]
@@ -797,7 +801,7 @@ public sealed class MaterialNavigationSurfacesTests
 
         NavigationRailThemeData midpoint = NavigationRailThemeData.Lerp(begin, end, 0.5)!;
 
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.BackgroundColor);
         Assert.Equal(2, midpoint.Elevation);
         Assert.Equal(15, midpoint.UnselectedLabelTextStyle!.FontSize);
         Assert.Equal(17, midpoint.SelectedLabelTextStyle!.FontSize);
@@ -806,7 +810,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Equal(0, midpoint.GroupAlignment);
         Assert.Equal(NavigationRailLabelType.All, midpoint.LabelType);
         Assert.True(midpoint.UseIndicator);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.IndicatorColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(0xFF, 127, 127, 127), midpoint.IndicatorColor);
         Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.IndicatorShape).Radius);
         Assert.Equal(70, midpoint.MinWidth);
         Assert.Equal(240, midpoint.MinExtendedWidth);
@@ -831,7 +835,9 @@ public sealed class MaterialNavigationSurfacesTests
         ThemeData midpoint = ThemeData.Lerp(begin, end, 0.5);
 
         Assert.Equal(70, midpoint.NavigationRailTheme.MinWidth);
-        Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.NavigationRailTheme.IndicatorColor);
+        ColorMatchers.AssertSameColorAs(
+            Color.FromARGB(0xFF, 127, 127, 127),
+            midpoint.NavigationRailTheme.IndicatorColor);
     }
 
     [Fact]

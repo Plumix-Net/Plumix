@@ -24,8 +24,8 @@ public sealed class CupertinoListTile : StatefulWidget
         Widget? leading,
         Widget? trailing,
         Func<Task>? onTap,
-        CupertinoDynamicColor? backgroundColor,
-        CupertinoDynamicColor? backgroundColorActivated,
+        Color? backgroundColor,
+        Color? backgroundColorActivated,
         EdgeInsetsGeometry? padding,
         double leadingSize,
         double leadingToTitle,
@@ -52,8 +52,8 @@ public sealed class CupertinoListTile : StatefulWidget
         Widget? leading = null,
         Widget? trailing = null,
         Func<Task>? onTap = null,
-        CupertinoDynamicColor? backgroundColor = null,
-        CupertinoDynamicColor? backgroundColorActivated = null,
+        Color? backgroundColor = null,
+        Color? backgroundColorActivated = null,
         EdgeInsetsGeometry? padding = null,
         double leadingSize = LeadingSizeDefault,
         double leadingToTitle = LeadingToTitleDefault,
@@ -86,9 +86,9 @@ public sealed class CupertinoListTile : StatefulWidget
 
     public Func<Task>? OnTap { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
-    public CupertinoDynamicColor? BackgroundColorActivated { get; }
+    public Color? BackgroundColorActivated { get; }
 
     public EdgeInsetsGeometry? Padding { get; }
 
@@ -105,8 +105,8 @@ public sealed class CupertinoListTile : StatefulWidget
         Widget? leading = null,
         Widget? trailing = null,
         Func<Task>? onTap = null,
-        CupertinoDynamicColor? backgroundColor = null,
-        CupertinoDynamicColor? backgroundColorActivated = null,
+        Color? backgroundColor = null,
+        Color? backgroundColorActivated = null,
         EdgeInsetsGeometry? padding = null,
         double leadingSize = NotchedLeadingSizeDefault,
         double leadingToTitle = NotchedLeadingToTitleDefault,

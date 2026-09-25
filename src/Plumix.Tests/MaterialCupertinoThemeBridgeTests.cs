@@ -44,9 +44,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
         using var harness = TestTheme(new ThemeData(), out CupertinoThemeData theme);
 
         Assert.Equal(PlatformBrightness.Light, theme.Brightness);
-        Assert.Equal(Color.FromUInt32(0xFF6750A4), theme.PrimaryColor.Value);
-        Assert.Equal(Color.FromUInt32(0xFFFEF7FF), theme.ScaffoldBackgroundColor.Value);
-        Assert.Equal(Colors.White, theme.PrimaryContrastingColor.Value);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF6750A4), theme.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFFFEF7FF), theme.ScaffoldBackgroundColor);
+        ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
     }
 
@@ -56,9 +56,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
         using var harness = TestTheme(ThemeData.Dark, out CupertinoThemeData theme);
 
         Assert.Equal(PlatformBrightness.Dark, theme.Brightness);
-        Assert.Equal(Color.FromUInt32(0xFFD0BCFF), theme.PrimaryColor.Value);
-        Assert.Equal(Color.FromUInt32(0xFF381E72), theme.PrimaryContrastingColor.Value);
-        Assert.Equal(Color.FromUInt32(0xFF141218), theme.ScaffoldBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(new Color(0xFFD0BCFF), theme.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF381E72), theme.PrimaryContrastingColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF141218), theme.ScaffoldBackgroundColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
     }
 
@@ -70,7 +70,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             out CupertinoThemeData theme);
 
         Assert.Equal(PlatformBrightness.Light, theme.Brightness);
-        Assert.Equal(Colors.White, theme.PrimaryContrastingColor.Value);
+        ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
     }
 
@@ -120,9 +120,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
 
         Assert.Equal(PlatformBrightness.Light, theme.Brightness);
         // We took the scaffold background override but the rest are still cascaded to the theme.
-        Assert.Equal(Color.FromUInt32(0xFF6750A4), theme.PrimaryColor.Value);
-        Assert.Equal(Colors.White, theme.PrimaryContrastingColor.Value);
-        Assert.Equal(CupertinoColors.LightBackgroundGray, theme.ScaffoldBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF6750A4), theme.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(Colors.White, theme.PrimaryContrastingColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.LightBackgroundGray, theme.ScaffoldBackgroundColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
     }
 
@@ -136,9 +136,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
                     barBackgroundColor: CupertinoColors.Black)),
             out CupertinoThemeData theme);
 
-        Assert.Equal(Color.FromUInt32(0xFF6750A4), theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF6750A4), theme.PrimaryColor);
         // MaterialBasedCupertinoThemeData should also function like a normal CupertinoThemeData.
-        Assert.Equal(CupertinoColors.Black, theme.BarBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Black, theme.BarBackgroundColor);
     }
 
     [Fact]
@@ -149,14 +149,14 @@ public sealed class MaterialCupertinoThemeBridgeTests
             out CupertinoThemeData theme);
 
         Assert.Equal(1, _buildCount);
-        Assert.Equal(Colors.Red, theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(Colors.Red, theme.PrimaryColor);
 
         harness.PumpWidget(new Theme(
             new ThemeData(colorScheme: ColorScheme.Light(primary: Colors.Orange)),
             _singletonThemeSubtree));
 
         Assert.Equal(2, _buildCount);
-        Assert.Equal(Colors.Orange, _actualTheme!.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(Colors.Orange, _actualTheme!.PrimaryColor);
     }
 
     [Fact]
@@ -186,7 +186,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             out CupertinoThemeData theme);
 
         Assert.Equal(1, _buildCount);
-        Assert.Equal(CupertinoColors.ActiveOrange.Color, theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveOrange.Color, theme.PrimaryColor);
 
         harness.PumpWidget(new Theme(
             new ThemeData(
@@ -196,7 +196,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             _singletonThemeSubtree));
 
         Assert.Equal(2, _buildCount);
-        Assert.Equal(CupertinoColors.ActiveGreen.Color, _actualTheme!.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveGreen.Color, _actualTheme!.PrimaryColor);
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             out CupertinoThemeData theme);
 
         Assert.Equal(1, _buildCount);
-        Assert.Equal(CupertinoColors.ActiveOrange.Color, theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveOrange.Color, theme.PrimaryColor);
 
         // Change the upstream material primary color; the override still preempts it.
         harness.PumpWidget(new Theme(
@@ -221,7 +221,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
             _singletonThemeSubtree));
 
         Assert.Equal(2, _buildCount);
-        Assert.Equal(CupertinoColors.SystemRed.Color, _actualTheme!.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.Color, _actualTheme!.PrimaryColor);
     }
 
     [Fact]
@@ -236,7 +236,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
 
         Assert.Equal(1, _buildCount);
         Assert.Equal(Colors.Purple, theme.TextTheme.ActionTextStyle.Color);
-        Assert.Equal(CupertinoColors.DestructiveRed.Color, theme.PrimaryContrastingColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.DestructiveRed.Color, theme.PrimaryContrastingColor);
 
         harness.PumpWidget(new Theme(
             new ThemeData(
@@ -247,9 +247,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
 
         Assert.Equal(2, _buildCount);
         Assert.Equal(Colors.Green, _actualTheme!.TextTheme.ActionTextStyle.Color);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             CupertinoColors.DestructiveRed.Color,
-            _actualTheme.PrimaryContrastingColor.Value);
+            _actualTheme.PrimaryContrastingColor);
     }
 
     [Fact]
@@ -270,9 +270,9 @@ public sealed class MaterialCupertinoThemeBridgeTests
                 cupertinoOverrideTheme: copiedTheme),
             out CupertinoThemeData theme);
 
-        Assert.Equal(Colors.Blue, theme.PrimaryColor.Value);
-        Assert.Equal(CupertinoColors.ActiveOrange.Color, theme.PrimaryContrastingColor.Value);
-        Assert.Equal(CupertinoColors.DestructiveRed.Color, theme.BarBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(Colors.Blue, theme.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveOrange.Color, theme.PrimaryContrastingColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.DestructiveRed.Color, theme.BarBackgroundColor);
     }
 
     [Fact]
@@ -290,20 +290,20 @@ public sealed class MaterialCupertinoThemeBridgeTests
                 cupertinoOverrideTheme: copiedTheme),
             out CupertinoThemeData theme);
 
-        Assert.Equal(Colors.Blue, theme.PrimaryColor.Value);
-        Assert.Equal(CupertinoColors.DestructiveRed.Color, theme.PrimaryContrastingColor.Value);
+        ColorMatchers.AssertSameColorAs(Colors.Blue, theme.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.DestructiveRed.Color, theme.PrimaryContrastingColor);
     }
 
     [Fact]
     public void MaterialBasedCupertinoThemeData_DefersSelectionHandleColor_ToTheMaterialTheme()
     {
-        Color handleColor = Color.FromUInt32(0xFF00FF00);
+        Color handleColor = new Color(0xFF00FF00);
         using var harness = TestTheme(
             new ThemeData(
                 textSelectionTheme: new TextSelectionThemeData(SelectionHandleColor: handleColor)),
             out CupertinoThemeData theme);
 
-        Assert.Equal(handleColor, theme.SelectionHandleColor.Value);
+        ColorMatchers.AssertSameColorAs(handleColor, theme.SelectionHandleColor);
     }
 
     [Fact]
@@ -350,7 +350,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
                 return new SizedBox();
             })));
 
-        Assert.Equal(CupertinoColors.ActiveGreen.Color, appliedTheme!.ColorScheme.Primary);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveGreen.Color, appliedTheme!.ColorScheme.Primary);
     }
 
     [Fact]

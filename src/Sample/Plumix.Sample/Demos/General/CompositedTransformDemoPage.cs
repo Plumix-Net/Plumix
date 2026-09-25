@@ -59,7 +59,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                         $"target={(_showTarget ? $"x={_targetLeft:0}" : "removed")}; " +
                         $"showWhenUnlinked={_showWhenUnlinked.ToString().ToLowerInvariant()}",
                         fontSize: 13,
-                        color: Color.Parse("#FF334155")),
+                        color: new Color(0xFF334155)),
                 ]);
         }
 
@@ -77,7 +77,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                         _link,
                         child: new AnnotatedRegion<string>(
                             value: "target",
-                            child: BuildLabel("TARGET", Color.Parse("#FFF59E0B"))))));
+                            child: BuildLabel("TARGET", new Color(0xFFF59E0B))))));
             }
 
             children.Add(new Positioned(
@@ -93,11 +93,11 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     followerAnchor: Alignment.TopCenter,
                     child: new AnnotatedRegion<string>(
                         value: "follower",
-                        child: BuildLabel("FOLLOWER", Color.Parse("#FF2563EB"), Colors.White)))));
+                        child: BuildLabel("FOLLOWER", new Color(0xFF2563EB), Colors.White)))));
 
             return new Container(
                 height: 190,
-                color: Color.Parse("#FFF1F5F9"),
+                color: new Color(0xFFF1F5F9),
                 child: new Stack(clipBehavior: Clip.None, children: children));
         }
 

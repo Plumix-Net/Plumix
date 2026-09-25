@@ -43,7 +43,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                     "Drag over the stripes: the text magnifier follows the gesture, stays inside the "
                     + "10pt screen padding and resists downward drag.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8.0,
                     children: Scales
@@ -74,7 +74,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             onPanEnd: _ => HideMagnifier(),
             onPanCancel: HideMagnifier,
             child: new Container(
-                color: Color.Parse("#FFF2F2F7"),
+                color: new Color(0xFFF2F2F7),
                 child: new Stack(
                     clipBehavior: Clip.None,
                     children:
@@ -88,7 +88,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                                 child: new Text(
                                     "MAGNIFY 0123456789",
                                     fontSize: 24.0,
-                                    color: Color.Parse("#FF1C1C1E")))),
+                                    color: new Color(0xFF1C1C1E)))),
                         new Positioned(
                             left: 16.0,
                             top: 148.0,
@@ -100,7 +100,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                                 $"gesture=({_lastGesturePosition.X:0}, {_lastGesturePosition.Y:0}), "
                                 + $"scale={_magnificationScale:0.0}",
                                 fontSize: 12.0,
-                                color: Color.Parse("#FF007AFF"))),
+                                color: new Color(0xFF007AFF))),
                     ])));
     }
 
@@ -114,18 +114,18 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             child: new Text(
                 $"x{scale:0.0}",
                 fontSize: 13.0,
-                color: selected ? Colors.White : Color.Parse("#FF1C1C1E")));
+                color: selected ? Colors.White : new Color(0xFF1C1C1E)));
     }
 
     private static Widget StripeRow()
     {
         var colors = new[]
         {
-            Color.Parse("#FF007AFF"),
-            Color.Parse("#FFFFCC00"),
-            Color.Parse("#FF34C759"),
-            Color.Parse("#FFFF3B30"),
-            Color.Parse("#FF5856D6"),
+            new Color(0xFF007AFF),
+            new Color(0xFFFFCC00),
+            new Color(0xFF34C759),
+            new Color(0xFFFF3B30),
+            new Color(0xFF5856D6),
         };
         return new Row(
             children: colors

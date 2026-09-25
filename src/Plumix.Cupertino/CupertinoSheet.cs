@@ -137,7 +137,7 @@ public sealed class CupertinoSheetTransition : StatefulWidget
                     new Opacity(
                         opacity: 0.10 * curved.Value,
                         child: new ColoredBox(
-                            color: dark ? Color.FromUInt32(0xFFC8C8C8) : Color.FromUInt32(0xFF000000))),
+                            color: dark ? new Color(0xFFC8C8C8) : new Color(0xFF000000))),
                 ]);
         }
 

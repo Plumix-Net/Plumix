@@ -29,7 +29,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                     "Open the anchored menu by button, keyboard, long press, or swipe. " +
                     "Items demonstrate leading, subtitle, trailing, disabled, and destructive states.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new CupertinoMenuAnchor(
                     enableLongPressToOpen: true,
                     menuChildren:
@@ -64,7 +64,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                                 new Text("Document actions", color: Colors.White),
                                 new Icon(CupertinoIcons.ChevronDown, color: Colors.White, size: 18.0),
                             ]),
-                        color: Color.Parse("#FF007AFF"),
+                        color: new Color(0xFF007AFF),
                         onPressed: () =>
                         {
                             if (controller.IsOpen)
@@ -76,7 +76,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                                 controller.Open();
                             }
                         })),
-                new Text(_lastAction, fontSize: 13.0, color: Color.Parse("#FF455A64")),
+                new Text(_lastAction, fontSize: 13.0, color: new Color(0xFF455A64)),
             ]);
     }
 

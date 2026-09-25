@@ -405,7 +405,7 @@ public sealed class LayerTreeTests
         CheckNeedsAddToScene(shaderMaskLayer, () => shaderMaskLayer.BlendMode = BlendMode.Source);
         CheckNeedsAddToScene(
             shaderMaskLayer,
-            () => shaderMaskLayer.Shader = new Avalonia.Media.SolidColorBrush(Avalonia.Media.Colors.Red));
+            () => shaderMaskLayer.Shader = new Avalonia.Media.SolidColorBrush(Colors.Red));
 
         var backdropFilterLayer = new BackdropFilterLayer { ImageFilter = new ImageFilter.Blur(1.0, 1.0) };
         CheckNeedsAddToScene(

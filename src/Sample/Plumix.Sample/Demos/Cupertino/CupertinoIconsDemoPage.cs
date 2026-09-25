@@ -39,7 +39,7 @@ public sealed class CupertinoIconsDemoPage : StatelessWidget
                 new Text(
                     "Representative legacy, SF Symbols, directional, alias, and high-range glyphs.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -56,13 +56,13 @@ public sealed class CupertinoIconsDemoPage : StatelessWidget
             width: 132.0,
             padding: new Thickness(12.0),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF2F2F7"),
+                Color: new Color(0xFFF2F2F7),
                 BorderRadius: BorderRadius.Circular(12.0)),
             child: new Column(
                 spacing: 8.0,
                 children:
                 [
-                    new Icon(icon, size: 34.0, color: Color.Parse("#FF007AFF")),
+                    new Icon(icon, size: 34.0, color: new Color(0xFF007AFF)),
                     new Text(name, fontSize: 11.0, color: Colors.Black, textAlign: TextAlign.Center),
                 ]));
     }

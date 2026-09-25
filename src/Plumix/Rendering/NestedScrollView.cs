@@ -328,7 +328,7 @@ public class RenderSliverOverlapInjector : RenderSliver
             return;
         }
 
-        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFCC9933)), 3.0);
+        var pen = new Pen(new SolidColorBrush(new Color(0xFFCC9933)), 3.0);
         SliverConstraints constraints = Constraints;
         Point start;
         Point end;

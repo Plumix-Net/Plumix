@@ -28,39 +28,39 @@ public sealed class MaterialColorSchemeTests
     [Fact]
     public void ColorScheme_FromSeed_MatchesFlutterTonalSpotLightBlue()
     {
-        var scheme = ColorScheme.FromSeed(Color.Parse("#FF2196F3"));
+        var scheme = ColorScheme.FromSeed(new Color(0xFF2196F3));
 
-        Assert.Equal(Color.Parse("#FF36618E"), scheme.Primary);
+        Assert.Equal(new Color(0xFF36618E), scheme.Primary);
         Assert.Equal(Colors.White, scheme.OnPrimary);
-        Assert.Equal(Color.Parse("#FFD1E4FF"), scheme.PrimaryContainer);
-        Assert.Equal(Color.Parse("#FF194975"), scheme.OnPrimaryContainer);
-        Assert.Equal(Color.Parse("#FF535F70"), scheme.Secondary);
-        Assert.Equal(Color.Parse("#FF6B5778"), scheme.Tertiary);
-        Assert.Equal(Color.Parse("#FFBA1A1A"), scheme.Error);
-        Assert.Equal(Color.Parse("#FFF8F9FF"), scheme.Surface);
-        Assert.Equal(Color.Parse("#FFECEEF4"), scheme.SurfaceContainer);
-        Assert.Equal(Color.Parse("#FF191C20"), scheme.OnSurface);
-        Assert.Equal(Color.Parse("#FF73777F"), scheme.Outline);
-        Assert.Equal(Color.Parse("#FFA0CAFD"), scheme.InversePrimary);
+        Assert.Equal(new Color(0xFFD1E4FF), scheme.PrimaryContainer);
+        Assert.Equal(new Color(0xFF194975), scheme.OnPrimaryContainer);
+        Assert.Equal(new Color(0xFF535F70), scheme.Secondary);
+        Assert.Equal(new Color(0xFF6B5778), scheme.Tertiary);
+        Assert.Equal(new Color(0xFFBA1A1A), scheme.Error);
+        Assert.Equal(new Color(0xFFF8F9FF), scheme.Surface);
+        Assert.Equal(new Color(0xFFECEEF4), scheme.SurfaceContainer);
+        Assert.Equal(new Color(0xFF191C20), scheme.OnSurface);
+        Assert.Equal(new Color(0xFF73777F), scheme.Outline);
+        Assert.Equal(new Color(0xFFA0CAFD), scheme.InversePrimary);
         Assert.Equal(Brightness.Light, scheme.Brightness);
     }
 
     [Fact]
     public void ColorScheme_FromSeed_MatchesFlutterTonalSpotDarkBlue()
     {
-        var scheme = ColorScheme.FromSeed(Color.Parse("#FF2196F3"), Brightness.Dark);
+        var scheme = ColorScheme.FromSeed(new Color(0xFF2196F3), Brightness.Dark);
 
-        Assert.Equal(Color.Parse("#FFA0CAFD"), scheme.Primary);
-        Assert.Equal(Color.Parse("#FF003258"), scheme.OnPrimary);
-        Assert.Equal(Color.Parse("#FF194975"), scheme.PrimaryContainer);
-        Assert.Equal(Color.Parse("#FFD1E4FF"), scheme.OnPrimaryContainer);
-        Assert.Equal(Color.Parse("#FFBBC7DB"), scheme.Secondary);
-        Assert.Equal(Color.Parse("#FFD6BEE4"), scheme.Tertiary);
-        Assert.Equal(Color.Parse("#FFFFB4AB"), scheme.Error);
-        Assert.Equal(Color.Parse("#FF111418"), scheme.Surface);
-        Assert.Equal(Color.Parse("#FF1D2024"), scheme.SurfaceContainer);
-        Assert.Equal(Color.Parse("#FFE1E2E8"), scheme.OnSurface);
-        Assert.Equal(Color.Parse("#FF8D9199"), scheme.Outline);
+        Assert.Equal(new Color(0xFFA0CAFD), scheme.Primary);
+        Assert.Equal(new Color(0xFF003258), scheme.OnPrimary);
+        Assert.Equal(new Color(0xFF194975), scheme.PrimaryContainer);
+        Assert.Equal(new Color(0xFFD1E4FF), scheme.OnPrimaryContainer);
+        Assert.Equal(new Color(0xFFBBC7DB), scheme.Secondary);
+        Assert.Equal(new Color(0xFFD6BEE4), scheme.Tertiary);
+        Assert.Equal(new Color(0xFFFFB4AB), scheme.Error);
+        Assert.Equal(new Color(0xFF111418), scheme.Surface);
+        Assert.Equal(new Color(0xFF1D2024), scheme.SurfaceContainer);
+        Assert.Equal(new Color(0xFFE1E2E8), scheme.OnSurface);
+        Assert.Equal(new Color(0xFF8D9199), scheme.Outline);
         Assert.Equal(Brightness.Dark, scheme.Brightness);
     }
 
@@ -73,16 +73,16 @@ public sealed class MaterialColorSchemeTests
         foreach (DynamicSchemeVariant variant in variants)
         {
             var scheme = ColorScheme.FromSeed(
-                seedColor: Color.Parse("#FF6559F5"),
+                seedColor: new Color(0xFF6559F5),
                 dynamicSchemeVariant: variant);
             primaries.Add(scheme.Primary);
         }
 
         Assert.True(primaries.Count >= 8);
         Assert.Equal(
-            Color.Parse("#FF4C3CDB"),
+            new Color(0xFF4C3CDB),
             ColorScheme.FromSeed(
-                seedColor: Color.Parse("#FF6559F5"),
+                seedColor: new Color(0xFF6559F5),
                 dynamicSchemeVariant: DynamicSchemeVariant.Fidelity).Primary);
     }
 
@@ -137,7 +137,7 @@ public sealed class MaterialColorSchemeTests
     [Fact]
     public void ThemeData_ColorScheme_DrivesLegacyColorSurface()
     {
-        var scheme = ColorScheme.FromSeed(Color.Parse("#FF006495"), Brightness.Dark);
+        var scheme = ColorScheme.FromSeed(new Color(0xFF006495), Brightness.Dark);
         var theme = new ThemeData(colorScheme: scheme);
 
         Assert.Equal(scheme, theme.ColorScheme);
@@ -155,7 +155,7 @@ public sealed class MaterialColorSchemeTests
     [Fact]
     public void ThemeData_ColorSchemeSeed_GeneratesScheme_AndGuardsConflicts()
     {
-        Color seed = Color.Parse("#FF006495");
+        Color seed = new Color(0xFF006495);
         var theme = new ThemeData(colorSchemeSeed: seed, brightness: Brightness.Dark);
 
         Assert.Equal(ColorScheme.FromSeed(seed, Brightness.Dark), theme.ColorScheme);
@@ -309,10 +309,10 @@ public sealed class MaterialColorSchemeTests
             Assert.Equal(new FontFamily("CupertinoSystemDisplay"), style.FontFamily));
         Assert.All(cupertino[7..], style =>
             Assert.Equal(new FontFamily("CupertinoSystemText"), style.FontFamily));
-        Assert.Equal(Color.FromArgb(0x8A, 0, 0, 0), Typography.BlackMountainView.DisplayLarge.Color);
-        Assert.Equal(Color.FromArgb(0xDD, 0, 0, 0), Typography.BlackMountainView.BodyMedium.Color);
+        Assert.Equal(Color.FromARGB(0x8A, 0, 0, 0), Typography.BlackMountainView.DisplayLarge.Color);
+        Assert.Equal(Color.FromARGB(0xDD, 0, 0, 0), Typography.BlackMountainView.BodyMedium.Color);
         Assert.Equal(Colors.Black, Typography.BlackMountainView.LabelSmall.Color);
-        Assert.Equal(Color.FromArgb(0xB3, 255, 255, 255), Typography.WhiteMountainView.DisplayLarge.Color);
+        Assert.Equal(Color.FromARGB(0xB3, 255, 255, 255), Typography.WhiteMountainView.DisplayLarge.Color);
         Assert.Equal(Colors.White, Typography.WhiteMountainView.BodyMedium.Color);
     }
 
@@ -344,7 +344,7 @@ public sealed class MaterialColorSchemeTests
         Assert.Equal(15, localized.TextTheme.BodyMedium.FontSize);
         Assert.Equal(TextBaseline.Ideographic, localized.TextTheme.BodyMedium.TextBaseline);
         Assert.Equal(new FontFamily("Roboto"), localized.TextTheme.BodyMedium.FontFamily);
-        Assert.Equal(Color.FromArgb(0xDD, 0, 0, 0), localized.TextTheme.BodyMedium.Color);
+        Assert.Equal(Color.FromARGB(0xDD, 0, 0, 0), localized.TextTheme.BodyMedium.Color);
 
         root.UnmountRoot();
     }

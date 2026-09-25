@@ -73,7 +73,7 @@ public sealed class MaterialExpandIconTests : IDisposable
     [InlineData(true, Brightness.Dark)]
     public void DisabledDefaultColor_FollowsIconButtonMaterialPolicy(bool useMaterial3, Brightness brightness)
     {
-        Color onSurface = Color.Parse("#FF13579B");
+        Color onSurface = new Color(0xFF13579B);
         ColorScheme? colorScheme = useMaterial3
             ? ColorScheme.Light(brightness: brightness, onSurface: onSurface)
             : null;
@@ -261,7 +261,7 @@ public sealed class MaterialExpandIconTests : IDisposable
     {
         return harness.FindWidgets<IconTheme>()
             .Select(iconTheme => iconTheme.Data.Color)
-            .Last(color => color.HasValue)!.Value;
+            .Last(color => color != null)!;
     }
 
     private static Widget BuildThemed(

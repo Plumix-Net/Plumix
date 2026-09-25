@@ -35,7 +35,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                             children: Enumerable.Range(1, 12).Select(index => (Widget)new Container(
                                 width: 100,
                                 height: 56,
-                                color: Color.Parse("#FFE3F2FD"),
+                                color: new Color(0xFFE3F2FD),
                                 alignment: Alignment.Center,
                                 child: new Text($"item #{index}", fontSize: 14))).ToArray()))),
                 new Expanded(
@@ -47,26 +47,26 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                             new Expanded(
                                 child: BuildList(
                                     "Bouncing (iOS)",
-                                    Color.Parse("#FFE8F5E9"),
+                                    new Color(0xFFE8F5E9),
                                     new BouncingScrollPhysics(
                                         parent: new RangeMaintainingScrollPhysics()))),
                             new Expanded(
                                 child: BuildList(
                                     "Bouncing (fast)",
-                                    Color.Parse("#FFFFF3E0"),
+                                    new Color(0xFFFFF3E0),
                                     new BouncingScrollPhysics(
                                         decelerationRate: ScrollDecelerationRate.Fast,
                                         parent: new RangeMaintainingScrollPhysics()))),
                             new Expanded(
                                 child: BuildList(
                                     "Clamping (Android)",
-                                    Color.Parse("#FFE3F2FD"),
+                                    new Color(0xFFE3F2FD),
                                     new ClampingScrollPhysics(
                                         parent: new RangeMaintainingScrollPhysics()))),
                             new Expanded(
                                 child: BuildList(
                                     "Never (locked)",
-                                    Color.Parse("#FFF3E5F5"),
+                                    new Color(0xFFF3E5F5),
                                     new NeverScrollableScrollPhysics())),
                         ])),
             ]);

@@ -15,7 +15,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ErrorWidgetDartParityTests
 {
-    private static readonly Color Red = Color.FromUInt32(0xffff0000);
+    private static readonly Color Red = new Color(0xffff0000);
 
     // Flutter: error_widget_test.dart: "ErrorWidget displays actual error when throwing during build"
     [Fact]
@@ -23,7 +23,7 @@ public sealed class ErrorWidgetDartParityTests
     {
         using var tester = new FrameworkDartTester();
         Key container = new UniqueKey();
-        const string errorText = "Oh no, there was a crash!!1";
+        const string errorText = "Oh no, there was a crash!1";
 
         tester.PumpWidget(new Container(
             key: container,

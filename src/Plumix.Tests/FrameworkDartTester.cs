@@ -321,11 +321,11 @@ internal sealed class FrameworkDartFlipWidgetState : State<FrameworkDartFlipWidg
 /// <summary>flutter/packages/flutter/test/widgets/test_widgets.dart: the shared constants and helpers.</summary>
 internal static class FrameworkDartTestWidgets
 {
-    public static readonly BoxDecoration BoxDecorationA = new(Color: Avalonia.Media.Color.FromUInt32(0xFFFF0000));
+    public static readonly BoxDecoration BoxDecorationA = new(Color: new Color(0xFFFF0000));
 
-    public static readonly BoxDecoration BoxDecorationB = new(Color: Avalonia.Media.Color.FromUInt32(0xFF00FF00));
+    public static readonly BoxDecoration BoxDecorationB = new(Color: new Color(0xFF00FF00));
 
-    public static readonly BoxDecoration BoxDecorationC = new(Color: Avalonia.Media.Color.FromUInt32(0xFF0000FF));
+    public static readonly BoxDecoration BoxDecorationC = new(Color: new Color(0xFF0000FF));
 
     /// <summary>Dart's <c>flipStatefulWidget</c>.</summary>
     public static void FlipStatefulWidget(FrameworkDartTester tester)

@@ -23,10 +23,10 @@ namespace Plumix.Tests;
 
 public sealed class RenderEditableDartParityTests
 {
-    private static readonly Color Black = Color.FromUInt32(0xFF000000);
-    private static readonly Color Blue = Color.FromUInt32(0xFF0000FF);
-    private static readonly Color Grey = Color.FromUInt32(0xFF9E9E9E);
-    private static readonly Color Red = Color.FromUInt32(0xFFFF0000);
+    private static readonly Color Black = new Color(0xFF000000);
+    private static readonly Color Blue = new Color(0xFF0000FF);
+    private static readonly Color Grey = new Color(0xFF9E9E9E);
+    private static readonly Color Red = new Color(0xFFFF0000);
 
     private static double CaretMarginOf(RenderEditable renderEditable) => renderEditable.CursorWidth + 1.0;
 
@@ -155,7 +155,7 @@ public sealed class RenderEditableDartParityTests
         var showCursor = new ValueNotifier<bool>(true);
         RenderEditable editable = NewEditable(
             backgroundCursorColor: Grey,
-            cursorColor: Color.FromArgb(0xFF, 0xFF, 0x00, 0x00),
+            cursorColor: Color.FromARGB(0xFF, 0xFF, 0x00, 0x00),
             text: new TextSpan(text: "test", style: new TextStyle(Height: 1.0, FontSize: 10.0)),
             selection: TextSelection.Collapsed(4, TextAffinity.Upstream));
         AssertCursorColorRadiusVisibility(editable, showCursor, BoxConstraints.Loose(new Size(100, 100)), false);
@@ -203,7 +203,7 @@ public sealed class RenderEditableDartParityTests
         var showCursor = new ValueNotifier<bool>(true);
         RenderEditable editable = NewEditable(
             backgroundCursorColor: Grey,
-            cursorColor: Color.FromArgb(0xFF, 0xFF, 0x00, 0x00),
+            cursorColor: Color.FromARGB(0xFF, 0xFF, 0x00, 0x00),
             text: new TextSpan(
                 text: "中文测试文本是否正确",
                 style: new TextStyle(FontSize: 10.0, FontFamily: new FontFamily("FlutterTest"))),
@@ -238,10 +238,10 @@ public sealed class RenderEditableDartParityTests
 
         Assert.True(Paints(
             PaintEditable(editable),
-            RectStep(Color.FromArgb(0xFF, 0xFF, 0x00, 0x00), new Rect(40, 0, 1, 10))));
+            RectStep(Color.FromARGB(0xFF, 0xFF, 0x00, 0x00), new Rect(40, 0, 1, 10))));
 
         // Now change to a rounded caret.
-        editable.CursorColor = Color.FromArgb(0xFF, 0x00, 0x00, 0xFF);
+        editable.CursorColor = Color.FromARGB(0xFF, 0x00, 0x00, 0xFF);
         editable.CursorWidth = 4;
         editable.CursorRadius = Radius.Circular(3);
         tester.PumpFrame(EnginePhase.CompositingBits);
@@ -249,7 +249,7 @@ public sealed class RenderEditableDartParityTests
         Assert.True(Paints(
             PaintEditable(editable),
             RRectStep(
-                Color.FromArgb(0xFF, 0x00, 0x00, 0xFF),
+                Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
                 RRect.FromRectAndRadius(new Rect(40, 0, 4, 10), Radius.Circular(3)))));
 
         editable.TextScaler = TextScaler.Linear(2.0);
@@ -259,7 +259,7 @@ public sealed class RenderEditableDartParityTests
         Assert.True(Paints(
             PaintEditable(editable),
             RRectStep(
-                Color.FromArgb(0xFF, 0x00, 0x00, 0xFF),
+                Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
                 RRect.FromRectAndRadius(new Rect(80, 0, 4, 20), Radius.Circular(3)))));
 
         // Can turn off caret.
@@ -539,7 +539,7 @@ public sealed class RenderEditableDartParityTests
     [Fact]
     public void PromptRectDisappearsWhenPromptRectColorIsSetToNull()
     {
-        Color promptRectColor = Color.FromUInt32(0x12345678);
+        Color promptRectColor = new Color(0x12345678);
         RenderEditable editable = NewEditable(
             text: new TextSpan(style: new TextStyle(Height: 1.0, FontSize: 10.0), text: "ABCDEFG"),
             locale: "en_US",
@@ -582,7 +582,7 @@ public sealed class RenderEditableDartParityTests
         RenderEditable editable = NewEditable(
             maxLines: 2,
             backgroundCursorColor: Grey,
-            cursorColor: Color.FromArgb(0xFF, 0xFF, 0x00, 0x00),
+            cursorColor: Color.FromARGB(0xFF, 0xFF, 0x00, 0x00),
             text: new TextSpan(
                 text: "撒地方加咖啡哈金凤凰卡号方式剪坏算法发挥福建垃\nasfjafjajfjaslfjaskjflasjfksajf撒分开建安路口附近拉设\n计费可使肌肤撒附近埃里克圾房卡设计费\"",
                 style: new TextStyle(Height: 1.0, FontSize: 10.0, FontFamily: new FontFamily("Roboto"))),
@@ -681,7 +681,7 @@ public sealed class RenderEditableDartParityTests
         using var tester = new RenderingTester();
         tester.Layout(editable, BoxConstraints.Loose(new Size(100, 100)));
 
-        Color color = Color.FromUInt32(0x12345678);
+        Color color = new Color(0x12345678);
         Rect onePixel = FromLTRB(1, 1, 1, 1);
         editable.ForegroundPainter = new TestRenderEditablePainter();
         tester.PumpFrame(EnginePhase.CompositingBits);
@@ -753,8 +753,8 @@ public sealed class RenderEditableDartParityTests
         using var tester = new RenderingTester();
         tester.Layout(editable, BoxConstraints.Loose(new Size(100, 100)));
 
-        var painter1 = new TestRenderEditablePainter(Color.FromUInt32(0x01234567));
-        var painter2 = new TestRenderEditablePainter(Color.FromUInt32(0x76543210));
+        var painter1 = new TestRenderEditablePainter(new Color(0x01234567));
+        var painter2 = new TestRenderEditablePainter(new Color(0x76543210));
         Rect onePixel = FromLTRB(1, 1, 1, 1);
 
         editable.Painter = painter1;
@@ -787,7 +787,7 @@ public sealed class RenderEditableDartParityTests
         tester.PumpFrame(EnginePhase.Paint);
         Assert.Equal(2, painter.PaintCount);
 
-        Color color = Color.FromUInt32(0x12345678);
+        Color color = new Color(0x12345678);
         Rect onePixel = FromLTRB(1, 1, 1, 1);
         Assert.True(Paints(
             PaintEditable(editable),
@@ -850,7 +850,7 @@ public sealed class RenderEditableDartParityTests
         tester.PumpFrame(EnginePhase.CompositingBits);
         Assert.True(Paints(
             PaintEditable(editable),
-            RectStep(Color.FromUInt32(0x12345678), FromLTRB(1, 1, 1, 1)),
+            RectStep(new Color(0x12345678), FromLTRB(1, 1, 1, 1)),
             ParagraphStep()));
     }
 
@@ -1325,7 +1325,7 @@ public sealed class RenderEditableDartParityTests
             locale: "en_US",
             offset: ViewportOffset.Fixed(10.0),
             selection: TextSelection.Collapsed(0),
-            cursorColor: Color.FromUInt32(0xFFFFFFFF),
+            cursorColor: new Color(0xFFFFFFFF),
             showCursor: new ValueNotifier<bool>(true));
         using var tester = new RenderingTester();
         tester.Layout(editable, constraints);
@@ -1342,7 +1342,7 @@ public sealed class RenderEditableDartParityTests
     public void FloatingCursorPositionIsIndependentOfViewportOffset()
     {
         var showCursor = new ValueNotifier<bool>(true);
-        Color cursorColor = Color.FromArgb(0xFF, 0xFF, 0x00, 0x00);
+        Color cursorColor = Color.FromARGB(0xFF, 0xFF, 0x00, 0x00);
         RenderEditable editable = NewEditable(
             backgroundCursorColor: Grey,
             cursorColor: cursorColor,
@@ -2067,7 +2067,7 @@ public sealed class RenderEditableDartParityTests
 
     private sealed class TestRenderEditablePainter(Color? color = null) : RenderEditablePainter
     {
-        public Color Color { get; } = color ?? Color.FromUInt32(0x12345678);
+        public Color Color { get; } = color ?? new Color(0x12345678);
 
         public bool Repaint { get; set; } = true;
 

@@ -292,15 +292,15 @@ public sealed class RenderParagraphTests
     public void ChangingColor_DoesNotRequireLayout()
     {
         var paragraph = new RenderParagraph(
-            new TextSpan("Hello", style: new TextStyle(Color: Avalonia.Media.Colors.Black)));
+            new TextSpan("Hello", style: new TextStyle(Color: Colors.Black)));
         var constraints = new BoxConstraints(MaxWidth: 100.0);
         LayOut(paragraph, constraints);
 
-        paragraph.Text = new TextSpan("Hello World", style: new TextStyle(Color: Avalonia.Media.Colors.Black));
+        paragraph.Text = new TextSpan("Hello World", style: new TextStyle(Color: Colors.Black));
         Assert.True(paragraph.DebugNeedsLayout);
         paragraph.Layout(constraints, parentUsesSize: true);
 
-        paragraph.Text = new TextSpan("Hello World", style: new TextStyle(Color: Avalonia.Media.Colors.Red));
+        paragraph.Text = new TextSpan("Hello World", style: new TextStyle(Color: Colors.Red));
         Assert.False(paragraph.DebugNeedsLayout);
         Assert.True(paragraph.DebugNeedsPaint);
     }

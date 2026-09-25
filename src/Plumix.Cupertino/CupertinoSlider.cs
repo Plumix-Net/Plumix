@@ -32,8 +32,8 @@ public sealed class CupertinoSlider : StatefulWidget
         double min = 0.0,
         double max = 1.0,
         int? divisions = null,
-        CupertinoDynamicColor? activeColor = null,
-        CupertinoDynamicColor? thumbColor = null,
+        Color? activeColor = null,
+        Color? thumbColor = null,
         Key? key = null) : base(key)
     {
         if (!(value >= min && value <= max))
@@ -82,10 +82,10 @@ public sealed class CupertinoSlider : StatefulWidget
     /// The color of the selected portion of the track. Defaults to the <see cref="CupertinoTheme"/>'s
     /// primary color.
     /// </summary>
-    public CupertinoDynamicColor? ActiveColor { get; }
+    public Color? ActiveColor { get; }
 
     /// <summary>The color of the thumb. Defaults to <see cref="CupertinoColors.White"/>.</summary>
-    public CupertinoDynamicColor ThumbColor { get; }
+    public Color ThumbColor { get; }
 
     public override State CreateState() => new CupertinoSliderState();
 
@@ -177,7 +177,7 @@ internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
         double value,
         int? divisions,
         Color activeColor,
-        CupertinoDynamicColor thumbColor,
+        Color thumbColor,
         CupertinoSliderValueChanged? onChanged,
         Action<double>? onChangeStart,
         Action<double>? onChangeEnd,
@@ -197,7 +197,7 @@ internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
     public double Value { get; }
     public int? Divisions { get; }
     public Color ActiveColor { get; }
-    public CupertinoDynamicColor ThumbColor { get; }
+    public Color ThumbColor { get; }
     public CupertinoSliderValueChanged? OnChanged { get; }
     public Action<double>? OnChangeStart { get; }
     public Action<double>? OnChangeEnd { get; }

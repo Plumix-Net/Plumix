@@ -100,7 +100,7 @@ internal sealed class RenderAnimatedOpacityMixin
     private void UpdateOpacity()
     {
         int? oldAlpha = _alpha;
-        _alpha = ColorUtilities.GetAlphaFromOpacity(Opacity.Value);
+        _alpha = Color.GetAlphaFromOpacity(Opacity.Value);
         if (oldAlpha != _alpha)
         {
             bool? wasRepaintBoundary = _currentlyIsRepaintBoundary;

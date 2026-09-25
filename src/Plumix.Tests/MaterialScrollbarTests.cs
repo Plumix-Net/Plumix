@@ -558,7 +558,7 @@ public sealed class MaterialScrollbarTests
         ScrollbarPainter painter = RequirePainter(harness);
         Assert.Equal(9, painter.Thickness);
         Assert.Equal(Colors.DarkCyan, painter.Color);
-        Assert.Equal(Color.FromArgb(0, 0, 0, 0), painter.TrackColor);
+        Assert.Equal(Color.FromARGB(0, 0, 0, 0), painter.TrackColor);
 
         Point point = painter.Geometry!.Value.ThumbRect.Center;
         Dispatch(harness, new PointerHoverEvent(
@@ -1074,7 +1074,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(new Rect(194, 0, 6, 72), shape.PaintedRect);
         if (preferInterior)
         {
-            Assert.Equal(128, shape.InteriorColor.A);
+            Assert.Equal(128, shape.InteriorColor!.Alpha);
         }
         Assert.Equal(Colors.Blue, shape.Side.Color);
     }
@@ -1083,7 +1083,7 @@ public sealed class MaterialScrollbarTests
     {
         public List<string> Calls { get; } = [];
         public Rect PaintedRect { get; private set; }
-        public Color InteriorColor { get; private set; }
+        public Color? InteriorColor { get; private set; }
         public override bool PreferPaintInterior => PreferInterior;
         public override OutlinedBorder CopyWith(BorderSide? side = null) => this with { Side = side ?? Side };
         public override ShapeBorder Scale(double t) => this;
@@ -1100,7 +1100,7 @@ public sealed class MaterialScrollbarTests
         {
             Calls.Add("interior");
             PaintedRect = rect;
-            InteriorColor = ((SolidColorBrush)brush).Color;
+            InteriorColor = (Color)((SolidColorBrush)brush).Color;
             new CircleBorder().PaintInterior(context, rect, brush);
         }
         public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -1396,8 +1396,8 @@ public sealed class MaterialScrollbarTests
     }
 
     // Dart's `Color.withOpacity` replaces the alpha channel outright, rounding to the nearest byte.
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
+    private static Color WithOpacity(Color color, double opacity) => Color.FromARGB(
+        (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.Red, color.Green, color.Blue);
 
     private static Widget Wrap(Widget widget) => new MediaQuery(data: new MediaQueryData(), child: widget);
 

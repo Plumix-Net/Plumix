@@ -40,13 +40,13 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                 ViewPadding: new Thickness(24, 18, 32, 28)),
             child: new Container(
                 height: 170,
-                color: Color.Parse("#FFFFCDD2"),
+                color: new Color(0xFFFFCDD2),
                 child: new SafeArea(
                     minimum: EdgeInsets.All(8),
                     maintainBottomViewPadding: true,
                     child: new Container(
                         alignment: Alignment.Center,
-                        color: Color.Parse("#FFBBDEFB"),
+                        color: new Color(0xFFBBDEFB),
                         child: new Text(
                             "Safe content\n24 left · 18 top · 32 right · 28 bottom",
                             fontSize: 15,
@@ -61,7 +61,7 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                 Padding: new Thickness(16, 20, 24, 12),
                 ViewPadding: new Thickness(16, 20, 24, 12)),
             child: new Container(
-                color: Color.Parse("#FFFFE0E0"),
+                color: new Color(0xFFFFE0E0),
                 child: new CustomScrollView(
                     slivers:
                     [
@@ -73,8 +73,8 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                                 itemBuilder: (_, index) => new Container(
                                     alignment: Alignment.CenterLeft,
                                     color: index % 2 == 0
-                                        ? Color.Parse("#FFE3F2FD")
-                                        : Color.Parse("#FFFFFFFF"),
+                                        ? new Color(0xFFE3F2FD)
+                                        : new Color(0xFFFFFFFF),
                                     padding: new Thickness(12, 8),
                                     child: new Text(
                                         $"safe sliver row #{index}",

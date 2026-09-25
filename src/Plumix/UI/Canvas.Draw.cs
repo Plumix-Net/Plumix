@@ -129,11 +129,11 @@ public sealed partial class Canvas
             double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
             previousOpacity = targetOpacity;
             byte layerAlpha = (byte)Math.Clamp(
-                (int)Math.Round(color.A * layerOpacity),
+                (int)Math.Round(color.Alpha * layerOpacity),
                 0,
                 byte.MaxValue);
-            Color layerColor = Color.FromArgb(layerAlpha, color.R, color.G, color.B);
-            if (layerColor.A > 0)
+            Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
+            if (layerColor.Alpha > 0)
             {
                 DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
             }
@@ -310,7 +310,7 @@ public sealed partial class Canvas
         bool transparentOccluder,
         Point geometryOffset)
     {
-        if (elevation <= 0.0 || color.A == 0)
+        if (elevation <= 0.0 || color.Alpha == 0)
         {
             return;
         }
@@ -327,10 +327,10 @@ public sealed partial class Canvas
             {
                 double fraction = step / (double)steps;
                 byte alpha = (byte)Math.Clamp(
-                    (int)Math.Round(color.A * 0.12 * (1.0 - (fraction * 0.75))),
+                    (int)Math.Round(color.Alpha * 0.12 * (1.0 - (fraction * 0.75))),
                     1,
                     byte.MaxValue);
-                var shadowBrush = new SolidColorBrush(Color.FromArgb(alpha, color.R, color.G, color.B));
+                var shadowBrush = new SolidColorBrush(Color.FromARGB(alpha, color.Red, color.Green, color.Blue));
                 var shadowPen = new Pen(shadowBrush, step * 2.0);
                 context.DrawGeometry(transparentOccluder ? shadowBrush : null, shadowPen, geometry);
             }

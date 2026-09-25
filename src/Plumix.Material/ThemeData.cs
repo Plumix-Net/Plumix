@@ -166,8 +166,7 @@ public sealed record AppBarThemeData(
     double? ScrolledUnderElevation = null,
     Color? ShadowColor = null,
     Color? SurfaceTintColor = null,
-    ShapeBorder? Shape = null,
-    WidgetStateColor? BackgroundColorState = null)
+    ShapeBorder? Shape = null)
 {
     public AppBarThemeData CopyWith(
         Color? color = null,
@@ -187,20 +186,16 @@ public sealed record AppBarThemeData(
         double? scrolledUnderElevation = null,
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
-        ShapeBorder? shape = null,
-        WidgetStateColor? backgroundColorState = null)
+        ShapeBorder? shape = null)
     {
-        if (color.HasValue && backgroundColor.HasValue)
+        if (color != null && backgroundColor != null)
         {
             throw new ArgumentException(
                 "color and backgroundColor mean the same thing. Only specify one.");
         }
 
         return new AppBarThemeData(
-            BackgroundColor: backgroundColor
-                             ?? color
-                             ?? backgroundColorState?.DefaultValue
-                             ?? BackgroundColor,
+            BackgroundColor: backgroundColor ?? color ?? BackgroundColor,
             ForegroundColor: foregroundColor ?? ForegroundColor,
             IconTheme: iconTheme ?? IconTheme,
             ActionsIconTheme: actionsIconTheme ?? ActionsIconTheme,
@@ -216,11 +211,7 @@ public sealed record AppBarThemeData(
             ScrolledUnderElevation: scrolledUnderElevation ?? ScrolledUnderElevation,
             ShadowColor: shadowColor ?? ShadowColor,
             SurfaceTintColor: surfaceTintColor ?? SurfaceTintColor,
-            Shape: shape ?? Shape,
-            BackgroundColorState: backgroundColorState
-                                  ?? (backgroundColor.HasValue || color.HasValue
-                                      ? new WidgetStateColor((backgroundColor ?? color)!.Value)
-                                      : BackgroundColorState));
+            Shape: shape ?? Shape);
     }
 
     public static AppBarThemeData Lerp(AppBarThemeData? a, AppBarThemeData? b, double t)
@@ -268,13 +259,13 @@ public sealed record AppBarThemeData(
 
     private static Color? LerpColor(Color? a, Color? b, double t)
     {
-        if (!a.HasValue && !b.HasValue)
+        if (a == null && b == null)
         {
             return null;
         }
 
-        var from = a ?? Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        var to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
+        var from = a ?? Color.FromARGB(0, b!.Red, b!.Green, b!.Blue);
+        var to = b ?? Color.FromARGB(0, a!.Red, a!.Green, a!.Blue);
         return new ColorTween().Evaluate(t, from, to);
     }
     private static IconThemeData? LerpIconTheme(IconThemeData? a, IconThemeData? b, double t)
@@ -319,7 +310,7 @@ public sealed record AppBarThemeData(
 
 public sealed record ThemeData : IDiagnosticable
 {
-    private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
+    private static readonly Color LightPrimaryColor = new Color(0xFF6750A4);
     private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
         new ThemeExtensionMap([]);
     private static readonly IReadOnlyDictionary<Type, Adaptation> EmptyAdaptations =
@@ -428,17 +419,17 @@ public sealed record ThemeData : IDiagnosticable
             throw new ArgumentException(
                 "ThemeData brightness must match ColorScheme brightness.");
         }
-        if (colorSchemeSeed.HasValue && colorScheme is not null)
+        if (colorSchemeSeed != null && colorScheme is not null)
         {
             throw new ArgumentException(
                 "Only one of colorSchemeSeed and colorScheme may be specified.");
         }
-        if (colorSchemeSeed.HasValue && primaryColor.HasValue)
+        if (colorSchemeSeed != null && primaryColor != null)
         {
             throw new ArgumentException(
                 "Only one of colorSchemeSeed and primaryColor may be specified.");
         }
-        if (colorSchemeSeed.HasValue && primarySwatch is not null)
+        if (colorSchemeSeed != null && primarySwatch is not null)
         {
             throw new ArgumentException(
                 "Only one of colorSchemeSeed and primarySwatch may be specified.");
@@ -451,8 +442,8 @@ public sealed record ThemeData : IDiagnosticable
         // Mirrors Flutter's derivation order: the Material 3 branch resolves the scheme-backed
         // colors first, then the shared Material 2 fallbacks fill in whatever is still unset, and
         // the Material 2 scheme itself is derived from `primarySwatch` last.
-        ColorScheme? scheme = colorSchemeSeed.HasValue
-            ? ColorScheme.FromSeed(colorSchemeSeed.Value, effectiveBrightness)
+        ColorScheme? scheme = colorSchemeSeed != null
+            ? ColorScheme.FromSeed(colorSchemeSeed!, effectiveBrightness)
             : colorScheme;
         Color? resolvedPrimaryColor = primaryColor;
         Color? resolvedCanvasColor = canvasColor;
@@ -461,7 +452,7 @@ public sealed record ThemeData : IDiagnosticable
         Color? resolvedDividerColor = dividerColor;
         Color? resolvedDialogBackgroundColor = dialogBackgroundColor;
         Color? resolvedIndicatorColor = indicatorColor;
-        if (colorSchemeSeed.HasValue || UseMaterial3)
+        if (colorSchemeSeed != null || UseMaterial3)
         {
             scheme ??= isDark ? ColorScheme.Material3Dark : ColorScheme.Material3Light;
             resolvedPrimaryColor ??= isDark ? scheme.Surface : scheme.Primary;
@@ -474,15 +465,15 @@ public sealed record ThemeData : IDiagnosticable
         }
 
         MaterialColor swatch = primarySwatch ?? Colors.Blue;
-        resolvedPrimaryColor ??= isDark ? Colors.Grey.Shade900 : swatch.Primary;
+        resolvedPrimaryColor ??= isDark ? Colors.Grey.Shade900 : swatch;
         PrimaryColorLight = primaryColorLight ?? (isDark ? Colors.Grey.Shade500 : swatch.Shade100);
         PrimaryColorDark = primaryColorDark ?? (isDark ? Colors.Black : swatch.Shade700);
-        resolvedCanvasColor ??= isDark ? Colors.Grey[850]!.Value : Colors.Grey.Shade50;
+        resolvedCanvasColor ??= isDark ? Colors.Grey[850]! : Colors.Grey.Shade50;
         resolvedScaffoldBackgroundColor ??= resolvedCanvasColor;
         resolvedCardColor ??= isDark ? Colors.Grey.Shade800 : Colors.White;
         resolvedDividerColor ??= isDark
-            ? Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)
-            : Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
+            ? Color.FromARGB(0x1F, 0xFF, 0xFF, 0xFF)
+            : Color.FromARGB(0x1F, 0x00, 0x00, 0x00);
         ColorScheme = scheme ?? ColorScheme.FromSwatch(
             primarySwatch: swatch,
             accentColor: isDark ? Colors.TealAccent.Shade200 : swatch.Shade500,
@@ -493,12 +484,12 @@ public sealed record ThemeData : IDiagnosticable
         SecondaryHeaderColor = secondaryHeaderColor
                                ?? (isDark ? Colors.Grey.Shade700 : swatch.Shade50);
         resolvedDialogBackgroundColor ??= isDark ? Colors.Grey.Shade800 : Colors.White;
-        CanvasColor = resolvedCanvasColor.Value;
-        ScaffoldBackgroundColor = resolvedScaffoldBackgroundColor.Value;
-        PrimaryColor = resolvedPrimaryColor.Value;
-        CardColor = resolvedCardColor.Value;
-        DividerColor = resolvedDividerColor.Value;
-        DialogBackgroundColor = resolvedDialogBackgroundColor.Value;
+        CanvasColor = resolvedCanvasColor!;
+        ScaffoldBackgroundColor = resolvedScaffoldBackgroundColor!;
+        PrimaryColor = resolvedPrimaryColor!;
+        CardColor = resolvedCardColor!;
+        DividerColor = resolvedDividerColor!;
+        DialogBackgroundColor = resolvedDialogBackgroundColor!;
         IndicatorColor = resolvedIndicatorColor
                          ?? (ColorScheme.Secondary == PrimaryColor
                              ? Colors.White
@@ -511,7 +502,7 @@ public sealed record ThemeData : IDiagnosticable
                              colorScheme: ColorScheme)
                          : Plumix.Material.Typography.Material2014(platform: Platform));
         ApplyElevationOverlayColor = applyElevationOverlayColor
-                                     ?? ((colorSchemeSeed.HasValue || UseMaterial3)
+                                     ?? ((colorSchemeSeed != null || UseMaterial3)
                                          && brightness == Brightness.Dark);
         TextTheme defaultTextTheme = effectiveBrightness == Brightness.Dark
             ? Typography.White
@@ -549,7 +540,7 @@ public sealed record ThemeData : IDiagnosticable
                     ?? new IconThemeData(
                         Color: effectiveBrightness == Brightness.Dark
                             ? Colors.White
-                            : Color.FromArgb(0xDD, 0x00, 0x00, 0x00));
+                            : Color.FromARGB(0xDD, 0x00, 0x00, 0x00));
         PrimaryIconTheme = primaryIconTheme
                            ?? new IconThemeData(
                                Color: EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
@@ -569,11 +560,11 @@ public sealed record ThemeData : IDiagnosticable
             effectiveBrightness == Brightness.Dark ? Colors.White : Colors.Black,
             0.04);
         HighlightColor = highlightColor ?? (effectiveBrightness == Brightness.Dark
-            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
-            : Color.FromArgb(0x66, 0xBC, 0xBC, 0xBC));
+            ? Color.FromARGB(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromARGB(0x66, 0xBC, 0xBC, 0xBC));
         SplashColor = splashColor ?? (effectiveBrightness == Brightness.Dark
-            ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
-            : Color.FromArgb(0x66, 0xC8, 0xC8, 0xC8));
+            ? Color.FromARGB(0x40, 0xCC, 0xCC, 0xCC)
+            : Color.FromARGB(0x66, 0xC8, 0xC8, 0xC8));
         SplashFactory = splashFactory ?? ResolveDefaultSplashFactory(UseMaterial3, Platform);
         MaterialTapTargetSize = materialTapTargetSize ?? Platform switch
         {
@@ -1291,11 +1282,7 @@ public sealed record ThemeData : IDiagnosticable
             : null;
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
-        color.R,
-        color.G,
-        color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     /// <summary>
     /// Dart's `ThemeData.copyWith` for the parameters whose semantics a C# `with` expression
@@ -1328,9 +1315,15 @@ public sealed record ThemeData : IDiagnosticable
         };
     }
 
-    public static ThemeData Light { get; } = new();
+    /// <summary>
+    /// Dart's <c>ThemeData.light()</c> factory: a new light theme on every read, so its
+    /// platform-dependent defaults (<see cref="VisualDensity"/>, <see cref="MaterialTapTargetSize"/>)
+    /// follow the target platform in effect at the call, not at the first read in the process.
+    /// </summary>
+    public static ThemeData Light => new();
 
-    public static ThemeData Dark { get; } = new(brightness: Brightness.Dark);
+    /// <summary>Dart's <c>ThemeData.dark()</c> factory: a new dark theme on every read.</summary>
+    public static ThemeData Dark => new(brightness: Brightness.Dark);
 
     /// <summary>
     /// A default theme without text geometry, expected to be localized through
@@ -1546,20 +1539,21 @@ public sealed record ThemeData : IDiagnosticable
 
     public static Brightness EstimateBrightnessForColor(Color color)
     {
-        static double Linearize(byte component)
+        double relativeLuminance = color.ComputeLuminance();
+
+        // See <https://www.w3.org/TR/WCAG20/#contrast-ratiodef>
+        // The spec says to use kThreshold=0.0525, but Material Design appears to bias
+        // more towards using light text than WCAG20 recommends. Material Design spec
+        // doesn't say what value to use, but 0.15 seemed close to what the Material
+        // Design spec shows for its color palette on
+        // <https://material.io/go/design-theming#color-color-palette>.
+        const double kThreshold = 0.15;
+        if ((relativeLuminance + 0.05) * (relativeLuminance + 0.05) > kThreshold)
         {
-            double value = component / 255.0;
-            return value <= 0.03928
-                ? value / 12.92
-                : Math.Pow((value + 0.055) / 1.055, 2.4);
+            return Brightness.Light;
         }
 
-        double luminance = (0.2126 * Linearize(color.R))
-                           + (0.7152 * Linearize(color.G))
-                           + (0.0722 * Linearize(color.B));
-        return (luminance + 0.05) * (luminance + 0.05) > 0.15
-            ? Brightness.Light
-            : Brightness.Dark;
+        return Brightness.Dark;
     }
 
     private static IReadOnlyDictionary<Type, Adaptation> CreateAdaptationMap(
@@ -1785,7 +1779,7 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
             cupertinoOverrideTheme.BarBackgroundColor,
             cupertinoOverrideTheme.ScaffoldBackgroundColor,
             cupertinoOverrideTheme.SelectionHandleColor
-            ?? AsDynamic(materialTheme.TextSelectionTheme.SelectionHandleColor),
+            ?? materialTheme.TextSelectionTheme.SelectionHandleColor,
             cupertinoOverrideTheme.ApplyThemeToAll)
     {
         _materialTheme = materialTheme;
@@ -1795,13 +1789,13 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
     public override PlatformBrightness? Brightness =>
         _cupertinoOverrideTheme.Brightness ?? ToPlatformBrightness(_materialTheme.Brightness);
 
-    public override CupertinoDynamicColor PrimaryColor =>
+    public override Color PrimaryColor =>
         _cupertinoOverrideTheme.PrimaryColor ?? _materialTheme.ColorScheme.Primary;
 
-    public override CupertinoDynamicColor PrimaryContrastingColor =>
+    public override Color PrimaryContrastingColor =>
         _cupertinoOverrideTheme.PrimaryContrastingColor ?? _materialTheme.ColorScheme.OnPrimary;
 
-    public override CupertinoDynamicColor ScaffoldBackgroundColor =>
+    public override Color ScaffoldBackgroundColor =>
         _cupertinoOverrideTheme.ScaffoldBackgroundColor ?? _materialTheme.ScaffoldBackgroundColor;
 
     /// <summary>
@@ -1812,12 +1806,12 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
     /// </summary>
     public override MaterialBasedCupertinoThemeData CopyWith(
         PlatformBrightness? brightness = null,
-        CupertinoDynamicColor? primaryColor = null,
-        CupertinoDynamicColor? primaryContrastingColor = null,
+        Color? primaryColor = null,
+        Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
-        CupertinoDynamicColor? barBackgroundColor = null,
-        CupertinoDynamicColor? scaffoldBackgroundColor = null,
-        CupertinoDynamicColor? selectionHandleColor = null,
+        Color? barBackgroundColor = null,
+        Color? scaffoldBackgroundColor = null,
+        Color? selectionHandleColor = null,
         bool? applyThemeToAll = null)
     {
         return new MaterialBasedCupertinoThemeData(
@@ -1844,8 +1838,6 @@ public class MaterialBasedCupertinoThemeData : CupertinoThemeData
             cupertinoOverrideThemeWithTextTheme.ResolveFrom(context));
     }
 
-    private static CupertinoDynamicColor? AsDynamic(Color? color) =>
-        color is { } value ? (CupertinoDynamicColor)value : null;
 
     // `Brightness` names this type's own property here, so the Material enum needs qualifying.
     private static PlatformBrightness ToPlatformBrightness(Plumix.Material.Brightness brightness) =>

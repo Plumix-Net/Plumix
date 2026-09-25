@@ -60,7 +60,7 @@ public sealed class CupertinoTabScaffold : StatefulWidget
         CupertinoTabBar tabBar,
         IndexedWidgetBuilder tabBuilder,
         CupertinoTabController? controller = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool resizeToAvoidBottomInset = true,
         string? restorationId = null,
         Key? key = null) : base(key)
@@ -87,7 +87,7 @@ public sealed class CupertinoTabScaffold : StatefulWidget
 
     public IndexedWidgetBuilder TabBuilder { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public bool ResizeToAvoidBottomInset { get; }
 
@@ -173,7 +173,7 @@ internal sealed class CupertinoTabScaffoldState : RestorationState<CupertinoTabS
                 child: content));
 
         Color backgroundColor = CupertinoDynamicColor.MaybeResolve(CurrentWidget.BackgroundColor, context)
-            ?? CupertinoTheme.Of(context).ScaffoldBackgroundColor.Value;
+            ?? CupertinoTheme.Of(context).ScaffoldBackgroundColor;
 
         return new DecoratedBox(
             decoration: new BoxDecoration(Color: backgroundColor),

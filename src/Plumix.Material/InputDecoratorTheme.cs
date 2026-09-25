@@ -32,16 +32,16 @@ public class InputDecorationThemeData : IDiagnosticable
         bool isDense = false,
         EdgeInsetsGeometry? contentPadding = null,
         bool isCollapsed = false,
-        WidgetStateColor? iconColor = null,
+        Color? iconColor = null,
         WidgetStateTextStyle? prefixStyle = null,
-        WidgetStateColor? prefixIconColor = null,
+        Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
         WidgetStateTextStyle? suffixStyle = null,
-        WidgetStateColor? suffixIconColor = null,
+        Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         WidgetStateTextStyle? counterStyle = null,
         bool filled = false,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
         WidgetStateBorderSide? outlineBorder = null,
         Color? focusColor = null,
@@ -109,16 +109,16 @@ public class InputDecorationThemeData : IDiagnosticable
     public virtual bool IsDense { get; }
     public virtual EdgeInsetsGeometry? ContentPadding { get; }
     public virtual bool IsCollapsed { get; }
-    public virtual WidgetStateColor? IconColor { get; }
+    public virtual Color? IconColor { get; }
     public virtual WidgetStateTextStyle? PrefixStyle { get; }
-    public virtual WidgetStateColor? PrefixIconColor { get; }
+    public virtual Color? PrefixIconColor { get; }
     public virtual BoxConstraints? PrefixIconConstraints { get; }
     public virtual WidgetStateTextStyle? SuffixStyle { get; }
-    public virtual WidgetStateColor? SuffixIconColor { get; }
+    public virtual Color? SuffixIconColor { get; }
     public virtual BoxConstraints? SuffixIconConstraints { get; }
     public virtual WidgetStateTextStyle? CounterStyle { get; }
     public virtual bool Filled { get; }
-    public virtual WidgetStateColor? FillColor { get; }
+    public virtual Color? FillColor { get; }
     public virtual WidgetStateBorderSide? ActiveIndicatorBorder { get; }
     public virtual WidgetStateBorderSide? OutlineBorder { get; }
     public virtual Color? FocusColor { get; }
@@ -148,16 +148,16 @@ public class InputDecorationThemeData : IDiagnosticable
         bool? isDense = null,
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
-        WidgetStateColor? iconColor = null,
+        Color? iconColor = null,
         WidgetStateTextStyle? prefixStyle = null,
-        WidgetStateColor? prefixIconColor = null,
+        Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
         WidgetStateTextStyle? suffixStyle = null,
-        WidgetStateColor? suffixIconColor = null,
+        Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         WidgetStateTextStyle? counterStyle = null,
         bool? filled = null,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
         WidgetStateBorderSide? outlineBorder = null,
         Color? focusColor = null,
@@ -342,15 +342,15 @@ public class InputDecorationThemeData : IDiagnosticable
             "contentPadding", ContentPadding, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool>(
             "isCollapsed", IsCollapsed, defaultValue: defaultTheme.IsCollapsed));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+        properties.Add(new ColorProperty(
             "iconColor", IconColor, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+        properties.Add(new ColorProperty(
             "prefixIconColor", PrefixIconColor, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>(
             "prefixIconConstraints", PrefixIconConstraints, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
             "prefixStyle", PrefixStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+        properties.Add(new ColorProperty(
             "suffixIconColor", SuffixIconColor, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>(
             "suffixIconConstraints", SuffixIconConstraints, defaultValue: nullDefault));
@@ -359,7 +359,7 @@ public class InputDecorationThemeData : IDiagnosticable
         properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
             "counterStyle", CounterStyle, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool>("filled", Filled, defaultValue: defaultTheme.Filled));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+        properties.Add(new ColorProperty(
             "fillColor", FillColor, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<WidgetStateBorderSide?>(
             "activeIndicatorBorder", ActiveIndicatorBorder, defaultValue: nullDefault));
@@ -461,16 +461,16 @@ public sealed class InputDecorationTheme : InheritedTheme
     private readonly bool _isDense;
     private readonly EdgeInsetsGeometry? _contentPadding;
     private readonly bool _isCollapsed;
-    private readonly WidgetStateColor? _iconColor;
+    private readonly Color? _iconColor;
     private readonly WidgetStateTextStyle? _prefixStyle;
-    private readonly WidgetStateColor? _prefixIconColor;
+    private readonly Color? _prefixIconColor;
     private readonly BoxConstraints? _prefixIconConstraints;
     private readonly WidgetStateTextStyle? _suffixStyle;
-    private readonly WidgetStateColor? _suffixIconColor;
+    private readonly Color? _suffixIconColor;
     private readonly BoxConstraints? _suffixIconConstraints;
     private readonly WidgetStateTextStyle? _counterStyle;
     private readonly bool _filled;
-    private readonly WidgetStateColor? _fillColor;
+    private readonly Color? _fillColor;
     private readonly WidgetStateBorderSide? _activeIndicatorBorder;
     private readonly WidgetStateBorderSide? _outlineBorder;
     private readonly Color? _focusColor;
@@ -502,16 +502,16 @@ public sealed class InputDecorationTheme : InheritedTheme
         bool? isDense = null,
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
-        WidgetStateColor? iconColor = null,
+        Color? iconColor = null,
         WidgetStateTextStyle? prefixStyle = null,
-        WidgetStateColor? prefixIconColor = null,
+        Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
         WidgetStateTextStyle? suffixStyle = null,
-        WidgetStateColor? suffixIconColor = null,
+        Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         WidgetStateTextStyle? counterStyle = null,
         bool? filled = null,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
         WidgetStateBorderSide? outlineBorder = null,
         Color? focusColor = null,
@@ -644,18 +644,18 @@ public sealed class InputDecorationTheme : InheritedTheme
     public bool IsDense => _data is not null ? _data.IsDense : _isDense;
     public EdgeInsetsGeometry? ContentPadding => _data is not null ? _data.ContentPadding : _contentPadding;
     public bool IsCollapsed => _data is not null ? _data.IsCollapsed : _isCollapsed;
-    public WidgetStateColor? IconColor => _data is not null ? _data.IconColor : _iconColor;
+    public Color? IconColor => _data is not null ? _data.IconColor : _iconColor;
     public WidgetStateTextStyle? PrefixStyle => _data is not null ? _data.PrefixStyle : _prefixStyle;
-    public WidgetStateColor? PrefixIconColor => _data is not null ? _data.PrefixIconColor : _prefixIconColor;
+    public Color? PrefixIconColor => _data is not null ? _data.PrefixIconColor : _prefixIconColor;
     public BoxConstraints? PrefixIconConstraints =>
         _data is not null ? _data.PrefixIconConstraints : _prefixIconConstraints;
     public WidgetStateTextStyle? SuffixStyle => _data is not null ? _data.SuffixStyle : _suffixStyle;
-    public WidgetStateColor? SuffixIconColor => _data is not null ? _data.SuffixIconColor : _suffixIconColor;
+    public Color? SuffixIconColor => _data is not null ? _data.SuffixIconColor : _suffixIconColor;
     public BoxConstraints? SuffixIconConstraints =>
         _data is not null ? _data.SuffixIconConstraints : _suffixIconConstraints;
     public WidgetStateTextStyle? CounterStyle => _data is not null ? _data.CounterStyle : _counterStyle;
     public bool Filled => _data is not null ? _data.Filled : _filled;
-    public WidgetStateColor? FillColor => _data is not null ? _data.FillColor : _fillColor;
+    public Color? FillColor => _data is not null ? _data.FillColor : _fillColor;
     public WidgetStateBorderSide? ActiveIndicatorBorder =>
         _data is not null ? _data.ActiveIndicatorBorder : _activeIndicatorBorder;
     public WidgetStateBorderSide? OutlineBorder => _data is not null ? _data.OutlineBorder : _outlineBorder;
@@ -698,16 +698,16 @@ public sealed class InputDecorationTheme : InheritedTheme
         bool? isDense = null,
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
-        WidgetStateColor? iconColor = null,
+        Color? iconColor = null,
         WidgetStateTextStyle? prefixStyle = null,
-        WidgetStateColor? prefixIconColor = null,
+        Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
         WidgetStateTextStyle? suffixStyle = null,
-        WidgetStateColor? suffixIconColor = null,
+        Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         WidgetStateTextStyle? counterStyle = null,
         bool? filled = null,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
         WidgetStateBorderSide? outlineBorder = null,
         Color? focusColor = null,

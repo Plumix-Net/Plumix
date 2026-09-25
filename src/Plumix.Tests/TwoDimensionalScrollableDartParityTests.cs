@@ -18,8 +18,8 @@ public sealed class TwoDimensionalScrollableDartParityTests
     private const string ViewportTest = "two_dimensional_viewport_test.dart";
     private const string ScrollViewTest = "two_dimensional_scroll_view_test.dart";
 
-    private static readonly Color Amber100 = Color.FromUInt32(0xFFFFF8E1);
-    private static readonly Color BlueAccent100 = Color.FromUInt32(0xFF82B1FF);
+    private static readonly Color Amber100 = new Color(0xFFFFF8E1);
+    private static readonly Color BlueAccent100 = new Color(0xFF82B1FF);
 
     // ------------------------------------------------------------------ two_dimensional_viewport_test.dart
 
@@ -212,7 +212,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
 
             // with restorationID set
             tester.PumpWidget(new WidgetsApp(
-                color: Color.FromUInt32(0xFFFFFFFF),
+                color: new Color(0xFFFFFFFF),
                 restorationScopeId: "Test ID",
                 builder: (_, _) => new TwoDimensionalScrollable(
                     restorationId: "Custom Restoration ID",
@@ -259,7 +259,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
         RunVariant(platform, tester =>
         {
             Widget app = new WidgetsApp(
-                color: Color.FromUInt32(0xFFFFFFFF),
+                color: new Color(0xFFFFFFFF),
                 restorationScopeId: "Test ID",
                 builder: (_, _) => new TwoDimensionalScrollable(
                     restorationId: "Custom Restoration ID",
@@ -1739,7 +1739,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
 
     private sealed class TestTextFieldState : State<TestTextField>
     {
-        private static readonly Color Red = Color.FromUInt32(0xFFF44336);
+        private static readonly Color Red = new Color(0xFFF44336);
 
         private readonly TextEditingController _controller = new();
         private readonly FocusNode _focusNode = new();
@@ -1792,7 +1792,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             var children = new List<Plumix.Widgets.Widget> { Widget.Child };
             if (_showOverlay)
             {
-                children.Add(Positioned.Fill(child: new Container(color: Color.FromUInt32(0x88000000))));
+                children.Add(Positioned.Fill(child: new Container(color: new Color(0x88000000))));
             }
 
             return new Stack(children: children);

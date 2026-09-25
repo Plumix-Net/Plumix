@@ -303,7 +303,7 @@ public class PaintingContext : ClipContext
 
             if (RenderingDebug.PaintLayerBordersEnabled)
             {
-                var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFF9800)), 1.0);
+                var pen = new Pen(new SolidColorBrush(new Color(0xFFFF9800)), 1.0);
                 Canvas.DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds));
             }
         }

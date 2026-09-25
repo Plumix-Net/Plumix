@@ -51,7 +51,7 @@ internal sealed class AsyncBuilderDemoPageState : State
     private Widget BuildFutureSection()
     {
         return new Container(
-            color: Color.Parse("#FFF4F7FA"),
+            color: new Color(0xFFF4F7FA),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -78,7 +78,7 @@ internal sealed class AsyncBuilderDemoPageState : State
     private Widget BuildStreamSection()
     {
         return new Container(
-            color: Color.Parse("#FFF4F7FA"),
+            color: new Color(0xFFF4F7FA),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -108,7 +108,7 @@ internal sealed class AsyncBuilderDemoPageState : State
         string value = snapshot.HasError
             ? $"error: {snapshot.Error!.Message}"
             : $"data: {snapshot.Data ?? "null"}";
-        return new Text($"state: {snapshot.ConnectionState} · {value}", color: Color.Parse("#FF31506F"));
+        return new Text($"state: {snapshot.ConnectionState} · {value}", color: new Color(0xFF31506F));
     }
 
     private static Widget BuildStreamSnapshot(BuildContext context, AsyncSnapshot<int> snapshot)
@@ -118,7 +118,7 @@ internal sealed class AsyncBuilderDemoPageState : State
             : snapshot.HasData
                 ? $"data: {snapshot.Data}"
                 : "data: null";
-        return new Text($"state: {snapshot.ConnectionState} · {value}", color: Color.Parse("#FF31506F"));
+        return new Text($"state: {snapshot.ConnectionState} · {value}", color: new Color(0xFF31506F));
     }
 
     private static Widget BuildButton(string label, Action onPressed)
@@ -127,7 +127,7 @@ internal sealed class AsyncBuilderDemoPageState : State
             onPressed: onPressed,
             child: new Text(label),
             style: TextButton.StyleFrom(
-                backgroundColor: Color.Parse("#FFDCE3ED")));
+                backgroundColor: new Color(0xFFDCE3ED)));
     }
 
     private void RestartFuture()

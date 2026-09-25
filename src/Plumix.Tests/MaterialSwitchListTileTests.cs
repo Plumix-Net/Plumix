@@ -255,10 +255,10 @@ public sealed class MaterialSwitchListTileTests
     [Fact]
     public void SelectedColor_FollowsFlutterPrecedence()
     {
-        var activeThumb = Color.Parse("#FF8C1D40");
-        var active = Color.Parse("#FF2D6A4F");
-        var themed = Color.Parse("#FF006C4C");
-        var secondary = Color.Parse("#FF735C00");
+        var activeThumb = new Color(0xFF8C1D40);
+        var active = new Color(0xFF2D6A4F);
+        var themed = new Color(0xFF006C4C);
+        var secondary = new Color(0xFF735C00);
         var bare = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondary: secondary)

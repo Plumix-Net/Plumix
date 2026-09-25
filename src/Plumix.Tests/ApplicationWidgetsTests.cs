@@ -273,7 +273,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Widget? builderChild = null;
         string? generatedTitleLocale = null;
         var app = new WidgetsApp(
-            color: Color.FromArgb(0x80, 0x11, 0x22, 0x33),
+            color: Color.FromARGB(0x80, 0x11, 0x22, 0x33),
             navigatorKey: navigatorKey,
             home: new Builder(context =>
             {
@@ -475,10 +475,10 @@ public sealed class ApplicationWidgetsTests : IDisposable
     {
         var lightTheme = new ThemeData(
             brightness: Brightness.Light,
-            primaryColor: Color.FromRgb(10, 20, 30));
+            primaryColor: Color.FromARGB(0xFF, 10, 20, 30));
         var darkTheme = new ThemeData(
             brightness: Brightness.Dark,
-            primaryColor: Color.FromRgb(40, 50, 60));
+            primaryColor: Color.FromARGB(0xFF, 40, 50, 60));
         ThemeData? resolvedTheme = null;
         DefaultSelectionStyle? selectionStyle = null;
         ScaffoldMessengerState? messenger = null;
@@ -510,7 +510,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         // Dart's `_MaterialAppState._materialBuilder` resolves both defaults from the color scheme.
         Color darkPrimary = darkTheme.ColorScheme.Primary;
         Assert.Equal(
-            Color.FromArgb(102, darkPrimary.R, darkPrimary.G, darkPrimary.B),
+            Color.FromARGB(102, darkPrimary.Red, darkPrimary.Green, darkPrimary.Blue),
             selectionStyle!.SelectionColor);
         Assert.Equal(darkPrimary, selectionStyle.CursorColor);
         Assert.NotNull(messenger);
@@ -526,14 +526,14 @@ public sealed class ApplicationWidgetsTests : IDisposable
     [Fact]
     public void MaterialApp_ThemePrecedenceMatchesDarkAndHighContrastPolicy()
     {
-        var lightTheme = new ThemeData(primaryColor: Color.FromRgb(1, 1, 1));
+        var lightTheme = new ThemeData(primaryColor: Color.FromARGB(0xFF, 1, 1, 1));
         var darkTheme = new ThemeData(
             brightness: Brightness.Dark,
-            primaryColor: Color.FromRgb(2, 2, 2));
-        var highContrastTheme = new ThemeData(primaryColor: Color.FromRgb(3, 3, 3));
+            primaryColor: Color.FromARGB(0xFF, 2, 2, 2));
+        var highContrastTheme = new ThemeData(primaryColor: Color.FromARGB(0xFF, 3, 3, 3));
         var highContrastDarkTheme = new ThemeData(
             brightness: Brightness.Dark,
-            primaryColor: Color.FromRgb(4, 4, 4));
+            primaryColor: Color.FromARGB(0xFF, 4, 4, 4));
         ThemeData? resolvedTheme = null;
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(

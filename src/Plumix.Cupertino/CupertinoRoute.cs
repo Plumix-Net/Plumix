@@ -31,7 +31,7 @@ internal static class CupertinoRoutePhysics
 /// <summary>Shared iOS page-route behavior corresponding to Dart's route transition mixin.</summary>
 public abstract class CupertinoRouteTransitionMixin<T> : PageRoute, ICupertinoRouteTransition
 {
-    private static readonly Color PageTransitionBarrierColor = Color.FromUInt32(0x18000000);
+    private static readonly Color PageTransitionBarrierColor = new Color(0x18000000);
     private readonly bool _allowSnapshotting;
     private readonly bool _barrierDismissible;
     private ValueNotifier<string?>? _previousTitle;
@@ -635,7 +635,7 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
 
     public override Color? BarrierColor => _usesDefaultBarrierColor
         ? Navigator is null
-            ? Color.FromUInt32(0x33000000)
+            ? new Color(0x33000000)
             : CupertinoRouteConstants.ModalBarrierColor.ResolveFrom(Navigator.Context)
         : _barrierColor;
 
@@ -762,8 +762,8 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
 {
     private static readonly IReadOnlyList<Color> ShadowColors =
     [
-        Color.FromUInt32(0x04000000),
-        Colors.Transparent,
+        new Color(0x04000000),
+        CupertinoColors.Transparent,
     ];
 
     private readonly IReadOnlyList<Color>? _colors;
@@ -828,35 +828,7 @@ internal sealed record CupertinoEdgeShadowDecoration : Decoration
         return new CupertinoEdgeShadowPainter(this, onChanged);
     }
 
-    private static Color LerpColor(Color? a, Color? b, double t)
-    {
-        if (a is null)
-        {
-            Color color = b!.Value;
-            return Color.FromArgb(
-                (byte)Math.Round(color.A * t),
-                color.R,
-                color.G,
-                color.B);
-        }
-
-        if (b is null)
-        {
-            Color color = a.Value;
-            return Color.FromArgb(
-                (byte)Math.Round(color.A * (1.0 - t)),
-                color.R,
-                color.G,
-                color.B);
-        }
-
-        byte LerpChannel(byte start, byte end) => (byte)Math.Round(start + ((end - start) * t));
-        return Color.FromArgb(
-            LerpChannel(a.Value.A, b.Value.A),
-            LerpChannel(a.Value.R, b.Value.R),
-            LerpChannel(a.Value.G, b.Value.G),
-            LerpChannel(a.Value.B, b.Value.B));
-    }
+    private static Color LerpColor(Color? a, Color? b, double t) => Color.Lerp(a, b, t)!;
 
     private sealed class CupertinoEdgeShadowPainter : BoxPainter
     {

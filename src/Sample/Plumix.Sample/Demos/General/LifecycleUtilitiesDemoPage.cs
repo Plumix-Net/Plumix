@@ -55,7 +55,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State
                             + "The animation probe rebuilds only when AnimationStatus changes.",
                             color: Colors.DimGray),
                         new Container(
-                            color: Color.Parse("#FFF4F7FA"),
+                            color: new Color(0xFFF4F7FA),
                             padding: new Thickness(12),
                             child: new Text(
                                 $"Last app state: {_lastLifecycleState?.ToString() ?? "waiting"}\n"
@@ -82,7 +82,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State
     {
         _statusBuildCount++;
         return new Container(
-            color: Color.Parse("#FFE7F0FA"),
+            color: new Color(0xFFE7F0FA),
             padding: new Thickness(12),
             child: new Text(
                 $"Animation status: {_controller.Status}\nStatusTransitionWidget builds: {_statusBuildCount}"));

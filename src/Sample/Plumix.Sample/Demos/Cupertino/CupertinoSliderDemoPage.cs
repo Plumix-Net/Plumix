@@ -35,7 +35,7 @@ internal sealed class CupertinoSliderDemoPageState : State
             new Directionality(
                 _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                 new Container(
-                    color: _dark ? Color.Parse("#FF1C1C1E") : CupertinoColors.White,
+                    color: _dark ? new Color(0xFF1C1C1E) : CupertinoColors.White,
                     padding: new Thickness(12.0),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -99,17 +99,17 @@ internal sealed class CupertinoSliderDemoPageState : State
 
     private Color TitleColor => _dark ? CupertinoColors.White : CupertinoColors.Black;
 
-    private Color SubtitleColor => _dark ? Color.Parse("#99FFFFFF") : Color.Parse("#8A000000");
+    private Color SubtitleColor => _dark ? new Color(0x99FFFFFF) : new Color(0x8A000000);
 
     private Widget BuildRow(Widget slider, string title, string subtitle)
     {
         return new Container(
             padding: new Thickness(10.0, 8.0),
             decoration: new BoxDecoration(
-                Color: _dark ? Color.Parse("#FF2C2C2E") : Color.Parse("#FFF1F4F9"),
+                Color: _dark ? new Color(0xFF2C2C2E) : new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10.0),
                 Border: Border.FromBorderSide(
-                    new BorderSide(_dark ? Color.Parse("#FF3A3A3C") : Color.Parse("#FFD6DEEA"), 1.0))),
+                    new BorderSide(_dark ? new Color(0xFF3A3A3C) : new Color(0xFFD6DEEA), 1.0))),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 6.0,
@@ -126,7 +126,7 @@ internal sealed class CupertinoSliderDemoPageState : State
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
             padding: new Thickness(12.0, 6.0),
-            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue.Value));
+            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue));
     }
 
     private static string Format(double value)

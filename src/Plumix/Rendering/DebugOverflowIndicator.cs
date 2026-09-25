@@ -23,7 +23,7 @@ internal sealed class DebugOverflowIndicator
     private const double LabelFontSize = 7.5;
     private const double LabelPadding = 1.0;
     private static readonly IBrush LabelBackgroundBrush = new SolidColorBrush(Colors.White);
-    private static readonly IBrush LabelForegroundBrush = new SolidColorBrush(Color.Parse("#FF900000"));
+    private static readonly IBrush LabelForegroundBrush = new SolidColorBrush(new Color(0xFF900000));
     private static readonly IBrush IndicatorBrush = new LinearGradientBrush
     {
         StartPoint = new RelativePoint(0, 0, RelativeUnit.Absolute),
@@ -31,10 +31,10 @@ internal sealed class DebugOverflowIndicator
         SpreadMethod = GradientSpreadMethod.Repeat,
         GradientStops = new GradientStops
         {
-            new GradientStop(Color.FromArgb(0xBF, 0x00, 0x00, 0x00), 0.25),
-            new GradientStop(Color.FromArgb(0xBF, 0xFF, 0xFF, 0x00), 0.25),
-            new GradientStop(Color.FromArgb(0xBF, 0xFF, 0xFF, 0x00), 0.75),
-            new GradientStop(Color.FromArgb(0xBF, 0x00, 0x00, 0x00), 0.75),
+            new GradientStop(Color.FromARGB(0xBF, 0x00, 0x00, 0x00), 0.25),
+            new GradientStop(Color.FromARGB(0xBF, 0xFF, 0xFF, 0x00), 0.25),
+            new GradientStop(Color.FromARGB(0xBF, 0xFF, 0xFF, 0x00), 0.75),
+            new GradientStop(Color.FromARGB(0xBF, 0x00, 0x00, 0x00), 0.75),
         },
     };
 

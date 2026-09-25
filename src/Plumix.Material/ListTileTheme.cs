@@ -35,8 +35,8 @@ public sealed partial record ListTileThemeData(
     ShapeBorder? Shape = null,
     ListTileStyle? Style = null,
     Color? SelectedColor = null,
-    WidgetStateProperty<Color?>? IconColor = null,
-    WidgetStateProperty<Color?>? TextColor = null,
+    Color? IconColor = null,
+    Color? TextColor = null,
     TextStyle? TitleTextStyle = null,
     TextStyle? SubtitleTextStyle = null,
     TextStyle? LeadingAndTrailingTextStyle = null,
@@ -59,8 +59,8 @@ public sealed partial record ListTileThemeData(
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        WidgetStateProperty<Color?>? iconColor = null,
-        WidgetStateProperty<Color?>? textColor = null,
+        Color? iconColor = null,
+        Color? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
@@ -111,8 +111,8 @@ public sealed class ListTileTheme : InheritedTheme
     private readonly ShapeBorder? _shape;
     private readonly ListTileStyle? _style;
     private readonly Color? _selectedColor;
-    private readonly WidgetStateProperty<Color?>? _iconColor;
-    private readonly WidgetStateProperty<Color?>? _textColor;
+    private readonly Color? _iconColor;
+    private readonly Color? _textColor;
     private readonly EdgeInsetsGeometry? _contentPadding;
     private readonly Color? _tileColor;
     private readonly Color? _selectedTileColor;
@@ -130,8 +130,8 @@ public sealed class ListTileTheme : InheritedTheme
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        WidgetStateProperty<Color?>? iconColor = null,
-        WidgetStateProperty<Color?>? textColor = null,
+        Color? iconColor = null,
+        Color? textColor = null,
         EdgeInsetsGeometry? contentPadding = null,
         Color? tileColor = null,
         Color? selectedTileColor = null,
@@ -146,12 +146,12 @@ public sealed class ListTileTheme : InheritedTheme
         ArgumentNullException.ThrowIfNull(child);
         if (data is not null
             && (shape is not null
-                || selectedColor.HasValue
+                || selectedColor != null
                 || iconColor is not null
                 || textColor is not null
                 || contentPadding.HasValue
-                || tileColor.HasValue
-                || selectedTileColor.HasValue
+                || tileColor != null
+                || selectedTileColor != null
                 || enableFeedback.HasValue
                 || mouseCursor is not null
                 || horizontalTitleGap.HasValue
@@ -205,9 +205,9 @@ public sealed class ListTileTheme : InheritedTheme
 
     public Color? SelectedColor => _data?.SelectedColor ?? _selectedColor;
 
-    public WidgetStateProperty<Color?>? IconColor => _data?.IconColor ?? _iconColor;
+    public Color? IconColor => _data?.IconColor ?? _iconColor;
 
-    public WidgetStateProperty<Color?>? TextColor => _data?.TextColor ?? _textColor;
+    public Color? TextColor => _data?.TextColor ?? _textColor;
 
     public EdgeInsetsGeometry? ContentPadding => _data?.ContentPadding ?? _contentPadding;
 
@@ -262,8 +262,8 @@ public sealed class ListTileTheme : InheritedTheme
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        WidgetStateProperty<Color?>? iconColor = null,
-        WidgetStateProperty<Color?>? textColor = null,
+        Color? iconColor = null,
+        Color? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,

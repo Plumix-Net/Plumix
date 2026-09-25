@@ -77,8 +77,8 @@ public sealed class SnackBarDemoPage : StatefulWidget
             ScaffoldMessenger.Of(context).ShowSnackBar(new SnackBar(
                 content: new Text("A queued Material snackbar from Plumix."),
                 behavior: _floating ? SnackBarBehavior.Floating : SnackBarBehavior.Fixed,
-                backgroundColor: _customColors ? Color.Parse("#FF004D40") : null,
-                closeIconColor: _customColors ? Color.Parse("#FFFFD54F") : null,
+                backgroundColor: _customColors ? new Color(0xFF004D40) : null,
+                closeIconColor: _customColors ? new Color(0xFFFFD54F) : null,
                 showCloseIcon: _showCloseIcon,
                 persist: _showAction || _showCloseIcon,
                 dismissDirection: _swipeUp ? DismissDirection.Up : DismissDirection.Down,
@@ -86,7 +86,7 @@ public sealed class SnackBarDemoPage : StatefulWidget
                 action: _showAction
                     ? new SnackBarAction(
                         label: "UNDO LONG ACTION",
-                        textColor: _customColors ? Color.Parse("#FFFFD54F") : null,
+                        textColor: _customColors ? new Color(0xFFFFD54F) : null,
                         onPressed: () => SetState(() => _actionCount++))
                     : null));
         }

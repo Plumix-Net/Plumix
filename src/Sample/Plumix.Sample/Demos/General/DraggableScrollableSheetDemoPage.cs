@@ -78,7 +78,7 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
                         children: BuildItems())));
 
             return new Container(
-                color: Color.Parse("#FFE7EDF6"),
+                color: new Color(0xFFE7EDF6),
                 child: new DraggableScrollableActuator(sheet));
         }
 

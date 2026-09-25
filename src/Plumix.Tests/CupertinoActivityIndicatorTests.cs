@@ -14,8 +14,8 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class CupertinoActivityIndicatorTests : IDisposable
 {
-    private static readonly Color LightTickColor = Color.FromUInt32(0xFF3C3C44);
-    private static readonly Color DarkTickColor = Color.FromUInt32(0xFFEBEBF5);
+    private static readonly Color LightTickColor = new Color(0xFF3C3C44);
+    private static readonly Color DarkTickColor = new Color(0xFFEBEBF5);
 
     public CupertinoActivityIndicatorTests()
     {
@@ -75,7 +75,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         {
             light.Pump(new Size(800, 600));
             var painter = FindPainter<CupertinoActivityIndicatorPainter>(light.RenderView);
-            Assert.Equal(LightTickColor, painter!.ActiveColor);
+            ColorMatchers.AssertSameColorAs(LightTickColor, painter!.ActiveColor);
         }
 
         using (var dark = new WidgetRenderHarness(
@@ -85,7 +85,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         {
             dark.Pump(new Size(800, 600));
             var painter = FindPainter<CupertinoActivityIndicatorPainter>(dark.RenderView);
-            Assert.Equal(DarkTickColor, painter!.ActiveColor);
+            ColorMatchers.AssertSameColorAs(DarkTickColor, painter!.ActiveColor);
         }
     }
 
@@ -125,7 +125,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
     [Fact]
     public void ActivityIndicator_CanSpecifyColor()
     {
-        var color = Color.FromUInt32(0xFF5D3FD3);
+        var color = new Color(0xFF5D3FD3);
         using var harness = new WidgetRenderHarness(
             new Center(
                 child: new CupertinoActivityIndicator(animating: false, color: color, radius: 100)));
@@ -221,8 +221,8 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         var painter = (CupertinoLinearActivityIndicatorPainter)renderPaint.Painter!;
         Assert.Equal(0.2, painter.Progress, 3);
         Assert.Null(painter.Color);
-        Assert.Equal(CupertinoColors.SystemFill.Value, painter.BackgroundPaint.Color);
-        Assert.Equal(CupertinoColors.ActiveBlue.Value, painter.ProgressPaint.Color);
+        Assert.Equal(CupertinoColors.SystemFill, painter.BackgroundPaint.Color);
+        Assert.Equal(CupertinoColors.ActiveBlue, painter.ProgressPaint.Color);
         painter.Paint(new PaintingContext(new ContainerLayer()), renderPaint.Size);
     }
 
@@ -234,7 +234,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
                 child: new CupertinoLinearActivityIndicator(
                     progress: 0.5,
                     height: 10,
-                    color: CupertinoColors.ActiveGreen.Value)));
+                    color: CupertinoColors.ActiveGreen)));
         harness.Pump(new Size(800, 600));
 
         var renderPaint = FindRenderCustomPaint(harness.RenderView, painter => painter
@@ -243,8 +243,8 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
 
         var painter = (CupertinoLinearActivityIndicatorPainter)renderPaint.Painter!;
         Assert.Equal(0.5, painter.Progress, 3);
-        Assert.Equal(CupertinoColors.ActiveGreen.Value, painter.ProgressPaint.Color);
-        Assert.Equal(CupertinoColors.SystemFill.Value, painter.BackgroundPaint.Color);
+        Assert.Equal(CupertinoColors.ActiveGreen, painter.ProgressPaint.Color);
+        Assert.Equal(CupertinoColors.SystemFill, painter.BackgroundPaint.Color);
     }
 
     [Fact]

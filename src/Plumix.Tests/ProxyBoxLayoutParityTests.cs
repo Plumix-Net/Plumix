@@ -861,10 +861,10 @@ public sealed class ProxyBoxLayoutParityTests
     }
 
     private static Widget OpacityTree(double opacity, PaintCounter counter) =>
-        new ColoredBox(Color.FromUInt32(0xFFFF0000), child: new Opacity(opacity, new TestWidget(counter)));
+        new ColoredBox(new Color(0xFFFF0000), child: new Opacity(opacity, new TestWidget(counter)));
 
     private static Widget FadeTree(Animation<double> opacity, PaintCounter counter) =>
-        new ColoredBox(Color.FromUInt32(0xFFFF0000), child: new FadeTransition(opacity, new TestWidget(counter)));
+        new ColoredBox(new Color(0xFFFF0000), child: new FadeTransition(opacity, new TestWidget(counter)));
 
     private static List<Layer> AllLayers(FrameworkDartTester tester)
     {

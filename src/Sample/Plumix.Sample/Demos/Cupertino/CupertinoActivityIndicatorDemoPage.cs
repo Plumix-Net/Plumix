@@ -28,7 +28,7 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
                 new Text(
                     "Spinning ticks, partially revealed ticks and the linear progress bar.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(
                     spacing: 24.0,
                     runSpacing: 12.0,
@@ -40,7 +40,7 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
                         BuildLabeled(
                             "Tinted",
                             new CupertinoActivityIndicator(
-                                color: CupertinoColors.ActiveOrange.Value,
+                                color: CupertinoColors.ActiveOrange,
                                 radius: 20.0)),
                         BuildLabeled(
                             "Paused",
@@ -59,7 +59,7 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
                 new CupertinoLinearActivityIndicator(
                     progress: _progress,
                     height: 10.0,
-                    color: CupertinoColors.ActiveGreen.Value),
+                    color: CupertinoColors.ActiveGreen),
             ]);
     }
 

@@ -335,14 +335,14 @@ public sealed class ParagraphEngineTests
             s5.GetParagraphStyle());
 
         var s2 = new TextStyle(
-            Color: Color.FromUInt32(0xFF00FF00),
+            Color: new Color(0xFF00FF00),
             FontWeight: FontWeight.ExtraBold,
             FontSize: 10.0,
             Height: 100.0,
             LeadingDistribution: TextLeadingDistribution.Even);
         Assert.Equal(
             new ParagraphTextStyle(
-                Color: Color.FromUInt32(0xFF00FF00),
+                Color: new Color(0xFF00FF00),
                 FontWeight: FontWeight.ExtraBold,
                 FontSize: 10.0,
                 Height: 100.0,

@@ -34,7 +34,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         Assert.True(bar.TransitionBetweenRoutes);
         Assert.Null(bar.LargeTitle);
         Assert.NotNull(bar.Border);
-        Assert.Equal(Color.FromUInt32(0x4D000000), bar.Border!.Bottom.Color);
+        Assert.Equal(new Color(0x4D000000), bar.Border!.Bottom.Color);
         Assert.Equal(0.0, bar.Border.Bottom.Width);
 
         // A custom heroTag cannot be combined with transitionBetweenRoutes: true.
@@ -62,7 +62,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         Assert.False(search.Opaque);
         Assert.True(new CupertinoSliverNavigationBar(
             largeTitle: new Text("T"),
-            backgroundColor: Color.FromUInt32(0xFF112233)).Opaque);
+            backgroundColor: new Color(0xFF112233)).Opaque);
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         // An opaque background disables the blur.
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
                    middle: new Text("T"),
-                   backgroundColor: Color.FromUInt32(0xFFE5E5E5))))))
+                   backgroundColor: new Color(0xFFE5E5E5))))))
         {
             harness.Pump(new Size(400, 600));
             var filter = Assert.Single(harness.FindWidgets<BackdropFilter>());
@@ -169,12 +169,12 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             var decoration = Assert.IsType<BoxDecoration>(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView)[0].Decoration);
             var border = Assert.IsType<Border>(decoration.Border);
-            Assert.Equal(Color.FromUInt32(0x4D000000), border.Bottom.Color);
+            Assert.Equal(new Color(0x4D000000), border.Bottom.Color);
             Assert.Equal(0.0, border.Bottom.Width);
         }
 
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
-                   border: new Border(bottom: new BorderSide(Color.FromUInt32(0xFFAABBCC), width: 0.0)),
+                   border: new Border(bottom: new BorderSide(new Color(0xFFAABBCC), width: 0.0)),
                    middle: new Text("T"),
                    automaticBackgroundVisibility: false)))))
         {
@@ -182,7 +182,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             var decoration = Assert.IsType<BoxDecoration>(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView)[0].Decoration);
             var border = Assert.IsType<Border>(decoration.Border);
-            Assert.Equal(Color.FromUInt32(0xFFAABBCC), border.Bottom.Color);
+            Assert.Equal(new Color(0xFFAABBCC), border.Bottom.Color);
         }
 
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
@@ -200,7 +200,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     [Fact]
     public void AutomaticBackgroundVisibility_IsTransparentUntilScrolledUnder()
     {
-        Color scaffoldColor = Color.FromUInt32(0xFF010203);
+        Color scaffoldColor = new Color(0xFF010203);
 
         // Inside a scaffold with nothing scrolled under, the bar shows the scaffold color and a
         // transparent border.
@@ -215,7 +215,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
                     .First(box => box.Decoration is BoxDecoration { Border: not null }).Decoration);
             Assert.Equal(scaffoldColor, decoration.Color);
             var border = Assert.IsType<Border>(decoration.Border);
-            Assert.Equal(0x00, border.Bottom.Color.A);
+            Assert.Equal(0x00, border.Bottom.Color.Alpha);
         }
 
         // automaticBackgroundVisibility: false always shows the theme bar background.
@@ -230,7 +230,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             var decoration = Assert.IsType<BoxDecoration>(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView)
                     .First(box => box.Decoration is BoxDecoration { Border: not null }).Decoration);
-            Assert.Equal(Color.FromUInt32(0xF0F9F9F9), decoration.Color);
+            ColorMatchers.AssertSameColorAs(new Color(0xF0F9F9F9), decoration.Color);
         }
 
         // Outside a CupertinoPageScaffold the parameter has no effect.
@@ -240,7 +240,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             harness.Pump(new Size(400, 600));
             var decoration = Assert.IsType<BoxDecoration>(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView)[0].Decoration);
-            Assert.Equal(Color.FromUInt32(0xF0F9F9F9), decoration.Color);
+            ColorMatchers.AssertSameColorAs(new Color(0xF0F9F9F9), decoration.Color);
         }
     }
 
@@ -261,7 +261,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         // Dark background draws a light status bar (luminance < 0.179).
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
                    middle: new Text("T"),
-                   backgroundColor: Color.FromUInt32(0xFF000000))))))
+                   backgroundColor: new Color(0xFF000000))))))
         {
             harness.Pump(new Size(400, 600));
             var region = Assert.Single(harness.FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>());
@@ -271,7 +271,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         // An explicit brightness overrides the luminance-derived value.
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(new CupertinoNavigationBar(
                    middle: new Text("T"),
-                   backgroundColor: Color.FromUInt32(0xFF000000),
+                   backgroundColor: new Color(0xFF000000),
                    brightness: PlatformBrightness.Light)))))
         {
             harness.Pump(new Size(400, 600));

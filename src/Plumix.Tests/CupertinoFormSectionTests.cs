@@ -105,7 +105,7 @@ public sealed class CupertinoFormSectionTests
     [Fact]
     public void Build_AppliesBackgroundClipAndDarkHeaderColor()
     {
-        Color background = Color.FromUInt32(0xFF123456);
+        Color background = new Color(0xFF123456);
         using var harness = new CupertinoThemeTestHarness(Wrap(
             new CupertinoFormSection(
                 header: new Text("Header"),

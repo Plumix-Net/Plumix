@@ -131,13 +131,13 @@ public sealed class SegmentedButton<T> : StatefulWidget
                 backgroundColor,
                 disabledBackgroundColor,
                 selectedBackgroundColor),
-            ShadowColor: shadowColor.HasValue ? WidgetStateProperty<Color?>.All(shadowColor) : null,
-            SurfaceTintColor: surfaceTintColor.HasValue
+            ShadowColor: shadowColor != null ? WidgetStateProperty<Color?>.All(shadowColor) : null,
+            SurfaceTintColor: surfaceTintColor != null
                 ? WidgetStateProperty<Color?>.All(surfaceTintColor)
                 : null,
             OverlayColor: BuildOverlayColor(foregroundColor, selectedForegroundColor, overlayColor),
             Elevation: elevation.HasValue ? WidgetStateProperty<double?>.All(elevation) : null,
-            IconColor: iconColor.HasValue || disabledIconColor.HasValue
+            IconColor: iconColor != null || disabledIconColor != null
                 ? WidgetStateProperty<Color?>.ResolveWith(states =>
                     states.Contains(WidgetState.Disabled) ? disabledIconColor : iconColor)
                 : null,
@@ -168,7 +168,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Color? disabled,
         Color? selected)
     {
-        if (!enabled.HasValue && !disabled.HasValue && !selected.HasValue)
+        if (enabled == null && disabled == null && selected == null)
         {
             return null;
         }
@@ -186,11 +186,11 @@ public sealed class SegmentedButton<T> : StatefulWidget
         Color? selectedForeground,
         Color? overlay)
     {
-        if (!foreground.HasValue && !selectedForeground.HasValue && !overlay.HasValue)
+        if (foreground == null && selectedForeground == null && overlay == null)
         {
             return null;
         }
-        if (overlay is { A: 0 })
+        if (overlay is { Alpha: 0 })
         {
             return WidgetStateProperty<Color?>.All(Colors.Transparent);
         }
@@ -199,17 +199,17 @@ public sealed class SegmentedButton<T> : StatefulWidget
         {
             Color? stateColor = overlay
                                 ?? (states.Contains(WidgetState.Selected) ? selectedForeground : foreground);
-            if (!stateColor.HasValue)
+            if (stateColor == null)
             {
                 return null;
             }
             if (states.Contains(WidgetState.Pressed) || states.Contains(WidgetState.Focused))
             {
-                return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.10);
+                return NavigationSurfaceUtilities.WithOpacity(stateColor!, 0.10);
             }
             if (states.Contains(WidgetState.Hovered))
             {
-                return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.08);
+                return NavigationSurfaceUtilities.WithOpacity(stateColor!, 0.08);
             }
 
             return Colors.Transparent;

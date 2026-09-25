@@ -491,10 +491,10 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         return new TextStyle(
             Inherit: t < 0.5 ? a.Inherit : b.Inherit,
             Color: a.Foreground is null && b.Foreground is null
-                ? ColorUtilities.Lerp(a.Color, b.Color, t)
+                ? Color.Lerp(a.Color, b.Color, t)
                 : null,
             BackgroundColor: a.Background is null && b.Background is null
-                ? ColorUtilities.Lerp(a.BackgroundColor, b.BackgroundColor, t)
+                ? Color.Lerp(a.BackgroundColor, b.BackgroundColor, t)
                 : null,
             FontSize: LerpDouble(a.FontSize ?? b.FontSize, b.FontSize ?? a.FontSize, t),
             FontWeight: LerpFontWeight(a.FontWeight, b.FontWeight, t),
@@ -507,19 +507,19 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
             Locale: t < 0.5 ? a.Locale : b.Locale,
             Foreground: a.Foreground is not null || b.Foreground is not null
                 ? t < 0.5
-                    ? a.Foreground ?? new Paint { Color = a.Color!.Value }
-                    : b.Foreground ?? new Paint { Color = b.Color!.Value }
+                    ? a.Foreground ?? new Paint { Color = a.Color! }
+                    : b.Foreground ?? new Paint { Color = b.Color! }
                 : null,
             Background: a.Background is not null || b.Background is not null
                 ? t < 0.5
-                    ? a.Background ?? new Paint { Color = a.BackgroundColor!.Value }
-                    : b.Background ?? new Paint { Color = b.BackgroundColor!.Value }
+                    ? a.Background ?? new Paint { Color = a.BackgroundColor! }
+                    : b.Background ?? new Paint { Color = b.BackgroundColor! }
                 : null,
             Shadows: Shadow.LerpList(a.Shadows, b.Shadows, t),
             FontFeatures: t < 0.5 ? a.FontFeatures : b.FontFeatures,
             FontVariations: LerpFontVariations(a.FontVariations, b.FontVariations, t),
             Decoration: t < 0.5 ? a.Decoration : b.Decoration,
-            DecorationColor: ColorUtilities.Lerp(a.DecorationColor, b.DecorationColor, t),
+            DecorationColor: Color.Lerp(a.DecorationColor, b.DecorationColor, t),
             DecorationStyle: t < 0.5 ? a.DecorationStyle : b.DecorationStyle,
             DecorationThickness: LerpDouble(
                 a.DecorationThickness ?? b.DecorationThickness,
@@ -537,8 +537,8 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         bool first = t < 0.5;
         return new TextStyle(
             Inherit: b.Inherit,
-            Color: ColorUtilities.Lerp(null, b.Color, t),
-            BackgroundColor: ColorUtilities.Lerp(null, b.BackgroundColor, t),
+            Color: Color.Lerp(null, b.Color, t),
+            BackgroundColor: Color.Lerp(null, b.BackgroundColor, t),
             FontSize: first ? null : b.FontSize,
             FontWeight: LerpFontWeight(null, b.FontWeight, t),
             FontStyle: first ? null : b.FontStyle,
@@ -554,7 +554,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
             FontFeatures: first ? null : b.FontFeatures,
             FontVariations: LerpFontVariations(null, b.FontVariations, t),
             Decoration: first ? null : b.Decoration,
-            DecorationColor: ColorUtilities.Lerp(null, b.DecorationColor, t),
+            DecorationColor: Color.Lerp(null, b.DecorationColor, t),
             DecorationStyle: first ? null : b.DecorationStyle,
             DecorationThickness: first ? null : b.DecorationThickness,
             DebugLabel: lerpDebugLabel,
@@ -569,9 +569,9 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
         bool first = t < 0.5;
         return new TextStyle(
             Inherit: a.Inherit,
-            Color: ColorUtilities.Lerp(a.Color, null, t),
+            Color: Color.Lerp(a.Color, null, t),
             // Dart passes the arguments in this order too.
-            BackgroundColor: ColorUtilities.Lerp(null, a.BackgroundColor, t),
+            BackgroundColor: Color.Lerp(null, a.BackgroundColor, t),
             FontSize: first ? a.FontSize : null,
             FontWeight: LerpFontWeight(a.FontWeight, null, t),
             FontStyle: first ? a.FontStyle : null,
@@ -587,7 +587,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
             FontFeatures: first ? a.FontFeatures : null,
             FontVariations: LerpFontVariations(a.FontVariations, null, t),
             Decoration: first ? a.Decoration : null,
-            DecorationColor: ColorUtilities.Lerp(a.DecorationColor, null, t),
+            DecorationColor: Color.Lerp(a.DecorationColor, null, t),
             DecorationStyle: first ? a.DecorationStyle : null,
             DecorationThickness: first ? a.DecorationThickness : null,
             DebugLabel: lerpDebugLabel,
@@ -977,7 +977,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
 
             if (DecorationColor is { } decorationColor)
             {
-                decorationDescription.Add(decorationColor.ToDartString());
+                decorationDescription.Add(decorationColor.ToString());
             }
 
             // Intentionally collide with the property 'decoration' added below. Tools that show hidden
@@ -1184,7 +1184,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     internal static TextStyle Fallback { get; } = new(
         FontFamily: Avalonia.Media.FontFamily.Default,
         FontSize: 14,
-        Color: Colors.Black,
+        Color: new Color(0xFF000000),
         FontWeight: Avalonia.Media.FontWeight.Normal,
         FontStyle: Avalonia.Media.FontStyle.Normal);
 }

@@ -202,7 +202,7 @@ public sealed class Magnifier : StatelessWidget
     {
         AdditionalFocalPointOffset = additionalFocalPointOffset;
         BorderRadius = borderRadius ?? Plumix.Rendering.BorderRadius.Circular(40);
-        FilmColor = filmColor ?? Color.FromArgb(8, 158, 158, 158);
+        FilmColor = filmColor ?? Color.FromARGB(8, 158, 158, 158);
         Shadows = shadows ?? DefaultShadows;
         ClipBehavior = clipBehavior;
         Size = size ?? DefaultMagnifierSize;
@@ -223,7 +223,7 @@ public sealed class Magnifier : StatelessWidget
     internal static IReadOnlyList<BoxShadow> DefaultShadows { get; } =
     [
         new BoxShadow(
-            color: Color.FromArgb(25, 0, 0, 0),
+            color: Color.FromARGB(25, 0, 0, 0),
             offset: new Point(0, 2.0),
             blurRadius: 1.5,
             spreadRadius: 0.75),

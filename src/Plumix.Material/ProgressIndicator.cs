@@ -767,7 +767,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             ? offset.X + maxRadius
             : offset.X + (Size.Width - maxRadius);
         var center = new Point(centerX, offset.Y + maxRadius);
-        ctx.Canvas.DrawCircle(new SolidColorBrush(_stopIndicatorColor.Value), null, center, radius);
+        ctx.Canvas.DrawCircle(new SolidColorBrush(_stopIndicatorColor!), null, center, radius);
     }
 
     private static double GetEffectiveTrackGapFraction(double currentValue, double trackGapFraction)
@@ -1737,10 +1737,10 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             ? CircularProgressIndicator.ClampValue(Value.Value)
             : (double?)null;
 
-        if (TrackColor.HasValue)
+        if (TrackColor != null)
         {
             var trackPen = new Pen(
-                new SolidColorBrush(TrackColor.Value),
+                new SolidColorBrush(TrackColor!),
                 strokeWidth,
                 lineCap: ResolveTrackLineCap(StrokeCap));
             if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out double gapArcStart, out double gapArcSweep))

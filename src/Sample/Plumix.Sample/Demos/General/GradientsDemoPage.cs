@@ -102,7 +102,7 @@ internal sealed class GradientsDemoPageState : State
     private Gradient BuildLinearGradient()
     {
         return new LinearGradient(
-            colors: [Color.Parse("#FF1D3557"), Color.Parse("#FF9DC4FF"), Color.Parse("#FFF3E8D8")],
+            colors: [new Color(0xFF1D3557), new Color(0xFF9DC4FF), new Color(0xFFF3E8D8)],
             begin: Alignment.TopLeft,
             end: Alignment.BottomRight,
             stops: [0.0, 0.35, 0.7],
@@ -113,7 +113,7 @@ internal sealed class GradientsDemoPageState : State
     private Gradient BuildRadialGradient()
     {
         return new RadialGradient(
-            colors: [Color.Parse("#FFFFF1D0"), Color.Parse("#FFE76F51"), Color.Parse("#FF1D3557")],
+            colors: [new Color(0xFFFFF1D0), new Color(0xFFE76F51), new Color(0xFF1D3557)],
             center: Alignment.Center,
             radius: 0.35,
             stops: [0.0, 0.55, 1.0],
@@ -125,7 +125,7 @@ internal sealed class GradientsDemoPageState : State
     private Gradient BuildSweepGradient()
     {
         return new SweepGradient(
-            colors: [Color.Parse("#FF2A9D8F"), Color.Parse("#FFE9C46A"), Color.Parse("#FF264653")],
+            colors: [new Color(0xFF2A9D8F), new Color(0xFFE9C46A), new Color(0xFF264653)],
             center: Alignment.Center,
             startAngle: 0.0,
             endAngle: Math.PI * 1.5,
@@ -138,19 +138,19 @@ internal sealed class GradientsDemoPageState : State
         IReadOnlyList<BoxShadow> shadows = _blended
             ?
             [
-                new BoxShadow(color: Color.FromArgb(90, 29, 53, 87), offset: new Point(0, 10), blurRadius: 18),
-                new BoxShadow(color: Color.FromArgb(50, 29, 53, 87), offset: new Point(0, 2), blurRadius: 4),
+                new BoxShadow(color: Color.FromARGB(90, 29, 53, 87), offset: new Point(0, 10), blurRadius: 18),
+                new BoxShadow(color: Color.FromARGB(50, 29, 53, 87), offset: new Point(0, 2), blurRadius: 4),
             ]
             :
             [
-                new BoxShadow(color: Color.FromArgb(40, 0, 0, 0), offset: new Point(0, 2), blurRadius: 6),
+                new BoxShadow(color: Color.FromARGB(40, 0, 0, 0), offset: new Point(0, 2), blurRadius: 6),
             ];
 
         return new BoxDecoration(
             Gradient: new LinearGradient(
                 colors: _blended
-                    ? [Color.Parse("#FF264653"), Color.Parse("#FF2A9D8F")]
-                    : [Color.Parse("#FFE76F51"), Color.Parse("#FFF4A261")],
+                    ? [new Color(0xFF264653), new Color(0xFF2A9D8F)]
+                    : [new Color(0xFFE76F51), new Color(0xFFF4A261)],
                 begin: _blended ? Alignment.TopLeft : Alignment.BottomLeft,
                 end: _blended ? Alignment.BottomRight : Alignment.TopRight),
             BorderRadius: BorderRadius.Circular(16),
@@ -164,7 +164,7 @@ internal sealed class GradientsDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

@@ -19,24 +19,24 @@ public sealed class AppBarTextStylesDemoPage : StatefulWidget
 
 internal sealed class AppBarTextStylesDemoPageState : State
 {
-    private static readonly Color AppBarBackground = Color.Parse("#FF1E3A5F");
+    private static readonly Color AppBarBackground = new Color(0xFF1E3A5F);
     private static readonly Color ForegroundWhite = Colors.White;
-    private static readonly Color ForegroundMint = Color.Parse("#FFB8FFF1");
+    private static readonly Color ForegroundMint = new Color(0xFFB8FFF1);
     private static readonly TextStyle ThemeTitleStyle = new(
         FontSize: 22,
-        Color: Color.Parse("#FF90E0EF"),
+        Color: new Color(0xFF90E0EF),
         FontWeight: FontWeight.Bold);
     private static readonly TextStyle ThemeToolbarStyle = new(
         FontSize: 14,
-        Color: Color.Parse("#FFF4A261"),
+        Color: new Color(0xFFF4A261),
         FontWeight: FontWeight.SemiBold);
     private static readonly TextStyle WidgetTitleStyle = new(
         FontSize: 19,
-        Color: Color.Parse("#FF8E44AD"),
+        Color: new Color(0xFF8E44AD),
         FontWeight: FontWeight.Normal);
     private static readonly TextStyle WidgetToolbarStyle = new(
         FontSize: 16,
-        Color: Color.Parse("#FFE63946"),
+        Color: new Color(0xFFE63946),
         FontWeight: FontWeight.Bold);
 
     private Color _foregroundColor = ForegroundWhite;
@@ -98,7 +98,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                     color: Colors.DarkSlateGray),
                 new Container(
                     width: 320,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -155,7 +155,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
@@ -226,5 +226,5 @@ internal sealed class AppBarTextStylesDemoPageState : State
 
     private static string OnOff(bool value) => value ? "on" : "off";
 
-    private static string ColorLabel(Color color) => $"#{color.A:X2}{color.R:X2}{color.G:X2}{color.B:X2}";
+    private static string ColorLabel(Color color) => $"#{color.Alpha:X2}{color.Red:X2}{color.Green:X2}{color.Blue:X2}";
 }

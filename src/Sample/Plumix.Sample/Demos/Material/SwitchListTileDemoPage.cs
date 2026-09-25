@@ -32,7 +32,7 @@ internal sealed class SwitchListTileDemoPageState : State
                     "Whole-tile interaction, affinity, density/alignment, selected styling, "
                     + "disabled state, and the adaptive branch (which paints the Cupertino switch).",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -41,34 +41,34 @@ internal sealed class SwitchListTileDemoPageState : State
                             _enabled ? "Enabled" : "Disabled",
                             () => SetState(() => _enabled = !_enabled),
                             104,
-                            Color.Parse("#FFE9F0FF")),
+                            new Color(0xFFE9F0FF)),
                         ListTileControlDemos.ControlButton(
                             _affinity == ListTileControlAffinity.Leading ? "Leading" : "Trailing",
                             () => SetState(() => _affinity = _affinity == ListTileControlAffinity.Leading
                                 ? ListTileControlAffinity.Trailing
                                 : ListTileControlAffinity.Leading),
                             104,
-                            Color.Parse("#FFE9F7EF")),
+                            new Color(0xFFE9F7EF)),
                         ListTileControlDemos.ControlButton(
                             _adaptive ? "Adaptive" : "Material",
                             () => SetState(() => _adaptive = !_adaptive),
                             104,
-                            Color.Parse("#FFF8EFE2")),
+                            new Color(0xFFF8EFE2)),
                         ListTileControlDemos.ControlButton(
                             _compact ? "Compact / top" : "Standard / center",
                             () => SetState(() => _compact = !_compact),
                             144,
-                            Color.Parse("#FFF3E5F5")),
+                            new Color(0xFFF3E5F5)),
                     ]),
                 new Text(
                     $"switch={ListTileControlDemos.Lower(_switchValue)}, "
                     + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F9FC"),
+                        color: new Color(0xFFF7F9FC),
                         child: new ListTileTheme(
                             data: new ListTileThemeData(
                                 ControlAffinity: _affinity,
@@ -105,6 +105,6 @@ internal sealed class SwitchListTileDemoPageState : State
                 subtitle: new Text("The embedded switch remains draggable."),
                 secondary: new Icon(Icons.Menu),
                 selected: _switchValue,
-                selectedTileColor: Color.Parse("#FFE8DEF8"));
+                selectedTileColor: new Color(0xFFE8DEF8));
     }
 }

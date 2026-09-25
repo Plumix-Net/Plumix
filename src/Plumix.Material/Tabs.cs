@@ -161,7 +161,7 @@ internal sealed class TabStyle : AnimatedWidget
         Animation<double> animation,
         bool isSelected,
         bool isPrimary,
-        WidgetStateColor? labelColor,
+        Color? labelColor,
         Color? unselectedLabelColor,
         TextStyle? labelStyle,
         TextStyle? unselectedLabelStyle,
@@ -185,7 +185,7 @@ internal sealed class TabStyle : AnimatedWidget
 
     public bool IsPrimary { get; }
 
-    public WidgetStateColor? LabelColor { get; }
+    public Color? LabelColor { get; }
 
     public Color? UnselectedLabelColor { get; }
 
@@ -237,9 +237,9 @@ internal sealed class TabStyle : AnimatedWidget
     }
 
     // Mirrors Flutter's `kDefaultIconLightColor`/`kDefaultIconDarkColor` from `material/constants.dart`.
-    internal static readonly Color DefaultIconLightColor = Color.FromArgb(0xFF, 0xFF, 0xFF, 0xFF);
+    internal static readonly Color DefaultIconLightColor = Color.FromARGB(0xFF, 0xFF, 0xFF, 0xFF);
 
-    internal static readonly Color DefaultIconDarkColor = Color.FromArgb(0xDD, 0x00, 0x00, 0x00);
+    internal static readonly Color DefaultIconDarkColor = Color.FromARGB(0xDD, 0x00, 0x00, 0x00);
 
     private WidgetStateColor ResolveWithLabelColor(
         BuildContext context,
@@ -249,17 +249,17 @@ internal sealed class TabStyle : AnimatedWidget
     {
         // labelStyle.color and unselectedLabelStyle.color are ignored when labelColor or
         // unselectedLabelColor are set, matching Dart's chain order.
-        WidgetStateColor selectedColor = LabelColor
+        Color selectedColor = LabelColor
                                          ?? tabBarTheme.LabelColor
                                          ?? LabelStyle?.Color
                                          ?? tabBarTheme.LabelStyle?.Color
                                          ?? Defaults.LabelColor!;
 
         Color unselectedColor;
-        if (!selectedColor.IsConstantColor)
+        if (selectedColor is WidgetStateColor)
         {
             // A state-resolving labelColor takes precedence over unselectedLabelColor.
-            unselectedColor = selectedColor.Resolve(new HashSet<WidgetState>());
+            unselectedColor = WidgetStateProperty<Color>.ResolveAs(selectedColor, new HashSet<WidgetState>());
         }
         else
         {
@@ -269,32 +269,23 @@ internal sealed class TabStyle : AnimatedWidget
                               ?? tabBarTheme.UnselectedLabelStyle?.Color
                               ?? iconTheme?.Color
                               ?? (themeData.UseMaterial3
-                                  ? Defaults.UnselectedLabelColor!.Value
-                                  : WithAlpha(selectedColor.DefaultValue, 0xB2));
+                                  ? Defaults.UnselectedLabelColor!
+                                  : WithAlpha(selectedColor, 0xB2));
         }
 
-        Color selected = selectedColor.IsConstantColor
-            ? selectedColor.DefaultValue
-            : selectedColor.Resolve(new HashSet<WidgetState> { WidgetState.Selected });
+        Color selected = selectedColor is not WidgetStateColor
+            ? selectedColor
+            : WidgetStateProperty<Color>.ResolveAs(selectedColor, new HashSet<WidgetState> { WidgetState.Selected });
         return WidgetStateColor.ResolveWith(states => states.Contains(WidgetState.Selected)
             ? LerpColor(selected, unselectedColor, Animation.Value)
             : LerpColor(unselectedColor, selected, Animation.Value));
     }
 
-    internal static Color WithAlpha(Color color, int alpha) =>
-        Color.FromArgb((byte)alpha, color.R, color.G, color.B);
+    internal static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 
-    internal static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0)),
-        color.R,
-        color.G,
-        color.B);
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    internal static Color LerpColor(Color a, Color b, double t) => Color.FromArgb(
-        (byte)Math.Clamp(Math.Round(a.A + ((b.A - a.A) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.R + ((b.R - a.R) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.G + ((b.G - a.G) * t)), 0, 255),
-        (byte)Math.Clamp(Math.Round(a.B + ((b.B - a.B) * t)), 0, 255));
+    internal static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
 }
 
 /// <summary>
@@ -314,7 +305,7 @@ internal abstract class TabBarDefaults
 
     public virtual double? DividerHeight => null;
 
-    public virtual WidgetStateColor? LabelColor => null;
+    public virtual Color? LabelColor => null;
 
     public virtual TextStyle? LabelStyle => null;
 
@@ -333,10 +324,10 @@ internal abstract class TabBarDefaults
 internal sealed class TabsDefaultsM2 : TabBarDefaults
 {
     /// <summary>Dart's <c>Colors.blue</c>, the Material 2 light primary color.</summary>
-    private static readonly Color MaterialBlue = Color.FromArgb(0xFF, 0x21, 0x96, 0xF3);
+    private static readonly Color MaterialBlue = Color.FromARGB(0xFF, 0x21, 0x96, 0xF3);
 
     /// <summary>Dart's <c>Colors.grey[900]</c>, the Material 2 dark primary color.</summary>
-    private static readonly Color MaterialGrey900 = Color.FromArgb(0xFF, 0x21, 0x21, 0x21);
+    private static readonly Color MaterialGrey900 = Color.FromARGB(0xFF, 0x21, 0x21, 0x21);
 
     internal static readonly EdgeInsetsGeometry IconMargin = EdgeInsetsGeometry.Only(bottom: 10);
 
@@ -363,7 +354,7 @@ internal sealed class TabsDefaultsM2 : TabBarDefaults
         }
     }
 
-    public override WidgetStateColor? LabelColor => _theme.PrimaryTextTheme.BodyLarge.Color
+    public override Color? LabelColor => _theme.PrimaryTextTheme.BodyLarge.Color
                                                     ?? _theme.ColorScheme.OnPrimary;
 
     public override TextStyle? LabelStyle => _theme.PrimaryTextTheme.BodyLarge;
@@ -402,7 +393,7 @@ internal sealed class TabsPrimaryDefaultsM3 : TabBarDefaults
 
     public override Color? IndicatorColor => _theme.ColorScheme.Primary;
 
-    public override WidgetStateColor? LabelColor => _theme.ColorScheme.Primary;
+    public override Color? LabelColor => _theme.ColorScheme.Primary;
 
     public override TextStyle? LabelStyle => _theme.TextTheme.TitleSmall;
 
@@ -475,7 +466,7 @@ internal sealed class TabsSecondaryDefaultsM3 : TabBarDefaults
 
     public override Color? IndicatorColor => _theme.ColorScheme.Primary;
 
-    public override WidgetStateColor? LabelColor => _theme.ColorScheme.OnSurface;
+    public override Color? LabelColor => _theme.ColorScheme.OnSurface;
 
     public override TextStyle? LabelStyle => _theme.TextTheme.TitleSmall;
 
@@ -819,7 +810,7 @@ internal sealed class IndicatorPainter : CustomPainter
         {
             double y = size.Height - (DividerHeight.Value / 2);
             context.Canvas.DrawLine(
-                new Pen(new SolidColorBrush(DividerColor!.Value), DividerHeight.Value),
+                new Pen(new SolidColorBrush(DividerColor!), DividerHeight.Value),
                 new Point(0, y),
                 new Point(size.Width, y));
         }
@@ -1165,7 +1156,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         TabBarIndicatorSize? indicatorSize = null,
         Color? dividerColor = null,
         double? dividerHeight = null,
-        WidgetStateColor? labelColor = null,
+        Color? labelColor = null,
         TextStyle? labelStyle = null,
         EdgeInsetsGeometry? labelPadding = null,
         Color? unselectedLabelColor = null,
@@ -1235,7 +1226,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         TabBarIndicatorSize? indicatorSize,
         Color? dividerColor,
         double? dividerHeight,
-        WidgetStateColor? labelColor,
+        Color? labelColor,
         TextStyle? labelStyle,
         EdgeInsetsGeometry? labelPadding,
         Color? unselectedLabelColor,
@@ -1314,7 +1305,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         TabBarIndicatorSize? indicatorSize = null,
         Color? dividerColor = null,
         double? dividerHeight = null,
-        WidgetStateColor? labelColor = null,
+        Color? labelColor = null,
         TextStyle? labelStyle = null,
         EdgeInsetsGeometry? labelPadding = null,
         Color? unselectedLabelColor = null,
@@ -1393,7 +1384,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
     public double? DividerHeight { get; }
 
-    public WidgetStateColor? LabelColor { get; }
+    public Color? LabelColor { get; }
 
     public TextStyle? LabelStyle { get; }
 
@@ -1770,7 +1761,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
                         : AlignmentDirectional.CenterStart;
                     Color scrollableDividerColor = Current.DividerColor
                                                    ?? tabBarTheme.DividerColor
-                                                   ?? defaults.DividerColor!.Value;
+                                                   ?? defaults.DividerColor!;
                     double scrollableDividerHeight = Current.DividerHeight
                                                      ?? tabBarTheme.DividerHeight
                                                      ?? defaults.DividerHeight!.Value;
@@ -1951,7 +1942,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
             Color color = Current.IndicatorColor
                           ?? tabBarTheme.IndicatorColor
-                          ?? defaults.IndicatorColor!.Value;
+                          ?? defaults.IndicatorColor!;
             // ThemeData tries to avoid this by having the indicatorColor avoid the material color.
             if (Current.AutomaticIndicatorColorAdjustment
                 && color == Material.MaybeOf(Context)?.Color)

@@ -101,8 +101,8 @@ public sealed class CupertinoListSectionTests
     [Fact]
     public void Build_ResolvesBackgroundSeparatorAndDevicePixelDividerHeight()
     {
-        Color background = Color.FromUInt32(0xFF123456);
-        Color separator = Color.FromUInt32(0xFF8FC133);
+        Color background = new Color(0xFF123456);
+        Color separator = new Color(0xFF8FC133);
         var section = new CupertinoListSection(
             children: [new Text("One"), new Text("Two")],
             backgroundColor: background,
@@ -112,9 +112,11 @@ public sealed class CupertinoListSectionTests
 
         Assert.Contains(
             harness.FindWidgets<DecoratedBox>(),
-            box => box.Decoration is BoxDecoration { Color: { } color } && color == background);
+            box => box.Decoration is BoxDecoration { Color: { } color } && ColorMatchers.IsSameColorAs(
+                color,
+                background));
         Container[] dividers = harness.FindWidgets<Container>()
-            .Where(container => container.Color == separator)
+            .Where(container => ColorMatchers.IsSameColorAs(container.Color, separator))
             .ToArray();
         Assert.Equal(3, dividers.Length);
         Assert.All(dividers, divider => Assert.Equal(0.5, divider.Constraints?.MaxHeight));
@@ -136,11 +138,12 @@ public sealed class CupertinoListSectionTests
         Color separator = CupertinoColors.Separator.DarkColor;
         Assert.Equal(
             3,
-            harness.FindWidgets<Container>().Count(container => container.Color == separator));
+            harness.FindWidgets<Container>().Count(
+                container => ColorMatchers.IsSameColorAs(container.Color, separator)));
         Assert.Contains(
             harness.FindWidgets<DecoratedBox>(),
             box => box.Decoration is BoxDecoration { Color: { } color }
-                && color == CupertinoColors.SystemGroupedBackground.DarkColor);
+                && ColorMatchers.IsSameColorAs(color, CupertinoColors.SystemGroupedBackground.DarkColor));
         RenderParagraph header = Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "Header"));
         Assert.Equal(0xFF8E8E92u, Assert.IsType<SolidColorBrush>(header.Foreground).Color.ToUInt32());
     }

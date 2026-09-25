@@ -382,16 +382,16 @@ public sealed class ProxyBoxSemanticsParityTests
                                 link,
                                 child: new RepaintBoundary(
                                     child: new ClipRect(
-                                        child: new Container(color: Color.FromUInt32(0x00ff0000)))))),
+                                        child: new Container(color: new Color(0x00ff0000)))))),
                         Positioned.Fill(
                             child: new RepaintBoundary(
-                                child: new ColoredBox(siblingColor ?? Color.FromUInt32(0xff000000)))),
+                                child: new ColoredBox(siblingColor ?? new Color(0xff000000)))),
                     ]));
         }
 
         tester.PumpWidget(BuildWidget(paddingLeft: 10));
         tester.PumpWidget(BuildWidget(paddingLeft: 0));
-        tester.PumpWidget(BuildWidget(paddingLeft: 0, siblingColor: Color.FromUInt32(0x0000ff00)));
+        tester.PumpWidget(BuildWidget(paddingLeft: 0, siblingColor: new Color(0x0000ff00)));
     }
 
     [Theory]

@@ -373,20 +373,20 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
     // Eyeballed from a radio on a physical Macbook Pro running macOS version 14.5.
     internal static readonly Color KDisabledOuterColor = WithOpacity(CupertinoColors.White, 0.50);
     internal static readonly CupertinoDynamicColor KDisabledInnerColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(64, 0, 0, 0),
-        darkColor: Color.FromArgb(64, 255, 255, 255));
+        color: Color.FromARGB(64, 0, 0, 0),
+        darkColor: Color.FromARGB(64, 255, 255, 255));
     internal static readonly CupertinoDynamicColor KDisabledBorderColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(64, 0, 0, 0),
-        darkColor: Color.FromArgb(64, 0, 0, 0));
+        color: Color.FromARGB(64, 0, 0, 0),
+        darkColor: Color.FromARGB(64, 0, 0, 0));
     internal static readonly CupertinoDynamicColor KDefaultBorderColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(255, 209, 209, 214),
-        darkColor: Color.FromArgb(64, 0, 0, 0));
+        color: Color.FromARGB(255, 209, 209, 214),
+        darkColor: Color.FromARGB(64, 0, 0, 0));
     internal static readonly CupertinoDynamicColor KDefaultInnerColor = CupertinoDynamicColor.WithBrightness(
         color: CupertinoColors.White,
-        darkColor: Color.FromArgb(255, 222, 232, 248));
+        darkColor: Color.FromARGB(255, 222, 232, 248));
     internal static readonly CupertinoDynamicColor KDefaultOuterColor = CupertinoDynamicColor.WithBrightness(
-        color: CupertinoColors.ActiveBlue.Value,
-        darkColor: Color.FromArgb(255, 50, 100, 215));
+        color: CupertinoColors.ActiveBlue,
+        darkColor: Color.FromARGB(255, 50, 100, 215));
     internal const double KPressedOverlayOpacity = 0.15;
     internal const double KCheckmarkStrokeWidth = 2.0;
     internal const double KFocusOutlineStrokeWidth = 3.0;
@@ -396,10 +396,10 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
     internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
 
     private bool? _value;
-    private Color _fillColor;
+    private Color _fillColor = null!;
     private bool _checkmarkStyle;
     private PlatformBrightness? _brightness;
-    private Color _borderColor;
+    private Color _borderColor = null!;
 
     public CupertinoRadioPainter(
         Animation<double> position,
@@ -587,12 +587,5 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
     }
 
     // Dart's `Color.withOpacity`: replaces the alpha channel outright.
-    internal static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp(
-            (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
-            0,
-            byte.MaxValue);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

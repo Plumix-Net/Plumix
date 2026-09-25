@@ -15,12 +15,12 @@ namespace Plumix.Cupertino;
 internal sealed class CupertinoMenuImplicitDivider : StatelessWidget
 {
     internal static CupertinoDynamicColor KOverlayColor { get; } = CupertinoDynamicColor.WithBrightness(
-        Color.FromArgb(77, 140, 140, 140),
-        Color.FromArgb(64, 255, 255, 255));
+        Plumix.UI.Color.FromRGBO(140, 140, 140, 0.3),
+        Plumix.UI.Color.FromRGBO(255, 255, 255, 0.25));
 
     internal static CupertinoDynamicColor KDividerColor { get; } = CupertinoDynamicColor.WithBrightness(
-        Color.FromArgb(64, 0, 0, 0),
-        Color.FromArgb(64, 255, 255, 255));
+        Plumix.UI.Color.FromRGBO(0, 0, 0, 0.25),
+        Plumix.UI.Color.FromRGBO(255, 255, 255, 0.25));
 
     public CupertinoMenuImplicitDivider(Key? key = null) : base(key)
     {
@@ -80,22 +80,22 @@ public sealed class CupertinoMenuDivider : StatelessWidget, CupertinoMenuEntry
     private const double KDividerHeight = 8.0;
 
     public static CupertinoDynamicColor KDefaultColor { get; } = CupertinoDynamicColor.WithBrightness(
-        Avalonia.Media.Color.FromArgb(20, 0, 0, 0),
-        Avalonia.Media.Color.FromArgb(41, 0, 0, 0));
+        Plumix.UI.Color.FromRGBO(0, 0, 0, 0.08),
+        Plumix.UI.Color.FromRGBO(0, 0, 0, 0.16));
 
-    public CupertinoMenuDivider(CupertinoDynamicColor? color = null, Key? key = null) : base(key)
+    public CupertinoMenuDivider(Color? color = null, Key? key = null) : base(key)
     {
         Color = color ?? KDefaultColor;
     }
 
-    public CupertinoDynamicColor Color { get; }
+    public Color Color { get; }
 
     public bool IsDivider => true;
 
     public bool HasLeading(BuildContext context) => false;
 
     public override Widget Build(BuildContext context) => new ColoredBox(
-        Color.ResolveFrom(context),
+        CupertinoDynamicColor.Resolve(Color, context),
         child: new SizedBox(height: KDividerHeight, width: double.PositiveInfinity));
 }
 
@@ -119,13 +119,13 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
 
     private static readonly CupertinoDynamicColor KDefaultTextColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromArgb(245, 0, 0, 0),
-            Color.FromArgb(245, 255, 255, 255));
+            Color.FromARGB(245, 0, 0, 0),
+            Color.FromARGB(245, 255, 255, 255));
 
     private static readonly CupertinoDynamicColor KDefaultSubtitleTextColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromArgb(140, 0, 0, 0),
-            Color.FromArgb(102, 255, 255, 255));
+            Color.FromARGB(140, 0, 0, 0),
+            Color.FromARGB(102, 255, 255, 255));
 
     private static readonly WidgetStateProperty<MouseCursor> KDefaultCursor =
         WidgetStateProperty<MouseCursor>.ResolveWith(states =>
@@ -134,21 +134,18 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
                 : Plumix.UI.MouseCursor.Defer);
 
     /// <summary>
-    /// Dart parity source: <c>CupertinoMenuItem.kDefaultDecoration</c>, resolved for the light
-    /// brightness.
+    /// Dart parity source: <c>CupertinoMenuItem.kDefaultDecoration</c>: brightness-dependent fills that
+    /// the item resolves against its context in <c>_buildStatefulAppearance</c>.
     /// </summary>
-    /// <remarks>
-    /// Dart stores an unresolved <c>CupertinoDynamicColor</c> in the <c>BoxDecoration</c> and resolves
-    /// it against the context in <c>_buildStatefulAppearance</c>. Plumix's <c>BoxDecoration.Color</c>
-    /// is an Avalonia <c>Color</c>, which cannot carry a dynamic color, so the brightness switch moves
-    /// from the color to the map (see <see cref="KDefaultDarkDecoration"/> and
-    /// <c>docs/ai/DIVERGENCES.md</c>).
-    /// </remarks>
     public static WidgetStateProperty<BoxDecoration> KDefaultDecoration { get; } =
-        BuildDefaultDecoration(dark: false);
-
-    internal static WidgetStateProperty<BoxDecoration> KDefaultDarkDecoration { get; } =
-        BuildDefaultDecoration(dark: true);
+        WidgetStateProperty<BoxDecoration>.FromMap(
+        [
+            new(WidgetState.Dragged, Fill(0.1)),
+            new(WidgetState.Pressed, Fill(0.1)),
+            new(WidgetState.Focused, Fill(0.075)),
+            new(WidgetState.Hovered, Fill(0.05)),
+            new(WidgetStatesConstraint.Any, new BoxDecoration()),
+        ]);
 
     public CupertinoMenuItem(
         Widget child,
@@ -292,7 +289,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
                 onFocusChange: OnFocusChange,
                 autofocus: Autofocus,
                 focusNode: FocusNode,
-                decoration: Decoration ?? ResolveDefaultDecoration(context),
+                decoration: Decoration ?? KDefaultDecoration,
                 behavior: Behavior,
                 child: label),
             minScaleFactor: CupertinoMenuMetrics.KMinimumTextScaleFactor,
@@ -302,7 +299,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
     /// <summary>Dart parity source: <c>CupertinoMenuItem._resolveDefaultTextStyle</c>.</summary>
     internal TextStyle ResolveDefaultTextStyle(BuildContext context, TextScaler textScaler)
     {
-        CupertinoDynamicColor color = OnPressed is null
+        Color color = OnPressed is null
             ? CupertinoColors.SystemGrey
             : IsDestructiveAction
                 ? CupertinoColors.SystemRed
@@ -311,7 +308,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
             .ResolveTextStyle(textScaler)
             .CopyWith(
                 fontSize: CupertinoMenuMetrics.KCupertinoMobileBaseFontSize,
-                color: color.ResolveFrom(context));
+                color: CupertinoDynamicColor.Resolve(color, context));
     }
 
     /// <summary>Dart parity source: <c>CupertinoMenuItem._resolveDefaultSubtitleStyle</c>.</summary>
@@ -341,26 +338,10 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
         OnPressed?.Invoke();
     }
 
-    private static WidgetStateProperty<BoxDecoration> ResolveDefaultDecoration(BuildContext context) =>
-        CupertinoTheme.MaybeBrightnessOf(context) == PlatformBrightness.Dark
-            ? KDefaultDarkDecoration
-            : KDefaultDecoration;
-
-    private static WidgetStateProperty<BoxDecoration> BuildDefaultDecoration(bool dark)
-    {
-        BoxDecoration Fill(double opacity) => new(Color: dark
-            ? Color.FromArgb((byte)Math.Round(opacity * 255.0), 255, 255, 255)
-            : Color.FromArgb((byte)Math.Round(opacity * 255.0), 50, 50, 50));
-
-        return WidgetStateProperty<BoxDecoration>.FromMap(
-        [
-            new(WidgetState.Dragged, Fill(0.1)),
-            new(WidgetState.Pressed, Fill(0.1)),
-            new(WidgetState.Focused, Fill(0.075)),
-            new(WidgetState.Hovered, Fill(0.05)),
-            new(WidgetStatesConstraint.Any, new BoxDecoration()),
-        ]);
-    }
+    private static BoxDecoration Fill(double opacity) =>
+        new(Color: CupertinoDynamicColor.WithBrightness(
+            Plumix.UI.Color.FromRGBO(50, 50, 50, opacity),
+            Plumix.UI.Color.FromRGBO(255, 255, 255, opacity)));
 }
 
 /// <summary>Dart parity source: <c>_CupertinoMenuItemLabel</c>.</summary>
@@ -785,7 +766,9 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State<Cupertino
             hitTestBehavior: HitTestBehavior.DeferToChild,
             cursor: cursor,
             opaque: false,
-            child: new DecoratedBox(decoration, child: child));
+            child: new DecoratedBox(
+                decoration with { Color = CupertinoDynamicColor.MaybeResolve(decoration.Color, context) },
+                child: child));
     }
 
     private object? HandleActivation(Intent intent)

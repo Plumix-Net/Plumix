@@ -33,10 +33,10 @@ internal sealed class TabsDemoPageState : State
             UseMaterial3 = _useMaterial3,
             TabBarTheme = _useThemeOverrides
                 ? new TabBarThemeData(
-                    IndicatorColor: Color.Parse("#FF00695C"),
-                    DividerColor: Color.Parse("#FF80CBC4"),
-                    LabelColor: Color.Parse("#FF00695C"),
-                    UnselectedLabelColor: Color.Parse("#FF455A64"),
+                    IndicatorColor: new Color(0xFF00695C),
+                    DividerColor: new Color(0xFF80CBC4),
+                    LabelColor: new Color(0xFF00695C),
+                    UnselectedLabelColor: new Color(0xFF455A64),
                     IndicatorSize: TabBarIndicatorSize.Tab)
                 : new TabBarThemeData(),
         };
@@ -92,20 +92,20 @@ internal sealed class TabsDemoPageState : State
                             ]),
                         new Text("Tap tabs or swipe pages; the indicator and labels share one TabController.",
                             fontSize: 13,
-                            color: Color.Parse("#8A000000")),
+                            color: new Color(0x8A000000)),
                         new Center(
                             child: new TabPageSelector(
                                 indicatorSize: _useThemeOverrides ? 16 : 12,
-                                color: _useThemeOverrides ? Color.Parse("#FFB2DFDB") : null,
-                                selectedColor: _useThemeOverrides ? Color.Parse("#FF00695C") : null,
+                                color: _useThemeOverrides ? new Color(0xFFB2DFDB) : null,
+                                selectedColor: _useThemeOverrides ? new Color(0xFF00695C) : null,
                                 borderStyle: _useThemeOverrides ? BorderStyle.None : null)),
                         new Text("Custom UnderlineTabIndicator: 6px inset, rounded, 5px weight.",
                             fontSize: 13,
-                            color: Color.Parse("#8A000000")),
+                            color: new Color(0x8A000000)),
                         new TabBar(
                             indicator: new UnderlineTabIndicator(
                                 borderRadius: BorderRadius.Circular(5),
-                                borderSide: new BorderSide(Color.Parse("#FF6750A4"), 5),
+                                borderSide: new BorderSide(new Color(0xFF6750A4), 5),
                                 insets: EdgeInsetsGeometry.Symmetric(horizontal: 6)),
                             indicatorSize: TabBarIndicatorSize.Label,
                             tabs: [new Tab(text: "ONE"), new Tab(text: "TWO"), new Tab(text: "THREE"),
@@ -131,13 +131,13 @@ internal sealed class TabsDemoPageState : State
                                 body: new TabBarView(
                                     children:
                                     [
-                                        Page("HOME", "Primary filled tab layout", Color.Parse("#FFE8DEF8")),
+                                        Page("HOME", "Primary filled tab layout", new Color(0xFFE8DEF8)),
                                         Page("EXPLORE", "Swipe keeps indicator animation synchronized",
-                                            Color.Parse("#FFD0BCFF")),
+                                            new Color(0xFFD0BCFF)),
                                         Page("SAVED", "Selected semantics follow the active page",
-                                            Color.Parse("#FFB2DFDB")),
+                                            new Color(0xFFB2DFDB)),
                                         Page("MORE", "Scrollable and themed paths use the same controller",
-                                            Color.Parse("#FFFFD8E4")),
+                                            new Color(0xFFFFD8E4)),
                                     ])))
                     ])));
     }
@@ -151,14 +151,14 @@ internal sealed class TabsDemoPageState : State
                 children:
                 [
                     new Text(title, fontSize: 22),
-                    new Text(subtitle, fontSize: 13, color: Color.Parse("#8A000000")),
+                    new Text(subtitle, fontSize: 13, color: new Color(0x8A000000)),
                 ])));
 
     private static Widget ControlButton(string label, Action onPressed) => new TextButton(
         onPressed: onPressed,
         child: new Text(label, fontSize: 12),
         style: TextButton.StyleFrom(
-            foregroundColor: Color.Parse("#FF21005D"),
-            backgroundColor: Color.Parse("#FFEADDFF"),
+            foregroundColor: new Color(0xFF21005D),
+            backgroundColor: new Color(0xFFEADDFF),
             minimumSize: new Size(64, 36)));
 }

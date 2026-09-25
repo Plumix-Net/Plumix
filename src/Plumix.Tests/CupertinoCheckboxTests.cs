@@ -183,7 +183,7 @@ public sealed class CupertinoCheckboxTests
     public void ShapeAndSide_ReachThePainter()
     {
         var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(5.0));
-        var side = new BorderSide(Color.FromUInt32(0xFFF44336), 4.0);
+        var side = new BorderSide(new Color(0xFFF44336), 4.0);
         using var harness = new CupertinoThemeTestHarness(Wrap(
             new CupertinoCheckbox(
                 value: false,
@@ -199,7 +199,7 @@ public sealed class CupertinoCheckboxTests
     [Fact]
     public void PlainSide_OnlyRendersWhenUnselected()
     {
-        var side = new BorderSide(Color.FromUInt32(0xFFF44336), 4.0);
+        var side = new BorderSide(new Color(0xFFF44336), 4.0);
         using var selected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoCheckbox(value: true, onChanged: _ => { }, side: side)));
 
@@ -302,8 +302,8 @@ public sealed class CupertinoCheckboxTests
     [Fact]
     public void FillColor_ResolvesEnabledAndDisabled_AndBeatsActiveAndInactiveColors()
     {
-        Color enabledFill = Color.FromUInt32(0xFF000001);
-        Color disabledFill = Color.FromUInt32(0xFF000002);
+        Color enabledFill = new Color(0xFF000001);
+        Color disabledFill = new Color(0xFF000002);
         WidgetStateProperty<Color?> fillColor = WidgetStateProperty<Color?>.ResolveWith(states =>
             states.Contains(WidgetState.Disabled) ? disabledFill : enabledFill);
 
@@ -311,8 +311,8 @@ public sealed class CupertinoCheckboxTests
             new CupertinoCheckbox(
                 value: true,
                 onChanged: _ => { },
-                activeColor: Color.FromUInt32(0xFF000003),
-                inactiveColor: Color.FromUInt32(0xFF000004),
+                activeColor: new Color(0xFF000003),
+                inactiveColor: new Color(0xFF000004),
                 fillColor: fillColor)));
         Assert.Equal(enabledFill, Painter(enabled).ActiveColor);
 
@@ -324,8 +324,8 @@ public sealed class CupertinoCheckboxTests
     [Fact]
     public void FillColor_ResolvesInTheHoveredState()
     {
-        Color hoveredFill = Color.FromUInt32(0xFF000001);
-        Color restingFill = Color.FromUInt32(0xFF000005);
+        Color hoveredFill = new Color(0xFF000001);
+        Color restingFill = new Color(0xFF000005);
         WidgetStateProperty<Color?> fillColor = WidgetStateProperty<Color?>.ResolveWith(states =>
             states.Contains(WidgetState.Hovered) ? hoveredFill : restingFill);
 
@@ -347,8 +347,8 @@ public sealed class CupertinoCheckboxTests
         using var light = new CupertinoThemeTestHarness(Wrap(
             new CupertinoCheckbox(value: true, onChanged: _ => { })));
         CupertinoCheckboxPainter lightPainter = Painter(light);
-        Assert.Equal(Color.FromUInt32(0xFF007AFF), lightPainter.ActiveColor);
-        Assert.Equal(CupertinoColors.White, lightPainter.CheckColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF007AFF), lightPainter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.White, lightPainter.CheckColor);
         Assert.Equal(CupertinoColors.White, lightPainter.InactiveColor);
         Assert.True(lightPainter.IsActive);
 
@@ -356,8 +356,8 @@ public sealed class CupertinoCheckboxTests
             new CupertinoCheckbox(value: true, onChanged: _ => { }),
             themeBrightness: PlatformBrightness.Dark));
         CupertinoCheckboxPainter darkPainter = Painter(dark);
-        Assert.Equal(Color.FromUInt32(0xFF3264D7), darkPainter.ActiveColor);
-        Assert.Equal(Color.FromUInt32(0xFFDEE8F8), darkPainter.CheckColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF3264D7), darkPainter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFFDEE8F8), darkPainter.CheckColor);
         Assert.Equal(PlatformBrightness.Dark, darkPainter.Brightness);
         // The unselected fill stays white; dark mode replaces it with the gradient at paint time.
         Assert.Equal(CupertinoColors.White, darkPainter.InactiveColor);
@@ -371,9 +371,9 @@ public sealed class CupertinoCheckboxTests
 
         CupertinoCheckboxPainter painter = Painter(harness);
         Assert.False(painter.IsActive);
-        Assert.Equal(Color.FromArgb(128, 255, 255, 255), painter.ActiveColor);
-        Assert.Equal(Color.FromArgb(64, 0, 0, 0), painter.CheckColor);
-        Assert.Equal(Color.FromArgb(13, 0, 0, 0), painter.Side.Color);
+        Assert.Equal(Color.FromARGB(128, 255, 255, 255), painter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(64, 0, 0, 0), painter.CheckColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(13, 0, 0, 0), painter.Side.Color);
         Assert.Equal(1.0, painter.Side.Width);
     }
 
@@ -383,7 +383,7 @@ public sealed class CupertinoCheckboxTests
         using var unselected = new CupertinoThemeTestHarness(Wrap(
             new CupertinoCheckbox(value: false, onChanged: _ => { })));
         CupertinoCheckboxPainter unselectedPainter = Painter(unselected);
-        Assert.Equal(Color.FromArgb(255, 209, 209, 214), unselectedPainter.Side.Color);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 209, 209, 214), unselectedPainter.Side.Color);
         Assert.Equal(1.0, unselectedPainter.Side.Width);
 
         using var selected = new CupertinoThemeTestHarness(Wrap(
@@ -411,7 +411,7 @@ public sealed class CupertinoCheckboxTests
             Assert.True(painter.IsFocused);
             Color expected = HSLColor
                 .FromColor(CupertinoCheckboxPainter.WithOpacity(
-                    Color.FromUInt32(0xFF007AFF),
+                    new Color(0xFF007AFF),
                     CupertinoConstants.CupertinoFocusColorOpacity))
                 .WithLightness(CupertinoConstants.CupertinoFocusColorBrightness)
                 .WithSaturation(CupertinoConstants.CupertinoFocusColorSaturation)
@@ -419,7 +419,7 @@ public sealed class CupertinoCheckboxTests
             Assert.Equal(expected, painter.EffectiveFocusColor);
 
             var custom = new FocusNode();
-            Color testFocusColor = Color.FromUInt32(0xFFAABBCC);
+            Color testFocusColor = new Color(0xFFAABBCC);
             using var customHarness = new CupertinoThemeTestHarness(Wrap(
                 new CupertinoCheckbox(
                     value: true,

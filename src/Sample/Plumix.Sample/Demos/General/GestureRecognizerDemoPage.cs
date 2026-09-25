@@ -166,7 +166,7 @@ public sealed class GestureRecognizerDemoPageState : State
             gestures: gestures,
             child: new Container(
                 height: 96,
-                color: Color.Parse("#FFF4F7FA"),
+                color: new Color(0xFFF4F7FA),
                 padding: new Thickness(8),
                 child: new Align(
                     alignment: Alignment.CenterLeft,
@@ -175,7 +175,7 @@ public sealed class GestureRecognizerDemoPageState : State
                         child: new Container(
                             width: 56,
                             height: 56,
-                            color: Color.Parse("#FF31506F"))))));
+                            color: new Color(0xFF31506F))))));
     }
 
     private Widget BuildLongPressSurface()
@@ -199,12 +199,12 @@ public sealed class GestureRecognizerDemoPageState : State
             onTertiaryLongPressEnd: _ => Log(_longPressLog, "tertiary end"),
             child: new Container(
                 height: 96,
-                color: Color.Parse("#FFE7EDF6"),
+                color: new Color(0xFFE7EDF6),
                 child: new Center(
                     child: new Text(
                         "Press and hold with any mouse button",
                         fontSize: 14,
-                        color: Color.Parse("#FF31506F")))));
+                        color: new Color(0xFF31506F)))));
     }
 
     private Widget BuildScaleSurface()
@@ -235,7 +235,7 @@ public sealed class GestureRecognizerDemoPageState : State
             onScaleEnd: details => Log(_scaleLog, $"end at {details.ScaleVelocity:F0} px/s"),
             child: new Container(
                 height: 176,
-                color: Color.Parse("#FFF4F7FA"),
+                color: new Color(0xFFF4F7FA),
                 child: new Center(
                     child: Widgets.Transform.Translate(
                         offset: _translation,
@@ -246,7 +246,7 @@ public sealed class GestureRecognizerDemoPageState : State
                                 child: new Container(
                                     width: 72,
                                     height: 72,
-                                    color: Color.Parse("#FF31506F"))))))));
+                                    color: new Color(0xFF31506F))))))));
     }
 
     private Widget BuildMultiTapSurface()
@@ -270,11 +270,11 @@ public sealed class GestureRecognizerDemoPageState : State
             gestures: gestures,
             child: new Container(
                 height: 96,
-                color: Color.Parse("#FFE7EDF6"),
+                color: new Color(0xFFE7EDF6),
                 child: new Center(child: new Text(
                     "Tap or hold with several fingers",
                     fontSize: 14,
-                    color: Color.Parse("#FF31506F")))));
+                    color: new Color(0xFF31506F)))));
     }
 
     private Widget BuildFeedbackSurface()
@@ -285,11 +285,11 @@ public sealed class GestureRecognizerDemoPageState : State
             onLongPress: Feedback.WrapForLongPress(() => Log(_feedbackLog, "long press"), context),
             child: new Container(
                 height: 96,
-                color: Color.Parse("#FFF4F7FA"),
+                color: new Color(0xFFF4F7FA),
                 child: new Center(child: new Text(
                     "Tap or hold for feedback",
                     fontSize: 14,
-                    color: Color.Parse("#FF31506F"))))));
+                    color: new Color(0xFF31506F))))));
     }
 
     private static Widget BuildLog(string title, List<string> lines)
@@ -308,7 +308,7 @@ public sealed class GestureRecognizerDemoPageState : State
         }
 
         return new Container(
-            color: Color.Parse("#FFF7F7F7"),
+            color: new Color(0xFFF7F7F7),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Start,

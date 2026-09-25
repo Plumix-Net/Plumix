@@ -1040,17 +1040,17 @@ public sealed class ScrollableDartParityTests
                         [
                             new Container(
                                 key: new ValueKey<string>($"{pageIndex}_{listIndex}_0"),
-                                color: Color.FromUInt32(0xFFFF0000),
+                                color: new Color(0xFFFF0000),
                                 width: 200,
                                 height: 10),
                             new Container(
                                 key: new ValueKey<string>($"{pageIndex}_{listIndex}_1"),
-                                color: Color.FromUInt32(0xFF0000FF),
+                                color: new Color(0xFF0000FF),
                                 width: 200,
                                 height: 10),
                             new Container(
                                 key: new ValueKey<string>($"{pageIndex}_{listIndex}_2"),
-                                color: Color.FromUInt32(0xFF00FF00),
+                                color: new Color(0xFF00FF00),
                                 width: 200,
                                 height: 10),
                         ])).ToList())).ToList())));
@@ -1704,9 +1704,9 @@ public sealed class ScrollableDartParityTests
                             scrollDirection: Axis.Horizontal,
                             children:
                             [
-                                new Container(width: 1000, height: 200, color: Color.FromUInt32(0xFFFF0000)),
+                                new Container(width: 1000, height: 200, color: new Color(0xFFFF0000)),
                             ])),
-                    new Container(height: 1000, color: Color.FromUInt32(0xFF0000FF)),
+                    new Container(height: 1000, color: new Color(0xFF0000FF)),
                 ])));
 
         Assert.Equal(0.0, verticalController.Offset);
@@ -2011,7 +2011,7 @@ public sealed class ScrollableDartParityTests
         TextEditingController controller,
         FocusNode focusNode) : StatelessWidget
     {
-        private static readonly Color Red = Color.FromUInt32(0xFFF44336);
+        private static readonly Color Red = new Color(0xFFF44336);
 
         public override Widget Build(BuildContext context)
         {

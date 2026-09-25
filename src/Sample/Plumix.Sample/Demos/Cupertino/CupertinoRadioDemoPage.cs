@@ -29,7 +29,7 @@ internal sealed class CupertinoRadioDemoPageState : State
         return new CupertinoTheme(
             new CupertinoThemeData(brightness: _dark ? PlatformBrightness.Dark : PlatformBrightness.Light),
             new Container(
-                color: _dark ? Color.Parse("#FF1C1C1E") : CupertinoColors.White,
+                color: _dark ? new Color(0xFF1C1C1E) : CupertinoColors.White,
                 padding: new Thickness(12.0),
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -74,16 +74,16 @@ internal sealed class CupertinoRadioDemoPageState : State
                                         "custom",
                                         "Custom colors",
                                         "activeColor + inactiveColor + fillColor",
-                                        activeColor: CupertinoColors.SystemGreen.Value,
-                                        inactiveColor: Color.Parse("#FFEFEFF4"),
-                                        fillColor: CupertinoColors.SystemYellow.Value),
+                                        activeColor: CupertinoColors.SystemGreen,
+                                        inactiveColor: new Color(0xFFEFEFF4),
+                                        fillColor: CupertinoColors.SystemYellow),
                                 ])),
                     ])));
     }
 
     private Color TitleColor => _dark ? CupertinoColors.White : CupertinoColors.Black;
 
-    private Color SubtitleColor => _dark ? Color.Parse("#99FFFFFF") : Color.Parse("#8A000000");
+    private Color SubtitleColor => _dark ? new Color(0x99FFFFFF) : new Color(0x8A000000);
 
     private Widget BuildRow(
         string value,
@@ -96,10 +96,10 @@ internal sealed class CupertinoRadioDemoPageState : State
         return new Container(
             padding: new Thickness(10.0, 8.0),
             decoration: new BoxDecoration(
-                Color: _dark ? Color.Parse("#FF2C2C2E") : Color.Parse("#FFF1F4F9"),
+                Color: _dark ? new Color(0xFF2C2C2E) : new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10.0),
                 Border: Border.FromBorderSide(
-                    new BorderSide(_dark ? Color.Parse("#FF3A3A3C") : Color.Parse("#FFD6DEEA"), 1.0))),
+                    new BorderSide(_dark ? new Color(0xFF3A3A3C) : new Color(0xFFD6DEEA), 1.0))),
             child: new Row(
                 spacing: 10.0,
                 children:
@@ -129,7 +129,7 @@ internal sealed class CupertinoRadioDemoPageState : State
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
             padding: new Thickness(12.0, 6.0),
-            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue.Value));
+            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue));
     }
 
     private void OnChanged(string? value)

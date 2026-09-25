@@ -79,7 +79,7 @@ public sealed class CupertinoFormRow : StatelessWidget
                 alignment: AlignmentDirectional.CenterStart,
                 child: new DefaultTextStyle(
                     style: new TextStyle(
-                        Color: CupertinoColors.DestructiveRed.Value,
+                        Color: CupertinoColors.DestructiveRed,
                         FontWeight: FontWeight.Medium),
                     child: Error)));
         }

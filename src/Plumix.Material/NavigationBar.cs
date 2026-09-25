@@ -138,10 +138,10 @@ public sealed class NavigationBar : StatelessWidget
         var defaults = ResolveDefaults(theme);
         double effectiveHeight = Height ?? navigationTheme.Height ?? defaults.Height!.Value;
         double effectiveElevation = Elevation ?? navigationTheme.Elevation ?? defaults.Elevation!.Value;
-        var effectiveBackground = BackgroundColor ?? navigationTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
+        var effectiveBackground = BackgroundColor ?? navigationTheme.BackgroundColor ?? defaults.BackgroundColor!;
         var effectiveShadow = ShadowColor ?? navigationTheme.ShadowColor ?? defaults.ShadowColor;
         var effectiveSurfaceTint = SurfaceTintColor ?? navigationTheme.SurfaceTintColor ?? defaults.SurfaceTintColor;
-        var effectiveIndicatorColor = IndicatorColor ?? navigationTheme.IndicatorColor ?? defaults.IndicatorColor!.Value;
+        var effectiveIndicatorColor = IndicatorColor ?? navigationTheme.IndicatorColor ?? defaults.IndicatorColor!;
         var effectiveIndicatorShape = IndicatorShape ?? navigationTheme.IndicatorShape ?? defaults.IndicatorShape!;
         var effectiveLabelBehavior = LabelBehavior ?? navigationTheme.LabelBehavior ?? defaults.LabelBehavior!.Value;
         var effectiveLabelPadding = LabelPadding ?? navigationTheme.LabelPadding ?? defaults.LabelPadding ?? new Thickness(0, 4, 0, 0);
@@ -286,9 +286,9 @@ public sealed class NavigationBar : StatelessWidget
         return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             var value = widget?.Resolve(states);
-            if (value.HasValue) return value;
+            if (value != null) return value;
             value = localTheme?.Resolve(states);
-            return value.HasValue ? value : defaults?.Resolve(states);
+            return value != null ? value : defaults?.Resolve(states);
         });
     }
 
@@ -740,12 +740,12 @@ internal static class NavigationSurfaceUtilities
         }
 
         IReadOnlyList<BoxShadow>? shadows = null;
-        if (elevation > 0 && shadowColor.HasValue && shadowColor.Value.A > 0)
+        if (elevation > 0 && shadowColor != null && shadowColor!.Alpha > 0)
         {
             shadows =
             [
                 new BoxShadow(
-                    color: WithOpacity(shadowColor.Value, 0.20),
+                    color: WithOpacity(shadowColor!, 0.20),
                     offset: new Point(0, Math.Max(1, elevation * 0.5)),
                     blurRadius: Math.Max(2, elevation * 2.4)),
             ];
@@ -754,19 +754,6 @@ internal static class NavigationSurfaceUtilities
         return new BoxDecoration(Color: background, BoxShadows: shadows);
     }
 
-    public static Color WithOpacity(Color color, double opacity)
-    {
-        return Color.FromArgb(
-            (byte)Math.Clamp((int)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), 0, 255),
-            color.R,
-            color.G,
-            color.B);
-    }
+    public static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    public static Color Blend(Color background, Color foreground, double opacity)
-    {
-        opacity = Math.Clamp(opacity, 0, 1) * (foreground.A / 255.0);
-        byte Mix(byte a, byte b) => (byte)Math.Clamp((int)Math.Round(a + ((b - a) * opacity)), 0, 255);
-        return Color.FromArgb(background.A, Mix(background.R, foreground.R), Mix(background.G, foreground.G), Mix(background.B, foreground.B));
-    }
 }

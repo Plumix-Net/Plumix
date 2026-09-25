@@ -1104,7 +1104,7 @@ public abstract class RenderBox : RenderObject
     protected internal virtual void DebugPaintSize(PaintingContext context, Point offset)
     {
         ArgumentNullException.ThrowIfNull(context);
-        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FFFF)), 1.0);
+        var pen = new Pen(new SolidColorBrush(new Color(0xFF00FFFF)), 1.0);
         context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(new Rect(offset, Size), 0.5)));
     }
 
@@ -1121,7 +1121,7 @@ public abstract class RenderBox : RenderObject
         double? baselineI = GetDistanceToBaseline(TextBaseline.Ideographic, onlyReal: true);
         if (baselineI is { } ideographic)
         {
-            var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFFD000)), 0.25);
+            var pen = new Pen(new SolidColorBrush(new Color(0xFFFFD000)), 0.25);
             context.Canvas.DrawLine(
                 pen,
                 new Point(offset.X, offset.Y + ideographic),
@@ -1132,7 +1132,7 @@ public abstract class RenderBox : RenderObject
         double? baselineA = GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true);
         if (baselineA is { } alphabetic)
         {
-            var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FF00)), 0.25);
+            var pen = new Pen(new SolidColorBrush(new Color(0xFF00FF00)), 0.25);
             context.Canvas.DrawLine(
                 pen,
                 new Point(offset.X, offset.Y + alphabetic),
@@ -1157,7 +1157,7 @@ public abstract class RenderBox : RenderObject
             return;
         }
 
-        var color = Color.FromUInt32(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
+        var color = new Color(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
         context.Canvas.DrawRectangle(new SolidColorBrush(color), null, new Rect(offset, Size));
     }
 

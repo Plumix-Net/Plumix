@@ -25,9 +25,9 @@ type StackFit = Plumix.Rendering.StackFit
 type TextAlign = Plumix.UI.TextAlign
 type TextOverflow = Plumix.UI.TextOverflow
 
-// Painting / geometry (Avalonia primitives used across the widget API)
-type Color = Avalonia.Media.Color
-type Colors = Avalonia.Media.Colors
+// Painting / geometry (the framework colour and the Avalonia primitives used across the widget API)
+type Color = Plumix.UI.Color
+type Colors = Plumix.Material.Colors
 type FontWeight = Avalonia.Media.FontWeight
 type Thickness = Avalonia.Thickness
 

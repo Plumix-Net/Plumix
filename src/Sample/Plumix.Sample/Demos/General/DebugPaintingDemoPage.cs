@@ -97,7 +97,7 @@ internal sealed class DebugPaintingDemoPageState : State
                             child: new UnconstrainedBox(
                                 alignment: Alignment.TopLeft,
                                 child: new Placeholder(
-                                    color: Color.Parse("#FF455A64"),
+                                    color: new Color(0xFF455A64),
                                     strokeWidth: 2,
                                     fallbackWidth: 160,
                                     fallbackHeight: 120,
@@ -105,7 +105,7 @@ internal sealed class DebugPaintingDemoPageState : State
                                         ? new Container(
                                             width: 96,
                                             height: 56,
-                                            color: Color.Parse("#FFFFE8A3"),
+                                            color: new Color(0xFFFFE8A3),
                                             alignment: Alignment.Center,
                                             child: new Text("child", fontSize: 14, color: Colors.Black))
                                         : null)))),
@@ -128,12 +128,12 @@ internal sealed class DebugPaintingDemoPageState : State
                         color: Colors.DarkSlateGray),
                     new Expanded(
                         child: new GridPaper(
-                            color: _customGrid ? Color.Parse("#7FFF8A65") : null,
+                            color: _customGrid ? new Color(0x7FFF8A65) : null,
                             interval: _customGrid ? 60 : 100,
                             divisions: _customGrid ? 3 : 2,
                             subdivisions: _customGrid ? 2 : 5,
                             child: new Container(
-                                color: Color.Parse("#FFF2F7FA"),
+                                color: new Color(0xFFF2F7FA),
                                 alignment: Alignment.Center,
                                 child: new Text("foreground grid", fontSize: 14, color: Colors.Black)))),
                 ]));
@@ -146,7 +146,7 @@ internal sealed class DebugPaintingDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

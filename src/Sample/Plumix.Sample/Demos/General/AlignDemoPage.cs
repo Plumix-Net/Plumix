@@ -78,12 +78,12 @@ internal sealed class AlignDemoPageState : State
             value => new Alignment(-1.0 + (2.0 * value), -1.0 + (2.0 * value)));
         var textStyleBegin = new TextStyle(
             FontSize: 12,
-            Color: Color.Parse("#FF315A7D"),
+            Color: new Color(0xFF315A7D),
             FontWeight: FontWeight.Normal,
             LetterSpacing: 0);
         var textStyleEnd = new TextStyle(
             FontSize: 20,
-            Color: Color.Parse("#FF9C4F63"),
+            Color: new Color(0xFF9C4F63),
             FontWeight: FontWeight.Bold,
             LetterSpacing: 1.5);
         _explicitTextStyleAnimation = new DerivedAnimation<TextStyle>(
@@ -91,12 +91,12 @@ internal sealed class AlignDemoPageState : State
             value => TextStyle.Lerp(textStyleBegin, textStyleEnd, value)!);
         _explicitDecorationAnimation = new DecorationTween(
             begin: new BoxDecoration(
-                Color: Color.Parse("#FF315A7D"),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF9EC5E5"), 2)),
+                Color: new Color(0xFF315A7D),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF9EC5E5), 2)),
                 BorderRadius: BorderRadius.Circular(4)),
             end: new BoxDecoration(
-                Color: Color.Parse("#FF9C4F63"),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFF4B6C2"), 6)),
+                Color: new Color(0xFF9C4F63),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFF4B6C2), 6)),
                 BorderRadius: BorderRadius.Circular(24))).Animate(_explicitTransitionsController);
     }
 
@@ -167,7 +167,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 220,
                     height: 140,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     child: new AnimatedPadding(
                         padding: new Thickness(_expandedPadding ? 24 : 8),
                         duration: TimeSpan.FromMilliseconds(350),
@@ -185,7 +185,7 @@ internal sealed class AlignDemoPageState : State
                             child: new Container(
                                 width: 64,
                                 height: 40,
-                                color: Color.Parse("#FF1D3557"),
+                                color: new Color(0xFF1D3557),
                                 child: new Center(
                                     child: new Text("A", fontSize: 16, color: Colors.White))))))),
                 new Text("AnimatedOpacity + AnimatedSlide", fontSize: 20, color: Colors.Black),
@@ -211,7 +211,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 220,
                     height: 110,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new AnimatedSlide(
                             offset: _shifted ? new Vector(0.75, -0.5) : default,
@@ -226,7 +226,7 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     width: 72,
                                     height: 44,
-                                    color: Color.Parse("#FF7B2CBF"),
+                                    color: new Color(0xFF7B2CBF),
                                     child: new Center(
                                         child: new Text("move", fontSize: 14, color: Colors.White))))))),
                 new Text("AnimatedScale + AnimatedRotation", fontSize: 20, color: Colors.Black),
@@ -252,7 +252,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 220,
                     height: 130,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new AnimatedRotation(
                             turns: _rotated ? 0.125 : 0,
@@ -271,7 +271,7 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     width: 72,
                                     height: 44,
-                                    color: Color.Parse("#FFB85C38"),
+                                    color: new Color(0xFFB85C38),
                                     child: new Center(
                                         child: new Text("turn", fontSize: 14, color: Colors.White))))))),
                 new Text("ScaleTransition + RotationTransition", fontSize: 20, color: Colors.Black),
@@ -287,7 +287,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 220,
                     height: 130,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new RotationTransition(
                             turns: _explicitTransitionsController,
@@ -300,7 +300,7 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     width: 72,
                                     height: 44,
-                                    color: Color.Parse("#FF356A82"),
+                                    color: new Color(0xFF356A82),
                                     child: new Center(
                                         child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
                 new Text("DecoratedBoxTransition", fontSize: 20, color: Colors.Black),
@@ -311,7 +311,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 220,
                     height: 100,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new DecoratedBoxTransition(
                             decoration: _explicitDecorationAnimation,
@@ -350,7 +350,7 @@ internal sealed class AlignDemoPageState : State
                         new Container(
                             width: 110,
                             height: 90,
-                            color: Color.Parse("#FFF3F5F8"),
+                            color: new Color(0xFFF3F5F8),
                             child: new Center(
                                 child: new SlideTransition(
                                     position: _explicitSlideAnimation,
@@ -360,13 +360,13 @@ internal sealed class AlignDemoPageState : State
                                     child: new Container(
                                         width: 58,
                                         height: 40,
-                                        color: Color.Parse("#FF2A6F97"),
+                                        color: new Color(0xFF2A6F97),
                                         child: new Center(
                                             child: new Text("slide", fontSize: 12, color: Colors.White)))))),
                         new Container(
                             width: 110,
                             height: 90,
-                            color: Color.Parse("#FFF3F5F8"),
+                            color: new Color(0xFFF3F5F8),
                             child: new Center(
                                 child: new SizeTransition(
                                     sizeFactor: _explicitTransitionsController,
@@ -376,7 +376,7 @@ internal sealed class AlignDemoPageState : State
                                     child: new Container(
                                         width: 72,
                                         height: 60,
-                                        color: Color.Parse("#FF9C4F63"),
+                                        color: new Color(0xFF9C4F63),
                                         child: new Center(
                                             child: new Text("size", fontSize: 12, color: Colors.White)))))),
                     ]),
@@ -391,21 +391,21 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 130,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Stack(
                         children:
                         [
                             new PositionedTransition(
                                 rect: _explicitPositionAnimation,
                                 child: new Container(
-                                    color: Color.Parse("#FF315A7D"),
+                                    color: new Color(0xFF315A7D),
                                     child: new Center(
                                         child: new Text("insets", fontSize: 12, color: Colors.White)))),
                             new RelativePositionedTransition(
                                 rect: _explicitRelativePositionAnimation,
                                 size: new Size(240, 130),
                                 child: new Container(
-                                    color: Color.Parse("#FF9C4F63"),
+                                    color: new Color(0xFF9C4F63),
                                     child: new Center(
                                         child: new Text("rect", fontSize: 12, color: Colors.White)))),
                         ])),
@@ -421,7 +421,7 @@ internal sealed class AlignDemoPageState : State
                         new Container(
                             width: 110,
                             height: 90,
-                            color: Color.Parse("#FFF3F5F8"),
+                            color: new Color(0xFFF3F5F8),
                             child: new AlignTransition(
                                 alignment: _explicitAlignmentAnimation,
                                 widthFactor: 1.6,
@@ -429,11 +429,11 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     width: 48,
                                     height: 28,
-                                    color: Color.Parse("#FF356A82")))),
+                                    color: new Color(0xFF356A82)))),
                         new Container(
                             width: 180,
                             height: 90,
-                            color: Color.Parse("#FFF3F5F8"),
+                            color: new Color(0xFFF3F5F8),
                             child: new Center(
                                 child: new DefaultTextStyleTransition(
                                     style: _explicitTextStyleAnimation,
@@ -464,7 +464,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 140,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Stack(
                         children:
                         [
@@ -477,7 +477,7 @@ internal sealed class AlignDemoPageState : State
                                 curve: Curves.EaseInOut,
                                 onEnd: HandleAnimationEnd,
                                 child: new Container(
-                                    color: Color.Parse("#FF2A6F97"),
+                                    color: new Color(0xFF2A6F97),
                                     child: new Center(
                                         child: new Text("left", fontSize: 12, color: Colors.White)))),
                             new Directionality(
@@ -493,7 +493,7 @@ internal sealed class AlignDemoPageState : State
                                     curve: Curves.EaseInOut,
                                     onEnd: HandleAnimationEnd,
                                     child: new Container(
-                                        color: Color.Parse("#FF6A4C93"),
+                                        color: new Color(0xFF6A4C93),
                                         child: new Center(
                                             child: new Text("start", fontSize: 12, color: Colors.White))))),
                         ])),
@@ -528,8 +528,8 @@ internal sealed class AlignDemoPageState : State
                                 style: new TextStyle(
                                     FontSize: _emphasizedText ? 22 : 14,
                                     Color: _emphasizedText
-                                        ? Color.Parse("#FF6A1B9A")
-                                        : Color.Parse("#FF264653"),
+                                        ? new Color(0xFF6A1B9A)
+                                        : new Color(0xFF264653),
                                     FontWeight: _emphasizedText ? FontWeight.Bold : FontWeight.Normal,
                                     LetterSpacing: _emphasizedText ? 1.2 : 0.1),
                                 duration: TimeSpan.FromMilliseconds(350),
@@ -544,9 +544,9 @@ internal sealed class AlignDemoPageState : State
                                 child: new Center(
                                     child: new Text("surface", fontSize: 13, color: Colors.White))),
                             color: _raisedSurface
-                                ? Color.Parse("#FF2A9D8F")
-                                : Color.Parse("#FF457B9D"),
-                            shadowColor: Color.Parse("#FF1D3557"),
+                                ? new Color(0xFF2A9D8F)
+                                : new Color(0xFF457B9D),
+                            shadowColor: new Color(0xFF1D3557),
                             duration: TimeSpan.FromMilliseconds(350),
                             clipBehavior: Plumix.UI.Clip.AntiAlias,
                             borderRadius: BorderRadius.Circular(_raisedSurface ? 24 : 4),
@@ -578,7 +578,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 90,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new AnimatedSwitcher(
                             duration: TimeSpan.FromMilliseconds(350),
@@ -590,8 +590,8 @@ internal sealed class AlignDemoPageState : State
                                 width: 96,
                                 height: 48,
                                 color: _switcherValue % 2 == 0
-                                    ? Color.Parse("#FF315A7D")
-                                    : Color.Parse("#FF9C4F63"),
+                                    ? new Color(0xFF315A7D)
+                                    : new Color(0xFF9C4F63),
                                 child: new Center(
                                     child: new Text(
                                         $"child {_switcherValue}",
@@ -605,13 +605,13 @@ internal sealed class AlignDemoPageState : State
                         firstChild: new Container(
                             width: 240,
                             height: 54,
-                            color: Color.Parse("#FFDCEBF2"),
+                            color: new Color(0xFFDCEBF2),
                             child: new Center(
                                 child: new Text("first / 54", fontSize: 13, color: Colors.Black))),
                         secondChild: new Container(
                             width: 240,
                             height: 92,
-                            color: Color.Parse("#FFF2D9DF"),
+                            color: new Color(0xFFF2D9DF),
                             child: new Center(
                                 child: new Text("second / 92", fontSize: 13, color: Colors.Black))),
                         crossFadeState: _showSecondCrossFade
@@ -650,7 +650,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 120,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new AnimatedFractionallySizedBox(
                         duration: TimeSpan.FromMilliseconds(350),
                         alignment: _expandedFraction ? Alignment.BottomRight : Alignment.TopLeft,
@@ -659,13 +659,13 @@ internal sealed class AlignDemoPageState : State
                         curve: Curves.EaseInOut,
                         onEnd: HandleAnimationEnd,
                         child: new Container(
-                            color: Color.Parse("#FF3F7D6B"),
+                            color: new Color(0xFF3F7D6B),
                             child: new Center(
                                 child: new Text("fraction", fontSize: 13, color: Colors.White))))),
                 new Container(
                     width: 240,
                     height: 100,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new CustomScrollView(
                         slivers:
                         [
@@ -677,7 +677,7 @@ internal sealed class AlignDemoPageState : State
                                 sliver: new SliverToBoxAdapter(
                                     new Container(
                                         height: 84,
-                                        color: Color.Parse("#FF8E5572"),
+                                        color: new Color(0xFF8E5572),
                                         child: new Center(
                                             child: new Text(
                                                 "sliver opacity",
@@ -709,7 +709,7 @@ internal sealed class AlignDemoPageState : State
                     child: new Container(
                         width: 84,
                         height: 28,
-                        color: Color.Parse("#FFE4E8EE"),
+                        color: new Color(0xFFE4E8EE),
                         child: new Center(
                             child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
                     builder: (_, value, child) => new Row(
@@ -722,7 +722,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 56,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TweenAnimationBuilder<double>(
@@ -735,7 +735,7 @@ internal sealed class AlignDemoPageState : State
                             builder: (_, value, child) => new Container(
                                 width: value,
                                 height: 36,
-                                color: Color.Parse("#FF356A82"),
+                                color: new Color(0xFF356A82),
                                 child: child)))),
                 new Text("ListenableBuilder + AnimatedBuilder", fontSize: 20, color: Colors.Black),
                 new Text(
@@ -762,7 +762,7 @@ internal sealed class AlignDemoPageState : State
                     child: new Container(
                         width: 84,
                         height: 28,
-                        color: Color.Parse("#FFE4E8EE"),
+                        color: new Color(0xFFE4E8EE),
                         child: new Center(
                             child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
                     builder: (_, child) => new Row(
@@ -778,7 +778,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 56,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Align(
                         alignment: Alignment.CenterLeft,
                         child: new AnimatedBuilder(
@@ -788,7 +788,7 @@ internal sealed class AlignDemoPageState : State
                             builder: (_, child) => new Container(
                                 width: 72 + (_explicitTransitionsController.Value * 108),
                                 height: 36,
-                                color: Color.Parse("#FF6B5B95"),
+                                color: new Color(0xFF6B5B95),
                                 child: child)))),
                 new Text("DualTransitionBuilder + RepeatingAnimationBuilder", fontSize: 20, color: Colors.Black),
                 new Text(
@@ -818,7 +818,7 @@ internal sealed class AlignDemoPageState : State
                 new Container(
                     width: 240,
                     height: 72,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Center(
                         child: new DualTransitionBuilder(
                             animation: _explicitTransitionsController,
@@ -831,13 +831,13 @@ internal sealed class AlignDemoPageState : State
                             child: new Container(
                                 width: 64,
                                 height: 40,
-                                color: Color.Parse("#FF356A82"),
+                                color: new Color(0xFF356A82),
                                 child: new Center(
                                     child: new Text("dual", fontSize: 12, color: Colors.White)))))),
                 new Container(
                     width: 240,
                     height: 56,
-                    color: Color.Parse("#FFF3F5F8"),
+                    color: new Color(0xFFF3F5F8),
                     child: new Align(
                         alignment: Alignment.CenterLeft,
                         child: new RepeatingAnimationBuilder<double>(
@@ -851,7 +851,7 @@ internal sealed class AlignDemoPageState : State
                             builder: (_, value, child) => new Container(
                                 width: value,
                                 height: 36,
-                                color: Color.Parse("#FF6D7F47"),
+                                color: new Color(0xFF6D7F47),
                                 child: child)))),
             ]);
     }
@@ -863,7 +863,7 @@ internal sealed class AlignDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

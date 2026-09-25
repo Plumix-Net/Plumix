@@ -65,7 +65,7 @@ type Ui private () =
         Text(
             data,
             fontSize = nul fontSize,
-            color = nul color,
+            color = obj' color,
             fontWeight = nul fontWeight,
             textAlign = defaultArg textAlign TextAlign.Start,
             maxLines = nul maxLines,
@@ -73,7 +73,7 @@ type Ui private () =
             key = obj' key)
 
     static member icon(icon: IconData, ?size: float, ?color: Color, ?key: Key) : Widget =
-        Icon(icon, size = nul size, color = nul color, key = obj' key)
+        Icon(icon, size = nul size, color = obj' color, key = obj' key)
 
     static member column
         (
@@ -163,7 +163,7 @@ type Ui private () =
         ) : Widget =
         Container(
             child = obj' child,
-            color = nul color,
+            color = obj' color,
             padding = edgeInsets padding,
             margin = edgeInsets margin,
             width = nul width,
@@ -190,7 +190,7 @@ type Ui private () =
             floatingActionButton = obj' floatingActionButton,
             bottomNavigationBar = obj' bottomNavigationBar,
             drawer = obj' drawer,
-            backgroundColor = nul backgroundColor,
+            backgroundColor = obj' backgroundColor,
             key = obj' key)
 
     static member appBar
@@ -221,8 +221,8 @@ type Ui private () =
             action onPressed,
             style =
                 ElevatedButton.StyleFrom(
-                    foregroundColor = nul foregroundColor,
-                    backgroundColor = nul backgroundColor),
+                    foregroundColor = obj' foregroundColor,
+                    backgroundColor = obj' backgroundColor),
             key = obj' key)
 
     static member textButton
@@ -238,8 +238,8 @@ type Ui private () =
             action onPressed,
             style =
                 TextButton.StyleFrom(
-                    foregroundColor = nul foregroundColor,
-                    backgroundColor = nul backgroundColor),
+                    foregroundColor = obj' foregroundColor,
+                    backgroundColor = obj' backgroundColor),
             key = obj' key)
 
     static member outlinedButton
@@ -255,7 +255,7 @@ type Ui private () =
             action onPressed,
             style =
                 OutlinedButton.StyleFrom(
-                    foregroundColor = nul foregroundColor,
+                    foregroundColor = obj' foregroundColor,
                     side = (match borderColor with
                             | Some color -> Nullable(BorderSide(color))
                             | None -> Nullable())),
@@ -274,8 +274,8 @@ type Ui private () =
             obj' child,
             action onPressed,
             tooltip = obj' tooltip,
-            foregroundColor = nul foregroundColor,
-            backgroundColor = nul backgroundColor,
+            foregroundColor = obj' foregroundColor,
+            backgroundColor = obj' backgroundColor,
             key = obj' key)
 
     static member theme(data: ThemeData, child: Widget, ?key: Key) : Widget =

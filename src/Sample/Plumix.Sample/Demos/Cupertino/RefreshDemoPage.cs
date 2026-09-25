@@ -33,11 +33,11 @@ internal sealed class CupertinoRefreshDemoPageState : State
                 new Text(
                     "Pull the list down past the indicator, then release. The sliver holds 60 px while refreshing.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Text(
                     $"{_status} · refreshCount={_refreshCount}",
                     fontSize: 12.0,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new CustomScrollView(
                         physics: new BouncingScrollPhysics(parent: new AlwaysScrollableScrollPhysics()),
@@ -49,7 +49,7 @@ internal sealed class CupertinoRefreshDemoPageState : State
                                 itemExtent: 54.0,
                                 addAutomaticKeepAlives: false,
                                 itemBuilder: (_, index) => new Container(
-                                    color: index % 2 == 0 ? Colors.White : Color.Parse("#FFF5F7FA"),
+                                    color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
                                     padding: new Thickness(12.0, 10.0),
                                     child: new Text(
                                         $"Cupertino refresh row #{index + 1}",

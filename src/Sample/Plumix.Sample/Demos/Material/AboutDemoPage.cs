@@ -18,7 +18,7 @@ public sealed class AboutDemoPage : StatelessWidget
         const string name = "Plumix Sample";
         const string version = "1.0.0-demo";
         const string legalese = "© 2026 Plumix contributors";
-        var appIcon = new Icon(Icons.InfoOutline, size: 40, color: Color.Parse("#FF6750A4"));
+        var appIcon = new Icon(Icons.InfoOutline, size: 40, color: new Color(0xFF6750A4));
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 12,

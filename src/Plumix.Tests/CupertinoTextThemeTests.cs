@@ -69,10 +69,10 @@ public sealed class CupertinoTextThemeTests
 
         Assert.False(theme.TextStyle.Inherit);
         Assert.Equal(Plumix.UI.TextDecoration.None, theme.TextStyle.Decoration);
-        Assert.Equal(CupertinoColors.Label.Color, theme.TextStyle.Color);
-        Assert.Equal(CupertinoColors.SystemBlue.Color, theme.ActionTextStyle.Color);
-        Assert.Equal(CupertinoColors.SystemBlue.Color, theme.NavActionTextStyle.Color);
-        Assert.Equal(CupertinoColors.InactiveGray.Color, theme.TabLabelTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, theme.TextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.Color, theme.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.Color, theme.NavActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.InactiveGray.Color, theme.TabLabelTextStyle.Color);
     }
 
     [Fact]
@@ -80,11 +80,11 @@ public sealed class CupertinoTextThemeTests
     {
         var theme = new CupertinoTextThemeData(primaryColor: CupertinoColors.SystemPink);
 
-        Assert.Equal(CupertinoColors.SystemPink.Color, theme.ActionTextStyle.Color);
-        Assert.Equal(CupertinoColors.SystemPink.Color, theme.ActionSmallTextStyle.Color);
-        Assert.Equal(CupertinoColors.SystemPink.Color, theme.NavActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, theme.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, theme.ActionSmallTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, theme.NavActionTextStyle.Color);
         // The non-action styles keep the label color.
-        Assert.Equal(CupertinoColors.Label.Color, theme.TextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, theme.TextStyle.Color);
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public sealed class CupertinoTextThemeTests
         CupertinoTextThemeData copy = theme.CopyWith(navTitleTextStyle: custom);
 
         Assert.Equal(custom, copy.NavTitleTextStyle);
-        Assert.Equal(CupertinoColors.SystemPink.Color, copy.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, copy.ActionTextStyle.Color);
         Assert.Equal(theme.TextStyle, copy.TextStyle);
         Assert.Equal(theme, theme.CopyWith());
     }
@@ -152,14 +152,14 @@ public sealed class CupertinoTextThemeTests
         {
         }
 
-        Assert.Equal(CupertinoColors.Label.Color, light!.TextStyle.Color);
-        Assert.Equal(CupertinoColors.InactiveGray.Color, light.TabLabelTextStyle.Color);
-        Assert.Equal(CupertinoColors.Label.DarkColor, dark!.TextStyle.Color);
-        Assert.Equal(CupertinoColors.InactiveGray.DarkColor, dark.TabLabelTextStyle.Color);
-        Assert.Equal(CupertinoColors.Label.DarkColor, dark.NavTitleTextStyle.Color);
-        Assert.Equal(CupertinoColors.Label.DarkColor, dark.NavLargeTitleTextStyle.Color);
-        Assert.Equal(CupertinoColors.Label.DarkColor, dark.PickerTextStyle.Color);
-        Assert.Equal(CupertinoColors.Label.DarkColor, dark.DateTimePickerTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, light!.TextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.InactiveGray.Color, light.TabLabelTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.DarkColor, dark!.TextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.InactiveGray.DarkColor, dark.TabLabelTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.DarkColor, dark.NavTitleTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.DarkColor, dark.NavLargeTitleTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.DarkColor, dark.PickerTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.DarkColor, dark.DateTimePickerTextStyle.Color);
         Assert.NotEqual(light.TextStyle, dark.TextStyle);
     }
 

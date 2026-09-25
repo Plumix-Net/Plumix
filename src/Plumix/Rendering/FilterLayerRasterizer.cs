@@ -366,10 +366,10 @@ internal static class FilterLayerRasterizer
         BlendMode blendMode)
     {
         var source = new Pixel(
-            color.R / 255.0,
-            color.G / 255.0,
-            color.B / 255.0,
-            color.A / 255.0);
+            color.Red / 255.0,
+            color.Green / 255.0,
+            color.Blue / 255.0,
+            color.Alpha / 255.0);
         for (int index = 0; index < pixels.Length; index += 4)
         {
             double destinationAlpha = pixels[index + 3] / 255.0;

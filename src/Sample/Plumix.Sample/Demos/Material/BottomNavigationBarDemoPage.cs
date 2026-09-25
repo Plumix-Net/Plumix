@@ -34,10 +34,10 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
             if (_themed)
             {
                 var bottomTheme = new BottomNavigationBarThemeData(
-                    BackgroundColor: Color.Parse("#FFE8DEF8"),
+                    BackgroundColor: new Color(0xFFE8DEF8),
                     Elevation: 12.0,
-                    SelectedItemColor: Color.Parse("#FF6750A4"),
-                    UnselectedItemColor: Color.Parse("#FF7A757F"),
+                    SelectedItemColor: new Color(0xFF6750A4),
+                    UnselectedItemColor: new Color(0xFF7A757F),
                     SelectedLabelStyle: new TextStyle(FontSize: 15.0, FontWeight: FontWeight.Bold),
                     UnselectedLabelStyle: new TextStyle(FontSize: 12.0),
                     MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
@@ -121,15 +121,15 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                 showUnselectedLabels: _showUnselectedLabels,
                 useLegacyColorScheme: _legacyColorScheme,
                 enableFeedback: _enableFeedback,
-                selectedItemColor: _customColors ? Color.Parse("#FF1B5E20") : null,
-                unselectedItemColor: _customColors ? Color.Parse("#FF8D6E63") : null,
-                selectedLabelStyle: _customColors ? new TextStyle(Color: Color.Parse("#FFB3261E")) : null,
-                unselectedLabelStyle: _customColors ? new TextStyle(Color: Color.Parse("#FF4A6572")) : null,
+                selectedItemColor: _customColors ? new Color(0xFF1B5E20) : null,
+                unselectedItemColor: _customColors ? new Color(0xFF8D6E63) : null,
+                selectedLabelStyle: _customColors ? new TextStyle(Color: new Color(0xFFB3261E)) : null,
+                unselectedLabelStyle: _customColors ? new TextStyle(Color: new Color(0xFF4A6572)) : null,
                 selectedIconTheme: _customIconThemes
-                    ? new IconThemeData(Color: Color.Parse("#FF0B57D0"), Size: 30.0)
+                    ? new IconThemeData(Color: new Color(0xFF0B57D0), Size: 30.0)
                     : null,
                 unselectedIconTheme: _customIconThemes
-                    ? new IconThemeData(Color: Color.Parse("#FF9AA0A6"), Size: 20.0)
+                    ? new IconThemeData(Color: new Color(0xFF9AA0A6), Size: 20.0)
                     : null,
                 items:
                 [
@@ -138,20 +138,20 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                         activeIcon: new Icon(Icons.Star),
                         label: "Favorites",
                         tooltip: "Saved items",
-                        backgroundColor: Color.Parse("#FF1565C0")),
+                        backgroundColor: new Color(0xFF1565C0)),
                     new BottomNavigationBarItem(
                         icon: new Icon(Icons.Menu),
                         label: "Browse",
-                        backgroundColor: Color.Parse("#FF2E7D32")),
+                        backgroundColor: new Color(0xFF2E7D32)),
                     new BottomNavigationBarItem(
                         icon: new Icon(Icons.InfoOutline),
                         label: "About",
                         semanticsLabel: "About this sample",
-                        backgroundColor: Color.Parse("#FF6A1B9A")),
+                        backgroundColor: new Color(0xFF6A1B9A)),
                     new BottomNavigationBarItem(
                         icon: new Icon(Icons.Check),
                         label: "Done",
-                        backgroundColor: Color.Parse("#FFAD1457")),
+                        backgroundColor: new Color(0xFFAD1457)),
                 ]);
         }
 

@@ -12,8 +12,8 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class CupertinoScrollbarTests
 {
-    private static readonly Color LightThumb = Color.FromArgb(0x59, 0x00, 0x00, 0x00);
-    private static readonly Color DarkThumb = Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF);
+    private static readonly Color LightThumb = Color.FromARGB(0x59, 0x00, 0x00, 0x00);
+    private static readonly Color DarkThumb = Color.FromARGB(0x80, 0xFF, 0xFF, 0xFF);
     private static readonly Size ViewportSize = new(800, 600);
     private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
@@ -152,7 +152,7 @@ public sealed class CupertinoScrollbarTests
         Settle(harness);
 
         Color expected = brightness == PlatformBrightness.Dark ? DarkThumb : LightThumb;
-        Assert.Equal(expected, RequirePainter(harness).Color);
+        ColorMatchers.AssertSameColorAs(expected, RequirePainter(harness).Color);
     }
 
     [Fact]
@@ -172,7 +172,7 @@ public sealed class CupertinoScrollbarTests
                         child: BuildScrollable(controller, 1000))))));
         Settle(harness);
 
-        Assert.Equal(DarkThumb, RequirePainter(harness).Color);
+        ColorMatchers.AssertSameColorAs(DarkThumb, RequirePainter(harness).Color);
     }
 
     // Flutter: "On first render with thumbVisibility: false, the thumb is hidden".

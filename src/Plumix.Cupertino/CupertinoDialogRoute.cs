@@ -14,8 +14,8 @@ namespace Plumix.Cupertino;
 public static class CupertinoRouteConstants
 {
     public static CupertinoDynamicColor ModalBarrierColor { get; } = CupertinoDynamicColor.WithBrightness(
-        Color.FromUInt32(0x33000000),
-        Color.FromUInt32(0x7A000000));
+        new Color(0x33000000),
+        new Color(0x7A000000));
 }
 
 /// <summary>A dialog route with iOS-style spring entrance/exit transitions.</summary>

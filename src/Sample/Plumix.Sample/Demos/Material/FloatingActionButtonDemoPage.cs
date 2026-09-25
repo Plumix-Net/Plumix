@@ -42,7 +42,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
         {
             FloatingActionButtonTheme = new FloatingActionButtonThemeData(
                 ForegroundColor: Colors.White,
-                BackgroundColor: Color.Parse("#FF00639B"),
+                BackgroundColor: new Color(0xFF00639B),
                 SizeConstraints: TightConstraints(64, 64),
                 ExtendedSizeConstraints: new BoxConstraints(
                     MinWidth: 0,
@@ -64,7 +64,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
                     new Text(
                         "Regular/small/large/extended FAB defaults, elevation states, and theme overrides.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -74,27 +74,27 @@ internal sealed class FloatingActionButtonDemoPageState : State
                                 label: _enabled ? "Enabled" : "Disabled",
                                 onTap: ToggleEnabled,
                                 width: 108,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _extendedOpen ? "Extended: open" : "Extended: icon",
                                 onTap: ToggleExtended,
                                 width: 146,
-                                background: Color.Parse("#FFEAE4FF")),
+                                background: new Color(0xFFEAE4FF)),
                             BuildControlButton(
                                 label: _useMaterial3 ? "Material 3" : "Material 2",
                                 onTap: ToggleMaterialMode,
                                 width: 104,
-                                background: Color.Parse("#FFE4F3E8")),
+                                background: new Color(0xFFE4F3E8)),
                             BuildControlButton(
                                 label: _dockedLocation ? "Location: centerDocked" : "Location: centerFloat",
                                 onTap: ToggleLocation,
                                 width: 190,
-                                background: Color.Parse("#FFFFE7D6")),
+                                background: new Color(0xFFFFE7D6)),
                             BuildControlButton(
                                 label: "Reset",
                                 onTap: ResetCounters,
                                 width: 88,
-                                background: Color.Parse("#FFF3E8D8")),
+                                background: new Color(0xFFF3E8D8)),
                         ]),
                     new Text(
                         $"mode={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
@@ -103,7 +103,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
                         + $"themed={_themedTaps}, "
                         + $"location={(_dockedLocation ? "centerDocked" : "centerFloat")}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new SizedBox(
                         height: 160,
                         child: new Scaffold(
@@ -171,9 +171,9 @@ internal sealed class FloatingActionButtonDemoPageState : State
         return new Container(
             padding: new Thickness(10, 8),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F4F9"),
+                Color: new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFD6DEEA), 1))),
             child: new Column(
                 mainAxisSize: MainAxisSize.Min,
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -181,7 +181,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
                 children:
                 [
                     new Text(title, fontSize: 13, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                     new SizedBox(
                         height: 112,
                         child: new Center(child: fab)),

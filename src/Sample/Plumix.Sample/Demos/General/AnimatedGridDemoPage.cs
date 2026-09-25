@@ -47,7 +47,7 @@ public sealed class AnimatedGridDemoPage : StatefulWidget
                                 onPressed: _sliverItems.Count == 0 ? null : RemoveSliverItem,
                                 child: new Text("Remove sliver tile")),
                         ]),
-                    new Text(_status, fontSize: 12, color: Color.Parse("#8A000000")),
+                    new Text(_status, fontSize: 12, color: new Color(0x8A000000)),
                     new Expanded(
                         new Row(
                             spacing: 12,
@@ -119,7 +119,7 @@ public sealed class AnimatedGridDemoPage : StatefulWidget
                 child: new Container(
                     alignment: Alignment.Center,
                     decoration: new BoxDecoration(
-                        Color: value < 10 ? Color.Parse("#FFEADDFF") : Color.Parse("#FFD7E3FF"),
+                        Color: value < 10 ? new Color(0xFFEADDFF) : new Color(0xFFD7E3FF),
                         BorderRadius: BorderRadius.Circular(10)),
                     child: new Text($"Tile {value}", color: Colors.Black)));
         }

@@ -277,43 +277,14 @@ public abstract record Gradient
     }
 
     /// dart:ui `Color.lerp` with a null endpoint, which scales the other endpoint's alpha.
-    private protected static IReadOnlyList<Color> ScaleColors(IReadOnlyList<Color> colors, double factor)
-    {
-        var scaled = new Color[colors.Count];
-        for (int index = 0; index < colors.Count; index++)
-        {
-            Color color = colors[index];
-            scaled[index] = Color.FromArgb(RoundChannel(color.A * factor), color.R, color.G, color.B);
-        }
-
-        return scaled;
-    }
+    private protected static IReadOnlyList<Color> ScaleColors(IReadOnlyList<Color> colors, double factor) =>
+        [.. colors.Select(color => Color.Lerp(null, color, factor))];
 
     /// dart:ui `Color.withOpacity`, which replaces the alpha rather than scaling it.
-    private protected static IReadOnlyList<Color> ColorsWithOpacity(IReadOnlyList<Color> colors, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp(
-            (int)Math.Round(opacity * 255.0, MidpointRounding.AwayFromZero),
-            byte.MinValue,
-            byte.MaxValue);
-        var faded = new Color[colors.Count];
-        for (int index = 0; index < colors.Count; index++)
-        {
-            Color color = colors[index];
-            faded[index] = Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+    private protected static IReadOnlyList<Color> ColorsWithOpacity(IReadOnlyList<Color> colors, double opacity) =>
+        [.. colors.Select(color => color.WithOpacity(opacity))];
 
-        return faded;
-    }
-
-    private protected static Color LerpColor(Color a, Color b, double t)
-    {
-        return Color.FromArgb(
-            LerpChannel(a.A, b.A, t),
-            LerpChannel(a.R, b.R, t),
-            LerpChannel(a.G, b.G, t),
-            LerpChannel(a.B, b.B, t));
-    }
+    private protected static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
 
     private protected static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 
@@ -354,7 +325,7 @@ public abstract record Gradient
 
     private protected string FormatColors()
     {
-        return "[" + string.Join(", ", Colors.Select(DartFormat.Color)) + "]";
+        return "[" + string.Join(", ", Colors.Select(color => color.ToString())) + "]";
     }
 
     private protected string FormatStops()
@@ -365,26 +336,6 @@ public abstract record Gradient
     private protected string FormatTransform()
     {
         return Transform is null ? string.Empty : $", transform: {Transform}";
-    }
-
-    private static byte LerpChannel(byte a, byte b, double t)
-    {
-        return ClampChannel(a + ((b - a) * t));
-    }
-
-    /// dart:ui `Color.lerp` truncates each interpolated channel, matching Dart's `double.toInt()`.
-    private static byte ClampChannel(double value)
-    {
-        return (byte)Math.Clamp((int)value, byte.MinValue, byte.MaxValue);
-    }
-
-    /// dart:ui `_scaleAlpha` rounds instead, matching Dart's `double.round()`.
-    private static byte RoundChannel(double value)
-    {
-        return (byte)Math.Clamp(
-            (int)Math.Round(value, MidpointRounding.AwayFromZero),
-            byte.MinValue,
-            byte.MaxValue);
     }
 }
 

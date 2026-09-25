@@ -65,7 +65,7 @@ internal sealed class ListViewReverseDemoPageState : State
                         {
                             int id = _messages[index];
                             return new Container(
-                                color: id % 2 == 0 ? Color.Parse("#FFFFF3E0") : Colors.White,
+                                color: id % 2 == 0 ? new Color(0xFFFFF3E0) : Colors.White,
                                 padding: new Thickness(12, 8),
                                 child: new Text($"message #{id}", fontSize: 13, color: Colors.Black));
                         },

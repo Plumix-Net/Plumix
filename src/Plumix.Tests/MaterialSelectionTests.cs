@@ -101,7 +101,7 @@ public sealed class MaterialSelectionTests
     [Fact]
     public void SelectableText_ResolvesThemeStyleSelectionAndCursor()
     {
-        var selection = Color.Parse("#55336699");
+        var selection = new Color(0x55336699);
         var cursor = Colors.Crimson;
         var theme = ThemeData.Light with
         {

@@ -51,7 +51,11 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - The palette itself is `MaterialColor.cs` (swatch types) plus the generated `Colors.g.cs`
   (`scripts/generate_material_colors.py`), on top of core `src/Plumix/Painting/ColorSwatch.cs`.
   `Plumix.Material.Colors` shadows `Avalonia.Media.Colors`; projects importing both alias one of
-  them (`src/Plumix.Tests/GlobalUsings.cs`).
+  them (`src/Plumix.Tests/GlobalUsings.cs`, which binds `Colors` to the CSS set in `CssColors.cs`).
+- The colour itself is core `src/Plumix/UI/Color.cs` (dart:ui `Color`/`ColorSpace`, a non-sealed class);
+  every project binds the unqualified name with `global using Color = Plumix.UI.Color;` in its
+  `GlobalUsings.cs`. `ColorSwatch`, `CupertinoDynamicColor` and `WidgetStateColor` derive from it
+  (`ColorTests.cs`, `ColorSubtypeTests.cs`).
 - Badges enter through `Badge.cs` + `BadgeTheme.cs`; physical/logical alignment resolution uses core
   `Rendering/AlignmentGeometry.cs`, with focused coverage in `MaterialBadgeTests.cs`.
 - Paired composition controls such as `GridTile` + `GridTileBar` share one focused test/demo surface when their Flutter implementations are directly coupled.

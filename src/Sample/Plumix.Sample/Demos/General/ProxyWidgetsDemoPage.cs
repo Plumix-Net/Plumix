@@ -75,7 +75,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                 new Container(
                     width: 220,
                     height: 140,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new ClipRect(
                         clipper: new FixedRectClipper(clip),
@@ -86,7 +86,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                 child: new Container(
                                     width: 140,
                                     height: 90,
-                                    color: Color.Parse("#FF111111"),
+                                    color: new Color(0xFF111111),
                                     padding: new Thickness(8),
                                     child: new Text("Layer", fontSize: 14, color: Colors.White)))))),
                 new Text("FractionalTranslation + RotatedBox", fontSize: 14, color: Colors.Black),
@@ -108,27 +108,27 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         new Container(
                             width: 120,
                             height: 80,
-                            color: Color.Parse("#FFE7EDF6"),
+                            color: new Color(0xFFE7EDF6),
                             child: new Center(
                                 new FractionalTranslation(
                                     translation: new Point(_fractionalShift, 0),
                                     child: new Container(
                                         width: 56,
                                         height: 32,
-                                        color: Color.Parse("#FF6750A4"),
+                                        color: new Color(0xFF6750A4),
                                         child: new Center(
                                             new Text("Shift", fontSize: 12, color: Colors.White)))))),
                         new Container(
                             width: 120,
                             height: 80,
-                            color: Color.Parse("#FFE7EDF6"),
+                            color: new Color(0xFFE7EDF6),
                             child: new Center(
                                 new RotatedBox(
                                     quarterTurns: _quarterTurns,
                                     child: new Container(
                                         width: 64,
                                         height: 28,
-                                        color: Color.Parse("#FF386A20"),
+                                        color: new Color(0xFF386A20),
                                         child: new Center(
                                             new Text("Rotate", fontSize: 12, color: Colors.White)))))),
                     ]),
@@ -142,7 +142,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             height: 72,
                             child: new ClipOval(
                                 child: new ColoredBox(
-                                    Color.Parse("#FF6750A4"),
+                                    new Color(0xFF6750A4),
                                     child: new Center(new Text("Oval", fontSize: 13, color: Colors.White))))),
                         new SizedBox(
                             width: 96,
@@ -150,14 +150,14 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                 child: new ClipPath(
                                     clipper: new TrianglePathClipper(),
                                     child: new ColoredBox(
-                                        Color.Parse("#FF386A20"),
+                                        new Color(0xFF386A20),
                                         child: new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
                         new SizedBox(
                             width: 96,
                             height: 72,
                             child: new PhysicalShape(
                                 clipper: new TrianglePathClipper(),
-                                color: Color.Parse("#FFB3261E"),
+                                color: new Color(0xFFB3261E),
                                 clipBehavior: Clip.AntiAlias,
                                 elevation: 6,
                                 shadowColor: Colors.Black,
@@ -187,7 +187,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         width: 62,
                         height: 62,
                         child: new ColoredBox(
-                            color: Color.Parse("#FF6750A4"),
+                            color: new Color(0xFF6750A4),
                             isAntiAlias: isAntiAlias,
                             child: new Center(
                                 new Text(label, fontSize: 12, color: Colors.White)))))));
@@ -200,7 +200,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

@@ -17,12 +17,12 @@ public sealed class PageViewDemoPage : StatefulWidget
     {
         private static readonly Color[] PageColors =
         [
-            Color.Parse("#FFE3F2FD"),
-            Color.Parse("#FFE8F5E9"),
-            Color.Parse("#FFFFF3E0"),
-            Color.Parse("#FFF3E5F5"),
-            Color.Parse("#FFE0F7FA"),
-            Color.Parse("#FFFCE4EC"),
+            new Color(0xFFE3F2FD),
+            new Color(0xFFE8F5E9),
+            new Color(0xFFFFF3E0),
+            new Color(0xFFF3E5F5),
+            new Color(0xFFE0F7FA),
+            new Color(0xFFFCE4EC),
         ];
 
         private PageController? _controller;

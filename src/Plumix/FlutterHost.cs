@@ -1327,14 +1327,14 @@ public class PlumixHost : Control
         }
 
         var fallbackSystemBarColor = style.StatusBarColor ?? style.NavigationBarColor;
-        if (fallbackSystemBarColor.HasValue)
+        if (fallbackSystemBarColor != null)
         {
             if (_attachedTopLevel != null)
             {
-                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor.Value));
+                TopLevel.SetSystemBarColor(_attachedTopLevel, new SolidColorBrush(fallbackSystemBarColor!));
             }
 
-            _insetsManager.SystemBarColor = fallbackSystemBarColor.Value;
+            _insetsManager.SystemBarColor = fallbackSystemBarColor!;
         }
 
         var iconBrightness = style.StatusBarIconBrightness ?? style.NavigationBarIconBrightness;
@@ -1351,7 +1351,7 @@ public class PlumixHost : Control
 
     private static bool ShouldDisplayEdgeToEdge(SystemUiOverlayStyle style)
     {
-        static bool IsTransparentOrUnset(Color? color) => !color.HasValue || color.Value.A == 0;
+        static bool IsTransparentOrUnset(Color? color) => color == null || color!.Alpha == 0;
 
         return IsTransparentOrUnset(style.StatusBarColor)
                && IsTransparentOrUnset(style.NavigationBarColor);
@@ -1385,7 +1385,7 @@ public class PlumixHost : Control
         Color? statusBarColor,
         Color? navigationBarColor)
     {
-        if (!statusBarColor.HasValue && !navigationBarColor.HasValue)
+        if (statusBarColor == null && navigationBarColor == null)
         {
             return;
         }
@@ -1408,14 +1408,14 @@ public class PlumixHost : Control
             return;
         }
 
-        if (statusBarColor.HasValue)
+        if (statusBarColor != null)
         {
-            TrySetAndroidWindowColor(window, "SetStatusBarColor", statusBarColor.Value);
+            TrySetAndroidWindowColor(window, "SetStatusBarColor", statusBarColor!);
         }
 
-        if (navigationBarColor.HasValue)
+        if (navigationBarColor != null)
         {
-            TrySetAndroidWindowColor(window, "SetNavigationBarColor", navigationBarColor.Value);
+            TrySetAndroidWindowColor(window, "SetNavigationBarColor", navigationBarColor!);
         }
     }
 
@@ -1460,10 +1460,7 @@ public class PlumixHost : Control
 
     private static uint ToArgb(Color color)
     {
-        return ((uint)color.A << 24)
-               | ((uint)color.R << 16)
-               | ((uint)color.G << 8)
-               | color.B;
+        return color.ToARGB32();
     }
 
     private static Thickness ResolveViewInsets(Rect occludedRect, Size hostSize)

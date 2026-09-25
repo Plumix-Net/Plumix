@@ -154,7 +154,7 @@ public class InkResponse : StatefulWidget
         private InteractiveInkFeatureFactory? _resolvedSplashFactory;
         private InteractiveInkFeature? _splashFeature;
         private TextDirection _textDirection = TextDirection.Ltr;
-        private Color _resolvedSplashColor;
+        private Color _resolvedSplashColor = null!;
         private bool _splashConfirmed;
         private bool _splashCanceled;
         private readonly List<SplashEntry> _splashes = [];
@@ -681,7 +681,7 @@ public class InkResponse : StatefulWidget
             Color hoverColor = ResolveHighlightColor(theme, states, InkHighlightKind.Hover);
             if (!Enabled)
             {
-                hoverColor = Color.FromArgb(0, hoverColor.R, hoverColor.G, hoverColor.B);
+                hoverColor = Color.FromARGB(0, hoverColor.Red, hoverColor.Green, hoverColor.Blue);
             }
             EnsureHighlight(InkHighlightKind.Hover, _hovered, hoverColor, hoverDuration);
 
@@ -1411,9 +1411,9 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
                         ApplyOpacity(highlight.Color, highlight.Opacity));
                 }
             }
-            else if (_highlightColor.HasValue)
+            else if (_highlightColor != null)
             {
-                PaintHighlight(target, offset, inkRect, _highlightColor.Value);
+                PaintHighlight(target, offset, inkRect, _highlightColor!);
             }
 
             if (_splashes is not null)
@@ -1437,7 +1437,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
                     canceled: _splashCanceled);
                 PaintFeature(target, offset, _splashFeature.Configuration.Color, frame);
             }
-            else if (_splashColor.HasValue && _splashProgress > 0)
+            else if (_splashColor != null && _splashProgress > 0)
             {
                 var center = new Point(Size.Width / 2.0, Size.Height / 2.0);
                 var origin = double.IsNaN(_splashOrigin.X) || double.IsNaN(_splashOrigin.Y)
@@ -1451,7 +1451,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
                 }
                 double maxRadius = _splashRadius ?? ResolveSplashRadius(origin);
                 target.Canvas.DrawCircle(
-                    new SolidColorBrush(_splashColor.Value),
+                    new SolidColorBrush(_splashColor!),
                     null,
                     offset + origin,
                     maxRadius * _splashProgress);
@@ -1571,10 +1571,10 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp(
-            (int)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0)),
+            (int)Math.Round(color.Alpha * Math.Clamp(opacity, 0.0, 1.0)),
             0,
             255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private double ResolveSplashRadius(Point origin)

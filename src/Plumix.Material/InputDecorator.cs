@@ -23,7 +23,7 @@ public sealed record InputDecoration
 
     public InputDecoration(
         Widget? icon = null,
-        WidgetStateColor? iconColor = null,
+        Color? iconColor = null,
         Widget? label = null,
         string? labelText = null,
         WidgetStateTextStyle? labelStyle = null,
@@ -54,18 +54,18 @@ public sealed record InputDecoration
         Widget? prefix = null,
         string? prefixText = null,
         WidgetStateTextStyle? prefixStyle = null,
-        WidgetStateColor? prefixIconColor = null,
+        Color? prefixIconColor = null,
         Widget? suffixIcon = null,
         Widget? suffix = null,
         string? suffixText = null,
         WidgetStateTextStyle? suffixStyle = null,
-        WidgetStateColor? suffixIconColor = null,
+        Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         Widget? counter = null,
         string? counterText = null,
         WidgetStateTextStyle? counterStyle = null,
         bool? filled = null,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         InputBorder? errorBorder = null,
@@ -174,7 +174,7 @@ public sealed record InputDecoration
     }
 
     public Widget? Icon { get; init; }
-    public WidgetStateColor? IconColor { get; init; }
+    public Color? IconColor { get; init; }
     public Widget? Label { get; init; }
     public string? LabelText { get; init; }
     public WidgetStateTextStyle? LabelStyle { get; init; }
@@ -205,18 +205,18 @@ public sealed record InputDecoration
     public Widget? Prefix { get; init; }
     public string? PrefixText { get; init; }
     public WidgetStateTextStyle? PrefixStyle { get; init; }
-    public WidgetStateColor? PrefixIconColor { get; init; }
+    public Color? PrefixIconColor { get; init; }
     public Widget? SuffixIcon { get; init; }
     public Widget? Suffix { get; init; }
     public string? SuffixText { get; init; }
     public WidgetStateTextStyle? SuffixStyle { get; init; }
-    public WidgetStateColor? SuffixIconColor { get; init; }
+    public Color? SuffixIconColor { get; init; }
     public BoxConstraints? SuffixIconConstraints { get; init; }
     public Widget? Counter { get; init; }
     public string? CounterText { get; init; }
     public WidgetStateTextStyle? CounterStyle { get; init; }
     public bool? Filled { get; init; }
-    public WidgetStateColor? FillColor { get; init; }
+    public Color? FillColor { get; init; }
     public Color? FocusColor { get; init; }
     public Color? HoverColor { get; init; }
     public InputBorder? ErrorBorder { get; init; }
@@ -240,7 +240,7 @@ public sealed record InputDecoration
         TimeSpan? hintFadeDuration = null,
         bool maintainHintSize = true,
         bool? filled = null,
-        WidgetStateColor? fillColor = null,
+        Color? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         bool enabled = true,
@@ -592,7 +592,9 @@ public sealed class InputDecorator : StatefulWidget
             double iconSize = isDense ? 18.0 : 24.0;
             Color fillColor = !filled
                 ? Colors.Transparent
-                : (decoration.FillColor ?? defaults.FillColor)?.Resolve(stateSet) ?? Colors.Transparent;
+                : WidgetStateProperty<Color?>.ResolveAs(
+                    (decoration.FillColor ?? defaults.FillColor),
+                    stateSet) ?? Colors.Transparent;
             Color hoverColor = !filled || !decoration.Enabled
                 ? Colors.Transparent
                 : decoration.HoverColor ?? themeData.HoverColor;
@@ -614,17 +616,19 @@ public sealed class InputDecorator : StatefulWidget
                         EdgeInsetsGeometry.DirectionalOnly(end: 16.0).Resolve(textDirection),
                         new IconTheme(
                             new IconThemeData(
-                                Color: (decoration.IconColor ?? defaults.IconColor)?.Resolve(stateSet),
+                                Color: WidgetStateProperty<Color?>.ResolveAs(
+                                    (decoration.IconColor ?? defaults.IconColor),
+                                    stateSet),
                                 Size: iconSize),
                             decoration.Icon)));
 
             // An ambient IconButtonTheme foreground sits between the decoration and the defaults.
-            Color? prefixIconColor = decoration.PrefixIconColor?.Resolve(stateSet)
+            Color? prefixIconColor = WidgetStateProperty<Color?>.ResolveAs(decoration.PrefixIconColor, stateSet)
                                      ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
-                                     ?? defaults.PrefixIconColor?.Resolve(stateSet);
-            Color? suffixIconColor = decoration.SuffixIconColor?.Resolve(stateSet)
+                                     ?? WidgetStateProperty<Color?>.ResolveAs(defaults.PrefixIconColor, stateSet);
+            Color? suffixIconColor = WidgetStateProperty<Color?>.ResolveAs(decoration.SuffixIconColor, stateSet)
                                      ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
-                                     ?? defaults.SuffixIconColor?.Resolve(stateSet);
+                                     ?? WidgetStateProperty<Color?>.ResolveAs(defaults.SuffixIconColor, stateSet);
             Widget? prefixIcon = BuildIconSlot(
                 decoration.PrefixIcon,
                 decoration.PrefixIconConstraints,
@@ -1365,18 +1369,18 @@ internal sealed class InputBorderPainter : CustomPainter
     internal TextDirection TextDirection { get; }
 
     internal Color BlendedColor => InputDecoratorDefaults.AlphaBlend(
-        Color.FromArgb(
-            (byte)Math.Clamp(Math.Round(HoverColor.A * HoverProgress), 0, 255),
-            HoverColor.R,
-            HoverColor.G,
-            HoverColor.B),
+        Color.FromARGB(
+            (byte)Math.Clamp(Math.Round(HoverColor.Alpha * HoverProgress), 0, 255),
+            HoverColor.Red,
+            HoverColor.Green,
+            HoverColor.Blue),
         FillColor);
 
     public override void Paint(PaintingContext context, Size size)
     {
         var canvasRect = new Rect(size);
         Color blended = BlendedColor;
-        if (blended.A > 0)
+        if (blended.Alpha > 0)
         {
             var brush = new SolidColorBrush(blended);
             if (Border.PreferPaintInterior)
@@ -1418,8 +1422,8 @@ internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
     private bool IsDark => _theme.Brightness == Brightness.Dark;
 
     private Color UnfocusedIconColor => IsDark
-        ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
-        : Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+        ? Color.FromARGB(0xB3, 0xFF, 0xFF, 0xFF)
+        : Color.FromARGB(0x73, 0x00, 0x00, 0x00);
 
     public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
         new TextStyle(Color: states.Contains(WidgetState.Disabled) ? _theme.DisabledColor : _theme.HintColor));
@@ -1442,16 +1446,16 @@ internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
         _theme.TextTheme.BodySmall.CopyWith(
             color: states.Contains(WidgetState.Disabled) ? Colors.Transparent : _theme.ColorScheme.Error));
 
-    public override WidgetStateColor FillColor => WidgetStateColor.ResolveWith(states =>
+    public override Color FillColor => WidgetStateColor.ResolveWith(states =>
         (IsDark, states.Contains(WidgetState.Disabled)) switch
         {
-            (true, true) => Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF),
-            (true, false) => Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF),
-            (false, true) => Color.FromArgb(0x05, 0x00, 0x00, 0x00),
-            (false, false) => Color.FromArgb(0x0A, 0x00, 0x00, 0x00),
+            (true, true) => Color.FromARGB(0x0D, 0xFF, 0xFF, 0xFF),
+            (true, false) => Color.FromARGB(0x1A, 0xFF, 0xFF, 0xFF),
+            (false, true) => Color.FromARGB(0x05, 0x00, 0x00, 0x00),
+            (false, false) => Color.FromARGB(0x0A, 0x00, 0x00, 0x00),
         });
 
-    public override WidgetStateColor IconColor => WidgetStateColor.ResolveWith(states =>
+    public override Color IconColor => WidgetStateColor.ResolveWith(states =>
     {
         bool focused = states.Contains(WidgetState.Focused);
         if (states.Contains(WidgetState.Disabled) && !focused) return _theme.DisabledColor;
@@ -1459,9 +1463,9 @@ internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
         return UnfocusedIconColor;
     });
 
-    public override WidgetStateColor PrefixIconColor => IconColor;
+    public override Color PrefixIconColor => IconColor;
 
-    public override WidgetStateColor SuffixIconColor => WidgetStateColor.ResolveWith(states =>
+    public override Color SuffixIconColor => WidgetStateColor.ResolveWith(states =>
     {
         bool focused = states.Contains(WidgetState.Focused);
         if (states.Contains(WidgetState.Disabled) && !focused) return _theme.DisabledColor;
@@ -1518,7 +1522,7 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
     public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
         new TextStyle(Color: states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant));
 
-    public override WidgetStateColor FillColor => WidgetStateColor.ResolveWith(states =>
+    public override Color FillColor => WidgetStateColor.ResolveWith(states =>
         states.Contains(WidgetState.Disabled) ? Disabled(0.04) : Colors_.SurfaceContainerHighest);
 
     public override WidgetStateBorderSide ActiveIndicatorBorder => WidgetStateBorderSide.ResolveWith(
@@ -1528,12 +1532,12 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         states => ResolveSide(states, Colors_.Outline, Disabled(0.12)));
 
     /// Flutter's M3 `iconColor` is a plain color, not a state-resolving one.
-    public override WidgetStateColor IconColor => new(Colors_.OnSurfaceVariant);
+    public override Color IconColor => Colors_.OnSurfaceVariant;
 
-    public override WidgetStateColor PrefixIconColor => WidgetStateColor.ResolveWith(states =>
+    public override Color PrefixIconColor => WidgetStateColor.ResolveWith(states =>
         states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant);
 
-    public override WidgetStateColor SuffixIconColor => WidgetStateColor.ResolveWith(states =>
+    public override Color SuffixIconColor => WidgetStateColor.ResolveWith(states =>
     {
         if (states.Contains(WidgetState.Disabled)) return Disabled(0.38);
         if (states.Contains(WidgetState.Error))
@@ -1567,37 +1571,7 @@ internal static class InputDecoratorDefaults
         ? new InputDecoratorDefaultsM3(theme)
         : new InputDecoratorDefaultsM2(theme);
 
-    internal static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0)),
-        color.R,
-        color.G,
-        color.B);
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    internal static Color AlphaBlend(Color foreground, Color background)
-    {
-        double alpha = foreground.A / 255.0;
-        if (alpha == 0.0)
-        {
-            return background;
-        }
-
-        if (alpha == 1.0)
-        {
-            return foreground;
-        }
-
-        double invAlpha = 1.0 - alpha;
-        double backAlpha = background.A / 255.0;
-        double outAlpha = alpha + (backAlpha * invAlpha);
-        if (outAlpha == 0.0)
-        {
-            return Colors.Transparent;
-        }
-
-        return Color.FromArgb(
-            (byte)Math.Round(outAlpha * 255.0),
-            (byte)Math.Round((((foreground.R * alpha) + (background.R * backAlpha * invAlpha)) / outAlpha)),
-            (byte)Math.Round((((foreground.G * alpha) + (background.G * backAlpha * invAlpha)) / outAlpha)),
-            (byte)Math.Round((((foreground.B * alpha) + (background.B * backAlpha * invAlpha)) / outAlpha)));
-    }
+    internal static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
 }

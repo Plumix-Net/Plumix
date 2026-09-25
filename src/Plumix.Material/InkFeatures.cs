@@ -130,8 +130,8 @@ public abstract class InteractiveInkFeature
     protected static Color ApplyOpacity(Color color, double opacity)
     {
         double normalized = Math.Clamp(opacity, 0.0, 1.0);
-        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * normalized), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        byte alpha = (byte)Math.Clamp((int)Math.Round(color.Alpha * normalized), 0, 255);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private static double Distance(Point a, Point b)

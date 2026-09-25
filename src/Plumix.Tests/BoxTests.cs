@@ -25,11 +25,11 @@ public sealed class BoxTests
     public void ShouldSizeToRenderView()
     {
         var root = new RenderDecoratedBox(new BoxDecoration(
-            Color: Color.FromUInt32(0xFF00FF00),
+            Color: new Color(0xFF00FF00),
             Gradient: new RadialGradient(
                 center: Alignment.TopLeft,
                 radius: 1.8,
-                colors: [Color.FromUInt32(0xFFFFFF00), Color.FromUInt32(0xFF00FFFF)])));
+                colors: [new Color(0xFFFFFF00), new Color(0xFF00FFFF)])));
         new RenderingHarness(root);
         Assert.Equal(800.0, root.Size.Width);
         Assert.Equal(600.0, root.Size.Height);
@@ -96,7 +96,7 @@ public sealed class BoxTests
     [DebugOnlyFact]
     public void SetSizeErrorMessages()
     {
-        var root = new RenderDecoratedBox(new BoxDecoration(Color: Color.FromUInt32(0xFF00FF00)));
+        var root = new RenderDecoratedBox(new BoxDecoration(Color: new Color(0xFF00FF00)));
         new RenderingHarness(root);
 
         var testBox = new MissingPerformLayoutRenderBox();
@@ -153,13 +153,13 @@ public sealed class BoxTests
     public void FlexAndPadding()
     {
         var size = new RenderConstrainedBox(BoxConstraints.Unbounded.Tighten(height: 100.0));
-        var inner = new RenderDecoratedBox(new BoxDecoration(Color: Color.FromUInt32(0xFF00FF00)), child: size);
+        var inner = new RenderDecoratedBox(new BoxDecoration(Color: new Color(0xFF00FF00)), child: size);
         var padding = new RenderPadding(EdgeInsets.All(50.0), inner);
         var flex = new RenderFlex(
             children: [padding],
             direction: Axis.Vertical,
             crossAxisAlignment: CrossAxisAlignment.Stretch);
-        var outer = new RenderDecoratedBox(new BoxDecoration(Color: Color.FromUInt32(0xFF0000FF)), child: flex);
+        var outer = new RenderDecoratedBox(new BoxDecoration(Color: new Color(0xFF0000FF)), child: flex);
 
         new RenderingHarness(outer);
 
@@ -577,7 +577,7 @@ public sealed class BoxTests
         List<FlutterErrorDetails> errors = CollectErrors(() => new RenderingHarness(badRoot));
         Assert.NotEmpty(errors);
 
-        var goodChild = new RenderDecoratedBox(new BoxDecoration(Color: Color.FromUInt32(0xFF00FF00)));
+        var goodChild = new RenderDecoratedBox(new BoxDecoration(Color: new Color(0xFF00FF00)));
         var goodRoot = new RenderBaseline(0.0, TextBaseline.Alphabetic, goodChild);
         errors = CollectErrors(() => new RenderingHarness(goodRoot));
         Assert.Empty(errors);

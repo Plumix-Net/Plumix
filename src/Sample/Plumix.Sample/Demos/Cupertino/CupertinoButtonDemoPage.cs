@@ -29,7 +29,7 @@ internal sealed class CupertinoButtonDemoPageState : State
                 new Text(
                     "Plain, tinted and filled styles across the three size styles.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -85,7 +85,7 @@ internal sealed class CupertinoButtonDemoPageState : State
                             onPressed: () => SetState(() => _taps++)),
                         new CupertinoButton(
                             child: new Icon(CupertinoIcons.Heart),
-                            foregroundColor: CupertinoColors.SystemPink.Value,
+                            foregroundColor: CupertinoColors.SystemPink,
                             onPressed: () => SetState(() => _taps++)),
                         new CupertinoButton(
                             child: new Text("Long press me"),

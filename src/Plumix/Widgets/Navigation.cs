@@ -1279,7 +1279,7 @@ public abstract class ModalRoute : TransitionRoute
     /// </summary>
     public virtual Widget BuildModalBarrier()
     {
-        if (!Offstage && BarrierColor is { A: not 0 } barrierColor)
+        if (!Offstage && BarrierColor is { Alpha: not 0 } barrierColor)
         {
             return new AnimatedModalBarrier(
                 color: CreateBarrierColorAnimation(barrierColor),
@@ -1466,11 +1466,11 @@ public abstract class ModalRoute : TransitionRoute
             _curve = curve;
         }
 
-        public override Color? Value => Color.FromArgb(
-            (byte)Math.Round(_color.A * _curve(Math.Clamp(_parent.Value, 0.0, 1.0))),
-            _color.R,
-            _color.G,
-            _color.B);
+        public override Color? Value => Color.FromARGB(
+            (byte)Math.Round(_color.Alpha * _curve(Math.Clamp(_parent.Value, 0.0, 1.0))),
+            _color.Red,
+            _color.Green,
+            _color.Blue);
 
         public override AnimationStatus Status => _parent.Status;
 

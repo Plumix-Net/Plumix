@@ -57,30 +57,8 @@ public sealed record BadgeThemeData(
             Offset: LerpVector(a?.Offset, b?.Offset, t));
     }
 
-    private static Color? LerpColor(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
+    private static Color? LerpColor(Color? a, Color? b, double t) => Color.Lerp(a, b, t);
 
-        Color from = a ?? Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        Color to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return Color.FromArgb(
-            LerpChannel(from.A, to.A, t),
-            LerpChannel(from.R, to.R, t),
-            LerpChannel(from.G, to.G, t),
-            LerpChannel(from.B, to.B, t));
-    }
-
-    private static byte LerpChannel(byte a, byte b, double t)
-    {
-        double value = a + ((b - a) * t);
-        return (byte)Math.Clamp(
-            Math.Round(value, MidpointRounding.AwayFromZero),
-            byte.MinValue,
-            byte.MaxValue);
-    }
 
     private static double? LerpDouble(double? a, double? b, double t)
     {

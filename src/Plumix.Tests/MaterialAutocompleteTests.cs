@@ -74,14 +74,14 @@ public sealed class MaterialAutocompleteTests : IDisposable
         var material2Light = new ThemeData(useMaterial3: false);
         var material2Dark = new ThemeData(brightness: Brightness.Dark, useMaterial3: false);
 
-        Assert.Equal(Color.Parse("#FFFEF7FF"), material3Light.CanvasColor);
-        Assert.Equal(Color.Parse("#FF141218"), material3Dark.CanvasColor);
-        Assert.Equal(Color.Parse("#FFFAFAFA"), material2Light.CanvasColor);
-        Assert.Equal(Color.Parse("#FF303030"), material2Dark.CanvasColor);
-        Assert.Equal(Color.FromArgb(0x1F, 0x00, 0x00, 0x00), material3Light.FocusColor);
-        Assert.Equal(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF), material3Dark.FocusColor);
-        Assert.Equal(Color.FromArgb(0x1F, 0x00, 0x00, 0x00), material2Light.FocusColor);
-        Assert.Equal(Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF), material2Dark.FocusColor);
+        Assert.Equal(new Color(0xFFFEF7FF), material3Light.CanvasColor);
+        Assert.Equal(new Color(0xFF141218), material3Dark.CanvasColor);
+        Assert.Equal(new Color(0xFFFAFAFA), material2Light.CanvasColor);
+        Assert.Equal(new Color(0xFF303030), material2Dark.CanvasColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0x00, 0x00, 0x00), material3Light.FocusColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0xFF, 0xFF, 0xFF), material3Dark.FocusColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0x00, 0x00, 0x00), material2Light.FocusColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0xFF, 0xFF, 0xFF), material2Dark.FocusColor);
         Assert.Equal(Colors.Black, material3Light.ShadowColor);
         Assert.Equal(Colors.Black, material2Dark.ShadowColor);
     }
@@ -725,9 +725,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
         for (int index = 0; index < shadows.Count; index += 1)
         {
             var shadow = shadows[index];
-            Assert.Equal(expectedShadowColor.R, shadow.Color.R);
-            Assert.Equal(expectedShadowColor.G, shadow.Color.G);
-            Assert.Equal(expectedShadowColor.B, shadow.Color.B);
+            Assert.Equal(expectedShadowColor.Red, shadow.Color.Red);
+            Assert.Equal(expectedShadowColor.Green, shadow.Color.Green);
+            Assert.Equal(expectedShadowColor.Blue, shadow.Color.Blue);
         }
     }
 

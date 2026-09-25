@@ -13,20 +13,20 @@ public sealed partial record TimePickerThemeData(
     ButtonStyle? CancelButtonStyle = null,
     ButtonStyle? ConfirmButtonStyle = null,
     BorderSide? DayPeriodBorderSide = null,
-    WidgetStateColor? DayPeriodColor = null,
+    Color? DayPeriodColor = null,
     OutlinedBorder? DayPeriodShape = null,
-    WidgetStateColor? DayPeriodTextColor = null,
+    Color? DayPeriodTextColor = null,
     TextStyle? DayPeriodTextStyle = null,
     Color? DialBackgroundColor = null,
     Color? DialHandColor = null,
-    WidgetStateColor? DialTextColor = null,
+    Color? DialTextColor = null,
     TextStyle? DialTextStyle = null,
     double? Elevation = null,
     Color? EntryModeIconColor = null,
     TextStyle? HelpTextStyle = null,
-    WidgetStateColor? HourMinuteColor = null,
+    Color? HourMinuteColor = null,
     ShapeBorder? HourMinuteShape = null,
-    WidgetStateColor? HourMinuteTextColor = null,
+    Color? HourMinuteTextColor = null,
     TextStyle? HourMinuteTextStyle = null,
     InputDecorationThemeData? InputDecorationTheme = null,
     EdgeInsetsGeometry? Padding = null,
@@ -34,23 +34,22 @@ public sealed partial record TimePickerThemeData(
     WidgetStateProperty<Color?>? TimeSelectorSeparatorColor = null,
     WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle = null)
 {
-    private readonly WidgetStateColor? _dayPeriodColor = DayPeriodColor;
+    private readonly Color? _dayPeriodColor = DayPeriodColor;
 
     /// Mirrors Dart's `dayPeriodColor` getter: a plain `Color` (one that reached this property through
     /// the implicit `Color` -> `WidgetStateColor` conversion) is wrapped so it only applies while
     /// selected and resolves to transparent otherwise. An explicitly built state color passes through.
-    public WidgetStateColor? DayPeriodColor
+    public Color? DayPeriodColor
     {
         get
         {
-            if (_dayPeriodColor is null || !_dayPeriodColor.IsConstantColor)
+            if (_dayPeriodColor is null || _dayPeriodColor is WidgetStateColor)
             {
                 return _dayPeriodColor;
             }
 
-            var constant = _dayPeriodColor.DefaultValue;
+            var constant = _dayPeriodColor;
             return WidgetStateColor.ResolveWith(
-                constant,
                 states => states.Contains(WidgetState.Selected) ? constant : Colors.Transparent);
         }
         init => _dayPeriodColor = value;
@@ -87,7 +86,7 @@ internal abstract class TimePickerDefaults
 
     public abstract BorderSide DayPeriodBorderSide { get; }
 
-    public abstract WidgetStateColor DayPeriodColor { get; }
+    public abstract Color DayPeriodColor { get; }
 
     public abstract OutlinedBorder DayPeriodShape { get; }
 
@@ -97,7 +96,7 @@ internal abstract class TimePickerDefaults
 
     public abstract Size DayPeriodPortraitSize { get; }
 
-    public abstract WidgetStateColor DayPeriodTextColor { get; }
+    public abstract Color DayPeriodTextColor { get; }
 
     public abstract TextStyle DayPeriodTextStyle { get; }
 
@@ -113,7 +112,7 @@ internal abstract class TimePickerDefaults
 
     public abstract double CenterRadius { get; }
 
-    public abstract WidgetStateColor DialTextColor { get; }
+    public abstract Color DialTextColor { get; }
 
     public abstract TextStyle DialTextStyle { get; }
 
@@ -123,7 +122,7 @@ internal abstract class TimePickerDefaults
 
     public abstract TextStyle HelpTextStyle { get; }
 
-    public abstract WidgetStateColor HourMinuteColor { get; }
+    public abstract Color HourMinuteColor { get; }
 
     public abstract ShapeBorder HourMinuteShape { get; }
 
@@ -135,7 +134,7 @@ internal abstract class TimePickerDefaults
 
     public abstract Size HourMinuteInputSize24Hour { get; }
 
-    public abstract WidgetStateColor HourMinuteTextColor { get; }
+    public abstract Color HourMinuteTextColor { get; }
 
     public abstract TextStyle HourMinuteTextStyle { get; }
 
@@ -151,36 +150,9 @@ internal abstract class TimePickerDefaults
     /// Null for Material 2, matching Dart, where only `_TimePickerDefaultsM3` overrides it.
     public virtual WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle => null;
 
-    internal static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)),
-        color.R,
-        color.G,
-        color.B);
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    internal static Color AlphaBlend(Color foreground, Color background)
-    {
-        int alpha = foreground.A;
-        if (alpha == 0) return background;
-        if (alpha == 255) return foreground;
-        int invAlpha = 255 - alpha;
-        int backAlpha = background.A;
-        if (backAlpha == 255)
-        {
-            return Color.FromArgb(
-                255,
-                (byte)((alpha * foreground.R + invAlpha * background.R) / 255),
-                (byte)((alpha * foreground.G + invAlpha * background.G) / 255),
-                (byte)((alpha * foreground.B + invAlpha * background.B) / 255));
-        }
-
-        backAlpha = backAlpha * invAlpha / 255;
-        int outAlpha = alpha + backAlpha;
-        return Color.FromArgb(
-            (byte)outAlpha,
-            (byte)((foreground.R * alpha + background.R * backAlpha) / outAlpha),
-            (byte)((foreground.G * alpha + background.G * backAlpha) / outAlpha),
-            (byte)((foreground.B * alpha + background.B * backAlpha) / outAlpha));
-    }
+    internal static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
 }
 
 // Dart parity source: material_ui/lib/src/time_picker.dart (_TimePickerDefaultsM2)
@@ -208,9 +180,8 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
     public override BorderSide DayPeriodBorderSide =>
         new(AlphaBlend(WithOpacity(_colors.OnSurface, 0.38), _colors.Surface));
 
-    public override WidgetStateColor DayPeriodColor => WidgetStateColor.ResolveWith(
-        Colors.Transparent,
-        states => states.Contains(WidgetState.Selected)
+    public override Color DayPeriodColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Selected)
             ? WithOpacity(_colors.Primary, _colors.Brightness == Brightness.Dark ? 0.24 : 0.12)
             : Colors.Transparent);
 
@@ -222,9 +193,8 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
 
     public override Size DayPeriodInputSize => new(52, 70);
 
-    public override WidgetStateColor DayPeriodTextColor => WidgetStateColor.ResolveWith(
-        WithOpacity(_colors.OnSurface, 0.60),
-        states => states.Contains(WidgetState.Selected)
+    public override Color DayPeriodTextColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Selected)
             ? _colors.Primary
             : WithOpacity(_colors.OnSurface, 0.60));
 
@@ -243,8 +213,7 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
 
     public override double CenterRadius => 4;
 
-    public override WidgetStateColor DialTextColor => WidgetStateColor.ResolveWith(
-        _colors.OnSurface,
+    public override Color DialTextColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.Surface : _colors.OnSurface);
 
     public override TextStyle DialTextStyle => _textTheme.BodyLarge;
@@ -256,9 +225,8 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
 
     public override TextStyle HelpTextStyle => _textTheme.LabelSmall;
 
-    public override WidgetStateColor HourMinuteColor => WidgetStateColor.ResolveWith(
-        WithOpacity(_colors.OnSurface, 0.12),
-        states => states.Contains(WidgetState.Selected)
+    public override Color HourMinuteColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Selected)
             ? WithOpacity(_colors.Primary, _colors.Brightness == Brightness.Dark ? 0.24 : 0.12)
             : WithOpacity(_colors.OnSurface, 0.12));
 
@@ -272,22 +240,20 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
 
     public override Size HourMinuteInputSize24Hour => new(114, 70);
 
-    public override WidgetStateColor HourMinuteTextColor => WidgetStateColor.ResolveWith(
-        _colors.OnSurface,
+    public override Color HourMinuteTextColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.Primary : _colors.OnSurface);
 
     public override TextStyle HourMinuteTextStyle => _textTheme.DisplayMedium;
 
-    private WidgetStateColor HourMinuteInputColor => WidgetStateColor.ResolveWith(
-        WithOpacity(_colors.OnSurface, 0.12),
-        states => states.Contains(WidgetState.Selected)
+    private Color HourMinuteInputColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Selected)
             ? Colors.Transparent
             : WithOpacity(_colors.OnSurface, 0.12));
 
     public override InputDecorationThemeData InputDecorationTheme => new(
         contentPadding: EdgeInsetsGeometry.Zero,
         filled: true,
-        fillColor: HourMinuteInputColor.DefaultValue,
+        fillColor: HourMinuteInputColor,
         focusColor: Colors.Transparent,
         enabledBorder: new OutlineInputBorder(borderSide: new BorderSide(Colors.Transparent)),
         errorBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Error, 2)),
@@ -324,8 +290,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
 
     public override BorderSide DayPeriodBorderSide => new(_colors.Outline);
 
-    public override WidgetStateColor DayPeriodColor => WidgetStateColor.ResolveWith(
-        Colors.Transparent,
+    public override Color DayPeriodColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.TertiaryContainer : Colors.Transparent);
 
     public override OutlinedBorder DayPeriodShape =>
@@ -340,9 +305,8 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
     public override Size DayPeriodInputSize =>
         new(DayPeriodPortraitSize.Width, DayPeriodPortraitSize.Height - 8);
 
-    public override WidgetStateColor DayPeriodTextColor => WidgetStateColor.ResolveWith(
-        _colors.OnSurfaceVariant,
-        states => states.Contains(WidgetState.Selected)
+    public override Color DayPeriodTextColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Selected)
             ? _colors.OnTertiaryContainer
             : _colors.OnSurfaceVariant);
 
@@ -360,8 +324,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
 
     public override double CenterRadius => 4;
 
-    public override WidgetStateColor DialTextColor => WidgetStateColor.ResolveWith(
-        _colors.OnSurface,
+    public override Color DialTextColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.OnPrimary : _colors.OnSurface);
 
     public override TextStyle DialTextStyle => _textTheme.BodyLarge;
@@ -372,9 +335,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
 
     public override TextStyle HelpTextStyle => _textTheme.LabelMedium.CopyWith(color: _colors.OnSurfaceVariant);
 
-    public override WidgetStateColor HourMinuteColor => WidgetStateColor.ResolveWith(
-        _colors.SurfaceContainerHighest,
-        states =>
+    public override Color HourMinuteColor => WidgetStateColor.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Selected))
             {
@@ -424,8 +385,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
     public override Size HourMinuteInputSize24Hour =>
         new(HourMinuteSize24Hour.Width, HourMinuteSize24Hour.Height - 8);
 
-    public override WidgetStateColor HourMinuteTextColor => WidgetStateColor.ResolveWith(
-        _colors.OnSurface,
+    public override Color HourMinuteTextColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.OnPrimaryContainer : _colors.OnSurface);
 
     public override TextStyle HourMinuteTextStyle => _entryMode switch
@@ -439,7 +399,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
     public override InputDecorationThemeData InputDecorationTheme => new(
         contentPadding: EdgeInsetsGeometry.Zero,
         filled: true,
-        fillColor: HourMinuteColor.DefaultValue,
+        fillColor: HourMinuteColor,
         focusColor: _colors.PrimaryContainer,
         enabledBorder: new OutlineInputBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(8),

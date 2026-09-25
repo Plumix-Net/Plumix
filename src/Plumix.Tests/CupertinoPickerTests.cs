@@ -110,7 +110,7 @@ public sealed class CupertinoPickerTests : IDisposable
         DefaultTextStyle defaultTextStyle = Assert.Single(harness.FindWidgets<DefaultTextStyle>());
         Assert.Equal(21.0, defaultTextStyle.Style.FontSize);
         Assert.Equal(-0.6, defaultTextStyle.Style.LetterSpacing);
-        Assert.Equal(CupertinoColors.Label.Color, defaultTextStyle.Style.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, defaultTextStyle.Style.Color);
 
         var overlay = Assert.Single(harness.FindWidgets<CupertinoPickerDefaultSelectionOverlay>());
         Assert.True(overlay.CapStartEdge);
@@ -130,8 +130,8 @@ public sealed class CupertinoPickerTests : IDisposable
     public void Build_ResolvesThemeTextAndDynamicBackgroundInLightAndDarkModes()
     {
         CupertinoDynamicColor background = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF123456),
-            Color.FromUInt32(0xFF654321));
+            new Color(0xFF123456),
+            new Color(0xFF654321));
         var picker = new CupertinoPicker(
             50.0,
             _ => { },
@@ -143,8 +143,8 @@ public sealed class CupertinoPickerTests : IDisposable
         Assert.Contains(
             light.FindWidgets<DecoratedBox>(),
             box => box.Decoration is BoxDecoration { Color: { } color }
-                && color == Color.FromUInt32(0xFF123456));
-        Assert.Equal(
+                && ColorMatchers.IsSameColorAs(color, new Color(0xFF123456)));
+        ColorMatchers.AssertSameColorAs(
             CupertinoColors.Label.Color,
             Assert.Single(light.FindWidgets<DefaultTextStyle>()).Style.Color);
 
@@ -153,8 +153,8 @@ public sealed class CupertinoPickerTests : IDisposable
         Assert.Contains(
             dark.FindWidgets<DecoratedBox>(),
             box => box.Decoration is BoxDecoration { Color: { } color }
-                && color == Color.FromUInt32(0xFF654321));
-        Assert.Equal(
+                && ColorMatchers.IsSameColorAs(color, new Color(0xFF654321)));
+        ColorMatchers.AssertSameColorAs(
             CupertinoColors.Label.DarkColor,
             Assert.Single(dark.FindWidgets<DefaultTextStyle>()).Style.Color);
     }
@@ -170,7 +170,7 @@ public sealed class CupertinoPickerTests : IDisposable
         removed.Pump(ViewSize);
         Assert.True(removed.FindWidgets<CupertinoPickerDefaultSelectionOverlay>().Count == 0);
 
-        var customOverlay = new ColoredBox(Color.FromUInt32(0xFF123456));
+        var customOverlay = new ColoredBox(new Color(0xFF123456));
         using var magnified = new CupertinoThemeTestHarness(Wrap(new CupertinoPicker(
             20.0,
             _ => { },
@@ -192,14 +192,14 @@ public sealed class CupertinoPickerTests : IDisposable
     {
         var overlay = new CupertinoPickerDefaultSelectionOverlay(
             capStartEdge: false,
-            background: Color.FromUInt32(0x12345678));
+            background: new Color(0x12345678));
         using var harness = new CupertinoThemeTestHarness(Wrap(overlay));
         harness.Pump(ViewSize);
 
         Container container = Assert.Single(harness.FindWidgets<Container>());
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(end: 9.0), container.Margin);
         var decoration = Assert.IsType<ShapeDecoration>(container.Decoration);
-        Assert.Equal(Color.FromUInt32(0x12345678), decoration.Color);
+        Assert.Equal(new Color(0x12345678), decoration.Color);
         var border = Assert.IsType<RoundedSuperellipseBorder>(decoration.Shape);
         Assert.Equal(
             BorderRadius.Only(topRight: 8.0, bottomRight: 8.0),

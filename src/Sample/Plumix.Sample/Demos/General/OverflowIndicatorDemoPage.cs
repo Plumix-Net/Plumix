@@ -50,7 +50,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                 new Container(
                     width: 280,
                     height: 220,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Center(
                         child: BuildProbe())),
@@ -93,7 +93,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
         return new Container(
             width: 72,
             height: 86,
-            color: index % 2 == 0 ? Color.Parse("#FFBBDEFB") : Color.Parse("#FFC8E6C9"),
+            color: index % 2 == 0 ? new Color(0xFFBBDEFB) : new Color(0xFFC8E6C9),
             child: new Center(
                 child: new Text($"tile {index}", fontSize: 12, color: Colors.Black)));
     }
@@ -102,7 +102,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
     {
         return new Container(
             height: 34,
-            color: index % 2 == 0 ? Color.Parse("#FFBBDEFB") : Color.Parse("#FFC8E6C9"),
+            color: index % 2 == 0 ? new Color(0xFFBBDEFB) : new Color(0xFFC8E6C9),
             child: new Center(
                 child: new Text($"row {index}", fontSize: 12, color: Colors.Black)));
     }
@@ -114,7 +114,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

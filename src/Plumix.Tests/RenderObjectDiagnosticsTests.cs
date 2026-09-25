@@ -435,15 +435,15 @@ public sealed class RenderObjectDiagnosticsTests
     [Fact]
     public void ColorProperty_SerializesTheChannelsTheWayFlutterDoes()
     {
-        var property = new ColorProperty("color", Avalonia.Media.Color.FromArgb(0x12, 0x34, 0x56, 0x78));
+        var property = new ColorProperty("color", Color.FromARGB(0x12, 0x34, 0x56, 0x78));
 
         Dictionary<string, object?> json = property.ToJsonMap(DiagnosticsSerializationDelegate.Create());
         var channels = (Dictionary<string, object>)json["valueProperties"]!;
 
-        Assert.Equal((byte)0x34, channels["red"]);
-        Assert.Equal((byte)0x56, channels["green"]);
-        Assert.Equal((byte)0x78, channels["blue"]);
-        Assert.Equal((byte)0x12, channels["alpha"]);
+        Assert.Equal(0x34, channels["red"]);
+        Assert.Equal(0x56, channels["green"]);
+        Assert.Equal(0x78, channels["blue"]);
+        Assert.Equal(0x12, channels["alpha"]);
     }
 
     [Fact]
@@ -452,10 +452,10 @@ public sealed class RenderObjectDiagnosticsTests
         // dart:ui's `Color.toString`, not Avalonia's `#AARRGGBB`.
         Assert.Equal(
             "Color(alpha: 1.0000, red: 0.3922, green: 0.5843, blue: 0.9294, colorSpace: ColorSpace.sRGB)",
-            new ColorProperty("color", Avalonia.Media.Color.FromArgb(0xFF, 0x64, 0x95, 0xED)).ValueToString());
+            new ColorProperty("color", Color.FromARGB(0xFF, 0x64, 0x95, 0xED)).ValueToString());
         Assert.Equal(
             "Color(alpha: 0.0000, red: 0.0000, green: 0.0000, blue: 0.0000, colorSpace: ColorSpace.sRGB)",
-            new ColorProperty("color", Avalonia.Media.Color.FromArgb(0, 0, 0, 0)).ValueToString());
+            new ColorProperty("color", Color.FromARGB(0, 0, 0, 0)).ValueToString());
 
         // A null colour keeps the base spelling.
         Assert.Equal("null", new ColorProperty("color", null).ValueToString());

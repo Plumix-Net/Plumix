@@ -778,7 +778,7 @@ public sealed class MaterialRangeSliderTests
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp((int)(255 * opacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private static void DispatchPointerDown(GestureBinding binding, RenderView renderView, int pointer, Point position)

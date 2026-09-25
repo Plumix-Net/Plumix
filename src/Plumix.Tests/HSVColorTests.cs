@@ -36,7 +36,7 @@ public sealed class HSVColorTests
     [Fact]
     public void ToColor_RoundTripsThroughFromColor()
     {
-        Color red = Color.FromArgb(255, 255, 0, 0);
+        Color red = Color.FromARGB(255, 255, 0, 0);
 
         HSVColor hsv = HSVColor.FromColor(red);
 
@@ -49,14 +49,14 @@ public sealed class HSVColorTests
     [Fact]
     public void FromColor_ReadsHueFromTheDominantChannel()
     {
-        Assert.Equal(120.0, HSVColor.FromColor(Color.FromArgb(255, 0, 255, 0)).Hue);
-        Assert.Equal(240.0, HSVColor.FromColor(Color.FromArgb(255, 0, 0, 255)).Hue);
+        Assert.Equal(120.0, HSVColor.FromColor(Color.FromARGB(255, 0, 255, 0)).Hue);
+        Assert.Equal(240.0, HSVColor.FromColor(Color.FromARGB(255, 0, 0, 255)).Hue);
     }
 
     [Fact]
     public void FromColor_OfGrey_HasZeroHueAndSaturation()
     {
-        HSVColor grey = HSVColor.FromColor(Color.FromArgb(255, 128, 128, 128));
+        HSVColor grey = HSVColor.FromColor(Color.FromARGB(255, 128, 128, 128));
 
         Assert.Equal(0.0, grey.Hue);
         Assert.Equal(0.0, grey.Saturation);
@@ -65,7 +65,7 @@ public sealed class HSVColorTests
     [Fact]
     public void FromColor_OfBlack_HasZeroValue()
     {
-        HSVColor black = HSVColor.FromColor(Color.FromArgb(255, 0, 0, 0));
+        HSVColor black = HSVColor.FromColor(Color.FromARGB(255, 0, 0, 0));
 
         Assert.Equal(0.0, black.Hue);
         Assert.Equal(0.0, black.Saturation);

@@ -127,7 +127,7 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_SelectedTileColor_OverridesDefaultBackground()
     {
-        var selectedTileColor = Color.Parse("#FFE7D6FF");
+        var selectedTileColor = new Color(0xFFE7D6FF);
         using var harness = new WidgetRenderHarness(
             BuildThemedTile(new ListTile(
                 title: new Text("Selected tile"),
@@ -145,14 +145,14 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_ThemeColors_ApplyWhenWidgetOverridesMissing()
     {
-        var themedText = Color.Parse("#FF0F5A4A");
-        var themedIcon = Color.Parse("#FF904E1A");
-        var themedTile = Color.Parse("#FFF3F8E8");
+        var themedText = new Color(0xFF0F5A4A);
+        var themedIcon = new Color(0xFF904E1A);
+        var themedTile = new Color(0xFFF3F8E8);
         var theme = ThemeData.Light with
         {
             ListTileTheme = new ListTileThemeData(
-                TextColor: WidgetStateProperty<Color?>.All(themedText),
-                IconColor: WidgetStateProperty<Color?>.All(themedIcon),
+                TextColor: themedText,
+                IconColor: themedIcon,
                 TileColor: themedTile)
         };
 
@@ -183,13 +183,13 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_LocalThemeMergeAndWidget_UseSourcePrecedence()
     {
-        var globalColor = Color.Parse("#FF8E2430");
-        var localColor = Color.Parse("#FF176B52");
-        var mergedColor = Color.Parse("#FF4051B5");
-        var widgetColor = Color.Parse("#FF9A5B00");
+        var globalColor = new Color(0xFF8E2430);
+        var localColor = new Color(0xFF176B52);
+        var mergedColor = new Color(0xFF4051B5);
+        var widgetColor = new Color(0xFF9A5B00);
         ThemeData theme = ThemeData.Light with
         {
-            ListTileTheme = new ListTileThemeData(TextColor: WidgetStateProperty<Color?>.All(globalColor))
+            ListTileTheme = new ListTileThemeData(TextColor: globalColor)
         };
         using var harness = new WidgetRenderHarness(BuildThemedTile(
             new Column(children:
@@ -197,13 +197,13 @@ public sealed class MaterialListTileTests
                 new ListTile(title: new Text("Global")),
                 new ListTileTheme(
                     child: new ListTile(title: new Text("Local")),
-                    data: new ListTileThemeData(TextColor: WidgetStateProperty<Color?>.All(localColor))),
+                    data: new ListTileThemeData(TextColor: localColor)),
                 ListTileTheme.Merge(
                     child: new ListTile(title: new Text("Merged")),
-                    textColor: WidgetStateProperty<Color?>.All(mergedColor)),
+                    textColor: mergedColor),
                 new ListTile(
                     title: new Text("Widget"),
-                    textColor: WidgetStateProperty<Color?>.All(widgetColor)),
+                    textColor: widgetColor),
             ]),
             theme));
 
@@ -264,8 +264,8 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_StateColors_ResolveDisabledAndSelectedTogether()
     {
-        var disabledSelected = Color.Parse("#FF8B1E3F");
-        WidgetStateProperty<Color?> stateColor = WidgetStateProperty<Color?>.ResolveWith(states =>
+        var disabledSelected = new Color(0xFF8B1E3F);
+        Color stateColor = WidgetStateColor.ResolveWith(states =>
             states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Selected)
                 ? disabledSelected
                 : Colors.Teal);
@@ -292,14 +292,14 @@ public sealed class MaterialListTileTests
     {
         var start = new ListTileThemeData(
             Dense: true,
-            IconColor: WidgetStateProperty<Color?>.All(Colors.Black),
-            TextColor: WidgetStateProperty<Color?>.All(Colors.Red),
+            IconColor: Colors.Black,
+            TextColor: Colors.Red,
             ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 12),
             MinTileHeight: 48);
         ListTileThemeData copy = start.CopyWith(minTileHeight: 64);
         var end = new ListTileThemeData(
-            IconColor: WidgetStateProperty<Color?>.All(Colors.White),
-            TextColor: WidgetStateProperty<Color?>.All(Colors.Blue),
+            IconColor: Colors.White,
+            TextColor: Colors.Blue,
             ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 16, end: 24),
             MinTileHeight: 72);
 
@@ -310,10 +310,10 @@ public sealed class MaterialListTileTests
         ListTileThemeData lerped = Assert.IsType<ListTileThemeData>(ListTileThemeData.Lerp(start, end, 0.5));
         Assert.Equal(
             MaterialThemeLerp.Color(Colors.Black, Colors.White, 0.5),
-            lerped.IconColor!.Resolve(new HashSet<WidgetState> { WidgetState.Selected }));
+            lerped.IconColor);
         Assert.Equal(
             MaterialThemeLerp.Color(Colors.Red, Colors.Blue, 0.5),
-            lerped.TextColor!.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+            lerped.TextColor);
         Assert.Equal(12, lerped.ContentPadding!.Value.Start, 3);
         Assert.Equal(18, lerped.ContentPadding.Value.End, 3);
         Assert.Equal(60, lerped.MinTileHeight);
@@ -372,7 +372,7 @@ public sealed class MaterialListTileTests
     [Fact]
     public void ListTile_DivideTiles_AddsOnlyForegroundBottomBorders()
     {
-        var dividerColor = Color.Parse("#FF123456");
+        var dividerColor = new Color(0xFF123456);
         Widget last = new Text("last");
         IReadOnlyList<Widget> divided = ListTile.DivideTiles(
             [new Text("first"), new Text("second"), last],
@@ -476,10 +476,10 @@ public sealed class MaterialListTileTests
         var theme = ThemeData.Light with
         {
             ListTileTheme = new ListTileThemeData(
-                TextColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF27526B")),
-                IconColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF7A4021")),
-                TileColor: Color.Parse("#FFF5F9EE"),
-                SelectedTileColor: Color.Parse("#FFE4EEFF"))
+                TextColor: new Color(0xFF27526B),
+                IconColor: new Color(0xFF7A4021),
+                TileColor: new Color(0xFFF5F9EE),
+                SelectedTileColor: new Color(0xFFE4EEFF))
         };
 
         using var harness = new WidgetRenderHarness(

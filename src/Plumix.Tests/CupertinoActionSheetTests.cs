@@ -82,18 +82,18 @@ public sealed class CupertinoActionSheetTests : IDisposable
         ])));
         light.Pump(PhoneSize);
 
-        Assert.Equal(Color.FromUInt32(0xFF007AFF), ParagraphColor(Paragraph(light, "Plain")));
+        Assert.Equal(new Color(0xFF007AFF), ParagraphColor(Paragraph(light, "Plain")));
         Assert.Equal(FontWeight.Normal, Paragraph(light, "Plain").FontWeight);
         Assert.Equal(FontWeight.SemiBold, Paragraph(light, "Default").FontWeight);
-        Assert.Equal(Color.FromUInt32(0xFFFF3B30), ParagraphColor(Paragraph(light, "Destroy")));
+        Assert.Equal(new Color(0xFFFF3B30), ParagraphColor(Paragraph(light, "Destroy")));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: [Action("Plain"), Action("Destroy", destructive: true)]),
             brightness: PlatformBrightness.Dark));
         dark.Pump(PhoneSize);
 
-        Assert.Equal(Color.FromUInt32(0xFF0A84FF), ParagraphColor(Paragraph(dark, "Plain")));
-        Assert.Equal(Color.FromUInt32(0xFFFF453A), ParagraphColor(Paragraph(dark, "Destroy")));
+        Assert.Equal(new Color(0xFF0A84FF), ParagraphColor(Paragraph(dark, "Plain")));
+        Assert.Equal(new Color(0xFFFF453A), ParagraphColor(Paragraph(dark, "Destroy")));
     }
 
     [Fact]
@@ -105,7 +105,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
         Assert.Equal(FontWeight.SemiBold, Paragraph(both, "Title").FontWeight);
         Assert.Equal(FontWeight.Normal, Paragraph(both, "Message").FontWeight);
         Assert.Equal(13.0, Paragraph(both, "Title").FontSize);
-        Assert.Equal(Color.FromUInt32(0x851D1D1D), ParagraphColor(Paragraph(both, "Message")));
+        Assert.Equal(new Color(0x851D1D1D), ParagraphColor(Paragraph(both, "Message")));
 
         using var titleOnly = new CupertinoThemeTestHarness(Wrap(
             Sheet(title: new Text("Title"), actions: [Action("One")])));
@@ -121,7 +121,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
             Sheet(title: new Text("Title"), actions: [Action("One")]),
             brightness: PlatformBrightness.Dark));
         dark.Pump(PhoneSize);
-        Assert.Equal(Color.FromUInt32(0x96F1F1F1), ParagraphColor(Paragraph(dark, "Title")));
+        Assert.Equal(new Color(0x96F1F1F1), ParagraphColor(Paragraph(dark, "Title")));
     }
 
     [Fact]
@@ -248,11 +248,14 @@ public sealed class CupertinoActionSheetTests : IDisposable
         ])));
         harness.Pump(PhoneSize);
 
-        Color background = Color.FromUInt32(0xC8FCFCFC);
-        Color divider = Color.FromUInt32(0xD4C9C9C9);
+        Color background = new Color(0xC8FCFCFC);
+        Color divider = new Color(0xD4C9C9C9);
         int backgroundBoxes = Descendants<RenderColoredBox>(harness.RenderView)
-            .Count(box => box.Color == background);
-        Assert.Equal(2, Descendants<RenderColoredBox>(harness.RenderView).Count(box => box.Color == divider));
+            .Count(box => ColorMatchers.IsSameColorAs(box.Color, background));
+        Assert.Equal(
+            2,
+            Descendants<RenderColoredBox>(harness.RenderView)
+                .Count(box => ColorMatchers.IsSameColorAs(box.Color, divider)));
 
         PointerDown(harness, CenterOf(Paragraph(harness, "Two")));
         harness.Pump(PhoneSize);
@@ -261,12 +264,15 @@ public sealed class CupertinoActionSheetTests : IDisposable
         // the background color so the highlight is not cut in half.
         Assert.Contains(
             Descendants<RenderColoredBox>(harness.RenderView),
-            box => box.Color == Color.FromUInt32(0xCAE0E0E0));
-        Assert.DoesNotContain(Descendants<RenderColoredBox>(harness.RenderView), box => box.Color == divider);
+            box => ColorMatchers.IsSameColorAs(box.Color, new Color(0xCAE0E0E0)));
+        Assert.DoesNotContain(
+            Descendants<RenderColoredBox>(harness.RenderView),
+            box => ColorMatchers.IsSameColorAs(box.Color, divider));
         // The pressed button stops painting the idle fill; both hidden dividers start painting it.
         Assert.Equal(
             backgroundBoxes + 1,
-            Descendants<RenderColoredBox>(harness.RenderView).Count(box => box.Color == background));
+            Descendants<RenderColoredBox>(harness.RenderView).Count(
+                box => ColorMatchers.IsSameColorAs(box.Color, background)));
     }
 
     [Fact]
@@ -314,15 +320,15 @@ public sealed class CupertinoActionSheetTests : IDisposable
             cancelButton: Action("Cancel"))));
         harness.Pump(PhoneSize);
 
-        Assert.Contains(DecorationColors(harness), color => color == Color.FromUInt32(0xFFFFFFFF));
+        Assert.Contains(DecorationColors(harness), color => ColorMatchers.IsSameColorAs(color, new Color(0xFFFFFFFF)));
 
         PointerDown(harness, CenterOf(Paragraph(harness, "Cancel")));
         harness.Pump(PhoneSize);
-        Assert.Contains(DecorationColors(harness), color => color == Color.FromUInt32(0xFFECECEC));
+        Assert.Contains(DecorationColors(harness), color => ColorMatchers.IsSameColorAs(color, new Color(0xFFECECEC)));
 
         PointerUp(harness, CenterOf(Paragraph(harness, "Cancel")));
         harness.Pump(PhoneSize);
-        Assert.Contains(DecorationColors(harness), color => color == Color.FromUInt32(0xFFFFFFFF));
+        Assert.Contains(DecorationColors(harness), color => ColorMatchers.IsSameColorAs(color, new Color(0xFFFFFFFF)));
     }
 
     [Fact]
@@ -405,11 +411,15 @@ public sealed class CupertinoActionSheetTests : IDisposable
     {
         using var light = new CupertinoThemeTestHarness(Wrap(Sheet(actions: [Action("One")])));
         light.Pump(PhoneSize);
-        Assert.DoesNotContain(DecorationColors(light), color => color == TintedFocus(0xFF007AFF, 0.12));
+        Assert.DoesNotContain(
+            DecorationColors(light),
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.12)));
 
         Assert.Single(light.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         light.Pump(PhoneSize);
-        Assert.Contains(DecorationColors(light), color => color == TintedFocus(0xFF007AFF, 0.12));
+        Assert.Contains(
+            DecorationColors(light),
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.12)));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions: [Action("One")]),
@@ -417,19 +427,23 @@ public sealed class CupertinoActionSheetTests : IDisposable
         dark.Pump(PhoneSize);
         Assert.Single(dark.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         dark.Pump(PhoneSize);
-        Assert.Contains(DecorationColors(dark), color => color == TintedFocus(0xFF007AFF, 0.26));
+        Assert.Contains(
+            DecorationColors(dark),
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFF007AFF, 0.26)));
 
         using var custom = new CupertinoThemeTestHarness(Wrap(
             Sheet(actions:
             [
                 new CupertinoActionSheetAction(
-                    new Text("One"), () => { }, focusColor: Color.FromUInt32(0xFFFFAAAA)),
+                    new Text("One"), () => { }, focusColor: new Color(0xFFFFAAAA)),
             ]),
             brightness: PlatformBrightness.Dark));
         custom.Pump(PhoneSize);
         Assert.Single(custom.FindWidgets<FocusableActionDetector>()).OnShowFocusHighlight!(true);
         custom.Pump(PhoneSize);
-        Assert.Contains(DecorationColors(custom), color => color == TintedFocus(0xFFFFAAAA, 0.26));
+        Assert.Contains(
+            DecorationColors(custom),
+            color => ColorMatchers.IsSameColorAs(color, TintedFocus(0xFFFFAAAA, 0.26)));
     }
 
     [Fact]
@@ -573,9 +587,9 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
     private static Color TintedFocus(uint baseColor, double opacity)
     {
-        Color color = Color.FromUInt32(baseColor);
+        Color color = new Color(baseColor);
         byte alpha = (byte)Math.Round(byte.MaxValue * opacity);
-        return HSLColor.FromColor(Color.FromArgb(alpha, color.R, color.G, color.B)).ToColor();
+        return HSLColor.FromColor(Color.FromARGB(alpha, color.Red, color.Green, color.Blue)).ToColor();
     }
 
     private static List<Color> DecorationColors(CupertinoThemeTestHarness harness)
@@ -584,7 +598,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
             .Select(box => box.Decoration)
             .OfType<BoxDecoration>()
             .Where(decoration => decoration.Color is not null)
-            .Select(decoration => decoration.Color!.Value)
+            .Select(decoration => decoration.Color!)
             .ToList();
     }
 
@@ -629,7 +643,7 @@ public sealed class CupertinoActionSheetTests : IDisposable
     }
 
     private static Color ParagraphColor(RenderParagraph paragraph) =>
-        ((ISolidColorBrush)paragraph.Foreground).Color;
+        (Color)((ISolidColorBrush)paragraph.Foreground).Color;
 
     private static RenderParagraph Paragraph(CupertinoThemeTestHarness harness, string text) =>
         Descendants<RenderParagraph>(harness.RenderView).First(paragraph => paragraph.PlainText == text);

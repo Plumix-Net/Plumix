@@ -13,7 +13,7 @@ public sealed class DebugPaintingWidgetsTests
     {
         var widget = new Placeholder();
 
-        Assert.Equal(Color.FromRgb(0x45, 0x5A, 0x64), widget.Color);
+        Assert.Equal(Color.FromARGB(0xFF, 0x45, 0x5A, 0x64), widget.Color);
         Assert.Equal(2.0, widget.StrokeWidth);
         Assert.Equal(400.0, widget.FallbackWidth);
         Assert.Equal(400.0, widget.FallbackHeight);
@@ -92,7 +92,7 @@ public sealed class DebugPaintingWidgetsTests
     {
         var widget = new GridPaper(child: new SizedBox(width: 120, height: 80));
 
-        Assert.Equal(Color.FromArgb(0x7F, 0xC3, 0xE8, 0xF3), widget.Color);
+        Assert.Equal(Color.FromARGB(0x7F, 0xC3, 0xE8, 0xF3), widget.Color);
         Assert.Equal(100.0, widget.Interval);
         Assert.Equal(2, widget.Divisions);
         Assert.Equal(5, widget.Subdivisions);

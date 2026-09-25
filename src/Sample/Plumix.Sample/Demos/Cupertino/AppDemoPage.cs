@@ -42,9 +42,9 @@ public sealed class CupertinoAppDemoPage : StatelessWidget
                     fontSize: 13.0,
                     color: secondaryLabel),
                 new CupertinoButton(
-                    color: theme.PrimaryColor.Value,
+                    color: theme.PrimaryColor,
                     onPressed: () => Navigator.Of(context).PushNamed("/details"),
-                    child: new Text("Push Cupertino route", color: theme.PrimaryContrastingColor.Value)),
+                    child: new Text("Push Cupertino route", color: theme.PrimaryContrastingColor)),
             ]);
     }
 
@@ -57,9 +57,9 @@ public sealed class CupertinoAppDemoPage : StatelessWidget
             [
                 new Text("Details route", fontSize: 22.0, color: label),
                 new CupertinoButton(
-                    color: theme.PrimaryColor.Value,
+                    color: theme.PrimaryColor,
                     onPressed: () => Navigator.Of(context).Pop(),
-                    child: new Text("Pop route", color: theme.PrimaryContrastingColor.Value)),
+                    child: new Text("Pop route", color: theme.PrimaryContrastingColor)),
             ]);
     }
 

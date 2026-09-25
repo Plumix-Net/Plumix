@@ -45,7 +45,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                 new Text(
                     "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) / IconButton with enabled/disabled and theme-aware defaults.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -54,17 +54,17 @@ internal sealed class MaterialButtonsDemoPageState : State
                             label: _enabled ? "Enabled" : "Disabled",
                             onTap: ToggleEnabled,
                             width: 108,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: "Reset",
                             onTap: ResetCounters,
                             width: 88,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                         BuildControlButton(
                             label: _useMaterial3 ? "Icons M3" : "Icons M2",
                             onTap: ToggleIconMaterialVersion,
                             width: 96,
-                            background: Color.Parse("#FFE8F5E9")),
+                            background: new Color(0xFFE8F5E9)),
                     ]),
                 new Text(
                     $"enabled={(_enabled ? "true" : "false")}, iconsM3={(_useMaterial3 ? "true" : "false")}, "
@@ -75,7 +75,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     + $"outlinedIcon={_outlinedIconButtonTaps}, "
                     + $"iconSelected={(_iconButtonSelected ? "true" : "false")}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new SizedBox(
                     width: 240,
                     child: new TextButton(
@@ -112,15 +112,15 @@ internal sealed class MaterialButtonsDemoPageState : State
                         new Expanded(
                             child: new MaterialButton(
                                 onPressed: _enabled ? OnMaterialButtonTap : null,
-                                color: Color.Parse("#FFE0E0E0"),
+                                color: new Color(0xFFE0E0E0),
                                 child: new Text($"Material: {_materialButtonTaps}"))),
                         new Expanded(
                             child: new RawMaterialButton(
                                 onPressed: _enabled ? OnRawMaterialButtonTap : null,
-                                fillColor: Color.Parse("#FFDDEBF7"),
-                                hoverColor: Color.Parse("#1F005E7A"),
-                                highlightColor: Color.Parse("#33005E7A"),
-                                splashColor: Color.Parse("#33005E7A"),
+                                fillColor: new Color(0xFFDDEBF7),
+                                hoverColor: new Color(0x1F005E7A),
+                                highlightColor: new Color(0x33005E7A),
+                                splashColor: new Color(0x33005E7A),
                                 shape: new RoundedRectangleBorder(
                                     borderRadius: BorderRadius.Circular(6)),
                                 child: new Text($"Raw: {_rawMaterialButtonTaps}"))),
@@ -136,14 +136,14 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 child: new Text("Custom elevated"),
                                 style: ElevatedButton.StyleFrom(
                                     foregroundColor: Colors.White,
-                                    backgroundColor: Color.Parse("#FF6A994E")))),
+                                    backgroundColor: new Color(0xFF6A994E)))),
                         new Expanded(
                             child: new OutlinedButton(
                                 onPressed: _enabled ? OnOutlinedButtonTap : null,
                                 child: new Text("Custom outlined"),
                                 style: OutlinedButton.StyleFrom(
-                                    foregroundColor: Color.Parse("#FF7B2CBF"),
-                                    side: new BorderSide(Color.Parse("#FF7B2CBF"))))),
+                                    foregroundColor: new Color(0xFF7B2CBF),
+                                    side: new BorderSide(new Color(0xFF7B2CBF))))),
                     ]),
                 new Row(
                     spacing: 8,
@@ -155,14 +155,14 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 child: new Text("Custom filled"),
                                 style: FilledButton.StyleFrom(
                                     foregroundColor: Colors.White,
-                                    backgroundColor: Color.Parse("#FF005E7A")))),
+                                    backgroundColor: new Color(0xFF005E7A)))),
                         new Expanded(
                             child: FilledButton.Tonal(
                                 onPressed: _enabled ? OnFilledTonalButtonTap : null,
                                 child: new Text("Custom tonal"),
                                 style: FilledButton.StyleFrom(
-                                    foregroundColor: Color.Parse("#FF42275A"),
-                                    backgroundColor: Color.Parse("#FFD8CFF8")))),
+                                    foregroundColor: new Color(0xFF42275A),
+                                    backgroundColor: new Color(0xFFD8CFF8)))),
                     ]),
             ]);
     }
@@ -171,8 +171,8 @@ internal sealed class MaterialButtonsDemoPageState : State
     {
         ThemeData inherited = Theme.Of(context);
         ColorScheme scheme = inherited.ColorScheme.CopyWith(
-            primary: Color.Parse("#FF006A6A"),
-            onSurface: Color.Parse("#FF4D2A6A"));
+            primary: new Color(0xFF006A6A),
+            onSurface: new Color(0xFF4D2A6A));
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -200,11 +200,11 @@ internal sealed class MaterialButtonsDemoPageState : State
     {
         ThemeData inherited = Theme.Of(context);
         ColorScheme scheme = inherited.ColorScheme.CopyWith(
-            primary: Color.Parse("#FF425F2D"),
-            onPrimary: Color.Parse("#FFFFFFFF"),
-            surfaceContainerLow: Color.Parse("#FFE8F2DD"),
-            onSurface: Color.Parse("#FF392E21"),
-            shadow: Color.Parse("#FF2F3B26"));
+            primary: new Color(0xFF425F2D),
+            onPrimary: new Color(0xFFFFFFFF),
+            surfaceContainerLow: new Color(0xFFE8F2DD),
+            onSurface: new Color(0xFF392E21),
+            shadow: new Color(0xFF2F3B26));
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -232,9 +232,9 @@ internal sealed class MaterialButtonsDemoPageState : State
     {
         ThemeData inherited = Theme.Of(context);
         ColorScheme scheme = inherited.ColorScheme.CopyWith(
-            primary: Color.Parse("#FF705D00"),
-            onSurface: Color.Parse("#FF453A10"),
-            outline: Color.Parse("#FF766F64"));
+            primary: new Color(0xFF705D00),
+            onSurface: new Color(0xFF453A10),
+            outline: new Color(0xFF766F64));
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -262,12 +262,12 @@ internal sealed class MaterialButtonsDemoPageState : State
     {
         ThemeData inherited = Theme.Of(context);
         ColorScheme scheme = inherited.ColorScheme.CopyWith(
-            primary: Color.Parse("#FF0057B8"),
+            primary: new Color(0xFF0057B8),
             onPrimary: Colors.White,
-            secondaryContainer: Color.Parse("#FFD8E2FF"),
-            onSecondaryContainer: Color.Parse("#FF001A41"),
-            onSurface: Color.Parse("#FF3F3F46"),
-            shadow: Color.Parse("#FF16233A"));
+            secondaryContainer: new Color(0xFFD8E2FF),
+            onSecondaryContainer: new Color(0xFF001A41),
+            onSurface: new Color(0xFF3F3F46),
+            shadow: new Color(0xFF16233A));
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
@@ -322,7 +322,7 @@ internal sealed class MaterialButtonsDemoPageState : State
         Widget tonalButton = new IconButtonTheme(
             data: new IconButtonThemeData(
                 style: IconButton.StyleFrom(
-                    foregroundColor: Color.Parse("#FF6A1B9A"))),
+                    foregroundColor: new Color(0xFF6A1B9A))),
             child: new SizedBox(
                 width: 56,
                 height: 56,

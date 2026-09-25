@@ -212,8 +212,7 @@ internal sealed class FlexibleSpaceBarState : State<FlexibleSpaceBar>
         return new ClipRect(child: new Stack(children: children));
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private static bool GetEffectiveCenterTitle(FlexibleSpaceBar widget, ThemeData theme)
     {

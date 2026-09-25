@@ -41,7 +41,7 @@ internal sealed class PlaceholderPainter : CustomPainter
 
 public sealed class Placeholder : StatelessWidget
 {
-    public static Color DefaultColor { get; } = Color.FromRgb(0x45, 0x5A, 0x64);
+    public static Color DefaultColor { get; } = Color.FromARGB(0xFF, 0x45, 0x5A, 0x64);
 
     public Placeholder(
         Color? color = null,
@@ -71,7 +71,7 @@ public sealed class Placeholder : StatelessWidget
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new ColorProperty("color", Color, defaultValue: Color.FromUInt32(0xFF455A64)));
+        properties.Add(new ColorProperty("color", Color, defaultValue: new Color(0xFF455A64)));
         properties.Add(new DoubleProperty("strokeWidth", StrokeWidth, defaultValue: 2.0));
         properties.Add(new DoubleProperty("fallbackWidth", FallbackWidth, defaultValue: 400.0));
         properties.Add(new DoubleProperty("fallbackHeight", FallbackHeight, defaultValue: 400.0));

@@ -93,7 +93,7 @@ internal sealed class BottomAppBarState : State<BottomAppBar>
                     ?? barTheme.Color
                     ?? (useMaterial3
                         ? theme.ColorScheme.SurfaceContainer
-                        : theme.Brightness == Brightness.Dark ? Color.Parse("#FF424242") : Colors.White);
+                        : theme.Brightness == Brightness.Dark ? new Color(0xFF424242) : Colors.White);
         var surfaceTint = widget.SurfaceTintColor
                           ?? barTheme.SurfaceTintColor
                           ?? (useMaterial3 ? Colors.Transparent : theme.ColorScheme.SurfaceTint);
@@ -407,13 +407,13 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         if (Size.Width <= 0 || Size.Height <= 0) return;
         var host = new Rect(Size);
         var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host);
-        if (Elevation > 0.0 && ShadowColor.A > 0)
+        if (Elevation > 0.0 && ShadowColor.Alpha > 0)
         {
             context.Canvas.DrawShadow(
                 geometry,
                 ShadowColor,
                 Elevation,
-                transparentOccluder: Color.A != byte.MaxValue,
+                transparentOccluder: Color.Alpha != byte.MaxValue,
                 geometryOffset: offset);
         }
         context.Canvas.DrawGeometry(new SolidColorBrush(Color), null, geometry, geometryOffset: offset);

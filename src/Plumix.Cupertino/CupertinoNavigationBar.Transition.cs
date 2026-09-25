@@ -462,7 +462,7 @@ internal sealed class NavigationBarComponentsTransition
                 child: NavBarStatics.WrapWithBackground(
                     // Don't update the system status bar color mid-flight.
                     updateSystemUiOverlay: false,
-                    backgroundColor: BottomBackgroundColor.Value,
+                    backgroundColor: BottomBackgroundColor!,
                     border: TopBorder,
                     child: new SizedBox(
                         height: BottomNavBarBox.Size.Height,
@@ -725,7 +725,7 @@ internal sealed class NavigationBarComponentsTransition
                 child: NavBarStatics.WrapWithBackground(
                     // Don't update the system status bar color mid-flight.
                     updateSystemUiOverlay: false,
-                    backgroundColor: TopBackgroundColor.Value,
+                    backgroundColor: TopBackgroundColor!,
                     border: TopBorder,
                     child: new SizedBox(height: TopNavBarBox.Size.Height, width: double.PositiveInfinity)));
         }

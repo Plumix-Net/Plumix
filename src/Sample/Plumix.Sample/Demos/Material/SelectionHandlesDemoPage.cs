@@ -54,7 +54,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                     "Long-press the field and drag through the touch lens: handles stay above it. "
                     + "The direct probe below also covers ranged and collapsed handles.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new TextField(
                     controller: _fieldController,
                     maxLines: 2,
@@ -71,7 +71,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                     ]),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F2FA"),
+                        color: new Color(0xFFF7F2FA),
                         child: new Stack(
                             clipBehavior: Clip.None,
                             children:
@@ -83,7 +83,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                                     child: new Text(
                                         "Drag the handles across this line",
                                         fontSize: 18,
-                                        color: Color.Parse("#FF1D192B"))),
+                                        color: new Color(0xFF1D192B))),
                                 new Positioned(
                                     left: EffectiveStartX,
                                     top: LineTop,
@@ -109,7 +109,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                                         $"startX={EffectiveStartX:0}, endX={_endX:0}, "
                                         + $"handles={(_handlesVisible ? "on" : "off")}",
                                         fontSize: 12,
-                                        color: Color.Parse("#FF6750A4"))),
+                                        color: new Color(0xFF6750A4))),
                             ]))),
             ]);
     }
@@ -217,8 +217,8 @@ internal sealed class SelectionHandlesDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

@@ -25,7 +25,7 @@ public sealed class ToggleButtons : StatelessWidget
         Color? color = null,
         Color? selectedColor = null,
         Color? disabledColor = null,
-        WidgetStateProperty<Color?>? fillColor = null,
+        Color? fillColor = null,
         Color? focusColor = null,
         Color? highlightColor = null,
         Color? hoverColor = null,
@@ -86,7 +86,7 @@ public sealed class ToggleButtons : StatelessWidget
     public Color? Color { get; }
     public Color? SelectedColor { get; }
     public Color? DisabledColor { get; }
-    public WidgetStateProperty<Color?>? FillColor { get; }
+    public Color? FillColor { get; }
     public Color? FocusColor { get; }
     public Color? HighlightColor { get; }
     public Color? HoverColor { get; }
@@ -282,26 +282,21 @@ public sealed class ToggleButtons : StatelessWidget
             : Color ?? toggleTheme.Color ?? WithOpacity(colorScheme.OnSurface, 0.87);
     }
 
+    // Dart's `_ResolveFillColor(fillColor ?? toggleButtonsTheme.fillColor).resolve(states) ??
+    // _DefaultFillColor(theme.colorScheme).resolve(states)`.
     private Color ResolveFillColor(
         ColorScheme colorScheme,
         ToggleButtonsThemeData toggleTheme,
         IReadOnlySet<WidgetState> states)
     {
-        WidgetStateProperty<Color?>? fill = FillColor ?? toggleTheme.FillColor;
-        if (fill is not null)
-        {
-            Color? resolved = fill is WidgetStatePropertyAll<Color?>
-                ? states.Contains(WidgetState.Selected) ? fill.Resolve(states) : null
-                : fill.Resolve(states);
-            if (resolved.HasValue)
-            {
-                return resolved.Value;
-            }
-        }
-
-        return states.Contains(WidgetState.Selected)
-            ? WithOpacity(colorScheme.Primary, 0.12)
-            : WithOpacity(colorScheme.Surface, 0.0);
+        Color? primary = FillColor ?? toggleTheme.FillColor;
+        Color? resolved = primary is IWidgetStateProperty<Color>
+            ? WidgetStateProperty<Color?>.ResolveAs(primary, states)
+            : states.Contains(WidgetState.Selected) ? primary : null;
+        return resolved
+               ?? (states.Contains(WidgetState.Selected)
+                   ? WithOpacity(colorScheme.Primary, 0.12)
+                   : WithOpacity(colorScheme.Surface, 0.0));
     }
 
     private BorderSide ResolveLeadingBorderSide(
@@ -945,7 +940,7 @@ internal sealed class RenderSelectToggleButton : RenderShiftedBox
 
     private static bool ShouldPaint(BorderSide side)
     {
-        return side.Style != BorderStyle.None && side.Width > 0.0 && side.Color.A > 0;
+        return side.Style != BorderStyle.None && side.Width > 0.0 && side.Color.Alpha > 0;
     }
 
     private static Pen PenFor(BorderSide side)

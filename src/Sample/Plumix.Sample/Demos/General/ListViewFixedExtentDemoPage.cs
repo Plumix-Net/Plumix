@@ -27,7 +27,7 @@ public sealed class ListViewFixedExtentDemoPage : StatelessWidget
                         itemExtent: 52,
                         padding: new Thickness(16, 12, 16, 20),
                         itemBuilder: (_, index) => new Container(
-                            color: index % 2 == 0 ? Color.Parse("#FFE8F5E9") : Color.Parse("#FFE3F2FD"),
+                            color: index % 2 == 0 ? new Color(0xFFE8F5E9) : new Color(0xFFE3F2FD),
                             padding: new Thickness(12, 8),
                             child: new Text(
                                 $"fixed row #{index} (itemExtent=52)",

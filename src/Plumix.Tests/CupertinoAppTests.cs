@@ -67,8 +67,8 @@ public sealed class CupertinoAppTests : IDisposable
     [Fact]
     public void App_ComposesThemeSelectionLocalizationRoutingScrollAndSystemChrome()
     {
-        Color lightPrimary = Color.FromRgb(10, 20, 30);
-        Color darkPrimary = Color.FromRgb(40, 50, 60);
+        Color lightPrimary = Color.FromARGB(0xFF, 10, 20, 30);
+        Color darkPrimary = Color.FromARGB(0xFF, 40, 50, 60);
         var primary = CupertinoDynamicColor.WithBrightness(lightPrimary, darkPrimary);
         var navigatorKey = new LabeledGlobalKey<NavigatorState>("Cupertino app navigator");
         CupertinoThemeData? resolvedTheme = null;
@@ -96,10 +96,10 @@ public sealed class CupertinoAppTests : IDisposable
 
         MountAndFlush(root, owner);
 
-        Assert.Equal(darkPrimary, resolvedTheme!.PrimaryColor.Value);
-        Assert.Equal(Color.FromArgb(51, darkPrimary.R, darkPrimary.G, darkPrimary.B),
+        ColorMatchers.AssertSameColorAs(darkPrimary, resolvedTheme!.PrimaryColor);
+        Assert.Equal(Color.FromARGB(51, darkPrimary.Red, darkPrimary.Green, darkPrimary.Blue),
             selectionStyle!.SelectionColor);
-        Assert.Equal(darkPrimary, selectionStyle.CursorColor);
+        ColorMatchers.AssertSameColorAs(darkPrimary, selectionStyle.CursorColor);
         Assert.Same(DefaultCupertinoLocalizations.Instance, localizations);
         Assert.IsType<CupertinoScrollBehavior>(scrollBehavior);
         Assert.Equal(CupertinoUserInterfaceLevelData.Base, interfaceLevel);
@@ -143,8 +143,8 @@ public sealed class CupertinoAppTests : IDisposable
     [Fact]
     public void App_ResolvesExplicitDynamicColorAgainstInstalledThemeBrightness()
     {
-        Color lightColor = Color.FromRgb(1, 2, 3);
-        Color darkColor = Color.FromRgb(4, 5, 6);
+        Color lightColor = Color.FromARGB(0xFF, 1, 2, 3);
+        Color darkColor = Color.FromARGB(0xFF, 4, 5, 6);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),

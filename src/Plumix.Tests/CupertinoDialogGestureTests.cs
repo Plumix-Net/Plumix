@@ -342,7 +342,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
 
     private static bool HasPressedFill(CupertinoThemeTestHarness harness, bool sheet) =>
         Descendants<RenderColoredBox>(harness.RenderView)
-            .Any(box => box.Color == Color.FromUInt32(sheet ? 0xCAE0E0E0u : 0xFFE1E1E1u));
+            .Any(box => ColorMatchers.IsSameColorAs(box.Color, new Color(sheet ? 0xCAE0E0E0u : 0xFFE1E1E1u)));
 
     private static IEnumerable<T> Descendants<T>(RenderObject root) where T : RenderObject
     {

@@ -429,8 +429,8 @@ public sealed class CupertinoButtonTests : IDisposable
     [Fact]
     public void CanSpecifyColors_AndTheDisabledColorTakesOverWhenDisabled()
     {
-        Color background = Color.FromUInt32(0xFF0000FF);
-        Color disabled = Color.FromUInt32(0xFF00FF00);
+        Color background = new Color(0xFF0000FF);
+        Color disabled = new Color(0xFF00FF00);
 
         using var enabled = new CupertinoThemeTestHarness(Wrap(new CupertinoButton(
             child: Box(0.0, 0.0),
@@ -461,11 +461,11 @@ public sealed class CupertinoButtonTests : IDisposable
     public void CanSpecifyDynamicColors()
     {
         CupertinoDynamicColor background = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF123456),
-            Color.FromUInt32(0xFF654321));
+            new Color(0xFF123456),
+            new Color(0xFF654321));
         CupertinoDynamicColor inactive = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF111111),
-            Color.FromUInt32(0xFF222222));
+            new Color(0xFF111111),
+            new Color(0xFF222222));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoButton(
@@ -474,14 +474,14 @@ public sealed class CupertinoButtonTests : IDisposable
                 color: background,
                 disabledColor: inactive),
             PlatformBrightness.Dark));
-        Assert.Equal(Color.FromUInt32(0xFF654321), Decoration(dark).Color);
+        Assert.Equal(new Color(0xFF654321), Decoration(dark).Color);
 
         using var light = new CupertinoThemeTestHarness(Wrap(new CupertinoButton(
             child: Box(0.0, 0.0),
             onPressed: null,
             color: background,
             disabledColor: inactive)));
-        Assert.Equal(Color.FromUInt32(0xFF111111), Decoration(light).Color);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF111111), Decoration(light).Color);
     }
 
     [Fact]
@@ -489,13 +489,13 @@ public sealed class CupertinoButtonTests : IDisposable
     {
         using var light = new CupertinoThemeTestHarness(Wrap(
             new CupertinoButton(child: Box(0.0, 0.0), onPressed: () => { })));
-        Assert.Equal(CupertinoColors.ActiveBlue.Color, TextStyleOf(light).Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveBlue.Color, TextStyleOf(light).Color);
         Assert.Null(Decoration(light).Color);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoButton(child: Box(0.0, 0.0), onPressed: () => { }),
             PlatformBrightness.Dark));
-        Assert.Equal(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
     }
 
     [Fact]
@@ -503,7 +503,7 @@ public sealed class CupertinoButtonTests : IDisposable
     {
         using var light = new CupertinoThemeTestHarness(Wrap(
             CupertinoButton.Tinted(child: Box(0.0, 0.0), onPressed: () => { })));
-        Assert.Equal(CupertinoColors.ActiveBlue.Color, TextStyleOf(light).Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveBlue.Color, TextStyleOf(light).Color);
         Assert.Equal(
             WithOpacity(CupertinoColors.ActiveBlue.Color, 0.12),
             Decoration(light).Color);
@@ -511,7 +511,7 @@ public sealed class CupertinoButtonTests : IDisposable
         using var dark = new CupertinoThemeTestHarness(Wrap(
             CupertinoButton.Tinted(child: Box(0.0, 0.0), onPressed: () => { }),
             PlatformBrightness.Dark));
-        Assert.Equal(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, TextStyleOf(dark).Color);
         Assert.Equal(
             WithOpacity(CupertinoColors.ActiveBlue.DarkColor, 0.26),
             Decoration(dark).Color);
@@ -544,13 +544,13 @@ public sealed class CupertinoButtonTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(
             new CupertinoButton(child: Box(0.0, 0.0), onPressed: null)));
 
-        Assert.Equal(CupertinoColors.TertiaryLabel.Color, TextStyleOf(harness).Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.TertiaryLabel.Color, TextStyleOf(harness).Color);
     }
 
     [Fact]
     public void ForegroundColor_OverridesTextAndIconColorsInEveryState()
     {
-        Color foreground = Color.FromUInt32(0xFF5500FF);
+        Color foreground = new Color(0xFF5500FF);
 
         using var enabled = new CupertinoThemeTestHarness(Wrap(new CupertinoButton(
             child: Box(0.0, 0.0),
@@ -832,7 +832,7 @@ public sealed class CupertinoButtonTests : IDisposable
             (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
             0,
             byte.MaxValue);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private static SemanticsNode? FindSemantics(SemanticsNode node, Func<SemanticsNode, bool> predicate)

@@ -62,7 +62,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         using var harness = PushRoute(route, out _);
 
         var barrier = Assert.IsType<AnimatedModalBarrier>(route.BuildModalBarrier());
-        Assert.Equal(0, barrier.Color.Value!.Value.A);
+        Assert.Equal(0, barrier.Color.Value!.Alpha);
 
         double now = Scheduler.CurrentSeconds;
         AnimationPump.Prime();
@@ -74,11 +74,11 @@ public sealed class ModalRouteBarrierTests : IDisposable
         Assert.InRange(progress, 0.2, 0.8);
         Assert.Equal(
             (byte)Math.Round(255 * Curves.Ease(progress)),
-            barrier.Color.Value!.Value.A);
+            barrier.Color.Value!.Alpha);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(400, 300));
-        Assert.Equal(255, barrier.Color.Value!.Value.A);
+        Assert.Equal(255, barrier.Color.Value!.Alpha);
     }
 
     [Fact]

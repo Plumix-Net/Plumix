@@ -177,7 +177,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         ShapeBorder? shape = null,
-        WidgetStateColor? backgroundColor = null,
+        Color? backgroundColor = null,
         Color? foregroundColor = null,
         IconThemeData? iconTheme = null,
         IconThemeData? actionsIconTheme = null,
@@ -266,7 +266,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
     public ShapeBorder? Shape { get; }
 
-    public WidgetStateColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public Color? ForegroundColor { get; }
 
@@ -441,12 +441,12 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                                    ?? appBarTheme.ToolbarHeight
                                    ?? MaterialConstants.ToolbarHeight;
 
-            WidgetStateColor? themeBackgroundColor = ThemeBackgroundColor(appBarTheme);
+            Color? themeBackgroundColor = appBarTheme.BackgroundColor;
             Color backgroundColor = ResolveColor(
                 states,
                 widget.BackgroundColor,
                 themeBackgroundColor,
-                defaults.BackgroundColor!.Value);
+                defaults.BackgroundColor!);
             Color scrolledUnderBackground = ResolveColor(
                 states,
                 widget.BackgroundColor,
@@ -456,7 +456,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
             Color foregroundColor = widget.ForegroundColor
                                     ?? appBarTheme.ForegroundColor
-                                    ?? defaults.ForegroundColor!.Value;
+                                    ?? defaults.ForegroundColor!;
 
             double elevation = widget.Elevation ?? appBarTheme.Elevation ?? defaults.Elevation!.Value;
             double effectiveElevation = isScrolledUnder
@@ -491,16 +491,16 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
             if (widget.ToolbarOpacity != 1.0)
             {
                 double opacity = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(widget.ToolbarOpacity);
-                if (titleTextStyle.Color.HasValue)
+                if (titleTextStyle.Color != null)
                 {
                     titleTextStyle = titleTextStyle.CopyWith(
-                        color: WithOpacity(titleTextStyle.Color.Value, opacity));
+                        color: WithOpacity(titleTextStyle.Color!, opacity));
                 }
 
-                if (toolbarTextStyle.Color.HasValue)
+                if (toolbarTextStyle.Color != null)
                 {
                     toolbarTextStyle = toolbarTextStyle.CopyWith(
-                        color: WithOpacity(toolbarTextStyle.Color.Value, opacity));
+                        color: WithOpacity(toolbarTextStyle.Color!, opacity));
                 }
 
                 overallIconTheme = overallIconTheme.CopyWith(
@@ -693,22 +693,16 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                         child: new Semantics(explicitChildNodes: true, child: appBar))));
         }
 
-        private static WidgetStateColor? ThemeBackgroundColor(AppBarThemeData appBarTheme)
-        {
-            return appBarTheme.BackgroundColorState
-                   ?? (appBarTheme.BackgroundColor.HasValue
-                       ? new WidgetStateColor(appBarTheme.BackgroundColor.Value)
-                       : null);
-        }
-
         /// <summary>Ports Dart's private <c>_AppBarState._resolveColor</c>.</summary>
         private static Color ResolveColor(
             IReadOnlySet<WidgetState> states,
-            WidgetStateColor? widgetColor,
-            WidgetStateColor? themeColor,
+            Color? widgetColor,
+            Color? themeColor,
             Color defaultColor)
         {
-            return widgetColor?.Resolve(states) ?? themeColor?.Resolve(states) ?? defaultColor;
+            return WidgetStateProperty<Color?>.ResolveAs(
+                widgetColor,
+                states) ?? WidgetStateProperty<Color?>.ResolveAs(themeColor, states) ?? defaultColor;
         }
 
         /// <summary>
@@ -756,10 +750,6 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                 StatusBarIconBrightness: style.StatusBarIconBrightness);
         }
 
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+        private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
     }
 }

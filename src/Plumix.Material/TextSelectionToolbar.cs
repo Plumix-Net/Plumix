@@ -81,7 +81,7 @@ public sealed class TextSelectionToolbar : StatelessWidget
         Color color = theme.ColorScheme.Surface != defaultSurface
             ? theme.ColorScheme.Surface
             : theme.Brightness == Brightness.Dark
-                ? Color.Parse("#FF424242")
+                ? new Color(0xFF424242)
                 : Colors.White;
 
         return new Material(

@@ -41,8 +41,8 @@ public sealed record ApplicationSwitcherDescription(
 public static class SystemChrome
 {
     private static SystemUiOverlayStyle _currentSystemUiOverlayStyle = new(
-        StatusBarColor: Colors.Transparent,
-        NavigationBarColor: Colors.Transparent,
+        StatusBarColor: new Color(0x00000000),
+        NavigationBarColor: new Color(0x00000000),
         StatusBarIconBrightness: SystemUiIconBrightness.Dark,
         NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
 
@@ -84,8 +84,8 @@ public static class SystemChrome
     internal static void ResetSystemUiOverlayStyleForTests(SystemUiOverlayStyle? style = null)
     {
         _currentSystemUiOverlayStyle = style ?? new SystemUiOverlayStyle(
-            StatusBarColor: Colors.Transparent,
-            NavigationBarColor: Colors.Transparent,
+            StatusBarColor: new Color(0x00000000),
+            NavigationBarColor: new Color(0x00000000),
             StatusBarIconBrightness: SystemUiIconBrightness.Dark,
             NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
     }

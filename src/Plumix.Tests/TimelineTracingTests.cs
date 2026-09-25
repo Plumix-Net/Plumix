@@ -94,7 +94,7 @@ public sealed class TimelineTracingTests : IDisposable
 
         WidgetsDebug.DebugProfileBuildsEnabled = true;
         WidgetsDebug.DebugEnhanceBuildTimelineArguments = true;
-        Color white = Color.FromUInt32(0xFFFFFFFF);
+        Color white = new Color(0xFFFFFFFF);
         TracingTestRoot.State!.UpdateWidget(new Placeholder(key: new UniqueKey(), color: white));
         tester.Pump();
 
@@ -121,7 +121,7 @@ public sealed class TimelineTracingTests : IDisposable
 
         WidgetsDebug.DebugProfileBuildsEnabledUserWidgets = true;
         WidgetsDebug.DebugEnhanceBuildTimelineArguments = true;
-        var placeholder = new Placeholder(key: new UniqueKey(), color: Color.FromUInt32(0xFFFFFFFF));
+        var placeholder = new Placeholder(key: new UniqueKey(), color: new Color(0xFFFFFFFF));
         Assert.False(WidgetsDebug.DebugIsWidgetLocalCreation(placeholder));
         TracingTestRoot.State!.UpdateWidget(placeholder);
         tester.Pump();

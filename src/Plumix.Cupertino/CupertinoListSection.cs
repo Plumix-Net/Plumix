@@ -41,14 +41,14 @@ public sealed class CupertinoListSection : StatelessWidget
         EdgeInsetsGeometry.DirectionalOnly(start: 20.0, end: 20.0, bottom: 10.0);
     private static readonly BorderRadius DefaultInsetGroupedBorderRadius = BorderRadius.Circular(10.0);
     private static readonly CupertinoDynamicColor HeaderFooterColor = new(
-        color: Color.FromRgb(108, 108, 108),
-        darkColor: Color.FromRgb(142, 142, 146),
-        highContrastColor: Color.FromRgb(74, 74, 77),
-        darkHighContrastColor: Color.FromRgb(176, 176, 183),
-        elevatedColor: Color.FromRgb(108, 108, 108),
-        darkElevatedColor: Color.FromRgb(142, 142, 146),
-        highContrastElevatedColor: Color.FromRgb(108, 108, 108),
-        darkHighContrastElevatedColor: Color.FromRgb(142, 142, 146));
+        color: Color.FromARGB(0xFF, 108, 108, 108),
+        darkColor: Color.FromARGB(0xFF, 142, 142, 146),
+        highContrastColor: Color.FromARGB(0xFF, 74, 74, 77),
+        darkHighContrastColor: Color.FromARGB(0xFF, 176, 176, 183),
+        elevatedColor: Color.FromARGB(0xFF, 108, 108, 108),
+        darkElevatedColor: Color.FromARGB(0xFF, 142, 142, 146),
+        highContrastElevatedColor: Color.FromARGB(0xFF, 108, 108, 108),
+        darkHighContrastElevatedColor: Color.FromARGB(0xFF, 142, 142, 146));
 
     private CupertinoListSection(
         CupertinoListSectionType type,
@@ -56,13 +56,13 @@ public sealed class CupertinoListSection : StatelessWidget
         Widget? header,
         Widget? footer,
         EdgeInsetsGeometry margin,
-        CupertinoDynamicColor backgroundColor,
+        Color backgroundColor,
         BoxDecoration? decoration,
         Clip clipBehavior,
         double dividerMargin,
         double additionalDividerMargin,
         double? topMargin,
-        CupertinoDynamicColor? separatorColor,
+        Color? separatorColor,
         Key? key) : base(key)
     {
         if ((children is null || children.Count == 0) && header is null)
@@ -89,14 +89,14 @@ public sealed class CupertinoListSection : StatelessWidget
         Widget? header = null,
         Widget? footer = null,
         EdgeInsetsGeometry? margin = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         BoxDecoration? decoration = null,
         Clip clipBehavior = Clip.None,
         double dividerMargin = BaseDividerMargin,
         double? additionalDividerMargin = null,
         double? topMargin = MarginTop,
         bool hasLeading = true,
-        CupertinoDynamicColor? separatorColor = null,
+        Color? separatorColor = null,
         Key? key = null) : this(
         CupertinoListSectionType.Base,
         children,
@@ -126,7 +126,7 @@ public sealed class CupertinoListSection : StatelessWidget
 
     public BoxDecoration? Decoration { get; }
 
-    public CupertinoDynamicColor BackgroundColor { get; }
+    public Color BackgroundColor { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -136,21 +136,21 @@ public sealed class CupertinoListSection : StatelessWidget
 
     public double? TopMargin { get; }
 
-    public CupertinoDynamicColor? SeparatorColor { get; }
+    public Color? SeparatorColor { get; }
 
     public static CupertinoListSection InsetGrouped(
         IReadOnlyList<Widget>? children = null,
         Widget? header = null,
         Widget? footer = null,
         EdgeInsetsGeometry? margin = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         BoxDecoration? decoration = null,
         Clip clipBehavior = Clip.HardEdge,
         double dividerMargin = InsetDividerMargin,
         double? additionalDividerMargin = null,
         double? topMargin = null,
         bool hasLeading = true,
-        CupertinoDynamicColor? separatorColor = null,
+        Color? separatorColor = null,
         Key? key = null)
     {
         return new CupertinoListSection(

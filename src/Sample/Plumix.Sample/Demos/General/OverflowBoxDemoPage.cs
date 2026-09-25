@@ -74,7 +74,7 @@ internal sealed class OverflowBoxDemoPageState : State
                 new Container(
                     width: 260,
                     height: 230,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -113,8 +113,8 @@ internal sealed class OverflowBoxDemoPageState : State
             width: 190,
             height: 86,
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFCCE3FF"),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                Color: new Color(0xFFCCE3FF),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF1D3557), 2)),
                 BorderRadius: BorderRadius.Circular(10)),
             child: new Center(
                 child: new Text("child 190x86", fontSize: 12, color: Colors.Black)));
@@ -127,7 +127,7 @@ internal sealed class OverflowBoxDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

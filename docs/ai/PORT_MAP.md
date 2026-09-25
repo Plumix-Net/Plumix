@@ -586,6 +586,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Foundation/TypedData.cs`
 - `src/Plumix/FrameworkSynchronizationContext.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
+- `src/Plumix/GlobalUsings.cs`
 - `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PlumixApplication.cs`
@@ -602,6 +603,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Canvas.Draw.cs`
 - `src/Plumix/UI/Canvas.cs`
 - `src/Plumix/UI/Clip.cs`
+- `src/Plumix/UI/Color.cs`
 - `src/Plumix/UI/FontFeature.cs`
 - `src/Plumix/UI/FrameTiming.cs`
 - `src/Plumix/UI/Geometry.cs`
@@ -624,6 +626,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Widgets/FlutterView.cs`
 - `src/Plumix/Widgets/InkSplash.cs`
 - `src/Plumix/Widgets/TextClipboard.cs`
+- `src/Plumix.Cupertino/GlobalUsings.cs`
+- `src/Plumix.Material/GlobalUsings.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
 - `src/Plumix.Material/SegmentedControlLayout.cs`
 - `src/Plumix.Material/ThemeDataLerp.cs`
@@ -648,7 +652,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - Flutter files mapped: 542
 - C# files carrying a marker: 726
-- C# files without a marker: 56
+- C# files without a marker: 60
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 9
 

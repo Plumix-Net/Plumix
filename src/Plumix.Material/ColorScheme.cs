@@ -280,11 +280,11 @@ public sealed record ColorScheme
     {
         return new ColorScheme(
             brightness: brightness,
-            primary: primary ?? Color.Parse("#FF6200EE"),
+            primary: primary ?? new Color(0xFF6200EE),
             onPrimary: onPrimary ?? Colors.White,
-            secondary: secondary ?? Color.Parse("#FF03DAC6"),
+            secondary: secondary ?? new Color(0xFF03DAC6),
             onSecondary: onSecondary ?? Colors.Black,
-            error: error ?? Color.Parse("#FFB00020"),
+            error: error ?? new Color(0xFFB00020),
             onError: onError ?? Colors.White,
             surface: surface ?? Colors.White,
             onSurface: onSurface ?? Colors.Black,
@@ -385,13 +385,13 @@ public sealed record ColorScheme
     {
         return new ColorScheme(
             brightness: brightness,
-            primary: primary ?? Color.Parse("#FFBB86FC"),
+            primary: primary ?? new Color(0xFFBB86FC),
             onPrimary: onPrimary ?? Colors.Black,
-            secondary: secondary ?? Color.Parse("#FF03DAC6"),
+            secondary: secondary ?? new Color(0xFF03DAC6),
             onSecondary: onSecondary ?? Colors.Black,
-            error: error ?? Color.Parse("#FFCF6679"),
+            error: error ?? new Color(0xFFCF6679),
             onError: onError ?? Colors.Black,
-            surface: surface ?? Color.Parse("#FF121212"),
+            surface: surface ?? new Color(0xFF121212),
             onSurface: onSurface ?? Colors.White,
             primaryContainer: primaryContainer,
             onPrimaryContainer: onPrimaryContainer,
@@ -431,20 +431,20 @@ public sealed record ColorScheme
             onInverseSurface: onInverseSurface,
             inversePrimary: inversePrimary,
             surfaceTint: surfaceTint,
-            background: background ?? Color.Parse("#FF121212"),
+            background: background ?? new Color(0xFF121212),
             onBackground: onBackground ?? Colors.White,
             surfaceVariant: surfaceVariant);
     }
 
     public static ColorScheme HighContrastLight() => Light(
-        primary: Color.Parse("#FF0000BA"),
-        secondary: Color.Parse("#FF66FFF9"),
-        error: Color.Parse("#FF790000"));
+        primary: new Color(0xFF0000BA),
+        secondary: new Color(0xFF66FFF9),
+        error: new Color(0xFF790000));
 
     public static ColorScheme HighContrastDark() => Dark(
-        primary: Color.Parse("#FFEFB7FF"),
-        secondary: Color.Parse("#FF66FFF9"),
-        error: Color.Parse("#FF9B374D"));
+        primary: new Color(0xFFEFB7FF),
+        secondary: new Color(0xFF66FFF9),
+        error: new Color(0xFF9B374D));
 
     /// <summary>
     /// Creates a Material 2 color scheme from a <see cref="MaterialColor"/> swatch.
@@ -466,7 +466,7 @@ public sealed record ColorScheme
         bool isDark = brightness == Brightness.Dark;
         bool primaryIsDark = BrightnessFor(primarySwatch) == Brightness.Dark;
         Color secondary = accentColor
-                          ?? (isDark ? Colors.TealAccent.Shade200 : primarySwatch.Primary);
+                          ?? (isDark ? Colors.TealAccent.Shade200 : primarySwatch);
         bool secondaryIsDark = BrightnessFor(secondary) == Brightness.Dark;
 
         return new ColorScheme(
@@ -550,7 +550,7 @@ public sealed record ColorScheme
         }
 
         var builder = ThemeBuilder
-            .CreateFromSourceColor(RgbColor.FromRgb(seedColor.R, seedColor.G, seedColor.B))
+            .CreateFromSourceColor(RgbColor.FromRgb((byte)seedColor.Red, (byte)seedColor.Green, (byte)seedColor.Blue))
             .WithMode(
                 brightness == Brightness.Dark
                     ? MaterialTheming.ThemeMode.Dark
@@ -861,107 +861,107 @@ public sealed record ColorScheme
 
     private static ColorScheme CreateMaterial3Light() => new(
         brightness: Brightness.Light,
-        primary: C("#FF6750A4"),
+        primary: new Color(0xFF6750A4),
         onPrimary: Colors.White,
-        primaryContainer: C("#FFEADDFF"),
-        onPrimaryContainer: C("#FF4F378B"),
-        primaryFixed: C("#FFEADDFF"),
-        primaryFixedDim: C("#FFD0BCFF"),
-        onPrimaryFixed: C("#FF21005D"),
-        onPrimaryFixedVariant: C("#FF4F378B"),
-        secondary: C("#FF625B71"),
+        primaryContainer: new Color(0xFFEADDFF),
+        onPrimaryContainer: new Color(0xFF4F378B),
+        primaryFixed: new Color(0xFFEADDFF),
+        primaryFixedDim: new Color(0xFFD0BCFF),
+        onPrimaryFixed: new Color(0xFF21005D),
+        onPrimaryFixedVariant: new Color(0xFF4F378B),
+        secondary: new Color(0xFF625B71),
         onSecondary: Colors.White,
-        secondaryContainer: C("#FFE8DEF8"),
-        onSecondaryContainer: C("#FF4A4458"),
-        secondaryFixed: C("#FFE8DEF8"),
-        secondaryFixedDim: C("#FFCCC2DC"),
-        onSecondaryFixed: C("#FF1D192B"),
-        onSecondaryFixedVariant: C("#FF4A4458"),
-        tertiary: C("#FF7D5260"),
+        secondaryContainer: new Color(0xFFE8DEF8),
+        onSecondaryContainer: new Color(0xFF4A4458),
+        secondaryFixed: new Color(0xFFE8DEF8),
+        secondaryFixedDim: new Color(0xFFCCC2DC),
+        onSecondaryFixed: new Color(0xFF1D192B),
+        onSecondaryFixedVariant: new Color(0xFF4A4458),
+        tertiary: new Color(0xFF7D5260),
         onTertiary: Colors.White,
-        tertiaryContainer: C("#FFFFD8E4"),
-        onTertiaryContainer: C("#FF633B48"),
-        tertiaryFixed: C("#FFFFD8E4"),
-        tertiaryFixedDim: C("#FFEFB8C8"),
-        onTertiaryFixed: C("#FF31111D"),
-        onTertiaryFixedVariant: C("#FF633B48"),
-        error: C("#FFB3261E"),
+        tertiaryContainer: new Color(0xFFFFD8E4),
+        onTertiaryContainer: new Color(0xFF633B48),
+        tertiaryFixed: new Color(0xFFFFD8E4),
+        tertiaryFixedDim: new Color(0xFFEFB8C8),
+        onTertiaryFixed: new Color(0xFF31111D),
+        onTertiaryFixedVariant: new Color(0xFF633B48),
+        error: new Color(0xFFB3261E),
         onError: Colors.White,
-        errorContainer: C("#FFF9DEDC"),
-        onErrorContainer: C("#FF8C1D18"),
-        surface: C("#FFFEF7FF"),
-        onSurface: C("#FF1D1B20"),
-        surfaceBright: C("#FFFEF7FF"),
+        errorContainer: new Color(0xFFF9DEDC),
+        onErrorContainer: new Color(0xFF8C1D18),
+        surface: new Color(0xFFFEF7FF),
+        onSurface: new Color(0xFF1D1B20),
+        surfaceBright: new Color(0xFFFEF7FF),
         surfaceContainerLowest: Colors.White,
-        surfaceContainerLow: C("#FFF7F2FA"),
-        surfaceContainer: C("#FFF3EDF7"),
-        surfaceContainerHigh: C("#FFECE6F0"),
-        surfaceContainerHighest: C("#FFE6E0E9"),
-        surfaceDim: C("#FFDED8E1"),
-        onSurfaceVariant: C("#FF49454F"),
-        outline: C("#FF79747E"),
-        outlineVariant: C("#FFCAC4D0"),
+        surfaceContainerLow: new Color(0xFFF7F2FA),
+        surfaceContainer: new Color(0xFFF3EDF7),
+        surfaceContainerHigh: new Color(0xFFECE6F0),
+        surfaceContainerHighest: new Color(0xFFE6E0E9),
+        surfaceDim: new Color(0xFFDED8E1),
+        onSurfaceVariant: new Color(0xFF49454F),
+        outline: new Color(0xFF79747E),
+        outlineVariant: new Color(0xFFCAC4D0),
         shadow: Colors.Black,
         scrim: Colors.Black,
-        inverseSurface: C("#FF322F35"),
-        onInverseSurface: C("#FFF5EFF7"),
-        inversePrimary: C("#FFD0BCFF"),
-        surfaceTint: C("#FF6750A4"),
-        background: C("#FFFEF7FF"),
-        onBackground: C("#FF1D1B20"),
-        surfaceVariant: C("#FFE7E0EC"));
+        inverseSurface: new Color(0xFF322F35),
+        onInverseSurface: new Color(0xFFF5EFF7),
+        inversePrimary: new Color(0xFFD0BCFF),
+        surfaceTint: new Color(0xFF6750A4),
+        background: new Color(0xFFFEF7FF),
+        onBackground: new Color(0xFF1D1B20),
+        surfaceVariant: new Color(0xFFE7E0EC));
 
     private static ColorScheme CreateMaterial3Dark() => new(
         brightness: Brightness.Dark,
-        primary: C("#FFD0BCFF"),
-        onPrimary: C("#FF381E72"),
-        primaryContainer: C("#FF4F378B"),
-        onPrimaryContainer: C("#FFEADDFF"),
-        primaryFixed: C("#FFEADDFF"),
-        primaryFixedDim: C("#FFD0BCFF"),
-        onPrimaryFixed: C("#FF21005D"),
-        onPrimaryFixedVariant: C("#FF4F378B"),
-        secondary: C("#FFCCC2DC"),
-        onSecondary: C("#FF332D41"),
-        secondaryContainer: C("#FF4A4458"),
-        onSecondaryContainer: C("#FFE8DEF8"),
-        secondaryFixed: C("#FFE8DEF8"),
-        secondaryFixedDim: C("#FFCCC2DC"),
-        onSecondaryFixed: C("#FF1D192B"),
-        onSecondaryFixedVariant: C("#FF4A4458"),
-        tertiary: C("#FFEFB8C8"),
-        onTertiary: C("#FF492532"),
-        tertiaryContainer: C("#FF633B48"),
-        onTertiaryContainer: C("#FFFFD8E4"),
-        tertiaryFixed: C("#FFFFD8E4"),
-        tertiaryFixedDim: C("#FFEFB8C8"),
-        onTertiaryFixed: C("#FF31111D"),
-        onTertiaryFixedVariant: C("#FF633B48"),
-        error: C("#FFF2B8B5"),
-        onError: C("#FF601410"),
-        errorContainer: C("#FF8C1D18"),
-        onErrorContainer: C("#FFF9DEDC"),
-        surface: C("#FF141218"),
-        onSurface: C("#FFE6E0E9"),
-        surfaceBright: C("#FF3B383E"),
-        surfaceContainerLowest: C("#FF0F0D13"),
-        surfaceContainerLow: C("#FF1D1B20"),
-        surfaceContainer: C("#FF211F26"),
-        surfaceContainerHigh: C("#FF2B2930"),
-        surfaceContainerHighest: C("#FF36343B"),
-        surfaceDim: C("#FF141218"),
-        onSurfaceVariant: C("#FFCAC4D0"),
-        outline: C("#FF938F99"),
-        outlineVariant: C("#FF49454F"),
+        primary: new Color(0xFFD0BCFF),
+        onPrimary: new Color(0xFF381E72),
+        primaryContainer: new Color(0xFF4F378B),
+        onPrimaryContainer: new Color(0xFFEADDFF),
+        primaryFixed: new Color(0xFFEADDFF),
+        primaryFixedDim: new Color(0xFFD0BCFF),
+        onPrimaryFixed: new Color(0xFF21005D),
+        onPrimaryFixedVariant: new Color(0xFF4F378B),
+        secondary: new Color(0xFFCCC2DC),
+        onSecondary: new Color(0xFF332D41),
+        secondaryContainer: new Color(0xFF4A4458),
+        onSecondaryContainer: new Color(0xFFE8DEF8),
+        secondaryFixed: new Color(0xFFE8DEF8),
+        secondaryFixedDim: new Color(0xFFCCC2DC),
+        onSecondaryFixed: new Color(0xFF1D192B),
+        onSecondaryFixedVariant: new Color(0xFF4A4458),
+        tertiary: new Color(0xFFEFB8C8),
+        onTertiary: new Color(0xFF492532),
+        tertiaryContainer: new Color(0xFF633B48),
+        onTertiaryContainer: new Color(0xFFFFD8E4),
+        tertiaryFixed: new Color(0xFFFFD8E4),
+        tertiaryFixedDim: new Color(0xFFEFB8C8),
+        onTertiaryFixed: new Color(0xFF31111D),
+        onTertiaryFixedVariant: new Color(0xFF633B48),
+        error: new Color(0xFFF2B8B5),
+        onError: new Color(0xFF601410),
+        errorContainer: new Color(0xFF8C1D18),
+        onErrorContainer: new Color(0xFFF9DEDC),
+        surface: new Color(0xFF141218),
+        onSurface: new Color(0xFFE6E0E9),
+        surfaceBright: new Color(0xFF3B383E),
+        surfaceContainerLowest: new Color(0xFF0F0D13),
+        surfaceContainerLow: new Color(0xFF1D1B20),
+        surfaceContainer: new Color(0xFF211F26),
+        surfaceContainerHigh: new Color(0xFF2B2930),
+        surfaceContainerHighest: new Color(0xFF36343B),
+        surfaceDim: new Color(0xFF141218),
+        onSurfaceVariant: new Color(0xFFCAC4D0),
+        outline: new Color(0xFF938F99),
+        outlineVariant: new Color(0xFF49454F),
         shadow: Colors.Black,
         scrim: Colors.Black,
-        inverseSurface: C("#FFE6E0E9"),
-        onInverseSurface: C("#FF322F35"),
-        inversePrimary: C("#FF6750A4"),
-        surfaceTint: C("#FFD0BCFF"),
-        background: C("#FF141218"),
-        onBackground: C("#FFE6E0E9"),
-        surfaceVariant: C("#FF49454F"));
+        inverseSurface: new Color(0xFFE6E0E9),
+        onInverseSurface: new Color(0xFF322F35),
+        inversePrimary: new Color(0xFF6750A4),
+        surfaceTint: new Color(0xFFD0BCFF),
+        background: new Color(0xFF141218),
+        onBackground: new Color(0xFFE6E0E9),
+        surfaceVariant: new Color(0xFF49454F));
 
     private static Variant ToMaterialVariant(DynamicSchemeVariant variant) => variant switch
     {
@@ -977,9 +977,8 @@ public sealed record ColorScheme
         _ => throw new ArgumentOutOfRangeException(nameof(variant)),
     };
 
-    private static Color ToColor(RgbColor color) => Color.FromRgb(color.Red, color.Green, color.Blue);
+    private static Color ToColor(RgbColor color) => Color.FromARGB(0xFF, color.Red, color.Green, color.Blue);
 
     private static Color LerpColor(Color a, Color b, double t) => new ColorTween().Evaluate(t, a, b);
 
-    private static Color C(string value) => Color.Parse(value);
 }

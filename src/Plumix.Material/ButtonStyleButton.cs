@@ -178,12 +178,7 @@ public abstract class ButtonStyleButton : StatefulWidget
         WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
             WidgetStateMouseCursor.AdaptiveClickable.Resolve(states));
 
-    /// Dart's `Color.withOpacity`.
-    internal static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * 255.0);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     /// <summary>
     /// The `styleFrom` background/icon colour switch shared by the four buttons: a single value
@@ -212,12 +207,12 @@ public abstract class ButtonStyleButton : StatefulWidget
             return null;
         }
 
-        if (overlayColor is { A: 0 })
+        if (overlayColor is { Alpha: 0 })
         {
             return WidgetStateProperty<Color?>.All(overlayColor);
         }
 
-        return StateOverlay(overlayColor ?? foregroundColor!.Value);
+        return StateOverlay(overlayColor ?? foregroundColor!);
     }
 
     /// <summary>Dart's default overlay table: pressed 0.1, hovered 0.08, focused 0.1, otherwise null.</summary>
@@ -385,10 +380,10 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
 
         double resolvedElevation = ResolveStruct<double>(style => style?.Elevation) ?? 0.0;
         TextStyle? resolvedTextStyle = ResolveClass<TextStyle>(style => style?.TextStyle);
-        Color? resolvedBackgroundColor = ResolveStruct<Color>(style => style?.BackgroundColor);
-        Color? resolvedForegroundColor = ResolveStruct<Color>(style => style?.ForegroundColor);
-        Color? resolvedShadowColor = ResolveStruct<Color>(style => style?.ShadowColor);
-        Color? resolvedSurfaceTintColor = ResolveStruct<Color>(style => style?.SurfaceTintColor);
+        Color? resolvedBackgroundColor = ResolveClass<Color>(style => style?.BackgroundColor);
+        Color? resolvedForegroundColor = ResolveClass<Color>(style => style?.ForegroundColor);
+        Color? resolvedShadowColor = ResolveClass<Color>(style => style?.ShadowColor);
+        Color? resolvedSurfaceTintColor = ResolveClass<Color>(style => style?.SurfaceTintColor);
         EdgeInsetsGeometry resolvedPadding =
             ResolveStruct<EdgeInsetsGeometry>(style => style?.Padding) ?? EdgeInsetsGeometry.Zero;
         Size resolvedMinimumSize = ResolveStruct<Size>(style => style?.MinimumSize) ?? default;
@@ -424,7 +419,7 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
             return EffectiveClass<MouseCursor>(style => style?.MouseCursor?.Resolve(flags));
         });
         WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.ResolveWith(
-            overlayStates => EffectiveStruct<Color>(style => style?.OverlayColor?.Resolve(overlayStates)));
+            overlayStates => EffectiveClass<Color>(style => style?.OverlayColor?.Resolve(overlayStates)));
 
         Vector densityAdjustment = resolvedVisualDensity.BaseSizeAdjustment;
         BoxConstraints effectiveConstraints = resolvedVisualDensity.EffectiveConstraints(new BoxConstraints(
@@ -589,9 +584,9 @@ public sealed class ButtonStyleState : State<ButtonStyleButton>
             || _backgroundColor is null
             || _elevation == resolvedElevation
             || resolvedBackgroundColor is null
-            || _backgroundColor.Value == resolvedBackgroundColor.Value
-            || _backgroundColor.Value.A != byte.MaxValue
-            || resolvedBackgroundColor.Value.A == byte.MaxValue
+            || _backgroundColor! == resolvedBackgroundColor!
+            || _backgroundColor!.Alpha != byte.MaxValue
+            || resolvedBackgroundColor!.Alpha == byte.MaxValue
             || resolvedElevation != 0.0)
         {
             return resolvedBackgroundColor;

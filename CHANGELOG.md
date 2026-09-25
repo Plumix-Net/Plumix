@@ -8,6 +8,21 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: framework `Color`/`ColorSpace` (dart:ui) replaces Avalonia's `Color` in every public API (painting.dart).
+- Breaking: `Color.lerp`, `alphaBlend`, `withOpacity` use dart:ui's exact math; 8-bit helper copies removed.
+- Breaking: `BoxShadow`/`Gradient` `ToString` print dart:ui's `Color(alpha: ..., colorSpace: ...)` spelling.
+- Breaking: `ColorSwatch<T>`/`MaterialColor` derive from `Color`; `Primary` and the conversion are gone (colors.dart).
+- Breaking: `CupertinoDynamicColor` derives from `Color`; Cupertino colour slots are `Color?` (cupertino colors.dart).
+- CupertinoTextThemeData resolves dynamic colours inside given styles (`_resolveTextStyle`) (cupertino text_theme.dart).
+- `CupertinoIconThemeData` and `createCupertinoColorProperty` are strict ports (cupertino icon_theme_data.dart).
+- `CupertinoMenuItem.kDefaultDecoration` is one brightness-dynamic table, resolved when painted (menu_anchor.dart).
+- Breaking: `WidgetStateColor extends Color`; its slots are `Color?`, `IsConstantColor` is gone (widget_state.dart).
+- `WidgetStateColor.fromMap`/`Transparent`, `IWidgetStateProperty<T>`, state-constraint equality (widget_state.dart).
+- Breaking: `AppBarThemeData.BackgroundColorState` removed; `BackgroundColor` takes a `WidgetStateColor` (app_bar.dart).
+- Breaking: `ListTile` icon/text and `ToggleButtons.fillColor` slots are `Color?`, resolved like Dart (list_tile.dart).
+- Breaking: `CupertinoSwitch` hands its track colours to the painter unresolved, as Dart does (cupertino switch.dart).
+- Breaking: segmented, switch-label, text-field and FlexibleSpaceBar opacities replace alpha like Dart's `withOpacity`.
+- Breaking: `ThemeData.Light`/`Dark` build a new theme per read, like Dart's factories; fixes flaky density tests.
 - `ProcessTextService`; EditableText/SelectableRegion text-processing menu items (services/process_text.dart).
 - EditableText Look Up, Search Web and Share menu items; SelectableRegion Share (editable_text.dart).
 - Breaking: context-menu anchors use `TextSelectionToolbarAnchors.fromSelection`, `getGlyphHeights` (editable_text).

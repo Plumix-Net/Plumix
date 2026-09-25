@@ -128,7 +128,7 @@ public sealed class MaterialScaffoldTests
         var owner = TestBuildOwner.Create();
         var drawerTheme = new DrawerThemeData(
             BackgroundColor: Colors.CadetBlue,
-            ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
+            ScrimColor: Color.FromARGB(0x99, 0x11, 0x22, 0x33),
             Elevation: 12,
             ShadowColor: Colors.Goldenrod,
             Width: 280);
@@ -163,10 +163,10 @@ public sealed class MaterialScaffoldTests
         for (int i = 0; i < shadows.Count; i++)
         {
             var shadow = shadows[i];
-            Assert.Equal(Colors.Goldenrod.R, shadow.Color.R);
-            Assert.Equal(Colors.Goldenrod.G, shadow.Color.G);
-            Assert.Equal(Colors.Goldenrod.B, shadow.Color.B);
-            Assert.True(shadow.Color.A > 0);
+            Assert.Equal(Colors.Goldenrod.Red, shadow.Color.Red);
+            Assert.Equal(Colors.Goldenrod.Green, shadow.Color.Green);
+            Assert.Equal(Colors.Goldenrod.Blue, shadow.Color.Blue);
+            Assert.True(shadow.Color.Alpha > 0);
         }
     }
 
@@ -176,7 +176,7 @@ public sealed class MaterialScaffoldTests
         var owner = TestBuildOwner.Create();
         var drawerTheme = new DrawerThemeData(
             BackgroundColor: Colors.CadetBlue,
-            ScrimColor: Color.FromArgb(0x99, 0x11, 0x22, 0x33),
+            ScrimColor: Color.FromARGB(0x99, 0x11, 0x22, 0x33),
             Elevation: 12,
             ShadowColor: Colors.Goldenrod,
             Width: 280);
@@ -215,10 +215,10 @@ public sealed class MaterialScaffoldTests
         for (int i = 0; i < shadows.Count; i++)
         {
             var shadow = shadows[i];
-            Assert.Equal(Colors.DarkGreen.R, shadow.Color.R);
-            Assert.Equal(Colors.DarkGreen.G, shadow.Color.G);
-            Assert.Equal(Colors.DarkGreen.B, shadow.Color.B);
-            Assert.True(shadow.Color.A > 0);
+            Assert.Equal(Colors.DarkGreen.Red, shadow.Color.Red);
+            Assert.Equal(Colors.DarkGreen.Green, shadow.Color.Green);
+            Assert.Equal(Colors.DarkGreen.Blue, shadow.Color.Blue);
+            Assert.True(shadow.Color.Alpha > 0);
         }
     }
 
@@ -1091,7 +1091,7 @@ public sealed class MaterialScaffoldTests
 
             RenderColoredBox? scrimAtStart = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimAtStart);
-            byte alphaAtStart = scrimAtStart!.Color.A;
+            int alphaAtStart = scrimAtStart!.Color.Alpha;
             Assert.True(alphaAtStart < 0x8A);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.15));
@@ -1099,14 +1099,14 @@ public sealed class MaterialScaffoldTests
 
             RenderColoredBox? scrimMid = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimMid);
-            Assert.True(scrimMid!.Color.A > alphaAtStart);
+            Assert.True(scrimMid!.Color.Alpha > alphaAtStart);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             RenderColoredBox? scrimFull = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimFull);
-            Assert.Equal(0x8A, scrimFull!.Color.A);
+            Assert.Equal(0x8A, scrimFull!.Color.Alpha);
             Assert.True(state.IsDrawerOpen);
         }
         finally
@@ -1887,7 +1887,7 @@ public sealed class MaterialScaffoldTests
         binding.ResetForTests();
 
         BuildContext? scaffoldContext = null;
-        var themedScrim = Color.FromArgb(0x99, 0x11, 0x22, 0x33);
+        var themedScrim = Color.FromARGB(0x99, 0x11, 0x22, 0x33);
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light with
@@ -1935,8 +1935,8 @@ public sealed class MaterialScaffoldTests
         binding.ResetForTests();
 
         BuildContext? scaffoldContext = null;
-        var themedScrim = Color.FromArgb(0x99, 0x11, 0x22, 0x33);
-        var widgetScrim = Color.FromArgb(0x88, 0x44, 0x55, 0x66);
+        var themedScrim = Color.FromARGB(0x99, 0x11, 0x22, 0x33);
+        var widgetScrim = Color.FromARGB(0x88, 0x44, 0x55, 0x66);
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light with
@@ -3386,7 +3386,7 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(snapshot);
         Assert.NotNull(snapshot!.TextStyle.Color);
         Assert.Equal(18, snapshot.TextStyle.FontSize);
-        Assert.Equal(Colors.CadetBlue, snapshot.TextStyle.Color!.Value);
+        Assert.Equal(Colors.CadetBlue, snapshot.TextStyle.Color!);
         Assert.Equal(FontWeight.Bold, snapshot.TextStyle.FontWeight);
         Assert.Equal(Colors.Goldenrod, snapshot.IconThemeData.Color);
         Assert.Equal(20, snapshot.IconThemeData.Size);
@@ -4048,7 +4048,7 @@ public sealed class MaterialScaffoldTests
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Dragged drawer"));
             Assert.NotNull(FindColoredBox(
                 harness.RenderView,
-                color => color == Color.FromArgb(0x8A, 0, 0, 0)));
+                color => color == Color.FromARGB(0x8A, 0, 0, 0)));
         }
         finally
         {
@@ -4189,7 +4189,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light with
                 {
-                    AppBarTheme = new AppBarThemeData(BackgroundColorState: themeBackground),
+                    AppBarTheme = new AppBarThemeData(BackgroundColor: themeBackground),
                 },
                 child: new ScrollNotificationObserver(
                     child: new Column(
@@ -4419,7 +4419,7 @@ public sealed class MaterialScaffoldTests
 
     /// <summary>Matches the drawer scrim, whose default color is black at 54% opacity.</summary>
     private static bool IsBlackScrim(Color color) =>
-        color.R == 0 && color.G == 0 && color.B == 0 && color.A > 0;
+        color.Red == 0 && color.Green == 0 && color.Blue == 0 && color.Alpha > 0;
 
     private static RenderColoredBox? FindColoredBox(RenderObject? root, Predicate<Color> predicate)
     {

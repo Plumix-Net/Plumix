@@ -109,9 +109,9 @@ public sealed class CardTheme : InheritedWidget
         Key? key = null) : base(child ?? new SizedBox(), key)
     {
         bool hasLegacyProperties = clipBehavior.HasValue
-                                   || color.HasValue
-                                   || surfaceTintColor.HasValue
-                                   || shadowColor.HasValue
+                                   || color != null
+                                   || surfaceTintColor != null
+                                   || shadowColor != null
                                    || elevation.HasValue
                                    || margin.HasValue
                                    || shape is not null;

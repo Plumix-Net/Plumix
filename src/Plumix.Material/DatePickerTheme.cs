@@ -390,9 +390,5 @@ internal static class DatePickerDefaultUtilities
     public static TextStyle ResolveToggleStyle(ColorScheme colors, TextTheme textTheme) =>
         textTheme.TitleSmall.CopyWith(color: WithOpacity(colors.OnSurface, 0.60));
 
-    public static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0)),
-        color.R,
-        color.G,
-        color.B);
+    public static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

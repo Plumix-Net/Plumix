@@ -346,13 +346,9 @@ public sealed class Scrollbar : StatelessWidget
             }
         }
 
-        private static Color Transparent => Color.FromArgb(0x00, 0x00, 0x00, 0x00);
+        private static Color Transparent => Color.FromARGB(0x00, 0x00, 0x00, 0x00);
     }
 
     // Dart's `Color.withOpacity` replaces the alpha channel outright rather than scaling it.
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255),
-        color.R,
-        color.G,
-        color.B);
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

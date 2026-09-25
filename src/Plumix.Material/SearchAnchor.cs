@@ -955,9 +955,9 @@ internal sealed class SearchViewContent : StatefulWidget
             SearchViewThemeData viewDefaults = SearchViewDefaultsM3.Resolve(theme, Current.ShowFullScreenView);
 
             Color effectiveBackgroundColor =
-                Current.ViewBackgroundColor ?? viewTheme.BackgroundColor ?? viewDefaults.BackgroundColor!.Value;
+                Current.ViewBackgroundColor ?? viewTheme.BackgroundColor ?? viewDefaults.BackgroundColor!;
             Color effectiveSurfaceTint =
-                Current.ViewSurfaceTintColor ?? viewTheme.SurfaceTintColor ?? viewDefaults.SurfaceTintColor!.Value;
+                Current.ViewSurfaceTintColor ?? viewTheme.SurfaceTintColor ?? viewDefaults.SurfaceTintColor!;
             double effectiveElevation = Current.ViewElevation ?? viewTheme.Elevation ?? viewDefaults.Elevation!.Value;
             BorderSide? effectiveSide = Current.ViewSide ?? viewTheme.Side ?? viewDefaults.Side;
             OutlinedBorder effectiveShape = Current.ViewShape ?? viewTheme.Shape ?? viewDefaults.Shape!;
@@ -969,7 +969,7 @@ internal sealed class SearchViewContent : StatefulWidget
             Color effectiveDividerColor = Current.DividerColor
                                           ?? viewTheme.DividerColor
                                           ?? DividerTheme.Of(context).Color
-                                          ?? viewDefaults.DividerColor!.Value;
+                                          ?? viewDefaults.DividerColor!;
             double? effectiveHeaderHeight = Current.ViewHeaderHeight ?? viewTheme.HeaderHeight;
             BoxConstraints? headerConstraints = effectiveHeaderHeight.HasValue
                 ? BoxConstraints.TightFor(height: effectiveHeaderHeight)
@@ -1292,14 +1292,14 @@ public sealed class SearchBar : StatefulWidget
             double effectiveElevation = Resolve(
                 CurrentWidget.Elevation, searchBarTheme.Elevation, defaults.Elevation, states)!.Value;
             Color effectiveBackgroundColor = Resolve(
-                CurrentWidget.BackgroundColor, searchBarTheme.BackgroundColor, defaults.BackgroundColor, states)!.Value;
+                CurrentWidget.BackgroundColor, searchBarTheme.BackgroundColor, defaults.BackgroundColor, states)!;
             Color effectiveShadowColor = Resolve(
-                CurrentWidget.ShadowColor, searchBarTheme.ShadowColor, defaults.ShadowColor, states)!.Value;
+                CurrentWidget.ShadowColor, searchBarTheme.ShadowColor, defaults.ShadowColor, states)!;
             Color effectiveSurfaceTintColor = Resolve(
                 CurrentWidget.SurfaceTintColor,
                 searchBarTheme.SurfaceTintColor,
                 defaults.SurfaceTintColor,
-                states)!.Value;
+                states)!;
             WidgetStateProperty<Color?>? effectiveOverlayColor =
                 CurrentWidget.OverlayColor ?? searchBarTheme.OverlayColor ?? defaults.OverlayColor;
             BorderSide? effectiveSide = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);

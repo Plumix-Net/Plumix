@@ -508,7 +508,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Assert.Equal(".", TimeSelectorSeparator.SeparatorFor(TimeOfDayFormat.HHDotMm));
         Assert.Equal("h", TimeSelectorSeparator.SeparatorFor(TimeOfDayFormat.FrenchCanadian));
 
-        var separatorColor = Color.Parse("#FF00FF00");
+        var separatorColor = new Color(0xFF00FF00);
         using var harness = CreateHarness(new TimePickerTheme(
             new TimePickerThemeData(
                 TimeSelectorSeparatorColor: WidgetStateProperty<Color?>.All(separatorColor),
@@ -687,8 +687,8 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public void Dial_ThemeOverridesFeedThePainterColors()
     {
-        var dialBackground = Color.Parse("#FF123456");
-        var hand = Color.Parse("#FFABCDEF");
+        var dialBackground = new Color(0xFF123456);
+        var hand = new Color(0xFFABCDEF);
         using var harness = CreateHarness(new TimePickerTheme(
             new TimePickerThemeData(DialBackgroundColor: dialBackground, DialHandColor: hand),
             DialogRoute(new TimePickerDialog(new TimeOfDay(10, 30)))));
@@ -701,12 +701,11 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public void HourMinuteControl_UsesTheThemeShapeAndSelectedStateColors()
     {
-        var selected = Color.Parse("#FF00AA00");
-        var unselected = Color.Parse("#FF0000AA");
+        var selected = new Color(0xFF00AA00);
+        var unselected = new Color(0xFF0000AA);
         using var harness = CreateHarness(new TimePickerTheme(
             new TimePickerThemeData(
                 HourMinuteColor: WidgetStateColor.ResolveWith(
-                    unselected,
                     states => states.Contains(WidgetState.Selected) ? selected : unselected),
                 HourMinuteShape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(16))),
             DialogRoute(new TimePickerDialog(new TimeOfDay(7, 0)))));
@@ -736,11 +735,11 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
 
     // ---- Helpers ------------------------------------------------------------------------
 
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+    private static Color WithOpacity(Color color, double opacity) => Color.FromARGB(
         (byte)Math.Round(255 * opacity),
-        color.R,
-        color.G,
-        color.B);
+        color.Red,
+        color.Green,
+        color.Blue);
 
     private static Widget DialogRoute(Widget dialog) => new Navigator(new BuilderPageRoute(_ => dialog));
 

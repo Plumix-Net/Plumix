@@ -419,7 +419,7 @@ public sealed class TextField : StatefulWidget
                 showSelectionHandles: _showSelectionHandles,
                 onTapOutside: Current.OnTapOutside,
                 rendererIgnoresPointer: true,
-                backgroundCursorColor: CupertinoColors.InactiveGray.Value,
+                backgroundCursorColor: CupertinoColors.InactiveGray,
                 autocorrectionTextRectColor: theme.Platform == TargetPlatform.IOS ? selectionColor : null,
                 restorationId: "editable",
                 key: _editableTextKey);
@@ -577,7 +577,7 @@ public sealed class TextField : StatefulWidget
             // `Theme` installs, which defers to `colorScheme.primary` when no Cupertino override is
             // present.
             return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-                ? CupertinoTheme.Of(context).PrimaryColor.Value
+                ? CupertinoTheme.Of(context).PrimaryColor
                 : theme.ColorScheme.Primary;
         }
 
@@ -599,6 +599,6 @@ public sealed class TextField : StatefulWidget
         }
 
 
-        private static Color ApplyOpacity(Color c, double opacity) => Color.FromArgb((byte)Math.Round(c.A * Math.Clamp(opacity, 0, 1)), c.R, c.G, c.B);
+private static Color ApplyOpacity(Color c, double opacity) => c.WithOpacity(opacity);
     }
 }

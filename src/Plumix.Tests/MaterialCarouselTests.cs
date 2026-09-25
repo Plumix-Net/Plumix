@@ -35,7 +35,7 @@ public sealed class MaterialCarouselTests
             200,
             Items(5),
             padding: new Thickness(20),
-            backgroundColor: Color.Parse("#FFFFC107"),
+            backgroundColor: new Color(0xFFFFC107),
             elevation: 10.0,
             shape: new StadiumBorder(),
             itemClipBehavior: Clip.HardEdge,
@@ -44,7 +44,7 @@ public sealed class MaterialCarouselTests
 
         MaterialSurface surface = harness.FindWidgets<MaterialSurface>()[0];
         Assert.Equal(Clip.HardEdge, surface.ClipBehavior);
-        Assert.Equal(Color.Parse("#FFFFC107"), surface.Color);
+        Assert.Equal(new Color(0xFFFFC107), surface.Color);
         Assert.Equal(10.0, surface.Elevation);
         Assert.IsType<StadiumBorder>(surface.Shape);
         Assert.Equal(new Thickness(20), harness.FindWidgets<Padding>()[0].Insets);
@@ -61,21 +61,21 @@ public sealed class MaterialCarouselTests
 
         Color onSurface = ThemeData.Light.ColorScheme.OnSurface;
         InkWell ink = harness.FindWidgets<InkWell>()[0];
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor!.Resolve(
-            new HashSet<WidgetState> { WidgetState.Pressed })!.Value.A);
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.08), ink.OverlayColor.Resolve(
-            new HashSet<WidgetState> { WidgetState.Hovered })!.Value.A);
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor.Resolve(
-            new HashSet<WidgetState> { WidgetState.Focused })!.Value.A);
+        Assert.Equal((byte)Math.Round(onSurface.Alpha * 0.1), ink.OverlayColor!.Resolve(
+            new HashSet<WidgetState> { WidgetState.Pressed })!.Alpha);
+        Assert.Equal((byte)Math.Round(onSurface.Alpha * 0.08), ink.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Hovered })!.Alpha);
+        Assert.Equal((byte)Math.Round(onSurface.Alpha * 0.1), ink.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Focused })!.Alpha);
         Assert.Null(ink.OverlayColor.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]
     public void CarouselViewTheme_ResolvesWidgetThenLocalThenThemeData()
     {
-        Color themeColor = Color.Parse("#FFE0F2F1");
-        Color localColor = Color.Parse("#FFFFF3E0");
-        Color widgetColor = Color.Parse("#FFE8F5E9");
+        Color themeColor = new Color(0xFFE0F2F1);
+        Color localColor = new Color(0xFFFFF3E0);
+        Color widgetColor = new Color(0xFFE8F5E9);
         ThemeData theme = ThemeData.Light with
         {
             CarouselViewTheme = new CarouselViewThemeData(

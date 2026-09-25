@@ -13,8 +13,8 @@ public sealed class AppBarTheme : InheritedTheme
 {
     public AppBarTheme(
         Widget? child = null,
-        WidgetStateColor? color = null,
-        WidgetStateColor? backgroundColor = null,
+        Color? color = null,
+        Color? backgroundColor = null,
         Color? foregroundColor = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
@@ -42,11 +42,11 @@ public sealed class AppBarTheme : InheritedTheme
 
         bool hasLegacyProperties = color is not null
                                    || backgroundColor is not null
-                                   || foregroundColor.HasValue
+                                   || foregroundColor != null
                                    || elevation.HasValue
                                    || scrolledUnderElevation.HasValue
-                                   || shadowColor.HasValue
-                                   || surfaceTintColor.HasValue
+                                   || shadowColor != null
+                                   || surfaceTintColor != null
                                    || shape is not null
                                    || iconTheme is not null
                                    || actionsIconTheme is not null
@@ -66,7 +66,7 @@ public sealed class AppBarTheme : InheritedTheme
         }
 
         Data = data ?? new AppBarThemeData(
-            BackgroundColor: (backgroundColor ?? color)?.DefaultValue,
+            BackgroundColor: (backgroundColor ?? color),
             ForegroundColor: foregroundColor,
             IconTheme: iconTheme,
             ActionsIconTheme: actionsIconTheme,
@@ -82,18 +82,12 @@ public sealed class AppBarTheme : InheritedTheme
             ScrolledUnderElevation: scrolledUnderElevation,
             ShadowColor: shadowColor,
             SurfaceTintColor: surfaceTintColor,
-            Shape: shape,
-            BackgroundColorState: backgroundColor ?? color);
+            Shape: shape);
     }
 
     public AppBarThemeData Data { get; }
 
     public Color? BackgroundColor => Data.BackgroundColor;
-
-    public WidgetStateColor? BackgroundColorState => Data.BackgroundColorState
-                                                     ?? (Data.BackgroundColor.HasValue
-                                                         ? new WidgetStateColor(Data.BackgroundColor.Value)
-                                                         : null);
 
     public Color? ForegroundColor => Data.ForegroundColor;
 
@@ -128,8 +122,8 @@ public sealed class AppBarTheme : InheritedTheme
     public Thickness? ActionsPadding => Data.ActionsPadding;
 
     public AppBarTheme CopyWith(
-        WidgetStateColor? color = null,
-        WidgetStateColor? backgroundColor = null,
+        Color? color = null,
+        Color? backgroundColor = null,
         Color? foregroundColor = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
@@ -154,9 +148,7 @@ public sealed class AppBarTheme : InheritedTheme
         }
 
         return new AppBarTheme(
-            backgroundColor: backgroundColor
-                             ?? color
-                             ?? BackgroundColorState,
+            backgroundColor: backgroundColor ?? color ?? BackgroundColor,
             foregroundColor: foregroundColor ?? ForegroundColor,
             elevation: elevation ?? Elevation,
             scrolledUnderElevation: scrolledUnderElevation ?? ScrolledUnderElevation,

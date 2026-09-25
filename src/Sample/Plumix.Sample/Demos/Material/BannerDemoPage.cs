@@ -31,15 +31,15 @@ public sealed class BannerDemoPage : StatefulWidget
                 : [new TextButton(new Text("DISMISS"), () => { })];
             ThemeData ambientTheme = Theme.Of(context);
             ColorScheme colorScheme = ambientTheme.ColorScheme.CopyWith(
-                surface: Color.Parse("#FFFFF8E1"),
-                surfaceContainerLow: Color.Parse("#FFE0F2F1"),
-                outlineVariant: Color.Parse("#FF00695C"));
+                surface: new Color(0xFFFFF8E1),
+                surfaceContainerLow: new Color(0xFFE0F2F1),
+                outlineVariant: new Color(0xFF00695C));
             MaterialBannerThemeData bannerTheme = _useThemeOverrides
                 ? new MaterialBannerThemeData(
-                    BackgroundColor: Color.Parse("#FFFCE4EC"),
-                    DividerColor: Color.Parse("#FFAD1457"),
+                    BackgroundColor: new Color(0xFFFCE4EC),
+                    DividerColor: new Color(0xFFAD1457),
                     ContentTextStyle: ambientTheme.TextTheme.BodyMedium.CopyWith(
-                        color: Color.Parse("#FF880E4F")),
+                        color: new Color(0xFF880E4F)),
                     Elevation: 2)
                 : new MaterialBannerThemeData();
             var theme = new ThemeData(
@@ -81,11 +81,11 @@ public sealed class BannerDemoPage : StatefulWidget
                             child: new Banner(
                                 message: "BETA",
                                 location: BannerLocation.TopEnd,
-                                color: Color.Parse("#CCB3261E"),
+                                color: new Color(0xCCB3261E),
                                 child: new Container(
                                     width: 320,
                                     height: 96,
-                                    color: Color.Parse("#FFEADDFF"),
+                                    color: new Color(0xFFEADDFF),
                                     alignment: Alignment.Center,
                                     child: new Text("Core diagonal ribbon")))),
                         new MaterialBanner(

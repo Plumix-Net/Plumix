@@ -28,14 +28,14 @@ internal sealed class CupertinoSearchTextFieldDemoPageState : State
                 new Text(
                     "Localized placeholder, live clear button, custom icon treatment, and disabled state.",
                     fontSize: 14.0,
-                    color: Color.FromUInt32(0x8A000000)),
+                    color: new Color(0x8A000000)),
                 new CupertinoSearchTextField(
                     controller: _controller,
                     onChanged: value => SetState(() => _query = value)),
                 new Text(
                     string.IsNullOrEmpty(_query) ? "No query" : $"Query: {_query}",
                     fontSize: 12.0,
-                    color: Color.FromUInt32(0xFF607D8B)),
+                    color: new Color(0xFF607D8B)),
                 new CupertinoSearchTextField(
                     placeholder: "Always-visible action",
                     itemColor: CupertinoColors.SystemBlue,

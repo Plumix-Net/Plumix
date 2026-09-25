@@ -205,7 +205,7 @@ public sealed class MaterialDropdownTests : IDisposable
             new DropdownButton<string>(items, _ => { }, value: "one")));
         harness.Pump(new Size(400, 160));
         BorderSide underline = Assert.Single(UnderlineBorders(harness));
-        Assert.Equal(Color.Parse("#FFBDBDBD"), underline.Color);
+        Assert.Equal(new Color(0xFFBDBDBD), underline.Color);
         Assert.Equal(0.0, underline.Width);
 
         using var custom = new WidgetRenderHarness(Wrap(
@@ -515,15 +515,15 @@ public sealed class MaterialDropdownTests : IDisposable
 
         IReadOnlyList<Plumix.Rendering.BoxShadow> eight = MaterialShadows.ForElevation(8)!;
         Assert.Equal(3, eight.Count);
-        Assert.Equal(Color.FromArgb(0x33, 0, 0, 0), eight[0].Color);
+        Assert.Equal(Color.FromARGB(0x33, 0, 0, 0), eight[0].Color);
         Assert.Equal(new Point(0.0, 5.0), eight[0].Offset);
         Assert.Equal(5.0, eight[0].BlurRadius);
         Assert.Equal(-3.0, eight[0].SpreadRadius);
-        Assert.Equal(Color.FromArgb(0x24, 0, 0, 0), eight[1].Color);
+        Assert.Equal(Color.FromARGB(0x24, 0, 0, 0), eight[1].Color);
         Assert.Equal(new Point(0.0, 8.0), eight[1].Offset);
         Assert.Equal(10.0, eight[1].BlurRadius);
         Assert.Equal(1.0, eight[1].SpreadRadius);
-        Assert.Equal(Color.FromArgb(0x1F, 0, 0, 0), eight[2].Color);
+        Assert.Equal(Color.FromARGB(0x1F, 0, 0, 0), eight[2].Color);
         Assert.Equal(new Point(0.0, 3.0), eight[2].Offset);
         Assert.Equal(14.0, eight[2].BlurRadius);
         Assert.Equal(2.0, eight[2].SpreadRadius);
@@ -765,7 +765,7 @@ public sealed class MaterialDropdownTests : IDisposable
             .OfType<BoxDecoration>()
             .Select(decoration => decoration.Border)
             .OfType<Plumix.Rendering.Border>()
-            .Where(border => border.Bottom.Color == Color.Parse("#FFBDBDBD") && border.Top == BorderSide.None)
+            .Where(border => border.Bottom.Color == new Color(0xFFBDBDBD) && border.Top == BorderSide.None)
             .Select(border => border.Bottom)
             .ToList();
 
@@ -858,9 +858,9 @@ public sealed class MaterialDropdownTests : IDisposable
     [Fact]
     public void MenuBarAndMenuButtonThemes_ResolveThemeLocalAndWidgetStylePrecedence()
     {
-        Color themeBackground = Color.Parse("#FFE3F2FD");
-        Color localBackground = Color.Parse("#FFFFF3E0");
-        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        Color themeBackground = new Color(0xFFE3F2FD);
+        Color localBackground = new Color(0xFFFFF3E0);
+        Color widgetBackground = new Color(0xFFE8F5E9);
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(
@@ -935,9 +935,9 @@ public sealed class MaterialDropdownTests : IDisposable
     [Fact]
     public void MenuTheme_ResolvesGlobalLocalAndWidgetPanelStylePrecedence()
     {
-        Color globalBackground = Color.Parse("#FFE3F2FD");
-        Color localBackground = Color.Parse("#FFFFF3E0");
-        Color widgetBackground = Color.Parse("#FFE8F5E9");
+        Color globalBackground = new Color(0xFFE3F2FD);
+        Color localBackground = new Color(0xFFFFF3E0);
+        Color widgetBackground = new Color(0xFFE8F5E9);
         ThemeData theme = ThemeData.Light with
         {
             MenuTheme = new MenuThemeData(new MenuStyle(
@@ -1612,9 +1612,9 @@ public sealed class MaterialDropdownTests : IDisposable
             // elevation 3.0 draws its key and ambient shadows from the scheme's shadow role.
             Assert.All(panel.AsBoxDecoration.BoxShadows!, shadow =>
             {
-                Assert.Equal(theme.ColorScheme.Shadow.R, shadow.Color.R);
-                Assert.Equal(theme.ColorScheme.Shadow.G, shadow.Color.G);
-                Assert.Equal(theme.ColorScheme.Shadow.B, shadow.Color.B);
+                Assert.Equal(theme.ColorScheme.Shadow.Red, shadow.Color.Red);
+                Assert.Equal(theme.ColorScheme.Shadow.Green, shadow.Color.Green);
+                Assert.Equal(theme.ColorScheme.Shadow.Blue, shadow.Color.Blue);
             });
         }
     }
@@ -1655,7 +1655,7 @@ public sealed class MaterialDropdownTests : IDisposable
     {
         // Flutter's "Material parameters are honored": `shape!.copyWith(side: side)` runs even when
         // the shape itself came from the defaults, so a theme setting only `side` still draws it.
-        Color outlineColor = Color.Parse("#FFD81B60");
+        Color outlineColor = new Color(0xFFD81B60);
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(

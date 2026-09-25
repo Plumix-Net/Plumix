@@ -111,7 +111,7 @@ public sealed class MaterialGridTileTests
         Assert.Equal(14, title!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
-            Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+            (Color)Assert.IsType<SolidColorBrush>(title.Foreground).Color);
         Assert.False(title.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);
     }
@@ -119,7 +119,7 @@ public sealed class MaterialGridTileTests
     [Fact]
     public void GridTileBar_TwoLinesAndSlots_UseSixtyEightHeightStylesIconsAndBackground()
     {
-        var background = Color.Parse("#CC102030");
+        var background = new Color(0xCC102030);
         using var harness = new WidgetRenderHarness(
             new Directionality(
                 TextDirection.Ltr,
@@ -153,10 +153,10 @@ public sealed class MaterialGridTileTests
         Assert.Equal(14, subtitle!.FontSize);
         Assert.Equal(
             ThemeData.Dark.TextTheme.TitleMedium.Color,
-            Assert.IsType<SolidColorBrush>(title.Foreground).Color);
+            (Color)Assert.IsType<SolidColorBrush>(title.Foreground).Color);
         Assert.Equal(
             ThemeData.Dark.TextTheme.BodySmall.Color,
-            Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
+            (Color)Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
         Assert.False(title.SoftWrap);
         Assert.False(subtitle.SoftWrap);
         Assert.Equal(TextOverflow.Ellipsis, title.Overflow);

@@ -118,15 +118,15 @@ public sealed class ExpandIcon : StatefulWidget
 
         private Color ResolveIconColor(ThemeData theme)
         {
-            if (CurrentWidget.IsExpanded && CurrentWidget.ExpandedColor.HasValue)
+            if (CurrentWidget.IsExpanded && CurrentWidget.ExpandedColor != null)
             {
-                return CurrentWidget.ExpandedColor.Value;
+                return CurrentWidget.ExpandedColor!;
             }
 
-            if (CurrentWidget.Color.HasValue) return CurrentWidget.Color.Value;
+            if (CurrentWidget.Color != null) return CurrentWidget.Color!;
             return theme.Brightness == Brightness.Dark
-                ? Avalonia.Media.Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)
-                : Avalonia.Media.Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
+                ? Color.FromARGB(0x99, 0xFF, 0xFF, 0xFF)
+                : Color.FromARGB(0x8A, 0x00, 0x00, 0x00);
         }
     }
 }

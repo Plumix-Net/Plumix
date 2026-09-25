@@ -6,7 +6,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 
 namespace Plumix.Tests;
 
@@ -55,8 +54,8 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
             focusNode: _focusNode,
             style: new TextStyle(FontSize: 10.0),
             padding: new Thickness(0),
-            cursorColor: Color.FromUInt32(0xFF2196F3),
-            backgroundCursorColor: Color.FromUInt32(0xFF9E9E9E),
+            cursorColor: new Color(0xFF2196F3),
+            backgroundCursorColor: new Color(0xFF9E9E9E),
             multiline: multiline,
             maxLines: multiline ? null : 1,
             obscureText: obscureText,
@@ -502,8 +501,8 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
                 controller: _controller,
                 focusNode: _focusNode,
                 style: new TextStyle(FontSize: 10.0),
-                cursorColor: Color.FromUInt32(0xFF2196F3),
-                backgroundCursorColor: Color.FromUInt32(0xFF9E9E9E),
+                cursorColor: new Color(0xFF2196F3),
+                backgroundCursorColor: new Color(0xFF9E9E9E),
                 enableInteractiveSelection: false,
                 multiline: true)));
             tester.Pump();

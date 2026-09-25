@@ -29,7 +29,7 @@ public partial class SnackBarThemeData
 {
     public SnackBarThemeData(
         Color? backgroundColor = null,
-        WidgetStateColor? actionTextColor = null,
+        Color? actionTextColor = null,
         Color? disabledActionTextColor = null,
         TextStyle? contentTextStyle = null,
         double? elevation = null,
@@ -40,7 +40,7 @@ public partial class SnackBarThemeData
         bool? showCloseIcon = null,
         Color? closeIconColor = null,
         double? actionOverflowThreshold = null,
-        WidgetStateColor? actionBackgroundColor = null,
+        Color? actionBackgroundColor = null,
         Color? disabledActionBackgroundColor = null,
         DismissDirection? dismissDirection = null)
     {
@@ -63,7 +63,7 @@ public partial class SnackBarThemeData
                 "Action overflow threshold must be between 0 and 1 inclusive");
         }
 
-        if (actionBackgroundColor is { IsConstantColor: false } && disabledActionBackgroundColor is not null)
+        if (actionBackgroundColor is WidgetStateColor && disabledActionBackgroundColor is not null)
         {
             throw new ArgumentException(
                 "disabledBackgroundColor must not be provided when background color is a WidgetStateColor",
@@ -89,7 +89,7 @@ public partial class SnackBarThemeData
 
     public virtual Color? BackgroundColor { get; }
 
-    public virtual WidgetStateColor? ActionTextColor { get; }
+    public virtual Color? ActionTextColor { get; }
 
     public virtual Color? DisabledActionTextColor { get; }
 
@@ -111,7 +111,7 @@ public partial class SnackBarThemeData
 
     public virtual double? ActionOverflowThreshold { get; }
 
-    public virtual WidgetStateColor? ActionBackgroundColor { get; }
+    public virtual Color? ActionBackgroundColor { get; }
 
     public virtual Color? DisabledActionBackgroundColor { get; }
 
@@ -119,7 +119,7 @@ public partial class SnackBarThemeData
 
     public SnackBarThemeData CopyWith(
         Color? backgroundColor = null,
-        WidgetStateColor? actionTextColor = null,
+        Color? actionTextColor = null,
         Color? disabledActionTextColor = null,
         TextStyle? contentTextStyle = null,
         double? elevation = null,
@@ -130,7 +130,7 @@ public partial class SnackBarThemeData
         bool? showCloseIcon = null,
         Color? closeIconColor = null,
         double? actionOverflowThreshold = null,
-        WidgetStateColor? actionBackgroundColor = null,
+        Color? actionBackgroundColor = null,
         Color? disabledActionBackgroundColor = null,
         DismissDirection? dismissDirection = null)
     {

@@ -178,7 +178,7 @@ public sealed class ModalBarrier : StatelessWidget
                 cursor: SystemMouseCursors.Basic,
                 child: new ConstrainedBox(
                     constraints: BoxConstraints.Expand(),
-                    child: Color.HasValue ? new ColoredBox(Color.Value) : null)));
+                    child: Color != null ? new ColoredBox(Color!) : null)));
 
         bool excluding = !semanticsDismissible || !modalBarrierSemanticsDismissible;
         if (!excluding && ClipDetailsNotifier != null)

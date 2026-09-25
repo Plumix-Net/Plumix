@@ -68,7 +68,7 @@ internal sealed class GridPaperPainter : CustomPainter
 
 public sealed class GridPaper : StatelessWidget
 {
-    public static Color DefaultColor { get; } = Color.FromArgb(0x7F, 0xC3, 0xE8, 0xF3);
+    public static Color DefaultColor { get; } = Color.FromARGB(0x7F, 0xC3, 0xE8, 0xF3);
 
     public GridPaper(
         Color? color = null,

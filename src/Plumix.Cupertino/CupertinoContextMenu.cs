@@ -24,13 +24,13 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
     public static CupertinoDynamicColor BackgroundColor { get; } =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFF1F1F1),
-            Color.FromUInt32(0xFF212122));
+            new Color(0xFFF1F1F1),
+            new Color(0xFF212122));
 
     public static IReadOnlyList<BoxShadow> EndBoxShadow { get; } =
     [
         new BoxShadow(
-            color: Color.FromUInt32(0x40000000),
+            color: new Color(0x40000000),
             blurRadius: 10.0,
             spreadRadius: 0.5),
     ];
@@ -391,7 +391,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
 
         public override bool SemanticsDismissible => false;
 
-        public override Color? BarrierColor => Color.FromUInt32(0x6604040F);
+        public override Color? BarrierColor => new Color(0x6604040F);
 
         public override string BarrierLabel => _barrierLabel;
 
@@ -659,8 +659,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
     {
         private static readonly CupertinoDynamicColor BorderColor =
             CupertinoDynamicColor.WithBrightness(
-                Color.FromUInt32(0xFFA9A9AF),
-                Color.FromUInt32(0xFF57585A));
+                new Color(0xFFA9A9AF),
+                new Color(0xFF57585A));
 
         private ScrollController _scrollController = null!;
 

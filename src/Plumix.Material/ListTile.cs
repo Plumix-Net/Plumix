@@ -12,7 +12,7 @@ namespace Plumix.Material;
 public sealed class ListTile : StatelessWidget
 {
     private static readonly TimeSpan ThemeChangeDuration = TimeSpan.FromMilliseconds(200);
-    private static readonly Color M2LightDefaultIconColor = Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+    private static readonly Color M2LightDefaultIconColor = Color.FromARGB(0x73, 0x00, 0x00, 0x00);
 
     public ListTile(
         Widget? leading = null,
@@ -25,8 +25,8 @@ public sealed class ListTile : StatelessWidget
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        WidgetStateProperty<Color?>? iconColor = null,
-        WidgetStateProperty<Color?>? textColor = null,
+        Color? iconColor = null,
+        Color? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
@@ -108,8 +108,8 @@ public sealed class ListTile : StatelessWidget
     public ShapeBorder? Shape { get; }
     public ListTileStyle? Style { get; }
     public Color? SelectedColor { get; }
-    public WidgetStateProperty<Color?>? IconColor { get; }
-    public WidgetStateProperty<Color?>? TextColor { get; }
+    public Color? IconColor { get; }
+    public Color? TextColor { get; }
     public TextStyle? TitleTextStyle { get; }
     public TextStyle? SubtitleTextStyle { get; }
     public TextStyle? LeadingAndTrailingTextStyle { get; }
@@ -142,7 +142,7 @@ public sealed class ListTile : StatelessWidget
         Color? color = null)
     {
         ArgumentNullException.ThrowIfNull(tiles);
-        if (!color.HasValue && context is null)
+        if (color == null && context is null)
         {
             throw new ArgumentException("ListTile.DivideTiles requires either a context or an explicit color.");
         }
@@ -182,11 +182,11 @@ public sealed class ListTile : StatelessWidget
         Color backgroundColor = TileColor
                                 ?? tileTheme.TileColor
                                 ?? theme.ListTileTheme.TileColor
-                                ?? defaults.TileColor!.Value;
+                                ?? defaults.TileColor!;
         Color selectedBackgroundColor = SelectedTileColor
                                         ?? tileTheme.SelectedTileColor
                                         ?? theme.ListTileTheme.SelectedTileColor
-                                        ?? defaults.TileColor!.Value;
+                                        ?? defaults.TileColor!;
         Color effectiveTileColor = Selected ? selectedBackgroundColor : backgroundColor;
         var states = new HashSet<WidgetState>();
         if (!Enabled)
@@ -199,49 +199,47 @@ public sealed class ListTile : StatelessWidget
             states.Add(WidgetState.Selected);
         }
 
-        Color? preDefaultIconColor = ResolveContentColor(IconColor, SelectedColor, null, null, states)
-                                     ?? ResolveContentColor(
-                                         tileTheme.IconColor,
-                                         tileTheme.SelectedColor,
-                                         null,
-                                         null,
-                                         states)
-                                     ?? ResolveContentColor(
-                                         theme.ListTileTheme.IconColor,
-                                         theme.ListTileTheme.SelectedColor,
-                                         null,
-                                         null,
-                                         states);
-        Color? defaultIconColor = ResolveContentColor(
-            null,
-            defaults.SelectedColor,
-            defaults.IconColor?.Resolve(new HashSet<WidgetState>()),
-            theme.DisabledColor,
-            states);
-        Color? effectiveIconButtonColor = preDefaultIconColor
-                                          ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
-                                          ?? defaultIconColor;
-        Color? effectiveIconColor = preDefaultIconColor ?? defaultIconColor;
+        Color? ResolveColor(
+            Color? explicitColor,
+            Color? selectedColor,
+            Color? enabledColor,
+            Color? disabledColor = null) =>
+            new IndividualOverrides(
+                explicitColor: explicitColor,
+                selectedColor: selectedColor,
+                enabledColor: enabledColor,
+                disabledColor: disabledColor).Resolve(states);
 
-        Color? effectiveTextColor = ResolveContentColor(TextColor, SelectedColor, null, null, states)
-                                    ?? ResolveContentColor(
-                                        tileTheme.TextColor,
-                                        tileTheme.SelectedColor,
-                                        null,
-                                        null,
-                                        states)
-                                    ?? ResolveContentColor(
+        Color? effectiveIconColor = ResolveColor(IconColor, SelectedColor, IconColor)
+                                    ?? ResolveColor(tileTheme.IconColor, tileTheme.SelectedColor, tileTheme.IconColor)
+                                    ?? ResolveColor(
+                                        theme.ListTileTheme.IconColor,
+                                        theme.ListTileTheme.SelectedColor,
+                                        theme.ListTileTheme.IconColor);
+
+        Color? defaultEffectiveIconColor = ResolveColor(
+            defaults.IconColor,
+            defaults.SelectedColor,
+            defaults.IconColor,
+            theme.DisabledColor);
+
+        Color? effectiveIconButtonColor = effectiveIconColor
+                                          ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
+                                          ?? defaultEffectiveIconColor;
+
+        effectiveIconColor ??= defaultEffectiveIconColor;
+
+        Color? effectiveTextColor = ResolveColor(TextColor, SelectedColor, TextColor)
+                                    ?? ResolveColor(tileTheme.TextColor, tileTheme.SelectedColor, tileTheme.TextColor)
+                                    ?? ResolveColor(
                                         theme.ListTileTheme.TextColor,
                                         theme.ListTileTheme.SelectedColor,
-                                        null,
-                                        null,
-                                        states)
-                                    ?? ResolveContentColor(
-                                        null,
+                                        theme.ListTileTheme.TextColor)
+                                    ?? ResolveColor(
+                                        defaults.TextColor,
                                         defaults.SelectedColor,
-                                        defaults.TextColor?.Resolve(new HashSet<WidgetState>()),
-                                        theme.DisabledColor,
-                                        states);
+                                        defaults.TextColor,
+                                        theme.DisabledColor);
 
         bool isDense = Dense ?? tileTheme.Dense ?? theme.ListTileTheme.Dense ?? false;
         TextStyle leadingAndTrailingStyle = (LeadingAndTrailingTextStyle
@@ -358,24 +356,32 @@ public sealed class ListTile : StatelessWidget
             child: content);
     }
 
-    private static Color? ResolveContentColor(
-        WidgetStateProperty<Color?>? explicitColor,
-        Color? selectedColor,
+    // Dart's `_IndividualOverrides`.
+    private sealed class IndividualOverrides(
+        Color? explicitColor,
         Color? enabledColor,
-        Color? disabledColor,
-        IReadOnlySet<WidgetState> states)
+        Color? selectedColor,
+        Color? disabledColor) : WidgetStateProperty<Color?>
     {
-        if (explicitColor is not null)
+        public override Color? Resolve(IReadOnlySet<WidgetState> states)
         {
-            return explicitColor.Resolve(states);
-        }
+            if (explicitColor is WidgetStateColor)
+            {
+                return WidgetStateProperty<Color?>.ResolveAs(explicitColor, states);
+            }
 
-        if (states.Contains(WidgetState.Disabled))
-        {
-            return disabledColor;
-        }
+            if (states.Contains(WidgetState.Disabled))
+            {
+                return disabledColor;
+            }
 
-        return states.Contains(WidgetState.Selected) ? selectedColor : enabledColor;
+            if (states.Contains(WidgetState.Selected))
+            {
+                return selectedColor;
+            }
+
+            return enabledColor;
+        }
     }
 
     private static Widget? WrapSlot(Widget? child, TextStyle style)
@@ -395,7 +401,7 @@ public sealed class ListTile : StatelessWidget
             return new ListTileThemeData(
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
                 SelectedColor: theme.ColorScheme.Primary,
-                IconColor: WidgetStateProperty<Color?>.All(theme.ColorScheme.OnSurfaceVariant),
+                IconColor: theme.ColorScheme.OnSurfaceVariant,
                 TitleTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface),
                 SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.ColorScheme.OnSurfaceVariant),
                 LeadingAndTrailingTextStyle:
@@ -413,7 +419,7 @@ public sealed class ListTile : StatelessWidget
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
             SelectedColor: theme.ColorScheme.Primary,
             IconColor: theme.Brightness == Brightness.Light
-                ? WidgetStateProperty<Color?>.All(M2LightDefaultIconColor)
+                ? M2LightDefaultIconColor
                 : null,
             TitleTextStyle: titleStyle,
             SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.TextTheme.BodySmall.Color),

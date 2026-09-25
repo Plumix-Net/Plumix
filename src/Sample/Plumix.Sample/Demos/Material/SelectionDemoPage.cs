@@ -91,7 +91,7 @@ internal sealed class SelectionDemoPageState : State
                         + "drag handles and the magnifier. Ctrl/Cmd+A and Ctrl/Cmd+C also work. "
                         + "The second probe spans several Text widgets.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TextButton(
@@ -116,8 +116,8 @@ internal sealed class SelectionDemoPageState : State
                     new Text("Single selectable run", fontSize: 18, color: Colors.Black),
                     new DecoratedBox(
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFF7F2FA"),
-                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFCAC4D0"))),
+                            Color: new Color(0xFFF7F2FA),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFCAC4D0))),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new Padding(
                             insets: new Thickness(16),
@@ -136,7 +136,7 @@ internal sealed class SelectionDemoPageState : State
                     new TextSelectionTheme(
                         data: new TextSelectionThemeData(
                             CursorColor: Colors.DarkGreen,
-                            SelectionColor: Color.FromArgb(0x66, 0x00, 0x80, 0x80)),
+                            SelectionColor: Color.FromARGB(0x66, 0x00, 0x80, 0x80)),
                         child: new SelectionArea(
                             onSelectionChanged: content => SetState(() =>
                                 _areaSelection = content?.PlainText ?? "none"),
@@ -144,9 +144,9 @@ internal sealed class SelectionDemoPageState : State
                                 _selectionNotifier,
                                 new DecoratedBox(
                                 decoration: new BoxDecoration(
-                                    Color: Color.Parse("#FFF4FBF8"),
+                                    Color: new Color(0xFFF4FBF8),
                                     Border: Plumix.Rendering.Border.FromBorderSide(
-                                        new BorderSide(Color.Parse("#FF80CBC4"))),
+                                        new BorderSide(new Color(0xFF80CBC4))),
                                     BorderRadius: BorderRadius.Circular(12)),
                                 child: new Padding(
                                     insets: new Thickness(16),
@@ -174,15 +174,15 @@ internal sealed class SelectionDemoPageState : State
                         + "scrolls while the drag continues, keeps the selection anchored to the content, "
                         + "and restores it for rows that scroll back into view.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new SelectionArea(
                         onSelectionChanged: content => SetState(() =>
                             _scrollableSelection = content?.PlainText ?? "none"),
                         child: new DecoratedBox(
                             decoration: new BoxDecoration(
-                                Color: Color.Parse("#FFFFFBF2"),
+                                Color: new Color(0xFFFFFBF2),
                                 Border: Plumix.Rendering.Border.FromBorderSide(
-                                    new BorderSide(Color.Parse("#FFE0C08A"))),
+                                    new BorderSide(new Color(0xFFE0C08A))),
                                 BorderRadius: BorderRadius.Circular(12)),
                             child: new SizedBox(
                                 height: 160,
@@ -197,8 +197,8 @@ internal sealed class SelectionDemoPageState : State
                     new Divider(),
                     new Text("DefaultSelectionStyle scope", fontSize: 18, color: Colors.Black),
                     new DefaultSelectionStyle(
-                        cursorColor: Color.Parse("#FFFF5722"),
-                        selectionColor: Color.FromArgb(0x66, 0xFF, 0x57, 0x22),
+                        cursorColor: new Color(0xFFFF5722),
+                        selectionColor: Color.FromARGB(0x66, 0xFF, 0x57, 0x22),
                         mouseCursor: SystemMouseCursors.Click,
                         child: new SelectableText(
                             "Cursor, selection, and mouse cursor inherit from the core selection style.")),
@@ -206,15 +206,15 @@ internal sealed class SelectionDemoPageState : State
                     new Text("TextSelectionTheme on TextField", fontSize: 18, color: Colors.Black),
                     new TextSelectionTheme(
                         data: new TextSelectionThemeData(
-                            CursorColor: Color.Parse("#FF7B1FA2"),
-                            SelectionColor: Color.FromArgb(0x66, 0x7B, 0x1F, 0xA2),
-                            SelectionHandleColor: Color.Parse("#FF7B1FA2")),
+                            CursorColor: new Color(0xFF7B1FA2),
+                            SelectionColor: Color.FromARGB(0x66, 0x7B, 0x1F, 0xA2),
+                            SelectionHandleColor: new Color(0xFF7B1FA2)),
                         child: new TextField(
                             decoration: new InputDecoration(
                                 labelText: "Themed cursor, selection, and handles"))),
                     new TextField(
-                        cursorColor: Color.Parse("#FF1565C0"),
-                        cursorErrorColor: Color.Parse("#FFB3261E"),
+                        cursorColor: new Color(0xFF1565C0),
+                        cursorErrorColor: new Color(0xFFB3261E),
                         decoration: new InputDecoration(
                             labelText: "Explicit cursorColor",
                             errorText: "An errored field paints cursorErrorColor")),

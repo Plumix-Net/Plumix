@@ -20,14 +20,14 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ProxyBoxClipParityTests
 {
-    private static readonly Color Black = Color.FromUInt32(0xFF000000);
+    private static readonly Color Black = new Color(0xFF000000);
 
     // ---- proxy_box_test.dart -------------------------------------------------------------------
 
     [Fact]
     public void RenderPhysicalModel_Compositing()
     {
-        var root = new RenderPhysicalModel(color: Color.FromUInt32(0xffff00ff));
+        var root = new RenderPhysicalModel(color: new Color(0xffff00ff));
         PipelineOwner pipeline = Composite(root, new Size(800, 600));
         Assert.False(root.NeedsCompositing);
 
@@ -45,7 +45,7 @@ public sealed class ProxyBoxClipParityTests
     {
         var root = new RenderPhysicalShape(
             clipper: new ShapeBorderClipper(new CircleBorder()),
-            color: Color.FromUInt32(0xffff00ff));
+            color: new Color(0xffff00ff));
         Composite(root, new Size(800, 600));
         Assert.False(root.DebugNeedsPaint);
 
@@ -63,7 +63,7 @@ public sealed class ProxyBoxClipParityTests
     {
         var root = new RenderPhysicalShape(
             clipper: new ShapeBorderClipper(new CircleBorder()),
-            color: Color.FromUInt32(0xffff00ff));
+            color: new Color(0xffff00ff));
         PipelineOwner pipeline = Composite(root, new Size(800, 600));
         Assert.False(root.NeedsCompositing);
 
@@ -626,7 +626,7 @@ public sealed class ProxyBoxClipParityTests
     {
         Assert.Equal(
             new Size(0, 0),
-            ZeroAreaSize<PhysicalModel>(new PhysicalModel(color: Color.FromUInt32(0xAABBCC00))));
+            ZeroAreaSize<PhysicalModel>(new PhysicalModel(color: new Color(0xAABBCC00))));
     }
 
     [Fact]
@@ -635,7 +635,7 @@ public sealed class ProxyBoxClipParityTests
         Assert.Equal(
             new Size(0, 0),
             ZeroAreaSize<PhysicalShape>(new PhysicalShape(
-                color: Color.FromUInt32(0xAABBCC00),
+                color: new Color(0xAABBCC00),
                 clipper: new ShapeBorderClipper(new CircleBorder()))));
     }
 
@@ -648,9 +648,9 @@ public sealed class ProxyBoxClipParityTests
         tester.PumpWidget(new PhysicalShape(
             clipper: new ShapeBorderClipper(new CircleBorder()),
             elevation: 2.0,
-            color: Color.FromUInt32(0xFF0000FF),
-            shadowColor: Color.FromUInt32(0xFF00FF00),
-            child: new Container(color: Color.FromUInt32(0xFF0000FF))));
+            color: new Color(0xFF0000FF),
+            shadowColor: new Color(0xFF00FF00),
+            child: new Container(color: new Color(0xFF0000FF))));
         var renderPhysicalShape = RenderOf<RenderPhysicalShape, PhysicalShape>(tester);
 
         // The viewport is 800x600, the CircleBorder is centered and fits the shortest edge, so we get a
@@ -731,7 +731,7 @@ public sealed class ProxyBoxClipParityTests
     private static Widget Item(Widget filter) => new ClipRect(child: filter);
 
     private static Widget ItemBody() => new Container(
-        color: Color.FromUInt32(0x28000000),
+        color: new Color(0x28000000),
         height: 200,
         child: new Text("Item 1"));
 

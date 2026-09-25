@@ -134,7 +134,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void RadioListTile_PlatformAffinity_DefaultsToLeadingAndUsesSelectedThemeColor()
     {
-        var selectedColor = Color.Parse("#FF006C4C");
+        var selectedColor = new Color(0xFF006C4C);
         var theme = ThemeData.Light with
         {
             RadioTheme = new RadioThemeData(
@@ -376,8 +376,8 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void ExpansionTile_ThemeAndWidgetOverrides_ResolveBackgroundAndAffinity()
     {
-        var themeBackground = Color.Parse("#FFE3F4E8");
-        var widgetBackground = Color.Parse("#FFFFE8D6");
+        var themeBackground = new Color(0xFFE3F4E8);
+        var widgetBackground = new Color(0xFFFFE8D6);
         using var controller = new ExpansibleController();
         controller.Expand();
         var theme = ThemeData.Light with
@@ -409,8 +409,8 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void ExpansionTile_LocalTheme_AppliesCollapsedBackgroundAndIconColor()
     {
-        var collapsedBackground = Color.Parse("#FFFFF0D8");
-        var collapsedIcon = Color.Parse("#FF3F51B5");
+        var collapsedBackground = new Color(0xFFFFF0D8);
+        var collapsedIcon = new Color(0xFF3F51B5);
         using var harness = new WidgetRenderHarness(
             BuildThemed(new ExpansionTileTheme(
                 data: new ExpansionTileThemeData(
@@ -453,7 +453,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     {
         var statesController = new WidgetStatesController();
         var density = new VisualDensity(-2.0, -1.0);
-        var splash = Color.Parse("#FF123456");
+        var splash = new Color(0xFF123456);
         var tile = new ExpansionTile(
             title: new Text("Forwarded header"),
             dense: true,
@@ -485,11 +485,11 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void ExpansionTile_M2AndM3Defaults_ReadDirectThemeRoles()
     {
-        Color primary = Color.Parse("#FF2255AA");
-        Color onSurface = Color.Parse("#FF112233");
-        Color onSurfaceVariant = Color.Parse("#FF445566");
-        Color m2Title = Color.Parse("#FF778899");
-        Color m2Unselected = Color.Parse("#FF667788");
+        Color primary = new Color(0xFF2255AA);
+        Color onSurface = new Color(0xFF112233);
+        Color onSurfaceVariant = new Color(0xFF445566);
+        Color m2Title = new Color(0xFF778899);
+        Color m2Unselected = new Color(0xFF667788);
         ColorScheme scheme = ThemeData.Light.ColorScheme.CopyWith(
             primary: primary,
             onSurface: onSurface,
@@ -535,7 +535,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void ExpansionTile_DefaultAndCustomShapes_UseSourceBordersAndClip()
     {
-        Color divider = Color.Parse("#FF884422");
+        Color divider = new Color(0xFF884422);
         ThemeData theme = ThemeData.Light with { DividerColor = divider };
         using (var harness = new WidgetRenderHarness(BuildThemed(
                    new ExpansionTile(
@@ -793,7 +793,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     private static Color ParagraphColor(RenderObject? root, string text)
     {
         RenderParagraph paragraph = Assert.IsType<RenderParagraph>(FindParagraphByText(root, text));
-        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
     }
 
     private static Color? DecorationColor(RenderDecoratedBox box)

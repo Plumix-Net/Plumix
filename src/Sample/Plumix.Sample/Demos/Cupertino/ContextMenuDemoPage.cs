@@ -23,7 +23,7 @@ internal sealed class CupertinoContextMenuDemoPageState : State
             width: 180.0,
             height: 120.0,
             decoration: new BoxDecoration(
-                Color: Color.FromUInt32(0xFF5E5CE6),
+                Color: new Color(0xFF5E5CE6),
                 BorderRadius: BorderRadius.Circular(16.0)),
             alignment: Alignment.Center,
             child: new Text(
@@ -40,7 +40,7 @@ internal sealed class CupertinoContextMenuDemoPageState : State
                 new Text(
                     "Hold the preview, choose an action, or drag the open preview down to dismiss.",
                     fontSize: 14.0,
-                    color: Color.FromUInt32(0x8A000000)),
+                    color: new Color(0x8A000000)),
                 new Center(
                     child: new CupertinoContextMenu(
                         actions:
@@ -59,7 +59,7 @@ internal sealed class CupertinoContextMenuDemoPageState : State
                 new Text(
                     $"last action: {_lastAction}",
                     fontSize: 13.0,
-                    color: Color.FromUInt32(0xFF455A64)),
+                    color: new Color(0xFF455A64)),
             ]);
     }
 

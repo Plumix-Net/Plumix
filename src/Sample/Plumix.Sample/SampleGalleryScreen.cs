@@ -813,11 +813,11 @@ internal sealed class SampleMenuPage : StatefulWidget
                             new Text(
                                 "Route-based sample menu. Open page and return via Back button or Esc.",
                                 fontSize: 14,
-                                color: Color.Parse("#8A000000")),
+                                color: new Color(0x8A000000)),
                             new Text(
                                 selectedTab.Description,
                                 fontSize: 12,
-                                color: Color.Parse("#73000000")),
+                                color: new Color(0x73000000)),
                             new Expanded(
                                 child: ListView.Builder(
                                     itemCount: pages.Count,
@@ -863,10 +863,10 @@ internal sealed class SampleMenuPage : StatefulWidget
                 child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12),
                 style: OutlinedButton.StyleFrom(
                     foregroundColor: Colors.Black,
-                    backgroundColor: Color.Parse("#FFDCE3ED"),
+                    backgroundColor: new Color(0xFFDCE3ED),
                     padding: new Thickness(10, 8),
                     minimumSize: new Size(64, 44),
-                    side: new BorderSide(Color.Parse("#FFB8C4D4"))));
+                    side: new BorderSide(new Color(0xFFB8C4D4))));
         }
     }
 }
@@ -900,10 +900,10 @@ internal sealed class SampleDemoPage : StatelessWidget
                     spacing: 10,
                     children:
                     [
-                        new Text(_subtitle, fontSize: 14, color: Color.Parse("#8A000000")),
+                        new Text(_subtitle, fontSize: 14, color: new Color(0x8A000000)),
                         new Expanded(
                             child: new Container(
-                                color: Color.Parse("#FFF7F9FC"),
+                                color: new Color(0xFFF7F9FC),
                                 padding: new Thickness(12),
                                 child: _child)),
                     ])));

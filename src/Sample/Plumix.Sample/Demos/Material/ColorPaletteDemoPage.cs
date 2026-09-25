@@ -51,7 +51,7 @@ internal sealed class ColorPaletteDemoPageState : State
                     new Text(
                         "MaterialColor shades, ColorScheme.fromSwatch and the primarySwatch-derived theme colors.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -61,12 +61,12 @@ internal sealed class ColorPaletteDemoPageState : State
                                 onTap: () => SetState(() =>
                                     _swatchIndex = (_swatchIndex + 1) % Swatches.Count),
                                 width: 150,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                         ]),
                     new Expanded(
                         child: new SingleChildScrollView(
@@ -86,7 +86,7 @@ internal sealed class ColorPaletteDemoPageState : State
         List<Widget> tiles = [];
         foreach (int shade in Shades)
         {
-            Color color = swatch[shade]!.Value;
+            Color color = swatch[shade]!;
             tiles.Add(new Expanded(
                 child: new Container(
                     height: 56,
@@ -101,7 +101,7 @@ internal sealed class ColorPaletteDemoPageState : State
         }
 
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -116,7 +116,7 @@ internal sealed class ColorPaletteDemoPageState : State
     private Widget BuildThemeProbe(ThemeData theme)
     {
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -143,9 +143,9 @@ internal sealed class ColorPaletteDemoPageState : State
                 new Container(width: 28, height: 20, color: color),
                 new Expanded(child: new Text(label, fontSize: 12, color: Colors.Black)),
                 new Text(
-                    $"#{color.ToUInt32():X8}",
+                    $"#{color.ToARGB32():X8}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
             ]);
     }
 

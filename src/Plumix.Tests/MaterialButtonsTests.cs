@@ -24,11 +24,11 @@ public sealed class MaterialButtonsTests
     {
         var theme = ThemeData.Light;
 
-        Assert.Equal(Color.Parse("#FFFEF7FF"), theme.ScaffoldBackgroundColor);
-        Assert.Equal(Color.Parse("#FFFEF7FF"), theme.CanvasColor);
-        Assert.Equal(Color.Parse("#FF6750A4"), theme.PrimaryColor);
-        Assert.Equal(Color.Parse("#FF1D1B20"), theme.ColorScheme.OnSurface);
-        Assert.Equal(Color.Parse("#FF4A4458"), theme.ColorScheme.OnSecondaryContainer);
+        Assert.Equal(new Color(0xFFFEF7FF), theme.ScaffoldBackgroundColor);
+        Assert.Equal(new Color(0xFFFEF7FF), theme.CanvasColor);
+        Assert.Equal(new Color(0xFF6750A4), theme.PrimaryColor);
+        Assert.Equal(new Color(0xFF1D1B20), theme.ColorScheme.OnSurface);
+        Assert.Equal(new Color(0xFF4A4458), theme.ColorScheme.OnSecondaryContainer);
         Assert.Equal(Colors.Black, theme.ShadowColor);
     }
 
@@ -822,7 +822,7 @@ public sealed class MaterialButtonsTests
         Assert.InRange(animatedTextColor.R, (byte)1, (byte)254);
         // Dart animates the text through `Material.animationDuration` and the icon through its
         // own theme animation, so both are mid-flight here without being frame-locked together.
-        Assert.InRange(capturedIconTheme!.Color!.Value.R, (byte)1, (byte)254);
+        Assert.InRange(capturedIconTheme!.Color!.Red, (byte)1, (byte)254);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
@@ -6215,22 +6215,22 @@ public sealed class MaterialButtonsTests
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private static Color BlendColorOverlay(Color baseColor, Color overlayColor)
     {
-        static byte Blend(byte from, byte to, double t)
+        static byte Blend(int from, int to, double t)
         {
             return (byte)Math.Clamp((int)(from + ((to - from) * t)), 0, 255);
         }
 
-        double clampedOpacity = Math.Clamp(overlayColor.A / 255.0, 0, 1);
-        return Color.FromArgb(
-            baseColor.A,
-            Blend(baseColor.R, overlayColor.R, clampedOpacity),
-            Blend(baseColor.G, overlayColor.G, clampedOpacity),
-            Blend(baseColor.B, overlayColor.B, clampedOpacity));
+        double clampedOpacity = Math.Clamp(overlayColor.Alpha / 255.0, 0, 1);
+        return Color.FromARGB(
+            baseColor.Alpha,
+            Blend(baseColor.Red, overlayColor.Red, clampedOpacity),
+            Blend(baseColor.Green, overlayColor.Green, clampedOpacity),
+            Blend(baseColor.Blue, overlayColor.Blue, clampedOpacity));
     }
 
     private static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)

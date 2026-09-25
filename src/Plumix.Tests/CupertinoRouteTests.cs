@@ -35,7 +35,7 @@ public sealed class CupertinoRouteTests : IDisposable
         Assert.False(route.FullscreenDialog);
         Assert.True(route.AllowSnapshotting);
         Assert.False(route.BarrierDismissible);
-        Assert.Equal(Color.FromUInt32(0x18000000), route.BarrierColor);
+        Assert.Equal(new Color(0x18000000), route.BarrierColor);
         Assert.Null(route.BarrierLabel);
         Assert.Equal(TimeSpan.FromMilliseconds(500), route.TransitionDuration);
         Assert.NotNull(route.DelegatedTransition);
@@ -162,7 +162,7 @@ public sealed class CupertinoRouteTests : IDisposable
         Assert.True(route.BarrierDismissible);
         Assert.False(route.SemanticsDismissible);
         Assert.Equal("Dismiss", route.BarrierLabel);
-        Assert.Equal(Color.FromUInt32(0x33000000), route.BarrierColor);
+        Assert.Equal(new Color(0x33000000), route.BarrierColor);
         Assert.Equal(TimeSpan.FromMilliseconds(335), route.TransitionDuration);
         Assert.False(route.AllowSnapshotting);
 

@@ -35,23 +35,23 @@ internal sealed class CupertinoActionSheetDemoPageState : State
                     + "the long list; touch scrolling does not select a folder.",
                     fontSize: 14.0,
                     color: Colors.DimGray),
-                new Text($"last result: {_lastResult}", fontSize: 12.0, color: Color.Parse("#FF607D8B")),
+                new Text($"last result: {_lastResult}", fontSize: 12.0, color: new Color(0xFF607D8B)),
                 BuildAction(
                     "Title + message + actions + cancel",
                     () => ShowFullSheet(context),
-                    Color.Parse("#FFE9F0FF")),
+                    new Color(0xFFE9F0FF)),
                 BuildAction(
                     "Actions only",
                     () => ShowActionsOnly(context),
-                    Color.Parse("#FFEAE4FF")),
+                    new Color(0xFFEAE4FF)),
                 BuildAction(
                     "Message + cancel only",
                     () => ShowMessageOnly(context),
-                    Color.Parse("#FFE8F0FE")),
+                    new Color(0xFFE8F0FE)),
                 BuildAction(
                     "Scrollable action list",
                     () => ShowScrollableSheet(context),
-                    Color.Parse("#FFE8F4E8")),
+                    new Color(0xFFE8F4E8)),
             ]);
     }
 

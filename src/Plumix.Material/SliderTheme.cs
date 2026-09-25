@@ -201,10 +201,7 @@ public sealed partial record SliderThemeData(
         };
     }
 
-    private static Color WithAlpha(Color color, byte alpha)
-    {
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 }
 
 public sealed class SliderTheme : InheritedTheme

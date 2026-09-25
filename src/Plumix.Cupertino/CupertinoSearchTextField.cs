@@ -20,11 +20,11 @@ public sealed class CupertinoSearchTextField : StatefulWidget
         string? placeholder = null,
         TextStyle? placeholderStyle = null,
         BoxDecoration? decoration = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         BorderRadius? borderRadius = null,
         TextInputType? keyboardType = null,
         EdgeInsetsGeometry? padding = null,
-        CupertinoDynamicColor? itemColor = null,
+        Color? itemColor = null,
         double itemSize = 20.0,
         EdgeInsetsGeometry? prefixInsets = null,
         Widget? prefixIcon = null,
@@ -45,7 +45,7 @@ public sealed class CupertinoSearchTextField : StatefulWidget
         double? cursorHeight = null,
         Radius? cursorRadius = null,
         bool cursorOpacityAnimates = true,
-        CupertinoDynamicColor? cursorColor = null,
+        Color? cursorColor = null,
         Key? key = null) : base(key)
     {
         if (decoration is not null && backgroundColor is not null)
@@ -112,7 +112,7 @@ public sealed class CupertinoSearchTextField : StatefulWidget
 
     public BoxDecoration? Decoration { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public BorderRadius? BorderRadius { get; }
 
@@ -120,7 +120,7 @@ public sealed class CupertinoSearchTextField : StatefulWidget
 
     public EdgeInsetsGeometry Padding { get; }
 
-    public CupertinoDynamicColor ItemColor { get; }
+    public Color ItemColor { get; }
 
     public double ItemSize { get; }
 
@@ -162,7 +162,7 @@ public sealed class CupertinoSearchTextField : StatefulWidget
 
     public bool CursorOpacityAnimates { get; }
 
-    public CupertinoDynamicColor? CursorColor { get; }
+    public Color? CursorColor { get; }
 
     public override State CreateState() => new CupertinoSearchTextFieldState();
 }
@@ -270,19 +270,19 @@ internal sealed class CupertinoSearchTextFieldState : RestorationState<Cupertino
                              ?? CupertinoLocalizations.Of(context).SearchTextFieldPlaceholderLabel;
         Color defaultPlaceholderColor = CupertinoDynamicColor.Resolve(CupertinoColors.SecondaryLabel, context);
         byte placeholderAlpha = (byte)Math.Clamp(
-            (int)Math.Round(defaultPlaceholderColor.A * (1.0 - _fadeExtent)),
+            (int)Math.Round(defaultPlaceholderColor.Alpha * (1.0 - _fadeExtent)),
             0,
             255);
         TextStyle placeholderStyle = Current.PlaceholderStyle ?? new TextStyle(
-            Color: Color.FromArgb(
+            Color: Color.FromARGB(
                 placeholderAlpha,
-                defaultPlaceholderColor.R,
-                defaultPlaceholderColor.G,
-                defaultPlaceholderColor.B));
+                defaultPlaceholderColor.Red,
+                defaultPlaceholderColor.Green,
+                defaultPlaceholderColor.Blue));
 
         _scaledIconSize = MediaQuery.TextScalerOf(context).Scale(Current.ItemSize);
 
-        CupertinoDynamicColor backgroundColor = Current.BackgroundColor ?? CupertinoColors.TertiarySystemFill;
+        Color backgroundColor = Current.BackgroundColor ?? CupertinoColors.TertiarySystemFill;
         BoxDecoration decoration = Current.Decoration ?? new BoxDecoration(
             Color: CupertinoDynamicColor.Resolve(backgroundColor, context),
             BorderRadius: Current.BorderRadius ?? DefaultBorderRadius);

@@ -47,10 +47,10 @@ internal static class RenderTransformTestExtensions
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ProxyBoxTransformParityTests : IDisposable
 {
-    private static readonly Color Blue = Color.FromUInt32(0xFF0000FF);
-    private static readonly Color Cyan = Color.FromUInt32(0xFF00FFFF);
-    private static readonly Color Black = Color.FromUInt32(0xFF000000);
-    private static readonly Color Red = Color.FromUInt32(0xFFFF0000);
+    private static readonly Color Blue = new Color(0xFF0000FF);
+    private static readonly Color Cyan = new Color(0xFF00FFFF);
+    private static readonly Color Black = new Color(0xFF000000);
+    private static readonly Color Red = new Color(0xFFFF0000);
 
     public ProxyBoxTransformParityTests()
     {
@@ -433,7 +433,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                     child: new ClipRect(
                         child: new Transform(
                             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
-                            child: new RepaintBoundary(child: new Container(color: Color.FromUInt32(0xFF00FF00))))))));
+                            child: new RepaintBoundary(child: new Container(color: new Color(0xFF00FF00))))))));
 
         // Dart counts two transform layers because its render view's root layer is a TransformLayer;
         // the root layer here is an OffsetLayer.

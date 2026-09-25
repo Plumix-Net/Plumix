@@ -39,11 +39,11 @@ internal sealed class DataTableDemoPageState : State
         var theme = baseTheme with
         {
             ColorScheme = _useThemeOverrides
-                ? baseTheme.ColorScheme with { Primary = Color.Parse("#FF6750A4") }
+                ? baseTheme.ColorScheme with { Primary = new Color(0xFF6750A4) }
                 : baseTheme.ColorScheme,
             DataTableTheme = _useThemeOverrides
                 ? new DataTableThemeData(
-                    headingRowColor: WidgetStateProperty<Color?>.All(Color.Parse("#FFE8DEF8")),
+                    headingRowColor: WidgetStateProperty<Color?>.All(new Color(0xFFE8DEF8)),
                     dataRowMinHeight: 44,
                     dataRowMaxHeight: 52,
                     horizontalMargin: 16,
@@ -66,7 +66,7 @@ internal sealed class DataTableDemoPageState : State
                             + "precedence, direct ColorScheme row roles, animated sort arrows, source caching, "
                             + "and page controls.",
                             fontSize: 14,
-                            color: Color.Parse("#8A000000")),
+                            color: new Color(0x8A000000)),
                         new Row(
                             spacing: 8,
                             children:
@@ -115,7 +115,7 @@ internal sealed class DataTableDemoPageState : State
 
     private static Table BuildTableCellProbe() => new(
         defaultColumnWidth: new FixedColumnWidth(100),
-        border: TableBorder.All(color: Color.Parse("#FF94A3B8")),
+        border: TableBorder.All(color: new Color(0xFF94A3B8)),
         children:
         [
             new TableRow(
@@ -134,7 +134,7 @@ internal sealed class DataTableDemoPageState : State
             [2] = new MaxColumnWidth(new IntrinsicColumnWidth(), new FixedColumnWidth(90)),
             [3] = new FlexColumnWidth(2),
         },
-        border: TableBorder.All(color: Color.Parse("#FF94A3B8"), borderRadius: BorderRadius.Circular(8)),
+        border: TableBorder.All(color: new Color(0xFF94A3B8), borderRadius: BorderRadius.Circular(8)),
         defaultVerticalAlignment: TableCellVerticalAlignment.IntrinsicHeight,
         children:
         [
@@ -145,7 +145,7 @@ internal sealed class DataTableDemoPageState : State
                     BuildWidthCell("max(intrinsic, 90)"),
                     BuildWidthCell("flex 2"),
                 ],
-                decoration: new BoxDecoration(Color: Color.Parse("#FFF1F5F9"))),
+                decoration: new BoxDecoration(Color: new Color(0xFFF1F5F9))),
             new TableRow(
                 [
                     BuildWidthCell("a"),
@@ -153,7 +153,7 @@ internal sealed class DataTableDemoPageState : State
                     BuildWidthCell("a wide intrinsic cell"),
                     BuildWidthCell("d"),
                 ],
-                decoration: new BoxDecoration(Color: Color.Parse("#FFFFFFFF"))),
+                decoration: new BoxDecoration(Color: new Color(0xFFFFFFFF))),
         ]);
 
     private static Widget BuildWidthCell(string label) => new Padding(
@@ -168,7 +168,7 @@ internal sealed class DataTableDemoPageState : State
         verticalAlignment: alignment,
         child: new Container(
             height: height,
-            color: Color.Parse(colorHex),
+            color: (Color)Avalonia.Media.Color.Parse(colorHex),
             child: new Center(
                 child: new Text(label, fontSize: 12, color: Colors.Black))));
 
@@ -196,7 +196,7 @@ internal sealed class DataTableDemoPageState : State
             child: new Text(label, fontSize: 11),
             style: TextButton.StyleFrom(
                 foregroundColor: Colors.Black,
-                backgroundColor: Color.Parse("#FFE9F0FF"),
+                backgroundColor: new Color(0xFFE9F0FF),
                 padding: new Thickness(8, 6),
                 minimumSize: new Size(64, 36),
                 shape: new RoundedRectangleBorder(

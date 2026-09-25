@@ -14,7 +14,7 @@ public sealed class MaterialGridTileBarTests
         var title = new Text("Title");
         var subtitle = new Text("Subtitle");
         var trailing = new SizedBox(width: 14, height: 14);
-        var color = Color.Parse("#CC102030");
+        var color = new Color(0xCC102030);
         var bar = new GridTileBar(
             backgroundColor: color,
             leading: leading,

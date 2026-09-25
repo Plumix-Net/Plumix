@@ -22,7 +22,7 @@ public sealed partial record BottomSheetThemeData
         double? ModalElevation = null,
         ShapeBorder? Shape = null,
         bool? ShowDragHandle = null,
-        WidgetStateColor? DragHandleColor = null,
+        Color? DragHandleColor = null,
         Size? DragHandleSize = null,
         Clip? ClipBehavior = null,
         BoxConstraints? Constraints = null)
@@ -62,7 +62,7 @@ public sealed partial record BottomSheetThemeData
     public double? ModalElevation { get; init; }
     public ShapeBorder? Shape { get; init; }
     public bool? ShowDragHandle { get; init; }
-    public WidgetStateColor? DragHandleColor { get; init; }
+    public Color? DragHandleColor { get; init; }
     public Size? DragHandleSize { get; init; }
     public Clip? ClipBehavior { get; init; }
     public BoxConstraints? Constraints { get; init; }
@@ -77,7 +77,7 @@ public sealed partial record BottomSheetThemeData
         double? modalElevation = null,
         ShapeBorder? shape = null,
         bool? showDragHandle = null,
-        WidgetStateColor? dragHandleColor = null,
+        Color? dragHandleColor = null,
         Size? dragHandleSize = null,
         Clip? clipBehavior = null,
         BoxConstraints? constraints = null)
@@ -123,7 +123,7 @@ public sealed partial record BottomSheetThemeData
         properties.Add(new DoubleProperty("modalElevation", ModalElevation, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<ShapeBorder?>("shape", Shape, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool?>("showDragHandle", ShowDragHandle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+        properties.Add(new ColorProperty(
             "dragHandleColor",
             DragHandleColor,
             defaultValue: nullDefault));

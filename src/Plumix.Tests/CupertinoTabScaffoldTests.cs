@@ -344,8 +344,8 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
     [Fact]
     public void BackgroundResolvesDynamicallyAndZeroAreaRemainsSafe()
     {
-        Color light = Color.FromUInt32(0xFF123456);
-        Color dark = Color.FromUInt32(0xFF654321);
+        Color light = new Color(0xFF123456);
+        Color dark = new Color(0xFF654321);
         CupertinoDynamicColor background = CupertinoDynamicColor.WithBrightness(light, dark);
 
         using (var lightHarness = new CupertinoThemeTestHarness(BuildRoot(
@@ -357,7 +357,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
         {
             lightHarness.Pump(ViewSize);
             Assert.Contains(lightHarness.FindWidgets<DecoratedBox>(), widget =>
-                Assert.IsType<BoxDecoration>(widget.Decoration).Color == light);
+                ColorMatchers.IsSameColorAs(Assert.IsType<BoxDecoration>(widget.Decoration).Color, light));
         }
 
         using var darkHarness = new CupertinoThemeTestHarness(BuildRoot(
@@ -372,7 +372,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
         darkHarness.Pump(ViewSize);
 
         Assert.Contains(darkHarness.FindWidgets<DecoratedBox>(), widget =>
-            Assert.IsType<BoxDecoration>(widget.Decoration).Color == dark);
+            ColorMatchers.IsSameColorAs(Assert.IsType<BoxDecoration>(widget.Decoration).Color, dark));
         Assert.Equal(default, darkHarness.RenderView.Child!.Size);
     }
 
@@ -413,7 +413,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
     private static double ContentBottomPadding(byte alpha)
     {
         MediaQueryData? contentQuery = null;
-        Color color = Color.FromArgb(alpha, 255, 255, 255);
+        Color color = Color.FromARGB(alpha, 255, 255, 255);
         using var harness = new CupertinoThemeTestHarness(BuildRoot(
             new CupertinoTabScaffold(
                 tabBar: BuildTabBar(2, backgroundColor: color),
@@ -449,7 +449,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
             onTap: onTap,
             backgroundColor: backgroundColor is null
                 ? null
-                : CupertinoDynamicColor.WithBrightness(backgroundColor.Value, backgroundColor.Value));
+                : CupertinoDynamicColor.WithBrightness(backgroundColor!, backgroundColor!));
     }
 
     private static Widget BuildRoot(

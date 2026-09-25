@@ -17,16 +17,16 @@ public sealed class CupertinoSwitch : StatefulWidget
     public CupertinoSwitch(
         bool value,
         Action<bool>? onChanged,
-        WidgetStateColor? activeColor = null,
-        WidgetStateColor? trackColor = null,
-        WidgetStateColor? activeTrackColor = null,
-        WidgetStateColor? inactiveTrackColor = null,
-        WidgetStateColor? thumbColor = null,
-        WidgetStateColor? inactiveThumbColor = null,
+        Color? activeColor = null,
+        Color? trackColor = null,
+        Color? activeTrackColor = null,
+        Color? inactiveTrackColor = null,
+        Color? thumbColor = null,
+        Color? inactiveThumbColor = null,
         bool? applyTheme = null,
-        CupertinoDynamicColor? focusColor = null,
-        CupertinoDynamicColor? onLabelColor = null,
-        CupertinoDynamicColor? offLabelColor = null,
+        Color? focusColor = null,
+        Color? onLabelColor = null,
+        Color? offLabelColor = null,
         ImageProvider? activeThumbImage = null,
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
@@ -91,26 +91,26 @@ public sealed class CupertinoSwitch : StatefulWidget
     public Action<bool>? OnChanged { get; }
 
     [Obsolete("Use ActiveTrackColor instead. Mirrors Flutter's deprecation after v3.24.0-0.2.pre.")]
-    public WidgetStateColor? ActiveColor => ActiveTrackColor;
+    public Color? ActiveColor => ActiveTrackColor;
 
     [Obsolete("Use InactiveTrackColor instead. Mirrors Flutter's deprecation after v3.24.0-0.2.pre.")]
-    public WidgetStateColor? TrackColor => InactiveTrackColor;
+    public Color? TrackColor => InactiveTrackColor;
 
-    public WidgetStateColor? ActiveTrackColor { get; }
+    public Color? ActiveTrackColor { get; }
 
-    public WidgetStateColor? InactiveTrackColor { get; }
+    public Color? InactiveTrackColor { get; }
 
-    public WidgetStateColor? ThumbColor { get; }
+    public Color? ThumbColor { get; }
 
-    public WidgetStateColor? InactiveThumbColor { get; }
+    public Color? InactiveThumbColor { get; }
 
     public bool? ApplyTheme { get; }
 
-    public CupertinoDynamicColor? FocusColor { get; }
+    public Color? FocusColor { get; }
 
-    public CupertinoDynamicColor? OnLabelColor { get; }
+    public Color? OnLabelColor { get; }
 
-    public CupertinoDynamicColor? OffLabelColor { get; }
+    public Color? OffLabelColor { get; }
 
     public ImageProvider? ActiveThumbImage { get; }
 
@@ -144,8 +144,8 @@ public sealed class CupertinoSwitch : StatefulWidget
         private const double DragCommitThreshold = 0.7;
         private const double DragReverseThreshold = 0.2;
         private static readonly Size SwitchSize = new(59.0, 39.0);
-        private static readonly Color OffLabelColor = Color.FromUInt32(0xFFB3B3B3);
-        private static readonly Color OffLabelHighContrastColor = Colors.White;
+        private static readonly Color OffLabelColor = new Color(0xFFB3B3B3);
+        private static readonly Color OffLabelHighContrastColor = CupertinoColors.White;
 
         private CupertinoSwitchPainter? _painter;
         private Point? _dragStartPosition;
@@ -189,23 +189,40 @@ public sealed class CupertinoSwitch : StatefulWidget
             CupertinoThemeData theme = CupertinoTheme.Of(context);
             IReadOnlySet<WidgetState> activeStates = States(selected: true);
             IReadOnlySet<WidgetState> inactiveStates = States(selected: false);
-            Color resolvedActiveColor = ResolveActiveColor(context, theme);
-            Color activeTrackColor = CurrentWidget.ActiveTrackColor?.DefaultValue ?? resolvedActiveColor;
-            Color inactiveTrackColor = ResolveStateColor(
-                                           CurrentWidget.InactiveTrackColor,
-                                           inactiveStates,
-                                           context)
-                                       ?? CupertinoColors.SecondarySystemFill.ResolveFrom(context).Value;
-            Color activeThumbColor = ResolveStateColor(CurrentWidget.ThumbColor, activeStates, context)
+            Color activeColor = CupertinoDynamicColor.Resolve(
+                CurrentWidget.ActiveTrackColor
+                ?? ((CurrentWidget.ApplyTheme ?? theme.ApplyThemeToAll) ? theme.PrimaryColor : null)
+                ?? CupertinoColors.SystemGreen,
+                context);
+            Color activeThumbColor = ResolveThumbColor(CurrentWidget.ThumbColor, activeStates)
+                                     ?? WidgetThumbColor(activeStates)
                                      ?? CupertinoColors.White;
-            Color inactiveThumbColor = ResolveStateColor(CurrentWidget.InactiveThumbColor, inactiveStates, context)
-                                         ?? activeThumbColor;
-            Color activePressedThumbColor = ResolvePressedThumbColor(context, activeStates, active: true);
-            Color inactivePressedThumbColor = ResolvePressedThumbColor(context, inactiveStates, active: false);
-            Color focusColor = ResolveFocusColor(context, resolvedActiveColor);
+            Color inactiveThumbColor = ResolveThumbColor(CurrentWidget.InactiveThumbColor, inactiveStates)
+                                       ?? WidgetThumbColor(inactiveStates)
+                                       ?? activeThumbColor;
+            Color activeTrackColor = WidgetTrackColor(activeStates) ?? activeColor;
+            Color inactiveTrackColor = ResolveTrackColor(CurrentWidget.InactiveTrackColor, inactiveStates)
+                                       ?? CupertinoDynamicColor.Resolve(CupertinoColors.SecondarySystemFill, context);
+            var activePressedStates = new HashSet<WidgetState>(activeStates) { WidgetState.Pressed };
+            Color activePressedThumbColor = ResolveThumbColor(CurrentWidget.ThumbColor, activePressedStates)
+                                            ?? WidgetThumbColor(activePressedStates)
+                                            ?? CupertinoColors.White;
+            var inactivePressedStates = new HashSet<WidgetState>(inactiveStates) { WidgetState.Pressed };
+            Color inactivePressedThumbColor = ResolveThumbColor(CurrentWidget.ThumbColor, inactivePressedStates)
+                                              ?? WidgetThumbColor(inactivePressedStates)
+                                              ?? CupertinoColors.White;
+            Color focusColor = CupertinoDynamicColor.Resolve(
+                CurrentWidget.FocusColor
+                ?? HSLColor.FromColor(activeColor.WithOpacity(CupertinoConstants.CupertinoFocusColorOpacity))
+                    .WithLightness(CupertinoConstants.CupertinoFocusColorBrightness)
+                    .WithSaturation(CupertinoConstants.CupertinoFocusColorSaturation)
+                    .ToColor(),
+                context);
             bool showLabels = MediaQuery.MaybeOnOffSwitchLabelsOf(context) ?? false;
-            Color onLabelColor = CurrentWidget.OnLabelColor?.ResolveFrom(context).Value ?? CupertinoColors.White;
-            Color offLabelColor = CurrentWidget.OffLabelColor?.ResolveFrom(context).Value
+            Color onLabelColor = CupertinoDynamicColor.MaybeResolve(
+                CurrentWidget.OnLabelColor,
+                context) ?? CupertinoColors.White;
+            Color offLabelColor = CupertinoDynamicColor.MaybeResolve(CurrentWidget.OffLabelColor, context)
                                   ?? (MediaQuery.MaybeHighContrastOf(context) == true
                                       ? OffLabelHighContrastColor
                                       : OffLabelColor);
@@ -284,70 +301,21 @@ public sealed class CupertinoSwitch : StatefulWidget
             return states;
         }
 
-        private Color ResolveActiveColor(
-            BuildContext context,
-            CupertinoThemeData theme)
-        {
-            if (CurrentWidget.ActiveTrackColor is CupertinoDynamicWidgetStateColor dynamicColor)
-            {
-                return dynamicColor.DynamicColor.ResolveFrom(context).Value;
-            }
-            if (CurrentWidget.ActiveTrackColor is not null)
-            {
-                return CurrentWidget.ActiveTrackColor.DefaultValue;
-            }
-            if (CurrentWidget.ApplyTheme ?? theme.ApplyThemeToAll)
-            {
-                return theme.PrimaryColor;
-            }
-            return CupertinoColors.SystemGreen.ResolveFrom(context).Value;
-        }
+        // Dart's `_widgetThumbColor.resolve(states)`.
+        private Color? WidgetThumbColor(IReadOnlySet<WidgetState> states) =>
+            states.Contains(WidgetState.Selected) ? CurrentWidget.ThumbColor : CurrentWidget.InactiveThumbColor;
 
-        private Color ResolvePressedThumbColor(
-            BuildContext context,
-            IReadOnlySet<WidgetState> states,
-            bool active)
-        {
-            var pressedStates = new HashSet<WidgetState>(states) { WidgetState.Pressed };
-            return ResolveStateColor(CurrentWidget.ThumbColor, pressedStates, context)
-                   ?? (active
-                       ? CupertinoColors.White
-                       : CurrentWidget.InactiveThumbColor?.DefaultValue ?? CupertinoColors.White);
-        }
+        // Dart's `_widgetTrackColor.resolve(states)`.
+        private Color? WidgetTrackColor(IReadOnlySet<WidgetState> states) =>
+            states.Contains(WidgetState.Selected) ? CurrentWidget.ActiveTrackColor : CurrentWidget.InactiveTrackColor;
 
-        private Color ResolveFocusColor(BuildContext context, Color activeTrackColor)
-        {
-            if (CurrentWidget.FocusColor is { } explicitColor)
-            {
-                return explicitColor.ResolveFrom(context).Value;
-            }
+        // Dart's `_resolveTrackColor`.
+        private static Color? ResolveTrackColor(Color? trackColor, IReadOnlySet<WidgetState> states) =>
+            trackColor is WidgetStateColor ? WidgetStateProperty<Color?>.ResolveAs(trackColor, states) : trackColor;
 
-            byte alpha = (byte)Math.Clamp((int)Math.Round(activeTrackColor.A * 0.80), 0, byte.MaxValue);
-            Color translucent = Color.FromArgb(
-                alpha,
-                activeTrackColor.R,
-                activeTrackColor.G,
-                activeTrackColor.B);
-            Color color = HSLColor.FromColor(translucent)
-                .WithLightness(0.69)
-                .WithSaturation(0.835)
-                .ToColor();
-            return CupertinoDynamicColor.Resolve(color, context);
-        }
-
-        private static Color? ResolveStateColor(
-            WidgetStateColor? color,
-            IReadOnlySet<WidgetState> states,
-            BuildContext context)
-        {
-            return color switch
-            {
-                null => null,
-                CupertinoDynamicWidgetStateColor dynamicColor =>
-                    dynamicColor.DynamicColor.ResolveFrom(context).Value,
-                _ => color.Resolve(states),
-            };
-        }
+        // Dart's `_resolveThumbColor`.
+        private static Color? ResolveThumbColor(Color? thumbColor, IReadOnlySet<WidgetState> states) =>
+            thumbColor is WidgetStateColor ? WidgetStateProperty<Color?>.ResolveAs(thumbColor, states) : thumbColor;
 
         private static WidgetStateProperty<MouseCursor> DefaultMouseCursor()
         {
@@ -459,7 +427,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     private const double TrackRadius = TrackHeight / 2.0;
     private const double ThumbDiameter = 28.0;
     private const double DefaultIconSize = 16.0;
-    private static readonly Color ThumbBorderColor = Color.FromUInt32(0x0A000000);
+    private static readonly Color ThumbBorderColor = new Color(0x0A000000);
     private static readonly IReadOnlyList<BoxShadow> ThumbShadows = CupertinoThumbPainter.SwitchThumb().Shadows;
 
     private readonly AnimationController _positionController;
@@ -470,12 +438,12 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     private ImageErrorListener? _cachedThumbImageError;
     private bool _isPainting;
     private TextDirection _textDirection;
-    private Color _activeTrackColor;
-    private Color _inactiveTrackColor;
-    private Color _activeThumbColor;
-    private Color _inactiveThumbColor;
-    private Color _activePressedThumbColor;
-    private Color _inactivePressedThumbColor;
+    private Color _activeTrackColor = null!;
+    private Color _inactiveTrackColor = null!;
+    private Color _activeThumbColor = null!;
+    private Color _inactiveThumbColor = null!;
+    private Color _activePressedThumbColor = null!;
+    private Color _inactivePressedThumbColor = null!;
     private Color? _activeOutlineColor;
     private Color? _inactiveOutlineColor;
     private double? _activeOutlineWidth;
@@ -484,13 +452,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     private Icon? _inactiveIcon;
     private IconThemeData _iconTheme = IconThemeData.Fallback;
     private bool _showLabels;
-    private Color _onLabelColor;
-    private Color _offLabelColor;
+    private Color _onLabelColor = null!;
+    private Color _offLabelColor = null!;
     private ImageProvider? _activeThumbImage;
     private ImageErrorListener? _onActiveThumbImageError;
     private ImageProvider? _inactiveThumbImage;
     private ImageErrorListener? _onInactiveThumbImageError;
-    private Color _backgroundColor;
+    private Color _backgroundColor = null!;
     private ImageConfiguration _imageConfiguration = ImageConfiguration.Empty;
 
     public CupertinoSwitchPainter(
@@ -592,11 +560,11 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         double pressedExtension = Reaction.Value * CupertinoThumbPainter.Extension;
         var thumbSize = new Size(ThumbDiameter + pressedExtension, ThumbDiameter);
         double colorPosition = ColorAnimationValue();
-        Color trackColor = ColorUtilities.Lerp(_inactiveTrackColor, _activeTrackColor, currentValue);
+        Color trackColor = Color.Lerp(_inactiveTrackColor, _activeTrackColor, currentValue);
         Color thumbColor = ResolveThumbColor(colorPosition);
-        thumbColor = ColorUtilities.AlphaBlend(thumbColor, _backgroundColor);
-        Color? outlineColor = _inactiveOutlineColor.HasValue && _activeOutlineColor.HasValue
-            ? ColorUtilities.Lerp(_inactiveOutlineColor.Value, _activeOutlineColor.Value, colorPosition)
+        thumbColor = Color.AlphaBlend(thumbColor, _backgroundColor);
+        Color? outlineColor = _inactiveOutlineColor != null && _activeOutlineColor != null
+            ? Color.Lerp(_inactiveOutlineColor!, _activeOutlineColor!, colorPosition)
             : null;
         double? outlineWidth = ColorUtilities.LerpDouble(
             _inactiveOutlineWidth,
@@ -619,13 +587,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         var thumbBounds = new Rect(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
 
         context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
-        if (outlineColor.HasValue)
+        if (outlineColor != null)
         {
             Rect outlineRect = trackRect.Deflate(1.0);
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, TrackRadius),
                 null,
-                new Pen(new SolidColorBrush(outlineColor.Value), outlineWidth ?? 2.0));
+                new Pen(new SolidColorBrush(outlineColor!), outlineWidth ?? 2.0));
         }
         if (IsFocused)
         {
@@ -680,20 +648,20 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     {
         if (Reaction.Status != AnimationStatus.Dismissed)
         {
-            return ColorUtilities.Lerp(
+            return Color.Lerp(
                 _inactivePressedThumbColor,
                 _activePressedThumbColor,
                 currentValue);
         }
         if (_positionController.Status == AnimationStatus.Forward)
         {
-            return ColorUtilities.Lerp(_inactivePressedThumbColor, _activeThumbColor, currentValue);
+            return Color.Lerp(_inactivePressedThumbColor, _activeThumbColor, currentValue);
         }
         if (_positionController.Status == AnimationStatus.Reverse)
         {
-            return ColorUtilities.Lerp(_inactiveThumbColor, _activePressedThumbColor, currentValue);
+            return Color.Lerp(_inactiveThumbColor, _activePressedThumbColor, currentValue);
         }
-        return ColorUtilities.Lerp(_inactiveThumbColor, _activeThumbColor, currentValue);
+        return Color.Lerp(_inactiveThumbColor, _activeThumbColor, currentValue);
     }
 
     private void PaintLabels(PaintingContext context, Rect trackRect, double visualPosition)
@@ -781,7 +749,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     {
         Color inactiveColor = _inactiveIcon?.Color ?? CupertinoColors.Black;
         Color activeColor = _activeIcon?.Color ?? CupertinoColors.Black;
-        Color iconColor = ColorUtilities.Lerp(inactiveColor, activeColor, currentValue);
+        Color iconColor = Color.Lerp(inactiveColor, activeColor, currentValue);
         double iconSize = icon.Size ?? DefaultIconSize;
         FontWeight weight = icon.FontWeight ?? ResolveFontWeight(icon.Weight ?? _iconTheme.Weight);
         var style = new TextStyle(
@@ -809,11 +777,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         }
     }
 
-    private static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0)), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private static FontWeight ResolveFontWeight(double? weight)
     {

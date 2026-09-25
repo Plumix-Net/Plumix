@@ -535,7 +535,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
         if (Child is { } child && child.Size.Width != 0.0 && child.Size.Height != 0.0)
         {
             var childParentData = (BoxParentData)child.parentData!;
-            var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFFFF00)), 1.0);
+            var pen = new Pen(new SolidColorBrush(new Color(0xFFFFFF00)), 1.0);
             var path = new UI.Path();
             bool drew = false;
 
@@ -585,7 +585,7 @@ public class RenderPositionedBox : RenderAligningShiftedBox
         else
         {
             context.Canvas.DrawRectangle(
-                new SolidColorBrush(Color.FromUInt32(0x90909090)),
+                new SolidColorBrush(new Color(0x90909090)),
                 null,
                 new Rect(offset, Size));
         }

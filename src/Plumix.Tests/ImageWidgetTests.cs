@@ -144,7 +144,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(36, image.Height);
         Assert.Equal(BoxFit.ScaleDown, image.Fit);
         Assert.True(image.ExcludeFromSemantics);
-        Assert.Equal(Color.FromArgb(128, 255, 0, 0), image.Color);
+        Assert.Equal(Color.FromARGB(128, 255, 0, 0), image.Color);
 
         var semantics = Assert.IsType<Semantics>(harness.FindWidget<Semantics>());
         Assert.Equal("Photo icon", semantics.Properties.Label);

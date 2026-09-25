@@ -32,7 +32,7 @@ internal sealed class TestWidgetsApp : StatelessWidget
         OnGenerateRoute = onGenerateRoute;
         NavigatorObservers = navigatorObservers ?? [];
         Routes = routes ?? new Dictionary<string, WidgetBuilder>();
-        Color = color ?? Color.FromUInt32(0xFFFFFFFF);
+        Color = color ?? new Color(0xFFFFFFFF);
         TextStyle = textStyle;
         Builder = builder;
         Shortcuts = shortcuts;

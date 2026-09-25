@@ -13,9 +13,9 @@ namespace Plumix.Tests;
 public sealed class MaterialMergeableMaterialTests
 {
     private static readonly Size ViewSize = new(320, 600);
-    private static readonly Color FirstColor = Color.Parse("#FFE8F5E9");
-    private static readonly Color SecondColor = Color.Parse("#FFE3F2FD");
-    private static readonly Color ThirdColor = Color.Parse("#FFFFF3E0");
+    private static readonly Color FirstColor = new Color(0xFFE8F5E9);
+    private static readonly Color SecondColor = new Color(0xFFE3F2FD);
+    private static readonly Color ThirdColor = new Color(0xFFFFF3E0);
 
     [Fact]
     public void ConstructorAndItems_PreserveFlutterDefaultsAndDiagnostics()

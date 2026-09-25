@@ -33,13 +33,13 @@ internal sealed class DrawerDemoPageState : State
         {
             UseMaterial3 = _useMaterial3,
             ColorScheme = baseTheme.ColorScheme.CopyWith(
-                surfaceContainerLow: Color.Parse("#FFE9F1FF")),
+                surfaceContainerLow: new Color(0xFFE9F1FF)),
             DrawerTheme = _useThemeOverrides
                 ? new DrawerThemeData(
-                    BackgroundColor: Color.Parse("#FFF3F7FC"),
-                    ScrimColor: Color.FromArgb(0x80, 0x12, 0x34, 0x56),
+                    BackgroundColor: new Color(0xFFF3F7FC),
+                    ScrimColor: Color.FromARGB(0x80, 0x12, 0x34, 0x56),
                     Elevation: 10,
-                    ShadowColor: Color.Parse("#FF345E8B"),
+                    ShadowColor: new Color(0xFF345E8B),
                     Width: 268)
                 : new DrawerThemeData(),
         };
@@ -55,7 +55,7 @@ internal sealed class DrawerDemoPageState : State
                     new Text(
                         "M2/M3 defaults, direct surfaceContainerLow, inner-edge shape, and overrides.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -64,17 +64,17 @@ internal sealed class DrawerDemoPageState : State
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                             BuildControlButton(
                                 label: _useWidgetOverrides ? "Widget on" : "Widget off",
                                 onTap: () => SetState(() => _useWidgetOverrides = !_useWidgetOverrides),
                                 width: 118,
-                                background: Color.Parse("#FFF0E8FF")),
+                                background: new Color(0xFFF0E8FF)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -84,26 +84,26 @@ internal sealed class DrawerDemoPageState : State
                                 label: _showEndDrawer ? "End drawer on" : "End drawer off",
                                 onTap: () => SetState(() => _showEndDrawer = !_showEndDrawer),
                                 width: 138,
-                                background: Color.Parse("#FFEFF5E8")),
+                                background: new Color(0xFFEFF5E8)),
                             BuildControlButton(
                                 label: "Reset",
                                 onTap: Reset,
                                 width: 88,
-                                background: Color.Parse("#FFF3E8D8")),
+                                background: new Color(0xFFF3E8D8)),
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, endDrawer={(_showEndDrawer ? "true" : "false")}, startOpens={_startOpens}, endOpens={_endOpens}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(
                         child: new Container(
                             decoration: new BoxDecoration(
-                                Color: Color.Parse("#FFFDFEFF"),
+                                Color: new Color(0xFFFDFEFF),
                                 BorderRadius: BorderRadius.Circular(10),
                                 Border: Plumix.Rendering.Border.FromBorderSide(
-                                    new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                                    new BorderSide(new Color(0xFFD6DEEA), 1))),
                             child: new Scaffold(
-                                drawerScrimColor: _useWidgetOverrides ? Color.FromArgb(0x99, 0x33, 0x44, 0x55) : null,
+                                drawerScrimColor: _useWidgetOverrides ? Color.FromARGB(0x99, 0x33, 0x44, 0x55) : null,
                                 drawer: BuildDrawerPanel(isStartDrawer: true),
                                 endDrawer: _showEndDrawer ? BuildDrawerPanel(isStartDrawer: false) : null,
                                 body: new ContextBuilder(BuildPreviewBody)))),
@@ -122,12 +122,12 @@ internal sealed class DrawerDemoPageState : State
                     new Container(
                         padding: new Thickness(10, 8),
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFE8EEF7"),
+                            Color: new Color(0xFFE8EEF7),
                             BorderRadius: BorderRadius.Circular(8)),
                         child: new Text(
                             "Use open/close controls to validate start/end drawer choreography and scrim behavior.",
                             fontSize: 12,
-                            color: Color.Parse("#FF30404D"))),
+                            color: new Color(0xFF30404D))),
                     new Row(
                         spacing: 8,
                         children:
@@ -136,38 +136,40 @@ internal sealed class DrawerDemoPageState : State
                                 label: "Open start",
                                 onTap: () => OpenStartDrawer(context),
                                 width: 104,
-                                background: Color.Parse("#FFDDEBFF")),
+                                background: new Color(0xFFDDEBFF)),
                             BuildControlButton(
                                 label: "Open end",
                                 onTap: _showEndDrawer
                                     ? () => OpenEndDrawer(context)
                                     : null,
                                 width: 98,
-                                background: Color.Parse("#FFE6F2FF")),
+                                background: new Color(0xFFE6F2FF)),
                             BuildControlButton(
                                 label: "Close all",
                                 onTap: () => CloseAllDrawers(context),
                                 width: 94,
-                                background: Color.Parse("#FFF7E9E3")),
+                                background: new Color(0xFFF7E9E3)),
                         ]),
                     new Expanded(
                         child: new Center(
                             child: new Text(
                                 "Drawer preview area",
                                 fontSize: 13,
-                                color: Color.Parse("#99000000")))),
+                                color: new Color(0x99000000)))),
                 ]));
     }
 
     private Widget BuildDrawerPanel(bool isStartDrawer)
     {
         string title = isStartDrawer ? "Start drawer" : "End drawer";
-        var accent = isStartDrawer ? Color.Parse("#FF0D47A1") : Color.Parse("#FF4A148C");
+        var accent = isStartDrawer ? new Color(0xFF0D47A1) : new Color(0xFF4A148C);
 
         return new Drawer(
-            backgroundColor: _useWidgetOverrides ? (isStartDrawer ? Color.Parse("#FFEAF2FF") : Color.Parse("#FFF4ECFF")) : null,
+            backgroundColor: _useWidgetOverrides
+                ? (isStartDrawer ? new Color(0xFFEAF2FF) : new Color(0xFFF4ECFF))
+                : null,
             elevation: _useWidgetOverrides ? (isStartDrawer ? 6 : 5) : null,
-            shadowColor: _useWidgetOverrides ? (isStartDrawer ? Color.Parse("#FF305D8A") : Color.Parse("#FF5E3F86")) : null,
+            shadowColor: _useWidgetOverrides ? (isStartDrawer ? new Color(0xFF305D8A) : new Color(0xFF5E3F86)) : null,
             width: _useWidgetOverrides ? (isStartDrawer ? 236 : 228) : null,
             child: new ContextBuilder(
                 context => new Container(
@@ -182,11 +184,11 @@ internal sealed class DrawerDemoPageState : State
                             new Text(
                                 "Color, shape, elevation, and width show widget/theme/default precedence.",
                                 fontSize: 12,
-                                color: Color.Parse("#8A000000")),
+                                color: new Color(0x8A000000)),
                             new Text(
                                 BuildControllerAlignmentLabel(context),
                                 fontSize: 11,
-                                color: Color.Parse("#FF607D8B")),
+                                color: new Color(0xFF607D8B)),
                             new Row(
                                 spacing: 8,
                                 children:
@@ -197,14 +199,14 @@ internal sealed class DrawerDemoPageState : State
                                             ? () => Scaffold.Of(context).CloseDrawer()
                                             : () => Scaffold.Of(context).CloseEndDrawer(),
                                         width: 84,
-                                        background: Color.Parse("#FFE9EEF5")),
+                                        background: new Color(0xFFE9EEF5)),
                                     BuildControlButton(
                                         label: isStartDrawer ? "Open end" : "Open start",
                                         onTap: isStartDrawer
                                             ? (_showEndDrawer ? () => OpenEndDrawer(context) : null)
                                             : (() => OpenStartDrawer(context)),
                                         width: 96,
-                                        background: Color.Parse("#FFEFE8F8")),
+                                        background: new Color(0xFFEFE8F8)),
                                 ]),
                         ]))));
     }

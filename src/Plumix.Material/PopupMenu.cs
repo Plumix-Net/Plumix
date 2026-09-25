@@ -231,8 +231,7 @@ public class PopupMenuItemState<T> : State<PopupMenuItem<T>>
         });
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }
 
 public sealed class CheckedPopupMenuItem<T> : PopupMenuItem<T>
@@ -340,7 +339,7 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
                     title: CheckedWidget.Child,
                     leading: leading,
                     titleTextStyle: effectiveLabelTextStyle,
-                    textColor: WidgetStateProperty<Color?>.All(effectiveLabelTextStyle.Color),
+                    textColor: effectiveLabelTextStyle.Color,
                     contentPadding: EdgeInsetsGeometry.Zero)));
     }
 

@@ -27,7 +27,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
     public void Title_ValidatesOpaqueColorAndUpdatesApplicationSwitcherDescription()
     {
         Assert.Throws<ArgumentException>(() => new Title(
-            color: Color.FromArgb(0x80, 0x11, 0x22, 0x33),
+            color: Color.FromARGB(0x80, 0x11, 0x22, 0x33),
             child: new SizedBox()));
 
         int notifications = 0;
@@ -35,7 +35,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Title(
             title: "First",
-            color: Color.FromArgb(0xFF, 0x12, 0x34, 0x56),
+            color: Color.FromARGB(0xFF, 0x12, 0x34, 0x56),
             child: new SizedBox()));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -48,14 +48,14 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
         root.Update(new Title(
             title: "First",
-            color: Color.FromArgb(0xFF, 0x12, 0x34, 0x56),
+            color: Color.FromARGB(0xFF, 0x12, 0x34, 0x56),
             child: new SizedBox()));
         owner.FlushBuild();
         Assert.Equal(1, notifications);
 
         root.Update(new Title(
             title: "Second",
-            color: Color.FromArgb(0xFF, 0x65, 0x43, 0x21),
+            color: Color.FromARGB(0xFF, 0x65, 0x43, 0x21),
             child: new SizedBox()));
         owner.FlushBuild();
         Assert.Equal(
@@ -93,7 +93,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         Assert.Equal(inheritedCursor, resolved.CursorColor);
         Assert.Equal(localSelection, resolved.SelectionColor);
         Assert.Equal(inheritedMouseCursor, resolved.MouseCursor);
-        Assert.Equal(Color.FromArgb(0x80, 0x80, 0x80, 0x80), DefaultSelectionStyle.DefaultColor);
+        Assert.Equal(Color.FromARGB(0x80, 0x80, 0x80, 0x80), DefaultSelectionStyle.DefaultColor);
 
         DefaultSelectionStyle? fallback = null;
         root.Update(new Builder(context =>

@@ -30,7 +30,7 @@ public sealed class PhysicalModel : SingleChildRenderObjectWidget
         ClipBehavior = clipBehavior;
         BorderRadius = borderRadius;
         Elevation = elevation;
-        ShadowColor = shadowColor ?? Colors.Black;
+        ShadowColor = shadowColor ?? new Color(0xFF000000);
     }
 
     public BoxShape Shape { get; }
@@ -89,7 +89,7 @@ public sealed class PhysicalShape : SingleChildRenderObjectWidget
         ClipBehavior = clipBehavior;
         Elevation = elevation;
         Color = color;
-        ShadowColor = shadowColor ?? Colors.Black;
+        ShadowColor = shadowColor ?? new Color(0xFF000000);
     }
 
     public CustomClipper<Path> Clipper { get; }

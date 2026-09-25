@@ -327,7 +327,7 @@ public sealed class Text : StatelessWidget
 
         return effective.CopyWith(
             fontSize: effective.FontSize ?? TextDefaults.DefaultFontSize,
-            color: effective.Color ?? Colors.Black,
+            color: effective.Color ?? new Color(0xFF000000),
             decoration: ResolveDecoration() ?? effective.Decoration);
     }
 }

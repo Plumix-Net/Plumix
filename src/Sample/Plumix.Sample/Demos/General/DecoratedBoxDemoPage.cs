@@ -24,8 +24,8 @@ internal sealed class DecoratedBoxDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var fillColor = _accentFill ? Color.Parse("#FF9DC4FF") : Color.Parse("#FFF3F3F3");
-        var borderColor = _accentFill ? Color.Parse("#FF1D3557") : Color.Parse("#FF555555");
+        var fillColor = _accentFill ? new Color(0xFF9DC4FF) : new Color(0xFFF3F3F3);
+        var borderColor = _accentFill ? new Color(0xFF1D3557) : new Color(0xFF555555);
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -60,7 +60,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                 new Container(
                     width: 220,
                     height: 140,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new Center(
                         child: new SizedBox(
@@ -73,7 +73,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                                         new BorderSide(borderColor, _borderWidth)),
                                     BorderRadius: BorderRadius.Circular(_radius)),
                                 child: new Center(
-                                    child: new Text("Decorated", fontSize: 14, color: Color.Parse("#FF14213D"))))))),
+                                    child: new Text("Decorated", fontSize: 14, color: new Color(0xFF14213D))))))),
             ]);
     }
 
@@ -84,7 +84,7 @@ internal sealed class DecoratedBoxDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

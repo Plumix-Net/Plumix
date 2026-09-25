@@ -52,7 +52,7 @@ public sealed class CupertinoSliderTests : IDisposable
         Assert.Equal(1.0, slider.Max);
         Assert.Null(slider.Divisions);
         Assert.Null(slider.ActiveColor);
-        Assert.Equal(CupertinoColors.White, slider.ThumbColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.White, slider.ThumbColor);
         Assert.Null(slider.OnChangeStart);
         Assert.Null(slider.OnChangeEnd);
 
@@ -307,33 +307,33 @@ public sealed class CupertinoSliderTests : IDisposable
     {
         using var light = new CupertinoThemeTestHarness(Wrap(new CupertinoSlider(0.5, _ => { })));
         light.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemBlue.Color, Render(light).ActiveColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.Color, Render(light).ActiveColor);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.5, _ => { }),
             brightness: PlatformBrightness.Dark));
         dark.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemBlue.DarkColor, Render(dark).ActiveColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, Render(dark).ActiveColor);
 
         using var overridden = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.5, _ => { }, activeColor: CupertinoColors.ActiveGreen),
             brightness: PlatformBrightness.Dark));
         overridden.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemGreen.DarkColor, Render(overridden).ActiveColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, Render(overridden).ActiveColor);
     }
 
     [Fact]
     public void ActiveColor_ResolvesEveryDynamicColorVariant()
     {
         var activeColor = new CupertinoDynamicColor(
-            color: Color.FromUInt32(0x00000001),
-            darkColor: Color.FromUInt32(0x00000002),
-            highContrastColor: Color.FromUInt32(0x00000004),
-            darkHighContrastColor: Color.FromUInt32(0x00000006),
-            elevatedColor: Color.FromUInt32(0x00000003),
-            darkElevatedColor: Color.FromUInt32(0x00000005),
-            highContrastElevatedColor: Color.FromUInt32(0x00000007),
-            darkHighContrastElevatedColor: Color.FromUInt32(0x00000008));
+            color: new Color(0x00000001),
+            darkColor: new Color(0x00000002),
+            highContrastColor: new Color(0x00000004),
+            darkHighContrastColor: new Color(0x00000006),
+            elevatedColor: new Color(0x00000003),
+            darkElevatedColor: new Color(0x00000005),
+            highContrastElevatedColor: new Color(0x00000007),
+            darkHighContrastElevatedColor: new Color(0x00000008));
 
         (PlatformBrightness Brightness, CupertinoUserInterfaceLevelData Level, bool HighContrast, Color Expected)[]
             cases =
@@ -363,7 +363,7 @@ public sealed class CupertinoSliderTests : IDisposable
                 level: level,
                 highContrast: highContrast));
             harness.Pump(ViewSize);
-            Assert.Equal(expected, Render(harness).ActiveColor);
+            ColorMatchers.AssertSameColorAs(expected, Render(harness).ActiveColor);
         }
     }
 
@@ -372,14 +372,14 @@ public sealed class CupertinoSliderTests : IDisposable
     {
         using var light = new CupertinoThemeTestHarness(Wrap(new CupertinoSlider(0.0, _ => { })));
         light.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemFill.Color, Render(light).TrackColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemFill.Color, Render(light).TrackColor);
         Assert.NotEqual(CupertinoColors.SystemFill.DarkColor, Render(light).TrackColor);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlider(0.0, _ => { }),
             brightness: PlatformBrightness.Dark));
         dark.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemFill.DarkColor, Render(dark).TrackColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemFill.DarkColor, Render(dark).TrackColor);
     }
 
     [Fact]
@@ -391,11 +391,11 @@ public sealed class CupertinoSliderTests : IDisposable
 
         harness.PumpWidget(Wrap(new CupertinoSlider(0.0, _ => { }, thumbColor: CupertinoColors.SystemPurple)));
         harness.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemPurple.Color, Render(harness).ThumbColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPurple.Color, Render(harness).ThumbColor);
 
         harness.PumpWidget(Wrap(new CupertinoSlider(0.0, _ => { }, thumbColor: CupertinoColors.ActiveOrange)));
         harness.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemOrange.Color, Render(harness).ThumbColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemOrange.Color, Render(harness).ThumbColor);
     }
 
     [Fact]

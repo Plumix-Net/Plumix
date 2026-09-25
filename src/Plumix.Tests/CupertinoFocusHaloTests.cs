@@ -113,7 +113,7 @@ public sealed class CupertinoFocusHaloTests : IDisposable
         BorderSide side = Assert.IsType<RoundedRectangleBorder>(decoration.Shape).Side;
         Assert.Equal(3.5, side.Width);
         Assert.Equal(BorderStyle.Solid, side.Style);
-        Assert.Equal(0xCC6EADF2u, side.Color.ToUInt32());
+        Assert.Equal(0xCC6EADF2u, side.Color.ToARGB32());
     }
 
     [Fact]
@@ -135,14 +135,14 @@ public sealed class CupertinoFocusHaloTests : IDisposable
     [Fact]
     public void HslColor_MatchesFlutterConversionAndInterpolationContracts()
     {
-        HSLColor blue = HSLColor.FromColor(Color.FromUInt32(0xCC007AFF));
+        HSLColor blue = HSLColor.FromColor(new Color(0xCC007AFF));
         Assert.Equal(0.8, blue.Alpha, 3);
         Assert.Equal(211.294, blue.Hue, 3);
         Assert.Equal(1.0, blue.Saturation, 3);
         Assert.Equal(0.5, blue.Lightness, 3);
         Assert.Equal(
             0xCC6EADF2u,
-            blue.WithLightness(0.69).WithSaturation(0.835).ToColor().ToUInt32());
+            blue.WithLightness(0.69).WithSaturation(0.835).ToColor().ToARGB32());
 
         HSLColor transparent = HSLColor.Lerp(null, blue, 0.5)!;
         Assert.Equal(0.4, transparent.Alpha, 3);

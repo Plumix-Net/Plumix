@@ -133,7 +133,7 @@ public sealed class RenderInkSplash : RenderProxyBox
 
     private void PaintSplash(PaintingContext ctx, Point offset)
     {
-        if (!_splashColor.HasValue || _splashProgress <= 0)
+        if (_splashColor == null || _splashProgress <= 0)
         {
             return;
         }
@@ -145,7 +145,7 @@ public sealed class RenderInkSplash : RenderProxyBox
             : localMaxRadius;
         double radius = constrainedMaxRadius * _splashProgress;
 
-        var brush = new SolidColorBrush(_splashColor.Value);
+        var brush = new SolidColorBrush(_splashColor!);
         ctx.Canvas.DrawCircle(brush, pen: null, center: offset + resolvedOrigin, radius: radius);
     }
 

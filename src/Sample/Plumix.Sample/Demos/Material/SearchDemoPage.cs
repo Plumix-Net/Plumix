@@ -62,25 +62,25 @@ internal sealed class SearchDemoPageState : State
         {
             SearchBarTheme = _useThemeOverrides
                 ? new SearchBarThemeData(
-                    BackgroundColor: WidgetStateProperty<Color?>.All(Color.Parse("#FFEAF6F7")),
+                    BackgroundColor: WidgetStateProperty<Color?>.All(new Color(0xFFEAF6F7)),
                     Elevation: WidgetStateProperty<double?>.All(1),
                     Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                         Plumix.Rendering.BorderRadius.Circular(18))),
-                    Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Color.Parse("#FF00695C"))),
+                    Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(new Color(0xFF00695C))),
                     Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(
                         EdgeInsetsGeometry.Symmetric(horizontal: 12)),
                     Constraints: new BoxConstraints(MinWidth: 280, MaxWidth: 520, MinHeight: 52),
-                    HintStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Color.Parse("#FF00695C"))))
+                    HintStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: new Color(0xFF00695C))))
                 : new SearchBarThemeData(),
             SearchViewTheme = _useThemeOverrides
                 ? new SearchViewThemeData(
-                    BackgroundColor: Color.Parse("#FFF5FBFA"),
+                    BackgroundColor: new Color(0xFFF5FBFA),
                     Elevation: 0,
                     Shape: new RoundedRectangleBorder(
-                        new BorderSide(Color.Parse("#FF80CBC4")), Plumix.Rendering.BorderRadius.Circular(22)),
+                        new BorderSide(new Color(0xFF80CBC4)), Plumix.Rendering.BorderRadius.Circular(22)),
                     HeaderHeight: 64,
                     BarPadding: EdgeInsetsGeometry.Symmetric(horizontal: 12),
-                    DividerColor: Color.Parse("#FF80CBC4"),
+                    DividerColor: new Color(0xFF80CBC4),
                     Constraints: new BoxConstraints(MinWidth: 360, MinHeight: 260, MaxWidth: 560, MaxHeight: 420),
                     Padding: EdgeInsetsGeometry.All(16))
                 : new SearchViewThemeData()
@@ -99,7 +99,7 @@ internal sealed class SearchDemoPageState : State
                             "Controller-backed search plus a legacy route with search-keyboard metadata "
                             + "and fade animation.",
                             fontSize: 14,
-                            color: Color.Parse("#8A000000")),
+                            color: new Color(0x8A000000)),
                         new Row(
                             spacing: 8,
                             children:

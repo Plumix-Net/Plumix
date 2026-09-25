@@ -1088,7 +1088,7 @@ public sealed class RouterTests : IDisposable
         var routerDelegate = new SimpleRouterDelegate((_, _) => new SizedBox(), reportConfiguration: true);
         using var navigation = new MockMethodCallHandler(SystemChannels.Navigation);
         using var harness = new RestorationHarness(WidgetsApp.Router(
-            color: Avalonia.Media.Colors.Blue,
+            color: Colors.Blue,
             routerDelegate: routerDelegate,
             routeInformationParser: new SimpleRouteInformationParser()));
         Pump(harness);
@@ -1114,7 +1114,7 @@ public sealed class RouterTests : IDisposable
         });
 
         WidgetsApp app = WidgetsApp.Router(
-            color: Avalonia.Media.Colors.Blue,
+            color: Colors.Blue,
             routerDelegate: routerDelegate,
             routeInformationParser: parser);
 
@@ -1151,7 +1151,7 @@ public sealed class RouterTests : IDisposable
             });
 
         WidgetsApp app = WidgetsApp.Router(
-            color: Avalonia.Media.Colors.Blue,
+            color: Colors.Blue,
             debugShowCheckedModeBanner: false,
             routerDelegate: routerDelegate,
             routeInformationParser: new SimpleRouteInformationParser());
@@ -1170,13 +1170,13 @@ public sealed class RouterTests : IDisposable
         var config = new RouterConfig<RouteInformation>(routerDelegate: routerDelegate);
 
         _ = Assert.Throws<ArgumentException>(() => WidgetsApp.Router<RouteInformation>(
-            color: Avalonia.Media.Colors.Blue));
+            color: Colors.Blue));
         _ = Assert.Throws<ArgumentException>(() => WidgetsApp.Router(
-            color: Avalonia.Media.Colors.Blue,
+            color: Colors.Blue,
             routerDelegate: routerDelegate,
             routerConfig: config));
         _ = Assert.Throws<ArgumentException>(() => WidgetsApp.Router(
-            color: Avalonia.Media.Colors.Blue,
+            color: Colors.Blue,
             routerDelegate: routerDelegate,
             routeInformationProvider: new SimpleRouteInformationProvider(Info("initial"))));
     }
@@ -1187,7 +1187,7 @@ public sealed class RouterTests : IDisposable
         var routerDelegate = new SimpleRouterDelegate((_, _) => new SizedBox());
         var config = new RouterConfig<RouteInformation>(routerDelegate: routerDelegate);
 
-        WidgetsApp app = WidgetsApp.Router(color: Avalonia.Media.Colors.Blue, routerConfig: config);
+        WidgetsApp app = WidgetsApp.Router(color: Colors.Blue, routerConfig: config);
         Assert.Same(config, app.RouterConfig);
 
         using var harness = new RestorationHarness(app);

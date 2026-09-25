@@ -42,13 +42,13 @@ public sealed class CupertinoMagnifierTests : IDisposable
         Assert.True(magnifier.BorderRadius.IsUniform);
         Assert.Equal(default, magnifier.AdditionalFocalPointOffset);
         Assert.Equal(Clip.None, magnifier.ClipBehavior);
-        Assert.Equal(Color.FromArgb(255, 0, 124, 255), magnifier.BorderSide.Color);
+        Assert.Equal(Color.FromARGB(255, 0, 124, 255), magnifier.BorderSide.Color);
         Assert.Equal(2.0, magnifier.BorderSide.Width);
         Assert.Null(magnifier.InOutAnimation);
         Assert.Equal(1.0, magnifier.MagnificationScale);
 
         BoxShadow shadow = Assert.Single(magnifier.Shadows);
-        Assert.Equal(Color.FromArgb(25, 0, 0, 0), shadow.Color);
+        Assert.Equal(Color.FromARGB(25, 0, 0, 0), shadow.Color);
         Assert.Equal(11.0, shadow.BlurRadius);
         Assert.Equal(0.2, shadow.SpreadRadius);
         Assert.Equal(BlurStyle.Outer, shadow.BlurStyle);
@@ -146,7 +146,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
         harness.Pump(ScreenSize);
 
         CupertinoMagnifier magnifier = Assert.Single(harness.FindWidgets<CupertinoMagnifier>());
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             CupertinoColors.ActiveGreen.Color,
             magnifier.BorderSide.Color);
         Assert.Equal(2.0, magnifier.BorderSide.Width);

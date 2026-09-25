@@ -35,8 +35,8 @@ public sealed class CupertinoScrollbar : RawScrollbar
 
     // Extracted from iOS 13.1 beta using Debug View Hierarchy.
     internal static readonly CupertinoDynamicColor KScrollbarColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(0x59, 0x00, 0x00, 0x00),
-        darkColor: Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF));
+        color: Color.FromARGB(0x59, 0x00, 0x00, 0x00),
+        darkColor: Color.FromARGB(0x80, 0xFF, 0xFF, 0xFF));
 
     /// <summary>Creates an iOS style scrollbar that wraps the given <paramref name="child"/>.</summary>
     public CupertinoScrollbar(

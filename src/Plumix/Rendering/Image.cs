@@ -383,8 +383,8 @@ public sealed class RenderImage : RenderBox
         }
 
         Resolve();
-        ColorFilter? colorFilter = _color.HasValue
-            ? new ColorFilter.Mode(_color.Value, _colorBlendMode ?? BitmapBlendingMode.SourceIn)
+        ColorFilter? colorFilter = _color != null
+            ? new ColorFilter.Mode(_color!, _colorBlendMode ?? BitmapBlendingMode.SourceIn)
             : null;
         ImagePainting.PaintImage(
             context: context,

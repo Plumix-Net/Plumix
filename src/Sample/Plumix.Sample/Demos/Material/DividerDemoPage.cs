@@ -31,7 +31,7 @@ internal sealed class DividerDemoPageState : State
             UseMaterial3 = _useMaterial3,
             DividerTheme = _useThemeOverrides
                 ? new DividerThemeData(
-                    Color: Color.Parse("#FF00695C"),
+                    Color: new Color(0xFF00695C),
                     Space: 28,
                     Thickness: 3,
                     Indent: 24,
@@ -55,7 +55,7 @@ internal sealed class DividerDemoPageState : State
                     new Text(
                         "M2/M3 tokens, directional indents, asymmetric theme radii, and widget overrides.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -64,22 +64,22 @@ internal sealed class DividerDemoPageState : State
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                             BuildControlButton(
                                 label: _useWidgetOverrides ? "Widget on" : "Widget off",
                                 onTap: () => SetState(() => _useWidgetOverrides = !_useWidgetOverrides),
                                 width: 118,
-                                background: Color.Parse("#FFF0E8FF")),
+                                background: new Color(0xFFF0E8FF)),
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -103,7 +103,7 @@ internal sealed class DividerDemoPageState : State
                 thickness: 5,
                 indent: 18,
                 endIndent: 30,
-                color: Color.Parse("#FF1565C0"),
+                color: new Color(0xFF1565C0),
                 radius: BorderRadius.Circular(3));
         }
         else
@@ -112,7 +112,7 @@ internal sealed class DividerDemoPageState : State
         }
 
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -121,14 +121,14 @@ internal sealed class DividerDemoPageState : State
                 [
                     new Text("Horizontal Divider", fontSize: 14, color: Colors.Black),
                     new Container(
-                        color: Color.Parse("#FFE3F2FD"),
+                        color: new Color(0xFFE3F2FD),
                         padding: new Thickness(10, 6),
-                        child: new Text("Before divider", fontSize: 12, color: Color.Parse("#FF0D47A1"))),
+                        child: new Text("Before divider", fontSize: 12, color: new Color(0xFF0D47A1))),
                     dividerWidget,
                     new Container(
-                        color: Color.Parse("#FFE8F5E9"),
+                        color: new Color(0xFFE8F5E9),
                         padding: new Thickness(10, 6),
-                        child: new Text("After divider", fontSize: 12, color: Color.Parse("#FF1B5E20"))),
+                        child: new Text("After divider", fontSize: 12, color: new Color(0xFF1B5E20))),
                 ]));
     }
 
@@ -142,7 +142,7 @@ internal sealed class DividerDemoPageState : State
                 thickness: 5,
                 indent: 12,
                 endIndent: 20,
-                color: Color.Parse("#FF6A1B9A"),
+                color: new Color(0xFF6A1B9A),
                 radius: BorderRadius.Circular(3));
         }
         else
@@ -151,7 +151,7 @@ internal sealed class DividerDemoPageState : State
         }
 
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -167,15 +167,15 @@ internal sealed class DividerDemoPageState : State
                             [
                                 new Expanded(
                                     child: new Container(
-                                        color: Color.Parse("#FFFFF8E1"),
+                                        color: new Color(0xFFFFF8E1),
                                         alignment: Alignment.Center,
-                                        child: new Text("Start", fontSize: 12, color: Color.Parse("#FF5D4037")))),
+                                        child: new Text("Start", fontSize: 12, color: new Color(0xFF5D4037)))),
                                 dividerWidget,
                                 new Expanded(
                                     child: new Container(
-                                        color: Color.Parse("#FFFCE4EC"),
+                                        color: new Color(0xFFFCE4EC),
                                         alignment: Alignment.Center,
-                                        child: new Text("End", fontSize: 12, color: Color.Parse("#FF880E4F")))),
+                                        child: new Text("End", fontSize: 12, color: new Color(0xFF880E4F)))),
                             ])),
                 ]));
     }

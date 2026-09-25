@@ -266,7 +266,7 @@ public sealed class ContextMenuControllerTests : IDisposable
     public void WidgetHostLeavesTheRootOverlayInsideApplicationThemeAndLocalizations()
     {
         BuildContext? context = null;
-        var theme = new Plumix.Material.ThemeData(primaryColor: Avalonia.Media.Colors.Red);
+        var theme = new Plumix.Material.ThemeData(primaryColor: Colors.Red);
         var host = new WidgetHost
         {
             RootWidget = new Plumix.Material.MaterialApp(

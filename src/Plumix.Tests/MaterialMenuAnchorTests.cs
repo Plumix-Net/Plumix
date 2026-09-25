@@ -545,18 +545,18 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStyle_LerpUsesDiscreteSwitchesForCursorDensityAndContinuousColors()
     {
         var a = new MenuStyle(
-            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromArgb(255, 0, 0, 0)),
+            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromARGB(255, 0, 0, 0)),
             mouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
             visualDensity: VisualDensity.Standard);
         var b = new MenuStyle(
-            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromArgb(255, 255, 255, 255)),
+            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromARGB(255, 255, 255, 255)),
             mouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
             visualDensity: VisualDensity.Compact);
 
         MenuStyle mid = MenuStyle.Lerp(a, b, 0.5)!;
         MenuStyle late = MenuStyle.Lerp(a, b, 0.75)!;
 
-        Assert.Equal(127, mid.BackgroundColor!.Resolve(new HashSet<WidgetState>())!.Value.R);
+        Assert.Equal(128, mid.BackgroundColor!.Resolve(new HashSet<WidgetState>())!.Red);
         Assert.Equal(SystemMouseCursors.Click, mid.MouseCursor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(VisualDensity.Compact, late.VisualDensity);
     }

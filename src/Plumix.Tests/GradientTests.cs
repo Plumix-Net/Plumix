@@ -10,7 +10,7 @@ namespace Plumix.Tests;
 // Dart parity source: flutter/packages/flutter/test/painting/gradient_test.dart
 public sealed class GradientTests
 {
-    private static Color Argb(uint value) => Color.FromUInt32(value);
+    private static Color Argb(uint value) => new Color(value);
 
     [Fact]
     public void LinearGradient_ScaleTest()
@@ -25,7 +25,10 @@ public sealed class GradientTests
         Assert.NotNull(scaled);
         Assert.Equal((AlignmentGeometry)Alignment.BottomRight, scaled.Begin);
         Assert.Equal((AlignmentGeometry)new Alignment(0.7, 1.0), scaled.End);
-        Assert.Equal([Argb(0x00FFFFFF), Argb(0x04777777), Argb(0x11444444)], scaled.Colors);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x00FFFFFF), Argb(0x04777777), Argb(0x11444444)],
+            scaled.Colors,
+            1.0 / 255);
     }
 
     [Fact]
@@ -45,7 +48,7 @@ public sealed class GradientTests
         Assert.NotNull(middle);
         Assert.Equal((AlignmentGeometry)Alignment.TopCenter, middle.Begin);
         Assert.Equal((AlignmentGeometry)Alignment.CenterLeft, middle.End);
-        Assert.Equal([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors, 1.0 / 255);
         Assert.Equal([0.0, 1.0], middle.Stops);
     }
 
@@ -71,7 +74,10 @@ public sealed class GradientTests
         LinearGradient? middle = LinearGradient.Lerp(from, to, 0.5);
 
         Assert.NotNull(middle);
-        Assert.Equal([Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x77777777)],
+            middle.Colors,
+            1.0 / 255);
         Assert.Equal([0.0, 0.5, 1.0], middle.Stops);
     }
 
@@ -84,7 +90,10 @@ public sealed class GradientTests
         LinearGradient? middle = LinearGradient.Lerp(from, to, 0.5);
 
         Assert.NotNull(middle);
-        Assert.Equal([Argb(0x33333333), Argb(0x55555555), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x33333333), Argb(0x55555555), Argb(0x77777777)],
+            middle.Colors,
+            1.0 / 255);
         Assert.Equal([0.0, 0.5, 1.0], middle.Stops);
     }
 
@@ -101,9 +110,10 @@ public sealed class GradientTests
         LinearGradient? middle = LinearGradient.Lerp(from, to, 0.5);
 
         Assert.NotNull(middle);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorsAs(
             [Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x57575757), Argb(0x77777777)],
-            middle.Colors);
+            middle.Colors,
+            1.0 / 255);
         Assert.Equal([0.0, 0.5, 0.7, 1.0], middle.Stops);
     }
 
@@ -133,7 +143,7 @@ public sealed class GradientTests
 
         Assert.Equal(
             "LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomLeft, "
-            + "colors: [Color(0x33333333), Color(0x66666666)], tileMode: TileMode.clamp, "
+            + $"colors: [{new Color(0x33333333)}, {new Color(0x66666666)}], tileMode: TileMode.clamp, "
             + "transform: GradientRotation(radians: 1.6))",
             gradient.ToString());
 
@@ -214,7 +224,10 @@ public sealed class GradientTests
 
         LinearGradient scaled = gradient.Scale(0.5);
 
-        Assert.Equal([Argb(0x80FF0000), Argb(0x8000FF00), Argb(0x800000FF)], scaled.Colors);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x80FF0000), Argb(0x8000FF00), Argb(0x800000FF)],
+            scaled.Colors,
+            1.0 / 255);
         Assert.Equal([0.0, 0.5, 1.0], scaled.Stops);
         Assert.Equal(TileMode.Decal, scaled.TileMode);
         Assert.Equal(new GradientRotation(Math.PI / 4), scaled.Transform);
@@ -237,7 +250,7 @@ public sealed class GradientTests
         Assert.NotNull(middle);
         Assert.Equal((AlignmentGeometry)Alignment.TopCenter, middle.Center);
         Assert.Equal(15.0, middle.Radius);
-        Assert.Equal([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors, 1.0 / 255);
         Assert.Equal([0.0, 1.0], middle.Stops);
         Assert.Null(middle.Focal);
     }
@@ -291,7 +304,10 @@ public sealed class GradientTests
         RadialGradient? middle = RadialGradient.Lerp(from, to, 0.5);
 
         Assert.NotNull(middle);
-        Assert.Equal([Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x77777777)],
+            middle.Colors,
+            1.0 / 255);
         Assert.Equal([0.0, 0.5, 1.0], middle.Stops);
     }
 
@@ -349,7 +365,7 @@ public sealed class GradientTests
         Assert.Equal((AlignmentGeometry)Alignment.TopCenter, middle.Center);
         Assert.Equal(Math.PI / 4, middle.StartAngle);
         Assert.Equal(Math.PI * 3 / 4, middle.EndAngle);
-        Assert.Equal([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors);
+        ColorMatchers.AssertSameColorsAs([Argb(0x3B3B3B3B), Argb(0x77777777)], middle.Colors, 1.0 / 255);
         Assert.Equal([0.0, 1.0], middle.Stops);
     }
 
@@ -365,7 +381,7 @@ public sealed class GradientTests
             transform: new GradientRotation(1));
 
         SweepGradient scaled = gradient.Scale(0.5);
-        Assert.Equal([Argb(0x80333333), Argb(0x80666666)], scaled.Colors);
+        ColorMatchers.AssertSameColorsAs([Argb(0x80333333), Argb(0x80666666)], scaled.Colors, 1.0 / 255);
         Assert.Equal(0.1, scaled.StartAngle);
         Assert.Equal(2.0, scaled.EndAngle);
 
@@ -413,8 +429,15 @@ public sealed class GradientTests
             radius: 15.0,
             colors: [Argb(0x3B3B3B3B), Argb(0x77777777)],
             stops: [0.0, 1.0]);
-        Assert.Equal(expected, Gradient.Lerp(from, to, 0.5));
-        Assert.Equal(expected, Gradient.Lerp(to, from, 0.5));
+        foreach (Gradient? middle in new[] { Gradient.Lerp(from, to, 0.5), Gradient.Lerp(to, from, 0.5) })
+        {
+            // gradient_test.dart's `_matchesRadialGradient`: colours within 1/255.
+            var radial = Assert.IsType<RadialGradient>(middle);
+            Assert.Equal(expected.Center, radial.Center);
+            Assert.Equal(expected.Radius, radial.Radius);
+            Assert.Equal(expected.Stops, radial.Stops);
+            ColorMatchers.AssertSameColorsAs(expected.Colors, radial.Colors, 1.0 / 255);
+        }
     }
 
     [Fact]
@@ -572,9 +595,9 @@ public sealed class GradientTests
         LinearGradient gradient = Assert.IsType<LinearGradient>(almostRed.Gradient);
         foreach (Color color in gradient.Colors)
         {
-            Assert.InRange(color.R, 240, 255);
-            Assert.InRange(color.G, 0, 15);
-            Assert.InRange(color.B, 0, 15);
+            Assert.InRange(color.Red, 240, 255);
+            Assert.InRange(color.Green, 0, 15);
+            Assert.InRange(color.Blue, 0, 15);
         }
     }
 
@@ -587,7 +610,7 @@ public sealed class GradientTests
         var middle = (ShapeDecoration)ShapeDecoration.Lerp(from, to, 0.5)!;
 
         Assert.Null(middle.Gradient);
-        Assert.Equal(Argb(0xFF7F7F7F), middle.Color);
+        ColorMatchers.AssertSameColorAs(Argb(0xFF7F7F7F), middle.Color);
     }
 
     private static LinearGradient RequireLinear(Decoration? decoration)

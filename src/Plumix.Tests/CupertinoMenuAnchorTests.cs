@@ -77,12 +77,14 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         using var light = new CupertinoThemeTestHarness(Wrap(divider));
         light.Pump(ViewSize);
         ColoredBox lightBox = Assert.Single(light.FindWidgets<ColoredBox>());
-        Assert.Equal(Color.FromArgb(20, 0, 0, 0), lightBox.Color);
+        ColorMatchers.AssertSameColorAs(Color.FromRGBO(0, 0, 0, 0.08), lightBox.Color);
         Assert.Equal(8.0, Assert.Single(light.FindWidgets<SizedBox>()).Height);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(divider, PlatformBrightness.Dark));
         dark.Pump(ViewSize);
-        Assert.Equal(Color.FromArgb(41, 0, 0, 0), Assert.Single(dark.FindWidgets<ColoredBox>()).Color);
+        ColorMatchers.AssertSameColorAs(
+            Color.FromRGBO(0, 0, 0, 0.16),
+            Assert.Single(dark.FindWidgets<ColoredBox>()).Color);
     }
 
     [Fact]
@@ -134,7 +136,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             onPressed: static () => { })));
         enabled.Pump(ViewSize);
         Assert.Equal(
-            Color.FromArgb(245, 0, 0, 0),
+            Color.FromARGB(245, 0, 0, 0),
             Assert.IsType<SolidColorBrush>(FindParagraph(enabled.RenderView, "Enabled").Foreground).Color);
 
         using var disabled = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
@@ -158,7 +160,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
             PlatformBrightness.Dark));
         dark.Pump(ViewSize);
         Assert.Equal(
-            Color.FromArgb(245, 255, 255, 255),
+            Color.FromARGB(245, 255, 255, 255),
             Assert.IsType<SolidColorBrush>(FindParagraph(dark.RenderView, "Dark").Foreground).Color);
     }
 
@@ -189,7 +191,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         harness.Pump(ViewSize);
         Assert.Contains(
             harness.FindWidgets<DecoratedBox>(),
-            box => box.Decoration is BoxDecoration { Color: { } color } && color.A == 26);
+            box => box.Decoration is BoxDecoration { Color: { } color } && color.Alpha == 26);
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
@@ -358,32 +360,28 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     [InlineData(true)]
     public void Item_DefaultDecorationResolvesEveryInteractionState(bool dark)
     {
-        WidgetStateProperty<BoxDecoration> property = dark
-            ? CupertinoMenuItem.KDefaultDarkDecoration
-            : CupertinoMenuItem.KDefaultDecoration;
-        byte red = dark ? (byte)255 : (byte)50;
+        WidgetStateProperty<BoxDecoration> property = CupertinoMenuItem.KDefaultDecoration;
 
-        Assert.Equal(
-            Color.FromArgb(26, red, red, red),
-            property.Resolve(new HashSet<WidgetState> { WidgetState.Dragged }).Color);
-        Assert.Equal(
-            Color.FromArgb(26, red, red, red),
-            property.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }).Color);
-        Assert.Equal(
-            Color.FromArgb(19, red, red, red),
-            property.Resolve(new HashSet<WidgetState> { WidgetState.Focused }).Color);
-        Assert.Equal(
-            Color.FromArgb(13, red, red, red),
-            property.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }).Color);
+        // One table of brightness-dependent colors, as in Dart; the variant is picked by brightness.
+        Color Fill(IReadOnlySet<WidgetState> states)
+        {
+            var color = Assert.IsType<CupertinoDynamicColor>(property.Resolve(states).Color);
+            return dark ? color.DarkColor : color.Color;
+        }
+
+        int red = dark ? 255 : 50;
+        Assert.Equal(Color.FromRGBO(red, red, red, 0.1), Fill(new HashSet<WidgetState> { WidgetState.Dragged }));
+        Assert.Equal(Color.FromRGBO(red, red, red, 0.1), Fill(new HashSet<WidgetState> { WidgetState.Pressed }));
+        Assert.Equal(Color.FromRGBO(red, red, red, 0.075), Fill(new HashSet<WidgetState> { WidgetState.Focused }));
+        Assert.Equal(Color.FromRGBO(red, red, red, 0.05), Fill(new HashSet<WidgetState> { WidgetState.Hovered }));
         Assert.Null(property.Resolve(new HashSet<WidgetState>()).Color);
 
         // Dart's ordered map puts `dragged` before `pressed`, `focused` and `hovered`.
         Assert.Equal(
-            Color.FromArgb(26, red, red, red),
-            property
-                .Resolve(new HashSet<WidgetState> { WidgetState.Hovered, WidgetState.Dragged })
-                .Color);
+            Color.FromRGBO(red, red, red, 0.1),
+            Fill(new HashSet<WidgetState> { WidgetState.Hovered, WidgetState.Dragged }));
     }
+
 
     [Fact]
     public void Item_HoverReportsOnceEachWayAndRequestsFocusUnlessOptedOut()
@@ -504,7 +502,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         RenderParagraph subtitle = FindParagraph(harness.RenderView, "Subtitle");
         Assert.Equal(15.0, subtitle.Text.Style!.FontSize!.Value, precision: 6);
         Assert.Equal(
-            Color.FromArgb(140, 0, 0, 0),
+            Color.FromARGB(140, 0, 0, 0),
             Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
     }
 

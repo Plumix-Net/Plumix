@@ -670,8 +670,8 @@ public sealed class RoundRangeSliderThumbShape : RangeSliderThumbShape
         Color color = enableAnimation.Value >= 0.5
             ? sliderTheme.ThumbColor ?? Colors.Transparent
             : sliderTheme.DisabledThumbColor ?? Colors.Transparent;
-        IPen? pen = isOnTop && sliderTheme.OverlappingShapeStrokeColor.HasValue
-            ? new Pen(new SolidColorBrush(sliderTheme.OverlappingShapeStrokeColor.Value), 1.0)
+        IPen? pen = isOnTop && sliderTheme.OverlappingShapeStrokeColor != null
+            ? new Pen(new SolidColorBrush(sliderTheme.OverlappingShapeStrokeColor!), 1.0)
             : null;
         context.Canvas.DrawCircle(new SolidColorBrush(color), pen, center, radius);
     }
@@ -884,7 +884,7 @@ internal static class SliderShapePaint
         double height = labelLayout.Height + 8.0;
         var rect = new Rect(center.X - (width / 2.0), center.Y - height - 8.0, width, height);
         Color? stroke = overrideStrokeColor ?? theme.ValueIndicatorStrokeColor;
-        IPen? pen = stroke.HasValue ? new Pen(new SolidColorBrush(stroke.Value), 1.0) : null;
+        IPen? pen = stroke != null ? new Pen(new SolidColorBrush(stroke!), 1.0) : null;
         context.Canvas.DrawRectangle(
             new SolidColorBrush(theme.ValueIndicatorColor ?? Colors.Transparent),
             pen,

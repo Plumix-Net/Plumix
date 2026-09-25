@@ -454,7 +454,7 @@ public sealed class MaterialDialogTests : IDisposable
         harness.Pump(new Size(600, 600));
 
         bool hasCupertinoSurface = FindDescendants<RenderColoredBox>(harness.RenderView)
-            .Any(box => box.Color == Color.FromUInt32(0xCCF2F2F2));
+            .Any(box => ColorMatchers.IsSameColorAs(box.Color, new Color(0xCCF2F2F2)));
         Assert.Equal(expectCupertino, hasCupertinoSurface);
         Assert.NotNull(FindParagraph(harness.RenderView, "Adaptive title"));
     }

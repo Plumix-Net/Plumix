@@ -63,15 +63,13 @@ public sealed class BottomSheetDemoPage : StatefulWidget
             }
 
             var bottomSheetTheme = new BottomSheetThemeData(
-                BackgroundColor: Color.Parse("#FFE8DEF8"),
+                BackgroundColor: new Color(0xFFE8DEF8),
                 Shape: new RoundedRectangleBorder(
                     borderRadius: Plumix.Rendering.BorderRadius.Circular(18)),
                 ShowDragHandle: true,
-                DragHandleColor: WidgetStateColor.ResolveWith(
-                    Color.Parse("#FF6750A4"),
-                    states => states.Contains(WidgetState.Hovered)
-                        ? Color.Parse("#FFB3261E")
-                        : Color.Parse("#FF6750A4")));
+                DragHandleColor: WidgetStateColor.ResolveWith(states => states.Contains(WidgetState.Hovered)
+                        ? new Color(0xFFB3261E)
+                        : new Color(0xFF6750A4)));
             ThemeData localTheme = Theme.Of(context) with { BottomSheetTheme = bottomSheetTheme };
             return new Theme(data: localTheme, child: new Builder(BuildContent));
         }
@@ -103,7 +101,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 context,
                 _ => new DraggableScrollableSheet(
                     builder: (_, scrollController) => new Container(
-                        color: Color.Parse("#FFF7F2FA"),
+                        color: new Color(0xFFF7F2FA),
                         child: new ListView(
                             controller: scrollController,
                             itemExtent: 48.0,

@@ -156,12 +156,12 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
             double rotation = value.HasValue || _lastValue.HasValue
                 ? Math.PI * ResolveAdditionalRotation(value ?? _lastValue!.Value)
                 : 0.0;
-            double opacity = resolvedValueColor.A / 255.0;
-            Color opaqueValueColor = Avalonia.Media.Color.FromArgb(
+            double opacity = resolvedValueColor.Alpha / 255.0;
+            Color opaqueValueColor = Color.FromARGB(
                 byte.MaxValue,
-                resolvedValueColor.R,
-                resolvedValueColor.G,
-                resolvedValueColor.B);
+                resolvedValueColor.Red,
+                resolvedValueColor.Green,
+                resolvedValueColor.Blue);
 
             Widget child = new CircularProgressIndicatorRenderWidget(
                 value: null,
@@ -453,7 +453,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
     private bool? _isIndicatorAtTop;
     private double? _dragOffset;
     private TaskCompletionSource? _pendingRefresh;
-    private Color _effectiveValueColor;
+    private Color _effectiveValueColor = null!;
 
     private RefreshIndicator CurrentWidget => (RefreshIndicator)StateWidget;
 
@@ -701,7 +701,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
 
         _positionController!.SetValue(Math.Clamp(newValue, 0.0, 1.0));
         if (_status == RefreshIndicatorStatus.Drag
-            && ResolveValueColor().A == _effectiveValueColor.A)
+            && ResolveValueColor().Alpha == _effectiveValueColor.Alpha)
         {
             SetStatus(RefreshIndicatorStatus.Armed);
         }
@@ -795,7 +795,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
 
     private Color ResolveValueColor()
     {
-        if (_effectiveValueColor.A == 0)
+        if (_effectiveValueColor.Alpha == 0)
         {
             return _effectiveValueColor;
         }
@@ -805,9 +805,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
             Math.Clamp(PositionValue * DragSizeFactorLimit, 0.0, 1.0));
     }
 
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, 255),
-        color.R,
-        color.G,
-        color.B);
+    // Dart: `ColorTween(begin: color.withAlpha(0), end: color.withAlpha(color.alpha))` at the drag fraction.
+    private static Color WithOpacity(Color color, double opacity) =>
+        Color.Lerp(color.WithAlpha(0), color.WithAlpha(color.Alpha), opacity);
 }

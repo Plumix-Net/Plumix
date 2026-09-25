@@ -78,42 +78,42 @@ internal static class CupertinoDialogConstants
     public const double ActionSheetButtonVerticalPaddingBase = 1.8;
 
     public static readonly CupertinoDynamicColor DialogColor = CupertinoDynamicColor.WithBrightness(
-        Color.FromUInt32(0xCCF2F2F2),
-        Color.FromUInt32(0xCC2D2D2D));
+        new Color(0xCCF2F2F2),
+        new Color(0xCC2D2D2D));
 
     public static readonly CupertinoDynamicColor DialogPressedColor = CupertinoDynamicColor.WithBrightness(
-        Color.FromUInt32(0xFFE1E1E1),
-        Color.FromUInt32(0xFF404040));
+        new Color(0xFFE1E1E1),
+        new Color(0xFF404040));
 
     public static readonly CupertinoDynamicColor ActionSheetPressedColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xCAE0E0E0),
-            Color.FromUInt32(0xC1515151));
+            new Color(0xCAE0E0E0),
+            new Color(0xC1515151));
 
     public static readonly CupertinoDynamicColor ActionSheetCancelColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFFFFFFF),
-            Color.FromUInt32(0xFF2C2C2C));
+            new Color(0xFFFFFFFF),
+            new Color(0xFF2C2C2C));
 
     public static readonly CupertinoDynamicColor ActionSheetCancelPressedColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFECECEC),
-            Color.FromUInt32(0xFF494949));
+            new Color(0xFFECECEC),
+            new Color(0xFF494949));
 
     public static readonly CupertinoDynamicColor ActionSheetBackgroundColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xC8FCFCFC),
-            Color.FromUInt32(0xBE292929));
+            new Color(0xC8FCFCFC),
+            new Color(0xBE292929));
 
     public static readonly CupertinoDynamicColor ActionSheetContentTextColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0x851D1D1D),
-            Color.FromUInt32(0x96F1F1F1));
+            new Color(0x851D1D1D),
+            new Color(0x96F1F1F1));
 
     public static readonly CupertinoDynamicColor ActionSheetButtonDividerColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xD4C9C9C9),
-            Color.FromUInt32(0xD57D7D7D));
+            new Color(0xD4C9C9C9),
+            new Color(0xD57D7D7D));
 
     /// <summary>Dart's `_isInAccessibilityMode`: effective text scale beyond 1.4 at 14 logical pixels.</summary>
     public static bool IsInAccessibilityMode(BuildContext context)
@@ -395,8 +395,7 @@ internal sealed class CupertinoDialogActionState : State<CupertinoDialogAction>,
 
         if (!Current.Enabled)
         {
-            Color color = style.Color ?? Colors.Black;
-            style = style.CopyWith(color: Color.FromArgb((byte)Math.Round(color.A * 0.5), color.R, color.G, color.B));
+            style = style.CopyWith(color: style.Color!.WithOpacity(0.5));
         }
 
         TextScaler textScaler = MediaQuery.TextScalerOf(context);
@@ -539,8 +538,8 @@ internal interface ISlideTarget
 internal sealed class AlertDialogButtonBackground : StatefulWidget
 {
     public AlertDialogButtonBackground(
-        CupertinoDynamicColor idleColor,
-        CupertinoDynamicColor pressedColor,
+        Color idleColor,
+        Color pressedColor,
         bool pressed,
         Action<bool>? onPressStateChange,
         Widget child,
@@ -553,8 +552,8 @@ internal sealed class AlertDialogButtonBackground : StatefulWidget
         Child = child;
     }
 
-    public CupertinoDynamicColor IdleColor { get; }
-    public CupertinoDynamicColor PressedColor { get; }
+    public Color IdleColor { get; }
+    public Color PressedColor { get; }
     public bool Pressed { get; }
     public Action<bool>? OnPressStateChange { get; }
     public Widget Child { get; }
@@ -584,8 +583,8 @@ internal sealed class AlertDialogButtonBackgroundState : State<AlertDialogButton
     public override Widget Build(BuildContext context)
     {
         Color color = Current.Pressed
-            ? Current.PressedColor.ResolveFrom(context)
-            : Current.IdleColor.ResolveFrom(context);
+            ? CupertinoDynamicColor.Resolve(Current.PressedColor, context)
+            : CupertinoDynamicColor.Resolve(Current.IdleColor, context);
         return new MetaData(
             metaData: this,
             child: new MergeSemantics(new ColoredBox(color, child: Current.Child)));

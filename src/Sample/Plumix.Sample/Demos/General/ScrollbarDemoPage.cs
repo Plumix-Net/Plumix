@@ -91,8 +91,8 @@ internal sealed class ScrollbarDemoPageState : State
                                                 states.Contains(WidgetState.Hovered) ? 12 : 8),
                                             thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 states.Contains(WidgetState.Dragged)
-                                                    ? Color.Parse("#FF7B1FA2")
-                                                    : Color.Parse("#FF1565C0"))),
+                                                    ? new Color(0xFF7B1FA2)
+                                                    : new Color(0xFF1565C0))),
                                         child: new MaterialScrollbar(
                                             controller: _materialController,
                                             child: BuildList(_materialController, "material"))))),
@@ -113,9 +113,9 @@ internal sealed class ScrollbarDemoPageState : State
                                                     thickness: 8,
                                                     radius: ThumbShape is null ? Radius.Elliptical(4, 8) : null,
                                                     shape: ThumbShape,
-                                                    thumbColor: Color.Parse("#B3005E7A"),
-                                                    trackColor: Color.Parse("#14005E7A"),
-                                                    trackBorderColor: Color.Parse("#33005E7A"),
+                                                    thumbColor: new Color(0xB3005E7A),
+                                                    trackColor: new Color(0x14005E7A),
+                                                    trackBorderColor: new Color(0x33005E7A),
                                                     child: BuildList(_rawController, "raw")))))),
                         ])),
             ]);
@@ -136,7 +136,7 @@ internal sealed class ScrollbarDemoPageState : State
         itemExtent: 40,
         padding: new Thickness(10),
         itemBuilder: (_, index) => new Container(
-            color: index % 2 == 0 ? Colors.White : Color.Parse("#FFF4F7FA"),
+            color: index % 2 == 0 ? Colors.White : new Color(0xFFF4F7FA),
             padding: new Thickness(10, 8),
             child: new Text($"{prefix} row #{index}", fontSize: 13, color: Colors.Black)),
         addAutomaticKeepAlives: false);

@@ -201,16 +201,16 @@ public sealed class ExpansionTile : StatefulWidget
             double progress = Curves.EaseIn(animation.Value);
             Color expandedTextColor = CurrentWidget.TextColor
                                       ?? expansionTheme.TextColor
-                                      ?? defaults.TextColor!.Value;
+                                      ?? defaults.TextColor!;
             Color collapsedTextColor = CurrentWidget.CollapsedTextColor
                                        ?? expansionTheme.CollapsedTextColor
-                                       ?? defaults.CollapsedTextColor!.Value;
+                                       ?? defaults.CollapsedTextColor!;
             Color expandedIconColor = CurrentWidget.IconColor
                                       ?? expansionTheme.IconColor
-                                      ?? defaults.IconColor!.Value;
+                                      ?? defaults.IconColor!;
             Color collapsedIconColor = CurrentWidget.CollapsedIconColor
                                        ?? expansionTheme.CollapsedIconColor
-                                       ?? defaults.CollapsedIconColor!.Value;
+                                       ?? defaults.CollapsedIconColor!;
             Color textColor = LerpColor(collapsedTextColor, expandedTextColor, progress);
             Color iconColor = LerpColor(collapsedIconColor, expandedIconColor, progress);
             ListTileControlAffinity affinity = ResolveAffinity();
@@ -225,8 +225,8 @@ public sealed class ExpansionTile : StatefulWidget
                 : null;
 
             Widget child = ListTileTheme.Merge(
-                iconColor: WidgetStateProperty<Color?>.All(iconColor),
-                textColor: WidgetStateProperty<Color?>.All(textColor),
+                iconColor: iconColor,
+                textColor: textColor,
                 child: new ListTile(
                     enabled: CurrentWidget.Enabled,
                     onTap: _controller!.IsExpanded ? _controller.Collapse : _controller.Expand,
@@ -330,7 +330,7 @@ public sealed class ExpansionTile : StatefulWidget
                     child: tile);
             }
 
-            if (backgroundColor.A > 0)
+            if (backgroundColor.Alpha > 0)
             {
                 tile = new Material(type: MaterialType.Transparency, child: tile);
             }

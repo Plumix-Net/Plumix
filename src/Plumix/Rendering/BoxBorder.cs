@@ -288,7 +288,7 @@ public sealed record Border : BoxBorder
         BorderStyle style = BorderStyle.Solid,
         double strokeAlign = BorderSide.StrokeAlignInside)
     {
-        return FromBorderSide(new BorderSide(color ?? Color.FromRgb(0, 0, 0), width, style, strokeAlign));
+        return FromBorderSide(new BorderSide(color ?? Color.FromARGB(0xFF, 0, 0, 0), width, style, strokeAlign));
     }
 
     /// Creates a [Border] that represents the addition of the two given [Border]s.

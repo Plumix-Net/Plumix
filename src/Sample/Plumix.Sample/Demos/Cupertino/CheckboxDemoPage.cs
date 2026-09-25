@@ -53,7 +53,7 @@ internal sealed class CheckboxDemoPageState : State
                 new Text(
                     "Material Checkbox with M2/M3 defaults, tristate values, theme precedence, and tap-target policy.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -62,27 +62,27 @@ internal sealed class CheckboxDemoPageState : State
                             label: _enabled ? "Enabled" : "Disabled",
                             onTap: ToggleEnabled,
                             width: 108,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: _shrinkWrapTapTarget ? "Tap: shrink" : "Tap: padded",
                             onTap: ToggleTapTargetSize,
                             width: 128,
-                            background: Color.Parse("#FFEAE4FF")),
+                            background: new Color(0xFFEAE4FF)),
                         BuildControlButton(
                             label: _useMaterial3 ? "Material 3" : "Material 2",
                             onTap: ToggleMaterialVersion,
                             width: 104,
-                            background: Color.Parse("#FFE8F5E9")),
+                            background: new Color(0xFFE8F5E9)),
                         BuildControlButton(
                             label: "Reset",
                             onTap: Reset,
                             width: 80,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                     ]),
                 new Text(
                     status,
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Theme(
                     data: checkboxTheme,
                     child: new Column(
@@ -107,23 +107,23 @@ internal sealed class CheckboxDemoPageState : State
                                 checkbox: new Checkbox(
                                     value: _checked,
                                     onChanged: _enabled ? OnCheckedChanged : null,
-                                    activeColor: Color.Parse("#FF00695C"),
+                                    activeColor: new Color(0xFF00695C),
                                     checkColor: Colors.White,
                                     fillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
                                         if (states.Contains(WidgetState.Disabled))
                                         {
-                                            return Color.Parse("#6100695C");
+                                            return new Color(0x6100695C);
                                         }
 
                                         if (states.Contains(WidgetState.Selected))
                                         {
-                                            return Color.Parse("#FF00695C");
+                                            return new Color(0xFF00695C);
                                         }
 
                                         return Colors.Transparent;
                                     }),
-                                    side: new BorderSide(Color.Parse("#FF00695C"), 2)),
+                                    side: new BorderSide(new Color(0xFF00695C), 2)),
                                 title: "Custom colors",
                                 subtitle: "active/check/fill/side overrides"),
                             BuildCheckboxRow(
@@ -131,7 +131,7 @@ internal sealed class CheckboxDemoPageState : State
                                     data: new CheckboxThemeData(
                                         FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                             states.Contains(WidgetState.Selected)
-                                                ? Color.Parse("#FF7B1FA2")
+                                                ? new Color(0xFF7B1FA2)
                                                 : Colors.Transparent),
                                         CheckColor: WidgetStateProperty<Color?>.All(Colors.White),
                                         Shape: new RoundedRectangleBorder(borderRadius:
@@ -140,7 +140,7 @@ internal sealed class CheckboxDemoPageState : State
                                             new BorderSide(
                                                 states.Contains(WidgetState.Error)
                                                     ? Colors.Red
-                                                    : Color.Parse("#FF7B1FA2"),
+                                                    : new Color(0xFF7B1FA2),
                                                 2))),
                                     child: new Checkbox(
                                         value: _checked,
@@ -152,7 +152,7 @@ internal sealed class CheckboxDemoPageState : State
                 new Text(
                     "macOS-style checkbox: dynamic colors, focus ring, press overlay, and the dark-mode gradient.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 BuildCheckboxRow(
                     checkbox: new CupertinoCheckbox(
                         value: _checked,
@@ -170,17 +170,17 @@ internal sealed class CheckboxDemoPageState : State
                     checkbox: new CupertinoCheckbox(
                         value: _checked,
                         onChanged: _enabled ? OnCheckedChanged : null,
-                        activeColor: Color.Parse("#FF00695C"),
+                        activeColor: new Color(0xFF00695C),
                         checkColor: Colors.White,
                         shape: new RoundedRectangleBorder(borderRadius:
                             Plumix.Rendering.BorderRadius.Circular(5)),
-                        side: new BorderSide(Color.Parse("#FF00695C"), 2)),
+                        side: new BorderSide(new Color(0xFF00695C), 2)),
                     title: "Custom CupertinoCheckbox",
                     subtitle: "active/check/shape/side overrides"),
                 new Container(
                     padding: new Thickness(10, 8),
                     decoration: new BoxDecoration(
-                        Color: Color.Parse("#FF1C1C1E"),
+                        Color: new Color(0xFF1C1C1E),
                         BorderRadius: BorderRadius.Circular(10)),
                     child: new CupertinoTheme(
                         new CupertinoThemeData(brightness: PlatformBrightness.Dark),
@@ -209,9 +209,9 @@ internal sealed class CheckboxDemoPageState : State
         return new Container(
             padding: new Thickness(10, 8),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F4F9"),
+                Color: new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFD6DEEA), 1))),
             child: new Row(
                 spacing: 10,
                 children:
@@ -224,7 +224,7 @@ internal sealed class CheckboxDemoPageState : State
                             children:
                             [
                                 new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                             ])),
                 ]));
     }

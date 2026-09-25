@@ -857,7 +857,7 @@ public sealed class WidgetsApp : StatefulWidget
 
         private static Color Opaque(Color color)
         {
-            return Color.FromArgb(byte.MaxValue, color.R, color.G, color.B);
+            return Color.FromARGB(byte.MaxValue, color.Red, color.Green, color.Blue);
         }
     }
 }

@@ -643,7 +643,7 @@ internal static class MaterialSurface
 {
     public static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color shadowColor, double elevation)
     {
-        if (elevation <= 0 || shadowColor.A == 0)
+        if (elevation <= 0 || shadowColor.Alpha == 0)
         {
             return null;
         }
@@ -671,7 +671,7 @@ internal static class MaterialSurface
 
     private static Color ApplyOpacity(Color color, double multiplier)
     {
-        byte alpha = (byte)Math.Clamp((int)(color.A * multiplier), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        byte alpha = (byte)Math.Clamp((int)(color.Alpha * multiplier), 0, 255);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 }

@@ -1097,10 +1097,10 @@ public sealed partial class EditableText : StatefulWidget
         MaxLines = multiline ? maxLines : 1;
         Expands = expands;
         FontSize = fontSize;
-        TextColor = textColor ?? Colors.Black;
-        PlaceholderColor = placeholderColor ?? Color.Parse("#FF757575");
-        BackgroundColor = backgroundColor ?? Color.Parse("#FFF5F5F5");
-        FocusedBackgroundColor = focusedBackgroundColor ?? Color.Parse("#FFE8F0FE");
+        TextColor = textColor ?? new Color(0xFF000000);
+        PlaceholderColor = placeholderColor ?? new Color(0xFF757575);
+        BackgroundColor = backgroundColor ?? new Color(0xFFF5F5F5);
+        FocusedBackgroundColor = focusedBackgroundColor ?? new Color(0xFFE8F0FE);
         CursorColor = cursorColor;
         SelectionColor = selectionColor;
         MouseCursor = mouseCursor;
@@ -2078,7 +2078,7 @@ public sealed partial class EditableText : StatefulWidget
         {
             Color cursorColor = Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor;
             _resolvedCursorColor = cursorColor;
-            double effectiveOpacity = Math.Min(cursorColor.A / 255.0, CursorBlinkOpacityController.Value);
+            double effectiveOpacity = Math.Min(cursorColor.Alpha / 255.0, CursorBlinkOpacityController.Value);
             return cursorColor.WithOpacity(effectiveOpacity);
         }
 

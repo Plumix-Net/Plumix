@@ -32,27 +32,27 @@ internal sealed class CupertinoRouteDemoPageState : State
                     "Page transitions, modal popups, and a CupertinoTabView with independent history.",
                     fontSize: 14.0,
                     color: Colors.DimGray),
-                new Text($"last result: {_lastResult}", fontSize: 12.0, color: Color.Parse("#FF607D8B")),
+                new Text($"last result: {_lastResult}", fontSize: 12.0, color: new Color(0xFF607D8B)),
                 BuildAction(
                     "Push standard CupertinoPageRoute",
                     () => PushPage(context, fullscreenDialog: false),
-                    Color.Parse("#FFE9F0FF")),
+                    new Color(0xFFE9F0FF)),
                 BuildAction(
                     "Push fullscreen CupertinoPageRoute",
                     () => PushPage(context, fullscreenDialog: true),
-                    Color.Parse("#FFEAE4FF")),
+                    new Color(0xFFEAE4FF)),
                 BuildAction(
                     "Open independent CupertinoTabView",
                     () => PushTabView(context),
-                    Color.Parse("#FFE8F0FE")),
+                    new Color(0xFFE8F0FE)),
                 BuildAction(
                     "Show Cupertino modal popup",
                     () => ShowPopup(context),
-                    Color.Parse("#FFE8F4E8")),
+                    new Color(0xFFE8F4E8)),
                 BuildAction(
                     "Show draggable Cupertino sheet",
                     () => ShowSheet(context),
-                    Color.Parse("#FFE5F4FF")),
+                    new Color(0xFFE5F4FF)),
             ]);
     }
 
@@ -78,7 +78,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                             BuildAction(
                                 "Pop with result",
                                 () => Complete(routeContext, $"{routeKind} page"),
-                                Color.Parse("#FFFFF3E0")),
+                                new Color(0xFFFFF3E0)),
                         ]))),
             title: fullscreenDialog ? "Fullscreen" : "Details",
             fullscreenDialog: fullscreenDialog);
@@ -116,7 +116,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                     children:
                     [
                         new Text(title, fontSize: 16.0, color: Colors.Black),
-                        BuildAction(actionLabel, onTap, Color.Parse("#FFE8F0FE")),
+                        BuildAction(actionLabel, onTap, new Color(0xFFE8F0FE)),
                     ])));
     }
 
@@ -136,7 +136,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                         BuildAction(
                             "Close popup",
                             () => Complete(popupContext, "modal popup"),
-                            Color.Parse("#FFE0F2F1")),
+                            new Color(0xFFE0F2F1)),
                     ])));
     }
 
@@ -158,7 +158,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                             BuildAction(
                                 "Close with CupertinoSheetRoute.PopSheet",
                                 () => CupertinoSheetRoute<object?>.PopSheet(sheetContext),
-                                Color.Parse("#FFFFF3E0")),
+                                new Color(0xFFFFF3E0)),
                             .. Enumerable.Range(1, 12)
                                 .Select(index => (Widget)new Text($"Scrollable sheet row {index}", fontSize: 14.0)),
                         ])))));

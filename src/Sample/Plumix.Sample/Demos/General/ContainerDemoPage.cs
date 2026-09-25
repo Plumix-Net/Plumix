@@ -98,7 +98,7 @@ internal sealed class ContainerDemoPageState : State
                 new Container(
                     width: 240,
                     height: 160,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new Container(
                         margin: margin,
@@ -110,13 +110,13 @@ internal sealed class ContainerDemoPageState : State
                         clipBehavior: clipBehavior,
                         alignment: _alignment,
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFCCE3FF"),
-                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                            Color: new Color(0xFFCCE3FF),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF1D3557), 2)),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new Container(
                             width: 32,
                             height: 20,
-                            color: Color.Parse("#FF1D3557"),
+                            color: new Color(0xFF1D3557),
                             child: new Center(
                                 child: new Text("C", fontSize: 12, color: Colors.White))))),
             ]);
@@ -129,7 +129,7 @@ internal sealed class ContainerDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

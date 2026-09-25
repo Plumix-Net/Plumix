@@ -112,7 +112,7 @@ public sealed class ScrollableEnsureVisibleDartParityTests
                                 key: new ValueKey<int>(0),
                                 width: 100.0,
                                 height: 100.0,
-                                color: Color.FromUInt32(0xFFFFFFFF))))),
+                                color: new Color(0xFFFFFFFF))))),
                 new SizedBox(height: 200.0),
                 new SizedBox(height: 200.0),
                 new SizedBox(height: 200.0),

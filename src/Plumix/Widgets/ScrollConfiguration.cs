@@ -73,7 +73,7 @@ public sealed record ScrollableDetails(
 public class ScrollBehavior
 {
     // scroll_configuration.dart: _kDefaultGlowColor.
-    private static readonly Avalonia.Media.Color DefaultGlowColor = Avalonia.Media.Color.FromUInt32(0xFFFFFFFF);
+    private static readonly Color DefaultGlowColor = new Color(0xFFFFFFFF);
 
     private static readonly ScrollPhysics BouncingPhysics =
         new BouncingScrollPhysics(parent: new RangeMaintainingScrollPhysics());

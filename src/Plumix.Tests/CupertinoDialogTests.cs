@@ -41,7 +41,7 @@ public sealed class CupertinoDialogTests : IDisposable
         Assert.Equal(270.0, FindDescendants<RenderClipRSuperellipse>(harness.RenderView).First().Size.Width);
         // The content section paints the translucent light dialog fill.
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
-            box.Color == Color.FromUInt32(0xCCF2F2F2));
+            ColorMatchers.IsSameColorAs(box.Color, new Color(0xCCF2F2F2)));
     }
 
     [Fact]
@@ -56,9 +56,9 @@ public sealed class CupertinoDialogTests : IDisposable
             ])));
         harness.Pump(new Size(600, 600));
 
-        Color separator = Color.FromArgb(73, 60, 60, 67);
+        Color separator = Color.FromARGB(73, 60, 60, 67);
         var dividers = FindDescendants<RenderColoredBox>(harness.RenderView)
-            .Where(box => box.Color == separator)
+            .Where(box => ColorMatchers.IsSameColorAs(box.Color, separator))
             .ToList();
         Assert.NotEmpty(dividers);
         // The section divider spans the dialog width at the 0.3 hairline thickness.
@@ -88,7 +88,7 @@ public sealed class CupertinoDialogTests : IDisposable
             CupertinoColors.SystemRed.Color,
             ParagraphColor(FindParagraph(harness.RenderView, "Delete")!));
         Color disabled = ParagraphColor(FindParagraph(harness.RenderView, "Disabled")!);
-        Assert.InRange(disabled.A, (byte)127, (byte)128);
+        Assert.InRange(disabled.Alpha, (byte)127, (byte)128);
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public sealed class CupertinoDialogTests : IDisposable
         harness.Pump(new Size(600, 600));
         // The pressed fill paints on the very next frame.
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
-            box.Color == Color.FromUInt32(0xFFE1E1E1));
+            ColorMatchers.IsSameColorAs(box.Color, new Color(0xFFE1E1E1)));
 
         harness.HandlePointerEvent(new PointerMoveEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: twoPosition,
@@ -207,7 +207,7 @@ public sealed class CupertinoDialogTests : IDisposable
             buttons: PointerButtons.Primary, timestampUtc: DateTime.UtcNow));
         harness.Pump(new Size(600, 600));
         Assert.DoesNotContain(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
-            box.Color == Color.FromUInt32(0xFFE1E1E1));
+            ColorMatchers.IsSameColorAs(box.Color, new Color(0xFFE1E1E1)));
 
         harness.HandlePointerEvent(new PointerUpEvent(
             pointer: 1, kind: PointerDeviceKind.Touch, position: disabledPosition,
@@ -333,7 +333,7 @@ public sealed class CupertinoDialogTests : IDisposable
 
         var route = Assert.IsType<CupertinoModalPopupRoute<string>>(
             Navigator.Of(captured).CurrentRoute);
-        Assert.Equal(Color.FromUInt32(0x7A000000), route.BarrierColor);
+        ColorMatchers.AssertSameColorAs(new Color(0x7A000000), route.BarrierColor);
         Assert.False(route.BarrierDismissible);
         Assert.True(route.SemanticsDismissible);
         Assert.Equal("/popup", route.Settings.Name);
@@ -399,7 +399,7 @@ public sealed class CupertinoDialogTests : IDisposable
     }
 
     private static Color ParagraphColor(RenderParagraph paragraph) =>
-        ((Avalonia.Media.ISolidColorBrush)paragraph.Foreground).Color;
+        (Color)((Avalonia.Media.ISolidColorBrush)paragraph.Foreground).Color;
 
     private static Point CenterOf(RenderBox box)
     {

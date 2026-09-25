@@ -58,7 +58,7 @@ internal readonly record struct CanvasCall(
     Point? Offset = null)
 {
     /// <summary>The fill color, when the call was made with a solid-color brush.</summary>
-    public Color? Color => Brush is ISolidColorBrush solid ? solid.Color : null;
+    public Color? Color => Brush is ISolidColorBrush solid ? (Color)solid.Color : null;
 }
 
 /// <summary>An object representing a sequence of recorded graphical operations.</summary>

@@ -149,7 +149,7 @@ public sealed partial record ToggleButtonsThemeData
             Color: MaterialThemeLerp.Color(a?.Color, b?.Color, t),
             SelectedColor: MaterialThemeLerp.Color(a?.SelectedColor, b?.SelectedColor, t),
             DisabledColor: MaterialThemeLerp.Color(a?.DisabledColor, b?.DisabledColor, t),
-            FillColor: MaterialThemeLerp.ColorStateProperty(a?.FillColor, b?.FillColor, t),
+            FillColor: MaterialThemeLerp.Color(a?.FillColor, b?.FillColor, t),
             FocusColor: MaterialThemeLerp.Color(a?.FocusColor, b?.FocusColor, t),
             HighlightColor: MaterialThemeLerp.Color(a?.HighlightColor, b?.HighlightColor, t),
             HoverColor: MaterialThemeLerp.Color(a?.HoverColor, b?.HoverColor, t),
@@ -193,11 +193,7 @@ public sealed partial record TooltipThemeData
 
 public sealed partial record BottomSheetThemeData
 {
-    private static WidgetStateColor? LerpStateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
-    {
-        Color? color = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
-        return color is null ? null : new WidgetStateColor(color.Value);
-    }
+    private static Color? LerpStateColor(Color? a, Color? b, double t) => MaterialThemeLerp.Color(a, b, t);
 
     public static BottomSheetThemeData? Lerp(BottomSheetThemeData? a, BottomSheetThemeData? b, double t)
     {
@@ -474,11 +470,7 @@ public partial class SnackBarThemeData
 {
     /// Dart lerps the state-color fields with `Color.lerp`, which collapses a `WidgetStateColor` to
     /// its default resolution; `StateColor` reproduces that.
-    private static WidgetStateColor? StateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
-    {
-        Color? lerped = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
-        return lerped is null ? null : new WidgetStateColor(lerped.Value);
-    }
+    private static Color? StateColor(Color? a, Color? b, double t) => MaterialThemeLerp.Color(a, b, t);
 
     public static SnackBarThemeData Lerp(SnackBarThemeData? a, SnackBarThemeData? b, double t)
     {
@@ -590,16 +582,8 @@ public sealed partial record ListTileThemeData
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             Style: t < 0.5 ? a?.Style : b?.Style,
             SelectedColor: MaterialThemeLerp.Color(a?.SelectedColor, b?.SelectedColor, t),
-            IconColor: WidgetStateProperty<Color?>.Lerp(
-                a?.IconColor,
-                b?.IconColor,
-                t,
-                MaterialThemeLerp.Color),
-            TextColor: WidgetStateProperty<Color?>.Lerp(
-                a?.TextColor,
-                b?.TextColor,
-                t,
-                MaterialThemeLerp.Color),
+            IconColor: MaterialThemeLerp.Color(a?.IconColor, b?.IconColor, t),
+            TextColor: MaterialThemeLerp.Color(a?.TextColor, b?.TextColor, t),
             TitleTextStyle: MaterialThemeLerp.TextStyle(a?.TitleTextStyle, b?.TitleTextStyle, t),
             SubtitleTextStyle: MaterialThemeLerp.TextStyle(
                 a?.SubtitleTextStyle,
@@ -724,10 +708,7 @@ public sealed partial record SearchViewThemeData
         return Rendering.BorderSide.Lerp(a.Value, b.Value, t);
     }
 
-    private static Color WithAlpha(Color color, byte alpha)
-    {
-        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 }
 
 public sealed partial record SegmentedButtonThemeData
@@ -1125,11 +1106,7 @@ public sealed partial record TimePickerThemeData
 {
     /// Dart lerps the state-color fields with `Color.lerp`, which collapses a `WidgetStateColor` to
     /// its default resolution; `StateColor` reproduces that.
-    private static WidgetStateColor? StateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
-    {
-        var lerped = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
-        return lerped is null ? null : new WidgetStateColor(lerped.Value);
-    }
+    private static Color? StateColor(Color? a, Color? b, double t) => MaterialThemeLerp.Color(a, b, t);
 
     public static TimePickerThemeData Lerp(TimePickerThemeData? a, TimePickerThemeData? b, double t)
     {

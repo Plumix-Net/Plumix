@@ -1208,11 +1208,11 @@ public sealed class RawChip : StatefulWidget
             ChipThemeData defaults)
         {
             Color? resolved;
-            if (widget.Color is not null && (resolved = widget.Color.Resolve(states)).HasValue)
+            if (widget.Color is not null && (resolved = widget.Color.Resolve(states)) != null)
             {
                 return resolved;
             }
-            if (chipTheme.Color is not null && (resolved = chipTheme.Color.Resolve(states)).HasValue)
+            if (chipTheme.Color is not null && (resolved = chipTheme.Color.Resolve(states)) != null)
             {
                 return resolved;
             }
@@ -1235,15 +1235,11 @@ public sealed class RawChip : StatefulWidget
                 ? disabledColor ?? defaults.Color?.Resolve(new HashSet<WidgetState> { WidgetState.Disabled })
                 : normalColor ?? defaults.Color?.Resolve(new HashSet<WidgetState>());
 
-            if (selectedColor.HasValue
+            if (selectedColor != null
                 && (_selectionController?.IsAnimating == true || _selectionProgress is > 0 and < 1))
             {
-                var from = unselected ?? Avalonia.Media.Color.FromArgb(
-                    0,
-                    selectedColor.Value.R,
-                    selectedColor.Value.G,
-                    selectedColor.Value.B);
-                return new ColorTween().Evaluate(_selectionProgress, from, selectedColor.Value);
+                var from = unselected ?? selectedColor.WithAlpha(0);
+                return new ColorTween().Evaluate(_selectionProgress, from, selectedColor!);
             }
 
             return target ?? Colors.Transparent;
@@ -1466,19 +1462,9 @@ public sealed class RawChip : StatefulWidget
             _enableController = null;
         }
 
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            return Avalonia.Media.Color.FromArgb(
-                (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255),
-                color.R,
-                color.G,
-                color.B);
-        }
+        private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-        private static Color WithAlpha(Color color, byte alpha)
-        {
-            return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+        private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
     }
 }
 

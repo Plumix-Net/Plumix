@@ -33,7 +33,7 @@ internal sealed class CupertinoFocusHaloDemoPageState : State
                 new Text(
                     "Press Tab or click a tile to move focus through the three halo shapes.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(
                     spacing: 16.0,
                     runSpacing: 16.0,
@@ -70,7 +70,7 @@ internal sealed class CupertinoFocusHaloDemoPageState : State
                     height: 72.0,
                     alignment: Alignment.Center,
                     decoration: new BoxDecoration(
-                        Color: Color.Parse("#FFF2F2F7"),
+                        Color: new Color(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(12.0)),
                     child: new Text(label, fontSize: 14.0, color: Colors.Black, textAlign: TextAlign.Center))));
     }

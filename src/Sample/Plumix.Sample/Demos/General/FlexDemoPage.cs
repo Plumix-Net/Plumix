@@ -91,7 +91,7 @@ internal sealed class FlexDemoPageState : State
                     color: Colors.DarkSlateGray),
                 new Container(
                     height: 120,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new Directionality(
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
@@ -110,7 +110,7 @@ internal sealed class FlexDemoPageState : State
                             ]))),
                 new Container(
                     height: 150,
-                    color: Color.Parse("#FFEFF3E7"),
+                    color: new Color(0xFFEFF3E7),
                     padding: new Thickness(8),
                     child: new Directionality(
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
@@ -132,7 +132,7 @@ internal sealed class FlexDemoPageState : State
         return new Container(
             width: width,
             height: height,
-            color: Color.Parse(colorHex),
+            color: (Color)Avalonia.Media.Color.Parse(colorHex),
             child: new Center(child: new Text(label, fontSize: 12, color: Colors.White)));
     }
 
@@ -143,7 +143,7 @@ internal sealed class FlexDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

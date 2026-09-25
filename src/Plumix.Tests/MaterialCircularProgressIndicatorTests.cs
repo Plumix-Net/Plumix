@@ -408,8 +408,8 @@ public sealed class MaterialCircularProgressIndicatorTests
     [Fact]
     public void CircularProgressIndicator_ValueColor_OverridesColorAndUpdatesFromNotifier()
     {
-        var initialValueColor = Color.Parse("#FF00695C");
-        var updatedValueColor = Color.Parse("#FF8E24AA");
+        var initialValueColor = new Color(0xFF00695C);
+        var updatedValueColor = new Color(0xFF8E24AA);
         using var notifier = new ValueNotifier<Color?>(initialValueColor);
 
         using var harness = new WidgetRenderHarness(

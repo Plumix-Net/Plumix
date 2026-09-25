@@ -32,7 +32,7 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                     new Text(
                         "An 8% anchor offsets the list; DragBoundary keeps its proxy inside the visible bounds.",
                         fontSize: 12,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -41,7 +41,7 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                 onPressed: ToggleHandles,
                                 child: new Text(
                                     _buildDefaultDragHandles ? "Use custom handles" : "Use default handles")),
-                            new Expanded(new Text(_status, fontSize: 12, color: Color.Parse("#8A000000"))),
+                            new Expanded(new Text(_status, fontSize: 12, color: new Color(0x8A000000))),
                         ]),
                     new Expanded(
                         new DragBoundary(
@@ -83,8 +83,8 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                     key: new ValueKey<string>(label),
                     leading: new CircleAvatar(
                         radius: 16,
-                        backgroundColor: Color.Parse("#FFEADDFF"),
-                        child: new Text((index + 1).ToString(), fontSize: 12, color: Color.Parse("#FF21005D"))),
+                        backgroundColor: new Color(0xFFEADDFF),
+                        child: new Text((index + 1).ToString(), fontSize: 12, color: new Color(0xFF21005D))),
                     title: new Text(label),
                     subtitle: new Text($"Stable key: {label.ToLowerInvariant()}"),
                     trailing: trailing,

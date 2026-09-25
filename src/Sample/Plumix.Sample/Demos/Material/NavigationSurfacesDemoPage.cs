@@ -28,7 +28,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
     {
         var baseTheme = Theme.Of(context);
         ColorScheme colorScheme = _useSeedScheme
-            ? ColorScheme.FromSeed(Color.Parse("#FF006495"))
+            ? ColorScheme.FromSeed(new Color(0xFF006495))
             : baseTheme.ColorScheme;
         var pageTheme = new ThemeData(
             platform: baseTheme.Platform,
@@ -39,12 +39,12 @@ internal sealed class NavigationSurfacesDemoPageState : State
             pageTheme = pageTheme with
             {
                 NavigationBarTheme = new NavigationBarThemeData(
-                    BackgroundColor: Color.Parse("#FFE0F2F1"),
-                    IndicatorColor: Color.Parse("#FF00695C"),
+                    BackgroundColor: new Color(0xFFE0F2F1),
+                    IndicatorColor: new Color(0xFF00695C),
                     Height: 76),
                 NavigationRailTheme = new NavigationRailThemeData(
-                    BackgroundColor: Color.Parse("#FFF3E5F5"),
-                    IndicatorColor: Color.Parse("#FF6A1B9A"),
+                    BackgroundColor: new Color(0xFFF3E5F5),
+                    IndicatorColor: new Color(0xFF6A1B9A),
                     MinWidth: 76,
                     MinExtendedWidth: 220),
             };
@@ -62,7 +62,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                         "Seed-generated ColorScheme, Material 2021 typography, navigation defaults, "
                         + "theme precedence, and icon-scoped hover/press ripples.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -103,7 +103,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             $"titleMedium · {pageTheme.TextTheme.TitleMedium.FontSize:0}px")),
                     new Container(
                         decoration: new BoxDecoration(
-                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#33000000"))),
+                            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0x33000000))),
                             BorderRadius: BorderRadius.Circular(12)),
                         child: new NavigationBar(
                             selectedIndex: _selectedIndex,
@@ -134,9 +134,9 @@ internal sealed class NavigationSurfacesDemoPageState : State
                                     ]),
                                 new Expanded(
                                     child: new Container(
-                                        color: Color.Parse("#FFF7F2FA"),
+                                        color: new Color(0xFFF7F2FA),
                                         alignment: Alignment.Center,
-                                        child: new Text("Rail content area", color: Color.Parse("#8A000000"))))
+                                        child: new Text("Rail content area", color: new Color(0x8A000000))))
                             ]))
                 ]));
     }
@@ -179,8 +179,8 @@ internal sealed class NavigationSurfacesDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

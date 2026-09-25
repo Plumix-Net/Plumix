@@ -399,6 +399,6 @@ internal static class WidgetStateBorderSideLerp
     private static BorderSide Faded(BorderSide side)
     {
         Color color = side.Color;
-        return new BorderSide(Color.FromArgb(0, color.R, color.G, color.B), 0.0);
+        return new BorderSide(Color.FromARGB(0, color.Red, color.Green, color.Blue), 0.0);
     }
 }

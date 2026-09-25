@@ -91,14 +91,14 @@ public sealed class CounterScreen : StatelessWidget
                             [
                                 new Expanded(
                                     child: new Container(
-                                        color: Color.Parse("#FFE8F5E9"),
+                                        color: new Color(0xFFE8F5E9),
                                         padding: new Thickness(8),
                                         child: model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
                                             : new Text("left slot", color: Colors.Gray))),
                                 new Expanded(
                                     child: new Container(
-                                        color: Color.Parse("#FFE3F2FD"),
+                                        color: new Color(0xFFE3F2FD),
                                         padding: new Thickness(8),
                                         child: !model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
@@ -115,7 +115,7 @@ public sealed class CounterScreen : StatelessWidget
                         new SizedBox(
                             height: 220,
                             child: new ColoredBox(
-                                color: Color.Parse("#FFF2F4F8"),
+                                color: new Color(0xFFF2F4F8),
                                 child: scrollList)),
                     ])));
     }

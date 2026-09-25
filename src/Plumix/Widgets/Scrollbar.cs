@@ -134,8 +134,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
         _repaint = repaint;
         _color = color;
         _fadeoutOpacityAnimation = fadeoutOpacityAnimation;
-        _trackColor = trackColor ?? Colors.Transparent;
-        _trackBorderColor = trackBorderColor ?? Colors.Transparent;
+        _trackColor = trackColor ?? new Color(0x00000000);
+        _trackBorderColor = trackBorderColor ?? new Color(0x00000000);
         _textDirection = textDirection;
         _thickness = thickness;
         _padding = padding ?? default;
@@ -701,11 +701,11 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
         }
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)Math.Floor(color.A * opacity + 0.5), 0, 255),
-        color.R,
-        color.G,
-        color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => Color.FromARGB(
+        (byte)Math.Clamp((int)Math.Floor(color.Alpha * opacity + 0.5), 0, 255),
+        color.Red,
+        color.Green,
+        color.Blue);
 }
 /// <summary>
 /// An extendable base class for building scrollbars that fade in and out.
@@ -1820,13 +1820,13 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
                                     child: new RepaintBoundary(child: CurrentWidget.Child))))))));
     }
 
-    private static Color DefaultThumbColor => Color.FromArgb(0x66, 0xBC, 0xBC, 0xBC);
+    private static Color DefaultThumbColor => Color.FromARGB(0x66, 0xBC, 0xBC, 0xBC);
 
-    private static Color DefaultTrackColor => Color.FromArgb(0x08, 0x00, 0x00, 0x00);
+    private static Color DefaultTrackColor => Color.FromARGB(0x08, 0x00, 0x00, 0x00);
 
-    private static Color DefaultTrackBorderColor => Color.FromArgb(0x1A, 0x00, 0x00, 0x00);
+    private static Color DefaultTrackBorderColor => Color.FromARGB(0x1A, 0x00, 0x00, 0x00);
 
-    private static Color TransparentColor => Color.FromArgb(0x00, 0x00, 0x00, 0x00);
+    private static Color TransparentColor => Color.FromARGB(0x00, 0x00, 0x00, 0x00);
 }
 
 /// <summary>

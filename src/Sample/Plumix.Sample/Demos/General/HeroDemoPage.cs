@@ -115,7 +115,7 @@ internal sealed class HeroDemoPageState : State
     {
         return new DecoratedBox(
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FF264653"),
+                Color: new Color(0xFF264653),
                 BorderRadius: BorderRadius.Circular(14)),
             child: new Center(
                 child: new Text(
@@ -131,8 +131,8 @@ internal sealed class HeroDemoPageState : State
             height: heroSize.Height,
             child: new DecoratedBox(
                 decoration: new BoxDecoration(
-                    Color: Color.Parse("#FFF1F1F1"),
-                    Border: Border.FromBorderSide(new BorderSide(Color.Parse("#FFBDBDBD"), 1)),
+                    Color: new Color(0xFFF1F1F1),
+                    Border: Border.FromBorderSide(new BorderSide(new Color(0xFFBDBDBD), 1)),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
                     child: new Text("placeholder", fontSize: 11, color: Colors.DimGray))));
@@ -145,7 +145,7 @@ internal sealed class HeroDemoPageState : State
             height: height,
             child: new DecoratedBox(
                 decoration: new BoxDecoration(
-                    Color: Color.Parse(colorHex),
+                    Color: (Color)Avalonia.Media.Color.Parse(colorHex),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
                     child: new Text(label, fontSize: fontSize, color: Colors.White))));
@@ -158,7 +158,7 @@ internal sealed class HeroDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
@@ -196,7 +196,7 @@ internal sealed class HeroDetailPage : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         return new Container(
-            color: Color.Parse("#FFFDFDFD"),
+            color: new Color(0xFFFDFDFD),
             padding: new Thickness(16),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -216,7 +216,7 @@ internal sealed class HeroDetailPage : StatelessWidget
                     new CounterTapButton(
                         label: "Pop",
                         onTap: () => Navigator.Of(context).Pop(),
-                        background: Color.Parse("#FFDCE3ED"),
+                        background: new Color(0xFFDCE3ED),
                         foreground: Colors.Black,
                         fontSize: 12,
                         padding: new Thickness(10, 8)),

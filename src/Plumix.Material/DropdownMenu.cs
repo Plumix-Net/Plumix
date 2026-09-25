@@ -503,11 +503,11 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
                     colorStateProperty?.Resolve(new HashSet<WidgetState> { WidgetState.Focused });
 
                 Color focusedForegroundColor =
-                    ResolveFocusedColor(effectiveForegroundColor ?? defaultStyle.ForegroundColor!)!.Value;
+                    ResolveFocusedColor(effectiveForegroundColor ?? defaultStyle.ForegroundColor!)!;
                 Color focusedIconColor =
-                    ResolveFocusedColor(effectiveIconColor ?? defaultStyle.IconColor!)!.Value;
+                    ResolveFocusedColor(effectiveIconColor ?? defaultStyle.IconColor!)!;
                 Color focusedOverlayColor =
-                    ResolveFocusedColor(effectiveOverlayColor ?? defaultStyle.OverlayColor!)!.Value;
+                    ResolveFocusedColor(effectiveOverlayColor ?? defaultStyle.OverlayColor!)!;
                 // For the background color Dart cannot rely on the transparent default style, so it
                 // falls back to `onSurface` at 0.12.
                 Color focusedBackgroundColor = ResolveFocusedColor(effectiveBackgroundColor)

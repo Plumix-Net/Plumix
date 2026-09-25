@@ -447,9 +447,9 @@ public sealed partial class RenderParagraph : RenderBox,
 
     public IBrush Foreground
     {
-        get => new SolidColorBrush(RootStyle.Color ?? Colors.Black);
+        get => new SolidColorBrush(RootStyle.Color ?? new Color(0xFF000000));
         set => UpdateRootStyle(RootStyle.CopyWith(
-            color: value is ISolidColorBrush solid ? solid.Color : Colors.Black));
+            color: value is ISolidColorBrush solid ? (Color)solid.Color : new Color(0xFF000000)));
     }
 
     public double? Height
@@ -933,8 +933,8 @@ public sealed partial class RenderParagraph : RenderBox,
                 EndPoint = new RelativePoint(To.X / width, To.Y / height, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
-                    new GradientStop(Color.FromUInt32(0xFFFFFFFF), 0),
-                    new GradientStop(Color.FromUInt32(0x00FFFFFF), 1),
+                    new GradientStop(new Color(0xFFFFFFFF), 0),
+                    new GradientStop(new Color(0x00FFFFFF), 1),
                 },
             };
         }

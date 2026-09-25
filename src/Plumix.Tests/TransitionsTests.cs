@@ -686,12 +686,12 @@ public sealed class TransitionsTests : IDisposable
     public void DecorationTween_UsesDecorationPolymorphicLerpAndSupportsNullableEndpoints()
     {
         var begin = new BoxDecoration(
-            Color: Color.Parse("#FF102030"),
-            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF203040"), 2)),
+            Color: new Color(0xFF102030),
+            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF203040), 2)),
             BorderRadius: BorderRadius.Circular(4));
         var end = new BoxDecoration(
-            Color: Color.Parse("#FF90A0B0"),
-            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFA0B0C0"), 6)),
+            Color: new Color(0xFF90A0B0),
+            Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFA0B0C0), 6)),
             BorderRadius: BorderRadius.Circular(20));
         var tween = new DecorationTween(begin, end);
 
@@ -699,13 +699,13 @@ public sealed class TransitionsTests : IDisposable
         Assert.Same(end, tween.End);
 
         var midpoint = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
-        Assert.Equal(Color.Parse("#FF506070"), midpoint.Color);
+        Assert.Equal(new Color(0xFF506070), midpoint.Color);
         Assert.Equal(4, ((Plumix.Rendering.Border)midpoint.Border!).Top.Width);
         Assert.Equal(12, midpoint.BorderRadius!.Value.Radius);
 
         tween.Begin = null;
         var scaled = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
-        Assert.Equal(0x7F, scaled.Color!.Value.A);
+        Assert.Equal(0.5, scaled.Color!.A);
         Assert.Equal(3, ((Plumix.Rendering.Border)scaled.Border!).Top.Width);
 
         tween.End = null;
@@ -715,9 +715,9 @@ public sealed class TransitionsTests : IDisposable
     [Fact]
     public void DecoratedBoxTransition_ExposesDefaultsRebuildsAndRebindsAnimation()
     {
-        var firstDecoration = new BoxDecoration(Color: Color.Parse("#FF123456"));
-        var secondDecoration = new BoxDecoration(Color: Color.Parse("#FFABCDEF"));
-        var replacementDecoration = new BoxDecoration(Color: Color.Parse("#FF654321"));
+        var firstDecoration = new BoxDecoration(Color: new Color(0xFF123456));
+        var secondDecoration = new BoxDecoration(Color: new Color(0xFFABCDEF));
+        var replacementDecoration = new BoxDecoration(Color: new Color(0xFF654321));
         var first = new TestValueAnimation<Decoration>(
             firstDecoration,
             AnimationStatus.Forward);
@@ -772,8 +772,8 @@ public sealed class TransitionsTests : IDisposable
     {
         var parent = new TestAnimation(0.25, AnimationStatus.Forward);
         var tween = new DecorationTween(
-            begin: new BoxDecoration(Color: Color.Parse("#FF000000")),
-            end: new BoxDecoration(Color: Color.Parse("#FFFFFFFF")));
+            begin: new BoxDecoration(Color: new Color(0xFF000000)),
+            end: new BoxDecoration(Color: new Color(0xFFFFFFFF)));
         Animation<Decoration> animation = tween.Animate(parent);
         int valueChanges = 0;
         AnimationStatus? status = null;
@@ -781,14 +781,14 @@ public sealed class TransitionsTests : IDisposable
         animation.AddStatusListener(value => status = value);
 
         Assert.Equal(AnimationStatus.Forward, animation.Status);
-        Assert.Equal(Color.Parse("#FF3F3F3F"), Assert.IsType<BoxDecoration>(animation.Value).Color);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF3F3F3F), Assert.IsType<BoxDecoration>(animation.Value).Color);
         Assert.Equal(1, parent.ListenerCount);
 
         parent.Set(0.75, AnimationStatus.Reverse);
 
         Assert.Equal(1, valueChanges);
         Assert.Equal(AnimationStatus.Reverse, status);
-        Assert.Equal(Color.Parse("#FFBFBFBF"), Assert.IsType<BoxDecoration>(animation.Value).Color);
+        ColorMatchers.AssertSameColorAs(new Color(0xFFBFBFBF), Assert.IsType<BoxDecoration>(animation.Value).Color);
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

@@ -35,10 +35,10 @@ internal sealed class ListTileDemoPageState : State
         {
             content = new ListTileTheme(
                 data: new ListTileThemeData(
-                    TextColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF27526B")),
-                    IconColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF7A4021")),
-                    TileColor: Color.Parse("#FFF5F9EE"),
-                    SelectedTileColor: Color.Parse("#FFE4EEFF"),
+                    TextColor: new Color(0xFF27526B),
+                    IconColor: new Color(0xFF7A4021),
+                    TileColor: new Color(0xFFF5F9EE),
+                    SelectedTileColor: new Color(0xFFE4EEFF),
                     Dense: _dense),
                 child: content);
         }
@@ -56,7 +56,7 @@ internal sealed class ListTileDemoPageState : State
                 new Text(
                     "Exact M2/M3 padding, typography, slot geometry, states, and theme precedence.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -65,17 +65,17 @@ internal sealed class ListTileDemoPageState : State
                             label: _enabled ? "Enabled" : "Disabled",
                             onTap: () => SetState(() => _enabled = !_enabled),
                             width: 108,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: _selected ? "Selected" : "Unselected",
                             onTap: () => SetState(() => _selected = !_selected),
                             width: 120,
-                            background: Color.Parse("#FFE9F7EF")),
+                            background: new Color(0xFFE9F7EF)),
                         BuildControlButton(
                             label: _dense ? "Dense" : "Regular",
                             onTap: () => SetState(() => _dense = !_dense),
                             width: 98,
-                            background: Color.Parse("#FFF8EFE2")),
+                            background: new Color(0xFFF8EFE2)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -85,22 +85,22 @@ internal sealed class ListTileDemoPageState : State
                             label: _threeLine ? "3-line" : "2-line",
                             onTap: () => SetState(() => _threeLine = !_threeLine),
                             width: 88,
-                            background: Color.Parse("#FFF0E8FF")),
+                            background: new Color(0xFFF0E8FF)),
                         BuildControlButton(
                             label: _useThemeOverrides ? "Theme on" : "Theme off",
                             onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                             width: 112,
-                            background: Color.Parse("#FFEAF6F7")),
+                            background: new Color(0xFFEAF6F7)),
                         BuildControlButton(
                             label: _useMaterial3 ? "M3" : "M2",
                             onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                             width: 64,
-                            background: Color.Parse("#FFFFF3CD")),
+                            background: new Color(0xFFFFF3CD)),
                         BuildControlButton(
                             label: "Reset",
                             onTap: ResetState,
                             width: 76,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                     ]),
                 new Text(
                     $"material={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
@@ -109,10 +109,10 @@ internal sealed class ListTileDemoPageState : State
                     + $"theme={(_useThemeOverrides ? "true" : "false")}, taps={_tapCount}, "
                     + $"longPress={_longPressCount}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F9FC"),
+                        color: new Color(0xFFF7F9FC),
                         child: content)),
             ]);
     }
@@ -130,8 +130,8 @@ internal sealed class ListTileDemoPageState : State
                     selected: _selected,
                     enabled: _enabled,
                     dense: _dense,
-                    tileColor: Color.Parse("#FFFFFFFF"),
-                    selectedTileColor: Color.Parse("#FFE6EEFF"),
+                    tileColor: new Color(0xFFFFFFFF),
+                    selectedTileColor: new Color(0xFFE6EEFF),
                     onTap: _enabled ? OnTap : null,
                     onLongPress: _enabled ? OnLongPress : null),
                 new ListTile(
@@ -142,8 +142,8 @@ internal sealed class ListTileDemoPageState : State
                     selected: _selected,
                     enabled: _enabled,
                     dense: _dense,
-                    tileColor: Color.Parse("#FFFFFFFF"),
-                    selectedTileColor: Color.Parse("#FFE6EEFF"),
+                    tileColor: new Color(0xFFFFFFFF),
+                    selectedTileColor: new Color(0xFFE6EEFF),
                     onTap: _enabled ? OnTap : null,
                     onLongPress: _enabled ? OnLongPress : null),
                 new ListTile(
@@ -155,8 +155,8 @@ internal sealed class ListTileDemoPageState : State
                     enabled: _enabled,
                     dense: _dense,
                     isThreeLine: _threeLine,
-                    tileColor: Color.Parse("#FFFFFFFF"),
-                    selectedTileColor: Color.Parse("#FFE6EEFF"),
+                    tileColor: new Color(0xFFFFFFFF),
+                    selectedTileColor: new Color(0xFFE6EEFF),
                     onTap: _enabled ? OnTap : null,
                     onLongPress: _enabled ? OnLongPress : null),
             ]);

@@ -94,13 +94,13 @@ public sealed partial record ChipThemeData(
         Brightness? brightness = null,
         Color? primaryColor = null)
     {
-        if (brightness.HasValue == primaryColor.HasValue)
+        if (brightness.HasValue == (primaryColor != null))
         {
             throw new ArgumentException("Exactly one of brightness and primaryColor must be provided.");
         }
 
         Brightness effectiveBrightness = brightness
-                                         ?? ThemeData.EstimateBrightnessForColor(primaryColor!.Value);
+                                         ?? ThemeData.EstimateBrightnessForColor(primaryColor!);
         Color baseColor = primaryColor
                           ?? (effectiveBrightness == global::Plumix.Material.Brightness.Light
                               ? Colors.Black
@@ -123,10 +123,7 @@ public sealed partial record ChipThemeData(
             IconTheme: new IconThemeData(Size: 18.0));
     }
 
-    private static Color WithAlpha(Color color, byte alpha)
-    {
-        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 }
 
 public sealed class ChipTheme : InheritedTheme

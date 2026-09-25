@@ -50,8 +50,8 @@ internal sealed class BlocCounterDemoPageState : State
                         new Text(
                             "BlocProvider + BlocBuilder + BlocListener + BlocSelector. Refresh event uses restartable transformer.",
                             fontSize: 14,
-                            color: Color.Parse("#8A000000")),
-                        new Text(_milestoneMessage, fontSize: 12, color: Color.Parse("#FF607D8B")),
+                            color: new Color(0x8A000000)),
+                        new Text(_milestoneMessage, fontSize: 12, color: new Color(0xFF607D8B)),
                         new BlocSelector<BlocCounterBloc, BlocCounterState, int>(
                             selector: static state => state.Count,
                             builder: static (_, count) =>
@@ -63,7 +63,7 @@ internal sealed class BlocCounterDemoPageState : State
                                     ? "loading=true (refresh in-flight, restartable)"
                                     : "loading=false",
                                 fontSize: 12,
-                                color: state.IsLoading ? Color.Parse("#FF8E24AA") : Color.Parse("#FF2E7D32"))),
+                                color: state.IsLoading ? new Color(0xFF8E24AA) : new Color(0xFF2E7D32))),
                         new BlocCounterActionButtons(),
                     ])));
     }
@@ -101,15 +101,15 @@ internal sealed class BlocCounterActionButtons : StatelessWidget
                     [
                         BlocCounterDemoPageState.BuildActionButton(
                             label: "-1",
-                            background: Color.Parse("#FFECEFF1"),
+                            background: new Color(0xFFECEFF1),
                             onPressed: () => bloc.Add(new DecrementCounterEvent())),
                         BlocCounterDemoPageState.BuildActionButton(
                             label: "+1",
-                            background: Color.Parse("#FFE3F2FD"),
+                            background: new Color(0xFFE3F2FD),
                             onPressed: () => bloc.Add(new IncrementCounterEvent())),
                         BlocCounterDemoPageState.BuildActionButton(
                             label: "+5",
-                            background: Color.Parse("#FFE8F5E9"),
+                            background: new Color(0xFFE8F5E9),
                             onPressed: () => bloc.Add(new IncrementByCounterEvent(5))),
                     ]),
                 new Row(
@@ -118,16 +118,16 @@ internal sealed class BlocCounterActionButtons : StatelessWidget
                     [
                         BlocCounterDemoPageState.BuildActionButton(
                             label: "Refresh +10 (350ms)",
-                            background: Color.Parse("#FFFFF3E0"),
+                            background: new Color(0xFFFFF3E0),
                             onPressed: () => bloc.Add(new RefreshCounterEvent(10, 350))),
                         BlocCounterDemoPageState.BuildActionButton(
                             label: "Refresh +10 (80ms)",
-                            background: Color.Parse("#FFF3E5F5"),
+                            background: new Color(0xFFF3E5F5),
                             onPressed: () => bloc.Add(new RefreshCounterEvent(10, 80))),
                     ]),
                 BlocCounterDemoPageState.BuildActionButton(
                     label: "Reset",
-                    background: Color.Parse("#FFFFEBEE"),
+                    background: new Color(0xFFFFEBEE),
                     onPressed: () => bloc.Add(new ResetCounterEvent())),
             ]);
     }

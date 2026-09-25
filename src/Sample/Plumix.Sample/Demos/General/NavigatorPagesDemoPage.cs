@@ -38,13 +38,13 @@ internal sealed class NavigatorPagesDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        BuildAction("Add page", AddPage, Color.Parse("#FFE8F5E9")),
-                        BuildAction("Remove top page", RemoveTopPage, Color.Parse("#FFFFF3E0")),
+                        BuildAction("Add page", AddPage, new Color(0xFFE8F5E9)),
+                        BuildAction("Remove top page", RemoveTopPage, new Color(0xFFFFF3E0)),
                     ]),
                 new SizedBox(
                     height: 220,
                     child: new ColoredBox(
-                        color: Color.Parse("#FFFAFAFA"),
+                        color: new Color(0xFFFAFAFA),
                         child: new Navigator(
                             pages: [.. _pages],
                             onDidRemovePage: HandleDidRemovePage))),
@@ -113,7 +113,7 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
     public override Widget BuildPage(BuildContext context)
     {
         return new ColoredBox(
-            color: _index % 2 == 0 ? Color.Parse("#FFE3F2FD") : Color.Parse("#FFF1F8E9"),
+            color: _index % 2 == 0 ? new Color(0xFFE3F2FD) : new Color(0xFFF1F8E9),
             child: new Center(
                 child: new Column(
                     mainAxisSize: MainAxisSize.Min,
@@ -126,7 +126,7 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                             label: "Pop this page",
                             // Qualified: `Route.Navigator` shadows the widget type inside a Route.
                             onTap: () => Plumix.Widgets.Navigator.Of(context).MaybePop(),
-                            background: Color.Parse("#FFFFFFFF"),
+                            background: new Color(0xFFFFFFFF),
                             foreground: Colors.Black,
                             fontSize: 12,
                             padding: new Thickness(10, 6)),

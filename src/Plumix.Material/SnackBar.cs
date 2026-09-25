@@ -63,15 +63,15 @@ public sealed class SnackBarAction : StatefulWidget
     public SnackBarAction(
         string label,
         Action onPressed,
-        WidgetStateColor? textColor = null,
+        Color? textColor = null,
         Color? disabledTextColor = null,
-        WidgetStateColor? backgroundColor = null,
+        Color? backgroundColor = null,
         Color? disabledBackgroundColor = null,
         Key? key = null) : base(key)
     {
         Label = label ?? throw new ArgumentNullException(nameof(label));
         OnPressed = onPressed ?? throw new ArgumentNullException(nameof(onPressed));
-        if (backgroundColor is { IsConstantColor: false } && disabledBackgroundColor is not null)
+        if (backgroundColor is WidgetStateColor && disabledBackgroundColor is not null)
         {
             throw new ArgumentException(
                 "disabledBackgroundColor must not be provided when background color is a WidgetStateColor",
@@ -84,11 +84,11 @@ public sealed class SnackBarAction : StatefulWidget
         DisabledBackgroundColor = disabledBackgroundColor;
     }
 
-    public WidgetStateColor? TextColor { get; }
+    public Color? TextColor { get; }
 
     public Color? DisabledTextColor { get; }
 
-    public WidgetStateColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public Color? DisabledBackgroundColor { get; }
 
@@ -128,19 +128,19 @@ public sealed class SnackBarAction : StatefulWidget
             {
                 // Dart checks `x is WidgetStateColor` down the chain with `else if`, so a plain
                 // widget color short-circuits the theme/defaults probes and falls through.
-                if (widget.TextColor is { IsConstantColor: false } widgetStateColor)
+                if (widget.TextColor is WidgetStateColor widgetStateColor)
                 {
                     return Bridge(widgetStateColor);
                 }
 
-                if (widget.TextColor is null && snackBarTheme.ActionTextColor is { IsConstantColor: false } themeColor)
+                if (widget.TextColor is null && snackBarTheme.ActionTextColor is WidgetStateColor themeColor)
                 {
                     return Bridge(themeColor);
                 }
 
                 if (widget.TextColor is null
                     && snackBarTheme.ActionTextColor is null
-                    && defaults.ActionTextColor is { IsConstantColor: false } defaultColor)
+                    && defaults.ActionTextColor is WidgetStateColor defaultColor)
                 {
                     return Bridge(defaultColor);
                 }
@@ -148,18 +148,18 @@ public sealed class SnackBarAction : StatefulWidget
                 return WidgetStateProperty<Color?>.ResolveWith(states => states.Contains(WidgetState.Disabled)
                     ? widget.DisabledTextColor
                       ?? snackBarTheme.DisabledActionTextColor
-                      ?? defaults.DisabledActionTextColor!.Value
+                      ?? defaults.DisabledActionTextColor!
                     : (Color)(widget.TextColor ?? snackBarTheme.ActionTextColor ?? defaults.ActionTextColor!));
             }
 
             WidgetStateProperty<Color?> ResolveBackgroundColor()
             {
-                if (widget.BackgroundColor is { IsConstantColor: false } widgetStateColor)
+                if (widget.BackgroundColor is WidgetStateColor widgetStateColor)
                 {
                     return Bridge(widgetStateColor);
                 }
 
-                if (snackBarTheme.ActionBackgroundColor is { IsConstantColor: false } themeColor)
+                if (snackBarTheme.ActionBackgroundColor is WidgetStateColor themeColor)
                 {
                     return Bridge(themeColor);
                 }
@@ -169,7 +169,7 @@ public sealed class SnackBarAction : StatefulWidget
                       ?? snackBarTheme.DisabledActionBackgroundColor
                       ?? Colors.Transparent
                     : (Color)(widget.BackgroundColor ?? snackBarTheme.ActionBackgroundColor
-                        ?? new WidgetStateColor(Colors.Transparent)));
+                        ?? Colors.Transparent));
             }
 
             WidgetStateProperty<Color?> foregroundColor = ResolveForegroundColor();
@@ -572,7 +572,7 @@ public sealed class SnackBar : StatefulWidget
             double elevation = widget.Elevation ?? snackBarTheme.Elevation ?? defaults.Elevation!.Value;
             Color backgroundColor = widget.BackgroundColor
                                     ?? snackBarTheme.BackgroundColor
-                                    ?? defaults.BackgroundColor!.Value;
+                                    ?? defaults.BackgroundColor!;
             ShapeBorder? shape = widget.Shape
                                  ?? snackBarTheme.Shape
                                  ?? (isFloatingSnackBar ? defaults.Shape : null);
@@ -697,7 +697,7 @@ internal sealed class SnackBarDefaultsM2 : SnackBarThemeData
     }
 
     public override Color? BackgroundColor => _theme.Brightness == Brightness.Light
-        ? ColorUtilities.AlphaBlend(ColorUtilities.WithOpacity(_colors.OnSurface, 0.80), _colors.Surface)
+        ? Color.AlphaBlend(ColorUtilities.WithOpacity(_colors.OnSurface, 0.80), _colors.Surface)
         : _colors.OnSurface;
 
     public override TextStyle? ContentTextStyle => new ThemeData(
@@ -707,7 +707,7 @@ internal sealed class SnackBarDefaultsM2 : SnackBarThemeData
 
     public override SnackBarBehavior? Behavior => SnackBarBehavior.Fixed;
 
-    public override WidgetStateColor? ActionTextColor => _colors.Secondary;
+    public override Color? ActionTextColor => _colors.Secondary;
 
     public override Color? DisabledActionTextColor => ColorUtilities.WithOpacity(
         _colors.OnSurface,
@@ -739,9 +739,7 @@ internal sealed class SnackBarDefaultsM3 : SnackBarThemeData
 
     public override Color? BackgroundColor => _colors.InverseSurface;
 
-    public override WidgetStateColor? ActionTextColor => WidgetStateColor.ResolveWith(
-        _colors.InversePrimary,
-        _ => _colors.InversePrimary);
+    public override Color? ActionTextColor => WidgetStateColor.ResolveWith(_ => _colors.InversePrimary);
 
     public override Color? DisabledActionTextColor => _colors.InversePrimary;
 
@@ -766,24 +764,7 @@ internal sealed class SnackBarDefaultsM3 : SnackBarThemeData
 
 internal static class ColorUtilities
 {
-    internal static Color WithOpacity(Color color, double opacity)
-    {
-        return Color.FromArgb(
-            (byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)),
-            color.R,
-            color.G,
-            color.B);
-    }
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    internal static Color AlphaBlend(Color foreground, Color background)
-    {
-        double alpha = foreground.A / 255.0;
-        byte Blend(byte foregroundChannel, byte backgroundChannel) =>
-            (byte)Math.Round((foregroundChannel * alpha) + (backgroundChannel * (1 - alpha)));
-        return Color.FromArgb(
-            255,
-            Blend(foreground.R, background.R),
-            Blend(foreground.G, background.G),
-            Blend(foreground.B, background.B));
-    }
+    internal static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
 }

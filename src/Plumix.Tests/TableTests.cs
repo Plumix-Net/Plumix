@@ -813,13 +813,13 @@ public sealed class TableTests
         Assert.True(empty.IsUniform);
 
         var all = TableBorder.All();
-        Assert.Equal(Avalonia.Media.Color.FromUInt32(0xFF000000), all.Top.Color);
+        Assert.Equal(new Color(0xFF000000), all.Top.Color);
         Assert.Equal(1.0, all.Top.Width);
         Assert.Equal(BorderStyle.Solid, all.HorizontalInside.Style);
         Assert.True(all.IsUniform);
         Assert.Equal(new Thickness(1, 1, 1, 1), all.Dimensions);
 
-        var side = new BorderSide(Avalonia.Media.Colors.Red, 2.0);
+        var side = new BorderSide(Colors.Red, 2.0);
         var symmetric = TableBorder.Symmetric(inside: side);
         Assert.Equal(side, symmetric.HorizontalInside);
         Assert.Equal(side, symmetric.VerticalInside);
@@ -830,8 +830,8 @@ public sealed class TableTests
     [Fact]
     public void TableBorder_LerpAndScaleInterpolateEverySide()
     {
-        var a = TableBorder.All(color: Avalonia.Media.Colors.Black, width: 4.0);
-        var b = TableBorder.All(color: Avalonia.Media.Colors.Black, width: 8.0);
+        var a = TableBorder.All(color: Colors.Black, width: 4.0);
+        var b = TableBorder.All(color: Colors.Black, width: 8.0);
 
         TableBorder? mid = TableBorder.Lerp(a, b, 0.5);
         Assert.Equal(6.0, mid!.Top.Width);
@@ -1031,7 +1031,7 @@ public sealed class TableTests
         var table = FindRenderObject<RenderTable>(root);
         Assert.Null(table.RowDecorations);
 
-        var decoration = new BoxDecoration(Color: Avalonia.Media.Colors.Red);
+        var decoration = new BoxDecoration(Color: Colors.Red);
         root.Update(new Directionality(TextDirection.Ltr, BuildGrid(1, 1, rowDecoration: decoration)));
         owner.FlushBuild();
 

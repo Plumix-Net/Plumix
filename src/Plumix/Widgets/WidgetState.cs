@@ -114,11 +114,11 @@ public abstract class WidgetStateBorderSide
         }
 
         BorderSide from = a ?? new BorderSide(
-            Avalonia.Media.Color.FromArgb(0, b!.Value.Color.R, b.Value.Color.G, b.Value.Color.B),
+            Color.FromARGB(0, b!.Value.Color.Red, b.Value.Color.Green, b.Value.Color.Blue),
             0.0,
             b.Value.Style);
         BorderSide to = b ?? new BorderSide(
-            Avalonia.Media.Color.FromArgb(0, a!.Value.Color.R, a.Value.Color.G, a.Value.Color.B),
+            Color.FromARGB(0, a!.Value.Color.Red, a.Value.Color.Green, a.Value.Color.Blue),
             0.0,
             a.Value.Style);
         return BorderSide.Lerp(from, to, t);

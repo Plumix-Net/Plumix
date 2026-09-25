@@ -2760,7 +2760,7 @@ internal static class MenuButtonStyleComposer
             {
                 Color? resolved = style?.IconColor?.Resolve(states)
                                   ?? style?.ForegroundColor?.Resolve(states);
-                if (resolved.HasValue)
+                if (resolved != null)
                 {
                     return resolved;
                 }

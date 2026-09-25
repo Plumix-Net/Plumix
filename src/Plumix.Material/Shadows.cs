@@ -14,9 +14,9 @@ namespace Plumix.Material;
 /// </summary>
 public static class MaterialShadows
 {
-    private static readonly Color KeyUmbraOpacity = Color.FromArgb(0x33, 0x00, 0x00, 0x00);
-    private static readonly Color KeyPenumbraOpacity = Color.FromArgb(0x24, 0x00, 0x00, 0x00);
-    private static readonly Color AmbientShadowOpacity = Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
+    private static readonly Color KeyUmbraOpacity = Color.FromARGB(0x33, 0x00, 0x00, 0x00);
+    private static readonly Color KeyPenumbraOpacity = Color.FromARGB(0x24, 0x00, 0x00, 0x00);
+    private static readonly Color AmbientShadowOpacity = Color.FromARGB(0x1F, 0x00, 0x00, 0x00);
 
     private static readonly Dictionary<int, IReadOnlyList<BoxShadow>> Table = new()
     {

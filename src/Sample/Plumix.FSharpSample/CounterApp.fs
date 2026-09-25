@@ -29,7 +29,7 @@ and CounterPageState() =
                         spacing = 12.0,
                         children = [
                             Ui.text "You have pushed the button this many times:"
-                            Ui.text (string count, fontSize = 34.0, color = Colors.DarkSlateBlue)
+                            Ui.text (string count, fontSize = 34.0, color = Color(0xFF483D8Bu))
                             Ui.row (
                                 mainAxisAlignment = MainAxisAlignment.Center,
                                 spacing = 12.0,

@@ -37,7 +37,7 @@ internal sealed class ChipsDemoPageState : State
                     "Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, "
                     + "with deletion and a copyWith-derived local ChipTheme override.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -141,7 +141,7 @@ internal sealed class ChipsDemoPageState : State
                                     _inputVisible = false;
                                     _deleteCount++;
                                 }))
-                            : new Text("Input removed", fontSize: 13, color: Color.Parse("#FF49454F")),
+                            : new Text("Input removed", fontSize: 13, color: new Color(0xFF49454F)),
                         new InputChip(
                             label: new Text("Pressable"),
                             avatar: new Icon(Icons.InfoOutline),
@@ -152,7 +152,7 @@ internal sealed class ChipsDemoPageState : State
                     $"Actions: {_actionCount} · deletes: {_deleteCount} · choice: {_selected.ToString().ToLowerInvariant()} · "
                     + $"filter: {_filterSelected.ToString().ToLowerInvariant()} · input: {_inputSelected.ToString().ToLowerInvariant()}",
                     fontSize: 13,
-                    color: Color.Parse("#FF49454F")),
+                    color: new Color(0xFF49454F)),
             ]);
 
         if (!_useLocalTheme)
@@ -162,10 +162,10 @@ internal sealed class ChipsDemoPageState : State
 
         return new ChipTheme(
             data: ChipTheme.Of(context).CopyWith(
-                backgroundColor: Color.Parse("#FFFFDDB3"),
-                selectedColor: Color.Parse("#FF006C4C"),
+                backgroundColor: new Color(0xFFFFDDB3),
+                selectedColor: new Color(0xFF006C4C),
                 checkmarkColor: Colors.White,
-                labelStyle: new TextStyle(Color: Color.Parse("#FF271900")),
+                labelStyle: new TextStyle(Color: new Color(0xFF271900)),
                 secondaryLabelStyle: new TextStyle(Color: Colors.White),
                 shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(14))),
             child: probes);
@@ -187,8 +187,8 @@ internal sealed class ChipsDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

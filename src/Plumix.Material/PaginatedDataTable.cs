@@ -374,6 +374,5 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
         _rows.Clear();
     }
 
-    private static Color WithOpacity(Color color, double opacity) =>
-        Color.FromArgb((byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

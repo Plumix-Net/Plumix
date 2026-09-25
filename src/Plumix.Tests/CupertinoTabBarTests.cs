@@ -67,11 +67,11 @@ public sealed class CupertinoTabBarTests : IDisposable
     public void Build_ResolvesColorsBorderIconsLabelsAndBlur()
     {
         CupertinoDynamicColor active = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF123456),
-            Color.FromUInt32(0xFF234567));
+            new Color(0xFF123456),
+            new Color(0xFF234567));
         CupertinoDynamicColor inactive = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF654321),
-            Color.FromUInt32(0xFF765432));
+            new Color(0xFF654321),
+            new Color(0xFF765432));
         var tabBar = new CupertinoTabBar(
             BuildItems(withActiveIcon: true),
             currentIndex: 1,
@@ -84,13 +84,13 @@ public sealed class CupertinoTabBarTests : IDisposable
         Assert.Single(FindAll<RenderBackdropFilter>(lightHarness.RenderView));
         RenderDecoratedBox lightDecoration = Assert.Single(FindAll<RenderDecoratedBox>(lightHarness.RenderView));
         var lightBox = Assert.IsType<BoxDecoration>(lightDecoration.Decoration);
-        Assert.Equal(0xF0F9F9F9u, lightBox.Color!.Value.ToUInt32());
-        Assert.Equal(0x4D000000u, Assert.IsType<Border>(lightBox.Border).Top.Color.ToUInt32());
+        Assert.Equal(0xF0F9F9F9u, lightBox.Color!.ToARGB32());
+        Assert.Equal(0x4D000000u, Assert.IsType<Border>(lightBox.Border).Top.Color.ToARGB32());
         Assert.Null(FindParagraph(lightHarness.RenderView, "inactive-two"));
         Assert.NotNull(FindParagraph(lightHarness.RenderView, "active-two"));
-        Assert.Equal(0xFF654321u, Foreground(FindParagraph(lightHarness.RenderView, "First")!).ToUInt32());
-        Assert.Equal(0xFF123456u, Foreground(FindParagraph(lightHarness.RenderView, "active-two")!).ToUInt32());
-        Assert.Equal(0xFF123456u, Foreground(FindParagraph(lightHarness.RenderView, "Second")!).ToUInt32());
+        Assert.Equal(0xFF654321u, Foreground(FindParagraph(lightHarness.RenderView, "First")!).ToARGB32());
+        Assert.Equal(0xFF123456u, Foreground(FindParagraph(lightHarness.RenderView, "active-two")!).ToARGB32());
+        Assert.Equal(0xFF123456u, Foreground(FindParagraph(lightHarness.RenderView, "Second")!).ToARGB32());
 
         using var darkHarness = new CupertinoThemeTestHarness(Wrap(
             tabBar,
@@ -98,10 +98,10 @@ public sealed class CupertinoTabBarTests : IDisposable
         darkHarness.Pump(ViewSize);
         RenderDecoratedBox darkDecoration = Assert.Single(FindAll<RenderDecoratedBox>(darkHarness.RenderView));
         var darkBox = Assert.IsType<BoxDecoration>(darkDecoration.Decoration);
-        Assert.Equal(0xF01D1D1Du, darkBox.Color!.Value.ToUInt32());
-        Assert.Equal(0x29000000u, Assert.IsType<Border>(darkBox.Border).Top.Color.ToUInt32());
-        Assert.Equal(0xFF765432u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToUInt32());
-        Assert.Equal(0xFF234567u, Foreground(FindParagraph(darkHarness.RenderView, "Second")!).ToUInt32());
+        Assert.Equal(0xF01D1D1Du, darkBox.Color!.ToARGB32());
+        Assert.Equal(0x29000000u, Assert.IsType<Border>(darkBox.Border).Top.Color.ToARGB32());
+        Assert.Equal(0xFF765432u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToARGB32());
+        Assert.Equal(0xFF234567u, Foreground(FindParagraph(darkHarness.RenderView, "Second")!).ToARGB32());
 
         using var opaqueHarness = new CupertinoThemeTestHarness(Wrap(new CupertinoTabBar(
             BuildItems(),
@@ -125,15 +125,15 @@ public sealed class CupertinoTabBarTests : IDisposable
         var tabBar = new CupertinoTabBar(BuildItems(), currentIndex: 1);
         using var lightHarness = new CupertinoThemeTestHarness(Wrap(tabBar));
         lightHarness.Pump(ViewSize);
-        Assert.Equal(0xFF999999u, Foreground(FindParagraph(lightHarness.RenderView, "First")!).ToUInt32());
-        Assert.Equal(0xFF007AFFu, Foreground(FindParagraph(lightHarness.RenderView, "Second")!).ToUInt32());
+        Assert.Equal(0xFF999999u, Foreground(FindParagraph(lightHarness.RenderView, "First")!).ToARGB32());
+        Assert.Equal(0xFF007AFFu, Foreground(FindParagraph(lightHarness.RenderView, "Second")!).ToARGB32());
 
         using var darkHarness = new CupertinoThemeTestHarness(Wrap(
             tabBar,
             brightness: PlatformBrightness.Dark));
         darkHarness.Pump(ViewSize);
-        Assert.Equal(0xFF757575u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToUInt32());
-        Assert.Equal(0xFF0A84FFu, Foreground(FindParagraph(darkHarness.RenderView, "Second")!).ToUInt32());
+        Assert.Equal(0xFF757575u, Foreground(FindParagraph(darkHarness.RenderView, "First")!).ToARGB32());
+        Assert.Equal(0xFF0A84FFu, Foreground(FindParagraph(darkHarness.RenderView, "Second")!).ToARGB32());
     }
 
     [Fact]
@@ -300,7 +300,7 @@ public sealed class CupertinoTabBarTests : IDisposable
 
     private static Color Foreground(RenderParagraph paragraph)
     {
-        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

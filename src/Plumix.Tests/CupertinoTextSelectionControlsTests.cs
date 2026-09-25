@@ -84,7 +84,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
     [Fact]
     public void HandlePainter_UsesThemeColorSingleUnionPathAndColorBasedRepaint()
     {
-        Color color = Color.FromArgb(0x55, 0x00, 0x00, 0xAA);
+        Color color = Color.FromARGB(0x55, 0x00, 0x00, 0xAA);
         var painter = new CupertinoTextSelectionHandlePainter(color);
         var geometry = Assert.IsType<CombinedGeometry>(
             CupertinoTextSelectionHandlePainter.BuildPath(new Size(12.0, 20.5)));

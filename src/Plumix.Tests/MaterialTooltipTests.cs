@@ -323,7 +323,7 @@ public sealed class MaterialTooltipTests
                 box => box.AdditionalConstraints.MinHeight == 24);
             Assert.Contains(
                 FindDescendants<RenderDecoratedBox>(harness.RenderView),
-                box => box.AsBoxDecoration.Color == Color.FromArgb(0xE6, 0x61, 0x61, 0x61));
+                box => box.AsBoxDecoration.Color == Color.FromARGB(0xE6, 0x61, 0x61, 0x61));
         }
         finally
         {

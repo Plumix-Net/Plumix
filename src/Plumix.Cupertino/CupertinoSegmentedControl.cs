@@ -81,18 +81,18 @@ public sealed class CupertinoSegmentedControl<T> : StatefulWidget where T : notn
 internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegmentedControl<T>> where T : notnull
 {
     private static readonly TimeSpan SelectionAnimationDuration = TimeSpan.FromMilliseconds(165.0);
-    private static readonly Color DefaultDisabledTextColor = Color.FromArgb(115, 122, 122, 122);
+    private static readonly Color DefaultDisabledTextColor = Color.FromARGB(115, 122, 122, 122);
 
     private readonly Dictionary<T, LabeledGlobalKey<CupertinoSegmentButtonState<T>>> _segmentKeys = [];
     private readonly List<AnimationController> _selectionControllers = [];
     private readonly List<ColorTween> _childTweens = [];
-    private Color _selectedColor;
-    private Color _unselectedColor;
-    private Color _selectedDisabledColor;
-    private Color _unselectedDisabledColor;
-    private Color _borderColor;
-    private Color _pressedColor;
-    private Color _disabledTextColor;
+    private Color _selectedColor = null!;
+    private Color _unselectedColor = null!;
+    private Color _selectedDisabledColor = null!;
+    private Color _unselectedDisabledColor = null!;
+    private Color _borderColor = null!;
+    private Color _pressedColor = null!;
+    private Color _disabledTextColor = null!;
     private bool _colorsInitialized;
     private T? _pressedKey;
     private bool _hasPressedKey;
@@ -411,11 +411,7 @@ internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegment
         return null;
     }
 
-    private static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0.0, 1.0));
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }
 
 internal sealed class CupertinoSegmentButton<T> : StatefulWidget where T : notnull

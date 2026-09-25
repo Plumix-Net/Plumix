@@ -292,8 +292,8 @@ public sealed class MaterialRadioTests
         harness.Pump(new Size(220, 120));
 
         CupertinoRadioPainter painter = FindCupertinoRadioPainter(harness.RenderView);
-        Assert.Equal(Color.FromArgb(255, 0, 122, 255), painter.ActiveColor);
-        Assert.Equal(Colors.White, painter.FillColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 0, 122, 255), painter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(Colors.White, painter.FillColor);
         Assert.Equal(MaterialColors.Transparent, painter.BorderColor);
         Assert.True(painter.IsActive);
         Assert.Equal(true, painter.Value);
@@ -319,7 +319,7 @@ public sealed class MaterialRadioTests
 
         CupertinoRadioPainter painter = FindCupertinoRadioPainter(harness.RenderView);
         Assert.Equal(Colors.Orange, painter.ActiveColor);
-        Assert.Equal(Colors.White, painter.FillColor);
+        ColorMatchers.AssertSameColorAs(Colors.White, painter.FillColor);
     }
 
     [Fact]
@@ -610,9 +610,9 @@ public sealed class MaterialRadioTests
         return FindDescendants<RenderDecoratedBox>(root)
             .FirstOrDefault(box =>
                 box.AsBoxDecoration.Border is null
-                && box.AsBoxDecoration.Color.HasValue
-                && box.AsBoxDecoration.Color!.Value.A > 0
-                && box.AsBoxDecoration.Color!.Value != MaterialColors.Transparent);
+                && box.AsBoxDecoration.Color != null
+                && box.AsBoxDecoration.Color!.Alpha > 0
+                && box.AsBoxDecoration.Color! != MaterialColors.Transparent);
     }
 
     private static RadioPainter FindRadioPainter(RenderObject root)
@@ -682,7 +682,7 @@ public sealed class MaterialRadioTests
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

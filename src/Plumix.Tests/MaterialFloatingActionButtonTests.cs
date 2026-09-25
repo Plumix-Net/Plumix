@@ -49,11 +49,11 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultM2_UsesColorSchemeAndLegacyStateColors()
     {
-        Color secondary = Color.Parse("#FF123456");
-        Color onSecondary = Color.Parse("#FFFEDCBA");
-        Color focus = Color.Parse("#33112233");
-        Color hover = Color.Parse("#22112233");
-        Color splash = Color.Parse("#44112233");
+        Color secondary = new Color(0xFF123456);
+        Color onSecondary = new Color(0xFFFEDCBA);
+        Color focus = new Color(0x33112233);
+        Color hover = new Color(0x22112233);
+        Color splash = new Color(0x44112233);
         Widget? capturedBuiltWidget = null;
         var theme = ThemeData.Light with
         {

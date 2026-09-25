@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class ReparentStateDartParityTests
 {
-    private static readonly Avalonia.Media.Color Green = Avalonia.Media.Color.FromUInt32(0xff00ff00);
+    private static readonly Color Green = new Color(0xff00ff00);
 
     // Flutter: reparent_state_test.dart: "can reparent state"
     [Fact]

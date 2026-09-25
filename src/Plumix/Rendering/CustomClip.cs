@@ -237,10 +237,10 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
                     SpreadMethod = GradientSpreadMethod.Repeat,
                     GradientStops =
                     [
-                        new GradientStop(Color.FromUInt32(0x00000000), 0.25),
-                        new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.25),
-                        new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.75),
-                        new GradientStop(Color.FromUInt32(0x00000000), 0.75),
+                        new GradientStop(new Color(0x00000000), 0.25),
+                        new GradientStop(new Color(0xFFFF00FF), 0.25),
+                        new GradientStop(new Color(0xFFFF00FF), 0.75),
+                        new GradientStop(new Color(0x00000000), 0.75),
                     ],
                 },
                 2.0);
@@ -249,7 +249,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
                 _debugText = new TextPainter(
                     text: new TextSpan(
                         text: "✂",
-                        style: new TextStyle(Color: Color.FromUInt32(0xFFFF00FF), FontSize: 14.0)),
+                        style: new TextStyle(Color: new Color(0xFFFF00FF), FontSize: 14.0)),
                     textDirection: TextDirection.Rtl); // doesn't matter, it's one character
                 _debugText.Layout();
             }

@@ -107,8 +107,8 @@ public sealed class MaterialBarControlsTests
     [Fact]
     public void BottomAppBar_M2DarkSurfaceUsesElevationOverlayPolicy()
     {
-        Color surface = Color.Parse("#FF121212");
-        Color onSurface = Color.Parse("#FF69F0AE");
+        Color surface = new Color(0xFF121212);
+        Color onSurface = new Color(0xFF69F0AE);
         var theme = new ThemeData(
             brightness: Brightness.Dark,
             useMaterial3: false,

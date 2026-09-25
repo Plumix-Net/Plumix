@@ -41,7 +41,7 @@ public sealed class TextStyleTests
             s1.CopyWith(inherit: false).ToString());
 
         TextStyle s2 = s1.CopyWith(
-            color: Color.FromUInt32(0xFF00FF00),
+            color: new Color(0xFF00FF00),
             height: 100.0,
             leadingDistribution: TextLeadingDistribution.Even);
         Assert.Null(s1.FontFamily);
@@ -53,7 +53,7 @@ public sealed class TextStyleTests
         Assert.Equal(10.0, s2.FontSize);
         Assert.Equal(W(800), s2.FontWeight);
         Assert.Equal(100.0, s2.Height);
-        Assert.Equal(Color.FromUInt32(0xFF00FF00), s2.Color);
+        Assert.Equal(new Color(0xFF00FF00), s2.Color);
         Assert.Equal(TextLeadingDistribution.Even, s2.LeadingDistribution);
         Assert.NotEqual(s1, s2);
         Assert.Equal(
@@ -88,14 +88,14 @@ public sealed class TextStyleTests
         Assert.Equal(10.0, s2.FontSize);
         Assert.Equal(W(800), s2.FontWeight);
         Assert.Equal(100.0, s2.Height);
-        Assert.Equal(Color.FromUInt32(0xFF00FF00), s2.Color);
+        Assert.Equal(new Color(0xFF00FF00), s2.Color);
         Assert.Equal(TextLeadingDistribution.Even, s2.LeadingDistribution);
         Assert.NotEqual(s2, s4);
         Assert.Null(s4.FontFamily);
         Assert.Equal(10.0, s4.FontSize);
         Assert.Equal(W(800), s4.FontWeight);
         Assert.Equal(123.0, s4.Height);
-        Assert.Equal(Color.FromUInt32(0xFF00FF00), s4.Color);
+        Assert.Equal(new Color(0xFF00FF00), s4.Color);
         Assert.Equal(TextLeadingDistribution.Even, s4.LeadingDistribution);
 
         TextStyle s5 = TextStyle.Lerp(s1, s3, 0.25)!;
@@ -168,7 +168,7 @@ public sealed class TextStyleTests
         ParagraphTextStyle ts2 = s2.GetTextStyle();
         Assert.Equal(
             new ParagraphTextStyle(
-                Color: Color.FromUInt32(0xFF00FF00),
+                Color: new Color(0xFF00FF00),
                 FontWeight: W(800),
                 FontSize: 10.0,
                 Height: 100.0,
@@ -176,7 +176,7 @@ public sealed class TextStyleTests
             ts2);
         Assert.Equal(
             UiTextStyleString(
-                color: Color.FromUInt32(0xFF00FF00).ToDartString(),
+                color: new Color(0xFF00FF00).ToString(),
                 fontWeight: "FontWeight.w800",
                 fontSize: "10.0",
                 height: "100.0x",
@@ -348,9 +348,9 @@ public sealed class TextStyleTests
     public void TextStyleShadows()
     {
         var shadow1 = new Shadow(blurRadius: 1.0, offset: new Point(1.0, 1.0));
-        var shadow2 = new Shadow(blurRadius: 2.0, color: Color.FromUInt32(0xFF111111), offset: new Point(2.0, 2.0));
-        var shadow3 = new Shadow(blurRadius: 3.0, color: Color.FromUInt32(0xFF222222), offset: new Point(3.0, 3.0));
-        var shadow4 = new Shadow(blurRadius: 4.0, color: Color.FromUInt32(0xFF333333), offset: new Point(4.0, 4.0));
+        var shadow2 = new Shadow(blurRadius: 2.0, color: new Color(0xFF111111), offset: new Point(2.0, 2.0));
+        var shadow3 = new Shadow(blurRadius: 3.0, color: new Color(0xFF222222), offset: new Point(3.0, 3.0));
+        var shadow4 = new Shadow(blurRadius: 4.0, color: new Color(0xFF333333), offset: new Point(4.0, 4.0));
 
         var s1 = new TextStyle(Shadows: [shadow1, shadow2]);
         var s2 = new TextStyle(Shadows: [shadow3, shadow4]);
@@ -367,8 +367,8 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStyleForegroundAndColorCombos()
     {
-        Color red = Color.FromArgb(255, 255, 0, 0);
-        Color blue = Color.FromArgb(255, 0, 0, 255);
+        Color red = Color.FromARGB(255, 255, 0, 0);
+        Color blue = Color.FromARGB(255, 0, 0, 255);
         var redTextStyle = new TextStyle(Color: red);
         var blueTextStyle = new TextStyle(Color: blue);
         var redPaintTextStyle = new TextStyle(Foreground: new Paint { Color = red });
@@ -397,7 +397,7 @@ public sealed class TextStyleTests
         Assert.Equal(blue, redTextStyle.Apply(color: blue).Color);
 
         // lerp
-        Assert.Equal(ColorUtilities.Lerp(red, blue, 0.25), TextStyle.Lerp(redTextStyle, blueTextStyle, 0.25)!.Color);
+        Assert.Equal(Color.Lerp(red, blue, 0.25), TextStyle.Lerp(redTextStyle, blueTextStyle, 0.25)!.Color);
         Assert.Null(TextStyle.Lerp(redTextStyle, bluePaintTextStyle, 0.25)!.Color);
         Assert.Equal(red, TextStyle.Lerp(redTextStyle, bluePaintTextStyle, 0.25)!.Foreground!.Color);
         Assert.Equal(blue, TextStyle.Lerp(redTextStyle, bluePaintTextStyle, 0.75)!.Foreground!.Color);
@@ -414,8 +414,8 @@ public sealed class TextStyleTests
         Assert.Null(s1.BackgroundColor);
         Assert.Equal("TextStyle(<all styles inherited>)", s1.ToString());
 
-        var s2 = new TextStyle(BackgroundColor: Color.FromUInt32(0xFF00FF00));
-        Assert.Equal(Color.FromUInt32(0xFF00FF00), s2.BackgroundColor);
+        var s2 = new TextStyle(BackgroundColor: new Color(0xFF00FF00));
+        Assert.Equal(new Color(0xFF00FF00), s2.BackgroundColor);
         Assert.Equal(
             "TextStyle(inherit: true, backgroundColor: Color(alpha: 1.0000, red: 0.0000, green: 1.0000, "
             + "blue: 0.0000, colorSpace: ColorSpace.sRGB))",
@@ -428,8 +428,8 @@ public sealed class TextStyleTests
     [Fact]
     public void TextStyleBackgroundAndBackgroundColorCombos()
     {
-        Color red = Color.FromArgb(255, 255, 0, 0);
-        Color blue = Color.FromArgb(255, 0, 0, 255);
+        Color red = Color.FromARGB(255, 255, 0, 0);
+        Color blue = Color.FromARGB(255, 0, 0, 255);
         var redTextStyle = new TextStyle(BackgroundColor: red);
         var blueTextStyle = new TextStyle(BackgroundColor: blue);
         var redPaintTextStyle = new TextStyle(Background: new Paint { Color = red });
@@ -459,7 +459,7 @@ public sealed class TextStyleTests
 
         // lerp
         Assert.Equal(
-            ColorUtilities.Lerp(red, blue, 0.25),
+            Color.Lerp(red, blue, 0.25),
             TextStyle.Lerp(redTextStyle, blueTextStyle, 0.25)!.BackgroundColor);
         Assert.Null(TextStyle.Lerp(redTextStyle, bluePaintTextStyle, 0.25)!.BackgroundColor);
         Assert.Equal(red, TextStyle.Lerp(redTextStyle, bluePaintTextStyle, 0.25)!.Background!.Color);
@@ -579,13 +579,13 @@ public sealed class TextStyleTests
         var fromStyle = new TextStyle();
         var toStyle = new TextStyle(
             Inherit: false,
-            Color: Color.FromUInt32(0x87654321),
-            BackgroundColor: Color.FromUInt32(0x12345678),
+            Color: new Color(0x87654321),
+            BackgroundColor: new Color(0x12345678),
             FontSize: 20,
             LetterSpacing: 1,
             WordSpacing: 1,
             Height: 20,
-            DecorationColor: Color.FromUInt32(0x11111111),
+            DecorationColor: new Color(0x11111111),
             DecorationThickness: 5);
 
         Assert.Equal(toStyle, TextStyle.Lerp(fromStyle, toStyle, 1));
@@ -678,12 +678,12 @@ public sealed class TextStyleTests
             new ParagraphTextStyle(FontWeight: W(700), FontSize: 12.0, Height: 123.0).ToString());
         Assert.Equal(
             UiTextStyleString(
-                color: Color.FromUInt32(0xFF00FF00).ToDartString(),
+                color: new Color(0xFF00FF00).ToString(),
                 fontWeight: "FontWeight.w800",
                 fontSize: "10.0",
                 height: "100.0x"),
             new ParagraphTextStyle(
-                Color: Color.FromUInt32(0xFF00FF00),
+                Color: new Color(0xFF00FF00),
                 FontWeight: W(800),
                 FontSize: 10.0,
                 Height: 100.0).ToString());
@@ -776,8 +776,8 @@ public sealed class TextStyleTests
     {
         Assert.Equal("Paint()", new Paint().ToString());
         Assert.Equal(
-            $"Paint({Color.FromUInt32(0xFFFF0000).ToDartString()})",
-            new Paint { Color = Color.FromUInt32(0xFFFF0000) }.ToString());
+            $"Paint({new Color(0xFFFF0000).ToString()})",
+            new Paint { Color = new Color(0xFFFF0000) }.ToString());
         Assert.Equal(
             "Paint(PaintingStyle.stroke 2.0 StrokeCap.round StrokeJoin.bevel; antialias off; "
             + "BlendMode.srcIn; maskFilter: MaskFilter.blur(BlurStyle.normal, 1.5); invert: true)",

@@ -240,8 +240,8 @@ public sealed class MaterialStepperTests : IDisposable
     [Fact]
     public void Stepper_CircleAndConnectorColors_ReadColorSchemeAndWidgetStates()
     {
-        Color lightPrimary = Color.Parse("#FF123456");
-        Color lightOnSurface = Color.Parse("#FF654321");
+        Color lightPrimary = new Color(0xFF123456);
+        Color lightOnSurface = new Color(0xFF654321);
         var lightTheme = ThemeData.Light with
         {
             PrimaryColor = Colors.Orange,
@@ -262,8 +262,8 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Contains(lightCircles, decoration => decoration.Color == lightPrimary);
         Assert.Contains(lightCircles, decoration => decoration.Color == ApplyOpacity(lightOnSurface, 0.38));
 
-        Color darkSecondary = Color.Parse("#FF234567");
-        Color darkBackground = Color.Parse("#FF765432");
+        Color darkSecondary = new Color(0xFF234567);
+        Color darkBackground = new Color(0xFF765432);
         var darkTheme = ThemeData.Dark with
         {
             ColorScheme = ThemeData.Dark.ColorScheme with
@@ -311,9 +311,9 @@ public sealed class MaterialStepperTests : IDisposable
         string cancelLabel)
     {
         ThemeData baseTheme = dark ? ThemeData.Dark : ThemeData.Light;
-        Color primary = Color.Parse("#FF0A6B4F");
-        Color onPrimary = Color.Parse("#FFF0FFF9");
-        Color onSurface = Color.Parse("#FF102019");
+        Color primary = new Color(0xFF0A6B4F);
+        Color onPrimary = new Color(0xFFF0FFF9);
+        Color onSurface = new Color(0xFF102019);
         var theme = baseTheme with
         {
             UseMaterial3 = useMaterial3,
@@ -413,11 +413,11 @@ public sealed class MaterialStepperTests : IDisposable
         .Where(decoration => decoration.Shape == BoxShape.Circle)
         .ToArray();
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
-        color.R,
-        color.G,
-        color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => Color.FromARGB(
+        (byte)Math.Round(color.Alpha * Math.Clamp(opacity, 0, 1)),
+        color.Red,
+        color.Green,
+        color.Blue);
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
         FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);

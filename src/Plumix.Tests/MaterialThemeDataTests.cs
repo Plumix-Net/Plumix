@@ -573,8 +573,8 @@ public sealed class MaterialThemeDataTests
     {
         var a = new ThemeData(extensions: [new ProbeExtension(Colors.Black)]);
         var b = new ThemeData(extensions: [new ProbeExtension(Colors.White)]);
-        Assert.Equal(
-            Color.FromArgb(0xFF, 0x7F, 0x7F, 0x7F),
+        ColorMatchers.AssertSameColorAs(
+            Color.FromARGB(0xFF, 0x7F, 0x7F, 0x7F),
             ThemeData.Lerp(a, b, 0.5).Extension<ProbeExtension>()!.Value);
 
         // Present only on `a`: kept unlerped. Present only on `b`: carried over unlerped.

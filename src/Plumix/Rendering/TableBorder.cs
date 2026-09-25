@@ -38,7 +38,7 @@ public sealed record TableBorder
         BorderStyle style = BorderStyle.Solid,
         BorderRadius? borderRadius = null)
     {
-        var side = new BorderSide(color ?? Color.FromUInt32(0xFF000000), width, style);
+        var side = new BorderSide(color ?? new Color(0xFF000000), width, style);
         return new TableBorder(
             top: side,
             right: side,
@@ -318,12 +318,7 @@ public sealed record TableBorder
         return new BorderSide(LerpColor(colorA, colorB, t), width, BorderStyle.Solid);
     }
 
-    private static Color WithAlpha(Color color, byte alpha) => Color.FromArgb(alpha, color.R, color.G, color.B);
+    private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 
-    private static Color LerpColor(Color a, Color b, double t)
-    {
-        static byte Mix(byte from, byte to, double amount) =>
-            (byte)Math.Clamp(Math.Round(from + ((to - from) * amount)), 0, 255);
-        return Color.FromArgb(Mix(a.A, b.A, t), Mix(a.R, b.R, t), Mix(a.G, b.G, t), Mix(a.B, b.B, t));
-    }
+    private static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
 }

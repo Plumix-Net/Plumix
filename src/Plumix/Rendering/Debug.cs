@@ -174,13 +174,13 @@ public static partial class RenderingDebug
 
         if (innerRect is { } inner && !IsEmptyRect(inner))
         {
-            DrawDoubleRect(context, outerRect, inner, Color.FromUInt32(0x900090FF));
+            DrawDoubleRect(context, outerRect, inner, new Color(0x900090FF));
             Rect outline = Intersect(Inflate(inner, outlineWidth), outerRect);
-            DrawDoubleRect(context, outline, inner, Color.FromUInt32(0xFF0090FF));
+            DrawDoubleRect(context, outline, inner, new Color(0xFF0090FF));
         }
         else
         {
-            context.Canvas.DrawRectangle(new SolidColorBrush(Color.FromUInt32(0x90909090)), null, outerRect);
+            context.Canvas.DrawRectangle(new SolidColorBrush(new Color(0x90909090)), null, outerRect);
         }
     }
 

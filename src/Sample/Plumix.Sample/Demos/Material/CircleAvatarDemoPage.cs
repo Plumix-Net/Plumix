@@ -48,7 +48,7 @@ internal sealed class CircleAvatarDemoPageState : State
                 new Text(
                     "Initials, theme colors, animated radius, foreground/background images, and error fallback.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -74,7 +74,7 @@ internal sealed class CircleAvatarDemoPageState : State
                             })),
                     ]),
                 new Container(
-                    color: Color.Parse("#FFF7F2FA"),
+                    color: new Color(0xFFF7F2FA),
                     padding: new Thickness(20),
                     child: new Row(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
@@ -86,13 +86,13 @@ internal sealed class CircleAvatarDemoPageState : State
                                     ThemeData.Light with
                                     {
                                         ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
-                                            primaryContainer: Color.Parse("#FFFFD8E4"),
-                                            onPrimaryContainer: Color.Parse("#FF31111D")),
+                                            primaryContainer: new Color(0xFFFFD8E4),
+                                            onPrimaryContainer: new Color(0xFF31111D)),
                                     },
                                     new CircleAvatar(child: new Text("ER")))),
                             Probe("Color + radius", new CircleAvatar(
                                 radius: radius,
-                                backgroundColor: Color.Parse("#FF00695C"),
+                                backgroundColor: new Color(0xFF00695C),
                                 foregroundColor: Colors.White,
                                 child: new Text("42"))),
                             Probe("Image layers", new CircleAvatar(
@@ -105,7 +105,7 @@ internal sealed class CircleAvatarDemoPageState : State
                                 foregroundImage: foreground,
                                 onForegroundImageError: foreground is null ? null : HandleForegroundError)),
                         ])),
-                new Text(_status, fontSize: 13, color: Color.Parse("#FF49454F")),
+                new Text(_status, fontSize: 13, color: new Color(0xFF49454F)),
             ]);
     }
 
@@ -129,8 +129,8 @@ internal sealed class CircleAvatarDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

@@ -184,8 +184,8 @@ public sealed class MaterialExpansionPanelTests : IDisposable
     [Fact]
     public void ExpansionPanelList_CompositionAndInteractionColors_MatchFlutter()
     {
-        var splash = Color.Parse("#FF006C4C");
-        var highlight = Color.Parse("#FFFFB4AB");
+        var splash = new Color(0xFF006C4C);
+        var highlight = new Color(0xFFFFB4AB);
         using var harness = new WidgetRenderHarness(
             BuildThemed(new ExpansionPanelList(
                 animationDuration: TimeSpan.FromMilliseconds(800),
@@ -230,9 +230,9 @@ public sealed class MaterialExpansionPanelTests : IDisposable
     [Fact]
     public void ExpansionPanelList_VisualOverridesApplyToSliceDividerIconAndGap()
     {
-        var background = Color.Parse("#FFFFE8D6");
-        var divider = Color.Parse("#FF006C4C");
-        var icon = Color.Parse("#FF6750A4");
+        var background = new Color(0xFFFFE8D6);
+        var divider = new Color(0xFF006C4C);
+        var icon = new Color(0xFF6750A4);
         using var harness = new WidgetRenderHarness(
             BuildThemed(new ExpansionPanelList(
                 dividerColor: divider,

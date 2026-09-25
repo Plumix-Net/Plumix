@@ -43,12 +43,12 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     [Fact]
     public void Toolbar_ResolvesBackgroundDividerAndTextColorsForBothBrightnesses()
     {
-        Assert.Equal(Color.FromUInt32(0xFFF6F6F6), CupertinoTextSelectionToolbar.ToolbarBackgroundColor.Color);
+        Assert.Equal(new Color(0xFFF6F6F6), CupertinoTextSelectionToolbar.ToolbarBackgroundColor.Color);
         Assert.Equal(
-            Color.FromUInt32(0xFF222222),
+            new Color(0xFF222222),
             CupertinoTextSelectionToolbar.ToolbarBackgroundColor.DarkColor);
-        Assert.Equal(Color.FromUInt32(0xFFD6D6D6), CupertinoTextSelectionToolbar.ToolbarDividerColor.Color);
-        Assert.Equal(Color.FromUInt32(0xFF424242), CupertinoTextSelectionToolbar.ToolbarDividerColor.DarkColor);
+        Assert.Equal(new Color(0xFFD6D6D6), CupertinoTextSelectionToolbar.ToolbarDividerColor.Color);
+        Assert.Equal(new Color(0xFF424242), CupertinoTextSelectionToolbar.ToolbarDividerColor.DarkColor);
         Assert.Equal(CupertinoColors.Black, CupertinoTextSelectionToolbar.ToolbarTextColor.Color);
         Assert.Equal(CupertinoColors.White, CupertinoTextSelectionToolbar.ToolbarTextColor.DarkColor);
     }
@@ -473,14 +473,14 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 anchorBelow: new Point(400.0, 140.0),
                 children: [Child()]));
         light.Pump(new Size(800.0, 600.0));
-        Assert.Equal(
-            Color.FromUInt32(0xFFF6F6F6),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFFF6F6F6),
             Assert.Single(light.FindWidgets<ColoredBox>()).Color);
         Assert.Equal(
-            Color.FromArgb(0x33, 0x00, 0x00, 0x00),
+            Color.FromARGB(0x33, 0x00, 0x00, 0x00),
             Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarShape>(light.RenderView))
                 .ShadowColor);
-        Assert.Equal(Color.FromUInt32(0xFFD6D6D6), Items(light).DividerColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFFD6D6D6), Items(light).DividerColor);
 
         using var dark = CreateHarness(
             new CupertinoTextSelectionToolbar(
@@ -489,13 +489,13 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 children: [Child()]),
             brightness: PlatformBrightness.Dark);
         dark.Pump(new Size(800.0, 600.0));
-        Assert.Equal(
-            Color.FromUInt32(0xFF222222),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFF222222),
             Assert.Single(dark.FindWidgets<ColoredBox>()).Color);
         Assert.Null(
             Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarShape>(dark.RenderView))
                 .ShadowColor);
-        Assert.Equal(Color.FromUInt32(0xFF424242), Items(dark).DividerColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF424242), Items(dark).DividerColor);
     }
 
     [Fact]

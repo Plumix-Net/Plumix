@@ -106,7 +106,7 @@ public sealed class MaterialDataTableTests : IDisposable
 
         RenderTable m3Table = Assert.Single(FindDescendants<RenderTable>(m3.RenderView));
         BoxDecoration m3Row = Assert.IsType<BoxDecoration>(m3Table.RowDecorations![1]);
-        Assert.Equal(Color.FromArgb(20, primary.R, primary.G, primary.B), m3Row.Color);
+        Assert.Equal(Color.FromARGB(20, primary.Red, primary.Green, primary.Blue), m3Row.Color);
         var m3Border = Assert.IsType<Plumix.Rendering.Border>(m3Row.Border);
         Assert.Equal(outlineVariant, m3Border.Top.Color);
         Assert.Equal(1.0, m3Border.Top.Width);

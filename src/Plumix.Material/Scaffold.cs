@@ -250,7 +250,7 @@ public sealed class Scaffold : StatefulWidget
                     MaxBottomSheetScrimOpacity - floatingButtonVisibilityValue);
                 return new ModalBarrier(
                     dismissible: false,
-                    color: Color.FromArgb((byte)Math.Round(opacity * 255), 0, 0, 0));
+                    color: Color.FromARGB((byte)Math.Round(opacity * 255), 0, 0, 0));
             });
     }
 }

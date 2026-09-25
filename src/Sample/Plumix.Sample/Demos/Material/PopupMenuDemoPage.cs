@@ -29,19 +29,19 @@ public sealed class PopupMenuDemoPage : StatefulWidget
             ThemeData theme = Theme.Of(context) with { UseMaterial3 = _useMaterial3 };
             var popupTheme = _useTheme
                 ? new PopupMenuThemeData(
-                    Color: Color.Parse("#FFFFF3E0"),
+                    Color: new Color(0xFFFFF3E0),
                     Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
                     MenuPadding: EdgeInsetsGeometry.DirectionalOnly(
                         start: 12,
                         top: 4,
                         end: 4,
                         bottom: 4),
-                    IconColor: Color.Parse("#FFE65100"),
+                    IconColor: new Color(0xFFE65100),
                     LabelTextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
                         Theme.Of(context).TextTheme.LabelLarge.CopyWith(
                             color: states.Contains(WidgetState.Disabled)
-                                ? Color.Parse("#619E9E9E")
-                                : Color.Parse("#FFE65100"))))
+                                ? new Color(0x619E9E9E)
+                                : new Color(0xFFE65100))))
                 : new PopupMenuThemeData();
             return new Theme(
                 theme,

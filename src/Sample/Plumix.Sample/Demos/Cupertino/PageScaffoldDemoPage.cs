@@ -18,8 +18,8 @@ public sealed class CupertinoPageScaffoldDemoPage : StatefulWidget
 internal sealed class CupertinoPageScaffoldDemoPageState : State
 {
     private static readonly CupertinoDynamicColor PageBackground = CupertinoDynamicColor.WithBrightness(
-        Color.FromUInt32(0xFFF2F2F7),
-        Color.FromUInt32(0xFF1C1C1E));
+        new Color(0xFFF2F2F7),
+        new Color(0xFF1C1C1E));
 
     private bool _opaqueBar;
     private bool _showKeyboardInset;
@@ -91,19 +91,19 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                         BuildAction(
                             _opaqueBar ? "Use translucent bar" : "Use opaque bar",
                             () => SetState(() => _opaqueBar = !_opaqueBar),
-                            Color.FromUInt32(0xFFE9F0FF)),
+                            new Color(0xFFE9F0FF)),
                         BuildAction(
                             _showKeyboardInset ? "Hide simulated keyboard" : "Show simulated keyboard",
                             () => SetState(() => _showKeyboardInset = !_showKeyboardInset),
-                            Color.FromUInt32(0xFFEAE4FF)),
+                            new Color(0xFFEAE4FF)),
                         BuildAction(
                             _resizeToAvoidBottomInset ? "Resize: on" : "Resize: off",
                             () => SetState(() => _resizeToAvoidBottomInset = !_resizeToAvoidBottomInset),
-                            Color.FromUInt32(0xFFE8F4E8)),
+                            new Color(0xFFE8F4E8)),
                         new SizedBox(
                             height: 96.0,
                             child: new Container(
-                                color: Color.FromUInt32(0xFFFFF3E0),
+                                color: new Color(0xFFFFF3E0),
                                 alignment: Alignment.Center,
                                 child: new Text("Bottom inset probe", fontSize: 13.0, color: Colors.Black))),
                     ])));
@@ -124,8 +124,8 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
     {
         private static readonly CupertinoDynamicColor TranslucentBackground =
             CupertinoDynamicColor.WithBrightness(
-                Color.FromUInt32(0xCCFFFFFF),
-                Color.FromUInt32(0xCC1C1C1E));
+                new Color(0xCCFFFFFF),
+                new Color(0xCC1C1C1E));
 
         public DemoNavigationBar(bool opaque)
         {

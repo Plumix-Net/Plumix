@@ -51,7 +51,7 @@ public sealed class CupertinoTextFormFieldRowTests : IDisposable
     {
         var controller = new TextEditingController("value");
         var focusNode = new FocusNode();
-        var decoration = new BoxDecoration(Color: Color.FromUInt32(0xFF123456));
+        var decoration = new BoxDecoration(Color: new Color(0xFF123456));
         var style = new TextStyle(FontSize: 19.0);
         var strutStyle = new StrutStyle(FontSize: 18.0);
         var toolbarOptions = new ToolbarOptions(Copy: false);

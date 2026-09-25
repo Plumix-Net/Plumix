@@ -425,7 +425,7 @@ public sealed class RenderingParityTests
         public override void Paint(PaintingContext ctx, Point offset)
         {
             ctx.Canvas.DrawRectangle(
-                new SolidColorBrush(Color.Parse("#FFC8E6C9")),
+                new SolidColorBrush(new Color(0xFFC8E6C9)),
                 null,
                 new Rect(offset, Size));
         }

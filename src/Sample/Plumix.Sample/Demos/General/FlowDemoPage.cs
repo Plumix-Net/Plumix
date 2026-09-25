@@ -44,7 +44,7 @@ internal sealed class FlowDemoPageState : State
                     ]),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF3F6FA"),
+                        color: new Color(0xFFF3F6FA),
                         alignment: Alignment.Center,
                         child: new SizedBox(
                             width: 300,
@@ -53,9 +53,9 @@ internal sealed class FlowDemoPageState : State
                                 new DemoFlowDelegate(_expanded),
                                 children:
                                 [
-                                    BuildTile("0", Color.Parse("#FF1565C0")),
-                                    BuildTile("1", Color.Parse("#FF2E7D32")),
-                                    BuildTile("2", Color.Parse("#FFF57C00")),
+                                    BuildTile("0", new Color(0xFF1565C0)),
+                                    BuildTile("1", new Color(0xFF2E7D32)),
+                                    BuildTile("2", new Color(0xFFF57C00)),
                                 ])))),
                 new RepaintBoundary(
                     child: new Container(
@@ -83,7 +83,7 @@ internal sealed class FlowDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

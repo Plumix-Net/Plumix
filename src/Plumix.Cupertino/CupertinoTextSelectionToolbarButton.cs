@@ -25,8 +25,8 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
 
     private static readonly CupertinoDynamicColor ToolbarPressedColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromArgb(0x10, 0x00, 0x00, 0x00),
-            Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF));
+            Color.FromARGB(0x10, 0x00, 0x00, 0x00),
+            Color.FromARGB(0x10, 0xFF, 0xFF, 0xFF));
 
     // Value measured from screenshot of iOS 16.0.2.
     private static readonly Thickness ToolbarButtonPadding = new(16.0, 18.0);
@@ -334,7 +334,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
                 Current.Text ?? CupertinoTextSelectionToolbarButton.GetButtonLabel(context, Current.ButtonItem!),
                 style: ToolbarButtonFontStyle.CopyWith(color: ResolveTextColor(context)),
                 overflow: TextOverflow.Ellipsis);
-            CupertinoDynamicColor? backgroundColor = _isHovered
+            Color? backgroundColor = _isHovered
                 ? CupertinoTheme.Of(context).PrimaryColor
                 : null;
             Widget button = new CupertinoButton(

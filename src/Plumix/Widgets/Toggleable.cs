@@ -403,12 +403,12 @@ public abstract class ToggleableState<TWidget> : ToggleableState where TWidget :
 public abstract class ToggleablePainter : CustomPainter
 {
     private readonly MergedListenable _mergedRepaint;
-    private Color _activeColor;
-    private Color _inactiveColor;
-    private Color _inactiveReactionColor;
-    private Color _reactionColor;
-    private Color _hoverColor;
-    private Color _focusColor;
+    private Color? _activeColor;
+    private Color? _inactiveColor;
+    private Color? _inactiveReactionColor;
+    private Color? _reactionColor;
+    private Color? _hoverColor;
+    private Color? _focusColor;
     private double _splashRadius;
     private Point? _downPosition;
     private bool _isFocused;
@@ -457,37 +457,37 @@ public abstract class ToggleablePainter : CustomPainter
 
     public Color ActiveColor
     {
-        get => _activeColor;
+        get => _activeColor!;
         set => SetField(ref _activeColor, value);
     }
 
     public Color InactiveColor
     {
-        get => _inactiveColor;
+        get => _inactiveColor!;
         set => SetField(ref _inactiveColor, value);
     }
 
     public Color InactiveReactionColor
     {
-        get => _inactiveReactionColor;
+        get => _inactiveReactionColor!;
         set => SetField(ref _inactiveReactionColor, value);
     }
 
     public Color ReactionColor
     {
-        get => _reactionColor;
+        get => _reactionColor!;
         set => SetField(ref _reactionColor, value);
     }
 
     public Color HoverColor
     {
-        get => _hoverColor;
+        get => _hoverColor!;
         set => SetField(ref _hoverColor, value);
     }
 
     public Color FocusColor
     {
-        get => _focusColor;
+        get => _focusColor!;
         set => SetField(ref _focusColor, value);
     }
 
@@ -567,18 +567,7 @@ public abstract class ToggleablePainter : CustomPainter
         NotifyPainterChanged();
     }
 
-    protected static Color LerpColor(Color from, Color to, double t)
-    {
-        double clampedT = Math.Clamp(t, 0.0, 1.0);
-        byte LerpChannel(byte start, byte end) =>
-            (byte)Math.Clamp((int)Math.Round(start + ((end - start) * clampedT)), 0, byte.MaxValue);
-
-        return Color.FromArgb(
-            LerpChannel(from.A, to.A),
-            LerpChannel(from.R, to.R),
-            LerpChannel(from.G, to.G),
-            LerpChannel(from.B, to.B));
-    }
+    protected static Color LerpColor(Color from, Color to, double t) => Color.Lerp(from, to, t);
 
     public override void Dispose()
     {

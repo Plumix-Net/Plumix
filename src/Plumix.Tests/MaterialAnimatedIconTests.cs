@@ -59,7 +59,7 @@ public sealed class MaterialAnimatedIconTests
     {
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         animation.SetValue(0.5);
-        var color = Color.Parse("#FF2468AC");
+        var color = new Color(0xFF2468AC);
         using var harness = new WidgetRenderHarness(
             new Directionality(
                 TextDirection.Rtl,
@@ -78,7 +78,7 @@ public sealed class MaterialAnimatedIconTests
             FindDescendant<RenderSemanticsAnnotations>(harness.RenderView));
         Assert.Equal(new Size(36, 36), customPaint.Size);
         Assert.Equal(0.75, painter.Scale, 10);
-        Assert.Equal(Color.FromArgb(128, color.R, color.G, color.B), painter.Color);
+        Assert.Equal(Color.FromARGB(128, color.Red, color.Green, color.Blue), painter.Color);
         Assert.True(painter.ShouldMirror);
         Assert.Equal("Open navigation", semantics.Properties.Label);
     }
@@ -87,7 +87,7 @@ public sealed class MaterialAnimatedIconTests
     public void AnimatedIcon_ExplicitValuesOverrideThemeAndNonDirectionalIconDoesNotMirror()
     {
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
-        var explicitColor = Color.Parse("#FF9A3412");
+        var explicitColor = new Color(0xFF9A3412);
         using var harness = new WidgetRenderHarness(
             new Directionality(
                 TextDirection.Rtl,
@@ -105,9 +105,9 @@ public sealed class MaterialAnimatedIconTests
         var customPaint = Assert.IsType<RenderCustomPaint>(FindDescendant<RenderCustomPaint>(harness.RenderView));
         var painter = Assert.IsType<AnimatedIconPainter>(customPaint.Painter);
         Assert.Equal(new Size(40, 40), customPaint.Size);
-        Assert.Equal((byte)64, painter.Color.A);
-        Assert.Equal((explicitColor.R, explicitColor.G, explicitColor.B),
-            (painter.Color.R, painter.Color.G, painter.Color.B));
+        Assert.Equal((byte)64, painter.Color.Alpha);
+        Assert.Equal((explicitColor.Red, explicitColor.Green, explicitColor.Blue),
+            (painter.Color.Red, painter.Color.Green, painter.Color.Blue));
         Assert.False(painter.ShouldMirror);
     }
 

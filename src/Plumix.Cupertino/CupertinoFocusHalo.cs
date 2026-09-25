@@ -77,12 +77,12 @@ public sealed class CupertinoFocusHalo : StatefulWidget
         {
             get
             {
-                Color activeBlue = CupertinoColors.ActiveBlue.Value;
-                Color translucentBlue = Color.FromArgb(
+                Color activeBlue = CupertinoColors.ActiveBlue;
+                Color translucentBlue = Color.FromARGB(
                     (byte)Math.Round(FocusColorOpacity * 255.0, MidpointRounding.AwayFromZero),
-                    activeBlue.R,
-                    activeBlue.G,
-                    activeBlue.B);
+                    activeBlue.Red,
+                    activeBlue.Green,
+                    activeBlue.Blue);
                 return HSLColor.FromColor(translucentBlue)
                     .WithLightness(FocusColorBrightness)
                     .WithSaturation(FocusColorSaturation)

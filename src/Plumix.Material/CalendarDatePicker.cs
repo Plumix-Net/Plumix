@@ -652,10 +652,10 @@ internal sealed class CalendarDay : StatefulWidget
                 : ShapeBorderGeometry.SideOrNull(shape);
             if (widget.IsToday
                 && border.HasValue
-                && foreground.HasValue
-                && (!localTodayBorder.HasValue || localTodayBorder.Value.Color.A == 0))
+                && foreground != null
+                && (!localTodayBorder.HasValue || localTodayBorder.Value.Color.Alpha == 0))
             {
-                border = new BorderSide(foreground.Value, border.Value.Width);
+                border = new BorderSide(foreground!, border.Value.Width);
             }
             var style = (local.DayStyle ?? defaults.DayStyle!).CopyWith(color: foreground);
             var decoration = new BoxDecoration(
@@ -903,9 +903,9 @@ internal sealed class CalendarYear : StatefulWidget
             var border = widget.IsCurrent
                 ? local.TodayBorder ?? defaults.TodayBorder
                 : ShapeBorderGeometry.SideOrNull(shape);
-            if (widget.IsCurrent && border is not null && foreground.HasValue)
+            if (widget.IsCurrent && border is not null && foreground != null)
             {
-                border = new BorderSide(foreground.Value, border.Value.Width);
+                border = new BorderSide(foreground!, border.Value.Width);
             }
             var style = (local.YearStyle ?? defaults.YearStyle!).CopyWith(color: foreground);
             var localizations = MaterialLocalizations.Of(context);

@@ -58,18 +58,18 @@ public sealed class RichTextDemoPageState : State
     private Widget BuildStyledParagraph()
     {
         return new Container(
-            color: Color.Parse("#FFF1F5F9"),
+            color: new Color(0xFFF1F5F9),
             padding: new Thickness(12),
             child: new RichText(
                 text: new TextSpan(
                     text: "Can you ",
-                    style: new TextStyle(FontSize: 18, Color: Color.Parse("#FF1D3557")),
+                    style: new TextStyle(FontSize: 18, Color: new Color(0xFF1D3557)),
                     children:
                     [
                         new TextSpan(
                             text: "find the",
                             style: new TextStyle(
-                                Color: Color.Parse("#FF2A9D8F"),
+                                Color: new Color(0xFF2A9D8F),
                                 FontWeight: FontWeight.Bold,
                                 Decoration: Plumix.UI.TextDecoration.Underline),
                             recognizer: _tapRecognizer),
@@ -80,7 +80,7 @@ public sealed class RichTextDemoPageState : State
     private static Widget BuildPaintedParagraph()
     {
         return new Container(
-            color: Color.Parse("#FFFDF6E3"),
+            color: new Color(0xFFFDF6E3),
             padding: new Thickness(12),
             child: Text.Rich(
                 new TextSpan(
@@ -89,25 +89,25 @@ public sealed class RichTextDemoPageState : State
                     [
                         new TextSpan(
                             text: "highlighted",
-                            style: new TextStyle(BackgroundColor: Color.Parse("#FFFFE8A3"))),
+                            style: new TextStyle(BackgroundColor: new Color(0xFFFFE8A3))),
                         new TextSpan(text: " word, a "),
                         new TextSpan(
                             text: "painted",
                             style: new TextStyle(
-                                Foreground: new Paint { Color = Color.Parse("#FFE63946") },
+                                Foreground: new Paint { Color = new Color(0xFFE63946) },
                                 FontWeight: FontWeight.Bold)),
                         new TextSpan(text: " one, and tabular figures: "),
                         new TextSpan(
                             text: "1111 / 8888",
                             style: new TextStyle(FontFeatures: [Plumix.UI.FontFeature.TabularFigures()])),
                     ]),
-                style: new TextStyle(FontSize: 16, Color: Color.Parse("#FF1D3557"))));
+                style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557))));
     }
 
     private static Widget BuildInlineWidgetParagraph()
     {
         return new Container(
-            color: Color.Parse("#FFE7EDF6"),
+            color: new Color(0xFFE7EDF6),
             padding: new Thickness(12),
             child: Text.Rich(
                 new TextSpan(
@@ -117,16 +117,16 @@ public sealed class RichTextDemoPageState : State
                         new WidgetSpan(new Container(
                             width: 40,
                             height: 20,
-                            color: Color.Parse("#FFE9C46A"))),
+                            color: new Color(0xFFE9C46A))),
                         new TextSpan(text: " widgets flow with the text."),
                     ]),
-                style: new TextStyle(FontSize: 16, Color: Color.Parse("#FF1D3557"))));
+                style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557))));
     }
 
     private static Widget BuildAlignmentRow()
     {
         return new Container(
-            color: Color.Parse("#FFF8EDEB"),
+            color: new Color(0xFFF8EDEB),
             padding: new Thickness(12),
             child: Text.Rich(
                 new TextSpan(
@@ -139,15 +139,15 @@ public sealed class RichTextDemoPageState : State
                         new TextSpan(text: " bottom "),
                         BuildBadge(PlaceholderAlignment.Bottom, "#FF457B9D"),
                     ]),
-                style: new TextStyle(FontSize: 24, Color: Color.Parse("#FF1D3557"))));
+                style: new TextStyle(FontSize: 24, Color: new Color(0xFF1D3557))));
     }
 
     private static Widget BuildOverflowAndStrut()
     {
         const string longText = "Overflowing text can fade out, end with an ellipsis, or be clipped at the box edge.";
-        Color textColor = Color.Parse("#FF1D3557");
+        Color textColor = new Color(0xFF1D3557);
         return new Container(
-            color: Color.Parse("#FFEAF4EA"),
+            color: new Color(0xFFEAF4EA),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -173,10 +173,10 @@ public sealed class RichTextDemoPageState : State
     private static Widget BuildDefaultTextStyleParagraph()
     {
         return new Container(
-            color: Color.Parse("#FFF5F0FF"),
+            color: new Color(0xFFF5F0FF),
             padding: new Thickness(12),
             child: new DefaultTextStyle(
-                style: new TextStyle(FontSize: 16, Color: Color.Parse("#FF1D3557")),
+                style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557)),
                 overflow: TextOverflow.Ellipsis,
                 maxLines: 1,
                 child: new Column(
@@ -194,7 +194,7 @@ public sealed class RichTextDemoPageState : State
     private static InlineSpan BuildBadge(PlaceholderAlignment alignment, string color)
     {
         return new WidgetSpan(
-            new Container(width: 18, height: 18, color: Color.Parse(color)),
+            new Container(width: 18, height: 18, color: (Color)Avalonia.Media.Color.Parse(color)),
             alignment);
     }
 }

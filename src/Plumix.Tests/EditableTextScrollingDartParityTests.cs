@@ -58,7 +58,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
             scrollPadding: scrollPadding,
             inputFormatters: inputFormatters,
             autocorrectionTextRectColor: autocorrectionTextRectColor,
-            backgroundCursorColor: Color.FromUInt32(0xFFAAAAAA),
+            backgroundCursorColor: new Color(0xFFAAAAAA),
             cursorOpacityAnimates: cursorOpacityAnimates,
             contextMenuBuilder: contextMenuBuilder,
             selectionControls: selectionControls,
@@ -910,7 +910,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         var controller = new TextEditingController("ABCDEFG");
         var focusNode = new FocusNode();
-        Color red = Color.FromUInt32(0xFFFF0000);
+        Color red = new Color(0xFFFF0000);
         tester.PumpWidget(Ltr(Field(controller, focusNode, autocorrectionTextRectColor: red)));
         focusNode.RequestFocus();
         tester.Pump();

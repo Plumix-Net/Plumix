@@ -43,7 +43,7 @@ internal sealed class CupertinoLocalizationsDemoPageState : State
                     "GlobalCupertinoLocalizations.Delegates translates every Cupertino string and "
                     + "formats dates with the locale's own calendar data.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Wrap(spacing: 8.0, runSpacing: 8.0, children: BuildLocaleButtons()),
                 new Localizations(
                     locale: Locales[_selected].Locale,
@@ -66,7 +66,7 @@ internal sealed class CupertinoLocalizationsDemoPageState : State
                     child: new Container(
                         padding: EdgeInsets.Symmetric(horizontal: 14.0, vertical: 8.0),
                         decoration: new BoxDecoration(
-                            Color: selected ? Color.Parse("#FF007AFF") : Color.Parse("#FFF2F2F7"),
+                            Color: selected ? new Color(0xFF007AFF) : new Color(0xFFF2F2F7),
                             BorderRadius: BorderRadius.Circular(10.0)),
                         child: new Text(
                             Locales[target].Label,
@@ -85,7 +85,7 @@ internal sealed class CupertinoLocalizationsDemoPageState : State
         return new Container(
             padding: EdgeInsets.All(16.0),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF2F2F7"),
+                Color: new Color(0xFFF2F2F7),
                 BorderRadius: BorderRadius.Circular(12.0)),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -132,7 +132,7 @@ internal sealed class CupertinoLocalizationsDemoPageState : State
             [
                 new SizedBox(
                     width: 220.0,
-                    child: new Text(label, fontSize: 13.0, color: Color.Parse("#8A000000"))),
+                    child: new Text(label, fontSize: 13.0, color: new Color(0x8A000000))),
                 new Expanded(child: new Text(value, fontSize: 13.0, color: Colors.Black)),
             ]);
     }

@@ -49,7 +49,7 @@ public sealed class ReparentStateWithLayoutBuilderDartParityTests
         Widget layoutBuilderChild = keyedWidget;
         Widget deepChild = new Container();
 
-        var green = Avalonia.Media.Color.FromUInt32(0xff00ff00);
+        var green = new Color(0xff00ff00);
 
         tester.PumpWidget(new MediaQuery(
             data: MediaQueryData.FromView(tester.View),

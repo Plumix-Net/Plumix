@@ -34,10 +34,10 @@ internal sealed class BarControlsDemoPageState : State
             UseMaterial3 = _useMaterial3,
             BottomAppBarTheme = _useThemeOverrides
                 ? new BottomAppBarThemeData(
-                    Color: Color.Parse("#FFE8F5E9"),
+                    Color: new Color(0xFFE8F5E9),
                     Elevation: 6,
                     Height: 72,
-                    ShadowColor: Color.Parse("#66000000"),
+                    ShadowColor: new Color(0x66000000),
                     Padding: new Thickness(10, 8))
                 : new BottomAppBarThemeData(),
             ButtonBarTheme = _useThemeOverrides
@@ -63,7 +63,7 @@ internal sealed class BarControlsDemoPageState : State
                     new Text(
                         "M2/M3 bottom-surface defaults, FAB notch geometry, SafeArea, theme precedence, and legacy ButtonBar row-to-column overflow.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -75,13 +75,13 @@ internal sealed class BarControlsDemoPageState : State
                             BuildToggle(_overflowUp ? "overflow=up" : "overflow=down", () => _overflowUp = !_overflowUp, 118),
                             BuildToggle(_useRtl ? "RTL" : "LTR", () => _useRtl = !_useRtl, 68),
                         ]),
-                    new Text($"actionCount={_actionCount}", fontSize: 12, color: Color.Parse("#FF607D8B")),
+                    new Text($"actionCount={_actionCount}", fontSize: 12, color: new Color(0xFF607D8B)),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new SizedBox(
                             width: _narrowButtonBar ? 190 : 520,
                             child: new Container(
-                                color: Color.Parse("#FFF7F9FC"),
+                                color: new Color(0xFFF7F9FC),
                                 child: new Directionality(
                                     _useRtl ? TextDirection.Rtl : TextDirection.Ltr,
                                     new ButtonBar(
@@ -94,7 +94,7 @@ internal sealed class BarControlsDemoPageState : State
                                         ]))))),
                     new Expanded(
                         child: new Scaffold(
-                            backgroundColor: Color.Parse("#FFF4F6FA"),
+                            backgroundColor: new Color(0xFFF4F6FA),
                             body: new Center(
                                 child: new Text(
                                     "The FAB and notch share Scaffold geometry",
@@ -128,7 +128,7 @@ internal sealed class BarControlsDemoPageState : State
             child: new Text(label, fontSize: 11),
             style: TextButton.StyleFrom(
                 foregroundColor: Colors.Black,
-                backgroundColor: Color.Parse("#FFE9F0FF"),
+                backgroundColor: new Color(0xFFE9F0FF),
                 padding: new Thickness(8, 6),
                 minimumSize: new Size(64, 36),
                 shape: new RoundedRectangleBorder(

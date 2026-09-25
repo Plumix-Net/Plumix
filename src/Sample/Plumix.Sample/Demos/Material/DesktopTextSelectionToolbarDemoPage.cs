@@ -60,7 +60,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
                     ]),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF3EDF7"),
+                        color: new Color(0xFFF3EDF7),
                         child: toolbar)),
             ]);
     }

@@ -130,10 +130,10 @@ public sealed record ParagraphTextStyle(
         string fontFamilyText = FontFamily is { } family && family.Name.Length > 0 ? family.Name : unspecified;
         string fallbackText = FontFamilyFallback is { Count: > 0 } fallback ? DartList(fallback) : unspecified;
         string decorationColorText = DecorationColor is { } decorationColor
-            ? decorationColor.ToDartString()
+            ? decorationColor.ToString()
             : unspecified;
         return "TextStyle("
-               + $"color: {(Color is { } color ? color.ToDartString() : unspecified)}, "
+               + $"color: {(Color is { } color ? color.ToString() : unspecified)}, "
                + $"decoration: {(Decoration is { } decoration ? DescribeDecoration(decoration) : unspecified)}, "
                + $"decorationColor: {decorationColorText}, "
                + $"decorationStyle: {(DecorationStyle is { } decorationStyle ? Enum(decorationStyle) : unspecified)}, "

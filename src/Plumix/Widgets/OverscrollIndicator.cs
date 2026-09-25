@@ -738,7 +738,7 @@ internal sealed class GlowController : ChangeNotifier
             height - radius);
         byte alpha = (byte)Math.Round(Math.Clamp(_glowOpacity, 0.0, 1.0) * byte.MaxValue);
         var brush = new SolidColorBrush(
-            Avalonia.Media.Color.FromArgb(alpha, Color.R, Color.G, Color.B));
+            Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue));
         Matrix4 transform = Matrix4.Identity();
         transform.ScaleByDouble(1.0, scaleY, 1.0, 1);
         transform.TranslateByDouble(0.0, PaintOffset + PaintOffsetScrollPixels, 0, 1);

@@ -85,11 +85,7 @@ public sealed class AnimatedIcon : StatelessWidget
                     textDirection == Plumix.UI.TextDirection.Rtl && iconData.MatchTextDirection)));
     }
 
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, 255);
-        return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(color.Opacity * opacity);
 }
 
 internal sealed class AnimatedIconDataImpl : AnimatedIconData
@@ -153,8 +149,8 @@ internal sealed class AnimatedIconPainter : CustomPainter
         foreach (PathFrames path in Paths)
         {
             double opacity = AnimatedIconInterpolation.Interpolate(path.Opacities, clampedProgress);
-            byte alpha = (byte)Math.Clamp((int)Math.Round(Color.A * opacity), 0, 255);
-            var brush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(alpha, Color.R, Color.G, Color.B));
+            byte alpha = (byte)Math.Clamp((int)Math.Round(Color.Alpha * opacity), 0, 255);
+            var brush = new SolidColorBrush(Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue));
             context.Canvas.DrawGeometry(brush, null, path.BuildGeometry(clampedProgress));
         }
 

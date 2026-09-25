@@ -8,14 +8,14 @@ namespace Plumix.Tests;
 // Mirrors cupertino_ui/test/colors_test.dart.
 public sealed class CupertinoColorsTests
 {
-    private static readonly Color Color0 = Color.FromUInt32(0xFF000000);
-    private static readonly Color Color1 = Color.FromUInt32(0xFF000001);
-    private static readonly Color Color2 = Color.FromUInt32(0xFF000002);
-    private static readonly Color Color3 = Color.FromUInt32(0xFF000003);
-    private static readonly Color Color4 = Color.FromUInt32(0xFF000004);
-    private static readonly Color Color5 = Color.FromUInt32(0xFF000005);
-    private static readonly Color Color6 = Color.FromUInt32(0xFF000006);
-    private static readonly Color Color7 = Color.FromUInt32(0xFF000007);
+    private static readonly Color Color0 = new Color(0xFF000000);
+    private static readonly Color Color1 = new Color(0xFF000001);
+    private static readonly Color Color2 = new Color(0xFF000002);
+    private static readonly Color Color3 = new Color(0xFF000003);
+    private static readonly Color Color4 = new Color(0xFF000004);
+    private static readonly Color Color5 = new Color(0xFF000005);
+    private static readonly Color Color6 = new Color(0xFF000006);
+    private static readonly Color Color7 = new Color(0xFF000007);
 
     /// A color that depends on brightness, accessibility contrast and interface elevation.
     private static readonly CupertinoDynamicColor DynamicColor = new(
@@ -203,17 +203,17 @@ public sealed class CupertinoColorsTests
     {
         // No MediaQuery, no CupertinoTheme and no CupertinoUserInterfaceLevel ancestor: a color that
         // does not vary must resolve anyway.
-        Assert.Equal(Color0, Resolve(NotSoDynamicColor1, child => child));
+        ColorMatchers.AssertSameColorAs(Color0, Resolve(NotSoDynamicColor1, child => child));
     }
 
     [Fact]
     public void VibrancyDependentColor_FollowsBrightnessAndPrefersTheTheme()
     {
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color1,
             Resolve(VibrancyDependentColor1, child => new MediaQuery(new MediaQueryData(), child)));
 
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color0,
             Resolve(
                 VibrancyDependentColor1,
@@ -222,7 +222,7 @@ public sealed class CupertinoColorsTests
                     child)));
 
         // CupertinoTheme takes precedence over MediaQuery.
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color1,
             Resolve(
                 VibrancyDependentColor1,
@@ -236,11 +236,11 @@ public sealed class CupertinoColorsTests
     [Fact]
     public void ContrastDependentColor_FollowsTheAccessibilityContrastSetting()
     {
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color1,
             Resolve(ContrastDependentColor1, child => new MediaQuery(new MediaQueryData(), child)));
 
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color0,
             Resolve(
                 ContrastDependentColor1,
@@ -250,13 +250,13 @@ public sealed class CupertinoColorsTests
     [Fact]
     public void ElevationDependentColor_FollowsTheUserInterfaceLevel()
     {
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color1,
             Resolve(
                 ElevationDependentColor1,
                 child => new CupertinoUserInterfaceLevel(CupertinoUserInterfaceLevelData.Base, child)));
 
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             Color0,
             Resolve(
                 ElevationDependentColor1,
@@ -299,7 +299,7 @@ public sealed class CupertinoColorsTests
                     elevated ? CupertinoUserInterfaceLevelData.Elevated : CupertinoUserInterfaceLevelData.Base,
                     child)));
 
-        Assert.Equal(palette[expectedIndex], resolved);
+        ColorMatchers.AssertSameColorAs(palette[expectedIndex], resolved);
     }
 
     [Fact]
@@ -317,12 +317,13 @@ public sealed class CupertinoColorsTests
                 }))));
 
         Assert.NotNull(resolved);
-        Assert.Equal(Color7, resolved!.Value);
+        ColorMatchers.AssertSameColorAs(Color7, resolved!);
         Assert.Equal(Color0, resolved.Color);
         Assert.Equal(Color1, resolved.DarkColor);
         Assert.Equal(Color3, resolved.HighContrastColor);
         Assert.Equal(Color2, resolved.ElevatedColor);
-        Assert.Contains("resolved by: resolved", resolved.ToString());
+        // Dart prints the resolving element's widget, not UNRESOLVED.
+        Assert.Contains("resolved by: Builder", resolved.ToString());
         // The effective value is part of equality, so a resolved color differs from its source.
         Assert.NotEqual(DynamicColor, resolved);
     }
@@ -330,40 +331,40 @@ public sealed class CupertinoColorsTests
     [Fact]
     public void Palette_MatchesTheAppleSystemColorTable()
     {
-        Assert.Equal(Color.FromUInt32(0xFFFFFFFF), CupertinoColors.White);
-        Assert.Equal(Color.FromUInt32(0xFF000000), CupertinoColors.Black);
-        Assert.Equal(Color.FromUInt32(0x00000000), CupertinoColors.Transparent);
-        Assert.Equal(Color.FromUInt32(0xFFE5E5EA), CupertinoColors.LightBackgroundGray);
-        Assert.Equal(Color.FromUInt32(0xFFEFEFF4), CupertinoColors.ExtraLightBackgroundGray);
-        Assert.Equal(Color.FromUInt32(0xFF171717), CupertinoColors.DarkBackgroundGray);
+        Assert.Equal(new Color(0xFFFFFFFF), CupertinoColors.White);
+        Assert.Equal(new Color(0xFF000000), CupertinoColors.Black);
+        Assert.Equal(new Color(0x00000000), CupertinoColors.Transparent);
+        Assert.Equal(new Color(0xFFE5E5EA), CupertinoColors.LightBackgroundGray);
+        Assert.Equal(new Color(0xFFEFEFF4), CupertinoColors.ExtraLightBackgroundGray);
+        Assert.Equal(new Color(0xFF171717), CupertinoColors.DarkBackgroundGray);
 
-        Assert.Equal(Color.FromArgb(255, 0, 122, 255), CupertinoColors.SystemBlue.Color);
-        Assert.Equal(Color.FromArgb(255, 10, 132, 255), CupertinoColors.SystemBlue.DarkColor);
-        Assert.Equal(Color.FromArgb(255, 0, 64, 221), CupertinoColors.SystemBlue.HighContrastColor);
-        Assert.Equal(Color.FromArgb(255, 64, 156, 255), CupertinoColors.SystemBlue.DarkHighContrastColor);
+        Assert.Equal(Color.FromARGB(255, 0, 122, 255), CupertinoColors.SystemBlue.Color);
+        Assert.Equal(Color.FromARGB(255, 10, 132, 255), CupertinoColors.SystemBlue.DarkColor);
+        Assert.Equal(Color.FromARGB(255, 0, 64, 221), CupertinoColors.SystemBlue.HighContrastColor);
+        Assert.Equal(Color.FromARGB(255, 64, 156, 255), CupertinoColors.SystemBlue.DarkHighContrastColor);
         // withBrightnessAndContrast mirrors the base variants onto the elevated ones.
         Assert.Equal(CupertinoColors.SystemBlue.Color, CupertinoColors.SystemBlue.ElevatedColor);
         Assert.Equal(CupertinoColors.SystemBlue.DarkColor, CupertinoColors.SystemBlue.DarkElevatedColor);
 
-        Assert.Equal(Color.FromUInt32(0xFF999999), CupertinoColors.InactiveGray.Color);
-        Assert.Equal(Color.FromUInt32(0xFF757575), CupertinoColors.InactiveGray.DarkColor);
+        Assert.Equal(new Color(0xFF999999), CupertinoColors.InactiveGray.Color);
+        Assert.Equal(new Color(0xFF757575), CupertinoColors.InactiveGray.DarkColor);
 
-        Assert.Equal(Color.FromArgb(255, 0, 0, 0), CupertinoColors.Label.Color);
-        Assert.Equal(Color.FromArgb(255, 255, 255, 255), CupertinoColors.Label.DarkColor);
-        Assert.Equal(Color.FromArgb(153, 60, 60, 67), CupertinoColors.SecondaryLabel.Color);
-        Assert.Equal(Color.FromArgb(153, 235, 235, 245), CupertinoColors.SecondaryLabel.DarkColor);
+        Assert.Equal(Color.FromARGB(255, 0, 0, 0), CupertinoColors.Label.Color);
+        Assert.Equal(Color.FromARGB(255, 255, 255, 255), CupertinoColors.Label.DarkColor);
+        Assert.Equal(Color.FromARGB(153, 60, 60, 67), CupertinoColors.SecondaryLabel.Color);
+        Assert.Equal(Color.FromARGB(153, 235, 235, 245), CupertinoColors.SecondaryLabel.DarkColor);
 
-        Assert.Equal(Color.FromArgb(73, 60, 60, 67), CupertinoColors.Separator.Color);
-        Assert.Equal(Color.FromArgb(153, 84, 84, 88), CupertinoColors.Separator.DarkColor);
-        Assert.Equal(Color.FromArgb(153, 210, 210, 210), CupertinoColors.Separator.DarkElevatedColor);
+        Assert.Equal(Color.FromARGB(73, 60, 60, 67), CupertinoColors.Separator.Color);
+        Assert.Equal(Color.FromARGB(153, 84, 84, 88), CupertinoColors.Separator.DarkColor);
+        Assert.Equal(Color.FromARGB(153, 210, 210, 210), CupertinoColors.Separator.DarkElevatedColor);
 
-        Assert.Equal(Color.FromArgb(255, 255, 255, 255), CupertinoColors.SystemBackground.Color);
-        Assert.Equal(Color.FromArgb(255, 0, 0, 0), CupertinoColors.SystemBackground.DarkColor);
-        Assert.Equal(Color.FromArgb(255, 28, 28, 30), CupertinoColors.SystemBackground.DarkElevatedColor);
+        Assert.Equal(Color.FromARGB(255, 255, 255, 255), CupertinoColors.SystemBackground.Color);
+        Assert.Equal(Color.FromARGB(255, 0, 0, 0), CupertinoColors.SystemBackground.DarkColor);
+        Assert.Equal(Color.FromARGB(255, 28, 28, 30), CupertinoColors.SystemBackground.DarkElevatedColor);
 
-        Assert.Equal(Color.FromArgb(255, 142, 142, 147), CupertinoColors.SystemGrey.Color);
-        Assert.Equal(Color.FromArgb(255, 242, 242, 247), CupertinoColors.SystemGrey6.Color);
-        Assert.Equal(Color.FromArgb(255, 28, 28, 30), CupertinoColors.SystemGrey6.DarkColor);
+        Assert.Equal(Color.FromARGB(255, 142, 142, 147), CupertinoColors.SystemGrey.Color);
+        Assert.Equal(Color.FromARGB(255, 242, 242, 247), CupertinoColors.SystemGrey6.Color);
+        Assert.Equal(Color.FromARGB(255, 28, 28, 30), CupertinoColors.SystemGrey6.DarkColor);
     }
 
     [Fact]
@@ -375,9 +376,9 @@ public sealed class CupertinoColorsTests
         Assert.Equal(CupertinoColors.SystemRed, CupertinoColors.DestructiveRed);
     }
 
-    private static Color Resolve(CupertinoDynamicColor color, Func<Widget, Widget> wrap)
+    private static Color Resolve(Color color, Func<Widget, Widget> wrap)
     {
-        Color resolved = default;
+        Color resolved = null!;
         using var harness = new CupertinoThemeTestHarness(wrap(new Builder(context =>
         {
             resolved = CupertinoDynamicColor.Resolve(color, context);

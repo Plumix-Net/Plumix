@@ -37,12 +37,12 @@ internal sealed class RangeSliderDemoPageState : State
             UseMaterial3 = _useMaterial3,
             SliderTheme = _useThemeOverrides
                 ? new SliderThemeData(
-                    ActiveTrackColor: Color.Parse("#FF2E7D32"),
-                    InactiveTrackColor: Color.Parse("#FFC8E6C9"),
-                    ThumbColor: Color.Parse("#FF1B5E20"),
-                    DisabledActiveTrackColor: Color.Parse("#66212121"),
-                    DisabledInactiveTrackColor: Color.Parse("#1F212121"),
-                    DisabledThumbColor: Color.Parse("#66212121"),
+                    ActiveTrackColor: new Color(0xFF2E7D32),
+                    InactiveTrackColor: new Color(0xFFC8E6C9),
+                    ThumbColor: new Color(0xFF1B5E20),
+                    DisabledActiveTrackColor: new Color(0x66212121),
+                    DisabledInactiveTrackColor: new Color(0x1F212121),
+                    DisabledThumbColor: new Color(0x66212121),
                     TrackHeight: 6,
                     ThumbRadius: 11)
                 : new SliderThemeData()
@@ -60,7 +60,7 @@ internal sealed class RangeSliderDemoPageState : State
                         "Two-thumb range mapping, continuous/discrete updates, drag/tap plus Tab focus "
                         + "between the two thumbs, and M2/M3 theme/widget color precedence.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -69,22 +69,22 @@ internal sealed class RangeSliderDemoPageState : State
                                 label: _enabled ? "Enabled" : "Disabled",
                                 onTap: () => SetState(() => _enabled = !_enabled),
                                 width: 96,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _discrete ? "Discrete" : "Continuous",
                                 onTap: () => SetState(() => _discrete = !_discrete),
                                 width: 112,
-                                background: Color.Parse("#FFE8F5E9")),
+                                background: new Color(0xFFE8F5E9)),
                             BuildControlButton(
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 76,
-                                background: Color.Parse("#FFFFF8E1")),
+                                background: new Color(0xFFFFF8E1)),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -94,32 +94,32 @@ internal sealed class RangeSliderDemoPageState : State
                                 label: _useWidgetColorOverride ? "Widget on" : "Widget off",
                                 onTap: () => SetState(() => _useWidgetColorOverride = !_useWidgetColorOverride),
                                 width: 118,
-                                background: Color.Parse("#FFF0E8FF")),
+                                background: new Color(0xFFF0E8FF)),
                             BuildControlButton(
                                 label: "S-",
                                 onTap: () => NudgeStart(-0.1),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             BuildControlButton(
                                 label: "S+",
                                 onTap: () => NudgeStart(0.1),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             BuildControlButton(
                                 label: "E-",
                                 onTap: () => NudgeEnd(-0.1),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             BuildControlButton(
                                 label: "E+",
                                 onTap: () => NudgeEnd(0.1),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             new Expanded(
                                 child: new Text(
                                     $"start={_values.Start:0.00}, end={_values.End:0.00}, status={_status}",
                                     fontSize: 12,
-                                    color: Color.Parse("#FF607D8B"))),
+                                    color: new Color(0xFF607D8B))),
                         ]),
                     new Row(
                         children:
@@ -128,7 +128,7 @@ internal sealed class RangeSliderDemoPageState : State
                                 label: _year2023 ? "2023 look" : "2024 look",
                                 onTap: () => SetState(() => _year2023 = !_year2023),
                                 width: 96,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                         ]),
                     new Expanded(
                         child: new SingleChildScrollView(
@@ -152,7 +152,7 @@ internal sealed class RangeSliderDemoPageState : State
     private Widget BuildPreviewCard(string title, string subtitle, TextDirection textDirection)
     {
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -160,7 +160,7 @@ internal sealed class RangeSliderDemoPageState : State
                 children:
                 [
                     new Text(title, fontSize: 14, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                     new Directionality(
                         textDirection: textDirection,
                         child: BuildRangeSlider()),
@@ -177,8 +177,8 @@ internal sealed class RangeSliderDemoPageState : State
             labels: new RangeLabels(
                 $"{Math.Round(_values.Start * 100)}",
                 $"{Math.Round(_values.End * 100)}"),
-            activeColor: _useWidgetColorOverride ? Color.Parse("#FFB71C1C") : null,
-            inactiveColor: _useWidgetColorOverride ? Color.Parse("#FFFFCDD2") : null,
+            activeColor: _useWidgetColorOverride ? new Color(0xFFB71C1C) : null,
+            inactiveColor: _useWidgetColorOverride ? new Color(0xFFFFCDD2) : null,
             year2023: _year2023,
             onChanged: _enabled ? HandleValuesChanged : null,
             onChangeStart: values => SetState(() => _status = $"start {values.Start:0.00}-{values.End:0.00}"),

@@ -29,7 +29,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
     [Fact]
     public void ApplySurfaceTint_NullAndTransparentTintReturnOriginalColor()
     {
-        Color color = Color.Parse("#FF888888");
+        Color color = new Color(0xFF888888);
 
         Assert.Equal(color, ElevationOverlay.ApplySurfaceTint(color, null, 42.0));
         Assert.Equal(color, ElevationOverlay.ApplySurfaceTint(color, MaterialColors.Transparent, 42.0));
@@ -52,19 +52,19 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         string expected)
     {
         Color result = ElevationOverlay.ApplySurfaceTint(
-            Color.Parse("#FF888888"),
-            Color.Parse("#FF44CCFF"),
+            new Color(0xFF888888),
+            new Color(0xFF44CCFF),
             elevation);
 
-        Assert.Equal(Color.Parse(expected), result);
+        ColorMatchers.AssertSameColorAs((Color)Avalonia.Media.Color.Parse(expected), result);
     }
 
     [Fact]
     public void ApplySurfaceTint_ReplacesAProvidedTintAlphaLikeFlutterWithOpacity()
     {
-        Color baseColor = Color.Parse("#FF121212");
-        Color opaqueTint = Color.Parse("#FF44CCFF");
-        Color translucentTint = Color.Parse("#8044CCFF");
+        Color baseColor = new Color(0xFF121212);
+        Color opaqueTint = new Color(0xFF44CCFF);
+        Color translucentTint = new Color(0x8044CCFF);
 
         Assert.Equal(
             ElevationOverlay.ApplySurfaceTint(baseColor, opaqueTint, 12.0),
@@ -74,8 +74,8 @@ public sealed class MaterialElevationOverlayTests : IDisposable
     [Fact]
     public void OverlayColorAndApplyOverlay_UseAmbientDarkThemeSurfacePolicy()
     {
-        Color surface = Color.Parse("#FF121212");
-        Color onSurface = Color.Parse("#FF69F0AE");
+        Color surface = new Color(0xFF121212);
+        Color onSurface = new Color(0xFF69F0AE);
         Color? overlayColor = null;
         Color? appliedColor = null;
         var theme = new ThemeData(
@@ -98,16 +98,16 @@ public sealed class MaterialElevationOverlayTests : IDisposable
 
         MountAndFlush(root, owner);
 
-        Assert.Equal(Color.Parse("#1E69F0AE"), overlayColor);
-        Assert.Equal(Color.Parse("#FF1C2C24"), appliedColor);
+        Assert.Equal(new Color(0x1E69F0AE), overlayColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF1C2C24), appliedColor);
         root.UnmountRoot();
     }
 
     [Fact]
     public void ApplyOverlay_RequiresPositiveElevationEnabledDarkThemeAndSurfaceRgb()
     {
-        Color surface = Color.Parse("#FF121212");
-        Color overlay = Color.Parse("#FF69F0AE");
+        Color surface = new Color(0xFF121212);
+        Color overlay = new Color(0xFF69F0AE);
         var enabled = new ThemeData(
             brightness: Brightness.Dark,
             useMaterial3: false,
@@ -133,7 +133,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
                 surface,
                 8.0));
 
-        Color translucentSurface = Color.FromArgb(0xBF, surface.R, surface.G, surface.B);
+        Color translucentSurface = Color.FromARGB(0xBF, surface.Red, surface.Green, surface.Blue);
         Color result = ElevationOverlay.ApplyOverlay(enabled, translucentSurface, 8.0);
         Assert.NotEqual(translucentSurface, result);
     }
@@ -161,9 +161,9 @@ public sealed class MaterialElevationOverlayTests : IDisposable
     [Fact]
     public void Material_UsesM2OverlayOrM3SurfaceTintAccordingToThemeMode()
     {
-        Color surface = Color.Parse("#FF121212");
-        Color onSurface = Color.Parse("#FF69F0AE");
-        Color tint = Color.Parse("#FF44CCFF");
+        Color surface = new Color(0xFF121212);
+        Color onSurface = new Color(0xFF69F0AE);
+        Color tint = new Color(0xFF44CCFF);
         var m2Theme = new ThemeData(
             brightness: Brightness.Dark,
             useMaterial3: false,
@@ -174,8 +174,8 @@ public sealed class MaterialElevationOverlayTests : IDisposable
                 onSurface: onSurface));
         var m3Theme = m2Theme with { UseMaterial3 = true };
 
-        Assert.Equal(
-            Color.Parse("#FF1C2C24"),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFF1C2C24),
             ResolveMaterialColor(
                 m2Theme,
                 new MaterialSurface(
@@ -190,8 +190,8 @@ public sealed class MaterialElevationOverlayTests : IDisposable
                     color: surface,
                     elevation: 8.0,
                     child: new SizedBox())));
-        Assert.Equal(
-            Color.Parse("#FF192C33"),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFF192C33),
             ResolveMaterialColor(
                 m3Theme,
                 new MaterialSurface(

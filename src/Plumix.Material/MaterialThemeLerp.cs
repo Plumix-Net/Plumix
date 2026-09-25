@@ -19,27 +19,7 @@ internal static class MaterialThemeLerp
         return from + ((to - from) * t);
     }
 
-    public static Color? Color(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-
-        Avalonia.Media.Color from = a
-                                    ?? Avalonia.Media.Color.FromArgb(
-                                        0,
-                                        b!.Value.R,
-                                        b.Value.G,
-                                        b.Value.B);
-        Avalonia.Media.Color to = b
-                                  ?? Avalonia.Media.Color.FromArgb(
-                                      0,
-                                      a!.Value.R,
-                                      a.Value.G,
-                                      a.Value.B);
-        return new ColorTween().Evaluate(t, from, to);
-    }
+    public static Color? Color(Color? a, Color? b, double t) => Plumix.UI.Color.Lerp(a, b, t);
 
     public static TextStyle? TextStyle(TextStyle? a, TextStyle? b, double t)
     {
@@ -95,23 +75,23 @@ internal static class MaterialThemeLerp
         }
 
         Plumix.Rendering.BorderSide from = a ?? new Plumix.Rendering.BorderSide(
-            Avalonia.Media.Color.FromArgb(
+            Plumix.UI.Color.FromARGB(
                 0,
-                b!.Value.Color.R,
-                b.Value.Color.G,
-                b.Value.Color.B),
+                b!.Value.Color.Red,
+                b.Value.Color.Green,
+                b.Value.Color.Blue),
             0.0,
             b.Value.Style);
         Plumix.Rendering.BorderSide to = b ?? new Plumix.Rendering.BorderSide(
-            Avalonia.Media.Color.FromArgb(
+            Plumix.UI.Color.FromARGB(
                 0,
-                a!.Value.Color.R,
-                a.Value.Color.G,
-                a.Value.Color.B),
+                a!.Value.Color.Red,
+                a.Value.Color.Green,
+                a.Value.Color.Blue),
             0.0,
             a.Value.Style);
         return new Plumix.Rendering.BorderSide(
-            Color(from.Color, to.Color, t)!.Value,
+            Color(from.Color, to.Color, t)!,
             from.Width + ((to.Width - from.Width) * t),
             t < 0.5 ? from.Style : to.Style);
     }

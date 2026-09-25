@@ -77,7 +77,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                 new Container(
                     width: 260,
                     height: 304,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -125,7 +125,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                     child: new Container(
                                         width: 280,
                                         height: 42,
-                                        color: Color.Parse("#FFFFD7A8"),
+                                        color: new Color(0xFFFFD7A8),
                                         child: new Center(
                                             child: new Text(
                                                 "natural width 280",
@@ -141,8 +141,8 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
             width: 190,
             height: 86,
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFCCE3FF"),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                Color: new Color(0xFFCCE3FF),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF1D3557), 2)),
                 BorderRadius: BorderRadius.Circular(10)),
             child: new Center(
                 child: new Text(
@@ -159,7 +159,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

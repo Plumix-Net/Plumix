@@ -413,11 +413,11 @@ public class IconButton : StatelessWidget
         return new ButtonStyle(
             ForegroundColor: CreateDefaultColorResolver(foregroundColor, disabledForegroundColor),
             BackgroundColor: CreateDefaultColorResolver(backgroundColor, disabledBackgroundColor),
-            ShadowColor: shadowColor.HasValue
-                ? WidgetStateProperty<Color?>.All(shadowColor.Value)
+            ShadowColor: shadowColor != null
+                ? WidgetStateProperty<Color?>.All(shadowColor!)
                 : null,
-            SurfaceTintColor: surfaceTintColor.HasValue
-                ? WidgetStateProperty<Color?>.All(surfaceTintColor.Value)
+            SurfaceTintColor: surfaceTintColor != null
+                ? WidgetStateProperty<Color?>.All(surfaceTintColor!)
                 : null,
             OverlayColor: CreateStyleFromOverlayResolver(
                 foregroundColor,
@@ -602,7 +602,7 @@ public class IconButton : StatelessWidget
         var theme = Theme.Of(context);
         Color defaultIconColor = theme.Brightness == Brightness.Dark
             ? Colors.White
-            : Avalonia.Media.Color.FromArgb(0xDD, 0x00, 0x00, 0x00);
+            : Color.FromARGB(0xDD, 0x00, 0x00, 0x00);
         bool isDefaultColor = iconTheme.Color == defaultIconColor;
         bool isDefaultSize = iconTheme.Size is null;
         var iconThemeStyle = StyleFrom(
@@ -820,7 +820,7 @@ public class IconButton : StatelessWidget
         Color? enabledColor,
         Color? disabledColor)
     {
-        if (!enabledColor.HasValue && !disabledColor.HasValue)
+        if (enabledColor == null && disabledColor == null)
         {
             return null;
         }
@@ -839,17 +839,17 @@ public class IconButton : StatelessWidget
         Color? highlightColor)
     {
         var overlayFallback = overlayColor ?? foregroundColor;
-        if (!overlayFallback.HasValue
-            && !focusColor.HasValue
-            && !hoverColor.HasValue
-            && !highlightColor.HasValue)
+        if (overlayFallback == null
+            && focusColor == null
+            && hoverColor == null
+            && highlightColor == null)
         {
             return null;
         }
 
-        if (overlayColor.HasValue && overlayColor.Value.A == 0)
+        if (overlayColor != null && overlayColor!.Alpha == 0)
         {
-            return WidgetStateProperty<Color?>.All(overlayColor.Value);
+            return WidgetStateProperty<Color?>.All(overlayColor!);
         }
 
         return WidgetStateProperty<Color?>.ResolveWith(states =>
@@ -861,37 +861,37 @@ public class IconButton : StatelessWidget
 
             if (states.Contains(WidgetState.Pressed))
             {
-                if (highlightColor.HasValue)
+                if (highlightColor != null)
                 {
-                    return highlightColor.Value;
+                    return highlightColor!;
                 }
 
-                return overlayFallback.HasValue
-                    ? overlayFallback.Value.WithOpacity(0.10)
+                return overlayFallback != null
+                    ? overlayFallback!.WithOpacity(0.10)
                     : null;
             }
 
             if (states.Contains(WidgetState.Hovered))
             {
-                if (hoverColor.HasValue)
+                if (hoverColor != null)
                 {
-                    return hoverColor.Value;
+                    return hoverColor!;
                 }
 
-                return overlayFallback.HasValue
-                    ? overlayFallback.Value.WithOpacity(0.08)
+                return overlayFallback != null
+                    ? overlayFallback!.WithOpacity(0.08)
                     : null;
             }
 
             if (states.Contains(WidgetState.Focused))
             {
-                if (focusColor.HasValue)
+                if (focusColor != null)
                 {
-                    return focusColor.Value;
+                    return focusColor!;
                 }
 
-                return overlayFallback.HasValue
-                    ? overlayFallback.Value.WithOpacity(0.10)
+                return overlayFallback != null
+                    ? overlayFallback!.WithOpacity(0.10)
                     : null;
             }
 

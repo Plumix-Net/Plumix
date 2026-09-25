@@ -50,14 +50,14 @@ public sealed class MaterialTimePickerThemeTests
     public void TimePickerThemeData_PlainDayPeriodColorIsWrappedButStateColorPassesThrough()
     {
         var plain = new TimePickerThemeData(DayPeriodColor: Colors.Red);
-        Assert.Equal(Colors.Red, plain.DayPeriodColor!.Resolve(SelectedSet));
-        Assert.Equal(MaterialColors.Transparent, plain.DayPeriodColor!.Resolve(EmptySet));
+        Assert.Equal(Colors.Red, WidgetStateProperty<Color>.ResolveAs(plain.DayPeriodColor, SelectedSet));
+        Assert.Equal(MaterialColors.Transparent, WidgetStateProperty<Color>.ResolveAs(plain.DayPeriodColor, EmptySet));
 
-        var stateful = new TimePickerThemeData(DayPeriodColor: WidgetStateColor.ResolveWith(
-            Colors.Blue,
-            states => states.Contains(WidgetState.Selected) ? Colors.Green : Colors.Blue));
-        Assert.Equal(Colors.Green, stateful.DayPeriodColor!.Resolve(SelectedSet));
-        Assert.Equal(Colors.Blue, stateful.DayPeriodColor!.Resolve(EmptySet));
+        var stateful = new TimePickerThemeData(
+            DayPeriodColor: WidgetStateColor.ResolveWith(states =>
+                states.Contains(WidgetState.Selected) ? Colors.Green : Colors.Blue));
+        Assert.Equal(Colors.Green, WidgetStateProperty<Color>.ResolveAs(stateful.DayPeriodColor, SelectedSet));
+        Assert.Equal(Colors.Blue, WidgetStateProperty<Color>.ResolveAs(stateful.DayPeriodColor, EmptySet));
     }
 
     [Fact]
@@ -67,26 +67,26 @@ public sealed class MaterialTimePickerThemeTests
         Assert.Same(data, TimePickerThemeData.Lerp(data, data, 0.5));
 
         var a = new TimePickerThemeData(
-            BackgroundColor: Color.FromArgb(255, 0, 0, 0),
+            BackgroundColor: Color.FromARGB(255, 0, 0, 0),
             Elevation: 0,
-            DialHandColor: Color.FromArgb(255, 0, 0, 0),
-            HourMinuteColor: Color.FromArgb(255, 0, 0, 0),
+            DialHandColor: Color.FromARGB(255, 0, 0, 0),
+            HourMinuteColor: Color.FromARGB(255, 0, 0, 0),
             InputDecorationTheme: new InputDecorationThemeData(filled: true),
             Padding: EdgeInsetsGeometry.All(0));
         var b = new TimePickerThemeData(
-            BackgroundColor: Color.FromArgb(255, 100, 100, 100),
+            BackgroundColor: Color.FromARGB(255, 100, 100, 100),
             Elevation: 10,
-            DialHandColor: Color.FromArgb(255, 100, 100, 100),
-            HourMinuteColor: Color.FromArgb(255, 100, 100, 100),
+            DialHandColor: Color.FromARGB(255, 100, 100, 100),
+            HourMinuteColor: Color.FromARGB(255, 100, 100, 100),
             InputDecorationTheme: new InputDecorationThemeData(filled: false),
             Padding: EdgeInsetsGeometry.All(20));
 
         var mid = TimePickerThemeData.Lerp(a, b, 0.5);
         Assert.Equal(5, mid.Elevation);
-        Assert.Equal(50, mid.BackgroundColor!.Value.R);
-        Assert.Equal(50, mid.DialHandColor!.Value.R);
+        Assert.Equal(50, mid.BackgroundColor!.Red);
+        Assert.Equal(50, mid.DialHandColor!.Red);
         // Dart lerps the state colors with Color.lerp, collapsing them to the default resolution.
-        Assert.Equal(50, mid.HourMinuteColor!.DefaultValue.R);
+        Assert.Equal(50, mid.HourMinuteColor!.Red);
         Assert.Equal(new Thickness(10), mid.Padding!.Value.Resolve(TextDirection.Ltr));
         // inputDecorationTheme is a discrete t < 0.5 switch, never interpolated.
         Assert.True(TimePickerThemeData.Lerp(a, b, 0.4).InputDecorationTheme!.Filled);

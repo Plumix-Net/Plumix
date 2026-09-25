@@ -274,20 +274,20 @@ public sealed class MaterialTabsTests
         Assert.Same(theme, TabBarThemeData.Lerp(theme, theme, 0.5));
 
         var a = new TabBarThemeData(
-            IndicatorColor: Color.FromArgb(255, 0, 0, 0),
+            IndicatorColor: Color.FromARGB(255, 0, 0, 0),
             DividerHeight: 1,
             IndicatorSize: TabBarIndicatorSize.Tab,
             LabelPadding: EdgeInsetsGeometry.All(0),
             TabAlignment: TabAlignment.Center);
         var b = new TabBarThemeData(
-            IndicatorColor: Color.FromArgb(255, 100, 100, 100),
+            IndicatorColor: Color.FromARGB(255, 100, 100, 100),
             DividerHeight: 5,
             IndicatorSize: TabBarIndicatorSize.Label,
             LabelPadding: EdgeInsetsGeometry.All(10),
             TabAlignment: TabAlignment.Fill);
 
         TabBarThemeData mid = TabBarThemeData.Lerp(a, b, 0.5);
-        Assert.Equal(Color.FromArgb(255, 50, 50, 50), mid.IndicatorColor);
+        Assert.Equal(Color.FromARGB(255, 50, 50, 50), mid.IndicatorColor);
         Assert.Equal(EdgeInsetsGeometry.All(5), mid.LabelPadding);
         // Discrete fields snap at the midpoint rather than interpolating.
         Assert.Equal(TabBarIndicatorSize.Label, mid.IndicatorSize);
@@ -495,14 +495,14 @@ public sealed class MaterialTabsTests
             Wrap(
                 new TabBar(
                     controller: controller,
-                    labelColor: Color.FromArgb(0xFF, 0x00, 0x00, 0xFF),
+                    labelColor: Color.FromARGB(0xFF, 0x00, 0x00, 0xFF),
                     tabs: [new Tab(text: "One"), new Tab(text: "Two")]),
                 theme));
         harness.Pump(new Size(300, 100));
 
         IReadOnlyList<TextStyle> styles = LabelStyles(harness.RenderView);
-        Assert.Equal(Color.FromArgb(0xFF, 0x00, 0x00, 0xFF), styles[0].Color);
-        Assert.Equal(Color.FromArgb(0xB2, 0x00, 0x00, 0xFF), styles[1].Color);
+        Assert.Equal(Color.FromARGB(0xFF, 0x00, 0x00, 0xFF), styles[0].Color);
+        Assert.Equal(Color.FromARGB(0xB2, 0x00, 0x00, 0xFF), styles[1].Color);
     }
 
     [Fact]
@@ -1253,7 +1253,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(3, circles.Count);
         Assert.Equal(
             [MaterialColors.Transparent, ThemeData.Light.ColorScheme.Secondary, MaterialColors.Transparent],
-            circles.Select(circle => circle.AsBoxDecoration.Color!.Value).ToArray());
+            circles.Select(circle => circle.AsBoxDecoration.Color!).ToArray());
         Assert.All(circles, circle => Assert.Equal(
             Plumix.Rendering.Border.FromBorderSide(new BorderSide(ThemeData.Light.ColorScheme.Secondary)),
             circle.AsBoxDecoration.Border));
@@ -1369,11 +1369,11 @@ public sealed class MaterialTabsTests
         TextDirection.Ltr,
         new Theme(theme ?? ThemeData.Light, child));
 
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+    private static Color WithOpacity(Color color, double opacity) => Color.FromARGB(
         (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0)),
-        color.R,
-        color.G,
-        color.B);
+        color.Red,
+        color.Green,
+        color.Blue);
 
     private static IndicatorPainter RequireIndicatorPainter(RenderObject root) =>
         FindIndicatorPainter(root) ?? throw new InvalidOperationException("No indicator painter was built.");
@@ -1519,7 +1519,7 @@ public sealed class MaterialTabsTests
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .Where(box => box.AsBoxDecoration.Shape == BoxShape.Circle)
-            .Select(box => (int)box.AsBoxDecoration.Color!.Value.A)
+            .Select(box => (int)box.AsBoxDecoration.Color!.Alpha)
             .ToArray();
     }
 

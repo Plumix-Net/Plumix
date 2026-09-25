@@ -31,12 +31,12 @@ internal sealed class RefreshIndicatorDemoPageState : State
         var theme = baseTheme with
         {
             Platform = _useCupertinoPlatform ? TargetPlatform.IOS : TargetPlatform.Android,
-            PrimaryColor = Color.Parse("#FFFF6F00"),
-            ColorScheme = baseTheme.ColorScheme.CopyWith(primary: Color.Parse("#FF00897B")),
+            PrimaryColor = new Color(0xFFFF6F00),
+            ColorScheme = baseTheme.ColorScheme.CopyWith(primary: new Color(0xFF00897B)),
             ProgressIndicatorTheme = _useThemeOverrides
                 ? new ProgressIndicatorThemeData(
-                    Color: Color.Parse("#FF6A1B9A"),
-                    RefreshBackgroundColor: Color.Parse("#FFFFF3E0"),
+                    Color: new Color(0xFF6A1B9A),
+                    RefreshBackgroundColor: new Color(0xFFFFF3E0),
                     StrokeAlign: -1,
                     StrokeCap: StrokeCap.Round)
                 : new ProgressIndicatorThemeData()
@@ -53,7 +53,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
                     new Text(
                         "Pull the list down from its top edge. Cycle Material/adaptive/no-spinner paths and theme the refresh surface.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -72,12 +72,12 @@ internal sealed class RefreshIndicatorDemoPageState : State
                             new Text(
                                 "scheme teal; legacy primary orange",
                                 fontSize: 12,
-                                color: Color.Parse("#FF607D8B")),
+                                color: new Color(0xFF607D8B)),
                         ]),
                     new Text(
                         $"status={_status}, refreshCount={_refreshCount}; drag past the armed threshold, then release",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(child: BuildRefreshWrapper(BuildList())),
                 ]));
     }
@@ -89,7 +89,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             1 => RefreshIndicator.Adaptive(
                 onRefresh: HandleRefresh,
                 child: child,
-                color: _useSchemeColor ? null : Color.Parse("#FF1565C0"),
+                color: _useSchemeColor ? null : new Color(0xFF1565C0),
                 semanticsLabel: "Refresh sample list"),
             2 => RefreshIndicator.NoSpinner(
                 onRefresh: HandleRefresh,
@@ -99,7 +99,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             _ => new RefreshIndicator(
                 onRefresh: HandleRefresh,
                 child: child,
-                color: _useSchemeColor ? null : Color.Parse("#FF1565C0"),
+                color: _useSchemeColor ? null : new Color(0xFF1565C0),
                 backgroundColor: _useThemeOverrides ? null : Colors.White,
                 semanticsLabel: "Refresh sample list"),
         };
@@ -113,7 +113,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             padding: new Thickness(8),
             addAutomaticKeepAlives: false,
             itemBuilder: (_, index) => new Container(
-                color: index % 2 == 0 ? Colors.White : Color.Parse("#FFF5F7FA"),
+                color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
                 padding: new Thickness(12, 10),
                 child: new Text($"refresh row #{index + 1}", fontSize: 13, color: Colors.Black)));
     }
@@ -147,7 +147,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
                 child: new Text(label, fontSize: 12),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
-                    backgroundColor: Color.Parse("#FFE9F0FF"),
+                    backgroundColor: new Color(0xFFE9F0FF),
                     padding: new Thickness(10, 8),
                     minimumSize: new Size(64, 36),
                     shape: new RoundedRectangleBorder(

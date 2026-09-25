@@ -120,7 +120,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
             child: new Text(
                 AdaptiveTextSelectionToolbar.GetButtonLabel(context, item),
                 color: item.Type == ContextMenuButtonType.Delete
-                    ? Color.Parse("#FF2196F3")
+                    ? new Color(0xFF2196F3)
                     : null));
 
         if (item.Type != ContextMenuButtonType.Delete)
@@ -139,7 +139,7 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
                     top: 0.0,
                     right: 0.0,
                     height: 1.0,
-                    child: new ColoredBox(Color.Parse("#FF9E9E9E"))),
+                    child: new ColoredBox(new Color(0xFF9E9E9E))),
             ]);
     }
 }

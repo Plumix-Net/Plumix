@@ -95,7 +95,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
     [Fact]
     public void HandlePainter_DrawsOneUnionPathAndRepaintsOnColorChange()
     {
-        var painter = new TextSelectionHandlePainter(Color.FromArgb(0x55, 0x00, 0x00, 0xAA));
+        var painter = new TextSelectionHandlePainter(Color.FromARGB(0x55, 0x00, 0x00, 0xAA));
 
         // A single filled path (circle unioned with the square corner) so a translucent handle never
         // double-blends where the two shapes overlap. `radius` comes from the width alone.
@@ -112,7 +112,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
         Assert.False(picture.IsEmpty);
 
         Assert.False(painter.ShouldRepaint(
-            new TextSelectionHandlePainter(Color.FromArgb(0x55, 0x00, 0x00, 0xAA))));
+            new TextSelectionHandlePainter(Color.FromARGB(0x55, 0x00, 0x00, 0xAA))));
         Assert.True(painter.ShouldRepaint(new TextSelectionHandlePainter(Colors.Red)));
     }
 
@@ -298,7 +298,7 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
             context,
             TextSelectionHandleType.Right,
             10.0));
-        if (selectionHandleColor.HasValue)
+        if (selectionHandleColor != null)
         {
             child = new TextSelectionTheme(
                 new TextSelectionThemeData(SelectionHandleColor: selectionHandleColor),

@@ -300,7 +300,7 @@ public sealed class MaterialSliverAppBarTests
         var paragraph = FindDescendants<RenderParagraph>(rtl.RenderView)
             .Single(value => value.PlainText == "RTL title");
         Assert.Equal(
-            Color.FromArgb(128, Colors.Purple.R, Colors.Purple.G, Colors.Purple.B),
+            Color.FromARGB(128, Colors.Purple.Red, Colors.Purple.Green, Colors.Purple.Blue),
             Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
 
         ThemeData material2 = material3 with { UseMaterial3 = false };
@@ -319,7 +319,7 @@ public sealed class MaterialSliverAppBarTests
         var m2Paragraph = FindDescendants<RenderParagraph>(m2.RenderView)
             .Single(value => value.PlainText == "M2 title");
         Assert.Equal(
-            Color.FromArgb(128, Colors.Green.R, Colors.Green.G, Colors.Green.B),
+            Color.FromARGB(128, Colors.Green.Red, Colors.Green.Green, Colors.Green.Blue),
             Assert.IsType<SolidColorBrush>(m2Paragraph.Foreground).Color);
     }
 

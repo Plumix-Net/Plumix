@@ -52,7 +52,7 @@ internal sealed class RadioDemoPageState : State
                 new Text(
                     "RadioGroup keyboard navigation plus adaptive Cupertino platform/checkmark probes.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -61,22 +61,22 @@ internal sealed class RadioDemoPageState : State
                             label: _enabled ? "Enabled" : "Disabled",
                             onTap: ToggleEnabled,
                             width: 108,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: _toggleable ? "Toggleable" : "No toggle",
                             onTap: ToggleToggleable,
                             width: 116,
-                            background: Color.Parse("#FFEAE4FF")),
+                            background: new Color(0xFFEAE4FF)),
                         BuildControlButton(
                             label: _shrinkWrapTapTarget ? "Tap: shrink" : "Tap: padded",
                             onTap: ToggleTapTargetSize,
                             width: 128,
-                            background: Color.Parse("#FFE8F4E8")),
+                            background: new Color(0xFFE8F4E8)),
                         BuildControlButton(
                             label: "Reset",
                             onTap: Reset,
                             width: 80,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -86,17 +86,17 @@ internal sealed class RadioDemoPageState : State
                             label: $"Adaptive: {FormatPlatform(_adaptivePlatform)}",
                             onTap: CycleAdaptivePlatform,
                             width: 156,
-                            background: Color.Parse("#FFE7F4FF")),
+                            background: new Color(0xFFE7F4FF)),
                         BuildControlButton(
                             label: _adaptiveUseCheckmarkStyle ? "Adaptive: checkmark" : "Adaptive: dot",
                             onTap: ToggleAdaptiveCheckmarkStyle,
                             width: 164,
-                            background: Color.Parse("#FFEFE7FF")),
+                            background: new Color(0xFFEFE7FF)),
                     ]),
                 new Text(
                     $"enabled={(_enabled ? "true" : "false")}, toggleable={(_toggleable ? "true" : "false")}, materialValue={FormatValue(_materialGroupValue)}, materialChanges={_materialChanges}, adaptiveValue={FormatValue(_adaptiveGroupValue)}, adaptiveChanges={_adaptiveChanges}, adaptivePlatform={FormatPlatform(_adaptivePlatform)}, adaptiveStyle={(_adaptiveUseCheckmarkStyle ? "checkmark" : "dot")}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Theme(
                     data: radioTheme,
                     child: new Column(
@@ -107,7 +107,7 @@ internal sealed class RadioDemoPageState : State
                             new Text(
                                 "Material path",
                                 fontSize: 13,
-                                color: Color.Parse("#FF37474F")),
+                                color: new Color(0xFF37474F)),
                             new RadioGroup<string>(
                                 groupValue: _materialGroupValue,
                                 onChanged: OnMaterialChanged,
@@ -135,47 +135,47 @@ internal sealed class RadioDemoPageState : State
                                                 value: "custom",
                                                 enabled: _enabled,
                                                 toggleable: _toggleable,
-                                                activeColor: Color.Parse("#FF00695C"),
+                                                activeColor: new Color(0xFF00695C),
                                                 fillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
                                                     if (states.Contains(WidgetState.Disabled))
                                                     {
-                                                        return Color.Parse("#6100695C");
+                                                        return new Color(0x6100695C);
                                                     }
 
                                                     if (states.Contains(WidgetState.Selected))
                                                     {
-                                                        return Color.Parse("#FF00695C");
+                                                        return new Color(0xFF00695C);
                                                     }
 
-                                                    return Color.Parse("#FF455A64");
+                                                    return new Color(0xFF455A64);
                                                 }),
                                                 backgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
                                                     return states.Contains(WidgetState.Selected)
-                                                        ? Color.Parse("#1400695C")
+                                                        ? new Color(0x1400695C)
                                                         : Colors.Transparent;
                                                 }),
                                                 overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
                                                     if (states.Contains(WidgetState.Pressed))
                                                     {
-                                                        return Color.Parse("#3300695C");
+                                                        return new Color(0x3300695C);
                                                     }
 
                                                     if (states.Contains(WidgetState.Hovered))
                                                     {
-                                                        return Color.Parse("#2200695C");
+                                                        return new Color(0x2200695C);
                                                     }
 
                                                     if (states.Contains(WidgetState.Focused))
                                                     {
-                                                        return Color.Parse("#2900695C");
+                                                        return new Color(0x2900695C);
                                                     }
 
                                                     return null;
                                                 }),
-                                                side: new BorderSide(Color.Parse("#FF00695C"), 2),
+                                                side: new BorderSide(new Color(0xFF00695C), 2),
                                                 innerRadius: WidgetStateProperty<double?>.All(5)),
                                             title: "Custom colors",
                                             subtitle: "fill/overlay/side/background overrides"),
@@ -183,7 +183,7 @@ internal sealed class RadioDemoPageState : State
                             new Text(
                                 "Adaptive path",
                                 fontSize: 13,
-                                color: Color.Parse("#FF37474F")),
+                                color: new Color(0xFF37474F)),
                             new Theme(
                                 data: adaptiveTheme,
                                 child: new RadioGroup<string>(
@@ -206,9 +206,9 @@ internal sealed class RadioDemoPageState : State
                                                     value: "adaptive-second",
                                                     enabled: _enabled,
                                                     toggleable: _toggleable,
-                                                    activeColor: Color.Parse("#FF00695C"),
+                                                    activeColor: new Color(0xFF00695C),
                                                     fillColor: WidgetStateProperty<Color?>.All(
-                                                        Color.Parse("#FF8E24AA")),
+                                                        new Color(0xFF8E24AA)),
                                                     useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle),
                                                 title: "Adaptive style probe",
                                                 subtitle: "checkmark style + fillColor ignore on iOS/macOS"),
@@ -222,9 +222,9 @@ internal sealed class RadioDemoPageState : State
         return new Container(
             padding: new Thickness(10, 8),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F4F9"),
+                Color: new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFD6DEEA), 1))),
             child: new Row(
                 spacing: 10,
                 children:
@@ -237,7 +237,7 @@ internal sealed class RadioDemoPageState : State
                             children:
                             [
                                 new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                             ])),
                 ]));
     }

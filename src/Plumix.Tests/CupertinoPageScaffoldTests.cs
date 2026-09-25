@@ -41,8 +41,8 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
     [Fact]
     public void BackgroundColor_ResolvesForPaintAndInheritedConsumers()
     {
-        Color light = Color.FromUInt32(0xFF010203);
-        Color dark = Color.FromUInt32(0xFF040506);
+        Color light = new Color(0xFF010203);
+        Color dark = new Color(0xFF040506);
         Color? inheritedColor = null;
         var dynamicColor = CupertinoDynamicColor.WithBrightness(light, dark);
 
@@ -55,8 +55,8 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
         var decoratedBox = Assert.Single(harness.FindWidgets<DecoratedBox>());
         var decoration = Assert.IsType<BoxDecoration>(decoratedBox.Decoration);
-        Assert.Equal(dark, decoration.Color);
-        Assert.Equal(dark, inheritedColor);
+        ColorMatchers.AssertSameColorAs(dark, decoration.Color);
+        ColorMatchers.AssertSameColorAs(dark, inheritedColor);
         Assert.Single(harness.FindWidgets<ScrollNotificationObserver>());
     }
 
@@ -69,7 +69,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
         var decoratedBox = Assert.Single(harness.FindWidgets<DecoratedBox>());
         var decoration = Assert.IsType<BoxDecoration>(decoratedBox.Decoration);
-        Assert.Equal(CupertinoColors.Black, decoration.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Black, decoration.Color);
     }
 
     [Fact]

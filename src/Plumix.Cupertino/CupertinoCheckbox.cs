@@ -320,26 +320,26 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
 {
     // Eyeballed from a checkbox on a physical Macbook Pro running macOS version 14.5.
     internal static readonly CupertinoDynamicColor KDisabledCheckColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(64, 0, 0, 0),
-        darkColor: Color.FromArgb(64, 255, 255, 255));
+        color: Color.FromARGB(64, 0, 0, 0),
+        darkColor: Color.FromARGB(64, 255, 255, 255));
     internal static readonly CupertinoDynamicColor KDisabledBorderColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(13, 0, 0, 0),
-        darkColor: Color.FromArgb(13, 0, 0, 0));
+        color: Color.FromARGB(13, 0, 0, 0),
+        darkColor: Color.FromARGB(13, 0, 0, 0));
     internal static readonly CupertinoDynamicColor KDefaultBorderColor = CupertinoDynamicColor.WithBrightness(
-        color: Color.FromArgb(255, 209, 209, 214),
-        darkColor: Color.FromArgb(50, 128, 128, 128));
+        color: Color.FromARGB(255, 209, 209, 214),
+        darkColor: Color.FromARGB(50, 128, 128, 128));
     internal static readonly CupertinoDynamicColor KDefaultFillColor = CupertinoDynamicColor.WithBrightness(
-        color: CupertinoColors.ActiveBlue.Value,
-        darkColor: Color.FromArgb(255, 50, 100, 215));
+        color: CupertinoColors.ActiveBlue,
+        darkColor: Color.FromARGB(255, 50, 100, 215));
     internal static readonly CupertinoDynamicColor KDefaultCheckColor = CupertinoDynamicColor.WithBrightness(
         color: CupertinoColors.White,
-        darkColor: Color.FromArgb(255, 222, 232, 248));
+        darkColor: Color.FromARGB(255, 222, 232, 248));
     internal const double KPressedOverlayOpacity = 0.15;
     // In dark mode, the fill color of a checkbox is an opacity gradient of the background color.
     internal static readonly IReadOnlyList<double> KDarkGradientOpacities = [0.14, 0.29];
     internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
 
-    private Color _checkColor;
+    private Color _checkColor = null!;
     private bool? _value;
     private bool? _previousValue;
     private OutlinedBorder _shape = new RoundedRectangleBorder(
@@ -479,7 +479,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     // shape's outline.
     private void DrawSide(PaintingContext context, Rect outer, BorderSide side)
     {
-        if (side.Width <= 0.0 || side.Color.A == 0 || side.Style == BorderStyle.None)
+        if (side.Width <= 0.0 || side.Color.Alpha == 0 || side.Style == BorderStyle.None)
         {
             return;
         }
@@ -566,12 +566,5 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     }
 
     // Dart's `Color.withOpacity`: replaces the alpha channel outright.
-    internal static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp(
-            (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
-            0,
-            byte.MaxValue);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    internal static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 }

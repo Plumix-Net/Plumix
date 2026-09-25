@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Media;
 using Plumix.Physics;
 
@@ -610,9 +610,9 @@ public sealed class ColorTween : Tween<Color>
         get => HasBeginValue ? GetBeginValue() : null;
         set
         {
-            if (value.HasValue)
+            if (value != null)
             {
-                SetBeginValue(value.Value);
+                SetBeginValue(value!);
             }
             else
             {
@@ -626,9 +626,9 @@ public sealed class ColorTween : Tween<Color>
         get => HasEndValue ? GetEndValue() : null;
         set
         {
-            if (value.HasValue)
+            if (value != null)
             {
-                SetEndValue(value.Value);
+                SetEndValue(value!);
             }
             else
             {
@@ -637,15 +637,7 @@ public sealed class ColorTween : Tween<Color>
         }
     }
 
-    public override Color Lerp(Color a, Color b, double t)
-    {
-        byte L(byte x, byte y) => (byte)(x + (y - x) * t);
-        return Color.FromArgb(
-            L(a.A, b.A),
-            L(a.R, b.R),
-            L(a.G, b.G),
-            L(a.B, b.B));
-    }
+    public override Color Lerp(Color a, Color b, double t) => Color.Lerp(a, b, t);
 }
 
 public class RectTween : Tween<Rect>

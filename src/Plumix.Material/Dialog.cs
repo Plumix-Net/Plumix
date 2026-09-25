@@ -137,7 +137,7 @@ public class Dialog : StatelessWidget
         if (IsFullscreen)
         {
             dialogChild = new Material(
-                color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value,
+                color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!,
                 child: Child);
         }
         else
@@ -148,7 +148,7 @@ public class Dialog : StatelessWidget
                 child: new ConstrainedBox(
                     constraints,
                     new Material(
-                        color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!.Value,
+                        color: BackgroundColor ?? dialogTheme.BackgroundColor ?? defaults.BackgroundColor!,
                         elevation: Elevation ?? dialogTheme.Elevation ?? defaults.Elevation!.Value,
                         shadowColor: ShadowColor ?? dialogTheme.ShadowColor ?? defaults.ShadowColor,
                         surfaceTintColor: SurfaceTintColor
@@ -187,7 +187,7 @@ public class Dialog : StatelessWidget
         if (!theme.UseMaterial3)
         {
             return new DialogThemeData(
-                BackgroundColor: theme.Brightness == Brightness.Dark ? Color.Parse("#FF424242") : Colors.White,
+                BackgroundColor: theme.Brightness == Brightness.Dark ? new Color(0xFF424242) : Colors.White,
                 Elevation: 24,
                 ShadowColor: theme.ShadowColor,
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
@@ -775,7 +775,7 @@ public sealed class DialogRoute<T> : RawDialogRoute<T>
         AnimationStyle? animationStyle = null) : base(
         pageBuilder: (pageContext, _, _) => BuildDialogPage(builder, themes, useSafeArea),
         barrierDismissible: barrierDismissible,
-        barrierColor: barrierColor ?? Color.FromArgb(0x8A, 0, 0, 0),
+        barrierColor: barrierColor ?? Color.FromARGB(0x8A, 0, 0, 0),
         barrierLabel: barrierLabel ?? MaterialLocalizations.Of(context).ModalBarrierDismissLabel,
         transitionDuration: animationStyle?.Duration ?? TimeSpan.FromMilliseconds(150),
         transitionBuilder: static (_, _, _, child) => child,
@@ -854,7 +854,7 @@ public static class MaterialDialogs
             themes: themes,
             barrierColor: barrierColor
                           ?? DialogTheme.Of(context).BarrierColor
-                          ?? Color.FromArgb(0x8A, 0, 0, 0),
+                          ?? Color.FromARGB(0x8A, 0, 0, 0),
             barrierDismissible: barrierDismissible,
             barrierLabel: barrierLabel,
             useSafeArea: useSafeArea,

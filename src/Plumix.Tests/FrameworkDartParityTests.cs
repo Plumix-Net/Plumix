@@ -17,7 +17,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class FrameworkDartParityTests
 {
-    private static readonly Avalonia.Media.Color Green = Avalonia.Media.Color.FromUInt32(0xFF00FF00);
+    private static readonly Color Green = new Color(0xFF00FF00);
 
     private const string DuplicateKeysStackMessage =
         "Duplicate keys found.\n"

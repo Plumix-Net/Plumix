@@ -170,7 +170,7 @@ internal sealed record ResolvedTextStyle(
     internal static ResolvedTextStyle FromParagraphStyle(ParagraphStyle style)
     {
         return new ResolvedTextStyle(
-            Colors.Black,
+            new Color(0xFF000000),
             TextDecoration.None,
             null,
             TextDecorationStyle.Solid,

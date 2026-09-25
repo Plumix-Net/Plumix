@@ -13,7 +13,7 @@ public sealed class CupertinoIconThemeDataTests
     public void IconThemeOf_ReturnsConcreteDataUnchanged()
     {
         var data = new IconThemeData(
-            Color: Color.FromUInt32(0xAAAAAAAA),
+            Color: new Color(0xAAAAAAAA),
             Size: 16.0,
             Opacity: 0.5,
             Fill: 0.0,
@@ -50,15 +50,15 @@ public sealed class CupertinoIconThemeDataTests
 
         Assert.IsType<CupertinoIconThemeData>(retrieved);
         Assert.True(retrieved!.IsConcrete);
-        Assert.Equal(CupertinoColors.SystemBlue.DarkColor, retrieved.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemBlue.DarkColor, retrieved.Color);
     }
 
     [Fact]
     public void CupertinoTheme_ResolvesPrimaryColorAtNestedConsumerOverrides()
     {
-        Color baseColor = Color.FromUInt32(0xFF102030);
-        Color elevatedColor = Color.FromUInt32(0xFF405060);
-        Color highContrastElevatedColor = Color.FromUInt32(0xFF708090);
+        Color baseColor = new Color(0xFF102030);
+        Color elevatedColor = new Color(0xFF405060);
+        Color highContrastElevatedColor = new Color(0xFF708090);
         var dynamicColor = new CupertinoDynamicColor(
             color: baseColor,
             darkColor: baseColor,
@@ -82,7 +82,7 @@ public sealed class CupertinoIconThemeDataTests
                         return new SizedBox();
                     })))));
 
-        Assert.Equal(highContrastElevatedColor, retrieved!.Color);
+        ColorMatchers.AssertSameColorAs(highContrastElevatedColor, retrieved!.Color);
     }
 
     [Fact]
@@ -106,7 +106,7 @@ public sealed class CupertinoIconThemeDataTests
         Assert.IsType<CupertinoIconThemeData>(retrieved);
         Assert.Equal(16.0, retrieved!.Size);
         Assert.Equal(500.0, retrieved.Weight);
-        Assert.Equal(CupertinoColors.SystemGreen.DarkColor, retrieved.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, retrieved.Color);
     }
 
     [Fact]

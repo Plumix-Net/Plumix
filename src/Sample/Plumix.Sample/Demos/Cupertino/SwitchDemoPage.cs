@@ -35,11 +35,11 @@ internal sealed class SwitchDemoPageState : State
             UseMaterial3 = _useMaterial3,
             ColorScheme = baseTheme.ColorScheme with
             {
-                Primary = Color.Parse("#FF006A60"),
+                Primary = new Color(0xFF006A60),
                 OnPrimary = Colors.White,
-                Secondary = Color.Parse("#FF9C432E"),
-                SurfaceContainerHighest = Color.Parse("#FFDCE5E1"),
-                Outline = Color.Parse("#FF6F7975")
+                Secondary = new Color(0xFF9C432E),
+                SurfaceContainerHighest = new Color(0xFFDCE5E1),
+                Outline = new Color(0xFF6F7975)
             },
             MaterialTapTargetSize = _shrinkWrapTapTarget
                 ? MaterialTapTargetSize.ShrinkWrap
@@ -64,7 +64,7 @@ internal sealed class SwitchDemoPageState : State
                 new Text(
                     "Material Switch with value control, drag/tap interaction, thumb icons, and theme/widget color precedence.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -73,22 +73,22 @@ internal sealed class SwitchDemoPageState : State
                             label: _enabled ? "Enabled" : "Disabled",
                             onTap: ToggleEnabled,
                             width: 108,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: _showThumbIcons ? "Icons: on" : "Icons: off",
                             onTap: ToggleThumbIcons,
                             width: 108,
-                            background: Color.Parse("#FFEAE4FF")),
+                            background: new Color(0xFFEAE4FF)),
                         BuildControlButton(
                             label: _shrinkWrapTapTarget ? "Tap: shrink" : "Tap: padded",
                             onTap: ToggleTapTargetSize,
                             width: 128,
-                            background: Color.Parse("#FFE8F4E8")),
+                            background: new Color(0xFFE8F4E8)),
                         BuildControlButton(
                             label: "Reset",
                             onTap: Reset,
                             width: 80,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                     ]),
                 new Row(
                     children:
@@ -97,14 +97,14 @@ internal sealed class SwitchDemoPageState : State
                             label: _useMaterial3 ? "Material 3" : "Material 2",
                             onTap: ToggleMaterialVersion,
                             width: 108,
-                            background: Color.Parse("#FFE6F3EF")),
+                            background: new Color(0xFFE6F3EF)),
                     ]),
                 new Text(
                     $"material={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
                     + $"value={(_value ? "true" : "false")}, thumbIcons={(_showThumbIcons ? "true" : "false")}, "
                     + $"changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Theme(
                     data: switchTheme,
                     child: new Column(
@@ -126,35 +126,35 @@ internal sealed class SwitchDemoPageState : State
                                     {
                                         if (states.Contains(WidgetState.Disabled))
                                         {
-                                            return Color.Parse("#6100695C");
+                                            return new Color(0x6100695C);
                                         }
 
                                         if (states.Contains(WidgetState.Selected))
                                         {
-                                            return Color.Parse("#FFE8F5E9");
+                                            return new Color(0xFFE8F5E9);
                                         }
 
-                                        return Color.Parse("#FFB2DFDB");
+                                        return new Color(0xFFB2DFDB);
                                     }),
                                     trackColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
                                         if (states.Contains(WidgetState.Disabled))
                                         {
-                                            return Color.Parse("#3300695C");
+                                            return new Color(0x3300695C);
                                         }
 
                                         if (states.Contains(WidgetState.Selected))
                                         {
-                                            return Color.Parse("#FF00695C");
+                                            return new Color(0xFF00695C);
                                         }
 
-                                        return Color.Parse("#FFB0BEC5");
+                                        return new Color(0xFFB0BEC5);
                                     }),
                                     trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
                                         return states.Contains(WidgetState.Selected)
                                             ? Colors.Transparent
-                                            : Color.Parse("#FF455A64");
+                                            : new Color(0xFF455A64);
                                     }),
                                     trackOutlineWidth: WidgetStateProperty<double?>.All(2)),
                                 title: "Custom colors",
@@ -171,14 +171,14 @@ internal sealed class SwitchDemoPageState : State
                     toggle: new CupertinoSwitch(
                         value: _value,
                         onChanged: _enabled ? OnValueChanged : null,
-                        activeTrackColor: Color.Parse("#FF00695C"),
-                        inactiveTrackColor: Color.Parse("#FFB0BEC5"),
-                        thumbColor: Color.Parse("#FFE8F5E9"),
-                        inactiveThumbColor: Color.Parse("#FFB2DFDB"),
+                        activeTrackColor: new Color(0xFF00695C),
+                        inactiveTrackColor: new Color(0xFFB0BEC5),
+                        thumbColor: new Color(0xFFE8F5E9),
+                        inactiveThumbColor: new Color(0xFFB2DFDB),
                         trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                             states.Contains(WidgetState.Selected)
                                 ? Colors.Transparent
-                                : Color.Parse("#FF455A64")),
+                                : new Color(0xFF455A64)),
                         trackOutlineWidth: WidgetStateProperty<double?>.All(2.0),
                         thumbIcon: _showThumbIcons
                             ? WidgetStateProperty<Icon?>.ResolveWith(states =>
@@ -196,9 +196,9 @@ internal sealed class SwitchDemoPageState : State
         return new Container(
             padding: new Thickness(10, 8),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F4F9"),
+                Color: new Color(0xFFF1F4F9),
                 BorderRadius: BorderRadius.Circular(10),
-                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFFD6DEEA), 1))),
             child: new Row(
                 spacing: 10,
                 children:
@@ -211,7 +211,7 @@ internal sealed class SwitchDemoPageState : State
                             children:
                             [
                                 new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                             ])),
                 ]));
     }

@@ -74,11 +74,11 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
                             child: new Container(
                                 width: _expanded ? 320 : 190,
                                 height: _expanded ? 64 : 44,
-                                color: Color.Parse("#FFDCEAF7"),
+                                color: new Color(0xFFDCEAF7),
                                 alignment: Alignment.Center,
                                 child: new Text(
                                     $"layout notifications: {_sizeNotifications}",
-                                    color: Color.Parse("#FF174A72")))))),
+                                    color: new Color(0xFF174A72)))))),
                 new Expanded(
                     child: new Directionality(
                         textDirection,
@@ -95,12 +95,12 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
             insets: new Thickness(0, 0, 0, 8),
             child: new Dismissible(
                 key: new ValueKey<int>(item),
-                child: BuildRowSurface($"Swipe row {item}", Color.Parse("#FFF4F6F8")),
-                background: BuildRowBackground("START →", Alignment.CenterLeft, Color.Parse("#FF2E7D32")),
+                child: BuildRowSurface($"Swipe row {item}", new Color(0xFFF4F6F8)),
+                background: BuildRowBackground("START →", Alignment.CenterLeft, new Color(0xFF2E7D32)),
                 secondaryBackground: BuildRowBackground(
                     "← END",
                     Alignment.CenterRight,
-                    Color.Parse("#FFC62828")),
+                    new Color(0xFFC62828)),
                 crossAxisEndOffset: 0.08,
                 onDismissed: _ => SetState(() => _items.Remove(item))));
     }
@@ -132,7 +132,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(8, 7)));

@@ -66,7 +66,7 @@ internal static class NavBarStatics
     public static readonly TimeSpan NavBarTitleFadeDuration = TimeSpan.FromMilliseconds(150);
 
     /// <summary>`_kDefaultNavBarBorderColor`.</summary>
-    public static readonly Color DefaultNavBarBorderColor = Color.FromUInt32(0x4D000000);
+    public static readonly Color DefaultNavBarBorderColor = new Color(0x4D000000);
 
     /// <summary>`_kDefaultNavBarBorder`.</summary>
     public static readonly Border DefaultNavBarBorder = new(
@@ -74,7 +74,7 @@ internal static class NavBarStatics
 
     /// <summary>`_kTransparentNavBarBorder`.</summary>
     public static readonly Border TransparentNavBarBorder = new(
-        bottom: new BorderSide(Color.FromUInt32(0x00000000), width: 0.0));
+        bottom: new BorderSide(new Color(0x00000000), width: 0.0));
 
     /// <summary>`_kTopNavBarHeaderTransitionCurve`.</summary>
     public static Curve TopNavBarHeaderTransitionCurve { get; } = Curves.Cubic(0.0, 0.45, 0.45, 0.98);
@@ -154,7 +154,7 @@ internal static class NavBarStatics
             child: new BackdropFilter(
                 filter: new ImageFilter.Blur(sigmaX: 10.0, sigmaY: 10.0),
                 child: childWithBackground,
-                enabled: backgroundColor.A != 0xFF && enableBackgroundFilterBlur));
+                enabled: backgroundColor.Alpha != 0xFF && enableBackgroundFilterBlur));
     }
 
     /// <summary>`MediaQuery.withClampedTextScaling(minScaleFactor: 0.9, maxScaleFactor: 1.235)`.</summary>
@@ -209,7 +209,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -245,7 +245,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         string? previousPageTitle = null,
         Widget? middle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -282,7 +282,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         bool automaticallyImplyTitle = true,
         string? previousPageTitle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -320,7 +320,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         bool automaticallyImplyTitle = true,
         string? previousPageTitle = null,
         Widget? trailing = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool automaticBackgroundVisibility = true,
         bool enableBackgroundFilterBlur = true,
         PlatformBrightness? brightness = null,
@@ -359,7 +359,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
         string? previousPageTitle,
         Widget? middle,
         Widget? trailing,
-        CupertinoDynamicColor? backgroundColor,
+        Color? backgroundColor,
         bool automaticBackgroundVisibility,
         bool enableBackgroundFilterBlur,
         PlatformBrightness? brightness,
@@ -416,7 +416,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
 
     public Border? Border { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public bool AutomaticBackgroundVisibility { get; }
 
@@ -448,7 +448,7 @@ public sealed class CupertinoNavigationBar : StatefulWidget, IObstructingPreferr
     {
         Color backgroundColor = CupertinoDynamicColor.MaybeResolve(BackgroundColor, context)
                                 ?? CupertinoTheme.Of(context).BarBackgroundColor;
-        return backgroundColor.A == 0xFF;
+        return backgroundColor.Alpha == 0xFF;
     }
 
     public override State CreateState() => new CupertinoNavigationBarState();
@@ -547,7 +547,7 @@ internal sealed class CupertinoNavigationBarState : State<CupertinoNavigationBar
             ? null
             : Border.Lerp(initialBorder, CurrentWidget.Border, _scrollAnimationValue);
         Color effectiveBackgroundColor = automaticallyTransparent
-            ? ColorUtilities.Lerp(parentPageScaffoldBackgroundColor!.Value, backgroundColor, _scrollAnimationValue)
+            ? Color.Lerp(parentPageScaffoldBackgroundColor!, backgroundColor, _scrollAnimationValue)
             : backgroundColor;
 
         var components = new NavigationBarStaticComponents(
@@ -665,7 +665,7 @@ internal sealed class CupertinoNavigationBarState : State<CupertinoNavigationBar
 public sealed class CupertinoNavigationBarBackButton : StatelessWidget
 {
     public CupertinoNavigationBarBackButton(
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         string? previousPageTitle = null,
         Action? onPressed = null,
         Key? key = null) : base(key)
@@ -687,7 +687,7 @@ public sealed class CupertinoNavigationBarBackButton : StatelessWidget
         return new CupertinoNavigationBarBackButton(backChevron, backLabel);
     }
 
-    public CupertinoDynamicColor? Color { get; }
+    public Color? Color { get; }
 
     public string? PreviousPageTitle { get; }
 

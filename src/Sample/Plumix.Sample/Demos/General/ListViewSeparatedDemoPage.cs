@@ -30,8 +30,8 @@ public sealed class ListViewSeparatedDemoPage : StatelessWidget
                         separatorBuilder: (_, index) => new Container(
                             height: 4,
                             color: index % 2 == 0
-                                ? Color.Parse("#FFDCE3ED")
-                                : Color.Parse("#FFE9EEF5")),
+                                ? new Color(0xFFDCE3ED)
+                                : new Color(0xFFE9EEF5)),
                         addAutomaticKeepAlives: false)),
             ]);
     }
@@ -67,7 +67,7 @@ internal sealed class SeparatedListItemState : State
         return new CounterTapButton(
             label: $"item #{_index} taps={_taps}",
             onTap: () => SetState(() => _taps += 1),
-            background: _index % 2 == 0 ? Color.Parse("#FFEFF5FF") : Colors.White,
+            background: _index % 2 == 0 ? new Color(0xFFEFF5FF) : Colors.White,
             foreground: Colors.Black,
             fontSize: 13,
             padding: new Thickness(10, 8));

@@ -75,12 +75,12 @@ internal sealed class DragTargetDemoContentState : State
                             BuildTarget(),
                         ]),
                     new Container(
-                        color: Color.Parse("#FFF4F0FA"),
+                        color: new Color(0xFFF4F0FA),
                         padding: new Thickness(12),
                         child: new Text(
                             $"accepted={_acceptedCount}; {_status}",
                             fontSize: 13,
-                            color: Color.Parse("#FF332D41"))),
+                            color: new Color(0xFF332D41))),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TextButton(
@@ -119,13 +119,13 @@ internal sealed class DragTargetDemoContentState : State
                         },
                         behavior: HitTestBehavior.Opaque,
                         child: new Container(
-                            color: Color.Parse("#FFEADDFF"),
+                            color: new Color(0xFFEADDFF),
                             padding: new Thickness(12),
                             alignment: Alignment.Center,
                             child: new Text(
                                 "Portal inherits page context.\nTap here, then outside.",
                                 fontSize: 13,
-                                color: Color.Parse("#FF332D41")))));
+                                color: new Color(0xFF332D41)))));
             },
             child: new TapRegion(
                 groupId: _portalGroup,
@@ -204,7 +204,7 @@ internal sealed class DragTargetDemoContentState : State
                 return new Container(
                     width: 190,
                     height: 96,
-                    color: Color.Parse(colorHex),
+                    color: (Color)Avalonia.Media.Color.Parse(colorHex),
                     alignment: Alignment.Center,
                     child: new Text(label, fontSize: 14, color: Colors.Black));
             });
@@ -220,7 +220,7 @@ internal sealed class DragTargetDemoContentState : State
             child: new Container(
                 width: 96,
                 height: 64,
-                color: Color.Parse(colorHex),
+                color: (Color)Avalonia.Media.Color.Parse(colorHex),
                 alignment: Alignment.Center,
                 child: new Text(label, fontSize: 14, color: Colors.White)));
     }

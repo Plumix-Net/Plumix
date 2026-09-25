@@ -140,14 +140,14 @@ internal sealed class ImageDemoPageState : State
                                             width: 96,
                                             height: 96,
                                             fit: fit,
-                                            placeholderColor: Color.Parse("#FF808080"),
-                                            color: Color.Parse("#FF4682B4"),
+                                            placeholderColor: new Color(0xFF808080),
+                                            color: new Color(0xFF4682B4),
                                             imageSemanticLabel: "Cross-fading image sample")),
                                     Probe(
                                         "ImageIcon",
                                         new IconTheme(
                                             new IconThemeData(
-                                                Color: Color.Parse("#FF800080"),
+                                                Color: new Color(0xFF800080),
                                                 Size: 64,
                                                 Opacity: opacity),
                                             new ImageIcon(SampleProvider, semanticLabel: "Image icon sample"))),
@@ -252,7 +252,7 @@ internal sealed class ImageDemoPageState : State
                                                                     child: new Container(
                                                                         width: 64,
                                                                         height: 64,
-                                                                        color: Color.Parse("#30FFFFFF"))))),
+                                                                        color: new Color(0x30FFFFFF))))),
                                                     ])))),
                                 ]),
                         ])),
@@ -283,7 +283,7 @@ internal sealed class ImageDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: () => SetState(update),
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
@@ -299,7 +299,7 @@ internal sealed class ImageDemoPageState : State
                 new Container(
                     width: 150,
                     height: 112,
-                    color: Color.Parse("#FFE8EEF5"),
+                    color: new Color(0xFFE8EEF5),
                     alignment: Alignment.Center,
                     child: child),
             ]);

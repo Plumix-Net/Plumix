@@ -52,7 +52,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                     "The full material_ui catalog: base, outlined, rounded, and sharp variants, "
                     + "aliases, high-range glyphs, and directional mirroring.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Text("Style variants of one icon", fontSize: 14.0, color: Colors.Black),
                 BuildRow(Variants),
                 new Text("Catalog samples", fontSize: 14.0, color: Colors.Black),
@@ -88,13 +88,13 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
             width: 148.0,
             padding: new Thickness(12.0),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFEDE7F6"),
+                Color: new Color(0xFFEDE7F6),
                 BorderRadius: BorderRadius.Circular(12.0)),
             child: new Column(
                 spacing: 8.0,
                 children:
                 [
-                    new Icon(icon, size: 34.0, color: Color.Parse("#FF6200EE")),
+                    new Icon(icon, size: 34.0, color: new Color(0xFF6200EE)),
                     new Text(name, fontSize: 11.0, color: Colors.Black, textAlign: TextAlign.Center),
                 ]));
     }

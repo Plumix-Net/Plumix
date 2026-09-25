@@ -16,8 +16,8 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
 
     // Extracted from iOS 13.2 Beta.
     private static readonly CupertinoDynamicColor ActiveTickColor = CupertinoDynamicColor.WithBrightness(
-        color: Avalonia.Media.Color.FromUInt32(0xFF3C3C44),
-        darkColor: Avalonia.Media.Color.FromUInt32(0xFFEBEBF5));
+        color: new Color(0xFF3C3C44),
+        darkColor: new Color(0xFFEBEBF5));
 
     /// <summary>Creates an iOS-style activity indicator that spins clockwise.</summary>
     public CupertinoActivityIndicator(
@@ -201,11 +201,11 @@ internal sealed class CupertinoActivityIndicatorPainter : CustomPainter
         {
             int t = FloorModulo(i - activeTick, tickCount);
             byte alpha = Progress < 1 ? PartiallyRevealedAlpha : AlphaValues[t];
-            var tickColor = Avalonia.Media.Color.FromArgb(
+            var tickColor = Color.FromARGB(
                 alpha,
-                ActiveColor.R,
-                ActiveColor.G,
-                ActiveColor.B);
+                ActiveColor.Red,
+                ActiveColor.Green,
+                ActiveColor.Blue);
             context.Canvas.Save();
             context.Canvas.Rotate(i * TwoPi / tickCount);
             context.Canvas.DrawRRect(TickFundamentalShape, new SolidColorBrush(tickColor), pen: null);
@@ -295,8 +295,8 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     {
         Progress = progress;
         Color = color;
-        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill.Value);
-        ProgressPaint = new SolidColorBrush(color ?? CupertinoColors.ActiveBlue.Value);
+        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill);
+        ProgressPaint = new SolidColorBrush(color ?? CupertinoColors.ActiveBlue);
     }
 
     public double Progress { get; }

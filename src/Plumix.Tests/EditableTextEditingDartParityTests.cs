@@ -4,7 +4,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 using TextDirection = Plumix.UI.TextDirection;
 
 namespace Plumix.Tests;
@@ -60,8 +59,8 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
             style: new TextStyle(FontSize: 10.0),
             padding: new Thickness(0),
             cursorWidth: 0,
-            cursorColor: Color.FromUInt32(0xFFFF0000),
-            backgroundCursorColor: Color.FromUInt32(0xFFFF0000),
+            cursorColor: new Color(0xFFFF0000),
+            backgroundCursorColor: new Color(0xFFFF0000),
             multiline: multiline,
             maxLines: multiline ? null : 1,
             inputFormatters: inputFormatters,

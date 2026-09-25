@@ -59,7 +59,7 @@ internal sealed class VisualDensityDemoPageState : State
                     "Density is unitless: one unit is four logical pixels per axis. ThemeData takes "
                     + "its default from the theme's platform, not the host.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -69,13 +69,13 @@ internal sealed class VisualDensityDemoPageState : State
                             onTap: () => SetState(() =>
                                 _profileIndex = (_profileIndex + 1) % Profiles.Count),
                             width: 180,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: $"platform: {platform}",
                             onTap: () => SetState(() =>
                                 _platformIndex = (_platformIndex + 1) % Platforms.Count),
                             width: 180,
-                            background: Color.Parse("#FFEAF6F7")),
+                            background: new Color(0xFFEAF6F7)),
                     ]),
                 new Expanded(
                     child: new SingleChildScrollView(
@@ -137,7 +137,7 @@ internal sealed class VisualDensityDemoPageState : State
                             child: new Text(
                                 name,
                                 fontSize: 12,
-                                color: selected ? Colors.Black : Color.Parse("#FF607D8B"))),
+                                color: selected ? Colors.Black : new Color(0xFF607D8B))),
                         new Theme(
                             data: ThemeData.Light with { VisualDensity = profile },
                             child: new ElevatedButton(
@@ -158,7 +158,7 @@ internal sealed class VisualDensityDemoPageState : State
         }
 
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -173,7 +173,7 @@ internal sealed class VisualDensityDemoPageState : State
             children:
             [
                 new Expanded(child: new Text(label, fontSize: 12, color: Colors.Black)),
-                new Text(value, fontSize: 12, color: Color.Parse("#FF607D8B")),
+                new Text(value, fontSize: 12, color: new Color(0xFF607D8B)),
             ]);
     }
 

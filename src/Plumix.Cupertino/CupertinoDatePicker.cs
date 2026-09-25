@@ -46,7 +46,7 @@ public sealed class CupertinoDatePicker : StatefulWidget
         int minuteInterval = 1,
         bool use24hFormat = false,
         DatePickerDateOrder? dateOrder = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool showDayOfWeek = false,
         bool showTimeSeparator = false,
         double itemExtent = DefaultItemExtent,
@@ -170,7 +170,7 @@ public sealed class CupertinoDatePicker : StatefulWidget
 
     public DatePickerDateOrder? DateOrder { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public bool ShowDayOfWeek { get; }
 
@@ -241,7 +241,7 @@ public sealed class CupertinoTimerPicker : StatefulWidget
         int minuteInterval = 1,
         int secondInterval = 1,
         AlignmentGeometry alignment = default,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         double itemExtent = CupertinoDatePicker.DefaultItemExtent,
         ChangeReportingBehavior changeReportingBehavior = ChangeReportingBehavior.OnScrollUpdate,
         SelectionOverlayBuilder? selectionOverlayBuilder = null,
@@ -297,7 +297,7 @@ public sealed class CupertinoTimerPicker : StatefulWidget
 
     public AlignmentGeometry Alignment { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public double ItemExtent { get; }
 

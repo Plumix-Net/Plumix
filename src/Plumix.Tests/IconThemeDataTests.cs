@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 public sealed class IconThemeDataTests
 {
     private static readonly Shadow ProbeShadow = new(
-        color: Color.FromUInt32(0xAAAAAAAA),
+        color: new Color(0xAAAAAAAA),
         offset: new Point(1.0, 1.0),
         blurRadius: 1.0);
 
@@ -19,7 +19,7 @@ public sealed class IconThemeDataTests
     public void CopyWith_EqualityAndDiagnosticsCoverEveryField()
     {
         var data = new IconThemeData(
-            Color: Color.FromUInt32(0xAAAAAAAA),
+            Color: new Color(0xAAAAAAAA),
             Size: 16.0,
             Opacity: 0.5,
             Fill: 0.5,
@@ -70,7 +70,7 @@ public sealed class IconThemeDataTests
     public void Lerp_InterpolatesEveryContinuousFieldAndShadows()
     {
         var data = new IconThemeData(
-            Color: Color.FromUInt32(0xAAAAAAAA),
+            Color: new Color(0xAAAAAAAA),
             Size: 16.0,
             Opacity: 0.5,
             Fill: 0.5,
@@ -87,10 +87,10 @@ public sealed class IconThemeDataTests
         Assert.Equal(550.0, lerped.Weight);
         Assert.Equal(18.75, lerped.Grade);
         Assert.Equal(45.75, lerped.OpticalSize);
-        Assert.Equal(Color.FromUInt32(0xBF7F7F7F), lerped.Color);
+        ColorMatchers.AssertSameColorAs(new Color(0xBF7F7F7F), lerped.Color);
         Assert.Equal(0.625, lerped.Opacity);
         Shadow shadow = Assert.Single(lerped.Shadows!);
-        Assert.Equal(Color.FromUInt32(0xAAAAAAAA), shadow.Color);
+        Assert.Equal(new Color(0xAAAAAAAA), shadow.Color);
         Assert.Equal(new Point(0.75, 0.75), shadow.Offset);
         Assert.Equal(0.75, shadow.BlurRadius);
         Assert.True(lerped.ApplyTextScaling);
@@ -112,12 +112,12 @@ public sealed class IconThemeDataTests
 
         IconThemeData fromNull = IconThemeData.Lerp(null, data, 0.25);
         Assert.Equal(4.0, fromNull.Size);
-        Assert.Equal(Color.FromUInt32(0x40FFFFFF), fromNull.Color);
+        ColorMatchers.AssertSameColorAs(new Color(0x40FFFFFF), fromNull.Color);
         Assert.Null(fromNull.ApplyTextScaling);
 
         IconThemeData toNull = IconThemeData.Lerp(data, null, 0.25);
         Assert.Equal(12.0, toNull.Size);
-        Assert.Equal(Color.FromUInt32(0xBFFFFFFF), toNull.Color);
+        ColorMatchers.AssertSameColorAs(new Color(0xBFFFFFFF), toNull.Color);
         Assert.True(toNull.ApplyTextScaling);
 
         IconThemeData bothNull = IconThemeData.Lerp(null, null, 0.25);

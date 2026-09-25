@@ -52,7 +52,7 @@ internal sealed class CustomElementDemoPageState : State
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Container(
-                    color: Color.Parse("#FFF4F7FA"),
+                    color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Start,
@@ -83,7 +83,7 @@ internal sealed class CustomElementDemoPageState : State
         if (!_attached)
         {
             return new Container(
-                color: Color.Parse("#FFF1F1F1"),
+                color: new Color(0xFFF1F1F1),
                 padding: new Thickness(12),
                 child: new Text("probe detached", fontSize: 14, color: Colors.DimGray));
         }
@@ -91,7 +91,7 @@ internal sealed class CustomElementDemoPageState : State
         return new ElementLifecycleProbe(
             log: _log,
             child: new Container(
-                color: Color.Parse("#FFE1F5FE"),
+                color: new Color(0xFFE1F5FE),
                 padding: new Thickness(12),
                 child: new Text($"probe child revision {_revision}", fontSize: 14, color: Colors.Black)),
             key: new ValueKey<int>(_generation));
@@ -99,7 +99,7 @@ internal sealed class CustomElementDemoPageState : State
 
     private static Widget CountLine(string label, int value)
     {
-        return new Text($"{label}: {value}", fontSize: 14, color: Color.Parse("#FF31506F"));
+        return new Text($"{label}: {value}", fontSize: 14, color: new Color(0xFF31506F));
     }
 
     private Widget ActionButton(string label, Action onTap)

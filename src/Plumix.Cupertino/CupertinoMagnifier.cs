@@ -302,12 +302,12 @@ public sealed class CupertinoMagnifier : StatelessWidget
         Plumix.Rendering.BorderRadius.All(Radius.Elliptical(60, 50));
 
     internal static BorderSide DefaultBorderSide { get; } =
-        new(Color.FromArgb(255, 0, 124, 255), 2.0);
+        new(Color.FromARGB(255, 0, 124, 255), 2.0);
 
     internal static IReadOnlyList<BoxShadow> DefaultShadows { get; } =
     [
         new BoxShadow(
-            color: Color.FromArgb(25, 0, 0, 0),
+            color: Color.FromARGB(25, 0, 0, 0),
             blurRadius: 11,
             spreadRadius: 0.2,
             blurStyle: BlurStyle.Outer),

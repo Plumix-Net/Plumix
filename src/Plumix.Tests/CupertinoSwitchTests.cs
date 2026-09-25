@@ -18,8 +18,8 @@ public sealed class CupertinoSwitchTests
     [Fact]
     public void Constructor_ExposesDefaultsAliasesAndSourceAssertions()
     {
-        var active = new WidgetStateColor(Colors.Green);
-        var inactive = new WidgetStateColor(Colors.Gray);
+        var active = Colors.Green;
+        var inactive = Colors.Gray;
         var value = new CupertinoSwitch(
             value: true,
             onChanged: _ => { },
@@ -94,18 +94,18 @@ public sealed class CupertinoSwitchTests
             new CupertinoSwitch(value: true, onChanged: _ => { }),
             PlatformBrightness.Light));
         CupertinoSwitchPainter lightPainter = Painter(light);
-        Assert.Equal(Color.FromUInt32(0xFF34C759), lightPainter.ActiveTrackColor);
-        Assert.Equal(Color.FromUInt32(0x28787880), lightPainter.InactiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF34C759), lightPainter.ActiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0x28787880), lightPainter.InactiveTrackColor);
         Assert.Equal(Colors.White, lightPainter.ActiveThumbColor);
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSwitch(value: true, onChanged: _ => { }),
             PlatformBrightness.Dark));
         CupertinoSwitchPainter darkPainter = Painter(dark);
-        Assert.Equal(Color.FromUInt32(0xFF30D158), darkPainter.ActiveTrackColor);
-        Assert.Equal(Color.FromUInt32(0x51787880), darkPainter.InactiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF30D158), darkPainter.ActiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0x51787880), darkPainter.InactiveTrackColor);
 
-        Color primary = Color.FromUInt32(0xFF123456);
+        Color primary = new Color(0xFF123456);
         using var themed = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSwitch(value: true, onChanged: _ => { }, applyTheme: true),
             primaryColor: primary));
@@ -126,9 +126,11 @@ public sealed class CupertinoSwitchTests
             onOffSwitchLabels: true));
         CupertinoSwitchPainter painter = Painter(harness);
 
-        Assert.Equal(Color.FromUInt32(0xFF007AFF), painter.ActiveTrackColor);
-        Assert.Equal(Color.FromUInt32(0xFF0A84FF), painter.InactiveTrackColor);
-        Assert.Equal(Color.FromUInt32(0xFF30D158), painter.OnLabelColor);
+        // Dart hands both track colors to the painter unresolved (`_widgetTrackColor` and
+        // `_resolveTrackColor` only resolve a WidgetStateColor), so they paint their light variant.
+        ColorMatchers.AssertSameColorAs(new Color(0xFF007AFF), painter.ActiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF007AFF), painter.InactiveTrackColor);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF30D158), painter.OnLabelColor);
     }
 
     [Fact]
@@ -207,7 +209,7 @@ public sealed class CupertinoSwitchTests
         {
             var node = new FocusNode();
             var changes = new List<bool>();
-            Color focus = Color.FromUInt32(0xFFABCDEF);
+            Color focus = new Color(0xFFABCDEF);
             using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoSwitch(
                 value: true,
                 onChanged: _ => { },
@@ -272,9 +274,9 @@ public sealed class CupertinoSwitchTests
         Assert.Equal(7.0, CupertinoThumbPainter.Extension);
         Assert.Equal(Colors.White, slider.Color);
         Assert.Equal(3, slider.Shadows.Count);
-        Assert.Equal(Color.FromUInt32(0x26000000), slider.Shadows[0].Color);
+        Assert.Equal(new Color(0x26000000), slider.Shadows[0].Color);
         Assert.Equal(2, toggle.Shadows.Count);
-        Assert.Equal(Color.FromUInt32(0x0F000000), toggle.Shadows[1].Color);
+        Assert.Equal(new Color(0x0F000000), toggle.Shadows[1].Color);
     }
 
     private static CupertinoSwitchPainter Painter(CupertinoThemeTestHarness harness)

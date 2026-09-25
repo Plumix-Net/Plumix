@@ -211,7 +211,7 @@ internal sealed class NavigationRailState : State<NavigationRail>
         var theme = Theme.Of(context);
         var railTheme = NavigationRailTheme.Of(context);
         var defaults = ResolveDefaults(theme);
-        var backgroundColor = widget.BackgroundColor ?? railTheme.BackgroundColor ?? defaults.BackgroundColor!.Value;
+        var backgroundColor = widget.BackgroundColor ?? railTheme.BackgroundColor ?? defaults.BackgroundColor!;
         double elevation = widget.Elevation ?? railTheme.Elevation ?? defaults.Elevation!.Value;
         double minWidth = widget.MinWidth ?? railTheme.MinWidth ?? defaults.MinWidth!.Value;
         double minExtendedWidth = widget.MinExtendedWidth ?? railTheme.MinExtendedWidth ?? defaults.MinExtendedWidth!.Value;
@@ -615,7 +615,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
         }
 
         Color primary = colors.Primary;
-        bool primaryAlphaModified = primary.A < byte.MaxValue;
+        bool primaryAlphaModified = primary.Alpha < byte.MaxValue;
         Color splashColor = primaryAlphaModified
             ? primary
             : NavigationSurfaceUtilities.WithOpacity(primary, 0.12);

@@ -26,7 +26,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Container(
-                    color: Color.Parse("#FFF4F7FA"),
+                    color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
                     child: new StatefulBuilder((builderContext, setState) =>
                         new Column(
@@ -34,7 +34,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                             spacing: 8,
                             children:
                             [
-                                new Text($"local count: {count}", color: Color.Parse("#FF31506F")),
+                                new Text($"local count: {count}", color: new Color(0xFF31506F)),
                                 new TextButton(
                                     onPressed: () => setState(() => count += 1),
                                     child: new Text("Increment local state")),
@@ -51,7 +51,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                                 builderContext.DependOnInheritedWidgetOfExactType<DemoLookupScope>()?.Label
                                 ?? "missing";
                             return new Container(
-                                color: Color.Parse("#FFE7EDF6"),
+                                color: new Color(0xFFE7EDF6),
                                 padding: new Thickness(12),
                                 child: new Column(
                                     crossAxisAlignment: CrossAxisAlignment.Start,

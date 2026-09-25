@@ -7,13 +7,15 @@ namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/icon_theme_data.dart
 
-/// <summary>An icon theme that resolves a Cupertino dynamic color at the consumer's context.</summary>
+/// <summary>
+/// An <see cref="IconThemeData"/> subclass that automatically resolves its <see cref="IconThemeData.Color"/>
+/// when retrieved using <see cref="IconTheme.Of"/>.
+/// </summary>
 public sealed class CupertinoIconThemeData : IconThemeData
 {
-    private readonly CupertinoDynamicColor? _dynamicColor;
-
+    /// <summary>Creates a <see cref="CupertinoIconThemeData"/>.</summary>
     public CupertinoIconThemeData(
-        CupertinoDynamicColor? Color = null,
+        Color? Color = null,
         double? Size = null,
         double? Opacity = null,
         double? Fill = null,
@@ -23,7 +25,7 @@ public sealed class CupertinoIconThemeData : IconThemeData
         IReadOnlyList<Shadow>? Shadows = null,
         bool? ApplyTextScaling = null)
         : base(
-            Color: Color?.Value,
+            Color: Color,
             Size: Size,
             Opacity: Opacity,
             Fill: Fill,
@@ -33,20 +35,19 @@ public sealed class CupertinoIconThemeData : IconThemeData
             Shadows: Shadows,
             ApplyTextScaling: ApplyTextScaling)
     {
-        _dynamicColor = Color;
     }
 
+    /// <summary>
+    /// Called by <see cref="IconTheme.Of"/> to resolve <see cref="IconThemeData.Color"/> against
+    /// the given <see cref="BuildContext"/>.
+    /// </summary>
     public override IconThemeData Resolve(BuildContext context)
     {
-        if (_dynamicColor is null)
-        {
-            return this;
-        }
-
-        Color resolvedColor = CupertinoDynamicColor.Resolve(_dynamicColor, context);
-        return CopyWith(color: resolvedColor);
+        Color? resolvedColor = CupertinoDynamicColor.MaybeResolve(Color, context);
+        return resolvedColor == Color ? this : CopyWith(color: resolvedColor);
     }
 
+    /// <summary>Creates a copy of this icon theme but with the given fields replaced with the new values.</summary>
     public override CupertinoIconThemeData CopyWith(
         Color? color = null,
         double? size = null,
@@ -56,36 +57,22 @@ public sealed class CupertinoIconThemeData : IconThemeData
         double? grade = null,
         double? opticalSize = null,
         IReadOnlyList<Shadow>? shadows = null,
-        bool? applyTextScaling = null)
-    {
-        CupertinoDynamicColor? effectiveColor = color.HasValue ? color.Value : _dynamicColor;
-        return new CupertinoIconThemeData(
-            Color: effectiveColor,
+        bool? applyTextScaling = null) =>
+        new(
             Size: size ?? Size,
-            Opacity: opacity ?? Opacity,
             Fill: fill ?? Fill,
             Weight: weight ?? Weight,
             Grade: grade ?? Grade,
             OpticalSize: opticalSize ?? OpticalSize,
+            Color: color ?? Color,
+            Opacity: opacity ?? Opacity,
             Shadows: shadows ?? Shadows,
             ApplyTextScaling: applyTextScaling ?? ApplyTextScaling);
-    }
-
-    public override bool Equals(IconThemeData? other)
-    {
-        return base.Equals(other)
-               && other is CupertinoIconThemeData cupertino
-               && Equals(cupertino._dynamicColor, _dynamicColor);
-    }
-
-    public override int GetHashCode() => HashCode.Combine(base.GetHashCode(), _dynamicColor);
 
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<CupertinoDynamicColor?>(
-            "color",
-            _dynamicColor,
-            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(
+            CupertinoColors.CreateCupertinoColorProperty("color", Color, defaultValue: DiagnosticsDefaults.NullValue));
     }
 }

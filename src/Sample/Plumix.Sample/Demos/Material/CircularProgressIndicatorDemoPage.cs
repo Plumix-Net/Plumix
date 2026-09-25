@@ -31,7 +31,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
     private bool _useValueColorOverride;
     private int _widgetTrackGapIndex;
     private double _progress = 0.35;
-    private static readonly AlwaysStoppedAnimation<Color?> ValueColorOverride = new(Color.Parse("#FF1B5E20"));
+    private static readonly AlwaysStoppedAnimation<Color?> ValueColorOverride = new(new Color(0xFF1B5E20));
 
     public override Widget Build(BuildContext context)
     {
@@ -41,8 +41,8 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
             UseMaterial3 = _useMaterial3,
             ProgressIndicatorTheme = _useThemeOverrides
                 ? new ProgressIndicatorThemeData(
-                    Color: Color.Parse("#FF1565C0"),
-                    CircularTrackColor: Color.Parse("#FFC5CAE9"),
+                    Color: new Color(0xFF1565C0),
+                    CircularTrackColor: new Color(0xFFC5CAE9),
                     StrokeWidth: 6,
                     StrokeAlign: -1.0,
                     Constraints: new BoxConstraints(MinWidth: 44, MinHeight: 44),
@@ -66,7 +66,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                         "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, valueColor " +
                         "priority, and circular gap/cap/alignment/constraints/padding.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -75,22 +75,22 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: _useYear2023 ? "2023" : "2024",
                                 onTap: () => SetState(() => _useYear2023 = !_useYear2023),
                                 width: 82,
-                                background: Color.Parse("#FFFFF8E1")),
+                                background: new Color(0xFFFFF8E1)),
                             BuildControlButton(
                                 label: _determinate ? "Determinate" : "Indeterminate",
                                 onTap: () => SetState(() => _determinate = !_determinate),
                                 width: 132,
-                                background: Color.Parse("#FFE8F5E9")),
+                                background: new Color(0xFFE8F5E9)),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                         ]),
                     new Row(
                         spacing: 8,
@@ -100,37 +100,37 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 label: _useWidgetOverrides ? "Widget on" : "Widget off",
                                 onTap: () => SetState(() => _useWidgetOverrides = !_useWidgetOverrides),
                                 width: 118,
-                                background: Color.Parse("#FFF0E8FF")),
+                                background: new Color(0xFFF0E8FF)),
                             BuildControlButton(
                                 label: _useValueColorOverride ? "valueColor on" : "valueColor off",
                                 onTap: () => SetState(() => _useValueColorOverride = !_useValueColorOverride),
                                 width: 126,
-                                background: Color.Parse("#FFE4F7E8")),
+                                background: new Color(0xFFE4F7E8)),
                             BuildControlButton(
                                 label: $"gap={GetWidgetTrackGap():0.#}",
                                 onTap: () => SetState(CycleWidgetTrackGap),
                                 width: 76,
-                                background: Color.Parse("#FFEFF4FF")),
+                                background: new Color(0xFFEFF4FF)),
                             BuildControlButton(
                                 label: "-",
                                 onTap: () => SetState(() => _progress = Math.Max(0, _progress - 0.1)),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             BuildControlButton(
                                 label: "+",
                                 onTap: () => SetState(() => _progress = Math.Min(1, _progress + 0.1)),
                                 width: 42,
-                                background: Color.Parse("#FFFFF3E0")),
+                                background: new Color(0xFFFFF3E0)),
                             new Expanded(
                                 child: new Text(
                                     $"value={_progress:0.00}",
                                     fontSize: 12,
-                                    color: Color.Parse("#FF607D8B"))),
+                                    color: new Color(0xFF607D8B))),
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, valueColor={(_useValueColorOverride ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -158,7 +158,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
     private Widget BuildPreviewCard(string title, string subtitle, Widget indicator)
     {
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -166,7 +166,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 children:
                 [
                     new Text(title, fontSize: 14, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: Color.Parse("#8A000000")),
+                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                     new SizedBox(
                         height: 92,
                         child: new Align(
@@ -181,8 +181,8 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
         {
             return new CircularProgressIndicator(
                 value: _determinate ? _progress : null,
-                color: Color.Parse("#FFB71C1C"),
-                backgroundColor: Color.Parse("#FFFFCDD2"),
+                color: new Color(0xFFB71C1C),
+                backgroundColor: new Color(0xFFFFCDD2),
                 strokeWidth: 8,
                 strokeAlign: 1.0,
                 constraints: new BoxConstraints(MinWidth: 56, MinHeight: 56),

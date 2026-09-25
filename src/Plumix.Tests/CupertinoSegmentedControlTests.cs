@@ -56,7 +56,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         using var light = new CupertinoThemeTestHarness(Wrap(Control(groupValue: "one")));
         light.Pump(ViewSize);
         RenderCupertinoSegmentedControl lightRender = FindRender(light);
-        Assert.Equal(0xFF007AFFu, lightRender.BorderColor.ToUInt32());
+        Assert.Equal(0xFF007AFFu, lightRender.BorderColor.ToARGB32());
         Assert.Equal([0xFF007AFFu, 0xFFFFFFFFu], ColorsOf(lightRender));
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
@@ -64,7 +64,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             brightness: PlatformBrightness.Dark));
         dark.Pump(ViewSize);
         RenderCupertinoSegmentedControl darkRender = FindRender(dark);
-        Assert.Equal(0xFF0A84FFu, darkRender.BorderColor.ToUInt32());
+        Assert.Equal(0xFF0A84FFu, darkRender.BorderColor.ToARGB32());
         Assert.Equal([0xFF0A84FFu, 0xFFFFFFFFu], ColorsOf(darkRender));
 
         using var disabled = new CupertinoThemeTestHarness(Wrap(new CupertinoSegmentedControl<string>(
@@ -76,7 +76,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         Assert.Equal([0x80007AFFu, 0xFFFFFFFFu], ColorsOf(FindRender(disabled)));
         Assert.All(
             disabled.FindWidgets<DefaultTextStyle>(),
-            style => Assert.Equal(0x737A7A7Au, style.Style.Color!.Value.ToUInt32()));
+            style => Assert.Equal(0x737A7A7Au, style.Style.Color!.ToARGB32()));
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
 
         RenderCupertinoSegmentedControl render = FindRender(harness);
         Assert.Equal(Colors.Purple, render.BorderColor);
-        Assert.Equal([Colors.Gray.ToUInt32(), Colors.Beige.ToUInt32()], ColorsOf(render));
+        Assert.Equal([Colors.Gray.ToARGB32(), Colors.Beige.ToARGB32()], ColorsOf(render));
         Padding padding = Assert.Single(harness.FindWidgets<Padding>());
         Assert.Equal(new Thickness(1.0, 3.0, 5.0, 7.0), padding.Insets);
         Assert.Single(
@@ -179,7 +179,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             groupValue: "two")));
         harness.Pump(ViewSize);
 
-        Assert.Equal([0xFF7BBAFFu, 0x95007AFFu], ColorsOf(FindRender(harness)));
+        Assert.Equal([0xFF7CBAFFu, 0x96007AFFu], ColorsOf(FindRender(harness)));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.20));
         harness.Pump(ViewSize);
         Assert.Equal([0xFFFFFFFFu, 0xFF007AFFu], ColorsOf(FindRender(harness)));
@@ -335,7 +335,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
     }
 
     private static uint[] ColorsOf(RenderCupertinoSegmentedControl render) =>
-        render.BackgroundColors.Select(color => color.ToUInt32()).ToArray();
+        render.BackgroundColors.Select(color => color.ToARGB32()).ToArray();
 
     private static IReadOnlyList<RenderBox> DirectChildren(RenderCupertinoSegmentedControl render)
     {

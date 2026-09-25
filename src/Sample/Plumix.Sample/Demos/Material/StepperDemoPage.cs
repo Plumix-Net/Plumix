@@ -33,7 +33,7 @@ internal sealed class StepperDemoPageState : State
                 new Text(
                     "Flutter-shaped disclosure animation plus vertical/horizontal step progress, states, connectors, and controls.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     mainAxisSize: MainAxisSize.Min,
                     spacing: 8,
@@ -42,7 +42,7 @@ internal sealed class StepperDemoPageState : State
                         new ExpandIcon(
                             isExpanded: _expanded,
                             onPressed: _ => SetState(() => _expanded = !_expanded),
-                            expandedColor: Color.Parse("#FF6750A4")),
+                            expandedColor: new Color(0xFF6750A4)),
                         new Text(_expanded ? "Expanded" : "Collapsed", fontSize: 14),
                         new ExpandIcon(onPressed: null),
                         new Text("Disabled", fontSize: 14),
@@ -50,7 +50,7 @@ internal sealed class StepperDemoPageState : State
                             child: new Text(_horizontal ? "Use vertical" : "Use horizontal"),
                             onPressed: () => SetState(() => _horizontal = !_horizontal)),
                     ]),
-                new Text($"Current step: {_currentStep + 1} / 3", fontSize: 13, color: Color.Parse("#FF006C4C")),
+                new Text($"Current step: {_currentStep + 1} / 3", fontSize: 13, color: new Color(0xFF006C4C)),
                 new Expanded(new Stepper(
                     type: _horizontal ? StepperType.Horizontal : StepperType.Vertical,
                     currentStep: _currentStep,
@@ -79,7 +79,7 @@ internal sealed class StepperDemoPageState : State
         label: new Text((index + 1).ToString()),
         content: new Container(
             padding: new Thickness(12),
-            color: Color.Parse("#FFF3EDF7"),
+            color: new Color(0xFFF3EDF7),
             child: new Text(content, fontSize: 14)),
         state: index < _currentStep
             ? StepState.Complete

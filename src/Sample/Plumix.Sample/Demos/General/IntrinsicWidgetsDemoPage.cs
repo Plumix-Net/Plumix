@@ -38,7 +38,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                     ]),
                 new Container(
                     height: 86.0,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(12.0),
                     child: new Align(
                         alignment: Alignment.CenterLeft,
@@ -46,18 +46,18 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                             stepWidth: _snapWidth ? 56.0 : 0.0,
                             child: new Container(
                                 width: 70.0,
-                                color: Color.Parse("#FFCCE3FF"),
+                                color: new Color(0xFFCCE3FF),
                                 padding: new Thickness(10.0, 8.0),
                                 child: new Text(
                                     _snapWidth ? "70 → 112" : "70 px",
                                     fontSize: 13.0,
-                                    color: Color.Parse("#FF1D3557")))))),
+                                    color: new Color(0xFF1D3557)))))),
                 new Text(
                     "All three tiles below receive the tallest tile's 64 px height.",
                     fontSize: 14.0,
                     color: Colors.DimGray),
                 new Container(
-                    color: Color.Parse("#FFF1F5F9"),
+                    color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12.0),
                     child: new IntrinsicHeight(
                         child: new Row(
@@ -80,8 +80,8 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                 label: label,
                 onTap: () => SetState(() => _snapWidth = enabled),
                 background: _snapWidth == enabled
-                    ? Color.Parse("#FF1D3557")
-                    : Color.Parse("#FFDCE3ED"),
+                    ? new Color(0xFF1D3557)
+                    : new Color(0xFFDCE3ED),
                 foreground: _snapWidth == enabled ? Colors.White : Colors.Black,
                 fontSize: 12.0,
                 padding: new Thickness(10.0, 8.0)));
@@ -92,7 +92,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
         return new Container(
             width: 70.0,
             height: height,
-            color: Color.Parse(colorHex),
+            color: (Color)Avalonia.Media.Color.Parse(colorHex),
             child: new Center(child: new Text(label, fontSize: 13.0, color: Colors.White)));
     }
 }

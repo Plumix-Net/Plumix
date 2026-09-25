@@ -53,7 +53,7 @@ internal sealed class AutocompleteDemoPageState : State
                         "Material defaults and a route-free raw options portal with shared filtering, keyboard " +
                         "highlighting, M2/M3 surfaces, inherited theme, and anchored direction probes.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new Row(
@@ -82,7 +82,7 @@ internal sealed class AutocompleteDemoPageState : State
                     new Divider(),
                     new Text("RawAutocomplete", fontSize: 18, color: Colors.Black),
                     new Theme(
-                        Theme.Of(context) with { FocusColor = Color.Parse("#243F51B5") },
+                        Theme.Of(context) with { FocusColor = new Color(0x243F51B5) },
                         new RawAutocomplete<string>(
                             textEditingController: _rawController,
                             focusNode: _rawFocusNode,

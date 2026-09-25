@@ -41,7 +41,7 @@ internal sealed class CupertinoPickerDemoPageState : State
                 new Text(
                     "Compare the base wheel, bounded date/time, and duration picker APIs.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8.0,
                     children:
@@ -50,7 +50,7 @@ internal sealed class CupertinoPickerDemoPageState : State
                         new Expanded(BuildModeButton("Date + time", 1)),
                         new Expanded(BuildModeButton("Timer", 2)),
                     ]),
-                new Text(BuildSummary(), fontSize: 13.0, color: Color.Parse("#FF607D8B")),
+                new Text(BuildSummary(), fontSize: 13.0, color: new Color(0xFF607D8B)),
                 BuildActivePicker(),
             ]);
     }
@@ -80,7 +80,7 @@ internal sealed class CupertinoPickerDemoPageState : State
             spacing: 6.0,
             children:
             [
-                new Text(label, fontSize: 13.0, color: Color.Parse("#FF37474F"), textAlign: TextAlign.Center),
+                new Text(label, fontSize: 13.0, color: new Color(0xFF37474F), textAlign: TextAlign.Center),
                 new SizedBox(height: 180.0, child: picker),
             ]);
     }

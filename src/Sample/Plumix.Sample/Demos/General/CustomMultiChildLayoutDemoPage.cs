@@ -48,15 +48,15 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
                     textDirection,
                     new Container(
                         height: 64,
-                        color: Color.Parse("#FFE7EDF6"),
+                        color: new Color(0xFFE7EDF6),
                         child: new NavigationToolbar(
-                            leading: BuildSlot("L", 56, 64, Color.Parse("#FF1565C0")),
-                            middle: BuildSlot("MIDDLE", 150, 32, Color.Parse("#FF2E7D32")),
-                            trailing: BuildSlot("TRAIL", 72, 32, Color.Parse("#FFF57C00")),
+                            leading: BuildSlot("L", 56, 64, new Color(0xFF1565C0)),
+                            middle: BuildSlot("MIDDLE", 150, 32, new Color(0xFF2E7D32)),
+                            trailing: BuildSlot("TRAIL", 72, 32, new Color(0xFFF57C00)),
                             centerMiddle: _centerMiddle))),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF3F6FA"),
+                        color: new Color(0xFFF3F6FA),
                         alignment: Alignment.Center,
                         child: new SizedBox(
                             width: 320,
@@ -67,13 +67,13 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
                                 [
                                     new LayoutId(
                                         DemoLayoutSlot.Leader,
-                                        BuildSlot("LEADER", 96, 56, Color.Parse("#FF6A1B9A"))),
+                                        BuildSlot("LEADER", 96, 56, new Color(0xFF6A1B9A))),
                                     new LayoutId(
                                         DemoLayoutSlot.Follower,
-                                        BuildSlot("FOLLOWER", 140, 80, Color.Parse("#FF00838F"))),
+                                        BuildSlot("FOLLOWER", 140, 80, new Color(0xFF00838F))),
                                     new LayoutId(
                                         DemoLayoutSlot.Caption,
-                                        BuildSlot("same size", 100, 28, Color.Parse("#FF455A64"))),
+                                        BuildSlot("same size", 100, 28, new Color(0xFF455A64))),
                                 ])))),
             ]);
     }
@@ -96,7 +96,7 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

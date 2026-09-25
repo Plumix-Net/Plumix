@@ -5,7 +5,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 using TextDirection = Plumix.UI.TextDirection;
 
 namespace Plumix.Tests;
@@ -72,8 +71,8 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
                             cursorWidth: 0,
                             padding: new Thickness(0),
                             style: new TextStyle(),
-                            cursorColor: Color.FromUInt32(0xFF0000FF),
-                            backgroundCursorColor: Color.FromUInt32(0xFF888888),
+                            cursorColor: new Color(0xFF0000FF),
+                            backgroundCursorColor: new Color(0xFF888888),
                             readOnly: readOnly,
                             stylusHandwritingEnabled: stylusHandwritingEnabled,
                             onSelectionChanged: onSelectionChanged)))));
@@ -224,7 +223,7 @@ public sealed class EditableTextScribbleDartParityTests : IDisposable
         tester.PumpWidget(new Directionality(TextDirection.Ltr, new Stack(children:
         [
             Field(width: 800, height: 600),
-            Positioned.Fill(child: new Container(color: Color.FromUInt32(0xFF000000))),
+            Positioned.Fill(child: new Container(color: new Color(0xFF000000))),
         ])));
         Assert.False(UI.TextInput.ScribbleClients.Values.Single().IsInScribbleRect(new Rect(0, 0, 1, 1)));
 

@@ -247,7 +247,7 @@ public record TextTheme
 public sealed record MaterialTextTheme : TextTheme
 {
     private static readonly FontFamily DefaultBodyFontFamily = ResolveDefaultBodyFontFamily();
-    private static readonly Color DefaultForeground = Color.Parse("#FF1D1B20");
+    private static readonly Color DefaultForeground = new Color(0xFF1D1B20);
 
     public MaterialTextTheme(
         TextStyle? bodyMedium = null,
@@ -309,7 +309,7 @@ public sealed record MaterialTextTheme : TextTheme
         12,
         1.33,
         0.4,
-        color: Color.Parse("#FF49454F"));
+        color: new Color(0xFF49454F));
 
     public static TextStyle DefaultLabelLarge { get; } = Style(14, 1.43, 0.1, FontWeight.Medium);
 
@@ -614,8 +614,8 @@ public sealed record Typography
 
     private static TextTheme CreatePlatformTheme(PlatformTypeface typeface, bool black)
     {
-        Color displayColor = black ? Color.FromArgb(0x8A, 0, 0, 0) : Color.FromArgb(0xB3, 255, 255, 255);
-        Color bodyColor = black ? Color.FromArgb(0xDD, 0, 0, 0) : Colors.White;
+        Color displayColor = black ? Color.FromARGB(0x8A, 0, 0, 0) : Color.FromARGB(0xB3, 255, 255, 255);
+        Color bodyColor = black ? Color.FromARGB(0xDD, 0, 0, 0) : Colors.White;
         Color strongColor = black ? Colors.Black : Colors.White;
         return new TextTheme(
             displayLarge: PlatformStyle(typeface, displayColor, true),

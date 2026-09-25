@@ -55,16 +55,16 @@ internal sealed class RouterDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        BuildAction("Home", () => Go("/home"), Color.Parse("#FFE8F5E9")),
-                        BuildAction("Details", () => Go("/details"), Color.Parse("#FFE3F2FD")),
-                        BuildAction("Settings", () => Go("/settings"), Color.Parse("#FFFFF3E0")),
-                        BuildAction("Back", HandleBack, Color.Parse("#FFFCE4EC")),
+                        BuildAction("Home", () => Go("/home"), new Color(0xFFE8F5E9)),
+                        BuildAction("Details", () => Go("/details"), new Color(0xFFE3F2FD)),
+                        BuildAction("Settings", () => Go("/settings"), new Color(0xFFFFF3E0)),
+                        BuildAction("Back", HandleBack, new Color(0xFFFCE4EC)),
                     ]),
                 new Text($"reported: {string.Join(", ", _reports)}", fontSize: 12),
                 new SizedBox(
                     height: 180,
                     child: new ColoredBox(
-                        color: Color.Parse("#FFFAFAFA"),
+                        color: new Color(0xFFFAFAFA),
                         child: new Router<DemoRouteConfiguration>(
                             routerDelegate: _routerDelegate,
                             routeInformationProvider: _provider,

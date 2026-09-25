@@ -16,8 +16,8 @@ internal static class TwoDimensionalHarness
 {
     public const double CellExtent = 200.0;
 
-    public static readonly Color Amber100 = Color.FromUInt32(0xFFFFF8E1);
-    public static readonly Color BlueAccent100 = Color.FromUInt32(0xFF82B1FF);
+    public static readonly Color Amber100 = new Color(0xFFFFF8E1);
+    public static readonly Color BlueAccent100 = new Color(0xFF82B1FF);
 
     public static TwoDimensionalChildBuilderDelegate BuilderDelegate(
         int? maxXIndex = 5,

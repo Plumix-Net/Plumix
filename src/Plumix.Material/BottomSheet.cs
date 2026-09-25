@@ -32,7 +32,7 @@ public sealed class BottomSheet : StatefulWidget
         AnimationController? animationController = null,
         bool enableDrag = true,
         bool? showDragHandle = null,
-        WidgetStateColor? dragHandleColor = null,
+        Color? dragHandleColor = null,
         Size? dragHandleSize = null,
         Action<DragStartDetails>? onDragStart = null,
         BottomSheetDragEndHandler? onDragEnd = null,
@@ -70,7 +70,7 @@ public sealed class BottomSheet : StatefulWidget
     public WidgetBuilder Builder { get; }
     public bool EnableDrag { get; }
     public bool? ShowDragHandle { get; }
-    public WidgetStateColor? DragHandleColor { get; }
+    public Color? DragHandleColor { get; }
     public Size? DragHandleSize { get; }
     public Action<DragStartDetails>? OnDragStart { get; }
     public BottomSheetDragEndHandler? OnDragEnd { get; }
@@ -318,7 +318,7 @@ internal sealed class DragHandle : StatelessWidget
         Action? onSemanticsTap,
         Action<bool> handleHover,
         IReadOnlySet<WidgetState> states,
-        WidgetStateColor? dragHandleColor = null,
+        Color? dragHandleColor = null,
         Size? dragHandleSize = null,
         Key? key = null) : base(key)
     {
@@ -332,7 +332,7 @@ internal sealed class DragHandle : StatelessWidget
     public Action? OnSemanticsTap { get; }
     public Action<bool> HandleHover { get; }
     public IReadOnlySet<WidgetState> States { get; }
-    public WidgetStateColor? DragHandleColor { get; }
+    public Color? DragHandleColor { get; }
     public Size? DragHandleSize { get; }
 
     public override Widget Build(BuildContext context)
@@ -340,9 +340,9 @@ internal sealed class DragHandle : StatelessWidget
         var bottomSheetTheme = BottomSheetTheme.Of(context);
         var defaults = BottomSheet.Material3Defaults(Theme.Of(context));
         Size handleSize = DragHandleSize ?? bottomSheetTheme.DragHandleSize ?? defaults.DragHandleSize!.Value;
-        Color color = DragHandleColor?.Resolve(States)
-                      ?? bottomSheetTheme.DragHandleColor?.Resolve(States)
-                      ?? defaults.DragHandleColor!.Resolve(States);
+        Color color = WidgetStateProperty<Color?>.ResolveAs(DragHandleColor, States)
+                      ?? WidgetStateProperty<Color?>.ResolveAs(bottomSheetTheme.DragHandleColor, States)
+                      ?? WidgetStateProperty<Color>.ResolveAs(defaults.DragHandleColor, States);
 
         return new MouseRegion(
             onEnter: _ => HandleHover(true),
@@ -754,7 +754,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
 
     public override Color? BarrierColor => ModalBarrierColor
                                            ?? _capturedBottomSheetTheme.ModalBarrierColor
-                                           ?? Color.FromArgb(0x8A, 0, 0, 0);
+                                           ?? Color.FromARGB(0x8A, 0, 0, 0);
 
     public override TimeSpan TransitionDuration => _transitionAnimationController?.Duration
                                                    ?? _sheetAnimationStyle?.Duration
@@ -838,7 +838,7 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
 
     public override Widget BuildModalBarrier()
     {
-        if (BarrierColor is { A: not 0 } barrierColor)
+        if (BarrierColor is { Alpha: not 0 } barrierColor)
         {
             return new AnimatedModalBarrier(
                 color: CreateBarrierColorAnimation(barrierColor),

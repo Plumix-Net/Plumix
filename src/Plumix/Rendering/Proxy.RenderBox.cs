@@ -343,7 +343,7 @@ public class RenderConstrainedBox : RenderProxyBox
             if (Child == null || Child.Size.Width <= 0.0 || Child.Size.Height <= 0.0)
             {
                 context.Canvas.DrawRectangle(
-                    new SolidColorBrush(Color.FromUInt32(0x90909090)),
+                    new SolidColorBrush(new Color(0x90909090)),
                     null,
                     new Rect(offset, Size));
             }
@@ -946,7 +946,7 @@ public class RenderOpacity : RenderProxyBox
 
         _opacity = opacity;
         _alwaysIncludeSemantics = alwaysIncludeSemantics;
-        _alpha = ColorUtilities.GetAlphaFromOpacity(opacity);
+        _alpha = Color.GetAlphaFromOpacity(opacity);
     }
 
     /// <inheritdoc />
@@ -974,7 +974,7 @@ public class RenderOpacity : RenderProxyBox
             bool didNeedCompositing = AlwaysNeedsCompositing;
             bool wasVisible = _alpha != 0;
             _opacity = value;
-            _alpha = ColorUtilities.GetAlphaFromOpacity(_opacity);
+            _alpha = Color.GetAlphaFromOpacity(_opacity);
             if (didNeedCompositing != AlwaysNeedsCompositing)
             {
                 MarkNeedsCompositingBitsUpdate();

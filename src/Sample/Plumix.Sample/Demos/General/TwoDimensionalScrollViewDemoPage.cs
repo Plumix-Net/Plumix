@@ -75,7 +75,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: () => SetState(() => _behavior = behavior),
-                background: _behavior == behavior ? Colors.SteelBlue : Color.Parse("#FFB0BEC5"),
+                background: _behavior == behavior ? Colors.SteelBlue : new Color(0xFFB0BEC5),
                 foreground: _behavior == behavior ? Colors.White : Colors.Black,
                 fontSize: 13));
     }
@@ -84,7 +84,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
     {
         bool shaded = (vicinity.XIndex + vicinity.YIndex) % 2 == 0;
         return new Container(
-            color: shaded ? Color.Parse("#FFE1F5FE") : Color.Parse("#FFFFF8E1"),
+            color: shaded ? new Color(0xFFE1F5FE) : new Color(0xFFFFF8E1),
             padding: new Thickness(10, 8),
             child: new Text(
                 $"R{vicinity.YIndex}:C{vicinity.XIndex}",

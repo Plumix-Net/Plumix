@@ -611,7 +611,7 @@ public sealed class AnimatedContainer : StatefulWidget
         Key? key = null) : base(key)
     {
         if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
-        if (color.HasValue && decoration is not null)
+        if (color != null && decoration is not null)
         {
             throw new ArgumentException("color and decoration cannot both be specified.");
         }
@@ -622,7 +622,7 @@ public sealed class AnimatedContainer : StatefulWidget
         Child = child;
         Alignment = alignment;
         Padding = padding;
-        Decoration = decoration ?? (color.HasValue ? new BoxDecoration(Color: color) : null);
+        Decoration = decoration ?? (color != null ? new BoxDecoration(Color: color) : null);
         ForegroundDecoration = foregroundDecoration;
         Constraints = width.HasValue || height.HasValue
             ? constraints?.Tighten(width: width, height: height)

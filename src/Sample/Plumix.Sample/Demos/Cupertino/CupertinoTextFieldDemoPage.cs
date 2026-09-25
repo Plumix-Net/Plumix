@@ -30,7 +30,7 @@ internal sealed class CupertinoTextFieldDemoPageState : State
                 new Text(
                     "Rounded, borderless, form validation, multiline, disabled, attachment, and clear-button states.",
                     fontSize: 14.0,
-                    color: Color.FromUInt32(0x8A000000)),
+                    color: new Color(0x8A000000)),
                 new CupertinoTextField(
                     controller: _controller,
                     placeholder: "Search settings",
@@ -42,13 +42,13 @@ internal sealed class CupertinoTextFieldDemoPageState : State
                 new Text(
                     string.IsNullOrEmpty(_value) ? "No query" : $"Query: {_value}",
                     fontSize: 12.0,
-                    color: Color.FromUInt32(0xFF607D8B)),
+                    color: new Color(0xFF607D8B)),
                 CupertinoTextField.Borderless(
                     placeholder: "Borderless multiline note",
                     minLines: 2,
                     maxLines: 4,
                     decoration: new BoxDecoration(
-                        Color: Color.FromUInt32(0xFFF2F2F7),
+                        Color: new Color(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(8.0))),
                 new Form(
                     child: new CupertinoTextFormFieldRow(

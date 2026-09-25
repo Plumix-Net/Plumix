@@ -15,20 +15,20 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
     private const double DefaultHeight = 50.0;
     private static readonly CupertinoDynamicColor DefaultTabBarBorderColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0x4D000000),
-            Color.FromUInt32(0x29000000));
+            new Color(0x4D000000),
+            new Color(0x29000000));
     private static readonly Border DefaultBorder = new(
         top: new BorderSide(
-            Color.FromUInt32(0x4D000000),
+            new Color(0x4D000000),
             width: 0.0));
 
     public CupertinoTabBar(
         IReadOnlyList<BottomNavigationBarItem> items,
         Action<int>? onTap = null,
         int currentIndex = 0,
-        CupertinoDynamicColor? backgroundColor = null,
-        CupertinoDynamicColor? activeColor = null,
-        CupertinoDynamicColor? inactiveColor = null,
+        Color? backgroundColor = null,
+        Color? activeColor = null,
+        Color? inactiveColor = null,
         double iconSize = 30.0,
         double height = DefaultHeight,
         Key? key = null)
@@ -51,9 +51,9 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
         Border? border,
         Action<int>? onTap = null,
         int currentIndex = 0,
-        CupertinoDynamicColor? backgroundColor = null,
-        CupertinoDynamicColor? activeColor = null,
-        CupertinoDynamicColor? inactiveColor = null,
+        Color? backgroundColor = null,
+        Color? activeColor = null,
+        Color? inactiveColor = null,
         double iconSize = 30.0,
         double height = DefaultHeight,
         Key? key = null) : base(key)
@@ -93,11 +93,11 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
 
     public int CurrentIndex { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
-    public CupertinoDynamicColor? ActiveColor { get; }
+    public Color? ActiveColor { get; }
 
-    public CupertinoDynamicColor InactiveColor { get; }
+    public Color InactiveColor { get; }
 
     public double IconSize { get; }
 
@@ -109,8 +109,8 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
 
     public bool Opaque(BuildContext context)
     {
-        CupertinoDynamicColor backgroundColor = BackgroundColor ?? CupertinoTheme.Of(context).BarBackgroundColor;
-        return CupertinoDynamicColor.Resolve(backgroundColor, context).A == byte.MaxValue;
+        Color backgroundColor = BackgroundColor ?? CupertinoTheme.Of(context).BarBackgroundColor;
+        return CupertinoDynamicColor.Resolve(backgroundColor, context).Alpha == byte.MaxValue;
     }
 
     public override Widget Build(BuildContext context)
@@ -154,9 +154,9 @@ public sealed class CupertinoTabBar : StatelessWidget, IPreferredSizeWidget
     public CupertinoTabBar CopyWith(
         Key? key = null,
         IReadOnlyList<BottomNavigationBarItem>? items = null,
-        CupertinoDynamicColor? backgroundColor = null,
-        CupertinoDynamicColor? activeColor = null,
-        CupertinoDynamicColor? inactiveColor = null,
+        Color? backgroundColor = null,
+        Color? activeColor = null,
+        Color? inactiveColor = null,
         double? iconSize = null,
         double? height = null,
         Border? border = null,

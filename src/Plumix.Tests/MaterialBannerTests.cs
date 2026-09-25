@@ -34,7 +34,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(expectedY, painter.TranslationY(120), precision: 5);
         Assert.Equal(rotationSign * Math.PI / 4, painter.Rotation, precision: 10);
         Assert.Equal(new Rect(-40, 28, 80, 12), BannerPainter.BannerRect);
-        Assert.Equal(Color.FromArgb(0xA0, 0xB7, 0x1C, 0x1C), painter.Color);
+        Assert.Equal(Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C), painter.Color);
         Assert.Equal(10.2, painter.TextStyle.FontSize!.Value, precision: 10);
         Assert.False(painter.HitTest(default));
     }
@@ -120,7 +120,7 @@ public sealed class MaterialBannerTests
         local.Pump(new Size(360, 180));
         var localBackground = Assert.Single(
             FindDescendants<RenderDecoratedBox>(local.RenderView),
-            box => box.AsBoxDecoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color != null);
         Assert.Equal(Colors.DarkCyan, localBackground.AsBoxDecoration.Color);
         Assert.NotNull(localBackground.AsBoxDecoration.BoxShadows);
     }
@@ -128,8 +128,8 @@ public sealed class MaterialBannerTests
     [Fact]
     public void MaterialBanner_M2AndM3DefaultsReadColorSchemeRolesDirectly()
     {
-        Color m3Surface = Color.Parse("#FF102030");
-        Color m3Outline = Color.Parse("#FF405060");
+        Color m3Surface = new Color(0xFF102030);
+        Color m3Outline = new Color(0xFF405060);
         var m3Theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -141,7 +141,7 @@ public sealed class MaterialBannerTests
 
         var m3Background = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
-            box => box.AsBoxDecoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color != null);
         var m3Divider = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
             box => box.AsBoxDecoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
@@ -149,7 +149,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(m3Outline, ((Plumix.Rendering.Border)m3Divider.AsBoxDecoration.Border!).Bottom.Color);
         Assert.Null(m3Background.AsBoxDecoration.BoxShadows);
 
-        Color m2Surface = Color.Parse("#FF708090");
+        Color m2Surface = new Color(0xFF708090);
         var m2Theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -160,7 +160,7 @@ public sealed class MaterialBannerTests
 
         var m2Background = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m2.RenderView),
-            box => box.AsBoxDecoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color != null);
         Assert.Equal(m2Surface, m2Background.AsBoxDecoration.Color);
         Assert.Null(m2Background.AsBoxDecoration.BoxShadows);
     }
@@ -173,7 +173,7 @@ public sealed class MaterialBannerTests
 
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color != null);
         Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.AsBoxDecoration.Color);
         Assert.Null(decoration.AsBoxDecoration.BoxShadows);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
@@ -260,7 +260,7 @@ public sealed class MaterialBannerTests
 
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(themed.RenderView),
-            box => box.AsBoxDecoration.Color.HasValue);
+            box => box.AsBoxDecoration.Color != null);
         Assert.Equal(Colors.Purple, decoration.AsBoxDecoration.Color);
         Assert.NotNull(decoration.AsBoxDecoration.BoxShadows);
         Assert.Equal(Colors.Orange,
@@ -278,7 +278,7 @@ public sealed class MaterialBannerTests
         Assert.Equal(Colors.Green,
             Assert.Single(
                 FindDescendants<RenderDecoratedBox>(explicitColor.RenderView),
-                box => box.AsBoxDecoration.Color.HasValue).AsBoxDecoration.Color);
+                box => box.AsBoxDecoration.Color != null).AsBoxDecoration.Color);
     }
 
     [Fact]

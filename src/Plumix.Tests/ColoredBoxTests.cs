@@ -84,7 +84,7 @@ public sealed class ColoredBoxTests
     {
         var child = new PaintProbeRenderBox(new Size(80.0, 60.0));
         var coloredBox = new RenderColoredBox(
-            Color.FromArgb(0, 0xAB, 0xCD, 0xEF),
+            Color.FromARGB(0, 0xAB, 0xCD, 0xEF),
             isAntiAlias: false,
             child: child);
 

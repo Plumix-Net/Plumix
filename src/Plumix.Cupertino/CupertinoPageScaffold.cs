@@ -14,7 +14,7 @@ public sealed class CupertinoPageScaffold : StatefulWidget
     public CupertinoPageScaffold(
         Widget child,
         IObstructingPreferredSizeWidget? navigationBar = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool resizeToAvoidBottomInset = true,
         Key? key = null) : base(key)
     {
@@ -35,7 +35,7 @@ public sealed class CupertinoPageScaffold : StatefulWidget
 
     public Widget Child { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public bool ResizeToAvoidBottomInset { get; }
 
@@ -90,7 +90,7 @@ internal sealed class CupertinoPageScaffoldState : State<CupertinoPageScaffold>,
     {
         Widget paddedContent = CurrentWidget.Child;
         Color backgroundColor = CupertinoDynamicColor.MaybeResolve(CurrentWidget.BackgroundColor, context)
-                                ?? CupertinoTheme.Of(context).ScaffoldBackgroundColor.Value;
+                                ?? CupertinoTheme.Of(context).ScaffoldBackgroundColor;
 
         MediaQueryData existingMediaQuery = MediaQuery.Of(context);
         IObstructingPreferredSizeWidget? navigationBar = CurrentWidget.NavigationBar;

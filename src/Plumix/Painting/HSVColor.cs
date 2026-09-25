@@ -52,15 +52,15 @@ public sealed record HSVColor
     /// <remarks>Flutter's <c>HSVColor.fromColor</c>.</remarks>
     public static HSVColor FromColor(Color color)
     {
-        double red = color.R / 255.0;
-        double green = color.G / 255.0;
-        double blue = color.B / 255.0;
+        double red = color.Red / 255.0;
+        double green = color.Green / 255.0;
+        double blue = color.Blue / 255.0;
         double max = Math.Max(red, Math.Max(green, blue));
         double min = Math.Min(red, Math.Min(green, blue));
         double delta = max - min;
         double saturation = max == 0.0 ? 0.0 : delta / max;
 
-        return new HSVColor(color.A / 255.0, GetHue(red, green, blue, max, delta), saturation, max);
+        return new HSVColor(color.Alpha / 255.0, GetHue(red, green, blue, max, delta), saturation, max);
     }
 
     public HSVColor WithAlpha(double alpha) => new(alpha, Hue, Saturation, Value);
@@ -87,7 +87,7 @@ public sealed record HSVColor
             _ => (chroma, 0.0, secondary),
         };
 
-        return Color.FromArgb(
+        return Color.FromARGB(
             RoundChannel(Alpha),
             RoundChannel(red + match),
             RoundChannel(green + match),

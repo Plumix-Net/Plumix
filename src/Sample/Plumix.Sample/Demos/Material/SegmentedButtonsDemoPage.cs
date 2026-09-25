@@ -30,11 +30,11 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            WidgetStateProperty<Color?>? toggleFill = _useStatefulFill
-                ? WidgetStateProperty<Color?>.ResolveWith(states =>
+            Color? toggleFill = _useStatefulFill
+                ? WidgetStateColor.ResolveWith(states =>
                     states.Contains(WidgetState.Selected) ? Colors.Teal : Colors.LightBlue)
                 : _useWidgetStyle
-                    ? WidgetStateProperty<Color?>.All(Color.Parse("#FF673AB7"))
+                    ? new Color(0xFF673AB7)
                     : null;
             var theme = Theme.Of(context) with
             {
@@ -42,7 +42,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                     ? new ToggleButtonsThemeData(
                         Color: Colors.DarkSlateBlue,
                         SelectedColor: Colors.White,
-                        FillColor: WidgetStateProperty<Color?>.All(Colors.Teal),
+                        FillColor: Colors.Teal,
                         BorderColor: Colors.Teal,
                         SelectedBorderColor: Colors.Teal,
                         BorderRadius: BorderRadius.Circular(12))
@@ -122,8 +122,8 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                                 style: _useWidgetStyle
                                     ? SegmentedButton<int>.StyleFrom(
                                         selectedForegroundColor: Colors.White,
-                                        selectedBackgroundColor: Color.Parse("#FF673AB7"),
-                                        side: new BorderSide(Color.Parse("#FF673AB7")),
+                                        selectedBackgroundColor: new Color(0xFF673AB7),
+                                        side: new BorderSide(new Color(0xFF673AB7)),
                                         shape: new StadiumBorder())
                                     : null,
                                 segments:

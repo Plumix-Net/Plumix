@@ -52,7 +52,7 @@ public class IconThemeData : Diagnosticable, IEquatable<IconThemeData>
 
     /// <summary>An icon theme with Flutter's concrete fallback values.</summary>
     public static IconThemeData Fallback { get; } = new(
-        Color: Avalonia.Media.Colors.Black,
+        Color: new Color(0xFF000000),
         Size: 24.0,
         Opacity: 1.0,
         Fill: 0.0,
@@ -87,7 +87,7 @@ public class IconThemeData : Diagnosticable, IEquatable<IconThemeData>
         && Weight.HasValue
         && Grade.HasValue
         && OpticalSize.HasValue
-        && Color.HasValue
+        && Color != null
         && Opacity.HasValue
         && ApplyTextScaling.HasValue;
 
@@ -240,32 +240,8 @@ public class IconThemeData : Diagnosticable, IEquatable<IconThemeData>
         return from + ((to - from) * t);
     }
 
-    private static Color? LerpColor(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
+    private static Color? LerpColor(Color? a, Color? b, double t) => Color.Lerp(a, b, t);
 
-        if (!a.HasValue)
-        {
-            Color value = b!.Value;
-            return Avalonia.Media.Color.FromArgb(ScaleAlpha(value.A, t), value.R, value.G, value.B);
-        }
-
-        if (!b.HasValue)
-        {
-            Color value = a.Value;
-            return Avalonia.Media.Color.FromArgb(ScaleAlpha(value.A, 1.0 - t), value.R, value.G, value.B);
-        }
-
-        return new ColorTween().Evaluate(t, a.Value, b.Value);
-    }
-
-    private static byte ScaleAlpha(byte alpha, double factor)
-    {
-        return (byte)Math.Clamp((int)Math.Round(alpha * factor, MidpointRounding.AwayFromZero), 0, 255);
-    }
 
     private static bool ShadowListsEqual(IReadOnlyList<Shadow>? a, IReadOnlyList<Shadow>? b)
     {

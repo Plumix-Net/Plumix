@@ -29,7 +29,7 @@ public sealed class CupertinoApp : StatefulWidget
         TransitionBuilder? builder = null,
         string? title = null,
         GenerateAppTitle? onGenerateTitle = null,
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         Locale? locale = null,
         IReadOnlyList<LocalizationsDelegate>? localizationsDelegates = null,
         LocaleListResolutionCallback? localeListResolutionCallback = null,
@@ -109,7 +109,7 @@ public sealed class CupertinoApp : StatefulWidget
         string? title = null,
         GenerateAppTitle? onGenerateTitle = null,
         Func<NavigationNotification, bool>? onNavigationNotification = null,
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         Locale? locale = null,
         IReadOnlyList<LocalizationsDelegate>? localizationsDelegates = null,
         LocaleListResolutionCallback? localeListResolutionCallback = null,
@@ -177,7 +177,7 @@ public sealed class CupertinoApp : StatefulWidget
         string? title,
         GenerateAppTitle? onGenerateTitle,
         Func<NavigationNotification, bool>? onNavigationNotification,
-        CupertinoDynamicColor? color,
+        Color? color,
         Locale? locale,
         IReadOnlyList<LocalizationsDelegate>? localizationsDelegates,
         LocaleListResolutionCallback? localeListResolutionCallback,
@@ -247,7 +247,7 @@ public sealed class CupertinoApp : StatefulWidget
     public TransitionBuilder? Builder { get; }
     public string? Title { get; }
     public GenerateAppTitle? OnGenerateTitle { get; }
-    public CupertinoDynamicColor? Color { get; }
+    public Color? Color { get; }
     public Locale? Locale { get; }
     public IReadOnlyList<LocalizationsDelegate> LocalizationsDelegates { get; }
     public LocaleListResolutionCallback? LocaleListResolutionCallback { get; }
@@ -342,7 +342,7 @@ public sealed class CupertinoApp : StatefulWidget
                 DefaultCupertinoLocalizations.Delegate,
             };
 
-            Color primaryColor = effectiveTheme.PrimaryColor.Value;
+            Color primaryColor = effectiveTheme.PrimaryColor;
             return new ScrollConfiguration(
                 behavior: CurrentWidget.ScrollBehavior ?? new CupertinoScrollBehavior(),
                 child: new HeroControllerScope(
@@ -366,8 +366,8 @@ public sealed class CupertinoApp : StatefulWidget
             CupertinoThemeData effectiveTheme,
             IReadOnlyList<LocalizationsDelegate> delegates)
         {
-            CupertinoDynamicColor appColor = CurrentWidget.Color ?? effectiveTheme.PrimaryColor;
-            Color color = appColor.ResolveFrom(context).Value;
+            Color appColor = CurrentWidget.Color ?? effectiveTheme.PrimaryColor;
+            Color color = CupertinoDynamicColor.Resolve(appColor, context);
             if (CurrentWidget.RouterHostConfiguration is not null)
             {
                 return new WidgetsApp(
@@ -428,11 +428,7 @@ public sealed class CupertinoApp : StatefulWidget
                 useInheritedMediaQuery: CurrentWidget.UseInheritedMediaQuery);
         }
 
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * byte.MaxValue);
-            return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+        private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
     }
 }
 

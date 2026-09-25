@@ -138,7 +138,7 @@ public sealed partial class EditableText
         private bool _tickersEnabled = true;
 
         // The cursor color the last build resolved, before the blink opacity is applied.
-        private Avalonia.Media.Color _resolvedCursorColor;
+        private Color _resolvedCursorColor = new(0x00000000);
 
         private AnimationController CursorBlinkOpacityController
         {
@@ -177,7 +177,7 @@ public sealed partial class EditableText
 
         private void OnCursorColorTick()
         {
-            double effectiveOpacity = Math.Min(_resolvedCursorColor.A / 255.0, CursorBlinkOpacityController.Value);
+            double effectiveOpacity = Math.Min(_resolvedCursorColor.Alpha / 255.0, CursorBlinkOpacityController.Value);
             if (RenderEditable is { } renderEditable)
             {
                 renderEditable.CursorColor = _resolvedCursorColor.WithOpacity(effectiveOpacity);

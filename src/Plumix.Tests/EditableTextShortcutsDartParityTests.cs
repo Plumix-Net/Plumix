@@ -3,7 +3,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 
 namespace Plumix.Tests;
 
@@ -83,8 +82,8 @@ public sealed class EditableTextShortcutsDartParityTests : IDisposable
                         padding: new Avalonia.Thickness(0),
                         // Avoid the cursor from taking up width.
                         cursorWidth: 0,
-                        cursorColor: Color.FromUInt32(0xFF2196F3),
-                        backgroundCursorColor: Color.FromUInt32(0xFF9E9E9E),
+                        cursorColor: new Color(0xFF2196F3),
+                        backgroundCursorColor: new Color(0xFF9E9E9E),
                         selectionControls: EmptyTextSelectionControls.Instance,
                         keyboardType: TextInputType.Text,
                         multiline: !obscured,

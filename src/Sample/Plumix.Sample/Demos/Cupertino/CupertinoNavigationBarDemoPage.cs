@@ -59,11 +59,11 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                     BuildAction(
                         "Push detail page (auto middle + back label)",
                         () => PushDetail(context),
-                        Color.Parse("#FFE9F0FF")),
+                        new Color(0xFFE9F0FF)),
                     BuildAction(
                         "Push page with a long title ('Back' fallback)",
                         () => PushLongTitle(context),
-                        Color.Parse("#FFEAE4FF")),
+                        new Color(0xFFEAE4FF)),
                     .. Enumerable.Range(1, 20)
                         .Select(index => (Widget)new Text($"Row {index}", fontSize: 14.0, color: label)),
                 ]));
@@ -110,7 +110,7 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                                     BuildAction(
                                         "Push detail from here (shows 'Back')",
                                         () => PushDetail(routeContext),
-                                        Color.Parse("#FFE8F4E8")),
+                                        new Color(0xFFE8F4E8)),
                                 ])))),
                     ]))));
     }

@@ -96,7 +96,7 @@ public sealed record ButtonThemeData
     public Color? GetFillColor(MaterialButton button, ThemeData theme)
     {
         var explicitFill = button.Enabled ? button.Color : button.DisabledColor;
-        if (explicitFill.HasValue)
+        if (explicitFill != null)
         {
             return explicitFill;
         }
@@ -112,9 +112,9 @@ public sealed record ButtonThemeData
             return GetDisabledTextColor(button, theme);
         }
 
-        if (button.TextColor.HasValue)
+        if (button.TextColor != null)
         {
-            return button.TextColor.Value;
+            return button.TextColor!;
         }
 
         return GetTextTheme(button) switch
@@ -123,20 +123,20 @@ public sealed record ButtonThemeData
             ButtonTextTheme.Primary => ResolvePrimaryTextColor(button, theme),
             _ => (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark
                 ? Colors.White
-                : Color.FromArgb(0xDE, 0, 0, 0),
+                : Color.FromARGB(0xDE, 0, 0, 0),
         };
     }
 
     public Color GetSplashColor(MaterialButton button, ThemeData theme)
     {
-        if (button.SplashColor.HasValue)
+        if (button.SplashColor != null)
         {
-            return button.SplashColor.Value;
+            return button.SplashColor!;
         }
 
-        if (SplashColor.HasValue && GetTextTheme(button) != ButtonTextTheme.Primary)
+        if (SplashColor != null && GetTextTheme(button) != ButtonTextTheme.Primary)
         {
-            return SplashColor.Value;
+            return SplashColor!;
         }
 
         return ApplyOpacity(GetTextColor(button, theme), 0.12);
@@ -150,9 +150,9 @@ public sealed record ButtonThemeData
 
     public Color GetHighlightColor(MaterialButton button, ThemeData theme)
     {
-        if (button.HighlightColor.HasValue)
+        if (button.HighlightColor != null)
         {
-            return button.HighlightColor.Value;
+            return button.HighlightColor!;
         }
 
         return GetTextTheme(button) == ButtonTextTheme.Primary
@@ -187,30 +187,26 @@ public sealed record ButtonThemeData
 
     private static bool IsDark(Color? color)
     {
-        if (!color.HasValue)
+        if (color == null)
         {
             return false;
         }
 
-        var value = color.Value;
-        double luminance = ((0.2126 * value.R) + (0.7152 * value.G) + (0.0722 * value.B)) / 255.0;
+        var value = color!;
+        double luminance = ((0.2126 * value.Red) + (0.7152 * value.Green) + (0.0722 * value.Blue)) / 255.0;
         return Math.Sqrt(luminance) + 0.15 < 0.5;
     }
 
     private Color ResolvePrimaryTextColor(MaterialButton button, ThemeData theme)
     {
         var fill = GetFillColor(button, theme);
-        bool fillIsDark = fill.HasValue
+        bool fillIsDark = fill != null
             ? IsDark(fill)
             : (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark;
         return fillIsDark ? Colors.White : Colors.Black;
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)(255 * opacity), 0, 255),
-        color.R,
-        color.G,
-        color.B);
+    private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private static void ValidateExtent(string name, double value)
     {

@@ -54,8 +54,8 @@ internal sealed class CounterTapButton : StatelessWidget
 
     private static Color DisabledColor(Color color)
     {
-        byte alpha = (byte)Math.Clamp((int)(color.A * 0.45), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        byte alpha = (byte)Math.Clamp((int)(color.Alpha * 0.45), 0, 255);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 }
 
@@ -88,7 +88,7 @@ internal sealed class KeyedListItemState : State
         return new CounterTapButton(
             label: $"id={_id} token={_token} taps={_taps}",
             onTap: () => SetState(() => _taps++),
-            background: Color.Parse("#FFF5F5F5"),
+            background: new Color(0xFFF5F5F5),
             foreground: Colors.Black,
             fontSize: 14,
             padding: new Thickness(10, 8));
@@ -175,7 +175,7 @@ internal sealed class KeepAliveListItemState : AutomaticKeepAliveClientMixin
                 SetState(() => _localTaps += 1);
                 _onTap?.Invoke();
             },
-            background: keepAlive ? Color.Parse("#FFE8F5E9") : Colors.White,
+            background: keepAlive ? new Color(0xFFE8F5E9) : Colors.White,
             foreground: Colors.Black,
             fontSize: 13,
             padding: new Thickness(10, 8));

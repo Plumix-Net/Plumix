@@ -48,7 +48,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                 new Text(
                     "persistentFooterButtons, the extendBody padding restoration, and drawer paint order.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -57,18 +57,18 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             label: _showFooter ? "Footer on" : "Footer off",
                             onTap: () => SetState(() => _showFooter = !_showFooter),
                             width: 96,
-                            background: Color.Parse("#FFE9F0FF")),
+                            background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             label: $"Align {FooterAlignmentLabels[_footerAlignmentIndex]}",
                             onTap: () => SetState(() =>
                                 _footerAlignmentIndex = (_footerAlignmentIndex + 1) % FooterAlignments.Length),
                             width: 106,
-                            background: Color.Parse("#FFEFE8F8")),
+                            background: new Color(0xFFEFE8F8)),
                         BuildControlButton(
                             label: _useFooterDecoration ? "Decoration" : "Divider",
                             onTap: () => SetState(() => _useFooterDecoration = !_useFooterDecoration),
                             width: 106,
-                            background: Color.Parse("#FFF7E9E3")),
+                            background: new Color(0xFFF7E9E3)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -78,18 +78,18 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             label: _extendBody ? "extendBody on" : "extendBody off",
                             onTap: () => SetState(() => _extendBody = !_extendBody),
                             width: 132,
-                            background: Color.Parse("#FFE8F5E9")),
+                            background: new Color(0xFFE8F5E9)),
                         BuildControlButton(
                             label: _extendBodyBehindAppBar ? "behind bar on" : "behind bar off",
                             onTap: () => SetState(() => _extendBodyBehindAppBar = !_extendBodyBehindAppBar),
                             width: 132,
-                            background: Color.Parse("#FFF3E8D8")),
+                            background: new Color(0xFFF3E8D8)),
                         BuildControlButton(
                             label: $"bottomSheet {BottomSheetLabels[_bottomSheetIndex]}",
                             onTap: () => SetState(() =>
                                 _bottomSheetIndex = (_bottomSheetIndex + 1) % BottomSheetLabels.Length),
                             width: 132,
-                            background: Color.Parse("#FFEDE7F6")),
+                            background: new Color(0xFFEDE7F6)),
                     ]),
                 new Text(
                     $"footer={(_showFooter ? "true" : "false")}, "
@@ -99,14 +99,14 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                     + $"extendBodyBehindAppBar={(_extendBodyBehindAppBar ? "true" : "false")}, "
                     + $"bottomSheet={BottomSheetLabels[_bottomSheetIndex]}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFFDFEFF"),
+                            Color: new Color(0xFFFDFEFF),
                             BorderRadius: BorderRadius.Circular(10),
                             Border: Plumix.Rendering.Border.FromBorderSide(
-                                new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
+                                new BorderSide(new Color(0xFFD6DEEA), 1))),
                         child: new Scaffold(
                             appBar: new AppBar(title: new Text("Slots preview")),
                             extendBody: _extendBody,
@@ -116,7 +116,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             bottomSheet: BuildPersistentBottomSheet(),
                             persistentFooterAlignment: FooterAlignments[_footerAlignmentIndex],
                             persistentFooterDecoration: _useFooterDecoration
-                                ? new BoxDecoration(Color: Color.Parse("#FFEFF4FF"))
+                                ? new BoxDecoration(Color: new Color(0xFFEFF4FF))
                                 : null,
                             persistentFooterButtons: _showFooter
                                 ?
@@ -126,13 +126,13 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                                 ]
                                 : null,
                             bottomNavigationBar: new Container(
-                                color: Color.Parse("#FFE3ECFB"),
+                                color: new Color(0xFFE3ECFB),
                                 height: 48,
                                 child: new Center(
                                     child: new Text(
                                         "bottomNavigationBar (48pt)",
                                         fontSize: 12,
-                                        color: Color.Parse("#FF30404D")))),
+                                        color: new Color(0xFF30404D)))),
                             body: new ContextBuilder(BuildPreviewBody)))),
             ]);
     }
@@ -149,13 +149,13 @@ internal sealed class ScaffoldSlotsDemoPageState : State
         }
 
         return new Container(
-            color: _bottomSheetIndex == 1 ? Color.Parse("#FFE8DEF8") : Color.Parse("#FFD7E9DE"),
+            color: _bottomSheetIndex == 1 ? new Color(0xFFE8DEF8) : new Color(0xFFD7E9DE),
             height: 56,
             child: new Center(
                 child: new Text(
                     $"Scaffold.bottomSheet {BottomSheetLabels[_bottomSheetIndex]}",
                     fontSize: 12,
-                    color: Color.Parse("#FF30404D"))));
+                    color: new Color(0xFF30404D))));
     }
 
     private Widget BuildPreviewBody(BuildContext context)
@@ -163,7 +163,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
         Thickness padding = MediaQuery.Of(context).Padding;
 
         return new Container(
-            color: Color.Parse("#FFF2F6FF"),
+            color: new Color(0xFFF2F6FF),
             padding: new Thickness(14),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -173,11 +173,11 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                     new Text(
                         "The body reports the padding _BodyBuilder restores for the slots it extends behind.",
                         fontSize: 12,
-                        color: Color.Parse("#FF30404D")),
+                        color: new Color(0xFF30404D)),
                     new Text(
                         $"body MediaQuery padding: top={padding.Top:0.#}, bottom={padding.Bottom:0.#}",
                         fontSize: 12,
-                        color: Color.Parse("#FF0D47A1")),
+                        color: new Color(0xFF0D47A1)),
                     new Row(
                         spacing: 8,
                         children:
@@ -186,12 +186,12 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                                 label: "Open start",
                                 onTap: () => Scaffold.Of(context).OpenDrawer(),
                                 width: 100,
-                                background: Color.Parse("#FFE9EEF5")),
+                                background: new Color(0xFFE9EEF5)),
                             BuildControlButton(
                                 label: "Open end",
                                 onTap: () => Scaffold.Of(context).OpenEndDrawer(),
                                 width: 100,
-                                background: Color.Parse("#FFEFE8F8")),
+                                background: new Color(0xFFEFE8F8)),
                         ]),
                 ]));
     }
@@ -199,7 +199,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
     private Widget BuildDrawerPanel(bool isStartDrawer)
     {
         string title = isStartDrawer ? "Start drawer" : "End drawer";
-        var accent = isStartDrawer ? Color.Parse("#FF0D47A1") : Color.Parse("#FF4A148C");
+        var accent = isStartDrawer ? new Color(0xFF0D47A1) : new Color(0xFF4A148C);
 
         return new Drawer(
             child: new ContextBuilder(
@@ -215,14 +215,14 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             new Text(
                                 "The opened end drawer is appended last, so it paints over the start drawer.",
                                 fontSize: 12,
-                                color: Color.Parse("#8A000000")),
+                                color: new Color(0x8A000000)),
                             BuildControlButton(
                                 label: "Close",
                                 onTap: isStartDrawer
                                     ? () => Scaffold.Of(context).CloseDrawer()
                                     : () => Scaffold.Of(context).CloseEndDrawer(),
                                 width: 84,
-                                background: Color.Parse("#FFE9EEF5")),
+                                background: new Color(0xFFE9EEF5)),
                         ]))));
     }
 
@@ -232,7 +232,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             onPressed: onTap,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF0D47A1"),
+                foregroundColor: new Color(0xFF0D47A1),
                 padding: new Thickness(12, 8),
                 minimumSize: new Size(64, 36),
                 shape: new RoundedRectangleBorder(

@@ -45,7 +45,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
         ISelectionRegistrar? selectionRegistrar = null,
-        Avalonia.Media.Color? selectionColor = null,
+        Color? selectionColor = null,
         Key? key = null)
         : base(WidgetSpan.ExtractFromInlineSpan(text, ResolveTextScaler(textScaler, textScaleFactor)), key)
     {
@@ -91,7 +91,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         StrutStyle? strutStyle = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
-        Avalonia.Media.Color? selectionColor = null,
+        Color? selectionColor = null,
         Key? key = null)
         : this(
             text,
@@ -156,7 +156,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
     public ISelectionRegistrar? SelectionRegistrar { get; }
 
     /// The color to use when painting the selection.
-    public Avalonia.Media.Color? SelectionColor { get; }
+    public Color? SelectionColor { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {

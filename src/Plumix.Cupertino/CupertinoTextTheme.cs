@@ -1,4 +1,5 @@
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -7,14 +8,6 @@ namespace Plumix.Cupertino;
 // Dart parity source: cupertino_ui/lib/src/text_theme.dart
 
 /// <summary>Cupertino typography: the text styles every Cupertino control resolves through.</summary>
-/// <remarks>
-/// Dart stores the (possibly dynamic) label/action colors inside the default <c>TextStyle</c>s and
-/// resolves them again in <c>resolveFrom</c>. Plumix's <see cref="TextStyle.Color"/> is a plain
-/// <see cref="Avalonia.Media.Color"/>, so the dynamic colors live in
-/// <see cref="TextThemeDefaultsBuilder"/> instead and are applied after resolution — the defaults
-/// behave identically, but a dynamic color placed in a caller-supplied <c>TextStyle</c> is captured
-/// at its light/base variant (see `docs/ai/DIVERGENCES.md`).
-/// </remarks>
 public class CupertinoTextThemeData
 {
     internal static readonly TextStyle DefaultTextStyle = new(
@@ -22,7 +15,7 @@ public class CupertinoTextThemeData
         FontFamily: new FontFamily("CupertinoSystemText"),
         FontSize: 17.0,
         LetterSpacing: -0.41,
-        Color: CupertinoColors.Label.Value,
+        Color: CupertinoColors.Label,
         Decoration: Plumix.UI.TextDecoration.None);
 
     internal static readonly TextStyle DefaultActionTextStyle = new(
@@ -30,7 +23,7 @@ public class CupertinoTextThemeData
         FontFamily: new FontFamily("CupertinoSystemText"),
         FontSize: 17.0,
         LetterSpacing: -0.41,
-        Color: CupertinoColors.ActiveBlue.Value,
+        Color: CupertinoColors.ActiveBlue,
         Decoration: Plumix.UI.TextDecoration.None);
 
     internal static readonly TextStyle DefaultActionSmallTextStyle = new(
@@ -38,7 +31,7 @@ public class CupertinoTextThemeData
         FontFamily: new FontFamily("CupertinoSystemText"),
         FontSize: 15.0,
         LetterSpacing: -0.23,
-        Color: CupertinoColors.ActiveBlue.Value,
+        Color: CupertinoColors.ActiveBlue,
         Decoration: Plumix.UI.TextDecoration.None);
 
     internal static readonly TextStyle DefaultTabLabelTextStyle = new(
@@ -47,7 +40,7 @@ public class CupertinoTextThemeData
         FontSize: 10.0,
         FontWeight: FontWeight.Medium,
         LetterSpacing: -0.24,
-        Color: CupertinoColors.InactiveGray.Value);
+        Color: CupertinoColors.InactiveGray);
 
     internal static readonly TextStyle DefaultMiddleTitleTextStyle = new(
         Inherit: false,
@@ -55,7 +48,7 @@ public class CupertinoTextThemeData
         FontSize: 17.0,
         FontWeight: FontWeight.SemiBold,
         LetterSpacing: -0.41,
-        Color: CupertinoColors.Label.Value);
+        Color: CupertinoColors.Label);
 
     internal static readonly TextStyle DefaultLargeTitleTextStyle = new(
         Inherit: false,
@@ -63,7 +56,7 @@ public class CupertinoTextThemeData
         FontSize: 34.0,
         FontWeight: FontWeight.Bold,
         LetterSpacing: 0.38,
-        Color: CupertinoColors.Label.Value);
+        Color: CupertinoColors.Label);
 
     internal static readonly TextStyle DefaultPickerTextStyle = new(
         Inherit: false,
@@ -71,7 +64,7 @@ public class CupertinoTextThemeData
         FontSize: 21.0,
         FontWeight: FontWeight.Regular,
         LetterSpacing: -0.6,
-        Color: CupertinoColors.Label.Value);
+        Color: CupertinoColors.Label);
 
     internal static readonly TextStyle DefaultDateTimePickerTextStyle = new(
         Inherit: false,
@@ -79,10 +72,10 @@ public class CupertinoTextThemeData
         FontSize: 21.0,
         FontWeight: FontWeight.Normal,
         LetterSpacing: 0.4,
-        Color: CupertinoColors.Label.Value);
+        Color: CupertinoColors.Label);
 
     private readonly TextThemeDefaultsBuilder _defaults;
-    private readonly CupertinoDynamicColor? _primaryColor;
+    private readonly Color? _primaryColor;
     private readonly TextStyle? _textStyle;
     private readonly TextStyle? _actionTextStyle;
     private readonly TextStyle? _actionSmallTextStyle;
@@ -94,7 +87,7 @@ public class CupertinoTextThemeData
     private readonly TextStyle? _dateTimePickerTextStyle;
 
     public CupertinoTextThemeData(
-        CupertinoDynamicColor? primaryColor = null,
+        Color? primaryColor = null,
         TextStyle? textStyle = null,
         TextStyle? actionTextStyle = null,
         TextStyle? actionSmallTextStyle = null,
@@ -121,7 +114,7 @@ public class CupertinoTextThemeData
 
     private protected CupertinoTextThemeData(
         TextThemeDefaultsBuilder defaults,
-        CupertinoDynamicColor? primaryColor,
+        Color? primaryColor,
         TextStyle? textStyle,
         TextStyle? actionTextStyle,
         TextStyle? actionSmallTextStyle,
@@ -182,20 +175,28 @@ public class CupertinoTextThemeData
     {
         return new CupertinoTextThemeData(
             _defaults.ResolveFrom(context),
-            _primaryColor?.ResolveFrom(context),
-            _textStyle,
-            _actionTextStyle,
-            _actionSmallTextStyle,
-            _tabLabelTextStyle,
-            _navTitleTextStyle,
-            _navLargeTitleTextStyle,
-            _navActionTextStyle,
-            _pickerTextStyle,
-            _dateTimePickerTextStyle);
+            CupertinoDynamicColor.MaybeResolve(_primaryColor, context),
+            ResolveTextStyle(_textStyle, context),
+            ResolveTextStyle(_actionTextStyle, context),
+            ResolveTextStyle(_actionSmallTextStyle, context),
+            ResolveTextStyle(_tabLabelTextStyle, context),
+            ResolveTextStyle(_navTitleTextStyle, context),
+            ResolveTextStyle(_navLargeTitleTextStyle, context),
+            ResolveTextStyle(_navActionTextStyle, context),
+            ResolveTextStyle(_pickerTextStyle, context),
+            ResolveTextStyle(_dateTimePickerTextStyle, context));
     }
 
+    // Dart's top-level `_resolveTextStyle`. This does not resolve the shadow color, foreground,
+    // background, etc.
+    private static TextStyle? ResolveTextStyle(TextStyle? style, BuildContext context) =>
+        style?.CopyWith(
+            color: CupertinoDynamicColor.MaybeResolve(style.Color, context),
+            backgroundColor: CupertinoDynamicColor.MaybeResolve(style.BackgroundColor, context),
+            decorationColor: CupertinoDynamicColor.MaybeResolve(style.DecorationColor, context));
+
     public CupertinoTextThemeData CopyWith(
-        CupertinoDynamicColor? primaryColor = null,
+        Color? primaryColor = null,
         TextStyle? textStyle = null,
         TextStyle? actionTextStyle = null,
         TextStyle? actionSmallTextStyle = null,
@@ -267,15 +268,15 @@ public class CupertinoTextThemeData
 /// <summary>Dart's private `_TextThemeDefaultsBuilder`: the label/action colors the defaults use.</summary>
 internal sealed class TextThemeDefaultsBuilder
 {
-    internal TextThemeDefaultsBuilder(CupertinoDynamicColor labelColor, CupertinoDynamicColor inactiveGrayColor)
+    internal TextThemeDefaultsBuilder(Color labelColor, Color inactiveGrayColor)
     {
         LabelColor = labelColor;
         InactiveGrayColor = inactiveGrayColor;
     }
 
-    internal CupertinoDynamicColor LabelColor { get; }
+    internal Color LabelColor { get; }
 
-    internal CupertinoDynamicColor InactiveGrayColor { get; }
+    internal Color InactiveGrayColor { get; }
 
     internal TextStyle TextStyle => ApplyLabelColor(CupertinoTextThemeData.DefaultTextStyle, LabelColor);
 
@@ -294,24 +295,23 @@ internal sealed class TextThemeDefaultsBuilder
     internal TextStyle DateTimePickerTextStyle =>
         ApplyLabelColor(CupertinoTextThemeData.DefaultDateTimePickerTextStyle, LabelColor);
 
-    internal TextStyle ActionTextStyle(CupertinoDynamicColor? primaryColor)
+    internal TextStyle ActionTextStyle(Color? primaryColor)
     {
-        return CupertinoTextThemeData.DefaultActionTextStyle.CopyWith(color: primaryColor?.Value);
+        return CupertinoTextThemeData.DefaultActionTextStyle.CopyWith(color: primaryColor);
     }
 
-    internal TextStyle ActionSmallTextStyle(CupertinoDynamicColor? primaryColor)
+    internal TextStyle ActionSmallTextStyle(Color? primaryColor)
     {
-        return CupertinoTextThemeData.DefaultActionSmallTextStyle.CopyWith(color: primaryColor?.Value);
+        return CupertinoTextThemeData.DefaultActionSmallTextStyle.CopyWith(color: primaryColor);
     }
 
-    internal TextStyle NavActionTextStyle(CupertinoDynamicColor? primaryColor) => ActionTextStyle(primaryColor);
+    internal TextStyle NavActionTextStyle(Color? primaryColor) => ActionTextStyle(primaryColor);
 
     internal TextThemeDefaultsBuilder ResolveFrom(BuildContext context)
     {
-        CupertinoDynamicColor resolvedLabelColor = LabelColor.ResolveFrom(context);
-        CupertinoDynamicColor resolvedInactiveGray = InactiveGrayColor.ResolveFrom(context);
-        return resolvedLabelColor.Value == LabelColor.Value
-               && resolvedInactiveGray.Value == CupertinoColors.InactiveGray.Value
+        Color resolvedLabelColor = CupertinoDynamicColor.Resolve(LabelColor, context);
+        Color resolvedInactiveGray = CupertinoDynamicColor.Resolve(InactiveGrayColor, context);
+        return resolvedLabelColor == LabelColor && resolvedInactiveGray == CupertinoColors.InactiveGray
             ? this
             : new TextThemeDefaultsBuilder(resolvedLabelColor, resolvedInactiveGray);
     }
@@ -330,8 +330,8 @@ internal sealed class TextThemeDefaultsBuilder
 
     public override int GetHashCode() => HashCode.Combine(LabelColor, InactiveGrayColor);
 
-    private static TextStyle ApplyLabelColor(TextStyle original, CupertinoDynamicColor color)
+    private static TextStyle ApplyLabelColor(TextStyle original, Color color)
     {
-        return original.Color == color.Value ? original : original.CopyWith(color: color.Value);
+        return original.Color == color ? original : original.CopyWith(color: color);
     }
 }

@@ -19,8 +19,8 @@ public sealed class CupertinoSlidingSegmentedControl<T> : StatefulWidget where T
         EdgeInsetsGeometry.Symmetric(horizontal: 3.0, vertical: 2.0);
 
     internal static readonly CupertinoDynamicColor DefaultThumbColor = CupertinoDynamicColor.WithBrightness(
-        Color.FromUInt32(0xFFFFFFFF),
-        Color.FromUInt32(0xFF636366),
+        new Color(0xFFFFFFFF),
+        new Color(0xFF636366),
         debugLabel: "CupertinoSlidingSegmentedControl.thumbColor");
 
     public CupertinoSlidingSegmentedControl(
@@ -28,9 +28,9 @@ public sealed class CupertinoSlidingSegmentedControl<T> : StatefulWidget where T
         Action<T?> onValueChanged,
         IReadOnlySet<T>? disabledChildren = null,
         T? groupValue = default,
-        CupertinoDynamicColor? thumbColor = null,
+        Color? thumbColor = null,
         EdgeInsetsGeometry? padding = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         bool proportionalWidth = false,
         bool isMomentary = false,
         Key? key = null) : base(key)
@@ -70,11 +70,11 @@ public sealed class CupertinoSlidingSegmentedControl<T> : StatefulWidget where T
 
     public Action<T?> OnValueChanged { get; }
 
-    public CupertinoDynamicColor BackgroundColor { get; }
+    public Color BackgroundColor { get; }
 
     public bool ProportionalWidth { get; }
 
-    public CupertinoDynamicColor ThumbColor { get; }
+    public Color ThumbColor { get; }
 
     public EdgeInsetsGeometry Padding { get; }
 
@@ -553,7 +553,7 @@ internal sealed class SlidingSegment<T> : StatefulWidget where T : notnull
 
 internal sealed class SlidingSegmentState<T> : State<SlidingSegment<T>> where T : notnull
 {
-    private static readonly Color DisabledContentColor = Color.FromArgb(115, 122, 122, 122);
+    private static readonly Color DisabledContentColor = Color.FromARGB(115, 122, 122, 122);
     private AnimationController? _scaleController;
     private Animation<double>? _scaleAnimation;
 
@@ -682,7 +682,7 @@ internal sealed class SlidingSegmentSeparator : StatefulWidget
 
 internal sealed class SlidingSegmentSeparatorState : State<SlidingSegmentSeparator>
 {
-    private static readonly Color SeparatorColor = Color.FromUInt32(0x4D8E8E93);
+    private static readonly Color SeparatorColor = new Color(0x4D8E8E93);
     private AnimationController? _opacityController;
 
     private SlidingSegmentSeparator Current => (SlidingSegmentSeparator)StateWidget;
@@ -731,11 +731,7 @@ internal sealed class SlidingSegmentSeparatorState : State<SlidingSegmentSeparat
         base.Dispose();
     }
 
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)Math.Round(color.A * opacity), 0, byte.MaxValue),
-        color.R,
-        color.G,
-        color.B);
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(color.Opacity * opacity);
 }
 
 internal sealed class CupertinoSlidingSegmentButton<T> : StatefulWidget where T : notnull
@@ -886,11 +882,11 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
     private static readonly IReadOnlyList<BoxShadow> ThumbShadows =
     [
         new BoxShadow(
-            color: Color.FromUInt32(0x1F000000),
+            color: new Color(0x1F000000),
             offset: new Point(0.0, 3.0),
             blurRadius: 8.0),
         new BoxShadow(
-            color: Color.FromUInt32(0x0A000000),
+            color: new Color(0x0A000000),
             offset: new Point(0.0, 3.0),
             blurRadius: 1.0),
     ];
@@ -1365,7 +1361,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
         context.Canvas.DrawRSuperellipse(
             shape.Inflate(0.5),
-            new SolidColorBrush(Color.FromUInt32(0x0A000000)),
+            new SolidColorBrush(new Color(0x0A000000)),
             null);
         context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(ThumbColor), null);
     }

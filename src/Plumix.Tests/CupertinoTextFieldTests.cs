@@ -74,13 +74,13 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
         DecoratedBox decorated = Assert.Single(harness.FindWidgets<DecoratedBox>());
         BoxDecoration decoration = Assert.IsType<BoxDecoration>(decorated.Decoration);
-        Assert.Equal(Color.FromUInt32(background), decoration.Color);
+        Assert.Equal(new Color(background), decoration.Color);
         Border resolvedBorder = Assert.IsType<Border>(decoration.Border);
-        Assert.Equal(Color.FromUInt32(border), resolvedBorder.Top.Color);
+        Assert.Equal(new Color(border), resolvedBorder.Top.Color);
         Assert.Equal(BorderRadius.Circular(5.0), decoration.BorderRadius);
 
         Text placeholderText = Assert.Single(harness.FindWidgets<Text>(), text => text.Data == "Search");
-        Assert.Equal(Color.FromUInt32(placeholder), placeholderText.Style?.Color);
+        ColorMatchers.AssertSameColorAs(new Color(placeholder), placeholderText.Style?.Color);
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
         Assert.Equal(new Thickness(0.0), editable.Padding);
         Assert.Equal(2.0, editable.CursorWidth);
@@ -132,11 +132,11 @@ public sealed class CupertinoTextFieldTests : IDisposable
         disabled.Pump(ViewSize);
         BoxDecoration defaultDecoration = Assert.IsType<BoxDecoration>(
             Assert.Single(disabled.FindWidgets<DecoratedBox>()).Decoration);
-        Assert.Equal(Color.FromUInt32(0xFFFAFAFA), defaultDecoration.Color);
+        Assert.Equal(new Color(0xFFFAFAFA), defaultDecoration.Color);
         // The EditableText's own Scrollable carries a keyed IgnorePointer of its own.
         Assert.True(Assert.Single(disabled.FindWidgets<IgnorePointer>(), widget => widget.Key is null).Ignoring);
 
-        var custom = new BoxDecoration(Color: Color.FromUInt32(0xFF123456));
+        var custom = new BoxDecoration(Color: new Color(0xFF123456));
         using var overridden = new CupertinoThemeTestHarness(Wrap(new CupertinoTextField(
             enabled: false,
             decoration: custom)));
@@ -145,7 +145,7 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
         using var borderless = new CupertinoThemeTestHarness(Wrap(CupertinoTextField.Borderless(enabled: false)));
         borderless.Pump(ViewSize);
-        Assert.Contains(borderless.FindWidgets<ColoredBox>(), box => box.Color == Color.FromUInt32(0xFFFAFAFA));
+        Assert.Contains(borderless.FindWidgets<ColoredBox>(), box => box.Color == new Color(0xFFFAFAFA));
     }
 
     [Theory]

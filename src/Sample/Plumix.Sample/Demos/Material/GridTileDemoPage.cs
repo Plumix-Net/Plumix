@@ -41,10 +41,10 @@ public sealed class GridTileDemoPage : StatelessWidget
     {
         var colors = new[]
         {
-            Color.Parse("#FFD7E3FF"),
-            Color.Parse("#FFFFD8E4"),
-            Color.Parse("#FFD9F2E6"),
-            Color.Parse("#FFFFE2C6"),
+            new Color(0xFFD7E3FF),
+            new Color(0xFFFFD8E4),
+            new Color(0xFFD9F2E6),
+            new Color(0xFFFFE2C6),
         };
         var content = new Container(
             color: colors[index],
@@ -56,24 +56,24 @@ public sealed class GridTileDemoPage : StatelessWidget
             0 => new GridTile(
                 child: content,
                 header: new GridTileBar(
-                    backgroundColor: Color.Parse("#CC000000"),
+                    backgroundColor: new Color(0xCC000000),
                     leading: new Icon(Icons.Star),
                     title: new Text("Header"))),
             1 => new GridTile(
                 child: content,
                 footer: new GridTileBar(
-                    backgroundColor: Color.Parse("#CC000000"),
+                    backgroundColor: new Color(0xCC000000),
                     title: new Text("Footer"),
                     subtitle: new Text("Two lines"),
                     trailing: new Icon(Icons.InfoOutline))),
             2 => new GridTile(
                 child: content,
                 header: new GridTileBar(
-                    backgroundColor: Color.Parse("#CC000000"),
+                    backgroundColor: new Color(0xCC000000),
                     leading: new Icon(Icons.Menu),
                     title: new Text("RTL")),
                 footer: new GridTileBar(
-                    backgroundColor: Color.Parse("#99000000"),
+                    backgroundColor: new Color(0x99000000),
                     subtitle: new Text("header + footer"))),
             _ => new GridTile(
                 child: content,

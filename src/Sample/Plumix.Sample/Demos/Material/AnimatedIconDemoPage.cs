@@ -96,7 +96,7 @@ internal sealed class AnimatedIconDemoPageState : State
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                         new IconTheme(
                             new IconThemeData(
-                                Color: Color.Parse("#FF315A7D"),
+                                Color: new Color(0xFF315A7D),
                                 Size: _large ? 48 : 36,
                                 Opacity: _muted ? 0.45 : 1.0),
                             new Wrap(
@@ -113,7 +113,7 @@ internal sealed class AnimatedIconDemoPageState : State
             height: 100,
             padding: new Thickness(8),
             decoration: new BoxDecoration(
-                Color: Color.Parse("#FFF1F4F8"),
+                Color: new Color(0xFFF1F4F8),
                 BorderRadius: new BorderRadius(12)),
             child: new Column(
                 mainAxisAlignment: MainAxisAlignment.Center,

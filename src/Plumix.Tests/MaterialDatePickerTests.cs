@@ -236,8 +236,8 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public void DatePickerThemeLocalOverridesDriveSelectedDayAndYear()
     {
-        var localDay = Color.Parse("#FF445566");
-        var localYear = Color.Parse("#FF778899");
+        var localDay = new Color(0xFF445566);
+        var localYear = new Color(0xFF778899);
         var localTheme = new DatePickerThemeData(
             DayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                 states.Contains(WidgetState.Selected) ? localDay : null),
@@ -267,14 +267,14 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public void DatePickerThemeDefaultsUseExactM2AndM3ColorSchemeRoles()
     {
-        var primary = Color.Parse("#FF102030");
-        var onPrimary = Color.Parse("#FF405060");
-        var onPrimaryContainer = Color.Parse("#FF708090");
-        var surface = Color.Parse("#FF90A0B0");
-        var onSurface = Color.Parse("#FFB0C0D0");
-        var onSurfaceVariant = Color.Parse("#FFD0E0F0");
-        var secondaryContainer = Color.Parse("#FF314253");
-        var surfaceContainerHigh = Color.Parse("#FF647586");
+        var primary = new Color(0xFF102030);
+        var onPrimary = new Color(0xFF405060);
+        var onPrimaryContainer = new Color(0xFF708090);
+        var surface = new Color(0xFF90A0B0);
+        var onSurface = new Color(0xFFB0C0D0);
+        var onSurfaceVariant = new Color(0xFFD0E0F0);
+        var secondaryContainer = new Color(0xFF314253);
+        var surfaceContainerHigh = new Color(0xFF647586);
         var scheme = ColorScheme.Material3Light with
         {
             Primary = primary,
@@ -747,7 +747,7 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public void DateRangePickerDialog_CalendarSelectionUsesRangeStatesAndPredicate()
     {
-        var rangeColor = Color.Parse("#FF345678");
+        var rangeColor = new Color(0xFF345678);
         using var harness = CreateHarness(new DatePickerTheme(
             new DatePickerThemeData(RangeSelectionBackgroundColor: rangeColor),
             new Navigator(new BuilderPageRoute(_ => new DateRangePickerDialog(
@@ -831,11 +831,11 @@ public sealed class MaterialDatePickerTests : IDisposable
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 
-    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+    private static Color WithOpacity(Color color, double opacity) => Color.FromARGB(
         (byte)Math.Round(255 * opacity),
-        color.R,
-        color.G,
-        color.B);
+        color.Red,
+        color.Green,
+        color.Blue);
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

@@ -49,7 +49,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                                         mainAxisSpacing: 8,
                                         childAspectRatio: 1.8),
                                     itemBuilder: (_, index) => new Container(
-                                        color: index % 2 == 0 ? Color.Parse("#FFEAF4FF") : Color.Parse("#FFE8F5E9"),
+                                        color: index % 2 == 0 ? new Color(0xFFEAF4FF) : new Color(0xFFE8F5E9),
                                         padding: new Thickness(8, 6),
                                         child: new Text($"sliver tile #{index}", fontSize: 12, color: Colors.Black)),
                                     addAutomaticKeepAlives: false)),
@@ -86,7 +86,7 @@ internal sealed class GridTileItemState : State
 
     public override Widget Build(BuildContext context)
     {
-        var background = _index % 2 == 0 ? Color.Parse("#FFEAF4FF") : Colors.White;
+        var background = _index % 2 == 0 ? new Color(0xFFEAF4FF) : Colors.White;
         return new CounterTapButton(
             label: $"tile {_index}\nstate={_token}\ntaps={_taps}",
             onTap: () => SetState(() => _taps += 1),

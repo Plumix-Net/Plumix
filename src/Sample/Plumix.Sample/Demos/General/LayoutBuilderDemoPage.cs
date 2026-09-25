@@ -24,7 +24,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                     color: Colors.DimGray),
                 new Container(
                     height: 96,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(12),
                     child: new LayoutBuilder((_, constraints) =>
                     {
@@ -32,7 +32,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                         string width = constraints.MaxWidth.ToString("0");
                         string height = constraints.MaxHeight.ToString("0");
                         return new Container(
-                            color: isWide ? Color.Parse("#FF2A9D8F") : Color.Parse("#FFE76F51"),
+                            color: isWide ? new Color(0xFF2A9D8F) : new Color(0xFFE76F51),
                             alignment: Alignment.Center,
                             child: new Text(
                                 $"{width} × {height} — {(isWide ? "wide" : "compact")}",
@@ -60,7 +60,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
             {
                 bool isLandscape = orientation == Orientation.Landscape;
                 return new Container(
-                    color: isLandscape ? Color.Parse("#FF264653") : Color.Parse("#FF457B9D"),
+                    color: isLandscape ? new Color(0xFF264653) : new Color(0xFF457B9D),
                     alignment: Alignment.Center,
                     child: new Text(
                         isLandscape ? "landscape" : "portrait",

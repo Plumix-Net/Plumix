@@ -19,7 +19,7 @@ public sealed class CupertinoFormSection : StatelessWidget
         Widget? header,
         Widget? footer,
         EdgeInsetsGeometry margin,
-        CupertinoDynamicColor backgroundColor,
+        Color backgroundColor,
         BoxDecoration? decoration,
         Clip clipBehavior,
         Key? key) : base(key)
@@ -44,7 +44,7 @@ public sealed class CupertinoFormSection : StatelessWidget
         Widget? header = null,
         Widget? footer = null,
         EdgeInsetsGeometry? margin = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         BoxDecoration? decoration = null,
         Clip clipBehavior = Clip.None,
         Key? key = null) : this(
@@ -76,7 +76,7 @@ public sealed class CupertinoFormSection : StatelessWidget
     public BoxDecoration? Decoration { get; }
 
     /// <summary>The background behind the section.</summary>
-    public CupertinoDynamicColor BackgroundColor { get; }
+    public Color BackgroundColor { get; }
 
     /// <summary>The clip applied to the decorated row group.</summary>
     public Clip ClipBehavior { get; }
@@ -88,7 +88,7 @@ public sealed class CupertinoFormSection : StatelessWidget
         Widget? header = null,
         Widget? footer = null,
         EdgeInsetsGeometry? margin = null,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         BoxDecoration? decoration = null,
         Clip clipBehavior = Clip.None,
         Key? key = null)

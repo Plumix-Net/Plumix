@@ -61,7 +61,7 @@ internal sealed class NavigationPopDemoPageState : State
                                 onPressed: () => Navigator.Of(Context).MaybePop("demo-result"),
                                 child: new Text("Simulate parent Back")),
                         ]),
-                    new Text($"Status: {_status}", color: Color.Parse("#FF31506F")),
+                    new Text($"Status: {_status}", color: new Color(0xFF31506F)),
                     new Expanded(
                         child: new NavigatorPopHandler<object?>(
                             onPopWithResult: result =>
@@ -104,7 +104,7 @@ internal sealed class NavigationPopDemoPageState : State
     private static Widget BuildNestedPage(int page)
     {
         return new Container(
-            color: page == 0 ? Color.Parse("#FFE8F0FE") : Color.Parse("#FFE6F4EA"),
+            color: page == 0 ? new Color(0xFFE8F0FE) : new Color(0xFFE6F4EA),
             padding: new Thickness(16),
             alignment: Alignment.Center,
             child: new Text(

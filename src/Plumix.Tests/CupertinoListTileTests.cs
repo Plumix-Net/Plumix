@@ -101,11 +101,11 @@ public sealed class CupertinoListTileTests : IDisposable
     public void Build_ResolvesDynamicColorsForNormalActivatedAndChevronStates()
     {
         var normal = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF112233),
-            Color.FromUInt32(0xFF223344));
+            new Color(0xFF112233),
+            new Color(0xFF223344));
         var activated = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFF334455),
-            Color.FromUInt32(0xFF445566));
+            new Color(0xFF334455),
+            new Color(0xFF445566));
         var completion = new TaskCompletionSource();
         var tile = new CupertinoListTile(
             title: new Text("Async tile"),
@@ -116,7 +116,7 @@ public sealed class CupertinoListTileTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(tile, PlatformBrightness.Dark));
         harness.Pump(ViewSize);
 
-        Assert.Equal(0xFF223344u, BackgroundColor(harness.RenderView).ToUInt32());
+        Assert.Equal(0xFF223344u, BackgroundColor(harness.RenderView).ToARGB32());
         RenderParagraph chevron = Assert.IsType<RenderParagraph>(FindParagraph(
             harness.RenderView,
             char.ConvertFromUtf32(CupertinoIcons.RightChevron.CodePoint)));
@@ -127,11 +127,11 @@ public sealed class CupertinoListTileTests : IDisposable
 
         Tap(harness.RenderView, new Point(160.0, 120.0), 801);
         harness.Pump(ViewSize);
-        Assert.Equal(0xFF445566u, BackgroundColor(harness.RenderView).ToUInt32());
+        Assert.Equal(0xFF445566u, BackgroundColor(harness.RenderView).ToARGB32());
 
         completion.SetResult();
         harness.Pump(ViewSize);
-        Assert.Equal(0xFF223344u, BackgroundColor(harness.RenderView).ToUInt32());
+        Assert.Equal(0xFF223344u, BackgroundColor(harness.RenderView).ToARGB32());
     }
 
     [Fact]

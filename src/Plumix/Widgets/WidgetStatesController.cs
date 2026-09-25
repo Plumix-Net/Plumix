@@ -64,6 +64,11 @@ internal sealed class SingleWidgetStateConstraint : WidgetStatesConstraint
         ArgumentNullException.ThrowIfNull(states);
         return states.Contains(_state);
     }
+
+    // Dart's `WidgetState` enum value is the constraint itself, so equal states are equal.
+    public override bool Equals(object? obj) => obj is SingleWidgetStateConstraint other && other._state == _state;
+
+    public override int GetHashCode() => _state.GetHashCode();
 }
 
 internal sealed class WidgetStateOperator : WidgetStatesConstraint
@@ -88,6 +93,17 @@ internal sealed class WidgetStateOperator : WidgetStatesConstraint
         WidgetStateOperation.Or => _first.IsSatisfiedBy(states) || _second!.IsSatisfiedBy(states),
         _ => !_first.IsSatisfiedBy(states),
     };
+
+    // Dart's `_WidgetStateAnd`/`_WidgetStateOr`/`_WidgetStateNot` equality: same kind and operands.
+    public override bool Equals(object? obj) =>
+        obj is WidgetStateOperator other
+        && other._operation == _operation
+        && other._first.Equals(_first)
+        && Equals(other._second, _second);
+
+    // Dart's `_WidgetStateCombo.hashCode` and `_WidgetStateNot.hashCode`.
+    public override int GetHashCode() =>
+        _second is null ? _first.GetHashCode() : HashCode.Combine(_first, _second);
 }
 
 /// <summary>

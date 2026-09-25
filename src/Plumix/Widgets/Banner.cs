@@ -24,14 +24,14 @@ public sealed class BannerPainter : CustomPainter
     public const double Height = 12.0;
     public static double BottomOffset => Offset + (Math.Sqrt(0.5) * Height);
     public static Rect BannerRect { get; } = new(-Offset, Offset - Height, Offset * 2.0, Height);
-    public static Color DefaultColor { get; } = Color.FromArgb(0xA0, 0xB7, 0x1C, 0x1C);
+    public static Color DefaultColor { get; } = Color.FromARGB(0xA0, 0xB7, 0x1C, 0x1C);
     public static TextStyle DefaultTextStyle { get; } = new(
         FontSize: Height * 0.85,
-        Color: Colors.White,
+        Color: new Color(0xFFFFFFFF),
         FontWeight: FontWeight.Black,
         Height: 1.0);
     public static BoxShadow DefaultShadow { get; } = new(
-        color: Color.FromArgb(0x7F, 0, 0, 0),
+        color: Color.FromARGB(0x7F, 0, 0, 0),
         blurRadius: 6.0);
 
     private TextLayout? _textLayout;
@@ -141,7 +141,7 @@ public sealed class BannerPainter : CustomPainter
                     TextStyle.FontWeight ?? FontWeight.Normal,
                     FontStretch.Normal),
                 fontSize: TextStyle.FontSize ?? DefaultTextStyle.FontSize!.Value,
-                foreground: new SolidColorBrush(TextStyle.Color ?? Colors.White),
+                foreground: new SolidColorBrush(TextStyle.Color ?? new Color(0xFFFFFFFF)),
                 textAlignment: TextAlignment.Center,
                 textWrapping: TextWrapping.NoWrap,
                 flowDirection: TextDirection == TextDirection.Rtl

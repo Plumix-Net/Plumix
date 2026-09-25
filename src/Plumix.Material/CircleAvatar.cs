@@ -91,7 +91,7 @@ public sealed class CircleAvatar : StatelessWidget
         var effectiveBackgroundColor = BackgroundColor
                                        ?? (theme.UseMaterial3 ? theme.ColorScheme.PrimaryContainer : null);
 
-        if (!effectiveBackgroundColor.HasValue)
+        if (effectiveBackgroundColor == null)
         {
             effectiveBackgroundColor = ThemeData.EstimateBrightnessForColor(textStyle.Color ?? Colors.Black) switch
             {
@@ -99,10 +99,10 @@ public sealed class CircleAvatar : StatelessWidget
                 _ => theme.PrimaryColorDark,
             };
         }
-        else if (!effectiveForegroundColor.HasValue)
+        else if (effectiveForegroundColor == null)
         {
             textStyle = textStyle.CopyWith(
-                color: ThemeData.EstimateBrightnessForColor(BackgroundColor!.Value) switch
+                color: ThemeData.EstimateBrightnessForColor(BackgroundColor!) switch
                 {
                     Brightness.Dark => theme.PrimaryColorLight,
                     _ => theme.PrimaryColorDark,

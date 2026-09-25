@@ -128,19 +128,19 @@ public class RenderErrorBox : RenderBox
 
     private static Color InitBackgroundColor()
     {
-        return Constants.KDebugMode ? Color.FromUInt32(0xF0900000) : Color.FromUInt32(0xF0C0C0C0);
+        return Constants.KDebugMode ? new Color(0xF0900000) : new Color(0xF0C0C0C0);
     }
 
     private static ParagraphTextStyle InitTextStyle()
     {
         return Constants.KDebugMode
             ? new ParagraphTextStyle(
-                Color: Color.FromUInt32(0xFFFFFF66),
+                Color: new Color(0xFFFFFF66),
                 FontFamily: FontFamily.Parse("monospace"),
                 FontSize: 14.0,
                 FontWeight: FontWeight.Bold)
             : new ParagraphTextStyle(
-                Color: Color.FromUInt32(0xFF303030),
+                Color: new Color(0xFF303030),
                 FontFamily: FontFamily.Parse("sans-serif"),
                 FontSize: 18.0);
     }

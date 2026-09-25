@@ -75,7 +75,7 @@ public sealed class MaterialSegmentedButtonsTests
             ToggleButtonsTheme = new ToggleButtonsThemeData(
                 Color: Colors.Purple,
                 SelectedColor: Colors.Orange,
-                FillColor: WidgetStateProperty<Color?>.All(Colors.DarkGreen),
+                FillColor: Colors.DarkGreen,
                 BorderWidth: 3,
                 BorderRadius: BorderRadius.Circular(12)),
         };
@@ -107,7 +107,7 @@ public sealed class MaterialSegmentedButtonsTests
     [Fact]
     public void ToggleButtons_StatefulFillAndAdjacentSelectedBorderResolveByState()
     {
-        var statefulFill = WidgetStateProperty<Color?>.ResolveWith(states =>
+        var statefulFill = WidgetStateColor.ResolveWith(states =>
         {
             if (states.Contains(WidgetState.Disabled)) return Colors.Orange;
             if (states.Contains(WidgetState.Selected)) return Colors.DarkGreen;

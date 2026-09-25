@@ -1,6 +1,5 @@
 // Dart parity source: flutter/packages/flutter/lib/src/painting/colors.dart
 
-using Avalonia.Media;
 using Plumix.Foundation;
 
 namespace Plumix.Painting;
@@ -9,51 +8,70 @@ namespace Plumix.Painting;
 /// A color that has a small table of related colors called a "swatch".
 /// </summary>
 /// <remarks>
-/// Dart's <c>ColorSwatch&lt;T&gt;</c> extends <c>Color</c>. Avalonia's <see cref="Color"/> is a
-/// sealed struct, so the swatch instead exposes its primary color through
-/// <see cref="Primary"/> and converts implicitly wherever a <see cref="Color"/> is expected.
+/// Like Dart's, the swatch <em>is</em> its primary color: it derives from <see cref="Color"/>, so it
+/// can be stored in any color slot and recovered with a runtime type test. Dart hashes the swatch
+/// map by identity while <c>==</c> compares its contents; Plumix hashes the contents so equal
+/// swatches hash equally.
 /// </remarks>
 /// <typeparam name="T">The type of the swatch keys.</typeparam>
-public class ColorSwatch<T> : IEquatable<ColorSwatch<T>>
+public class ColorSwatch<T> : Color
     where T : notnull
 {
     /// <summary>Creates a color that has a small table of related colors called a "swatch".</summary>
     /// <param name="primary">
-    /// The 32 bit ARGB value of one of the values in the swatch, as exposed by <see cref="Value"/>.
+    /// The 32 bit ARGB value of one of the values in the swatch, as exposed by <see cref="Color.Value"/>.
     /// This is distinct from the key of any color in the swatch.
     /// </param>
     /// <param name="swatch">The table of related colors.</param>
     public ColorSwatch(uint primary, IReadOnlyDictionary<T, Color> swatch)
+        : base(primary)
     {
-        Value = primary;
         Swatch = swatch;
     }
-
-    /// <summary>The 32 bit ARGB value of the swatch's primary color.</summary>
-    public uint Value { get; }
-
-    /// <summary>The swatch's primary color.</summary>
-    public Color Primary => Color.FromUInt32(Value);
 
     /// <summary>The table of related colors.</summary>
     protected IReadOnlyDictionary<T, Color> Swatch { get; }
 
     /// <summary>Returns an element of the swatch table.</summary>
-    public Color? this[T key] => Swatch.TryGetValue(key, out Color color) ? color : null;
+    public Color? this[T key] => Swatch.TryGetValue(key, out Color? color) ? color : null;
 
     /// <summary>Returns the valid keys for accessing the indexer.</summary>
     public IEnumerable<T> Keys => Swatch.Keys;
 
-    public static implicit operator Color(ColorSwatch<T> swatch) => swatch.Primary;
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(this, obj))
+        {
+            return true;
+        }
 
-    public static bool operator ==(ColorSwatch<T>? left, ColorSwatch<T>? right) =>
-        left?.Equals(right) ?? right is null;
+        if (obj is null || obj.GetType() != GetType())
+        {
+            return false;
+        }
 
-    public static bool operator !=(ColorSwatch<T>? left, ColorSwatch<T>? right) => !(left == right);
+        return base.Equals(obj) && obj is ColorSwatch<T> other && MapEquals(other.Swatch, Swatch);
+    }
 
-    /// <summary>Linearly interpolates between two <see cref="ColorSwatch{T}"/>es.</summary>
+    public override int GetHashCode()
+    {
+        int swatchHash = 0;
+        foreach (KeyValuePair<T, Color> entry in Swatch)
+        {
+            swatchHash ^= HashCode.Combine(entry.Key, entry.Value);
+        }
+
+        return HashCode.Combine(GetType(), Value, swatchHash);
+    }
+
+    public override string ToString() =>
+        $"{Diagnostics.ObjectRuntimeType(this, "ColorSwatch")}(primary value: {base.ToString()})";
+
+    /// <summary>Linearly interpolate between two <see cref="ColorSwatch{T}"/>es.</summary>
     /// <remarks>
-    /// If either swatch is null, this interpolates from a transparent instance of the other one.
+    /// It delegates to <see cref="Color.Lerp"/> to interpolate the different colors of the swatch.
+    /// If either color is null, this function linearly interpolates from a transparent instance of
+    /// the other color.
     /// </remarks>
     public static ColorSwatch<T>? Lerp(ColorSwatch<T>? a, ColorSwatch<T>? b, double t)
     {
@@ -65,86 +83,43 @@ public class ColorSwatch<T> : IEquatable<ColorSwatch<T>>
         Dictionary<T, Color> swatch;
         if (b is null)
         {
-            swatch = a!.Swatch.ToDictionary(
-                entry => entry.Key,
-                entry => LerpColor(entry.Value, null, t)!.Value);
+            swatch = a!.Swatch.ToDictionary(entry => entry.Key, entry => Lerp(entry.Value, null, t)!);
         }
         else if (a is null)
         {
-            swatch = b.Swatch.ToDictionary(
-                entry => entry.Key,
-                entry => LerpColor(null, entry.Value, t)!.Value);
+            swatch = b.Swatch.ToDictionary(entry => entry.Key, entry => Lerp(null, entry.Value, t)!);
         }
         else
         {
-            swatch = a.Swatch.ToDictionary(
-                entry => entry.Key,
-                entry => LerpColor(entry.Value, b[entry.Key], t)!.Value);
+            swatch = a.Swatch.ToDictionary(entry => entry.Key, entry => Lerp(entry.Value, b[entry.Key], t)!);
         }
 
-        Color? primary = LerpColor(a?.Primary, b?.Primary, t);
-        return new ColorSwatch<T>(primary!.Value.ToUInt32(), swatch);
+        return new ColorSwatch<T>(Lerp((Color?)a, b, t)!.Value, swatch);
     }
 
-    public bool Equals(ColorSwatch<T>? other)
+    // foundation's `mapEquals<T, Color>`.
+    private static bool MapEquals(IReadOnlyDictionary<T, Color> a, IReadOnlyDictionary<T, Color> b)
     {
-        if (ReferenceEquals(this, other))
+        if (ReferenceEquals(a, b))
         {
             return true;
         }
-        if (other is null || other.GetType() != GetType())
+
+        if (a.Count != b.Count)
         {
             return false;
         }
-        if (other.Value != Value || other.Swatch.Count != Swatch.Count)
+
+        foreach (KeyValuePair<T, Color> entry in a)
         {
-            return false;
-        }
-        foreach (KeyValuePair<T, Color> entry in Swatch)
-        {
-            if (!other.Swatch.TryGetValue(entry.Key, out Color color) || color != entry.Value)
+            if (!b.TryGetValue(entry.Key, out Color? color) || color != entry.Value)
             {
                 return false;
             }
         }
+
         return true;
     }
-
-    public override bool Equals(object? obj) => Equals(obj as ColorSwatch<T>);
-
-    public override int GetHashCode()
-    {
-        int swatchHash = 0;
-        foreach (KeyValuePair<T, Color> entry in Swatch)
-        {
-            swatchHash ^= HashCode.Combine(entry.Key, entry.Value);
-        }
-        return HashCode.Combine(GetType(), Value, swatchHash);
-    }
-
-    public override string ToString() => $"{GetType().Name}(primary value: {Primary})";
-
-    /// <summary>
-    /// Mirrors Dart's <c>Color.lerp</c>: a null endpoint fades the other one out through its own
-    /// color with zero alpha.
-    /// </summary>
-    private static Color? LerpColor(Color? a, Color? b, double t)
-    {
-        if (!a.HasValue && !b.HasValue)
-        {
-            return null;
-        }
-        Color from = a ?? Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        Color to = b ?? Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return Color.FromArgb(
-            LerpChannel(from.A, to.A, t),
-            LerpChannel(from.R, to.R, t),
-            LerpChannel(from.G, to.G, t),
-            LerpChannel(from.B, to.B, t));
-    }
-
-    private static byte LerpChannel(byte a, byte b, double t) =>
-        (byte)Math.Clamp((int)(a + ((b - a) * t)), byte.MinValue, byte.MaxValue);
 }
 
 /// <summary>
@@ -164,17 +139,6 @@ public sealed class ColorProperty : DiagnosticsProperty<Color?>
     {
     }
 
-    /// <summary>
-    /// Renders the colour the way dart:ui's <c>Color.toString</c> does rather than the way
-    /// Avalonia's <see cref="Color.ToString"/> does, so a diagnostics dump reads like Flutter's.
-    /// </summary>
-    public override string ValueToString(TextTreeConfiguration? parentConfiguration = null)
-    {
-        return TypedValue is { } color
-            ? color.ToDartString()
-            : base.ValueToString(parentConfiguration);
-    }
-
     /// <inheritdoc />
     public override Dictionary<string, object?> ToJsonMap(DiagnosticsSerializationDelegate serializationDelegate)
     {
@@ -183,10 +147,10 @@ public sealed class ColorProperty : DiagnosticsProperty<Color?>
         {
             json["valueProperties"] = new Dictionary<string, object>
             {
-                ["red"] = color.R,
-                ["green"] = color.G,
-                ["blue"] = color.B,
-                ["alpha"] = color.A,
+                ["red"] = color.Red,
+                ["green"] = color.Green,
+                ["blue"] = color.Blue,
+                ["alpha"] = color.Alpha,
             };
         }
 

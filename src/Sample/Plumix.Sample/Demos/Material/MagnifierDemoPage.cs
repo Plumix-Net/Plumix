@@ -34,7 +34,7 @@ internal sealed class MagnifierDemoPageState : State
                 new Text(
                     "Move both lenses across high-contrast text and stripes to compare source geometry and styling.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -47,7 +47,7 @@ internal sealed class MagnifierDemoPageState : State
                     ]),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F2FA"),
+                        color: new Color(0xFFF7F2FA),
                         child: new Stack(
                             clipBehavior: Clip.None,
                             children:
@@ -66,7 +66,7 @@ internal sealed class MagnifierDemoPageState : State
                                         child: new Text(
                                             "MAGNIFY 0123456789",
                                             fontSize: 24,
-                                            color: Color.Parse("#FF1D192B")))),
+                                            color: new Color(0xFF1D192B)))),
                                 new Positioned(
                                     left: _focusX - 50,
                                     top: 82,
@@ -76,20 +76,20 @@ internal sealed class MagnifierDemoPageState : State
                                         focalPointOffset: new Point(0, 74),
                                         decoration: new MagnifierDecoration(
                                             shape: new RoundedRectangleBorder(
-                                                new BorderSide(Color.Parse("#FF006A6A"), 2),
+                                                new BorderSide(new Color(0xFF006A6A), 2),
                                                 Plumix.Rendering.BorderRadius.Circular(14)),
                                             shadows: BuildLensShadow()),
                                         clipBehavior: Clip.HardEdge,
                                         child: new ColoredBox(
                                             _showFilm
-                                                ? Color.FromArgb(10, 0, 105, 105)
+                                                ? Color.FromARGB(10, 0, 105, 105)
                                                 : Colors.Transparent))),
                                 new Positioned(
                                     left: _focusX - (MaterialMagnifier.DefaultMagnifierSize.Width / 2.0),
                                     top: 116,
                                     child: new MaterialMagnifier(
                                         filmColor: _showFilm
-                                            ? Color.FromArgb(8, 158, 158, 158)
+                                            ? Color.FromARGB(8, 158, 158, 158)
                                             : Colors.Transparent)),
                                 new Positioned(
                                     left: 24,
@@ -97,7 +97,7 @@ internal sealed class MagnifierDemoPageState : State
                                     child: new Text(
                                         $"focusX={_focusX:0}, raw scale=1.8, material scale=1.25",
                                         fontSize: 12,
-                                        color: Color.Parse("#FF6750A4"))),
+                                        color: new Color(0xFF6750A4))),
                             ]))),
             ]);
     }
@@ -106,11 +106,11 @@ internal sealed class MagnifierDemoPageState : State
     {
         var colors = new[]
         {
-            Color.Parse("#FF6750A4"),
-            Color.Parse("#FFFFD8E4"),
-            Color.Parse("#FF006A6A"),
-            Color.Parse("#FFFFDDB3"),
-            Color.Parse("#FF386A20"),
+            new Color(0xFF6750A4),
+            new Color(0xFFFFD8E4),
+            new Color(0xFF006A6A),
+            new Color(0xFFFFDDB3),
+            new Color(0xFF386A20),
         };
         return new Row(
             children: colors
@@ -123,7 +123,7 @@ internal sealed class MagnifierDemoPageState : State
         return
         [
             new Plumix.Rendering.BoxShadow(
-                color: Color.FromArgb(25, 0, 0, 0),
+                color: Color.FromARGB(25, 0, 0, 0),
                 offset: new Point(0, 2),
                 blurRadius: 1.5,
                 spreadRadius: 0.75),
@@ -136,8 +136,8 @@ internal sealed class MagnifierDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

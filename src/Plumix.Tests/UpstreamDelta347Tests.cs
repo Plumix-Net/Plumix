@@ -5,7 +5,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 using Image = Plumix.Widgets.Image;
 using Path = Plumix.UI.Path;
 
@@ -26,7 +25,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class UpstreamDelta347Tests : IDisposable
 {
-    private static readonly Color Green = Color.FromRgb(0, 0xFF, 0);
+    private static readonly Color Green = Color.FromARGB(0xFF, 0, 0xFF, 0);
 
     public UpstreamDelta347Tests()
     {

@@ -14,8 +14,8 @@ public sealed class CupertinoTheme : StatelessWidget
         primaryColor: CupertinoColors.SystemBlue,
         primaryContrastingColor: CupertinoColors.White,
         barBackgroundColor: CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xF0F9F9F9),
-            Color.FromUInt32(0xF01D1D1D)),
+            new Color(0xF0F9F9F9),
+            new Color(0xF01D1D1D)),
         scaffoldBackgroundColor: CupertinoColors.SystemBackground,
         selectionHandleColor: CupertinoColors.SystemBlue,
         applyThemeToAll: false,
@@ -100,12 +100,12 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
     // subclass reaches Dart's `raw` behavior by calling this one positionally.
     public CupertinoThemeData(
         PlatformBrightness? brightness = null,
-        CupertinoDynamicColor? primaryColor = null,
-        CupertinoDynamicColor? primaryContrastingColor = null,
+        Color? primaryColor = null,
+        Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
-        CupertinoDynamicColor? barBackgroundColor = null,
-        CupertinoDynamicColor? scaffoldBackgroundColor = null,
-        CupertinoDynamicColor? selectionHandleColor = null,
+        Color? barBackgroundColor = null,
+        Color? scaffoldBackgroundColor = null,
+        Color? selectionHandleColor = null,
         bool? applyThemeToAll = null)
         : this(
             brightness,
@@ -122,12 +122,12 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
 
     private protected CupertinoThemeData(
         PlatformBrightness? brightness,
-        CupertinoDynamicColor? primaryColor,
-        CupertinoDynamicColor? primaryContrastingColor,
+        Color? primaryColor,
+        Color? primaryContrastingColor,
         CupertinoTextThemeData? textTheme,
-        CupertinoDynamicColor? barBackgroundColor,
-        CupertinoDynamicColor? scaffoldBackgroundColor,
-        CupertinoDynamicColor? selectionHandleColor,
+        Color? barBackgroundColor,
+        Color? scaffoldBackgroundColor,
+        Color? selectionHandleColor,
         bool? applyThemeToAll,
         CupertinoThemeDefaults defaults)
         : base(
@@ -143,21 +143,21 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
         _defaults = defaults;
     }
 
-    public override CupertinoDynamicColor PrimaryColor => base.PrimaryColor ?? _defaults.PrimaryColor;
+    public override Color PrimaryColor => base.PrimaryColor ?? _defaults.PrimaryColor;
 
-    public override CupertinoDynamicColor PrimaryContrastingColor =>
+    public override Color PrimaryContrastingColor =>
         base.PrimaryContrastingColor ?? _defaults.PrimaryContrastingColor;
 
     public override CupertinoTextThemeData TextTheme =>
         base.TextTheme ?? _defaults.TextThemeDefaults.CreateDefaults(PrimaryColor);
 
-    public override CupertinoDynamicColor BarBackgroundColor =>
+    public override Color BarBackgroundColor =>
         base.BarBackgroundColor ?? _defaults.BarBackgroundColor;
 
-    public override CupertinoDynamicColor ScaffoldBackgroundColor =>
+    public override Color ScaffoldBackgroundColor =>
         base.ScaffoldBackgroundColor ?? _defaults.ScaffoldBackgroundColor;
 
-    public override CupertinoDynamicColor SelectionHandleColor =>
+    public override Color SelectionHandleColor =>
         base.SelectionHandleColor ?? _defaults.SelectionHandleColor;
 
     // Dart overrides `applyThemeToAll` to a non-nullable `bool`; C# covariant returns do not cover
@@ -181,24 +181,24 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
     {
         return new CupertinoThemeData(
             Brightness,
-            base.PrimaryColor?.ResolveFrom(context),
-            base.PrimaryContrastingColor?.ResolveFrom(context),
+            CupertinoDynamicColor.MaybeResolve(base.PrimaryColor, context),
+            CupertinoDynamicColor.MaybeResolve(base.PrimaryContrastingColor, context),
             base.TextTheme?.ResolveFrom(context),
-            base.BarBackgroundColor?.ResolveFrom(context),
-            base.ScaffoldBackgroundColor?.ResolveFrom(context),
-            base.SelectionHandleColor?.ResolveFrom(context),
+            CupertinoDynamicColor.MaybeResolve(base.BarBackgroundColor, context),
+            CupertinoDynamicColor.MaybeResolve(base.ScaffoldBackgroundColor, context),
+            CupertinoDynamicColor.MaybeResolve(base.SelectionHandleColor, context),
             ApplyThemeToAll,
             _defaults.ResolveFrom(context, resolveTextTheme: base.TextTheme is null));
     }
 
     public override CupertinoThemeData CopyWith(
         PlatformBrightness? brightness = null,
-        CupertinoDynamicColor? primaryColor = null,
-        CupertinoDynamicColor? primaryContrastingColor = null,
+        Color? primaryColor = null,
+        Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
-        CupertinoDynamicColor? barBackgroundColor = null,
-        CupertinoDynamicColor? scaffoldBackgroundColor = null,
-        CupertinoDynamicColor? selectionHandleColor = null,
+        Color? barBackgroundColor = null,
+        Color? scaffoldBackgroundColor = null,
+        Color? selectionHandleColor = null,
         bool? applyThemeToAll = null)
     {
         return new CupertinoThemeData(
@@ -258,22 +258,22 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
 public class NoDefaultCupertinoThemeData
 {
     private readonly PlatformBrightness? _brightness;
-    private readonly CupertinoDynamicColor? _primaryColor;
-    private readonly CupertinoDynamicColor? _primaryContrastingColor;
+    private readonly Color? _primaryColor;
+    private readonly Color? _primaryContrastingColor;
     private readonly CupertinoTextThemeData? _textTheme;
-    private readonly CupertinoDynamicColor? _barBackgroundColor;
-    private readonly CupertinoDynamicColor? _scaffoldBackgroundColor;
-    private readonly CupertinoDynamicColor? _selectionHandleColor;
+    private readonly Color? _barBackgroundColor;
+    private readonly Color? _scaffoldBackgroundColor;
+    private readonly Color? _selectionHandleColor;
     private readonly bool? _applyThemeToAll;
 
     public NoDefaultCupertinoThemeData(
         PlatformBrightness? brightness = null,
-        CupertinoDynamicColor? primaryColor = null,
-        CupertinoDynamicColor? primaryContrastingColor = null,
+        Color? primaryColor = null,
+        Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
-        CupertinoDynamicColor? barBackgroundColor = null,
-        CupertinoDynamicColor? scaffoldBackgroundColor = null,
-        CupertinoDynamicColor? selectionHandleColor = null,
+        Color? barBackgroundColor = null,
+        Color? scaffoldBackgroundColor = null,
+        Color? selectionHandleColor = null,
         bool? applyThemeToAll = null)
     {
         _brightness = brightness;
@@ -289,17 +289,17 @@ public class NoDefaultCupertinoThemeData
     /// <summary>The brightness descendants should assume, or null to defer to the platform.</summary>
     public virtual PlatformBrightness? Brightness => _brightness;
 
-    public virtual CupertinoDynamicColor? PrimaryColor => _primaryColor;
+    public virtual Color? PrimaryColor => _primaryColor;
 
-    public virtual CupertinoDynamicColor? PrimaryContrastingColor => _primaryContrastingColor;
+    public virtual Color? PrimaryContrastingColor => _primaryContrastingColor;
 
     public virtual CupertinoTextThemeData? TextTheme => _textTheme;
 
-    public virtual CupertinoDynamicColor? BarBackgroundColor => _barBackgroundColor;
+    public virtual Color? BarBackgroundColor => _barBackgroundColor;
 
-    public virtual CupertinoDynamicColor? ScaffoldBackgroundColor => _scaffoldBackgroundColor;
+    public virtual Color? ScaffoldBackgroundColor => _scaffoldBackgroundColor;
 
-    public virtual CupertinoDynamicColor? SelectionHandleColor => _selectionHandleColor;
+    public virtual Color? SelectionHandleColor => _selectionHandleColor;
 
     /// <summary>Whether Cupertino theming also applies to Material descendants.</summary>
     public virtual bool? ApplyThemeToAll => _applyThemeToAll;
@@ -310,23 +310,23 @@ public class NoDefaultCupertinoThemeData
     {
         return new NoDefaultCupertinoThemeData(
             _brightness,
-            _primaryColor?.ResolveFrom(context),
-            _primaryContrastingColor?.ResolveFrom(context),
+            CupertinoDynamicColor.MaybeResolve(_primaryColor, context),
+            CupertinoDynamicColor.MaybeResolve(_primaryContrastingColor, context),
             _textTheme?.ResolveFrom(context),
-            _barBackgroundColor?.ResolveFrom(context),
-            _scaffoldBackgroundColor?.ResolveFrom(context),
-            _selectionHandleColor?.ResolveFrom(context),
+            CupertinoDynamicColor.MaybeResolve(_barBackgroundColor, context),
+            CupertinoDynamicColor.MaybeResolve(_scaffoldBackgroundColor, context),
+            CupertinoDynamicColor.MaybeResolve(_selectionHandleColor, context),
             _applyThemeToAll);
     }
 
     public virtual NoDefaultCupertinoThemeData CopyWith(
         PlatformBrightness? brightness = null,
-        CupertinoDynamicColor? primaryColor = null,
-        CupertinoDynamicColor? primaryContrastingColor = null,
+        Color? primaryColor = null,
+        Color? primaryContrastingColor = null,
         CupertinoTextThemeData? textTheme = null,
-        CupertinoDynamicColor? barBackgroundColor = null,
-        CupertinoDynamicColor? scaffoldBackgroundColor = null,
-        CupertinoDynamicColor? selectionHandleColor = null,
+        Color? barBackgroundColor = null,
+        Color? scaffoldBackgroundColor = null,
+        Color? selectionHandleColor = null,
         bool? applyThemeToAll = null)
     {
         return new NoDefaultCupertinoThemeData(
@@ -383,11 +383,11 @@ internal sealed class CupertinoThemeDefaults
 {
     internal CupertinoThemeDefaults(
         PlatformBrightness? brightness,
-        CupertinoDynamicColor primaryColor,
-        CupertinoDynamicColor primaryContrastingColor,
-        CupertinoDynamicColor barBackgroundColor,
-        CupertinoDynamicColor scaffoldBackgroundColor,
-        CupertinoDynamicColor selectionHandleColor,
+        Color primaryColor,
+        Color primaryContrastingColor,
+        Color barBackgroundColor,
+        Color scaffoldBackgroundColor,
+        Color selectionHandleColor,
         bool applyThemeToAll,
         CupertinoTextThemeDefaults textThemeDefaults)
     {
@@ -403,15 +403,15 @@ internal sealed class CupertinoThemeDefaults
 
     internal PlatformBrightness? Brightness { get; }
 
-    internal CupertinoDynamicColor PrimaryColor { get; }
+    internal Color PrimaryColor { get; }
 
-    internal CupertinoDynamicColor PrimaryContrastingColor { get; }
+    internal Color PrimaryContrastingColor { get; }
 
-    internal CupertinoDynamicColor BarBackgroundColor { get; }
+    internal Color BarBackgroundColor { get; }
 
-    internal CupertinoDynamicColor ScaffoldBackgroundColor { get; }
+    internal Color ScaffoldBackgroundColor { get; }
 
-    internal CupertinoDynamicColor SelectionHandleColor { get; }
+    internal Color SelectionHandleColor { get; }
 
     internal bool ApplyThemeToAll { get; }
 
@@ -421,11 +421,11 @@ internal sealed class CupertinoThemeDefaults
     {
         return new CupertinoThemeDefaults(
             Brightness,
-            PrimaryColor.ResolveFrom(context),
-            PrimaryContrastingColor.ResolveFrom(context),
-            BarBackgroundColor.ResolveFrom(context),
-            ScaffoldBackgroundColor.ResolveFrom(context),
-            SelectionHandleColor.ResolveFrom(context),
+            CupertinoDynamicColor.Resolve(PrimaryColor, context),
+            CupertinoDynamicColor.Resolve(PrimaryContrastingColor, context),
+            CupertinoDynamicColor.Resolve(BarBackgroundColor, context),
+            CupertinoDynamicColor.Resolve(ScaffoldBackgroundColor, context),
+            CupertinoDynamicColor.Resolve(SelectionHandleColor, context),
             ApplyThemeToAll,
             resolveTextTheme ? TextThemeDefaults.ResolveFrom(context) : TextThemeDefaults);
     }
@@ -434,24 +434,24 @@ internal sealed class CupertinoThemeDefaults
 /// <summary>Dart's private `_CupertinoTextThemeDefaults`.</summary>
 internal sealed class CupertinoTextThemeDefaults
 {
-    internal CupertinoTextThemeDefaults(CupertinoDynamicColor labelColor, CupertinoDynamicColor inactiveGray)
+    internal CupertinoTextThemeDefaults(Color labelColor, Color inactiveGray)
     {
         LabelColor = labelColor;
         InactiveGray = inactiveGray;
     }
 
-    internal CupertinoDynamicColor LabelColor { get; }
+    internal Color LabelColor { get; }
 
-    internal CupertinoDynamicColor InactiveGray { get; }
+    internal Color InactiveGray { get; }
 
     internal CupertinoTextThemeDefaults ResolveFrom(BuildContext context)
     {
         return new CupertinoTextThemeDefaults(
-            LabelColor.ResolveFrom(context),
-            InactiveGray.ResolveFrom(context));
+            CupertinoDynamicColor.Resolve(LabelColor, context),
+            CupertinoDynamicColor.Resolve(InactiveGray, context));
     }
 
-    internal CupertinoTextThemeData CreateDefaults(CupertinoDynamicColor primaryColor)
+    internal CupertinoTextThemeData CreateDefaults(Color primaryColor)
     {
         return new DefaultCupertinoTextThemeData(LabelColor, InactiveGray, primaryColor);
     }
@@ -460,29 +460,29 @@ internal sealed class CupertinoTextThemeDefaults
 /// <summary>Dart's private `_DefaultCupertinoTextThemeData`.</summary>
 internal sealed class DefaultCupertinoTextThemeData : CupertinoTextThemeData
 {
-    private readonly CupertinoDynamicColor _labelColor;
-    private readonly CupertinoDynamicColor _inactiveGray;
+    private readonly Color _labelColor;
+    private readonly Color _inactiveGray;
 
     internal DefaultCupertinoTextThemeData(
-        CupertinoDynamicColor labelColor,
-        CupertinoDynamicColor inactiveGray,
-        CupertinoDynamicColor primaryColor) : base(primaryColor: primaryColor)
+        Color labelColor,
+        Color inactiveGray,
+        Color primaryColor) : base(primaryColor: primaryColor)
     {
         _labelColor = labelColor;
         _inactiveGray = inactiveGray;
     }
 
-    public override TextStyle TextStyle => base.TextStyle.CopyWith(color: _labelColor.Value);
+    public override TextStyle TextStyle => base.TextStyle.CopyWith(color: _labelColor);
 
-    public override TextStyle TabLabelTextStyle => base.TabLabelTextStyle.CopyWith(color: _inactiveGray.Value);
+    public override TextStyle TabLabelTextStyle => base.TabLabelTextStyle.CopyWith(color: _inactiveGray);
 
-    public override TextStyle NavTitleTextStyle => base.NavTitleTextStyle.CopyWith(color: _labelColor.Value);
+    public override TextStyle NavTitleTextStyle => base.NavTitleTextStyle.CopyWith(color: _labelColor);
 
     public override TextStyle NavLargeTitleTextStyle =>
-        base.NavLargeTitleTextStyle.CopyWith(color: _labelColor.Value);
+        base.NavLargeTitleTextStyle.CopyWith(color: _labelColor);
 
-    public override TextStyle PickerTextStyle => base.PickerTextStyle.CopyWith(color: _labelColor.Value);
+    public override TextStyle PickerTextStyle => base.PickerTextStyle.CopyWith(color: _labelColor);
 
     public override TextStyle DateTimePickerTextStyle =>
-        base.DateTimePickerTextStyle.CopyWith(color: _labelColor.Value);
+        base.DateTimePickerTextStyle.CopyWith(color: _labelColor);
 }

@@ -113,7 +113,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
             });
 
         Assert.Equal(new DropdownMenuThemeData(), DropdownMenuThemeData.Lerp(null, null, 0));
-        var data = new DropdownMenuThemeData(textStyle, decorationTheme, menuStyle, Color.Parse("#FF9E9E9E"));
+        var data = new DropdownMenuThemeData(textStyle, decorationTheme, menuStyle, new Color(0xFF9E9E9E));
         Assert.Same(data, DropdownMenuThemeData.Lerp(data, data, 0.5));
         // `inputDecorationTheme` is not lerpable in Dart; it flips at t == 0.5.
         Assert.Null(DropdownMenuThemeData.Lerp(new DropdownMenuThemeData(), data, 0.4).InputDecorationTheme);
@@ -219,8 +219,8 @@ public sealed class MaterialDropdownMenuTests : IDisposable
     [Fact]
     public void DropdownMenu_EntryStyleTakesPrecedenceOverMenuButtonThemeAndMergesPerProperty()
     {
-        Color entryBackground = Color.Parse("#FFEEDDCC");
-        Color themeForeground = Color.Parse("#FF102030");
+        Color entryBackground = new Color(0xFFEEDDCC);
+        Color themeForeground = new Color(0xFF102030);
         var entries = new[]
         {
             new DropdownMenuEntry<string>(
@@ -266,9 +266,9 @@ public sealed class MaterialDropdownMenuTests : IDisposable
     {
         var menu = new DropdownMenu<string>(Entries("Item 0"), enabled: false);
         using var harness = new WidgetRenderHarness(Wrap(
-            new DropdownMenuTheme(new DropdownMenuThemeData(DisabledColor: Color.Parse("#FF9E9E9E")), menu)));
+            new DropdownMenuTheme(new DropdownMenuThemeData(DisabledColor: new Color(0xFF9E9E9E)), menu)));
         harness.Pump(new Size(500, 360));
-        Assert.Equal(Color.Parse("#FF9E9E9E"), Assert.Single(FindWidgets<TextField>(harness.RootElement)).Style!.Color);
+        Assert.Equal(new Color(0xFF9E9E9E), Assert.Single(FindWidgets<TextField>(harness.RootElement)).Style!.Color);
     }
 
     [Fact]

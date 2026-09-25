@@ -43,9 +43,9 @@ public sealed class GridTileBar : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         BoxDecoration? decoration = null;
-        if (BackgroundColor.HasValue)
+        if (BackgroundColor != null)
         {
-            decoration = new BoxDecoration(Color: BackgroundColor.Value);
+            decoration = new BoxDecoration(Color: BackgroundColor!);
         }
 
         var padding = EdgeInsetsDirectional.Only(

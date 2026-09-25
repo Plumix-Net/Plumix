@@ -26,7 +26,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
     private static readonly Plumix.Rendering.BoxShadow[] ToolbarShadow =
     [
         new(
-            color: Color.FromArgb(60, 0, 0, 0),
+            color: Color.FromARGB(60, 0, 0, 0),
             offset: new Point(0.0, 4.0),
             blurRadius: 10.0,
             spreadRadius: 0.5),
@@ -34,13 +34,13 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
 
     private static readonly CupertinoDynamicColor ToolbarBorderColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFB8B8B8),
-            Color.FromUInt32(0xFF5B5B5B));
+            new Color(0xFFB8B8B8),
+            new Color(0xFF5B5B5B));
 
     private static readonly CupertinoDynamicColor ToolbarBackgroundColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xB2FFFFFF),
-            Color.FromUInt32(0xB2303030));
+            new Color(0xB2FFFFFF),
+            new Color(0xB2303030));
 
     public CupertinoDesktopTextSelectionToolbar(
         Point anchor,

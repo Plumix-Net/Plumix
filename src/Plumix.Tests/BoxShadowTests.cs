@@ -15,7 +15,7 @@ public sealed class BoxShadowTests
         var shadow = new BoxShadow(blurRadius: 4.0);
 
         Assert.Equal(new BoxShadow(blurRadius: 4.0), shadow);
-        Assert.Equal(Color.FromArgb(0xFF, 0, 0, 0), shadow.Color);
+        Assert.Equal(Color.FromARGB(0xFF, 0, 0, 0), shadow.Color);
         Assert.Equal(new Point(0, 0), shadow.Offset);
         Assert.Equal(0.0, shadow.SpreadRadius);
         Assert.Equal(BlurStyle.Normal, shadow.BlurStyle);
@@ -114,9 +114,11 @@ public sealed class BoxShadowTests
     public void BoxShadow_ToStringTest()
     {
         Assert.Equal(
-            "BoxShadow(Color(0xff000000), Offset(0.0, 0.0), 4.0, 0.0, BlurStyle.normal)",
+            $"BoxShadow({new Color(0xff000000)}, Offset(0.0, 0.0), 4.0, 0.0, BlurStyle.normal)",
             new BoxShadow(blurRadius: 4.0).ToString());
-        Assert.Contains("BlurStyle.solid", new BoxShadow(blurRadius: 4.0, blurStyle: BlurStyle.Solid).ToString());
+        Assert.Equal(
+            $"BoxShadow({new Color(0xff000000)}, Offset(0.0, 0.0), 4.0, 0.0, BlurStyle.solid)",
+            new BoxShadow(blurRadius: 4.0, blurStyle: BlurStyle.Solid).ToString());
     }
 
     [Fact]

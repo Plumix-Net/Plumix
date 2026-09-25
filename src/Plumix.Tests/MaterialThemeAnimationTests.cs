@@ -32,7 +32,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
     {
         var begin = new ThemeData(
             brightness: Brightness.Light,
-            primaryColor: Color.FromArgb(255, 0, 20, 40),
+            primaryColor: Color.FromARGB(255, 0, 20, 40),
             textTheme: new MaterialTextTheme(
                 bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(fontSize: 10)),
             iconTheme: new IconThemeData(Color: Colors.Black, Size: 16),
@@ -46,7 +46,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             applyElevationOverlayColor: false);
         var end = new ThemeData(
             brightness: Brightness.Dark,
-            primaryColor: Color.FromArgb(255, 100, 120, 140),
+            primaryColor: Color.FromARGB(255, 100, 120, 140),
             textTheme: new MaterialTextTheme(
                 bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(fontSize: 20)),
             iconTheme: new IconThemeData(Color: Colors.White, Size: 24),
@@ -65,8 +65,8 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.Same(begin, ThemeData.Lerp(begin, begin, 0.25));
         Assert.NotSame(begin, ThemeData.Lerp(begin, end, 0.0));
         Assert.NotSame(end, ThemeData.Lerp(begin, end, 1.0));
-        Assert.Equal(Color.FromArgb(255, 25, 45, 65), firstHalf.PrimaryColor);
-        Assert.Equal(Color.FromArgb(255, 50, 70, 90), midpoint.PrimaryColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 25, 45, 65), firstHalf.PrimaryColor);
+        Assert.Equal(Color.FromARGB(255, 50, 70, 90), midpoint.PrimaryColor);
         Assert.Equal(15, midpoint.TextTheme.BodyMedium.FontSize);
         Assert.Equal(20, midpoint.IconTheme.Size);
         Assert.Equal(new VisualDensity(0, 2), midpoint.VisualDensity);
@@ -180,7 +180,9 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.Equal(6, result.DividerTheme.Space);
         Assert.Equal(12, result.TooltipTheme.Height);
         Assert.Equal(4, result.SliderTheme.TrackHeight);
-        Assert.Equal(Color.FromRgb(63, 63, 63), result.SwitchTheme.ThumbColor!.Resolve(new HashSet<WidgetState>()));
+        ColorMatchers.AssertSameColorAs(
+            Color.FromARGB(0xFF, 63, 63, 63),
+            result.SwitchTheme.ThumbColor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(switchCursorBegin, result.SwitchTheme.MouseCursor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(6, result.DatePickerTheme.RangePickerElevation);
         Assert.Equal(4, result.SnackBarTheme.Elevation);
@@ -192,10 +194,10 @@ public sealed class MaterialThemeAnimationTests : IDisposable
     {
         var colorBegin = new ColorThemeExtension(
             Colors.Black,
-            Color.Parse("#FFFFC107"));
+            new Color(0xFFFFC107));
         var colorEnd = new ColorThemeExtension(
             Colors.White,
-            Color.Parse("#FF2196F3"));
+            new Color(0xFF2196F3));
         var textBegin = new TextThemeExtension(new TextStyle(FontSize: 50));
         var textEnd = new TextThemeExtension(new TextStyle(FontSize: 100));
         var beginOnly = new BeginOnlyThemeExtension(30);
@@ -205,8 +207,8 @@ public sealed class MaterialThemeAnimationTests : IDisposable
 
         ThemeData result = ThemeData.Lerp(begin, end, 0.5);
 
-        Assert.Equal(Color.Parse("#FF7F7F7F"), result.Extension<ColorThemeExtension>()!.First);
-        Assert.Equal(Color.Parse("#FF90AB7D"), result.Extension<ColorThemeExtension>()!.Second);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF7F7F7F), result.Extension<ColorThemeExtension>()!.First);
+        ColorMatchers.AssertSameColorAs(new Color(0xFF90AB7D), result.Extension<ColorThemeExtension>()!.Second);
         Assert.Equal(75, result.Extension<TextThemeExtension>()!.Style.FontSize);
         Assert.Same(beginOnly, result.Extension<BeginOnlyThemeExtension>());
         Assert.Same(endOnly, result.Extension<EndOnlyThemeExtension>());
@@ -220,9 +222,9 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         ThemeData? observedTheme = null;
         int completed = 0;
         var probe = new ThemeProbe(theme => observedTheme = theme);
-        var begin = ThemeData.Light with { PrimaryColor = Color.FromRgb(0, 0, 0) };
-        var firstTarget = ThemeData.Light with { PrimaryColor = Color.FromRgb(200, 100, 50) };
-        var secondTarget = ThemeData.Light with { PrimaryColor = Color.FromRgb(20, 220, 120) };
+        var begin = ThemeData.Light with { PrimaryColor = Color.FromARGB(0xFF, 0, 0, 0) };
+        var firstTarget = ThemeData.Light with { PrimaryColor = Color.FromARGB(0xFF, 200, 100, 50) };
+        var secondTarget = ThemeData.Light with { PrimaryColor = Color.FromARGB(0xFF, 20, 220, 120) };
         var root = new TestRootElement(new AnimatedTheme(
             data: begin,
             duration: TimeSpan.FromMilliseconds(200),

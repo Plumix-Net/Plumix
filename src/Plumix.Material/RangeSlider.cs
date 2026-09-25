@@ -237,7 +237,7 @@ public sealed class RangeSlider : StatefulWidget
                                                                      ? new RoundedRectRangeSliderValueIndicatorShape()
                                                                      : new RectangularRangeSliderValueIndicatorShape());
             if (valueIndicatorShape is RectangularRangeSliderValueIndicatorShape
-                && !sliderTheme.ValueIndicatorColor.HasValue)
+                && sliderTheme.ValueIndicatorColor == null)
             {
                 valueIndicatorColor = AlphaBlend(
                     theme.ColorScheme.OnSurface.WithOpacity(0.60),
@@ -559,22 +559,22 @@ public sealed class RangeSlider : StatefulWidget
             IReadOnlySet<WidgetState> states)
         {
             var widgetOverlay = CurrentWidget.OverlayColor?.Resolve(states);
-            if (widgetOverlay.HasValue)
+            if (widgetOverlay != null)
             {
-                return widgetOverlay.Value;
+                return widgetOverlay!;
             }
 
-            if (CurrentWidget.ActiveColor.HasValue)
+            if (CurrentWidget.ActiveColor != null)
             {
                 return states.Contains(WidgetState.Disabled)
                     ? null
-                    : CurrentWidget.ActiveColor.Value.WithOpacity(0.12);
+                    : CurrentWidget.ActiveColor!.WithOpacity(0.12);
             }
 
             var themeOverlay = sliderTheme.OverlayColor?.Resolve(states);
-            if (themeOverlay.HasValue)
+            if (themeOverlay != null)
             {
-                return themeOverlay.Value;
+                return themeOverlay!;
             }
 
             Color baseColor = theme.ColorScheme.Primary;
@@ -604,25 +604,7 @@ public sealed class RangeSlider : StatefulWidget
             return null;
         }
 
-        private static Color AlphaBlend(Color foreground, Color background)
-        {
-            double alpha = foreground.A / 255.0;
-            double backgroundAlpha = background.A / 255.0;
-            double outputAlpha = alpha + (backgroundAlpha * (1.0 - alpha));
-            if (outputAlpha <= 0.0)
-            {
-                return Colors.Transparent;
-            }
-
-            byte a = (byte)Math.Round(outputAlpha * 255.0);
-            byte r = (byte)Math.Round(
-                ((foreground.R * alpha) + (background.R * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
-            byte g = (byte)Math.Round(
-                ((foreground.G * alpha) + (background.G * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
-            byte b = (byte)Math.Round(
-                ((foreground.B * alpha) + (background.B * backgroundAlpha * (1.0 - alpha))) / outputAlpha);
-            return Color.FromArgb(a, r, g, b);
-        }
+private static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
 
         private static IReadOnlySet<WidgetState> BuildStates(
             bool interactive,
@@ -1502,7 +1484,7 @@ internal sealed class RenderRangeSlider : RenderBox
         // Flutter paints a fully-activated overlay under each *focused* thumb, before the
         // activation-driven overlay, so keyboard focus highlights the thumb that actually has it rather
         // than whichever thumb was dragged last.
-        if (overlayColor is { A: > 0 })
+        if (overlayColor is { Alpha: > 0 })
         {
             if (_state.StartFocusNode.HasFocus)
             {
@@ -1515,7 +1497,7 @@ internal sealed class RenderRangeSlider : RenderBox
             }
         }
 
-        if (active && overlayColor is { A: > 0 })
+        if (active && overlayColor is { Alpha: > 0 })
         {
             Point overlayCenter = _activeThumb == RangeSliderThumb.Start ? startCenter : endCenter;
             paintTheme.OverlayShape!.Paint(
@@ -2421,19 +2403,19 @@ internal sealed class RenderRangeSlider : RenderBox
             return null;
         }
 
-        if (_dragging && _activeThumb.HasValue && OverlayDraggedColor.HasValue && OverlayDraggedColor.Value.A > 0)
+        if (_dragging && _activeThumb.HasValue && OverlayDraggedColor != null && OverlayDraggedColor!.Alpha > 0)
         {
-            return OverlayDraggedColor.Value;
+            return OverlayDraggedColor!;
         }
 
-        if (_hovered && OverlayHoveredColor.HasValue && OverlayHoveredColor.Value.A > 0)
+        if (_hovered && OverlayHoveredColor != null && OverlayHoveredColor!.Alpha > 0)
         {
-            return OverlayHoveredColor.Value;
+            return OverlayHoveredColor!;
         }
 
-        if (IsFocused && OverlayFocusedColor.HasValue && OverlayFocusedColor.Value.A > 0)
+        if (IsFocused && OverlayFocusedColor != null && OverlayFocusedColor!.Alpha > 0)
         {
-            return OverlayFocusedColor.Value;
+            return OverlayFocusedColor!;
         }
 
         return null;

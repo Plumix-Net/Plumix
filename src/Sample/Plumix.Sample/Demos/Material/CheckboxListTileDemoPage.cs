@@ -34,7 +34,7 @@ internal sealed class CheckboxListTileDemoPageState : State
                     "Whole-tile interaction, tristate cycle, affinity, checkbox scaling, "
                     + "density/alignment, selected styling, disabled state, and the adaptive branch.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -43,19 +43,19 @@ internal sealed class CheckboxListTileDemoPageState : State
                             _enabled ? "Enabled" : "Disabled",
                             () => SetState(() => _enabled = !_enabled),
                             104,
-                            Color.Parse("#FFE9F0FF")),
+                            new Color(0xFFE9F0FF)),
                         ListTileControlDemos.ControlButton(
                             _affinity == ListTileControlAffinity.Leading ? "Leading" : "Trailing",
                             () => SetState(() => _affinity = _affinity == ListTileControlAffinity.Leading
                                 ? ListTileControlAffinity.Trailing
                                 : ListTileControlAffinity.Leading),
                             104,
-                            Color.Parse("#FFE9F7EF")),
+                            new Color(0xFFE9F7EF)),
                         ListTileControlDemos.ControlButton(
                             _adaptive ? "Adaptive" : "Material",
                             () => SetState(() => _adaptive = !_adaptive),
                             104,
-                            Color.Parse("#FFF8EFE2")),
+                            new Color(0xFFF8EFE2)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -65,12 +65,12 @@ internal sealed class CheckboxListTileDemoPageState : State
                             _compact ? "Compact / top" : "Standard / center",
                             () => SetState(() => _compact = !_compact),
                             144,
-                            Color.Parse("#FFF3E5F5")),
+                            new Color(0xFFF3E5F5)),
                         ListTileControlDemos.ControlButton(
                             _scaled ? "Scale 1.5x" : "Scale 1.0x",
                             () => SetState(() => _scaled = !_scaled),
                             104,
-                            Color.Parse("#FFE0F2F1")),
+                            new Color(0xFFE0F2F1)),
                     ]),
                 new Text(
                     $"checkbox={ListTileControlDemos.Lower(_checkboxValue)}, "
@@ -78,10 +78,10 @@ internal sealed class CheckboxListTileDemoPageState : State
                     + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F9FC"),
+                        color: new Color(0xFFF7F9FC),
                         child: new ListTileTheme(
                             data: new ListTileThemeData(
                                 ControlAffinity: _affinity,
@@ -123,7 +123,7 @@ internal sealed class CheckboxListTileDemoPageState : State
                 titleAlignment: _compact ? ListTileTitleAlignment.Top : ListTileTitleAlignment.Center,
                 checkboxScaleFactor: _scaled ? 1.5 : 1.0,
                 selected: _checkboxValue,
-                selectedTileColor: Color.Parse("#FFE8DEF8"));
+                selectedTileColor: new Color(0xFFE8DEF8));
     }
 
     private Widget BuildTristateTile()

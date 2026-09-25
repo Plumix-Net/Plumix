@@ -51,12 +51,13 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.Same(CupertinoColors.TertiarySystemFill, control.BackgroundColor);
         Assert.False(control.ProportionalWidth);
         Assert.False(control.IsMomentary);
-        Assert.Equal(0xFFFFFFFFu, control.ThumbColor.Color.ToUInt32());
-        Assert.Equal(0xFF636366u, control.ThumbColor.DarkColor.ToUInt32());
+        var thumbColor = Assert.IsType<CupertinoDynamicColor>(control.ThumbColor);
+        Assert.Equal(0xFFFFFFFFu, thumbColor.Color.ToARGB32());
+        Assert.Equal(0xFF636366u, thumbColor.DarkColor.ToARGB32());
 
         var disabled = new HashSet<string> { "two" };
-        CupertinoDynamicColor thumb = Color.FromUInt32(0xFF123456);
-        CupertinoDynamicColor background = Color.FromUInt32(0xFF654321);
+        Color thumb = new Color(0xFF123456);
+        Color background = new Color(0xFF654321);
         var custom = new CupertinoSlidingSegmentedControl<string>(
             children,
             _ => { },
@@ -80,8 +81,8 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         using var light = new CupertinoThemeTestHarness(Wrap(Control(groupValue: "one")));
         light.Pump(ViewSize);
         RenderCupertinoSlidingSegmentedControl<string> lightRender = FindRender(light);
-        Assert.Equal(0xFFFFFFFFu, lightRender.ThumbColor.ToUInt32());
-        Assert.Equal(0x1E767680u, BackgroundColor(light).ToUInt32());
+        Assert.Equal(0xFFFFFFFFu, lightRender.ThumbColor.ToARGB32());
+        Assert.Equal(0x1E767680u, BackgroundColor(light).ToARGB32());
 
         using var dark = new CupertinoThemeTestHarness(Wrap(
             new CupertinoSlidingSegmentedControl<string>(
@@ -92,8 +93,8 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
                 backgroundColor: CupertinoColors.SystemRed),
             brightness: PlatformBrightness.Dark));
         dark.Pump(ViewSize);
-        Assert.Equal(CupertinoColors.SystemGreen.DarkColor, FindRender(dark).ThumbColor);
-        Assert.Equal(CupertinoColors.SystemRed.DarkColor, BackgroundColor(dark));
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, FindRender(dark).ThumbColor);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.DarkColor, BackgroundColor(dark));
     }
 
     [Fact]
@@ -253,7 +254,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.Equal(1, FindRender(harness).HighlightedIndex);
         Assert.All(
             harness.FindWidgets<AnimatedDefaultTextStyle>(),
-            style => Assert.Equal(Color.FromArgb(115, 122, 122, 122), style.Style.Color));
+            style => Assert.Equal(Color.FromARGB(115, 122, 122, 122), style.Style.Color));
         Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 20);
         Tap(harness.RenderView, new Point(110.0, 14.0), pointer: 21);
         Assert.Equal(0, reports);
@@ -511,7 +512,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             {
                 Shape: RoundedSuperellipseBorder,
             });
-        return Assert.IsType<ShapeDecoration>(container.Decoration).Color!.Value;
+        return Assert.IsType<ShapeDecoration>(container.Decoration).Color!;
     }
 
     private static IReadOnlyList<T> FindAll<T>(RenderObject? root) where T : RenderObject

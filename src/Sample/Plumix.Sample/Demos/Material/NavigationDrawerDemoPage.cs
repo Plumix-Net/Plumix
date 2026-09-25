@@ -27,14 +27,14 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
             {
                 NavigationDrawerTheme = _useThemeOverrides
                     ? new NavigationDrawerThemeData(
-                        BackgroundColor: Color.Parse("#FFF3E5F5"),
-                        IndicatorColor: Color.Parse("#FFB2DFDB"),
+                        BackgroundColor: new Color(0xFFF3E5F5),
+                        IndicatorColor: new Color(0xFFB2DFDB),
                         TileHeight: 60,
                         IndicatorSize: new Size(270, 48),
                         LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
-                            new TextStyle(Color: Color.Parse("#FF4A148C"), FontSize: 13)),
+                            new TextStyle(Color: new Color(0xFF4A148C), FontSize: 13)),
                         IconTheme: WidgetStateProperty<IconThemeData?>.All(
-                            new IconThemeData(Color: Color.Parse("#FF00695C"), Size: 22)))
+                            new IconThemeData(Color: new Color(0xFF00695C), Size: 22)))
                     : new NavigationDrawerThemeData(),
             };
 
@@ -81,8 +81,8 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                     new NavigationDrawer(
                                         selectedIndex: _selectedIndex,
                                         onDestinationSelected: index => SetState(() => _selectedIndex = index),
-                                        backgroundColor: _useWidgetOverrides ? Color.Parse("#FFFFF8E1") : null,
-                                        indicatorColor: _useWidgetOverrides ? Color.Parse("#FFFFCC80") : null,
+                                        backgroundColor: _useWidgetOverrides ? new Color(0xFFFFF8E1) : null,
+                                        indicatorColor: _useWidgetOverrides ? new Color(0xFFFFCC80) : null,
                                         tilePadding: _useWidgetOverrides ? new Thickness(18, 0) : null,
                                         header: new Padding(
                                             new Thickness(28, 20, 16, 12),
@@ -112,7 +112,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                         child: new Container(
                                             alignment: Alignment.Center,
                                             decoration: new BoxDecoration(
-                                                Color: Color.Parse("#FFF7F2FA"),
+                                                Color: new Color(0xFFF7F2FA),
                                                 BorderRadius: BorderRadius.Circular(12)),
                                             child: new Text(
                                                 "The drawer keeps destination indices independent from custom children.",

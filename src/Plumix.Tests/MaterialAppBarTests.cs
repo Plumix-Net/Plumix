@@ -451,7 +451,7 @@ public sealed class MaterialAppBarTests
             candidate => candidate.Overflow == TextOverflow.Ellipsis);
         Assert.Equal(
             (byte)Math.Clamp((int)Math.Round(255 * expected), 0, 255),
-            titleStyle.Style.Color!.Value.A);
+            titleStyle.Style.Color!.Alpha);
     }
 
     [Fact]
@@ -581,7 +581,7 @@ public sealed class MaterialAppBarTests
 
     private static Color MaterialColor(TestRootElement root)
     {
-        return FindWidgets<MaterialWidget>(root.ChildElement)[0].Color!.Value;
+        return FindWidgets<MaterialWidget>(root.ChildElement)[0].Color!;
     }
 
     // A `Scaffold` roots itself in a `Material`, so inside one the app bar's own Material has to be
@@ -590,7 +590,7 @@ public sealed class MaterialAppBarTests
     {
         Element? appBar = FindElement(root.ChildElement, element => element.Widget is AppBar);
         Assert.NotNull(appBar);
-        return FindWidgets<MaterialWidget>(appBar)[0].Color!.Value;
+        return FindWidgets<MaterialWidget>(appBar)[0].Color!;
     }
 
     private static Element? FindElement(Element? element, Func<Element, bool> predicate)

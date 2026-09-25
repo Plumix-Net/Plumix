@@ -63,7 +63,7 @@ internal sealed class OffstageDemoPageState : State
                             child: new LinearProgressIndicator())),
                     new Container(
                         height: 82,
-                        color: Color.Parse("#FFF6F8FB"),
+                        color: new Color(0xFFF6F8FB),
                         padding: new Thickness(8),
                         child: new Row(
                             mainAxisAlignment: MainAxisAlignment.Center,
@@ -76,7 +76,7 @@ internal sealed class OffstageDemoPageState : State
                                     child: new Container(
                                         width: 88,
                                         height: 42,
-                                        color: Color.Parse("#FFA8DADC"),
+                                        color: new Color(0xFFA8DADC),
                                         child: new Center(
                                             child: new Text("keeps size", fontSize: 11, color: Colors.Black)))),
                                 BuildMarker("R", "#FF457B9D"),
@@ -85,12 +85,12 @@ internal sealed class OffstageDemoPageState : State
                         visible: _visible,
                         replacement: new Container(
                             height: 42,
-                            color: Color.Parse("#FFFFE8CC"),
+                            color: new Color(0xFFFFE8CC),
                             child: new Center(
                                 child: new Text("Visibility replacement", fontSize: 11, color: Colors.Black))),
                         child: new Container(
                             height: 42,
-                            color: Color.Parse("#FFD8F3DC"),
+                            color: new Color(0xFFD8F3DC),
                             child: new Center(
                                 child: new Text("Visibility child", fontSize: 11, color: Colors.Black)))),
                     new SizedBox(
@@ -101,7 +101,7 @@ internal sealed class OffstageDemoPageState : State
                                 new SliverToBoxAdapter(
                                     new Container(
                                         height: 42,
-                                        color: Color.Parse("#FFE9ECEF"),
+                                        color: new Color(0xFFE9ECEF),
                                         child: new Center(
                                             child: new Text("sliver before", fontSize: 11, color: Colors.Black)))),
                                 new SliverVisibility(
@@ -109,7 +109,7 @@ internal sealed class OffstageDemoPageState : State
                                     replacementSliver: new SliverToBoxAdapter(
                                         new Container(
                                             height: 42,
-                                            color: Color.Parse("#FFFFE8CC"),
+                                            color: new Color(0xFFFFE8CC),
                                             child: new Center(
                                                 child: new Text(
                                                     "replacement sliver",
@@ -118,7 +118,7 @@ internal sealed class OffstageDemoPageState : State
                                     sliver: new SliverToBoxAdapter(
                                         new Container(
                                             height: 42,
-                                            color: Color.Parse("#FFBDE0FE"),
+                                            color: new Color(0xFFBDE0FE),
                                             child: new Center(
                                                 child: new Text(
                                                     "SliverVisibility child",
@@ -127,7 +127,7 @@ internal sealed class OffstageDemoPageState : State
                                 new SliverToBoxAdapter(
                                     new Container(
                                         height: 42,
-                                        color: Color.Parse("#FFE9ECEF"),
+                                        color: new Color(0xFFE9ECEF),
                                         child: new Center(
                                             child: new Text("sliver after", fontSize: 11, color: Colors.Black)))),
                             ])),
@@ -150,7 +150,7 @@ internal sealed class OffstageDemoPageState : State
                 new Container(
                     width: 260,
                     height: 190,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -177,9 +177,9 @@ internal sealed class OffstageDemoPageState : State
                                                 width: 120,
                                                 height: 44,
                                                 decoration: new BoxDecoration(
-                                                    Color: Color.Parse("#FFCCE3FF"),
+                                                    Color: new Color(0xFFCCE3FF),
                                                     Border: Plumix.Rendering.Border.FromBorderSide(
-                                                        new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                                                        new BorderSide(new Color(0xFF1D3557), 2)),
                                                     BorderRadius: BorderRadius.Circular(10)),
                                                 child: new Center(
                                                     child: new Text(
@@ -203,7 +203,7 @@ internal sealed class OffstageDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
@@ -214,7 +214,7 @@ internal sealed class OffstageDemoPageState : State
         return new Container(
             width: 34,
             height: 34,
-            color: Color.Parse(colorHex),
+            color: (Color)Avalonia.Media.Color.Parse(colorHex),
             child: new Center(
                 child: new Text(label, fontSize: 12, color: Colors.White)));
     }

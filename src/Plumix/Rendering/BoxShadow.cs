@@ -27,7 +27,7 @@ public enum BlurStyle
 public record Shadow
 {
     /// dart:ui `Shadow._kColorDefault`.
-    public static Color DefaultColor { get; } = Color.FromArgb(0xFF, 0x00, 0x00, 0x00);
+    public static Color DefaultColor { get; } = Color.FromARGB(0xFF, 0x00, 0x00, 0x00);
 
     public Shadow(Color? color = null, Point offset = default, double blurRadius = 0.0)
     {
@@ -142,19 +142,7 @@ public record Shadow
         return new Point(offset.X * factor, offset.Y * factor);
     }
 
-    internal static Color LerpColor(Color a, Color b, double t)
-    {
-        return Color.FromArgb(
-            LerpChannel(a.A, b.A, t),
-            LerpChannel(a.R, b.R, t),
-            LerpChannel(a.G, b.G, t),
-            LerpChannel(a.B, b.B, t));
-    }
-
-    private static byte LerpChannel(byte a, byte b, double t)
-    {
-        return (byte)Math.Clamp((int)Math.Round(a + ((b - a) * t)), byte.MinValue, byte.MaxValue);
-    }
+    internal static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
 }
 
 /// <summary>
@@ -258,7 +246,7 @@ public sealed record BoxShadow : Shadow
 internal static class DartFormat
 {
     /// dart:ui `Color.toString`.
-    public static string Color(Color color) => $"Color(0x{color.ToUInt32():x8})";
+    public static string Color(Color color) => color.ToString();
 
     /// dart:ui `Offset.toString`.
     public static string Offset(Point offset) => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})";

@@ -411,14 +411,14 @@ public sealed class Checkbox : StatefulWidget
             IReadOnlySet<WidgetState> states)
         {
             Color? widgetFill = CurrentWidget.FillColor?.Resolve(states);
-            if (widgetFill.HasValue)
+            if (widgetFill != null)
             {
                 return widgetFill;
             }
 
             if (!states.Contains(WidgetState.Disabled)
                 && states.Contains(WidgetState.Selected)
-                && CurrentWidget.ActiveColor.HasValue)
+                && CurrentWidget.ActiveColor != null)
             {
                 return CurrentWidget.ActiveColor;
             }
@@ -460,8 +460,8 @@ public sealed class Checkbox : StatefulWidget
             IReadOnlySet<WidgetState> pressedStates = WithInteractionState(states, WidgetState.Pressed);
             return CurrentWidget.OverlayColor?.Resolve(pressedStates)
                    ?? checkboxTheme.OverlayColor?.Resolve(pressedStates)
-                   ?? (nonDefaultFillColor.HasValue
-                       ? WithAlpha(nonDefaultFillColor.Value, RadialReactionAlpha)
+                   ?? (nonDefaultFillColor != null
+                       ? WithAlpha(nonDefaultFillColor!, RadialReactionAlpha)
                        : ResolveDefaultOverlayColor(theme, pressedStates));
         }
 
@@ -692,19 +692,9 @@ public sealed class Checkbox : StatefulWidget
             return Colors.Transparent;
         }
 
-        private static Color WithAlpha(Color color, byte alpha)
-        {
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+        private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
 
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Clamp(
-                (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
-                0,
-                byte.MaxValue);
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
     }
 }
 
@@ -715,7 +705,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
 
     private bool? _value;
     private bool? _previousValue;
-    private Color _checkColor;
+    private Color _checkColor = null!;
     private BorderSide? _activeSide;
     private BorderSide? _inactiveSide;
     private ShapeBorder _shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2.0));

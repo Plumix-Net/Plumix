@@ -82,7 +82,7 @@ public sealed class MaskFilter : IEquatable<MaskFilter>
 public sealed class Paint
 {
     // Dart's `_kColorDefault`.
-    private static readonly Color ColorDefault = Color.FromUInt32(0xFF000000);
+    private static readonly Color ColorDefault = new Color(0xFF000000);
 
     // Dart's `_kStrokeMiterLimitDefault`.
     private const double StrokeMiterLimitDefault = 4.0;
@@ -211,7 +211,7 @@ public sealed class Paint
 
         if (Color != ColorDefault)
         {
-            result.Append(semicolon).Append(Color.ToDartString());
+            result.Append(semicolon).Append(Color.ToString());
             semicolon = "; ";
         }
 

@@ -4,7 +4,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Color = Avalonia.Media.Color;
 
 namespace Plumix.Tests;
 
@@ -14,7 +13,7 @@ namespace Plumix.Tests;
 // flutter/packages/flutter/test/widgets/editable_text_test.dart.
 public sealed class EditableTextCursorDartParityTests : IDisposable
 {
-    private static readonly Color CursorColor = Color.FromUInt32(0xFF2196F3);
+    private static readonly Color CursorColor = new Color(0xFF2196F3);
 
     private readonly RecordingTextInputControl _control = new();
     private readonly TextEditingController _controller = new();
@@ -51,7 +50,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
             style: new TextStyle(FontSize: 10.0),
             padding: new Thickness(0),
             cursorColor: CursorColor,
-            backgroundCursorColor: Color.FromUInt32(0xFF9E9E9E),
+            backgroundCursorColor: new Color(0xFF9E9E9E),
             obscureText: obscureText,
             cursorOpacityAnimates: cursorOpacityAnimates,
             showCursor: showCursor,
@@ -94,7 +93,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
     {
         using FrameworkDartTester tester = Pump(Field(cursorOpacityAnimates: true), TargetPlatform.IOS);
         RenderEditable renderEditable = Editable(tester);
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         int walltimeMicrosecond = 0;
         double lastVerifiedOpacity = 1.0;
@@ -104,7 +103,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
             const int delta = 1;
             tester.Pump(TimeSpan.FromTicks((at - delta - walltimeMicrosecond) * 10L));
             // The opacity is verified immediately *before* each key frame.
-            Assert.Equal(lastVerifiedOpacity, renderEditable.CursorColor!.Value.A / 255.0, 2);
+            Assert.Equal(lastVerifiedOpacity, renderEditable.CursorColor!.Alpha / 255.0, 2);
             walltimeMicrosecond = at - delta;
             lastVerifiedOpacity = opacity;
         }
@@ -131,7 +130,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         {
             tester.Pump(TimeSpan.FromMilliseconds(100));
             Assert.Equal(0, Scheduler.TransientCallbackCount);
-            byte alpha = Editable(tester).CursorColor!.Value.A;
+            int alpha = Editable(tester).CursorColor!.Alpha;
             Assert.True(alpha is 0 or 255, $"alpha {alpha}");
         }
     }
@@ -142,19 +141,19 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         EditableText.DebugDeterministicCursor = true;
         using FrameworkDartTester tester = Pump(Field(cursorOpacityAnimates: true, multiline: true));
         RenderEditable renderEditable = Editable(tester);
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump();
         tester.Pump(TimeSpan.FromMilliseconds(200));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
         Assert.True(renderEditable.ShowCursor.Value);
 
         tester.Pump(TimeSpan.FromMilliseconds(200));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         // No more transient calls.
         tester.PumpAndSettle();
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
     }
 
     [Fact]
@@ -165,36 +164,36 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         RenderEditable renderEditable = Editable(tester);
 
         tester.Pump();
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         // The cursor goes from exactly on to exactly off on the 500ms dot.
         tester.Pump(TimeSpan.FromMilliseconds(499));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         KeySim.SendKeyCombination(LogicalKeyboardKey.ArrowLeft);
         tester.Pump();
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump(TimeSpan.FromMilliseconds(200));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump(TimeSpan.FromMilliseconds(299));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         KeySim.SendKeyCombination(LogicalKeyboardKey.ArrowRight);
         tester.Pump();
         KeySim.SendKeyCombination(LogicalKeyboardKey.ArrowRight);
         tester.Pump();
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump(TimeSpan.FromMilliseconds(200));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump(TimeSpan.FromMilliseconds(299));
-        Assert.Equal(255, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(255, renderEditable.CursorColor!.Alpha);
 
         tester.Pump(TimeSpan.FromMilliseconds(1));
-        Assert.Equal(0, renderEditable.CursorColor!.Value.A);
+        Assert.Equal(0, renderEditable.CursorColor!.Alpha);
         Assert.False(renderEditable.ShowCursor.Value);
     }
 
@@ -445,7 +444,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
                 focusNode: secondFocusNode,
                 style: new TextStyle(FontSize: 10.0),
                 cursorColor: CursorColor,
-                backgroundCursorColor: Color.FromUInt32(0xFF9E9E9E),
+                backgroundCursorColor: new Color(0xFF9E9E9E),
                 maxLines: 1),
         ])));
         tester.Pump();

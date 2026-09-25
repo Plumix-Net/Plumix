@@ -49,14 +49,14 @@ public sealed class MaterialInkResponseTests : IDisposable
             width: 100,
             height: 56,
             padding: new Thickness(8, 4),
-            color: Color.Parse("#FFEADDFF"),
+            color: new Color(0xFFEADDFF),
             child: new InkWell(
                 onTap: () => { },
                 child: new Center(child: new Text("Ink")))));
         harness.Pump(new Size(160, 100));
 
         var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(Color.Parse("#FFEADDFF"), decoration.AsBoxDecoration.Color);
+        Assert.Equal(new Color(0xFFEADDFF), decoration.AsBoxDecoration.Color);
         Assert.Equal(100, decoration.Size.Width, 3);
         Assert.Equal(56, decoration.Size.Height, 3);
         Assert.Contains(
@@ -129,7 +129,7 @@ public sealed class MaterialInkResponseTests : IDisposable
     [Fact]
     public void InkWell_HoverHighlightUsesConfiguredFadeDuration()
     {
-        Color hoverColor = Color.Parse("#FF00AA00");
+        Color hoverColor = new Color(0xFF00AA00);
         using var harness = CreateHarness(new Plumix.Material.Material(
             child: new InkWell(
                 hoverColor: hoverColor,
@@ -527,8 +527,8 @@ public sealed class MaterialInkResponseTests : IDisposable
     [Fact]
     public void InkResponse_OverlayColorResolvesHoveredAndPressedStates()
     {
-        var hovered = Color.Parse("#2200FF00");
-        var pressed = Color.Parse("#330000FF");
+        var hovered = new Color(0x2200FF00);
+        var pressed = new Color(0x330000FF);
         var controller = new WidgetStatesController();
         using var harness = CreateHarness(new InkResponse(
             statesController: controller,

@@ -43,9 +43,9 @@ public sealed class InkResponseDemoPage : StatefulWidget
         {
             var overlay = _customOverlay
                 ? WidgetStateProperty<Color?>.ResolveWith(states =>
-                    states.Contains(WidgetState.Pressed) ? Color.Parse("#556750A4")
-                    : states.Contains(WidgetState.Hovered) ? Color.Parse("#336750A4")
-                    : states.Contains(WidgetState.Focused) ? Color.Parse("#446750A4")
+                    states.Contains(WidgetState.Pressed) ? new Color(0x556750A4)
+                    : states.Contains(WidgetState.Hovered) ? new Color(0x336750A4)
+                    : states.Contains(WidgetState.Focused) ? new Color(0x446750A4)
                     : null)
                 : null;
 
@@ -105,7 +105,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         width: 112,
                         height: 112,
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFEADDFF"),
+                            Color: new Color(0xFFEADDFF),
                             Shape: BoxShape.Circle),
                         child: new InkResponse(
                             onTap: _enabled ? () => SetState(() => _responseTaps++) : null,
@@ -115,7 +115,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             overlayColor: overlay,
                             splashFactory: SplashFactory,
                             radius: 58,
-                            child: new Center(child: new Icon(Icons.Star, size: 32, color: Color.Parse("#FF6750A4"))))),
+                            child: new Center(child: new Icon(Icons.Star, size: 32, color: new Color(0xFF6750A4))))),
                 ]);
         }
 
@@ -130,7 +130,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         width: 150,
                         height: 96,
                         decoration: new BoxDecoration(
-                            Color: Color.Parse("#FFD7E3FF"),
+                            Color: new Color(0xFFD7E3FF),
                             BorderRadius: BorderRadius.Circular(18)),
                         child: new InkWell(
                             onTap: _enabled ? () => SetState(() => _wellTaps++) : null,

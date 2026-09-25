@@ -13,7 +13,7 @@ namespace Plumix.Widgets;
 public class RawDialogRoute<T> : PopupRoute
 {
     /// <summary>Dart's `RawDialogRoute` default barrier color, `Color(0x80000000)`.</summary>
-    public static readonly Color DefaultBarrierColor = Color.FromUInt32(0x80000000);
+    public static readonly Color DefaultBarrierColor = new Color(0x80000000);
 
     private readonly RoutePageBuilder _pageBuilder;
     private readonly bool _barrierDismissible;

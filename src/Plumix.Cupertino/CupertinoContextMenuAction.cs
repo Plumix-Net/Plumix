@@ -43,8 +43,8 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
     {
         private static readonly CupertinoDynamicColor BackgroundColorPressed =
             CupertinoDynamicColor.WithBrightness(
-                Color.FromUInt32(0xFFDDDDDD),
-                Color.FromUInt32(0xFF3F3F40));
+                new Color(0xFFDDDDDD),
+                new Color(0xFF3F3F40));
 
         private static readonly TextStyle ActionSheetActionStyle = new(
             FontFamily: new FontFamily("CupertinoSystemText"),

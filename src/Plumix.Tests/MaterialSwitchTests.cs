@@ -109,10 +109,10 @@ public sealed class MaterialSwitchTests
 
         Assert.Equal(Colors.DarkOrange, painter.ActiveColor);
         Assert.Equal(
-            Color.FromArgb(0x80, Colors.DarkOrange.R, Colors.DarkOrange.G, Colors.DarkOrange.B),
+            Color.FromARGB(0x80, Colors.DarkOrange.Red, Colors.DarkOrange.Green, Colors.DarkOrange.Blue),
             painter.ActiveTrackColor);
         Assert.Equal(Plumix.Material.Colors.Grey.Shade50, painter.InactiveColor);
-        Assert.Equal(Color.FromArgb(0x52, 0x00, 0x00, 0x00), painter.InactiveTrackColor);
+        Assert.Equal(Color.FromARGB(0x52, 0x00, 0x00, 0x00), painter.InactiveTrackColor);
         Assert.Equal(Plumix.Material.Colors.Transparent, painter.InactiveTrackOutlineColor);
         Assert.Null(painter.InactiveTrackOutlineWidth);
         Assert.Equal(10.0, painter.ActiveThumbRadius);
@@ -129,9 +129,9 @@ public sealed class MaterialSwitchTests
         SwitchPainter selected = MountAndFindPainter(theme, new Switch(true, onChanged: null));
         SwitchPainter unselected = MountAndFindPainter(theme, new Switch(false, onChanged: null));
 
-        Assert.Equal(Color.FromArgb(0x1F, 0x00, 0x00, 0x00), selected.ActiveTrackColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0x00, 0x00, 0x00), selected.ActiveTrackColor);
         Assert.Equal(Plumix.Material.Colors.Grey.Shade400, selected.ActiveColor);
-        Assert.Equal(Color.FromArgb(0x1F, 0x00, 0x00, 0x00), unselected.InactiveTrackColor);
+        Assert.Equal(Color.FromARGB(0x1F, 0x00, 0x00, 0x00), unselected.InactiveTrackColor);
         Assert.Equal(Plumix.Material.Colors.Grey.Shade400, unselected.InactiveColor);
     }
 
@@ -253,7 +253,7 @@ public sealed class MaterialSwitchTests
 
         Assert.Equal(Colors.Crimson, painter.ActiveColor);
         Assert.Equal(
-            Color.FromArgb(0x80, Colors.Crimson.R, Colors.Crimson.G, Colors.Crimson.B),
+            Color.FromARGB(0x80, Colors.Crimson.Red, Colors.Crimson.Green, Colors.Crimson.Blue),
             painter.ActiveTrackColor);
     }
 
@@ -305,10 +305,10 @@ public sealed class MaterialSwitchTests
                 inactiveThumbColor: Colors.Teal));
 
         Assert.Equal(
-            Color.FromArgb(0x1F, Colors.Crimson.R, Colors.Crimson.G, Colors.Crimson.B),
+            Color.FromARGB(0x1F, Colors.Crimson.Red, Colors.Crimson.Green, Colors.Crimson.Blue),
             painter.ReactionColor);
         Assert.Equal(
-            Color.FromArgb(0x1F, Colors.Teal.R, Colors.Teal.G, Colors.Teal.B),
+            Color.FromARGB(0x1F, Colors.Teal.Red, Colors.Teal.Green, Colors.Teal.Blue),
             painter.InactiveReactionColor);
     }
 
@@ -481,8 +481,8 @@ public sealed class MaterialSwitchTests
         Assert.Equal(14.0, painter.InactiveThumbRadius);
         Assert.Equal(Colors.White, painter.ActiveColor);
         Assert.Equal(Colors.White, painter.InactiveColor);
-        Assert.Equal(Color.FromArgb(255, 52, 199, 89), painter.ActiveTrackColor);
-        Assert.Equal(Color.FromArgb(40, 120, 120, 128), painter.InactiveTrackColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 52, 199, 89), painter.ActiveTrackColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(40, 120, 120, 128), painter.InactiveTrackColor);
         Assert.Equal(Plumix.Material.Colors.Transparent, painter.InactiveTrackOutlineColor);
         Assert.Equal(0.0, painter.SplashRadius);
         // The widget is still sized by the Material config, not the Cupertino one.
@@ -500,7 +500,7 @@ public sealed class MaterialSwitchTests
             new ThemeData(platform: TargetPlatform.IOS),
             new SwitchTheme(data: themeData, child: Switch.Adaptive(true, _ => { })));
         Assert.Equal(Colors.White, apple.ActiveColor);
-        Assert.Equal(Color.FromArgb(255, 52, 199, 89), apple.ActiveTrackColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 52, 199, 89), apple.ActiveTrackColor);
 
         SwitchPainter android = MountAndFindPainter(
             new ThemeData(platform: TargetPlatform.Android),
@@ -557,7 +557,7 @@ public sealed class MaterialSwitchTests
             new ThemeData(platform: TargetPlatform.MacOS),
             Switch.Adaptive(true, _ => { }));
 
-        Assert.Equal(Color.FromUInt32(0xCC6EF28F), painter.FocusColor);
+        Assert.Equal(new Color(0xCC6EF28F), painter.FocusColor);
     }
 
     [Fact]
@@ -974,16 +974,16 @@ public sealed class MaterialSwitchTests
         var boxes = FindDescendants<RenderDecoratedBox>(root);
         return boxes.FirstOrDefault(box => box.AsBoxDecoration.Border is not null)
                ?? boxes.FirstOrDefault(box =>
-                   box.AsBoxDecoration.Color.HasValue
-                   && box.AsBoxDecoration.Color!.Value.A > 0);
+                   box.AsBoxDecoration.Color != null
+                   && box.AsBoxDecoration.Color!.Alpha > 0);
     }
 
     private static RenderDecoratedBox? FindThumbDecoration(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
             .LastOrDefault(box =>
-                box.AsBoxDecoration.Color.HasValue
-                && box.AsBoxDecoration.Color!.Value.A > 0
+                box.AsBoxDecoration.Color != null
+                && box.AsBoxDecoration.Color!.Alpha > 0
                 && box.AsBoxDecoration.Border is null);
     }
 
@@ -1063,26 +1063,26 @@ public sealed class MaterialSwitchTests
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private static Color AlphaBlend(Color foreground, Color background)
     {
-        double foregroundAlpha = foreground.A / 255.0;
-        double backgroundAlpha = background.A / 255.0;
+        double foregroundAlpha = foreground.Alpha / 255.0;
+        double backgroundAlpha = background.Alpha / 255.0;
         double outputAlpha = foregroundAlpha + (backgroundAlpha * (1.0 - foregroundAlpha));
-        byte BlendChannel(byte foregroundChannel, byte backgroundChannel)
+        byte BlendChannel(int foregroundChannel, int backgroundChannel)
         {
             double numerator = (foregroundChannel * foregroundAlpha)
                                + (backgroundChannel * backgroundAlpha * (1.0 - foregroundAlpha));
             return (byte)Math.Round(numerator / outputAlpha);
         }
 
-        return Color.FromArgb(
+        return Color.FromARGB(
             (byte)Math.Round(outputAlpha * 255.0),
-            BlendChannel(foreground.R, background.R),
-            BlendChannel(foreground.G, background.G),
-            BlendChannel(foreground.B, background.B));
+            BlendChannel(foreground.Red, background.Red),
+            BlendChannel(foreground.Green, background.Green),
+            BlendChannel(foreground.Blue, background.Blue));
     }
 
     private sealed class WidgetRenderHarness : IDisposable

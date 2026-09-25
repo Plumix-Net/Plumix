@@ -489,7 +489,7 @@ public sealed class ScrollPipelineTests
             addAutomaticKeepAlives: false,
             itemBuilder: (_, index) => new Container(
                 height: 44,
-                color: index % 2 == 0 ? Avalonia.Media.Colors.White : Avalonia.Media.Colors.WhiteSmoke),
+                color: index % 2 == 0 ? Colors.White : Colors.WhiteSmoke),
             separatorBuilder: (_, _) => new SizedBox(height: 4));
 
         var harness = new WidgetRenderHarness(widget);

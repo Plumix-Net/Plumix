@@ -19,7 +19,7 @@ public sealed class ScrollableMiscDartParityTests
 {
     private const double DragOffset = 213.82;
 
-    private static readonly Color TestFontColor = Color.FromUInt32(0xFF00FF00);
+    private static readonly Color TestFontColor = new Color(0xFF00FF00);
 
     // ---------------------------------------------------------------- scrollable_fling_test.dart
 
@@ -30,7 +30,7 @@ public sealed class ScrollableMiscDartParityTests
         tester.PumpWidget(new Container());
         tester.PumpWidget(new TestWidgetsApp(
             home: new ColoredBox(
-                color: Color.FromUInt32(0xFF111111),
+                color: new Color(0xFF111111),
                 child: ListView.Builder(
                     dragStartBehavior: DragStartBehavior.Down,
                     itemBuilder: (_, index) => new Text($"{index}", color: TestFontColor)))));
@@ -349,7 +349,7 @@ public sealed class ScrollableMiscDartParityTests
                 new Center(
                     child: new Container(
                         key: outerContainer,
-                        color: Color.FromUInt32(0xFF0000FF),
+                        color: new Color(0xFF0000FF),
                         width: 400.0,
                         child: new SingleChildScrollView(
                             scrollDirection: Axis.Horizontal,
@@ -359,8 +359,8 @@ public sealed class ScrollableMiscDartParityTests
                                     controller: controller,
                                     itemBuilder: (_, index) => new Container(
                                         color: index % 2 == 0
-                                            ? Color.FromUInt32(0xFFFF0000)
-                                            : Color.FromUInt32(0xFF00FF00),
+                                            ? new Color(0xFFFF0000)
+                                            : new Color(0xFF00FF00),
                                         height: 200.0,
                                         child: new Text($"Hello {index}")))))))));
 

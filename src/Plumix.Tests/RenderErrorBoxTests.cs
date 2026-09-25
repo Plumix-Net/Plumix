@@ -17,9 +17,9 @@ public sealed class RenderErrorBoxTests
     {
         Assert.Equal(new EdgeInsets(64, 96, 64, 12), RenderErrorBox.Padding);
         Assert.Equal(200, RenderErrorBox.MinimumWidth);
-        Assert.Equal(Color.FromUInt32(Constants.KDebugMode ? 0xF0900000 : 0xF0C0C0C0),
+        Assert.Equal(new Color(Constants.KDebugMode ? 0xF0900000 : 0xF0C0C0C0),
             RenderErrorBox.BackgroundColor);
-        Assert.Equal(Color.FromUInt32(Constants.KDebugMode ? 0xFFFFFF66 : 0xFF303030),
+        Assert.Equal(new Color(Constants.KDebugMode ? 0xFFFFFF66 : 0xFF303030),
             RenderErrorBox.TextStyle.Color);
         Assert.Equal(Constants.KDebugMode ? "monospace" : "sans-serif", RenderErrorBox.TextStyle.FontFamily!.Name);
         Assert.Equal(Constants.KDebugMode ? 14 : 18, RenderErrorBox.TextStyle.FontSize);
@@ -121,7 +121,7 @@ public sealed class RenderErrorBoxTests
         {
             var box = new RenderErrorBox();
             box.Layout(BoxConstraints.Tight(new Size(800, 600)));
-            foreach (Color color in new[] { previous, Color.FromUInt32(0xFF112233) })
+            foreach (Color color in new[] { previous, new Color(0xFF112233) })
             {
                 RenderErrorBox.BackgroundColor = color;
                 var root = new ContainerLayer();

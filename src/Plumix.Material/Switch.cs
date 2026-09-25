@@ -640,12 +640,12 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
                                   ?? CurrentWidget.ActiveThumbColor
                                   ?? switchTheme.ThumbColor?.Resolve(activeStates);
         Color effectiveActiveThumbColor = activeThumbColor
-                                          ?? defaults.ThumbColor!.Resolve(activeStates)!.Value;
+                                          ?? defaults.ThumbColor!.Resolve(activeStates)!;
         Color? inactiveThumbColor = CurrentWidget.ThumbColor?.Resolve(inactiveStates)
                                     ?? CurrentWidget.InactiveThumbColor
                                     ?? switchTheme.ThumbColor?.Resolve(inactiveStates);
         Color effectiveInactiveThumbColor = inactiveThumbColor
-                                            ?? defaults.ThumbColor!.Resolve(inactiveStates)!.Value;
+                                            ?? defaults.ThumbColor!.Resolve(inactiveStates)!;
 
         Color effectiveActiveTrackColor = CurrentWidget.TrackColor?.Resolve(activeStates)
                                           ?? CurrentWidget.ActiveTrackColor
@@ -653,7 +653,7 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
                                               ? cupertinoPrimaryColor
                                               : switchTheme.TrackColor?.Resolve(activeStates))
                                           ?? WithAlpha(CurrentWidget.ActiveThumbColor, 0x80)
-                                          ?? defaults.TrackColor!.Resolve(activeStates)!.Value;
+                                          ?? defaults.TrackColor!.Resolve(activeStates)!;
         Color? effectiveActiveTrackOutlineColor =
             CurrentWidget.TrackOutlineColor?.Resolve(activeStates)
             ?? switchTheme.TrackOutlineColor?.Resolve(activeStates)
@@ -666,7 +666,7 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
         Color effectiveInactiveTrackColor = CurrentWidget.TrackColor?.Resolve(inactiveStates)
                                             ?? CurrentWidget.InactiveTrackColor
                                             ?? switchTheme.TrackColor?.Resolve(inactiveStates)
-                                            ?? defaults.TrackColor!.Resolve(inactiveStates)!.Value;
+                                            ?? defaults.TrackColor!.Resolve(inactiveStates)!;
         Color? effectiveInactiveTrackOutlineColor =
             CurrentWidget.TrackOutlineColor?.Resolve(inactiveStates)
             ?? switchTheme.TrackOutlineColor?.Resolve(inactiveStates)
@@ -691,32 +691,32 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
                                            ?? (applyCupertinoTheme
                                                ? CupertinoFocusColor(cupertinoPrimaryColor)
                                                : (Color?)null)
-                                           ?? defaults.OverlayColor!.Resolve(focusedStates)!.Value;
+                                           ?? defaults.OverlayColor!.Resolve(focusedStates)!;
         Color effectiveHoverOverlayColor = CurrentWidget.OverlayColor?.Resolve(hoveredStates)
                                            ?? CurrentWidget.HoverColor
                                            ?? switchTheme.OverlayColor?.Resolve(hoveredStates)
-                                           ?? defaults.OverlayColor!.Resolve(hoveredStates)!.Value;
+                                           ?? defaults.OverlayColor!.Resolve(hoveredStates)!;
 
         Color effectiveActivePressedThumbColor =
             CurrentWidget.ThumbColor?.Resolve(activePressedStates)
             ?? CurrentWidget.ActiveThumbColor
             ?? switchTheme.ThumbColor?.Resolve(activePressedStates)
-            ?? defaults.ThumbColor!.Resolve(activePressedStates)!.Value;
+            ?? defaults.ThumbColor!.Resolve(activePressedStates)!;
         Color effectiveActivePressedOverlayColor =
             CurrentWidget.OverlayColor?.Resolve(activePressedStates)
             ?? switchTheme.OverlayColor?.Resolve(activePressedStates)
             ?? WithAlpha(activeThumbColor, RadialReactionAlpha)
-            ?? defaults.OverlayColor!.Resolve(activePressedStates)!.Value;
+            ?? defaults.OverlayColor!.Resolve(activePressedStates)!;
         Color effectiveInactivePressedThumbColor =
             CurrentWidget.ThumbColor?.Resolve(inactivePressedStates)
             ?? CurrentWidget.InactiveThumbColor
             ?? switchTheme.ThumbColor?.Resolve(inactivePressedStates)
-            ?? defaults.ThumbColor!.Resolve(inactivePressedStates)!.Value;
+            ?? defaults.ThumbColor!.Resolve(inactivePressedStates)!;
         Color effectiveInactivePressedOverlayColor =
             CurrentWidget.OverlayColor?.Resolve(inactivePressedStates)
             ?? switchTheme.OverlayColor?.Resolve(inactivePressedStates)
             ?? WithAlpha(inactiveThumbColor, RadialReactionAlpha)
-            ?? defaults.OverlayColor!.Resolve(inactivePressedStates)!.Value;
+            ?? defaults.OverlayColor!.Resolve(inactivePressedStates)!;
 
         WidgetStateProperty<MouseCursor> effectiveMouseCursor =
             WidgetStateProperty<MouseCursor>.ResolveWith(states =>
@@ -884,20 +884,15 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
         return theme.UseMaterial3 ? new SwitchConfigM3(Context) : new SwitchConfigM2();
     }
 
-    private static Color? WithAlpha(Color? color, byte alpha)
-    {
-        return color.HasValue
-            ? Color.FromArgb(alpha, color.Value.R, color.Value.G, color.Value.B)
-            : null;
-    }
+    private static Color? WithAlpha(Color? color, int alpha) => color?.WithAlpha(alpha);
 
     /// Dart's `HSLColor.fromColor(primary.withOpacity(0.80)).withLightness(0.69)
     /// .withSaturation(0.835).toColor()`, used for the Cupertino focus ring.
     internal static Color CupertinoFocusColor(Color primary)
     {
-        double red = primary.R / 255.0;
-        double green = primary.G / 255.0;
-        double blue = primary.B / 255.0;
+        double red = primary.Red / 255.0;
+        double green = primary.Green / 255.0;
+        double blue = primary.Blue / 255.0;
         double maximum = Math.Max(red, Math.Max(green, blue));
         double minimum = Math.Min(red, Math.Min(green, blue));
         double delta = maximum - minimum;
@@ -940,7 +935,7 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
             _ => (chroma, 0.0, secondary)
         };
         double match = lightness - (chroma / 2.0);
-        return Color.FromArgb(
+        return Color.FromARGB(
             0xCC,
             ToChannel(redPrime + match),
             ToChannel(greenPrime + match),
@@ -1090,8 +1085,8 @@ internal sealed class SwitchConfigCupertino : SwitchConfig
 
     private static readonly IReadOnlyList<BoxShadow> CupertinoThumbShadow =
     [
-        new BoxShadow(Color.FromArgb(0x26, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 8.0),
-        new BoxShadow(Color.FromArgb(0x0F, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 1.0),
+        new BoxShadow(Color.FromARGB(0x26, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 8.0),
+        new BoxShadow(Color.FromARGB(0x0F, 0x00, 0x00, 0x00), new Point(0.0, 3.0), 1.0),
     ];
 
     private readonly ColorScheme _colors;
@@ -1168,22 +1163,22 @@ internal static class SwitchDefaults
                 if (states.Contains(WidgetState.Disabled))
                 {
                     return isDark
-                        ? Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)
-                        : Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
+                        ? Color.FromARGB(0x1A, 0xFF, 0xFF, 0xFF)
+                        : Color.FromARGB(0x1F, 0x00, 0x00, 0x00);
                 }
 
                 if (states.Contains(WidgetState.Selected))
                 {
-                    return Color.FromArgb(
+                    return Color.FromARGB(
                         0x80,
-                        colors.Secondary.R,
-                        colors.Secondary.G,
-                        colors.Secondary.B);
+                        colors.Secondary.Red,
+                        colors.Secondary.Green,
+                        colors.Secondary.Blue);
                 }
 
                 return isDark
-                    ? Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF)
-                    : Color.FromArgb(0x52, 0x00, 0x00, 0x00);
+                    ? Color.FromARGB(0x4D, 0xFF, 0xFF, 0xFF)
+                    : Color.FromARGB(0x52, 0x00, 0x00, 0x00);
             }),
             TrackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
             MaterialTapTargetSize: theme.MaterialTapTargetSize,
@@ -1198,11 +1193,11 @@ internal static class SwitchDefaults
                         : states.Contains(WidgetState.Selected)
                             ? colors.Secondary
                             : isDark ? Colors.Grey.Shade400 : Colors.Grey.Shade50;
-                    return Color.FromArgb(
+                    return Color.FromARGB(
                         MaterialSwitchState.RadialReactionAlpha,
-                        thumb.Value.R,
-                        thumb.Value.G,
-                        thumb.Value.B);
+                        thumb!.Red,
+                        thumb!.Green,
+                        thumb!.Blue);
                 }
 
                 if (states.Contains(WidgetState.Hovered))
@@ -1355,31 +1350,31 @@ internal sealed class SwitchPainter : ToggleablePainter
     private ImageErrorListener? _cachedThumbImageError;
     private bool _isPainting;
 
-    private Color _activePressedColor;
-    private Color _inactivePressedColor;
+    private Color _activePressedColor = null!;
+    private Color _inactivePressedColor = null!;
     private ImageProvider? _activeThumbImage;
     private ImageErrorListener? _onActiveThumbImageError;
     private ImageProvider? _inactiveThumbImage;
     private ImageErrorListener? _onInactiveThumbImageError;
-    private Color _activeTrackColor;
+    private Color _activeTrackColor = null!;
     private Color? _activeTrackOutlineColor;
     private double? _activeTrackOutlineWidth;
-    private Color _inactiveTrackColor;
+    private Color _inactiveTrackColor = null!;
     private Color? _inactiveTrackOutlineColor;
     private double? _inactiveTrackOutlineWidth;
     private ImageConfiguration _configuration = ImageConfiguration.Empty;
     private bool _isInteractive;
     private double _trackInnerLength;
     private TextDirection _textDirection;
-    private Color _surfaceColor;
+    private Color _surfaceColor = null!;
     private double _inactiveThumbRadius;
     private double _activeThumbRadius;
     private double _pressedThumbRadius;
     private double? _thumbOffset;
     private double _trackHeight;
     private double _trackWidth;
-    private Color _activeIconColor;
-    private Color _inactiveIconColor;
+    private Color _activeIconColor = null!;
+    private Color _inactiveIconColor = null!;
     private Icon? _activeIcon;
     private Icon? _inactiveIcon;
     private IconThemeData _iconTheme = IconThemeData.Fallback;
@@ -1610,13 +1605,13 @@ internal sealed class SwitchPainter : ToggleablePainter
         thumbSize = new Size(thumbSize.Width - inset, thumbSize.Height - inset);
 
         double colorValue = _colorAnimation.Value;
-        Color trackColor = Plumix.Painting.ColorUtilities.Lerp(_inactiveTrackColor, _activeTrackColor, colorValue);
+        Color trackColor = Color.Lerp(_inactiveTrackColor, _activeTrackColor, colorValue);
         Color? trackOutlineColor =
             _inactiveTrackOutlineColor is null || _activeTrackOutlineColor is null
                 ? null
-                : Plumix.Painting.ColorUtilities.Lerp(
-                    _inactiveTrackOutlineColor.Value,
-                    _activeTrackOutlineColor.Value,
+                : Color.Lerp(
+                    _inactiveTrackOutlineColor!,
+                    _activeTrackOutlineColor!,
                     colorValue);
         double? trackOutlineWidth = Plumix.Painting.ColorUtilities.LerpDouble(
             _inactiveTrackOutlineWidth,
@@ -1626,25 +1621,25 @@ internal sealed class SwitchPainter : ToggleablePainter
         Color lerpedThumbColor;
         if (Reaction.Status != AnimationStatus.Dismissed)
         {
-            lerpedThumbColor = Plumix.Painting.ColorUtilities.Lerp(
+            lerpedThumbColor = Color.Lerp(
                 _inactivePressedColor,
                 _activePressedColor,
                 colorValue);
         }
         else if (_positionController.Status == AnimationStatus.Forward)
         {
-            lerpedThumbColor = Plumix.Painting.ColorUtilities.Lerp(_inactivePressedColor, ActiveColor, colorValue);
+            lerpedThumbColor = Color.Lerp(_inactivePressedColor, ActiveColor, colorValue);
         }
         else if (_positionController.Status == AnimationStatus.Reverse)
         {
-            lerpedThumbColor = Plumix.Painting.ColorUtilities.Lerp(InactiveColor, _activePressedColor, colorValue);
+            lerpedThumbColor = Color.Lerp(InactiveColor, _activePressedColor, colorValue);
         }
         else
         {
-            lerpedThumbColor = Plumix.Painting.ColorUtilities.Lerp(InactiveColor, ActiveColor, colorValue);
+            lerpedThumbColor = Color.Lerp(InactiveColor, ActiveColor, colorValue);
         }
 
-        Color thumbColor = Plumix.Painting.ColorUtilities.AlphaBlend(lerpedThumbColor, _surfaceColor);
+        Color thumbColor = Color.AlphaBlend(lerpedThumbColor, _surfaceColor);
         Icon? thumbIcon = currentValue < 0.5 ? _inactiveIcon : _activeIcon;
         ImageProvider? thumbImage = currentValue < 0.5 ? _inactiveThumbImage : _activeThumbImage;
         ImageErrorListener? thumbImageError = currentValue < 0.5
@@ -1674,7 +1669,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             RRect.FromRectAndRadius(trackRect, trackRadius),
             new SolidColorBrush(trackColor),
             null);
-        if (trackOutlineColor.HasValue)
+        if (trackOutlineColor != null)
         {
             var outlineRect = new Rect(
                 trackPaintOffset.X + 1.0,
@@ -1684,7 +1679,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, trackRadius),
                 null,
-                new Pen(new SolidColorBrush(trackOutlineColor.Value), trackOutlineWidth ?? 2.0));
+                new Pen(new SolidColorBrush(trackOutlineColor!), trackOutlineWidth ?? 2.0));
         }
 
         if (_isCupertino)
@@ -1806,7 +1801,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         {
             context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(thumbBounds.Inflate(0.5), radius + 0.5),
-                new SolidColorBrush(Color.FromArgb(0x0A, 0x00, 0x00, 0x00)),
+                new SolidColorBrush(Color.FromARGB(0x0A, 0x00, 0x00, 0x00)),
                 null);
         }
 
@@ -1848,7 +1843,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         Icon icon,
         double colorValue)
     {
-        Color iconColor = Plumix.Painting.ColorUtilities.Lerp(_inactiveIconColor, _activeIconColor, colorValue);
+        Color iconColor = Color.Lerp(_inactiveIconColor, _activeIconColor, colorValue);
         double iconSize = icon.Size ?? SwitchConfigM3.IconSize;
         var style = new TextStyle(
             FontFamily: Icon.ResolveFontFamily(icon.IconData!),

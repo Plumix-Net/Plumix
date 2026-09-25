@@ -86,17 +86,18 @@ public sealed class MaterialBottomSheetTests : IDisposable
         }
 
         var stateful = WidgetStateColor.ResolveWith(
-            Colors.Blue,
             states => states.Contains(WidgetState.Hovered) ? Colors.Red : Colors.Blue);
         var lerped = BottomSheetThemeData.Lerp(
             new BottomSheetThemeData(DragHandleColor: stateful),
             new BottomSheetThemeData(DragHandleColor: Colors.Green),
             0.5);
         Assert.NotNull(lerped?.DragHandleColor);
-        Assert.True(lerped!.DragHandleColor!.IsConstantColor);
+        Assert.IsNotAssignableFrom<WidgetStateColor>(lerped!.DragHandleColor);
         Assert.Equal(
-            lerped.DragHandleColor.DefaultValue,
-            lerped.DragHandleColor.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
+            lerped.DragHandleColor,
+            WidgetStateProperty<Color>.ResolveAs(
+                lerped.DragHandleColor,
+                new HashSet<WidgetState> { WidgetState.Hovered }));
 
         var theme = new BottomSheetTheme(data, new SizedBox());
         var wrapped = Assert.IsType<BottomSheetTheme>(theme.Wrap(null!, new Text("child")));
@@ -125,8 +126,8 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void BottomSheet_Material3DefaultsMatchSource()
     {
-        Color surfaceContainerLow = Color.Parse("#FF102030");
-        Color onSurfaceVariant = Color.Parse("#FF405060");
+        Color surfaceContainerLow = new Color(0xFF102030);
+        Color onSurfaceVariant = new Color(0xFF405060);
         var theme = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -249,7 +250,6 @@ public sealed class MaterialBottomSheetTests : IDisposable
         {
             BottomSheetTheme = new BottomSheetThemeData(
                 DragHandleColor: WidgetStateColor.ResolveWith(
-                    Colors.Green,
                     states => states.Contains(WidgetState.Hovered) ? Colors.Red : Colors.Green)),
         };
         using var harness = new WidgetRenderHarness(Wrap(

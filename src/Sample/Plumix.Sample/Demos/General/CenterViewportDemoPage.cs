@@ -80,18 +80,18 @@ internal sealed class CenterViewportDemoPageState : State
                             new SliverList(
                                 new SliverChildListDelegate(
                                     Enumerable.Range(1, _before)
-                                        .Select(index => Row(-index, Color.Parse("#FFFFE0E0")))
+                                        .Select(index => Row(-index, new Color(0xFFFFE0E0)))
                                         .ToList())),
                             new SliverToBoxAdapter(
                                 key: CenterKey,
                                 child: new Container(
-                                    color: Color.Parse("#FF263238"),
+                                    color: new Color(0xFF263238),
                                     padding: new Thickness(12, 10),
                                     child: new Text("center (offset 0)", fontSize: 14, color: Colors.White))),
                             new SliverList(
                                 new SliverChildListDelegate(
                                     Enumerable.Range(1, _after)
-                                        .Select(index => Row(index, Color.Parse("#FFE0F2E9")))
+                                        .Select(index => Row(index, new Color(0xFFE0F2E9)))
                                         .ToList())),
                         ])),
             ]);

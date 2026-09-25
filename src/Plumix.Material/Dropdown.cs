@@ -1228,7 +1228,7 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
                             height: 1.0,
                             decoration: new BoxDecoration(
                                 Border: new Rendering.Border(
-                                    bottom: new BorderSide(Color.Parse("#FFBDBDBD"), 0.0))))),
+                                    bottom: new BorderSide(new Color(0xFFBDBDBD), 0.0))))),
                 ]);
         }
 
@@ -1291,14 +1291,14 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
         {
             return widget.IconEnabledColor
                    ?? (theme.Brightness == Brightness.Light
-                       ? Color.Parse("#FF616161")
-                       : Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF));
+                       ? new Color(0xFF616161)
+                       : Color.FromARGB(0xB3, 0xFF, 0xFF, 0xFF));
         }
 
         return widget.IconDisabledColor
                ?? (theme.Brightness == Brightness.Light
-                   ? Color.Parse("#FFBDBDBD")
-                   : Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF));
+                   ? new Color(0xFFBDBDBD)
+                   : Color.FromARGB(0x1A, 0xFF, 0xFF, 0xFF));
     }
 
     private static MouseCursor ResolveMouseCursor(MouseCursor? cursor, bool enabled)
@@ -1339,7 +1339,7 @@ internal sealed class DropdownButtonState<T> : State<DropdownButton<T>>
         Color? focusColor = widget.FocusColor ?? effectiveDecoration.FocusColor;
         return focusColor is null
             ? effectiveDecoration
-            : effectiveDecoration with { FillColor = focusColor.Value };
+            : effectiveDecoration with { FillColor = focusColor! };
     }
 
     private void HandleHover(bool hovering)

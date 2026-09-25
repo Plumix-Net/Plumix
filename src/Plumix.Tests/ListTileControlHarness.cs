@@ -107,7 +107,7 @@ internal sealed class ListTileControlHarness : IDisposable
             .FirstOrDefault(paragraph => string.Equals(paragraph.PlainText, text, StringComparison.Ordinal));
 
     public static Color? ForegroundOf(RenderParagraph? paragraph) =>
-        paragraph?.Foreground is SolidColorBrush brush ? brush.Color : null;
+        paragraph?.Foreground is SolidColorBrush brush ? (Color)brush.Color : null;
 
     public static Point GlobalOffsetOf(RenderObject renderObject)
     {

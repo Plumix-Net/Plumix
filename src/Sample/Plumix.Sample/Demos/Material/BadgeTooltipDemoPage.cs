@@ -35,7 +35,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                 new Text(
                     "Badge geometry plus plain/rich tooltips with hover, directional theming, and custom positioning.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -59,7 +59,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                             () => SetState(() => _useRtl = !_useRtl)),
                     ]),
                 new Container(
-                    color: Color.Parse("#FFF7F2FA"),
+                    color: new Color(0xFFF7F2FA),
                     padding: new Thickness(20),
                     child: new Row(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
@@ -80,7 +80,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                                     {
                                         ColorScheme = Theme.Of(context).ColorScheme with
                                         {
-                                            Error = Color.Parse("#FF00639B"),
+                                            Error = new Color(0xFF00639B),
                                             OnError = Colors.White,
                                         },
                                     },
@@ -89,7 +89,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                                         isLabelVisible: _isLabelVisible,
                                         child: new Icon(Icons.InfoOutline, size: 32)))),
                             Probe("Widget override", new Badge(
-                                backgroundColor: Color.Parse("#FF00695C"),
+                                backgroundColor: new Color(0xFF00695C),
                                 textColor: Colors.White,
                                 largeSize: 20,
                                 offset: new Vector(7, -7),
@@ -132,7 +132,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                                         ]),
                                     decoration: new ShapeDecoration(
                                         Shape: new StadiumBorder(),
-                                        Color: Color.Parse("#FF00695C")),
+                                        Color: new Color(0xFF00695C)),
                                     child: new OutlinedButton(
                                         onPressed: () => { },
                                         child: new Text("Rich + shape"))),
@@ -141,7 +141,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                                     preferBelow: false,
                                     verticalOffset: 28,
                                     decoration: new BoxDecoration(
-                                        Color: Color.Parse("#FF4527A0"),
+                                        Color: new Color(0xFF4527A0),
                                         BorderRadius: BorderRadius.Circular(8)),
                                     textStyle: new TextStyle(Color: Colors.White, FontSize: 13),
                                     waitDuration: TimeSpan.FromMilliseconds(250),
@@ -166,7 +166,7 @@ internal sealed class BadgeTooltipDemoPageState : State
 
         return new BadgeTheme(
             data: new BadgeThemeData(
-                BackgroundColor: Color.Parse("#FFB3261E"),
+                BackgroundColor: new Color(0xFFB3261E),
                 TextColor: Colors.White,
                 LargeSize: 18,
                 SmallSize: 8,
@@ -175,7 +175,7 @@ internal sealed class BadgeTooltipDemoPageState : State
             child: new TooltipTheme(
                 data: new TooltipThemeData(
                     Decoration: new BoxDecoration(
-                        Color: Color.Parse("#FF00695C"),
+                        Color: new Color(0xFF00695C),
                         BorderRadius: BorderRadius.Circular(6)),
                     TextStyle: new TextStyle(Color: Colors.White, FontSize: 12),
                     Padding: EdgeInsetsGeometry.DirectionalOnly(start: 12, top: 4, end: 4, bottom: 4),
@@ -198,8 +198,8 @@ internal sealed class BadgeTooltipDemoPageState : State
             onPressed: onPressed,
             child: new Text(label, fontSize: 12),
             style: TextButton.StyleFrom(
-                foregroundColor: Color.Parse("#FF21005D"),
-                backgroundColor: Color.Parse("#FFEADDFF"),
+                foregroundColor: new Color(0xFF21005D),
+                backgroundColor: new Color(0xFFEADDFF),
                 minimumSize: new Size(64, 36)));
     }
 }

@@ -10,8 +10,8 @@ namespace Plumix.Tests;
 
 public sealed class ShapeBorderTests
 {
-    private static readonly Color Green = Color.FromRgb(0, 0xFF, 0);
-    private static readonly Color Blue = Color.FromRgb(0, 0, 0xFF);
+    private static readonly Color Green = Color.FromARGB(0xFF, 0, 0xFF, 0);
+    private static readonly Color Blue = Color.FromARGB(0xFF, 0, 0, 0xFF);
 
     [Fact]
     public void BorderSide_DefaultsAndStrokeGeometryMatchFlutter()
@@ -23,7 +23,7 @@ public sealed class ShapeBorderTests
 
         Assert.Equal(0.0, BorderSide.None.Width);
         Assert.Equal(BorderStyle.None, BorderSide.None.Style);
-        Assert.Equal(Color.FromRgb(0, 0, 0), BorderSide.None.Color);
+        Assert.Equal(Color.FromARGB(0xFF, 0, 0, 0), BorderSide.None.Color);
 
         var inside = new BorderSide(Green, 10.0);
         var center = new BorderSide(Green, 10.0, BorderStyle.Solid, BorderSide.StrokeAlignCenter);

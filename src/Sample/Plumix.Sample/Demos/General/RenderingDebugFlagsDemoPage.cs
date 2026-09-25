@@ -105,13 +105,13 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                                 child: new Container(
                                     width: 200,
                                     height: 64,
-                                    color: Color.Parse("#FFB3E5FC"),
+                                    color: new Color(0xFFB3E5FC),
                                     alignment: Alignment.Center,
                                     child: new Text("clipped", fontSize: 16, color: Colors.Black)))),
                         new Opacity(
                             opacity: 0.45,
                             child: new PhysicalModel(
-                                color: Color.Parse("#FFFFE082"),
+                                color: new Color(0xFFFFE082),
                                 elevation: 8,
                                 borderRadius: BorderRadius.Circular(8),
                                 child: new SizedBox(
@@ -127,7 +127,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                             child: new Container(
                                 width: 200,
                                 height: 44,
-                                color: Color.Parse("#FFDCE3ED"),
+                                color: new Color(0xFFDCE3ED),
                                 alignment: Alignment.Center,
                                 child: new Text("press and hold me", fontSize: 14, color: Colors.Black))),
                     ])));
@@ -142,7 +142,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                 toggle();
                 _repaintToken += 1;
             }),
-            background: enabled ? Color.Parse("#FF9FC5E8") : Color.Parse("#FFDCE3ED"),
+            background: enabled ? new Color(0xFF9FC5E8) : new Color(0xFFDCE3ED),
             foreground: Colors.Black,
             fontSize: 12,
             padding: new Thickness(10, 8));

@@ -540,8 +540,8 @@ public sealed class Stepper : StatefulWidget
             if (state == StepState.Disabled)
             {
                 style = style.CopyWith(color: theme.Brightness == Brightness.Dark
-                    ? Color.FromArgb(0x61, 0xFF, 0xFF, 0xFF)
-                    : Color.FromArgb(0x61, 0, 0, 0));
+                    ? Color.FromARGB(0x61, 0xFF, 0xFF, 0xFF)
+                    : Color.FromARGB(0x61, 0, 0, 0));
             }
             else if (state == StepState.Error)
             {
@@ -572,8 +572,8 @@ public sealed class Stepper : StatefulWidget
                 ? localizations.CancelButtonLabel
                 : localizations.CancelButtonLabel.ToUpperInvariant();
             Color cancelColor = theme.Brightness == Brightness.Dark
-                ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
-                : Color.FromArgb(0x8A, 0, 0, 0);
+                ? Color.FromARGB(0xB3, 0xFF, 0xFF, 0xFF)
+                : Color.FromARGB(0x8A, 0, 0, 0);
             var continueStyle = new ButtonStyle(
                 ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                     states.Contains(WidgetState.Disabled)
@@ -627,7 +627,7 @@ public sealed class Stepper : StatefulWidget
                 ? new HashSet<WidgetState> { WidgetState.Selected }
                 : new HashSet<WidgetState> { WidgetState.Disabled };
             return CurrentWidget.ConnectorColor?.Resolve(states)
-                   ?? (active ? Theme.Of(Context).ColorScheme.Primary : Color.Parse("#FFBDBDBD"));
+                   ?? (active ? Theme.Of(Context).ColorScheme.Primary : new Color(0xFFBDBDBD));
         }
 
         private Color ResolveCircleColor(int index)
@@ -638,7 +638,7 @@ public sealed class Stepper : StatefulWidget
                 ? new HashSet<WidgetState> { WidgetState.Selected }
                 : new HashSet<WidgetState> { WidgetState.Disabled };
             Color? connector = CurrentWidget.ConnectorColor?.Resolve(states);
-            if (connector.HasValue) return connector.Value;
+            if (connector != null) return connector!;
             if (theme.Brightness == Brightness.Dark)
             {
                 return step.IsActive ? theme.ColorScheme.Secondary : theme.ColorScheme.Background;
@@ -650,7 +650,7 @@ public sealed class Stepper : StatefulWidget
         {
             var theme = Theme.Of(Context);
             return theme.Brightness == Brightness.Dark && CurrentWidget.Steps[index].IsActive
-                ? Color.FromArgb(0xDD, 0, 0, 0)
+                ? Color.FromARGB(0xDD, 0, 0, 0)
                 : Colors.White;
         }
 
@@ -693,8 +693,7 @@ public sealed class Stepper : StatefulWidget
                 a.Bottom + b.Bottom);
         }
 
-        private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-            (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)), color.R, color.G, color.B);
+private static Color ApplyOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     }
 

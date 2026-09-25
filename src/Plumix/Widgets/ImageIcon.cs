@@ -64,11 +64,10 @@ public sealed class ImageIcon : StatelessWidget
         }
 
         double iconOpacity = iconTheme.Opacity ?? 1.0;
-        Color iconColor = Color ?? iconTheme.Color ?? Colors.Black;
+        Color iconColor = Color ?? iconTheme.Color ?? new Color(0xFF000000);
         if (iconOpacity != 1.0)
         {
-            byte alpha = (byte)Math.Clamp((int)Math.Round(iconColor.A * iconOpacity), 0, 255);
-            iconColor = Avalonia.Media.Color.FromArgb(alpha, iconColor.R, iconColor.G, iconColor.B);
+            iconColor = iconColor.WithOpacity(iconColor.Opacity * iconOpacity);
         }
 
         return new Semantics(

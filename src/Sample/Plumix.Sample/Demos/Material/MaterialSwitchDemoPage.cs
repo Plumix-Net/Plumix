@@ -56,7 +56,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                     new Text(
                         "M2/M3 tokens, thumb icons, track outlines and Switch.adaptive per platform.",
                         fontSize: 14,
-                        color: Color.Parse("#8A000000")),
+                        color: new Color(0x8A000000)),
                     new Row(
                         spacing: 8,
                         children:
@@ -65,18 +65,18 @@ internal sealed class MaterialSwitchDemoPageState : State
                                 label: _useMaterial3 ? "M3" : "M2",
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
-                                background: Color.Parse("#FFE9F0FF")),
+                                background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: platform.ToString(),
                                 onTap: () => SetState(() =>
                                     _platformIndex = (_platformIndex + 1) % Platforms.Length),
                                 width: 112,
-                                background: Color.Parse("#FFEAF6F7")),
+                                background: new Color(0xFFEAF6F7)),
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, platform={platform}",
                         fontSize: 12,
-                        color: Color.Parse("#FF607D8B")),
+                        color: new Color(0xFF607D8B)),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -94,10 +94,10 @@ internal sealed class MaterialSwitchDemoPageState : State
                                         new Switch(
                                             value: _colored,
                                             onChanged: value => SetState(() => _colored = value),
-                                            activeThumbColor: Color.Parse("#FFFFF8E1"),
-                                            activeTrackColor: Color.Parse("#FF00695C"),
-                                            inactiveThumbColor: Color.Parse("#FF8D6E63"),
-                                            inactiveTrackColor: Color.Parse("#FFD7CCC8"))),
+                                            activeThumbColor: new Color(0xFFFFF8E1),
+                                            activeTrackColor: new Color(0xFF00695C),
+                                            inactiveThumbColor: new Color(0xFF8D6E63),
+                                            inactiveTrackColor: new Color(0xFFD7CCC8))),
                                     BuildRow(
                                         "Thumb icons",
                                         new Switch(
@@ -114,7 +114,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                                             onChanged: value => SetState(() => _outlined = value),
                                             trackOutlineColor:
                                                 WidgetStateProperty<Color?>.All(
-                                                    Color.Parse("#FF1565C0")),
+                                                    new Color(0xFF1565C0)),
                                             trackOutlineWidth:
                                                 WidgetStateProperty<double?>.All(3.0))),
                                     BuildRow(
@@ -135,7 +135,7 @@ internal sealed class MaterialSwitchDemoPageState : State
     private static Widget BuildRow(string label, Widget control)
     {
         return new Container(
-            color: Color.Parse("#FFF7F9FC"),
+            color: new Color(0xFFF7F9FC),
             padding: new Thickness(12, 8),
             child: new Row(
                 spacing: 12,

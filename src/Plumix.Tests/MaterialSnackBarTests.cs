@@ -209,19 +209,9 @@ public sealed class MaterialSnackBarTests : IDisposable
             box.AsBoxDecoration.Color == dark.ColorScheme.OnSurface);
     }
 
-    private static Color WithOpacity(Color color, double opacity) =>
-        Color.FromArgb((byte)Math.Round(255 * opacity), color.R, color.G, color.B);
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    private static Color AlphaBlend(Color foreground, Color background)
-    {
-        double alpha = foreground.A / 255.0;
-        byte Blend(byte f, byte b) => (byte)Math.Round((f * alpha) + (b * (1 - alpha)));
-        return Color.FromArgb(
-            255,
-            Blend(foreground.R, background.R),
-            Blend(foreground.G, background.G),
-            Blend(foreground.B, background.B));
-    }
+    private static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
 
     [Fact]
     public void SnackBar_M3AndM2DefaultsUseOppositeSurfaceContrast()

@@ -56,7 +56,7 @@ internal sealed class AspectRatioDemoPageState : State
                 new Container(
                     width: 260,
                     height: 190,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -67,9 +67,9 @@ internal sealed class AspectRatioDemoPageState : State
                                 aspectRatio: _aspectRatio,
                                 child: new Container(
                                     decoration: new BoxDecoration(
-                                        Color: Color.Parse("#FFCCE3FF"),
+                                        Color: new Color(0xFFCCE3FF),
                                         Border: Plumix.Rendering.Border.FromBorderSide(
-                                            new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                                            new BorderSide(new Color(0xFF1D3557), 2)),
                                         BorderRadius: BorderRadius.Circular(10)),
                                     child: new Center(
                                         child: new Text("Aspect preview", fontSize: 14, color: Colors.Black)))),
@@ -83,21 +83,21 @@ internal sealed class AspectRatioDemoPageState : State
                                         new Container(
                                             width: 42,
                                             height: 24,
-                                            color: Color.Parse("#FF1D3557"),
+                                            color: new Color(0xFF1D3557),
                                             child: new Center(
                                                 child: new Text("L", fontSize: 12, color: Colors.White))),
                                         new Spacer(flex: _spacerFlex),
                                         new Container(
                                             width: 28,
                                             height: 24,
-                                            color: Color.Parse("#FF2A9D8F"),
+                                            color: new Color(0xFF2A9D8F),
                                             child: new Center(
                                                 child: new Text("M", fontSize: 12, color: Colors.White))),
                                         new Spacer(),
                                         new Container(
                                             width: 54,
                                             height: 24,
-                                            color: Color.Parse("#FF457B9D"),
+                                            color: new Color(0xFF457B9D),
                                             child: new Center(
                                                 child: new Text("R", fontSize: 12, color: Colors.White))),
                                     ])),
@@ -112,7 +112,7 @@ internal sealed class AspectRatioDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

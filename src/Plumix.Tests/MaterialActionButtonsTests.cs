@@ -295,7 +295,7 @@ public sealed class MaterialActionButtonsTests
     [Fact]
     public void Material3ActionButtons_UseDirectOnSurfaceVariantRole()
     {
-        Color expected = Color.FromRgb(0x12, 0x78, 0x84);
+        Color expected = Color.FromARGB(0xFF, 0x12, 0x78, 0x84);
         var theme = ThemeData.Light with
         {
             UseMaterial3 = true,
@@ -326,7 +326,7 @@ public sealed class MaterialActionButtonsTests
     [Fact]
     public void Material2ActionButtons_UseLegacyAmbientIconTheme()
     {
-        Color expected = Color.FromRgb(0x51, 0x24, 0x7A);
+        Color expected = Color.FromARGB(0xFF, 0x51, 0x24, 0x7A);
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light with { UseMaterial3 = false },

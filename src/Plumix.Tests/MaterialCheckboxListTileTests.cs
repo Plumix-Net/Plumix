@@ -300,9 +300,9 @@ public sealed class MaterialCheckboxListTileTests
     [Fact]
     public void SelectedColor_FollowsFlutterPrecedence()
     {
-        var active = Color.Parse("#FF8C1D40");
-        var themed = Color.Parse("#FF006C4C");
-        var secondary = Color.Parse("#FF735C00");
+        var active = new Color(0xFF8C1D40);
+        var themed = new Color(0xFF006C4C);
+        var secondary = new Color(0xFF735C00);
         var bare = ThemeData.Light with
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondary: secondary)

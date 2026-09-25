@@ -499,9 +499,9 @@ public sealed class DataTable : StatelessWidget
                 children: [new Expanded(label), new Icon(Icons.Edit, size: 18.0)]);
         }
         TextStyle effectiveStyle = DefaultTextStyle.Of(context).Style.Merge(style);
-        if (cell.Placeholder && style.Color.HasValue)
+        if (cell.Placeholder && style.Color != null)
         {
-            effectiveStyle = effectiveStyle.CopyWith(color: WithOpacity(style.Color.Value, 0.60));
+            effectiveStyle = effectiveStyle.CopyWith(color: WithOpacity(style.Color!, 0.60));
         }
         Alignment cellAlignment = column.Numeric
             ? Alignment.CenterRight
@@ -607,8 +607,7 @@ public sealed class DataTable : StatelessWidget
         return EdgeInsetsGeometry.DirectionalOnly(start: start, end: end);
     }
 
-    private static Color WithOpacity(Color color, double opacity) =>
-        Color.FromArgb((byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private sealed class SortArrow : StatefulWidget
     {

@@ -80,7 +80,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                 alignment: AlignmentDirectional.CenterEnd,
                 itemHeight: _variableRows ? null : 48,
                 menuWidth: _wideMenu ? 280 : null,
-                dropdownColor: Color.Parse("#FFFFF8E1"),
+                dropdownColor: new Color(0xFFFFF8E1),
                 menuMaxHeight: 180,
                 borderRadius: BorderRadius.Circular(10),
                 padding: new Thickness(8, 4));
@@ -334,13 +334,13 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 new MenuThemeData(
                                     style: new MenuStyle(
                                         backgroundColor: WidgetStateProperty<Color?>.All(
-                                            Color.Parse("#FFFFF3E0"))),
+                                            new Color(0xFFFFF3E0))),
                                     submenuIcon: WidgetStateProperty<Widget?>.All(
                                         new Icon(Icons.InfoOutline))),
                                 new MenuBarTheme(
                                     new MenuBarThemeData(new MenuStyle(
                                         backgroundColor: WidgetStateProperty<Color?>.All(
-                                            Color.Parse("#FFF3E5F5")))),
+                                            new Color(0xFFF3E5F5)))),
                                     new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
                                         ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkSlateBlue))),

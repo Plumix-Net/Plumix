@@ -69,7 +69,7 @@ internal sealed class AutofillGroupDemoPageState : State
                                     _onDisposeAction == AutofillContextAction.Commit
                                         ? AutofillContextAction.Cancel
                                         : AutofillContextAction.Commit),
-                                background: Color.Parse("#FFDCE3ED"),
+                                background: new Color(0xFFDCE3ED),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -79,7 +79,7 @@ internal sealed class AutofillGroupDemoPageState : State
                                 label: _emailAutofillEnabled ? "Email: autofill on" : "Email: autofill off",
                                 onTap: () => SetState(() =>
                                     _emailAutofillEnabled = !_emailAutofillEnabled),
-                                background: Color.Parse("#FFE9F5EC"),
+                                background: new Color(0xFFE9F5EC),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -93,7 +93,7 @@ internal sealed class AutofillGroupDemoPageState : State
                             TextInput.FinishAutofillContext();
                             _lastAction = "finishAutofillContext(shouldSave: true)";
                         }),
-                        background: Color.Parse("#FFF3E8D8"),
+                        background: new Color(0xFFF3E8D8),
                         foreground: Colors.Black,
                         fontSize: 12,
                         padding: new Thickness(10, 8))),

@@ -23,7 +23,7 @@ public sealed class CupertinoPicker : StatefulWidget
         Action<int>? onSelectedItemChanged,
         IReadOnlyList<Widget> children,
         double diameterRatio = DefaultDiameterRatio,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         double offAxisFraction = 0.0,
         bool useMagnifier = false,
         double magnification = 1.0,
@@ -56,7 +56,7 @@ public sealed class CupertinoPicker : StatefulWidget
         IReadOnlyList<Widget> children,
         Widget? selectionOverlay,
         double diameterRatio = DefaultDiameterRatio,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         double offAxisFraction = 0.0,
         bool useMagnifier = false,
         double magnification = 1.0,
@@ -90,7 +90,7 @@ public sealed class CupertinoPicker : StatefulWidget
         NullableIndexedWidgetBuilder itemBuilder,
         int? childCount = null,
         double diameterRatio = DefaultDiameterRatio,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         double offAxisFraction = 0.0,
         bool useMagnifier = false,
         double magnification = 1.0,
@@ -124,7 +124,7 @@ public sealed class CupertinoPicker : StatefulWidget
         Widget? selectionOverlay,
         int? childCount = null,
         double diameterRatio = DefaultDiameterRatio,
-        CupertinoDynamicColor? backgroundColor = null,
+        Color? backgroundColor = null,
         double offAxisFraction = 0.0,
         bool useMagnifier = false,
         double magnification = 1.0,
@@ -155,7 +155,7 @@ public sealed class CupertinoPicker : StatefulWidget
         ListWheelChildDelegate childDelegate,
         Widget? selectionOverlay,
         double diameterRatio,
-        CupertinoDynamicColor? backgroundColor,
+        Color? backgroundColor,
         double offAxisFraction,
         bool useMagnifier,
         double magnification,
@@ -202,7 +202,7 @@ public sealed class CupertinoPicker : StatefulWidget
 
     public double DiameterRatio { get; }
 
-    public CupertinoDynamicColor? BackgroundColor { get; }
+    public Color? BackgroundColor { get; }
 
     public double OffAxisFraction { get; }
 
@@ -393,7 +393,7 @@ public sealed class CupertinoPickerDefaultSelectionOverlay : StatelessWidget
     public CupertinoPickerDefaultSelectionOverlay(
         bool capStartEdge = true,
         bool capEndEdge = true,
-        CupertinoDynamicColor? background = null,
+        Color? background = null,
         Key? key = null) : base(key)
     {
         CapStartEdge = capStartEdge;
@@ -405,7 +405,7 @@ public sealed class CupertinoPickerDefaultSelectionOverlay : StatelessWidget
 
     public bool CapEndEdge { get; }
 
-    public CupertinoDynamicColor Background { get; }
+    public Color Background { get; }
 
     public override Widget Build(BuildContext context)
     {

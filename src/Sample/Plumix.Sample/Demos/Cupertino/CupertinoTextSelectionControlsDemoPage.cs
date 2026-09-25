@@ -22,11 +22,11 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                 new Text(
                     "Line-height-aware iOS handles and handle-free macOS selection controls.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Container(
                     padding: new Thickness(12.0),
                     decoration: new BoxDecoration(
-                        Color: Color.Parse("#FFF2F2F7"),
+                        Color: new Color(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(12.0)),
                     child: new Row(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
@@ -42,14 +42,14 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                                     new Text(
                                         "no handles",
                                         fontSize: 12.0,
-                                        color: Color.Parse("#8A000000")),
+                                        color: new Color(0x8A000000)),
                                 ]),
                         ])),
                 new Text(
                     "Selection toolbars use the existing Cupertino mobile and desktop surfaces; "
                     + "Material TextField and SelectableText now choose these handle controls on Apple platforms.",
                     fontSize: 13.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
             ]));
     }
 

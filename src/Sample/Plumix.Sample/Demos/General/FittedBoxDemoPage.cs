@@ -58,7 +58,7 @@ internal sealed class FittedBoxDemoPageState : State
                 new Container(
                     width: 260,
                     height: 190,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Container(
                         color: Colors.White,
@@ -69,9 +69,9 @@ internal sealed class FittedBoxDemoPageState : State
                                 width: 160,
                                 height: 60,
                                 decoration: new BoxDecoration(
-                                    Color: Color.Parse("#FFCCE3FF"),
+                                    Color: new Color(0xFFCCE3FF),
                                     Border: Plumix.Rendering.Border.FromBorderSide(
-                                        new BorderSide(Color.Parse("#FF1D3557"), 2)),
+                                        new BorderSide(new Color(0xFF1D3557), 2)),
                                     BorderRadius: BorderRadius.Circular(10)),
                                 child: new Row(
                                     mainAxisAlignment: MainAxisAlignment.Center,
@@ -79,7 +79,7 @@ internal sealed class FittedBoxDemoPageState : State
                                     children:
                                     [
                                         new Text("WIDE", fontSize: 14, color: Colors.Black),
-                                        new Container(width: 14, height: 14, color: Color.Parse("#FF1D3557")),
+                                        new Container(width: 14, height: 14, color: new Color(0xFF1D3557)),
                                     ]))))),
             ]);
     }
@@ -91,7 +91,7 @@ internal sealed class FittedBoxDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

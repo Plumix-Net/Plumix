@@ -23,8 +23,8 @@ public sealed class RenderObjectElementDartParityTests
         Widget BuildWidget()
         {
             return new SwapperWithProperOverrides(
-                stable: new ColoredBox(key: redKey, color: Avalonia.Media.Color.FromUInt32(0xffff0000)),
-                swapper: new ColoredBox(key: blueKey, color: Avalonia.Media.Color.FromUInt32(0xff0000ff)));
+                stable: new ColoredBox(key: redKey, color: new Color(0xffff0000)),
+                swapper: new ColoredBox(key: blueKey, color: new Color(0xff0000ff)));
         }
 
         tester.PumpWidget(BuildWidget());

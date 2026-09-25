@@ -32,7 +32,7 @@ public sealed class CupertinoThemeTests
         using var harness = TestTheme(new CupertinoThemeData(), out CupertinoThemeData theme);
 
         Assert.Null(theme.Brightness);
-        Assert.Equal(CupertinoColors.ActiveBlue.Color, theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveBlue.Color, theme.PrimaryColor);
         Assert.Equal(17.0, theme.TextTheme.TextStyle.FontSize);
         Assert.False(theme.ApplyThemeToAll);
     }
@@ -44,7 +44,7 @@ public sealed class CupertinoThemeTests
             new CupertinoThemeData(primaryColor: CupertinoColors.SystemRed),
             out CupertinoThemeData theme);
 
-        Assert.Equal(CupertinoColors.SystemRed.Color, theme.TextTheme.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.Color, theme.TextTheme.ActionTextStyle.Color);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public sealed class CupertinoThemeTests
             out CupertinoThemeData theme);
 
         // The brightness still cascaded down to the background color.
-        Assert.Equal(CupertinoColors.Black, theme.ScaffoldBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Black, theme.ScaffoldBackgroundColor);
         // But not to the font color, which was overridden.
         Assert.Equal(CupertinoColors.Black, theme.TextTheme.TextStyle.Color);
     }
@@ -65,7 +65,7 @@ public sealed class CupertinoThemeTests
     [Fact]
     public void ReadingThemes_CreatesDependencies()
     {
-        Color barBackground = Color.FromUInt32(0x11223344);
+        Color barBackground = new Color(0x11223344);
         using var harness = new CupertinoThemeTestHarness(new CupertinoTheme(
             new CupertinoThemeData(
                 barBackgroundColor: barBackground,
@@ -128,10 +128,10 @@ public sealed class CupertinoThemeTests
             out CupertinoThemeData theme);
 
         Assert.Equal(PlatformBrightness.Dark, theme.Brightness);
-        Assert.Equal(CupertinoColors.SystemGreen.DarkColor, theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, theme.PrimaryColor);
         // Now check calculated derivatives.
-        Assert.Equal(CupertinoColors.SystemGreen.DarkColor, theme.TextTheme.ActionTextStyle.Color);
-        Assert.Equal(CupertinoColors.Black, theme.ScaffoldBackgroundColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemGreen.DarkColor, theme.TextTheme.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Black, theme.ScaffoldBackgroundColor);
         Assert.False(theme.ApplyThemeToAll);
     }
 
@@ -143,7 +143,7 @@ public sealed class CupertinoThemeTests
 
         using (TestIconTheme(themeData, out IconThemeData lightIconTheme))
         {
-            Assert.Equal(primaryColor.Color, lightIconTheme.Color);
+            ColorMatchers.AssertSameColorAs(primaryColor.Color, lightIconTheme.Color);
         }
 
         // Works in dark mode when primaryColor is a CupertinoDynamicColor.
@@ -151,7 +151,7 @@ public sealed class CupertinoThemeTests
                    themeData.CopyWith(brightness: PlatformBrightness.Dark),
                    out IconThemeData darkIconTheme))
         {
-            Assert.Equal(primaryColor.DarkColor, darkIconTheme.Color);
+            ColorMatchers.AssertSameColorAs(primaryColor.DarkColor, darkIconTheme.Color);
         }
     }
 
@@ -163,14 +163,14 @@ public sealed class CupertinoThemeTests
             _singletonThemeSubtree));
 
         Assert.Equal(1, _buildCount);
-        Assert.Equal(CupertinoColors.DestructiveRed.Color, _actualIconTheme!.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.DestructiveRed.Color, _actualIconTheme!.Color);
 
         harness.PumpWidget(new CupertinoTheme(
             new CupertinoThemeData(primaryColor: CupertinoColors.ActiveOrange),
             _singletonThemeSubtree));
 
         Assert.Equal(2, _buildCount);
-        Assert.Equal(CupertinoColors.ActiveOrange.Color, _actualIconTheme!.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.ActiveOrange.Color, _actualIconTheme!.Color);
     }
 
     [Fact]
@@ -227,11 +227,11 @@ public sealed class CupertinoThemeTests
             brightness: brightness,
             primaryColor: CupertinoColors.SystemRed);
 
-        Assert.Equal(CupertinoColors.SystemRed.Color, data.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.Color, data.PrimaryColor);
 
         using var harness = TestTheme(data, out CupertinoThemeData theme);
 
-        Assert.Equal(Variant(CupertinoColors.SystemRed, brightness), theme.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(Variant(CupertinoColors.SystemRed, brightness), theme.PrimaryColor);
     }
 
     [Theory]
@@ -242,29 +242,33 @@ public sealed class CupertinoThemeTests
         CupertinoDynamicColor primaryColor = CupertinoColors.SystemRed;
         var data = new CupertinoThemeData(brightness: brightness, primaryColor: primaryColor);
         CupertinoDynamicColor barBackgroundColor = CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xF0F9F9F9),
-            Color.FromUInt32(0xF01D1D1D));
+            new Color(0xF0F9F9F9),
+            new Color(0xF01D1D1D));
 
         using var harness = TestTheme(data, out CupertinoThemeData theme);
 
-        Assert.Equal(CupertinoColors.White, theme.PrimaryContrastingColor.Value);
-        Assert.Equal(Variant(barBackgroundColor, brightness), theme.BarBackgroundColor.Value);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(CupertinoColors.White, theme.PrimaryContrastingColor);
+        ColorMatchers.AssertSameColorAs(Variant(barBackgroundColor, brightness), theme.BarBackgroundColor);
+        ColorMatchers.AssertSameColorAs(
             Variant(CupertinoColors.SystemBackground, brightness),
-            theme.ScaffoldBackgroundColor.Value);
-        Assert.Equal(Variant(CupertinoColors.SystemBlue, brightness), theme.SelectionHandleColor.Value);
-        Assert.Equal(Variant(CupertinoColors.Label, brightness), theme.TextTheme.TextStyle.Color);
-        Assert.Equal(Variant(primaryColor, brightness), theme.TextTheme.ActionTextStyle.Color);
-        Assert.Equal(
+            theme.ScaffoldBackgroundColor);
+        ColorMatchers.AssertSameColorAs(Variant(CupertinoColors.SystemBlue, brightness), theme.SelectionHandleColor);
+        ColorMatchers.AssertSameColorAs(Variant(CupertinoColors.Label, brightness), theme.TextTheme.TextStyle.Color);
+        ColorMatchers.AssertSameColorAs(Variant(primaryColor, brightness), theme.TextTheme.ActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(
             Variant(CupertinoColors.InactiveGray, brightness),
             theme.TextTheme.TabLabelTextStyle.Color);
-        Assert.Equal(Variant(CupertinoColors.Label, brightness), theme.TextTheme.NavTitleTextStyle.Color);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
+            Variant(CupertinoColors.Label, brightness),
+            theme.TextTheme.NavTitleTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(
             Variant(CupertinoColors.Label, brightness),
             theme.TextTheme.NavLargeTitleTextStyle.Color);
-        Assert.Equal(Variant(primaryColor, brightness), theme.TextTheme.NavActionTextStyle.Color);
-        Assert.Equal(Variant(CupertinoColors.Label, brightness), theme.TextTheme.PickerTextStyle.Color);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(Variant(primaryColor, brightness), theme.TextTheme.NavActionTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(
+            Variant(CupertinoColors.Label, brightness),
+            theme.TextTheme.PickerTextStyle.Color);
+        ColorMatchers.AssertSameColorAs(
             Variant(CupertinoColors.Label, brightness),
             theme.TextTheme.DateTimePickerTextStyle.Color);
     }
@@ -323,7 +327,7 @@ public sealed class CupertinoThemeTests
                 return new SizedBox();
             })));
 
-        Assert.Equal(CupertinoColors.SystemPink.Color, captured!.PrimaryColor.Value);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemPink.Color, captured!.PrimaryColor);
     }
 
     private static Color Variant(CupertinoDynamicColor color, PlatformBrightness brightness)

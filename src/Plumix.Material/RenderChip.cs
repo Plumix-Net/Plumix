@@ -766,7 +766,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         if (_avatar is not null)
         {
             avatarRect = new Rect(ParentDataOf(_avatar).offset + offset, _avatar.Size);
-            var scrim = new SolidColorBrush(Color.FromArgb(0x60, 0x19, 0x19, 0x19));
+            var scrim = new SolidColorBrush(Color.FromARGB(0x60, 0x19, 0x19, 0x19));
             if (_avatarBorder is CircleBorder)
             {
                 context.Canvas.DrawCircle(
@@ -803,11 +803,11 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         Point start = origin + new Vector(checkSize * 0.15, checkSize * 0.45);
         Point middle = origin + new Vector(checkSize * 0.4, checkSize * 0.7);
         Point end = origin + new Vector(checkSize * 0.85, checkSize * 0.25);
-        var color = Color.FromArgb(
-            (byte)Math.Round(_checkmarkColor.A * Math.Clamp(progress, 0.0, 1.0)),
-            _checkmarkColor.R,
-            _checkmarkColor.G,
-            _checkmarkColor.B);
+        var color = Color.FromARGB(
+            (byte)Math.Round(_checkmarkColor.Alpha * Math.Clamp(progress, 0.0, 1.0)),
+            _checkmarkColor.Red,
+            _checkmarkColor.Green,
+            _checkmarkColor.Blue);
         var pen = new Pen(new SolidColorBrush(color), 2.0 * avatarRect.Height / 24.0);
         if (progress < 0.5)
         {

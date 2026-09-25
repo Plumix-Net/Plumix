@@ -139,7 +139,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
 
     private static Color Transparent(Color color)
     {
-        return Color.FromArgb(0, color.R, color.G, color.B);
+        return Color.FromARGB(0, color.Red, color.Green, color.Blue);
     }
 
     private static Animation<double> Map(Animation<double> parent, Func<double, double> transform)
@@ -413,11 +413,7 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
         return begin + ((end - begin) * Math.Clamp(t, 0.0, 1.0));
     }
 
-    private static Color WithOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * byte.MaxValue);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
-    }
+    private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
     private sealed class SnapshotGate : StatefulWidget
     {

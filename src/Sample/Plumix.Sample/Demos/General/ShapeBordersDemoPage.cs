@@ -38,7 +38,7 @@ internal sealed class ShapeBordersDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        var side = new BorderSide(Color.Parse("#FF1D3557"), _sideWidth);
+        var side = new BorderSide(new Color(0xFF1D3557), _sideWidth);
         ShapeBorder shape = BuildShape(side);
         if (_lerpToCircle)
         {
@@ -82,7 +82,7 @@ internal sealed class ShapeBordersDemoPageState : State
                 new Container(
                     width: 260,
                     height: 160,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new Center(
                         child: new SizedBox(
@@ -91,14 +91,14 @@ internal sealed class ShapeBordersDemoPageState : State
                             child: new DecoratedBox(
                                 decoration: new ShapeDecoration(
                                     Shape: shape,
-                                    Color: Color.Parse("#FF9DC4FF")),
+                                    Color: new Color(0xFF9DC4FF)),
                                 child: new ClipPath(
                                     clipper: new ShapeBorderClipper(shape),
                                     child: new Center(
                                         child: new Text(
                                             "Shaped",
                                             fontSize: 14,
-                                            color: Color.Parse("#FF14213D")))))))),
+                                            color: new Color(0xFF14213D)))))))),
             ]);
     }
 
@@ -129,7 +129,7 @@ internal sealed class ShapeBordersDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

@@ -166,7 +166,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
         Assert.All(harness.FindWidgets<CupertinoPicker>(), wheel =>
         {
             Assert.Equal(42.0, wheel.ItemExtent);
-            Assert.Equal(CupertinoColors.Black, wheel.BackgroundColor?.Value);
+            ColorMatchers.AssertSameColorAs(CupertinoColors.Black, wheel.BackgroundColor);
         });
         Assert.Contains(harness.FindWidgets<SizedBox>(), box => box.Width == expectedWidth && box.Height == 216.0);
     }
@@ -213,7 +213,9 @@ public sealed class CupertinoDatePickerTests : IDisposable
         Assert.NotEmpty(harness.FindWidgets<ExcludeSemantics>());
         Assert.Contains(
             harness.FindWidgets<Text>(),
-            text => text.Data == "15" && text.Style?.Color == CupertinoColors.InactiveGray.Color);
+            text => text.Data == "15" && ColorMatchers.IsSameColorAs(
+                text.Style?.Color,
+                CupertinoColors.InactiveGray.Color));
         Assert.Contains(
             harness.FindWidgets<Text>(),
             text => text.Data == "16" && text.Style?.Color != CupertinoColors.InactiveGray.Color);
@@ -233,7 +235,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
         Assert.Single(dark.FindWidgets<Text>(), text => text.Data == ":");
         Assert.Contains(
             dark.FindWidgets<Text>(),
-            text => text.Style?.Color == CupertinoColors.Label.DarkColor);
+            text => ColorMatchers.IsSameColorAs(text.Style?.Color, CupertinoColors.Label.DarkColor));
 
         using var zero = new CupertinoThemeTestHarness(Wrap(new SizedBox(
             width: 0.0,

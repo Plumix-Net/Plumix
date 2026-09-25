@@ -34,21 +34,19 @@ public sealed class DatePickerDemoPage : StatefulWidget
             var pickerTheme = _useThemeOverride
                 ? new DatePickerThemeData(
                     DayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
-                        states.Contains(WidgetState.Selected) ? Color.Parse("#FF006C4C") : null),
+                        states.Contains(WidgetState.Selected) ? new Color(0xFF006C4C) : null),
                     YearBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
-                        states.Contains(WidgetState.Selected) ? Color.Parse("#FF6750A4") : null),
-                    TodayBorder: new BorderSide(Color.Parse("#FF006C4C"), 2),
-                    RangeSelectionBackgroundColor: Color.Parse("#FFCDE8DE"))
+                        states.Contains(WidgetState.Selected) ? new Color(0xFF6750A4) : null),
+                    TodayBorder: new BorderSide(new Color(0xFF006C4C), 2),
+                    RangeSelectionBackgroundColor: new Color(0xFFCDE8DE))
                 : new DatePickerThemeData();
             var timePickerTheme = _useThemeOverride
                 ? new TimePickerThemeData(
-                    DialBackgroundColor: Color.Parse("#FFE0F2F1"),
-                    DialHandColor: Color.Parse("#FF006C4C"),
-                    HourMinuteColor: WidgetStateColor.ResolveWith(
-                        Color.Parse("#FFF2F2F2"),
-                        states => states.Contains(WidgetState.Selected)
-                            ? Color.Parse("#FFCDE8DE")
-                            : Color.Parse("#FFF2F2F2")))
+                    DialBackgroundColor: new Color(0xFFE0F2F1),
+                    DialHandColor: new Color(0xFF006C4C),
+                    HourMinuteColor: WidgetStateColor.ResolveWith(states => states.Contains(WidgetState.Selected)
+                            ? new Color(0xFFCDE8DE)
+                            : new Color(0xFFF2F2F2)))
                 : new TimePickerThemeData();
 
             Widget picker = _showYearPicker
@@ -90,7 +88,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
                             new Text(
                                 "Month paging, day/year modes, weekday predicate, M2/M3 defaults, and DatePickerTheme state overrides.",
                                 fontSize: 14,
-                                color: Color.Parse("#8A000000")),
+                                color: new Color(0x8A000000)),
                             new Row(
                                 spacing: 8,
                                 children:
@@ -103,7 +101,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
                             new Text(
                                 $"Selected: {_selectedDate:yyyy-MM-dd}  |  Displayed: {_displayedMonth:yyyy-MM}",
                                 fontSize: 13,
-                                color: Color.Parse("#FF455A64")),
+                                color: new Color(0xFF455A64)),
                             picker,
                             new Divider(),
                             new Text("InputDatePickerFormField + DatePickerDialog", fontSize: 18),
@@ -134,13 +132,13 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                     BuildToggle("Calendar dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Calendar)),
                                     BuildToggle("Input dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Input)),
                                 ]),
-                            new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: Color.Parse("#FF455A64")),
+                            new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: new Color(0xFF455A64)),
                             new Divider(),
                             new Text("TimePickerDialog + DateRangePickerDialog", fontSize: 18),
                             new Text(
                                 $"Time: {_selectedTime.Hour:00}:{_selectedTime.Minute:00}  |  Range: {_selectedRange.Start:yyyy-MM-dd} – {_selectedRange.End:yyyy-MM-dd}",
                                 fontSize: 13,
-                                color: Color.Parse("#FF455A64")),
+                                color: new Color(0xFF455A64)),
                             new Row(
                                 spacing: 8,
                                 children:

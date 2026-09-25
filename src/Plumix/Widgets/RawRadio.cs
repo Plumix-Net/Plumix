@@ -22,16 +22,35 @@ public enum WidgetState
     Error,
 }
 
-public abstract class WidgetStateProperty<T>
+/// <summary>
+/// The interface side of Dart's <c>WidgetStateProperty&lt;T&gt;</c>.
+/// </summary>
+/// <remarks>
+/// C#-only shape: Dart's value types that resolve per state (<c>WidgetStateColor extends Color
+/// implements WidgetStateProperty&lt;Color&gt;</c>) implement the property as an interface while
+/// extending the value's own class. C# has single inheritance, so <see cref="WidgetStateProperty{T}"/>
+/// is the base class for ordinary properties and this covariant interface is what
+/// <see cref="WidgetStateProperty{T}.ResolveAs"/> and the <c>is</c> tests check.
+/// </remarks>
+public interface IWidgetStateProperty<out T>
+{
+    /// <summary>Returns a value of type <typeparamref name="T"/> that depends on <paramref name="states"/>.</summary>
+    T Resolve(IReadOnlySet<WidgetState> states);
+}
+
+public abstract class WidgetStateProperty<T> : IWidgetStateProperty<T>
 {
     public abstract T Resolve(IReadOnlySet<WidgetState> states);
 
-    public static T ResolveAs(object value, IReadOnlySet<WidgetState> states)
+    /// <summary>
+    /// Resolves the value for the given set of states if <paramref name="value"/> is a
+    /// <see cref="IWidgetStateProperty{T}"/>, otherwise returns the value itself.
+    /// </summary>
+    public static T ResolveAs(object? value, IReadOnlySet<WidgetState> states)
     {
-        ArgumentNullException.ThrowIfNull(value);
-        return value is WidgetStateProperty<T> property
+        return value is IWidgetStateProperty<T> property
             ? property.Resolve(states)
-            : (T)value;
+            : (T)value!;
     }
 
     public static WidgetStateProperty<T> All(T value)
@@ -77,61 +96,116 @@ public abstract class WidgetStateProperty<T>
 }
 
 /// <summary>
-/// A color whose value can depend on the current widget states.
+/// Defines a <see cref="Color"/> that is also a <see cref="IWidgetStateProperty{T}"/>.
 /// </summary>
-public class WidgetStateColor : WidgetStateProperty<Color>
+/// <remarks>
+/// Like Dart's <c>WidgetStateColor extends Color implements WidgetStateProperty&lt;Color&gt;</c>,
+/// it can be stored in any <see cref="Color"/> slot; the widgets that document support resolve it
+/// with <see cref="WidgetStateProperty{T}.ResolveAs"/>. Its own components are the color it resolves
+/// to with no states.
+/// </remarks>
+public abstract class WidgetStateColor : Color, IWidgetStateProperty<Color>
 {
-    private readonly Func<IReadOnlySet<WidgetState>, Color> _resolver;
-
-    public WidgetStateColor(Color defaultValue)
-        : this(defaultValue, _ => defaultValue)
+    /// <summary>
+    /// Abstract const constructor, for subclasses; <paramref name="defaultValue"/> is the ARGB value.
+    /// </summary>
+    protected WidgetStateColor(uint defaultValue)
+        : base(defaultValue)
     {
-        IsConstantColor = true;
     }
 
-    public WidgetStateColor(
-        Color defaultValue,
-        Func<IReadOnlySet<WidgetState>, Color> resolver)
+    /// <summary>
+    /// Creates a <see cref="WidgetStateColor"/> from a callback that resolves the color for a set of
+    /// states.
+    /// </summary>
+    public static WidgetStateColor ResolveWith(Func<IReadOnlySet<WidgetState>, Color> callback) =>
+        new ResolvingWidgetStateColor(callback);
+
+    /// <summary>
+    /// Creates a <see cref="WidgetStateColor"/> from a map of state constraints to colors.
+    /// </summary>
+    /// <remarks>Dart's insertion-ordered map is an ordered list of entries, as in
+    /// <see cref="WidgetStateProperty{T}.FromMap"/>.</remarks>
+    public static WidgetStateColor FromMap(IReadOnlyList<KeyValuePair<WidgetStatesConstraint, Color>> map) =>
+        new WidgetStateColorMapper(map);
+
+    /// <summary>Returns a <see cref="Color"/> that depends on <paramref name="states"/>.</summary>
+    public abstract Color Resolve(IReadOnlySet<WidgetState> states);
+
+    /// <summary>A constant whose value is transparent for all states.</summary>
+    public static WidgetStateColor Transparent { get; } = new WidgetStateColorTransparent();
+}
+
+// Dart's `_WidgetStateColor`.
+internal sealed class ResolvingWidgetStateColor : WidgetStateColor
+{
+    private static readonly IReadOnlySet<WidgetState> DefaultStates = new HashSet<WidgetState>();
+
+    private readonly Func<IReadOnlySet<WidgetState>, Color> _resolve;
+
+    public ResolvingWidgetStateColor(Func<IReadOnlySet<WidgetState>, Color> resolve)
+        : base((resolve ?? throw new ArgumentNullException(nameof(resolve)))(DefaultStates).Value)
     {
-        DefaultValue = defaultValue;
-        _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
+        _resolve = resolve;
     }
 
-    public Color DefaultValue { get; }
+    public override Color Resolve(IReadOnlySet<WidgetState> states) => _resolve(states);
+}
 
-    /// True when this value stands in for a plain <see cref="Color"/> — the implicit conversion and
-    /// the single-argument constructor set it. Dart distinguishes the same two cases with
-    /// `value is WidgetStateColor`, which C# cannot express because `Color` is a sealed value type.
-    public bool IsConstantColor { get; }
-
-    public override Color Resolve(IReadOnlySet<WidgetState> states)
+// Dart's `_WidgetStateColorTransparent`.
+internal sealed class WidgetStateColorTransparent : WidgetStateColor
+{
+    public WidgetStateColorTransparent()
+        : base(0x00000000)
     {
-        return _resolver(states);
     }
 
-    public static WidgetStateColor ResolveWith(
-        Color defaultValue,
-        Func<IReadOnlySet<WidgetState>, Color> resolver)
+    public override Color Resolve(IReadOnlySet<WidgetState> states) => new(0x00000000);
+}
+
+// Dart's `_WidgetStateColorMapper extends WidgetStateMapper<Color> implements WidgetStateColor`. C#
+// cannot inherit both, so it derives from WidgetStateColor and delegates to a WidgetStateMapper; like
+// Dart's `noSuchMethod`, every Color member throws.
+internal sealed class WidgetStateColorMapper : WidgetStateColor
+{
+    private readonly WidgetStateMapper<Color> _mapper;
+
+    public WidgetStateColorMapper(IReadOnlyList<KeyValuePair<WidgetStatesConstraint, Color>> map)
+        : base(0)
     {
-        return new WidgetStateColor(defaultValue, resolver);
+        _mapper = new WidgetStateMapper<Color>(map);
     }
 
-    public new static WidgetStateColor ResolveWith(Func<IReadOnlySet<WidgetState>, Color> resolver)
-    {
-        ArgumentNullException.ThrowIfNull(resolver);
-        return new WidgetStateColor(resolver(new HashSet<WidgetState>()), resolver);
-    }
+    public override Color Resolve(IReadOnlySet<WidgetState> states) => _mapper.Resolve(states);
 
-    public static implicit operator WidgetStateColor(Color color)
-    {
-        return new WidgetStateColor(color);
-    }
+    public override double A => throw NoSuchMember(nameof(A));
 
-    public static implicit operator Color(WidgetStateColor color)
-    {
-        ArgumentNullException.ThrowIfNull(color);
-        return color.DefaultValue;
-    }
+    public override double R => throw NoSuchMember(nameof(R));
+
+    public override double G => throw NoSuchMember(nameof(G));
+
+    public override double B => throw NoSuchMember(nameof(B));
+
+    public override ColorSpace ColorSpace => throw NoSuchMember(nameof(ColorSpace));
+
+    public override uint Value => throw NoSuchMember(nameof(Value));
+
+    public override uint ToARGB32() => throw NoSuchMember(nameof(ToARGB32));
+
+    public override bool Equals(object? obj) => obj is WidgetStateColorMapper other && other._mapper.Equals(_mapper);
+
+    public override int GetHashCode() => _mapper.GetHashCode();
+
+    public override string ToString() => _mapper.ToString();
+
+    private FlutterError NoSuchMember(string memberName) =>
+        new(
+            $"There was an attempt to access the \"{memberName}\" field of a WidgetStateMapper<Color> object.\n"
+            + $"{this}\n"
+            + "WidgetStateProperty objects should only be used in places that document their support.\n"
+            + "Double-check whether the map was used in a place that documents support for "
+            + "WidgetStateProperty objects. If so, please file a bug report. (The https://pub.dev/ page "
+            + "for a package contains a link to \"View/report issues\".)");
 }
 
 public sealed class WidgetStatePropertyAll<T> : WidgetStateProperty<T>
@@ -202,6 +276,50 @@ internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>
         throw new ArgumentException(
             $"The current set of widget states ({string.Join(", ", states)}) is not supported by this map.");
     }
+
+    // Dart's `==`: another mapper with an equal map (`mapEquals`, order-insensitive).
+    public override bool Equals(object? obj)
+    {
+        if (obj is not WidgetStateMapper<T> other || other._map.Count != _map.Count)
+        {
+            return false;
+        }
+
+        foreach (KeyValuePair<WidgetStatesConstraint, T> entry in _map)
+        {
+            bool matched = false;
+            foreach (KeyValuePair<WidgetStatesConstraint, T> candidate in other._map)
+            {
+                if (candidate.Key.Equals(entry.Key))
+                {
+                    matched = EqualityComparer<T>.Default.Equals(candidate.Value, entry.Value);
+                    break;
+                }
+            }
+
+            if (!matched)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // Dart's `MapEquality().hash(_map)`: order-insensitive over the entries.
+    public override int GetHashCode()
+    {
+        int hash = 0;
+        foreach (KeyValuePair<WidgetStatesConstraint, T> entry in _map)
+        {
+            hash ^= HashCode.Combine(entry.Key, entry.Value);
+        }
+
+        return hash;
+    }
+
+    public override string ToString() =>
+        $"WidgetStateMapper<{Foundation.Diagnostics.DescribeType(typeof(T))}>({_map.Count} entries)";
 }
 
 public delegate Widget RadioBuilder<T>(BuildContext context, RawRadioState<T> state);

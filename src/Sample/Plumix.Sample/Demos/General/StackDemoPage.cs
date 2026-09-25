@@ -35,7 +35,7 @@ internal sealed class StackDemoPageState : State
             child: new Container(
                 width: 56,
                 height: 30,
-                color: Color.Parse("#FFD1495B"),
+                color: new Color(0xFFD1495B),
                 child: new Center(
                     child: new Text("badge", fontSize: 11, color: Colors.White))));
 
@@ -78,7 +78,7 @@ internal sealed class StackDemoPageState : State
                 new Container(
                     width: 220,
                     height: 140,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(8),
                     child: new Container(
                         color: Colors.White,
@@ -91,12 +91,12 @@ internal sealed class StackDemoPageState : State
                                     new Container(
                                         width: 140,
                                         height: 80,
-                                        color: Color.Parse("#FFCCE3FF"),
+                                        color: new Color(0xFFCCE3FF),
                                         child: new Center(
                                             child: new Text(
                                                 "base",
                                                 fontSize: 14,
-                                                color: Color.Parse("#FF1D3557")))),
+                                                color: new Color(0xFF1D3557)))),
                                     badge,
                                 ])))),
                 new Text("IndexedStack + Positioned", fontSize: 20, color: Colors.Black),
@@ -112,7 +112,7 @@ internal sealed class StackDemoPageState : State
                 new Container(
                     width: 220,
                     height: 140,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     child: new Directionality(
                         TextDirection.Ltr,
                         new IndexedStack(
@@ -120,19 +120,19 @@ internal sealed class StackDemoPageState : State
                             children:
                             [
                                 new Container(
-                                    color: Color.Parse("#FFCCE3FF"),
+                                    color: new Color(0xFFCCE3FF),
                                     child: new Center(
                                         child: new Text(
                                             "non-positioned child",
                                             fontSize: 14,
-                                            color: Color.Parse("#FF1D3557")))),
+                                            color: new Color(0xFF1D3557)))),
                                 new Positioned(
                                     left: 18,
                                     top: 24,
                                     width: 150,
                                     height: 50,
                                     child: new Container(
-                                        color: Color.Parse("#FFD1495B"),
+                                        color: new Color(0xFFD1495B),
                                         child: new Center(
                                             child: new Text(
                                                 "positioned child",
@@ -149,7 +149,7 @@ internal sealed class StackDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

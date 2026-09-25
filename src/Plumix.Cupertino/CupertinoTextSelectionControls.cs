@@ -62,7 +62,7 @@ public class CupertinoTextSelectionControls : TextSelectionControls
 
         var customPaint = new CustomPaint(
             painter: new CupertinoTextSelectionHandlePainter(
-                CupertinoTheme.Of(context).SelectionHandleColor.Value));
+                CupertinoTheme.Of(context).SelectionHandleColor));
         Widget handle = new SizedBox(
             width: desiredSize.Width,
             height: desiredSize.Height,

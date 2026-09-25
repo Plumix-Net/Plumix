@@ -72,13 +72,13 @@ internal sealed class TransformDemoPageState : State
                                 child: Transform.Scale(
                                     scale: _scale,
                                     alignment: alignment,
-                                    child: BuildCard("Card", Color.Parse("#FF1565C0"))))),
+                                    child: BuildCard("Card", new Color(0xFF1565C0))))),
                         BuildStage(
                             "flip",
                             Transform.Flip(
                                 flipX: _flipX,
                                 flipY: _flipY,
-                                child: BuildCard("Flip", Color.Parse("#FF2E7D32")))),
+                                child: BuildCard("Flip", new Color(0xFF2E7D32)))),
                     ]),
                 new Row(
                     spacing: 16,
@@ -87,10 +87,10 @@ internal sealed class TransformDemoPageState : State
                         BuildStage("perspective rotateY", new Transform(
                             transform: BuildPerspectiveTransform(),
                             alignment: Alignment.Center,
-                            child: BuildCard("3D", Color.Parse("#FFF57C00")))),
+                            child: BuildCard("3D", new Color(0xFFF57C00)))),
                         BuildStage("translate", Transform.Translate(
                             offset: new Point(_turns * 40.0, 0.0),
-                            child: BuildCard("Move", Color.Parse("#FF6750A4")))),
+                            child: BuildCard("Move", new Color(0xFF6750A4)))),
                     ]),
             ]);
     }
@@ -113,7 +113,7 @@ internal sealed class TransformDemoPageState : State
                 new Container(
                     width: 150,
                     height: 120,
-                    color: Color.Parse("#FFF3F6FA"),
+                    color: new Color(0xFFF3F6FA),
                     alignment: Alignment.Center,
                     child: child),
             ]);
@@ -136,7 +136,7 @@ internal sealed class TransformDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

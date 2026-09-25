@@ -85,7 +85,7 @@ internal sealed class EditableTextDemoPageState : State
                             child: new CounterTapButton(
                                 label: _enabled ? "Disable" : "Enable",
                                 onTap: () => SetState(() => _enabled = !_enabled),
-                                background: Color.Parse("#FFDCE3ED"),
+                                background: new Color(0xFFDCE3ED),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -99,7 +99,7 @@ internal sealed class EditableTextDemoPageState : State
                                     _notesController.Clear();
                                     _lastChange = "(cleared)";
                                 }),
-                                background: Color.Parse("#FFE9F5EC"),
+                                background: new Color(0xFFE9F5EC),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
@@ -113,7 +113,7 @@ internal sealed class EditableTextDemoPageState : State
                             _notesController.Text = "First line\nSecond line\nThird line";
                             _lastChange = "(seeded notes)";
                         }),
-                        background: Color.Parse("#FFF3E8D8"),
+                        background: new Color(0xFFF3E8D8),
                         foreground: Colors.Black,
                         fontSize: 12,
                         padding: new Thickness(10, 8))),
@@ -151,7 +151,7 @@ internal sealed class EditableTextDemoPageState : State
                     enabled: _enabled,
                     cursorWidth: 3,
                     cursorRadius: Radius.Circular(2),
-                    cursorColor: Color.Parse("#FFD81B60"),
+                    cursorColor: new Color(0xFFD81B60),
                     onChanged: value => SetState(() => _lastChange = $"caret = {value}")),
                 new Text("Caret (opacity animates)", fontSize: 12, color: Colors.DimGray),
                 new EditableText(
@@ -187,7 +187,7 @@ internal sealed class EditableTextDemoPageState : State
                                 child: new CounterTapButton(
                                     label: value.CanUndo ? "Undo" : "Undo (-)",
                                     onTap: _undoController.Undo,
-                                    background: Color.Parse("#FFDCE3ED"),
+                                    background: new Color(0xFFDCE3ED),
                                     foreground: Colors.Black,
                                     fontSize: 12,
                                     padding: new Thickness(10, 8))),
@@ -196,7 +196,7 @@ internal sealed class EditableTextDemoPageState : State
                                 child: new CounterTapButton(
                                     label: value.CanRedo ? "Redo" : "Redo (-)",
                                     onTap: _undoController.Redo,
-                                    background: Color.Parse("#FFDCE3ED"),
+                                    background: new Color(0xFFDCE3ED),
                                     foreground: Colors.Black,
                                     fontSize: 12,
                                     padding: new Thickness(10, 8))),

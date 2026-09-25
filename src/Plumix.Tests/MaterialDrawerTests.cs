@@ -92,7 +92,7 @@ public sealed class MaterialDrawerTests
             Assert.Equal(304.0, constrained.Constraints.MaxWidth);
         }
 
-        Color directSurface = Color.Parse("#FF123456");
+        Color directSurface = new Color(0xFF123456);
         var m3Theme = ThemeData.Light with
         {
             UseMaterial3 = true,

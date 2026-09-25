@@ -723,7 +723,7 @@ internal sealed class LargeTitleNavigationBarSliverDelegate : SliverPersistentHe
             : Plumix.Rendering.Border.Lerp(initialBorder, Border, shrinkAnimationValue);
 
         Color effectiveBackgroundColor = automaticallyTransparent
-            ? ColorUtilities.Lerp(parentPageScaffoldBackgroundColor!.Value, BackgroundColor, shrinkAnimationValue)
+            ? Color.Lerp(parentPageScaffoldBackgroundColor!, BackgroundColor, shrinkAnimationValue)
             : BackgroundColor;
 
         var stackChildren = new List<Widget>

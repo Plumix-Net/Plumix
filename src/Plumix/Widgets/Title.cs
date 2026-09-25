@@ -14,7 +14,7 @@ public sealed class Title : StatefulWidget
         string title = "",
         Key? key = null) : base(key)
     {
-        if (color.A != byte.MaxValue)
+        if (color.Alpha != byte.MaxValue)
         {
             throw new ArgumentException("Title color must be opaque.", nameof(color));
         }
@@ -71,10 +71,7 @@ public sealed class Title : StatefulWidget
 
         private static uint ToArgb(Color color)
         {
-            return ((uint)color.A << 24)
-                   | ((uint)color.R << 16)
-                   | ((uint)color.G << 8)
-                   | color.B;
+            return color.ToARGB32();
         }
     }
 }

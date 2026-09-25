@@ -90,7 +90,7 @@ public abstract class SearchDelegate<T> : IDisposable
     {
         var theme = Theme.Of(context);
         Color background = theme.ColorScheme.Brightness == Brightness.Dark
-            ? Color.Parse("#FF212121")
+            ? new Color(0xFF212121)
             : Colors.White;
         var decorationTheme = SearchFieldDecorationTheme
                               ?? new InputDecorationThemeData(

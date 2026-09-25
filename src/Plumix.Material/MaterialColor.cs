@@ -22,34 +22,34 @@ public class MaterialColor : ColorSwatch<int>
     }
 
     /// <summary>The lightest shade.</summary>
-    public Color Shade50 => this[50]!.Value;
+    public Color Shade50 => this[50]!;
 
     /// <summary>The second lightest shade.</summary>
-    public Color Shade100 => this[100]!.Value;
+    public Color Shade100 => this[100]!;
 
     /// <summary>The third lightest shade.</summary>
-    public Color Shade200 => this[200]!.Value;
+    public Color Shade200 => this[200]!;
 
     /// <summary>The fourth lightest shade.</summary>
-    public Color Shade300 => this[300]!.Value;
+    public Color Shade300 => this[300]!;
 
     /// <summary>The fifth lightest shade.</summary>
-    public Color Shade400 => this[400]!.Value;
+    public Color Shade400 => this[400]!;
 
     /// <summary>The default shade.</summary>
-    public Color Shade500 => this[500]!.Value;
+    public Color Shade500 => this[500]!;
 
     /// <summary>The fourth darkest shade.</summary>
-    public Color Shade600 => this[600]!.Value;
+    public Color Shade600 => this[600]!;
 
     /// <summary>The third darkest shade.</summary>
-    public Color Shade700 => this[700]!.Value;
+    public Color Shade700 => this[700]!;
 
     /// <summary>The second darkest shade.</summary>
-    public Color Shade800 => this[800]!.Value;
+    public Color Shade800 => this[800]!;
 
     /// <summary>The darkest shade.</summary>
-    public Color Shade900 => this[900]!.Value;
+    public Color Shade900 => this[900]!;
 }
 
 /// <summary>
@@ -71,14 +71,14 @@ public class MaterialAccentColor : ColorSwatch<int>
     }
 
     /// <summary>The lightest shade.</summary>
-    public Color Shade100 => this[100]!.Value;
+    public Color Shade100 => this[100]!;
 
     /// <summary>The default shade.</summary>
-    public Color Shade200 => this[200]!.Value;
+    public Color Shade200 => this[200]!;
 
     /// <summary>The second darkest shade.</summary>
-    public Color Shade400 => this[400]!.Value;
+    public Color Shade400 => this[400]!;
 
     /// <summary>The darkest shade.</summary>
-    public Color Shade700 => this[700]!.Value;
+    public Color Shade700 => this[700]!;
 }

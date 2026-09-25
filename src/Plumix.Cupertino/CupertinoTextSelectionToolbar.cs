@@ -42,13 +42,13 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
 
     internal static readonly CupertinoDynamicColor ToolbarBackgroundColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFF6F6F6),
-            Color.FromUInt32(0xFF222222));
+            new Color(0xFFF6F6F6),
+            new Color(0xFF222222));
 
     internal static readonly CupertinoDynamicColor ToolbarDividerColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromUInt32(0xFFD6D6D6),
-            Color.FromUInt32(0xFF424242));
+            new Color(0xFFD6D6D6),
+            new Color(0xFF424242));
 
     internal static readonly CupertinoDynamicColor ToolbarTextColor =
         CupertinoDynamicColor.WithBrightness(CupertinoColors.Black, CupertinoColors.White);
@@ -98,7 +98,7 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
             anchorAbove: anchorAbove,
             anchorBelow: anchorBelow,
             shadowColor: CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
-                ? Color.FromArgb(0x33, 0x00, 0x00, 0x00)
+                ? Color.FromARGB(0x33, 0x00, 0x00, 0x00)
                 : null,
             child: new ColoredBox(ToolbarBackgroundColor.ResolveFrom(context), child: child));
     }
@@ -550,10 +550,10 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
                 SpreadMethod = GradientSpreadMethod.Repeat,
                 GradientStops =
                 [
-                    new GradientStop(Color.FromUInt32(0x00000000), 0.25),
-                    new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.25),
-                    new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.75),
-                    new GradientStop(Color.FromUInt32(0x00000000), 0.75),
+                    new GradientStop(new Color(0x00000000), 0.25),
+                    new GradientStop(new Color(0xFFFF00FF), 0.25),
+                    new GradientStop(new Color(0xFFFF00FF), 0.75),
+                    new GradientStop(new Color(0x00000000), 0.75),
                 ],
             },
             2.0);

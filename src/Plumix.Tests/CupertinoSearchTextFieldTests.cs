@@ -79,19 +79,19 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
 
         CupertinoTextField inner = Assert.Single(harness.FindWidgets<CupertinoTextField>());
         BoxDecoration decoration = Assert.IsType<BoxDecoration>(inner.Decoration);
-        Assert.Equal(Color.FromUInt32(background), decoration.Color);
+        ColorMatchers.AssertSameColorAs(new Color(background), decoration.Color);
         Assert.Equal(BorderRadius.Circular(9.0), decoration.BorderRadius);
         Assert.Equal(TextInputActionType.Search, inner.TextInputAction);
 
         Text placeholder = Assert.Single(harness.FindWidgets<Text>(), text => text.Data == "Search");
-        Assert.Equal(Color.FromUInt32(secondaryLabel), placeholder.Style?.Color);
+        Assert.Equal(new Color(secondaryLabel), placeholder.Style?.Color);
 
         IconTheme prefixTheme = Assert.Single(harness.FindWidgets<IconTheme>(), theme =>
             theme.Child is Icon icon && icon.IconData == CupertinoIcons.Search);
         IconTheme suffixTheme = Assert.Single(harness.FindWidgets<IconTheme>(), theme =>
             theme.Child is Icon icon && icon.IconData == CupertinoIcons.XmarkCircleFill);
-        Assert.Equal(Color.FromUInt32(secondaryLabel), prefixTheme.Data.Color);
-        Assert.Equal(Color.FromUInt32(secondaryLabel), suffixTheme.Data.Color);
+        ColorMatchers.AssertSameColorAs(new Color(secondaryLabel), prefixTheme.Data.Color);
+        ColorMatchers.AssertSameColorAs(new Color(secondaryLabel), suffixTheme.Data.Color);
         Assert.Equal(20.0, prefixTheme.Data.Size);
         Assert.Equal(20.0, suffixTheme.Data.Size);
     }
@@ -103,9 +103,9 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
         using var focusNode = new FocusNode();
         int tapped = 0;
         int submitted = 0;
-        var style = new TextStyle(Color: Color.FromUInt32(0xFF123456), FontWeight: FontWeight.Light);
+        var style = new TextStyle(Color: new Color(0xFF123456), FontWeight: FontWeight.Light);
         var placeholderStyle = new TextStyle(
-            Color: Color.FromUInt32(0xAA654321),
+            Color: new Color(0xAA654321),
             FontWeight: FontWeight.Bold);
         var cursorColor = CupertinoDynamicColor.WithBrightness(Colors.Red, Colors.Blue);
         using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoSearchTextField(
@@ -161,7 +161,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
     public void DecorationAndInsets_UseOverridesAndRemainDirectional()
     {
         var decoration = new BoxDecoration(
-            Color: Color.FromUInt32(0xFF123456),
+            Color: new Color(0xFF123456),
             BorderRadius: BorderRadius.Zero);
         EdgeInsetsGeometry prefixInsets = EdgeInsetsGeometry.DirectionalOnly(start: 1.0, end: 2.0);
         EdgeInsetsGeometry suffixInsets = EdgeInsetsGeometry.DirectionalOnly(start: 3.0, end: 4.0);
@@ -191,7 +191,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
         shorthand.Pump(ViewSize);
         BoxDecoration shorthandDecoration = Assert.IsType<BoxDecoration>(
             Assert.Single(shorthand.FindWidgets<CupertinoTextField>()).Decoration);
-        Assert.Equal(CupertinoColors.SystemRed.Color, shorthandDecoration.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.SystemRed.Color, shorthandDecoration.Color);
         Assert.Equal(BorderRadius.Circular(3.0), shorthandDecoration.BorderRadius);
     }
 
@@ -312,7 +312,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
         Assert.Equal(0.0, PrefixOpacity(harness).Value);
         Assert.Equal(4.0, Assert.Single(harness.FindWidgets<CupertinoTextField>()).Padding.Top);
         Text placeholder = Assert.Single(harness.FindWidgets<Text>(), text => text.Data == "Search");
-        Assert.Equal((byte)0, placeholder.Style!.Color!.Value.A);
+        Assert.Equal((byte)0, placeholder.Style!.Color!.Alpha);
     }
 
     [Theory]

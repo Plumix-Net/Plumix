@@ -71,9 +71,9 @@ internal sealed class TrackpadPanZoomDemoPageState : State
                 height: 220,
                 alignment: Alignment.Center,
                 decoration: new BoxDecoration(
-                    Color: Color.Parse("#FFF1F3F4"),
+                    Color: new Color(0xFFF1F3F4),
                     Border: Rendering.Border.FromBorderSide(new BorderSide(
-                        color: Color.Parse("#FF9AA0A6"),
+                        color: new Color(0xFF9AA0A6),
                         width: 1)),
                     BorderRadius: BorderRadius.Circular(10)),
                 child: BuildTarget()));
@@ -93,7 +93,7 @@ internal sealed class TrackpadPanZoomDemoPageState : State
                 height: 96,
                 alignment: Alignment.Center,
                 decoration: new BoxDecoration(
-                    Color: Color.Parse("#FF00796B"),
+                    Color: new Color(0xFF00796B),
                     BorderRadius: BorderRadius.Circular(12)),
                 child: new Text("pinch me", fontSize: 13, color: Colors.White)));
     }

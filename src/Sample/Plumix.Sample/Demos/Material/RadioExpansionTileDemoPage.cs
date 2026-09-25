@@ -42,7 +42,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                 new Text(
                     "RadioGroup selection and controller-driven expansion with animated arrow/body/theme transitions.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new Row(
                     spacing: 8,
                     children:
@@ -51,19 +51,19 @@ internal sealed class RadioExpansionTileDemoPageState : State
                             _toggleable ? "Toggleable" : "Single select",
                             () => SetState(() => _toggleable = !_toggleable),
                             116,
-                            Color.Parse("#FFE9F0FF")),
+                            new Color(0xFFE9F0FF)),
                         BuildControlButton(
                             _adaptive ? "Adaptive" : "Material",
                             () => SetState(() => _adaptive = !_adaptive),
                             104,
-                            Color.Parse("#FFE9F7EF")),
+                            new Color(0xFFE9F7EF)),
                         BuildControlButton(
                             _affinity == ListTileControlAffinity.Leading ? "Leading" : "Trailing",
                             () => SetState(() => _affinity = _affinity == ListTileControlAffinity.Leading
                                 ? ListTileControlAffinity.Trailing
                                 : ListTileControlAffinity.Leading),
                             104,
-                            Color.Parse("#FFF8EFE2")),
+                            new Color(0xFFF8EFE2)),
                     ]),
                 new Row(
                     spacing: 8,
@@ -73,17 +73,17 @@ internal sealed class RadioExpansionTileDemoPageState : State
                             _expanded ? "Collapse" : "Expand",
                             () => _expansionController.Toggle(),
                             100,
-                            Color.Parse("#FFF0E8FF")),
+                            new Color(0xFFF0E8FF)),
                         BuildControlButton(
                             _maintainState ? "Maintain on" : "Maintain off",
                             () => SetState(() => _maintainState = !_maintainState),
                             112,
-                            Color.Parse("#FFEAF6F7")),
+                            new Color(0xFFEAF6F7)),
                         BuildControlButton(
                             _useMaterial3 ? "Material 3" : "Material 2",
                             () => SetState(() => _useMaterial3 = !_useMaterial3),
                             104,
-                            Color.Parse("#FFFFF2CC")),
+                            new Color(0xFFFFF2CC)),
                     ]),
                 new Text(
                     $"selected={_selectedSchedule ?? "null"}, expanded={_expanded.ToString().ToLowerInvariant()}, "
@@ -91,10 +91,10 @@ internal sealed class RadioExpansionTileDemoPageState : State
                     + $"adaptive={_adaptive.ToString().ToLowerInvariant()}, "
                     + $"material3={_useMaterial3.ToString().ToLowerInvariant()}",
                     fontSize: 12,
-                    color: Color.Parse("#FF607D8B")),
+                    color: new Color(0xFF607D8B)),
                 new Expanded(
                     child: new Container(
-                        color: Color.Parse("#FFF7F9FC"),
+                        color: new Color(0xFFF7F9FC),
                         child: new Column(
                             crossAxisAlignment: CrossAxisAlignment.Stretch,
                             children:
@@ -109,7 +109,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                                         controller: _expansionController,
                                         controlAffinity: _affinity,
                                         maintainState: _maintainState,
-                                        backgroundColor: Color.Parse("#FFF0E8FF"),
+                                        backgroundColor: new Color(0xFFF0E8FF),
                                         collapsedBackgroundColor: Colors.White,
                                         shape: new RoundedRectangleBorder(borderRadius:
                                             Plumix.Rendering.BorderRadius.Circular(12)),
@@ -150,10 +150,10 @@ internal sealed class RadioExpansionTileDemoPageState : State
         {
             UseMaterial3 = _useMaterial3,
             ColorScheme = ambient.ColorScheme.CopyWith(
-                primary: Color.Parse("#FF6750A4"),
-                secondary: Color.Parse("#FF006C4C"),
-                onSurface: Color.Parse("#FF1D1B20"),
-                onSurfaceVariant: Color.Parse("#FF49454F"))
+                primary: new Color(0xFF6750A4),
+                secondary: new Color(0xFF006C4C),
+                onSurface: new Color(0xFF1D1B20),
+                onSurfaceVariant: new Color(0xFF49454F))
         };
     }
 
@@ -181,7 +181,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                 selected: _selectedSchedule == value,
                 enabled: enabled,
                 controlAffinity: _affinity,
-                selectedTileColor: Color.Parse("#FFE8DEF8"));
+                selectedTileColor: new Color(0xFFE8DEF8));
     }
 
     private static Widget BuildControlButton(string label, Action onPressed, double width, Color background)

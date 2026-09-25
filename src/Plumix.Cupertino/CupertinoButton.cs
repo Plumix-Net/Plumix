@@ -68,9 +68,9 @@ public sealed class CupertinoButton : StatefulWidget
         Action? onPressed,
         CupertinoButtonSize sizeStyle = CupertinoButtonSize.Large,
         EdgeInsetsGeometry? padding = null,
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         Color? foregroundColor = null,
-        CupertinoDynamicColor? disabledColor = null,
+        Color? disabledColor = null,
         double? minSize = null,
         Size? minimumSize = null,
         double? pressedOpacity = 0.4,
@@ -113,9 +113,9 @@ public sealed class CupertinoButton : StatefulWidget
         Action? onPressed,
         CupertinoButtonSize sizeStyle,
         EdgeInsetsGeometry? padding,
-        CupertinoDynamicColor? color,
+        Color? color,
         Color? foregroundColor,
-        CupertinoDynamicColor disabledColor,
+        Color disabledColor,
         double? minSize,
         Size? minimumSize,
         double? pressedOpacity,
@@ -179,9 +179,9 @@ public sealed class CupertinoButton : StatefulWidget
         Action? onPressed,
         CupertinoButtonSize sizeStyle = CupertinoButtonSize.Large,
         EdgeInsetsGeometry? padding = null,
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         Color? foregroundColor = null,
-        CupertinoDynamicColor? disabledColor = null,
+        Color? disabledColor = null,
         double? minSize = null,
         Size? minimumSize = null,
         double? pressedOpacity = 0.4,
@@ -229,9 +229,9 @@ public sealed class CupertinoButton : StatefulWidget
         Action? onPressed,
         CupertinoButtonSize sizeStyle = CupertinoButtonSize.Large,
         EdgeInsetsGeometry? padding = null,
-        CupertinoDynamicColor? color = null,
+        Color? color = null,
         Color? foregroundColor = null,
-        CupertinoDynamicColor? disabledColor = null,
+        Color? disabledColor = null,
         double? minSize = null,
         Size? minimumSize = null,
         double? pressedOpacity = 0.4,
@@ -281,13 +281,13 @@ public sealed class CupertinoButton : StatefulWidget
     /// The color of the button's background. Defaults to null, which produces a button with no
     /// background or border; to the theme's primary color for <see cref="Filled"/>/<see cref="Tinted"/>.
     /// </summary>
-    public CupertinoDynamicColor? Color { get; }
+    public Color? Color { get; }
 
     /// <summary>
     /// The color of the button's background when the button is disabled. Ignored if the button does
     /// not also have a <see cref="Color"/>.
     /// </summary>
-    public CupertinoDynamicColor DisabledColor { get; }
+    public Color DisabledColor { get; }
 
     /// <summary>The color of the button's text and icons.</summary>
     public Color? ForegroundColor { get; }
@@ -463,7 +463,7 @@ public sealed class CupertinoButton : StatefulWidget
                         ? CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
                             ? CupertinoConstants.CupertinoButtonTintedOpacityLight
                             : CupertinoConstants.CupertinoButtonTintedOpacityDark
-                        : Current.Color is { } widgetColor ? widgetColor.Value.A / 255.0 : 1.0)
+                        : Current.Color is { } widgetColor ? widgetColor.Alpha / 255.0 : 1.0)
                 : null;
 
             Color effectiveForegroundColor =
@@ -723,13 +723,6 @@ public sealed class CupertinoButton : StatefulWidget
         }
 
         // Dart's `Color.withOpacity`: replaces the alpha channel outright.
-        private static Color WithOpacity(Color color, double opacity)
-        {
-            byte alpha = (byte)Math.Clamp(
-                (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
-                0,
-                byte.MaxValue);
-            return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+        private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
     }
 }

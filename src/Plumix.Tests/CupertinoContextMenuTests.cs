@@ -45,8 +45,8 @@ public sealed class CupertinoContextMenuTests : IDisposable
         Assert.False(menu.EnableHapticFeedback);
         Assert.Equal(12.0, CupertinoContextMenu.OpenBorderRadius);
         Assert.Equal(800.0 / 1135.0, CupertinoContextMenu.AnimationOpensAt);
-        Assert.Equal(Color.FromUInt32(0xFFF1F1F1), CupertinoContextMenu.BackgroundColor.Color);
-        Assert.Equal(Color.FromUInt32(0xFF212122), CupertinoContextMenu.BackgroundColor.DarkColor);
+        Assert.Equal(new Color(0xFFF1F1F1), CupertinoContextMenu.BackgroundColor.Color);
+        Assert.Equal(new Color(0xFF212122), CupertinoContextMenu.BackgroundColor.DarkColor);
 
         var built = CupertinoContextMenu.WithBuilder(
             [action],
@@ -74,7 +74,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         DefaultTextStyle textStyle = Assert.Single(light.FindWidgets<DefaultTextStyle>());
         Assert.Equal(16.0, textStyle.Style.FontSize);
         Assert.Equal(FontWeight.SemiBold, textStyle.Style.FontWeight);
-        Assert.Equal(CupertinoColors.Label.Color, textStyle.Style.Color);
+        ColorMatchers.AssertSameColorAs(CupertinoColors.Label.Color, textStyle.Style.Color);
         Icon icon = Assert.Single(light.FindWidgets<Icon>());
         Assert.Equal(21.0, icon.Size);
         Assert.Equal(textStyle.Style.Color, icon.Color);
@@ -83,10 +83,10 @@ public sealed class CupertinoContextMenuTests : IDisposable
             new CupertinoContextMenuAction(new Text("Copy")),
             PlatformBrightness.Dark));
         dark.Pump(ViewSize);
-        Assert.Equal(
-            Color.FromUInt32(0xFF212122),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFF212122),
             Assert.Single(dark.FindWidgets<ColoredBox>()).Color);
-        Assert.Equal(
+        ColorMatchers.AssertSameColorAs(
             CupertinoColors.Label.DarkColor,
             Assert.Single(dark.FindWidgets<DefaultTextStyle>()).Style.Color);
     }
@@ -103,15 +103,15 @@ public sealed class CupertinoContextMenuTests : IDisposable
 
         SendDown(harness.RenderView, new Point(30.0, 20.0), 41);
         harness.Pump(ViewSize);
-        Assert.Equal(
-            Color.FromUInt32(0xFFDDDDDD),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFFDDDDDD),
             Assert.Single(harness.FindWidgets<ColoredBox>()).Color);
 
         SendUp(harness.RenderView, new Point(30.0, 20.0), 41);
         harness.Pump(ViewSize);
         Assert.Equal(1, presses);
-        Assert.Equal(
-            Color.FromUInt32(0xFFF1F1F1),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFFF1F1F1),
             Assert.Single(harness.FindWidgets<ColoredBox>()).Color);
 
         using var disabled = new CupertinoThemeTestHarness(WrapPlain(
@@ -119,8 +119,8 @@ public sealed class CupertinoContextMenuTests : IDisposable
         disabled.Pump(ViewSize);
         SendDown(disabled.RenderView, new Point(30.0, 20.0), 42);
         disabled.Pump(ViewSize);
-        Assert.Equal(
-            Color.FromUInt32(0xFFDDDDDD),
+        ColorMatchers.AssertSameColorAs(
+            new Color(0xFFDDDDDD),
             Assert.Single(disabled.FindWidgets<ColoredBox>()).Color);
     }
 

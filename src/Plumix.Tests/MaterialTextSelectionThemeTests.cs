@@ -33,9 +33,9 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
 
         var filled = new DiagnosticPropertiesBuilder();
         new TextSelectionThemeData(
-            CursorColor: Color.FromUInt32(0xffeeffaa),
-            SelectionColor: Color.FromUInt32(0x88888888),
-            SelectionHandleColor: Color.FromUInt32(0xaabbccdd)).DebugFillProperties(filled);
+            CursorColor: new Color(0xffeeffaa),
+            SelectionColor: new Color(0x88888888),
+            SelectionHandleColor: new Color(0xaabbccdd)).DebugFillProperties(filled);
         Assert.All(filled.Properties, property => Assert.IsType<ColorProperty>(property));
         Assert.Equal(
             "Color(alpha: 1.0000, red: 0.9333, green: 1.0000, blue: 0.6667, colorSpace: ColorSpace.sRGB)",
@@ -51,9 +51,9 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         Assert.Equal(data.GetHashCode(), data.CopyWith().GetHashCode());
 
         var filled = new TextSelectionThemeData(
-            CursorColor: Color.FromUInt32(0xffeeffaa),
-            SelectionColor: Color.FromUInt32(0x88888888),
-            SelectionHandleColor: Color.FromUInt32(0xaabbccdd));
+            CursorColor: new Color(0xffeeffaa),
+            SelectionColor: new Color(0x88888888),
+            SelectionHandleColor: new Color(0xaabbccdd));
 
         Assert.Equal(filled, filled.CopyWith());
         Assert.Equal(
@@ -72,9 +72,9 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         var data = new TextSelectionThemeData();
         Assert.Same(data, TextSelectionThemeData.Lerp(data, data, 0.5));
 
-        var begin = new TextSelectionThemeData(CursorColor: Color.FromRgb(0, 0, 0));
-        var end = new TextSelectionThemeData(CursorColor: Color.FromRgb(0, 0, 100));
-        Assert.Equal(Color.FromRgb(0, 0, 50), TextSelectionThemeData.Lerp(begin, end, 0.5)!.CursorColor);
+        var begin = new TextSelectionThemeData(CursorColor: Color.FromARGB(0xFF, 0, 0, 0));
+        var end = new TextSelectionThemeData(CursorColor: Color.FromARGB(0xFF, 0, 0, 100));
+        Assert.Equal(Color.FromARGB(0xFF, 0, 0, 50), TextSelectionThemeData.Lerp(begin, end, 0.5)!.CursorColor);
     }
 
     [Fact]
@@ -94,14 +94,15 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
 
         // The values Flutter's own test hard-codes: `Colors.blue[500]` from the M2
         // `ColorScheme.fromSwatch` default, and the same color at 40% opacity.
-        Color defaultCursorColor = Color.FromUInt32(0xFF2196F3);
-        Color defaultSelectionColor = Color.FromUInt32(0x662196F3);
-        Assert.Equal(defaultCursorColor, theme.ColorScheme.Primary);
+        Color defaultCursorColor = new Color(0xFF2196F3);
+        Color defaultSelectionColor = new Color(0x662196F3);
+        // The scheme keeps the `Colors.blue` swatch itself, which equals no plain colour.
+        Assert.Equal(defaultCursorColor.Value, theme.ColorScheme.Primary.Value);
 
         (Color cursorColor, Color selectionColor) = ResolveFieldColors(theme);
         Assert.Equal(defaultCursorColor, cursorColor);
         Assert.Equal(defaultSelectionColor, selectionColor);
-        Assert.Equal(defaultCursorColor, ResolveHandleColor(theme));
+        Assert.Equal(defaultCursorColor.Value, ResolveHandleColor(theme).Value);
     }
 
     [Fact]
@@ -120,9 +121,9 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
     public void ThemeDataTextSelectionTheme_IsUsedWhenProvided()
     {
         var selectionTheme = new TextSelectionThemeData(
-            CursorColor: Color.FromUInt32(0xffaabbcc),
-            SelectionColor: Color.FromUInt32(0x88888888),
-            SelectionHandleColor: Color.FromUInt32(0x00ccbbaa));
+            CursorColor: new Color(0xffaabbcc),
+            SelectionColor: new Color(0x88888888),
+            SelectionHandleColor: new Color(0x00ccbbaa));
         ThemeData theme = ThemeData.Light with { TextSelectionTheme = selectionTheme };
 
         (Color cursorColor, Color selectionColor) = ResolveFieldColors(theme);
@@ -137,14 +138,14 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             TextSelectionTheme = new TextSelectionThemeData(
-                CursorColor: Color.FromUInt32(0xffaabbcc),
-                SelectionColor: Color.FromUInt32(0x88888888),
-                SelectionHandleColor: Color.FromUInt32(0x00ccbbaa)),
+                CursorColor: new Color(0xffaabbcc),
+                SelectionColor: new Color(0x88888888),
+                SelectionHandleColor: new Color(0x00ccbbaa)),
         };
         var widgetTheme = new TextSelectionThemeData(
-            CursorColor: Color.FromUInt32(0xffddeeff),
-            SelectionColor: Color.FromUInt32(0x44444444),
-            SelectionHandleColor: Color.FromUInt32(0x00ffeedd));
+            CursorColor: new Color(0xffddeeff),
+            SelectionColor: new Color(0x44444444),
+            SelectionHandleColor: new Color(0x00ffeedd));
 
         (Color cursorColor, Color selectionColor) = ResolveFieldColors(
             theme,
@@ -162,35 +163,35 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             TextSelectionTheme = new TextSelectionThemeData(
-                CursorColor: Color.FromUInt32(0xffaabbcc),
-                SelectionHandleColor: Color.FromUInt32(0x00ccbbaa)),
+                CursorColor: new Color(0xffaabbcc),
+                SelectionHandleColor: new Color(0x00ccbbaa)),
         };
         var widgetTheme = new TextSelectionThemeData(
-            CursorColor: Color.FromUInt32(0xffddeeff),
-            SelectionHandleColor: Color.FromUInt32(0x00ffeedd));
-        Color cursorColor = Color.FromUInt32(0x88888888);
+            CursorColor: new Color(0xffddeeff),
+            SelectionHandleColor: new Color(0x00ffeedd));
+        Color cursorColor = new Color(0x88888888);
 
         // Neither field is focused, so the cursor is not blinking and is fully transparent.
         RenderEditable field = RenderField(
             theme,
             new TextSelectionTheme(widgetTheme, new TextField(cursorColor: cursorColor)));
-        Assert.Equal(Color.FromArgb(0, cursorColor.R, cursorColor.G, cursorColor.B), field.CursorColor);
+        Assert.Equal(Color.FromARGB(0, cursorColor.Red, cursorColor.Green, cursorColor.Blue), field.CursorColor);
 
         RenderEditable selectable = RenderField(
             theme,
             new TextSelectionTheme(
                 widgetTheme,
                 new SelectableText("foobar", cursorColor: cursorColor)));
-        Assert.Equal(Color.FromArgb(0, cursorColor.R, cursorColor.G, cursorColor.B), selectable.CursorColor);
+        Assert.Equal(Color.FromARGB(0, cursorColor.Red, cursorColor.Green, cursorColor.Blue), selectable.CursorColor);
     }
 
     [Fact]
     public void TextSelectionTheme_OverridesDefaultSelectionStyleForDescendants()
     {
-        Color themeSelectionColor = Color.FromUInt32(0xffaabbcc);
-        Color themeCursorColor = Color.FromUInt32(0x00ccbbaa);
-        Color defaultSelectionColor = Color.FromUInt32(0xffaa1111);
-        Color defaultCursorColor = Color.FromUInt32(0x00cc2222);
+        Color themeSelectionColor = new Color(0xffaabbcc);
+        Color themeCursorColor = new Color(0x00ccbbaa);
+        Color defaultSelectionColor = new Color(0xffaa1111);
+        Color defaultCursorColor = new Color(0x00cc2222);
         DefaultSelectionStyle? aboveStyle = null;
         DefaultSelectionStyle? belowStyle = null;
 
@@ -230,7 +231,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
             new TextField(autofocus: true, decoration: new InputDecoration(errorText: "nope")));
         Assert.Equal(theme.ColorScheme.Error, errored.CursorColor);
 
-        Color cursorErrorColor = Color.FromUInt32(0xff00ff00);
+        Color cursorErrorColor = new Color(0xff00ff00);
         RenderEditable overridden = RenderField(
             theme,
             new TextField(
@@ -262,7 +263,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         Assert.Equal(theme.ColorScheme.Primary, cursorColor);
         Assert.Equal(WithOpacity(theme.ColorScheme.Primary, 0.40), selectionColor);
 
-        Color cupertinoPrimary = Color.FromUInt32(0xff00aa77);
+        Color cupertinoPrimary = new Color(0xff00aa77);
         RenderEditable overridden = RenderField(
             theme,
             new CupertinoTheme(
@@ -279,7 +280,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         // Like Flutter's test, the field is focused so its cursor is blinking and fully opaque.
         Widget field = new TextField(autofocus: true);
         RenderEditable editable = RenderField(theme, wrap is null ? field : wrap(field));
-        return (editable.CursorColor!.Value, editable.SelectionColor!.Value);
+        return (editable.CursorColor!, editable.SelectionColor!);
     }
 
     private static RenderEditable RenderField(ThemeData theme, Widget field)
@@ -305,7 +306,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
 
     private static Color WithOpacity(Color color, double opacity)
     {
-        return Color.FromArgb((byte)Math.Round(color.A * opacity), color.R, color.G, color.B);
+        return Color.FromARGB((byte)Math.Round(color.Alpha * opacity), color.Red, color.Green, color.Blue);
     }
 
     private static Widget Wrap(ThemeData theme, Widget child)

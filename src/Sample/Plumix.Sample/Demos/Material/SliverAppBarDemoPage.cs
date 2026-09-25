@@ -59,7 +59,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                     sliver: SliverList.Builder(
                         itemCount: 24,
                         itemBuilder: (_, index) => new Container(
-                            color: index % 2 == 0 ? Color.Parse("#FFF3EDF7") : Color.Parse("#FFE8DEF8"),
+                            color: index % 2 == 0 ? new Color(0xFFF3EDF7) : new Color(0xFFE8DEF8),
                             margin: new Thickness(0, 0, 0, 6),
                             padding: new Thickness(14),
                             child: new Text($"Scrollable row #{index + 1}")),
@@ -72,7 +72,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
             var flexible = new FlexibleSpaceBar(
                 title: title,
                 background: new DecoratedBox(
-                    new BoxDecoration(Color: Color.Parse("#FF6750A4")),
+                    new BoxDecoration(Color: new Color(0xFF6750A4)),
                     child: new Align(
                         alignment: Alignment.Center,
                         child: new Text("PARALLAX", fontSize: 30, color: Colors.White))),

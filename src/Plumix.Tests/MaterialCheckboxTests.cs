@@ -534,7 +534,7 @@ public sealed class MaterialCheckboxTests
         owner.FlushBuild();
 
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
-        Assert.Equal(Color.FromArgb(255, 0, 122, 255), painter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 0, 122, 255), painter.ActiveColor);
         Assert.Equal(0.0, painter.Side.Width);
         Assert.Equal(MaterialColors.Transparent, painter.Side.Color);
     }
@@ -717,7 +717,7 @@ public sealed class MaterialCheckboxTests
 
         // An enabled checked checkbox paints the dark fill color flat, never the gradient.
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
-        Assert.Equal(Color.FromArgb(255, 50, 100, 215), painter.ActiveColor);
+        ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 50, 100, 215), painter.ActiveColor);
         Assert.Equal(true, painter.Value);
         Assert.True(painter.IsActive);
     }
@@ -1104,7 +1104,7 @@ public sealed class MaterialCheckboxTests
     private static Color ApplyOpacity(Color color, double opacity)
     {
         byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
     }
 
     private sealed class WidgetRenderHarness : IDisposable

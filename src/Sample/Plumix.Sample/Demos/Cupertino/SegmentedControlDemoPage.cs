@@ -42,7 +42,7 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                 new Text(
                     "Controlled selection, sliding thumb, disabled segments, custom colors, and arrow-key focus.",
                     fontSize: 14.0,
-                    color: Color.Parse("#8A000000")),
+                    color: new Color(0x8A000000)),
                 new CupertinoSlidingSegmentedControl<string>(
                     children: segments,
                     groupValue: _selected,
@@ -58,12 +58,12 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                     children: segments,
                     groupValue: _selected,
                     disabledChildren: disabled,
-                    selectedColor: Color.Parse("#FF00695C"),
-                    unselectedColor: Color.Parse("#FFF4FBF8"),
-                    borderColor: Color.Parse("#FF00695C"),
-                    pressedColor: Color.Parse("#3300695C"),
-                    disabledColor: Color.Parse("#FFCFD8D5"),
-                    disabledTextColor: Color.Parse("#FF78908A"),
+                    selectedColor: new Color(0xFF00695C),
+                    unselectedColor: new Color(0xFFF4FBF8),
+                    borderColor: new Color(0xFF00695C),
+                    pressedColor: new Color(0x3300695C),
+                    disabledColor: new Color(0xFFCFD8D5),
+                    disabledTextColor: new Color(0xFF78908A),
                     padding: EdgeInsetsGeometry.Zero,
                     onValueChanged: Select),
                 new Row(
@@ -78,7 +78,7 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                 new Text(
                     $"selected={_selected ?? "none"}, changes={_changes}, weekDisabled={_disableWeek}",
                     fontSize: 13.0,
-                    color: Color.Parse("#FF455A64")),
+                    color: new Color(0xFF455A64)),
             ]);
     }
 
@@ -100,8 +100,8 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                 width: 126.0,
                 padding: new Thickness(10.0, 8.0),
                 decoration: new BoxDecoration(
-                    Color: Color.Parse("#FFE8F4F1"),
+                    Color: new Color(0xFFE8F4F1),
                     BorderRadius: BorderRadius.Circular(8.0)),
-                child: new Center(child: new Text(label, color: Color.Parse("#FF00695C")))));
+                child: new Center(child: new Text(label, color: new Color(0xFF00695C)))));
     }
 }

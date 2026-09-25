@@ -64,7 +64,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     color: Colors.DarkSlateGray),
                 new Container(
                     width: 300,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -90,7 +90,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             data: ThemeData.Light with
             {
                 AppBarTheme = new AppBarThemeData(
-                    BackgroundColor: Color.Parse("#FF1E3A5F"),
+                    BackgroundColor: new Color(0xFF1E3A5F),
                     ForegroundColor: Colors.White,
                     ActionsPadding: _themeActionsPadding),
             },
@@ -108,7 +108,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
     {
         return new AppBar(
             title: new Text("Default actions padding"),
-            backgroundColor: Color.Parse("#FF1E3A5F"),
+            backgroundColor: new Color(0xFF1E3A5F),
             foregroundColor: Colors.White,
             actions:
             [
@@ -119,10 +119,10 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
 
     private static Widget BuildScrolledUnderPreview()
     {
-        WidgetStateColor background = WidgetStateColor.ResolveWith(
+        Color background = WidgetStateColor.ResolveWith(
             states => states.Contains(WidgetState.ScrolledUnder)
-                ? Color.Parse("#FFB8C7DB")
-                : Color.Parse("#FFE7EDF6"));
+                ? new Color(0xFFB8C7DB)
+                : new Color(0xFFE7EDF6));
         return new SizedBox(
             height: 150,
             child: new ScrollNotificationObserver(
@@ -162,7 +162,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
         return new Container(
             width: 28,
             height: 22,
-            color: Color.Parse("#FFFFB703"),
+            color: new Color(0xFFFFB703),
             child: new Center(
                 child: new Icon(
                     icon,
@@ -177,7 +177,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

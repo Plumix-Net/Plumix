@@ -29,7 +29,7 @@ public sealed class DefaultSelectionStyle : InheritedTheme
         return new DefaultSelectionStyle(key);
     }
 
-    public static Color DefaultColor { get; } = Color.FromArgb(0x80, 0x80, 0x80, 0x80);
+    public static Color DefaultColor { get; } = Color.FromARGB(0x80, 0x80, 0x80, 0x80);
 
     public Color? CursorColor { get; }
 

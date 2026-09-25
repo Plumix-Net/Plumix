@@ -29,7 +29,7 @@ public sealed class BaselineDemoPage : StatelessWidget
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Container(
-                    color: Color.Parse("#FFF1F5F9"),
+                    color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12),
                     child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.Baseline,
@@ -37,13 +37,13 @@ public sealed class BaselineDemoPage : StatelessWidget
                         spacing: 12,
                         children:
                         [
-                            new Text("Aa", fontSize: 34, color: Color.Parse("#FF1D3557")),
+                            new Text("Aa", fontSize: 34, color: new Color(0xFF1D3557)),
                             new IgnoreBaseline(
                                 child: new Container(
                                     width: 32,
                                     height: 52,
-                                    color: Color.Parse("#FFE9C46A"))),
-                            new Text("baseline", fontSize: 16, color: Color.Parse("#FF2A9D8F")),
+                                    color: new Color(0xFFE9C46A))),
+                            new Text("baseline", fontSize: 16, color: new Color(0xFF2A9D8F)),
                         ])),
             ]);
     }
@@ -52,7 +52,7 @@ public sealed class BaselineDemoPage : StatelessWidget
     {
         return new Container(
             height: 118,
-            color: Color.Parse("#FFE7EDF6"),
+            color: new Color(0xFFE7EDF6),
             padding: new Thickness(12),
             child: new Stack(
                 clipBehavior: Clip.None,
@@ -63,11 +63,11 @@ public sealed class BaselineDemoPage : StatelessWidget
                         right: 0,
                         top: 48,
                         height: 1,
-                        child: new Container(color: Color.Parse("#FFE63946"))),
+                        child: new Container(color: new Color(0xFFE63946))),
                     new Baseline(
                         baseline: 48,
                         baselineType: TextBaseline.Alphabetic,
-                        child: new Text("Plumix", fontSize: 36, color: Color.Parse("#FF1D3557"))),
+                        child: new Text("Plumix", fontSize: 36, color: new Color(0xFF1D3557))),
                     new Positioned(
                         left: 150,
                         child: new Baseline(
@@ -76,7 +76,7 @@ public sealed class BaselineDemoPage : StatelessWidget
                             child: new Container(
                                 width: 54,
                                 height: 28,
-                                color: Color.Parse("#FF2A9D8F")))),
+                                color: new Color(0xFF2A9D8F)))),
                 ]));
     }
 }

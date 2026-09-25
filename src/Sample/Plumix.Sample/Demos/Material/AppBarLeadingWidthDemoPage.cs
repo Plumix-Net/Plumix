@@ -64,7 +64,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                     color: Colors.DarkSlateGray),
                 new Container(
                     width: 300,
-                    color: Color.Parse("#FFE7EDF6"),
+                    color: new Color(0xFFE7EDF6),
                     padding: new Thickness(10),
                     child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -83,7 +83,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
     {
         return new AppBarTheme(
             data: new AppBarThemeData(
-                BackgroundColor: Color.Parse("#FF1E3A5F"),
+                BackgroundColor: new Color(0xFF1E3A5F),
                 ForegroundColor: Colors.White,
                 LeadingWidth: _themeLeadingWidth),
             child: new AppBar(
@@ -100,7 +100,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
     {
         return new AppBar(
             title: new Text("Default leading width"),
-            backgroundColor: Color.Parse("#FF1E3A5F"),
+            backgroundColor: new Color(0xFF1E3A5F),
             foregroundColor: Colors.White,
             leading: BuildLeadingProbe(),
             actions:
@@ -114,7 +114,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
         return new Container(
             width: 24,
             height: 24,
-            color: Color.Parse("#FFFFB703"),
+            color: new Color(0xFFFFB703),
             child: new Center(
                 child: new Icon(
                     Icons.Menu,
@@ -129,7 +129,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse(colorHex),
+                background: (Color)Avalonia.Media.Color.Parse(colorHex),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));

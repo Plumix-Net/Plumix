@@ -65,11 +65,11 @@ internal sealed class StateStorageDemoPageState : State
                     child: _showScrollable
                         ? new RestorableStorageList()
                         : new Container(
-                            color: Color.Parse("#FFE8EEF6"),
+                            color: new Color(0xFFE8EEF6),
                             alignment: Alignment.Center,
                             child: new Text(
                                 "List is unmounted. Restore it to verify the saved offset.",
-                                color: Color.Parse("#FF31506F")))),
+                                color: new Color(0xFF31506F)))),
             ]);
     }
 
@@ -80,7 +80,7 @@ internal sealed class StateStorageDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FFDCE3ED"),
+                background: new Color(0xFFDCE3ED),
                 foreground: Colors.Black,
                 fontSize: 12,
                 padding: new Thickness(8, 7)));
@@ -114,7 +114,7 @@ internal sealed class RestorableStorageListState : State
                 child: scrollView)
             : new GlowingOverscrollIndicator(
                 axisDirection: AxisDirection.Down,
-                color: Color.Parse("#FF625B71"),
+                color: new Color(0xFF625B71),
                 child: scrollView);
 
         return new ScrollNotificationObserver(
@@ -176,7 +176,7 @@ internal sealed class RestorableStorageListState : State
     {
         return new Container(
             height: 44,
-            color: index % 2 == 0 ? Color.Parse("#FFF4F7FA") : Color.Parse("#FFE6EDF5"),
+            color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
             padding: new Thickness(12, 0),
             alignment: Alignment.CenterLeft,
             child: new Text($"Stored row {index + 1}", color: Colors.Black));
@@ -189,7 +189,7 @@ internal sealed class RestorableStorageListState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Color.Parse("#FF31506F"),
+                background: new Color(0xFF31506F),
                 foreground: Colors.White,
                 fontSize: 12,
                 padding: new Thickness(8, 7)));
@@ -222,7 +222,7 @@ internal sealed class ScrollObserverReadoutState : State
 
     public override Widget Build(BuildContext context)
     {
-        return new Text(_summary, fontSize: 12, color: Color.Parse("#FF31506F"));
+        return new Text(_summary, fontSize: 12, color: new Color(0xFF31506F));
     }
 
     public override void Dispose()

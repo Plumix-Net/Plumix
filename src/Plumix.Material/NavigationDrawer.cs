@@ -283,9 +283,9 @@ internal sealed class NavigationDrawerDestinationTileState : State<NavigationDra
                         new Semantics(label: indexLabel)
                     ])));
 
-        if (destination.BackgroundColor.HasValue)
+        if (destination.BackgroundColor != null)
         {
-            result = new Ink(color: destination.BackgroundColor.Value, child: result);
+            result = new Ink(color: destination.BackgroundColor!, child: result);
         }
 
         return result;

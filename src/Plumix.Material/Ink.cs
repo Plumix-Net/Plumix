@@ -23,7 +23,7 @@ public sealed class Ink : StatelessWidget
         Widget? child = null,
         Key? key = null) : base(key)
     {
-        if (color.HasValue && decoration is not null)
+        if (color != null && decoration is not null)
         {
             throw new ArgumentException("Cannot provide both color and decoration.", nameof(decoration));
         }
@@ -33,7 +33,7 @@ public sealed class Ink : StatelessWidget
         ValidatePadding(padding);
 
         Padding = padding;
-        Decoration = decoration ?? (color.HasValue ? new BoxDecoration(Color: color) : null);
+        Decoration = decoration ?? (color != null ? new BoxDecoration(Color: color) : null);
         Width = width;
         Height = height;
         Child = child;

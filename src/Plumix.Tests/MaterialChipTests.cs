@@ -48,23 +48,23 @@ public sealed class MaterialChipTests : IDisposable
             labelStyle: new TextStyle(FontSize: 14),
             brightness: Brightness.Light);
 
-        Assert.Equal(Color.FromArgb(0x1f, 0, 0, 0), defaults.BackgroundColor);
-        Assert.Equal(Color.FromArgb(0x0c, 0, 0, 0), defaults.DisabledColor);
-        Assert.Equal(Color.FromArgb(0x3d, 0, 0, 0), defaults.SelectedColor);
-        Assert.Equal(Color.FromArgb(0x3d, 95, 158, 160), defaults.SecondarySelectedColor);
-        Assert.Equal(Color.FromArgb(0xde, 95, 158, 160), defaults.SecondaryLabelStyle!.Color);
+        Assert.Equal(Color.FromARGB(0x1f, 0, 0, 0), defaults.BackgroundColor);
+        Assert.Equal(Color.FromARGB(0x0c, 0, 0, 0), defaults.DisabledColor);
+        Assert.Equal(Color.FromARGB(0x3d, 0, 0, 0), defaults.SelectedColor);
+        Assert.Equal(Color.FromARGB(0x3d, 95, 158, 160), defaults.SecondarySelectedColor);
+        Assert.Equal(Color.FromARGB(0xde, 95, 158, 160), defaults.SecondaryLabelStyle!.Color);
         Assert.True(defaults.ShowCheckmark);
         Assert.Equal(new Thickness(4), defaults.Padding);
         Assert.Equal(8.0, defaults.PressElevation);
         Assert.Equal(18.0, defaults.IconTheme!.Size);
 
-        Color customPrimary = Color.FromArgb(0x80, 0x11, 0x22, 0x33);
+        Color customPrimary = Color.FromARGB(0x80, 0x11, 0x22, 0x33);
         ChipThemeData primaryDefaults = ChipThemeData.FromDefaults(
             secondaryColor: Colors.CadetBlue,
             labelStyle: new TextStyle(FontSize: 14),
             primaryColor: customPrimary);
-        Assert.Equal(Color.FromArgb(0x1f, 0x11, 0x22, 0x33), primaryDefaults.BackgroundColor);
-        Assert.Equal(Color.FromArgb(0xde, 0x11, 0x22, 0x33), primaryDefaults.LabelStyle!.Color);
+        Assert.Equal(Color.FromARGB(0x1f, 0x11, 0x22, 0x33), primaryDefaults.BackgroundColor);
+        Assert.Equal(Color.FromARGB(0xde, 0x11, 0x22, 0x33), primaryDefaults.LabelStyle!.Color);
         Assert.Throws<ArgumentException>(() => ChipThemeData.FromDefaults(
             secondaryColor: Colors.CadetBlue,
             labelStyle: new TextStyle(),
@@ -170,15 +170,17 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Same(begin, ChipThemeData.Lerp(begin, begin, 0.5));
 
         ChipThemeData midpoint = ChipThemeData.Lerp(begin, end, 0.5)!;
-        Color middleGray = Color.FromArgb(0xff, 0x7f, 0x7f, 0x7f);
-        Assert.Equal(middleGray, midpoint.Color!.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
-        Assert.Equal(middleGray, midpoint.BackgroundColor);
-        Assert.Equal(middleGray, midpoint.DeleteIconColor);
-        Assert.Equal(middleGray, midpoint.CheckmarkColor);
+        Color middleGray = Color.FromARGB(0xff, 0x7f, 0x7f, 0x7f);
+        ColorMatchers.AssertSameColorAs(
+            middleGray,
+            midpoint.Color!.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
+        ColorMatchers.AssertSameColorAs(middleGray, midpoint.BackgroundColor);
+        ColorMatchers.AssertSameColorAs(middleGray, midpoint.DeleteIconColor);
+        ColorMatchers.AssertSameColorAs(middleGray, midpoint.CheckmarkColor);
         Assert.True(midpoint.ShowCheckmark);
         Assert.Equal(new Thickness(4, 4), midpoint.LabelPadding);
         Assert.Equal(new Thickness(3), midpoint.Padding);
-        Assert.Equal(middleGray, midpoint.Side!.Value.Color);
+        ColorMatchers.AssertSameColorAs(middleGray, midpoint.Side!.Value.Color);
         Assert.Equal(3, midpoint.Side.Value.Width);
         Assert.Equal(6, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(15, midpoint.LabelStyle!.FontSize);
@@ -985,16 +987,16 @@ public sealed class MaterialChipTests : IDisposable
 
     private static Color ForegroundColor(RenderParagraph paragraph)
     {
-        return Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
+        return (Color)Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color;
     }
 
     private static Color WithOpacity(Color color, double opacity)
     {
-        return Color.FromArgb(
+        return Color.FromARGB(
             (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255),
-            color.R,
-            color.G,
-            color.B);
+            color.Red,
+            color.Green,
+            color.Blue);
     }
 
     private static void Tap(RenderView view, Point point, int pointer)

@@ -398,7 +398,7 @@ internal sealed class CupertinoActionSheetActionState : State<CupertinoActionShe
             (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
             0,
             byte.MaxValue);
-        return HSLColor.FromColor(Color.FromArgb(alpha, baseColor.R, baseColor.G, baseColor.B)).ToColor();
+        return HSLColor.FromColor(Color.FromARGB(alpha, baseColor.Red, baseColor.Green, baseColor.Blue)).ToColor();
     }
 }
 

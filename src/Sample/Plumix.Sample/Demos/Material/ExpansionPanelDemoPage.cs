@@ -28,10 +28,10 @@ internal sealed class ExpansionPanelDemoPageState : State
                 new Text(
                     "Controlled panels, header tap gating, animated material gaps, and mutually exclusive radio panels.",
                     fontSize: 14,
-                    color: Color.Parse("#8A000000")),
-                new Text("Controlled list", fontSize: 14, color: Color.Parse("#FF6750A4")),
+                    color: new Color(0x8A000000)),
+                new Text("Controlled list", fontSize: 14, color: new Color(0xFF6750A4)),
                 BuildControlledList(),
-                new Text("Radio list · last callback: " + _lastRadioEvent, fontSize: 14, color: Color.Parse("#FF006C4C")),
+                new Text("Radio list · last callback: " + _lastRadioEvent, fontSize: 14, color: new Color(0xFF006C4C)),
                 BuildRadioList(),
             ]);
     }
@@ -40,8 +40,8 @@ internal sealed class ExpansionPanelDemoPageState : State
     {
         return new ExpansionPanelList(
             materialGapSize: 12,
-            dividerColor: Color.Parse("#FFE6E0E9"),
-            expandIconColor: Color.Parse("#FF6750A4"),
+            dividerColor: new Color(0xFFE6E0E9),
+            expandIconColor: new Color(0xFF6750A4),
             expansionCallback: (index, expanded) => SetState(() =>
             {
                 if (index == 0)
@@ -59,13 +59,13 @@ internal sealed class ExpansionPanelDemoPageState : State
                     isExpanded: _detailsExpanded,
                     headerBuilder: (_, expanded) => BuildHeader("Account details", expanded),
                     body: BuildBody("Name and contact preferences are synchronized."),
-                    backgroundColor: Color.Parse("#FFFFFBFE")),
+                    backgroundColor: new Color(0xFFFFFBFE)),
                 new ExpansionPanel(
                     isExpanded: _historyExpanded,
                     canTapOnHeader: true,
                     headerBuilder: (_, expanded) => BuildHeader("Recent activity", expanded),
                     body: BuildBody("Three successful synchronizations this week."),
-                    backgroundColor: Color.Parse("#FFFFFBFE")),
+                    backgroundColor: new Color(0xFFFFFBFE)),
             ]);
     }
 
@@ -102,6 +102,6 @@ internal sealed class ExpansionPanelDemoPageState : State
     {
         return new Padding(
             new Avalonia.Thickness(16, 0, 16, 16),
-            new Text(label, fontSize: 13, color: Color.Parse("#FF49454F")));
+            new Text(label, fontSize: 13, color: new Color(0xFF49454F)));
     }
 }

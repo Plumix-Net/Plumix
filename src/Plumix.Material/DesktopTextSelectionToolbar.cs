@@ -137,6 +137,6 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
 
         return theme.Brightness == Brightness.Dark
             ? Colors.White
-            : Color.FromArgb(0xDE, 0x00, 0x00, 0x00);
+            : Color.FromARGB(0xDE, 0x00, 0x00, 0x00);
     }
 }
