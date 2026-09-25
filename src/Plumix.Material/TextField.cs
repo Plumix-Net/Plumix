@@ -212,10 +212,21 @@ public sealed class TextField : StatefulWidget
                                                     ?? DefaultSpellCheckSuggestionsToolbarBuilder);
     }
 
-    private sealed class TextFieldState : RestorationState<TextField>
+    /// Dart's `_TextFieldSelectionGestureDetectorBuilder`: a user tap calls <see cref="OnTap"/>.
+    private sealed class TextFieldSelectionGestureDetectorBuilder(TextFieldState state)
+        : TextSelectionGestureDetectorBuilder(state)
+    {
+        protected override bool OnUserTapAlwaysCalled => state.Current.OnTapAlwaysCalled;
+
+        protected override void OnUserTap() => state.Current.OnTap?.Invoke();
+    }
+
+    private sealed class TextFieldState : RestorationState<TextField>, ITextSelectionGestureDetectorBuilderDelegate
     {
         private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
             new GlobalObjectKey<EditableText.EditableTextState>(new object());
+        private TextFieldSelectionGestureDetectorBuilder? _selectionGestureDetectorBuilder;
+        private bool _showSelectionHandles;
         private TextEditingController? _controller;
         private RestorableTextEditingController? _restorableController;
         private FocusNode? _focusNode;
@@ -223,14 +234,85 @@ public sealed class TextField : StatefulWidget
         private bool _ownsFocusNode;
         private bool _hovering;
         private MouseCursor? _resolvedMouseCursor;
-        private TextField Current => (TextField)StateWidget;
+        internal TextField Current => (TextField)StateWidget;
 
         protected override string? RestorationId => Current.RestorationId;
 
+        public GlobalKey<EditableText.EditableTextState> EditableTextKey => _editableTextKey;
+
+        /// Dart sets `forcePressEnabled` in `build`: only iOS has force press.
+        public bool ForcePressEnabled => PlatformDefaults.TargetPlatform == TargetPlatform.IOS;
+
+        public bool SelectionEnabled =>
+            Current.EnableInteractiveSelection && (Current.Enabled ?? Current.Decoration?.Enabled ?? true);
+
         public override void InitState()
         {
+            _selectionGestureDetectorBuilder = new TextFieldSelectionGestureDetectorBuilder(this);
             AttachController(Current.Controller);
             AttachFocusNode(Current.FocusNode);
+        }
+
+        private bool ShouldShowSelectionHandles(SelectionChangedCause? cause)
+        {
+            // When the text field is activated by something that doesn't trigger the selection
+            // toolbar, we shouldn't show the handles either.
+            if (!_selectionGestureDetectorBuilder!.ShouldShowSelectionToolbar
+                || !_selectionGestureDetectorBuilder.ShouldShowSelectionHandles)
+            {
+                return false;
+            }
+
+            if (cause == SelectionChangedCause.Keyboard)
+            {
+                return false;
+            }
+
+            if (Current.ReadOnly && _controller!.Selection.IsCollapsed)
+            {
+                return false;
+            }
+
+            if (!(Current.Enabled ?? Current.Decoration?.Enabled ?? true))
+            {
+                return false;
+            }
+
+            if (cause is SelectionChangedCause.LongPress or SelectionChangedCause.StylusHandwriting)
+            {
+                return true;
+            }
+
+            return _controller!.Text.Length > 0;
+        }
+
+        private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
+        {
+            bool willShowSelectionHandles = ShouldShowSelectionHandles(cause);
+            if (willShowSelectionHandles != _showSelectionHandles)
+            {
+                SetState(() => _showSelectionHandles = willShowSelectionHandles);
+            }
+
+            if (cause == SelectionChangedCause.LongPress)
+            {
+                _editableTextKey.CurrentState?.BringIntoView(selection.Extent);
+            }
+
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Linux:
+                case TargetPlatform.Windows:
+                    if (cause == SelectionChangedCause.Drag)
+                    {
+                        _editableTextKey.CurrentState?.HideToolbar();
+                    }
+
+                    break;
+            }
+
+            Current.OnSelectionChanged?.Invoke(selection, cause);
         }
 
         protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
@@ -317,7 +399,9 @@ public sealed class TextField : StatefulWidget
                 selectionControls: Current.EnableInteractiveSelection ? selectionControls : null,
                 spellCheckConfiguration: spellCheckConfiguration,
                 magnifierConfiguration: Current.MagnifierConfiguration,
-                onSelectionChanged: Current.OnSelectionChanged,
+                onSelectionChanged: HandleSelectionChanged,
+                showSelectionHandles: _showSelectionHandles,
+                onTapOutside: Current.OnTapOutside,
                 rendererIgnoresPointer: true,
                 backgroundCursorColor: CupertinoColors.InactiveGray.Value,
                 autocorrectionTextRectColor: theme.Platform == TargetPlatform.IOS ? selectionColor : null,
@@ -358,19 +442,7 @@ public sealed class TextField : StatefulWidget
                     child: editable);
             }
 
-            result = new Listener(
-                onPointerDown: @event => _editableTextKey.CurrentState?.HandlePointerDown(@event),
-                onPointerMove: @event => _editableTextKey.CurrentState?.HandlePointerMove(@event),
-                onPointerUp: @event => _editableTextKey.CurrentState?.HandlePointerUp(@event),
-                onPointerCancel: @event => _editableTextKey.CurrentState?.HandlePointerCancel(@event),
-                behavior: HitTestBehavior.Translucent,
-                child: result);
-            result = new GestureDetector(
-                excludeFromSemantics: true,
-                onTap: Current.OnTap,
-                onDoubleTap: () => _editableTextKey.CurrentState?.HandleDoubleTap(),
-                onLongPress: () => _editableTextKey.CurrentState?.HandleLongPress(),
-                onSecondaryTap: () => _editableTextKey.CurrentState?.ShowToolbar(),
+            result = _selectionGestureDetectorBuilder!.BuildGestureDetector(
                 behavior: HitTestBehavior.Translucent,
                 child: result);
             // Dart's `_TextFieldState.build` wraps the field in a `MouseRegion` that carries the
@@ -380,12 +452,7 @@ public sealed class TextField : StatefulWidget
                 onEnter: _ => BeginHover(),
                 onExit: _ => EndHover(),
                 child: result);
-            if (Current.OnTapOutside is not null)
-            {
-                result = new TextFieldTapRegion(
-                    onTapOutside: Current.OnTapOutside,
-                    child: result);
-            }
+            result = new TextFieldTapRegion(child: result);
 
             return result;
         }
@@ -515,10 +582,11 @@ public sealed class TextField : StatefulWidget
             return keyboardType ?? (multiline ? TextInputType.Multiline : TextInputType.Text);
         }
 
-        private static TextInputActionType ResolveTextInputAction(TextInputAction? textInputAction)
+        private static TextInputActionType? ResolveTextInputAction(TextInputAction? textInputAction)
         {
             return textInputAction switch
             {
+                null => null,
                 global::Plumix.Material.TextInputAction.None => TextInputActionType.None,
                 global::Plumix.Material.TextInputAction.Search => TextInputActionType.Search,
                 global::Plumix.Material.TextInputAction.Done => TextInputActionType.Done,

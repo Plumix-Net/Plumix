@@ -181,8 +181,10 @@ public sealed class CupertinoTextFieldTests : IDisposable
 
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
         Assert.Single(supplied);
-        Assert.Equal(2, editable.InputFormatters!.Count);
-        var limiter = Assert.IsType<LengthLimitingTextInputFormatter>(editable.InputFormatters[1]);
+        // `EditableText` puts Dart's single-line formatter in front of a one-line field's list.
+        Assert.Equal(3, editable.InputFormatters!.Count);
+        Assert.Same(FilteringTextInputFormatter.SingleLineFormatter, editable.InputFormatters[0]);
+        var limiter = Assert.IsType<LengthLimitingTextInputFormatter>(editable.InputFormatters[2]);
         Assert.Equal(MaxLengthEnforcement.Enforced, limiter.MaxLengthEnforcement);
         TextEditingValue value = limiter.FormatEditUpdate(
             new TextEditingValue(),

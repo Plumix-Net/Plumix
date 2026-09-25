@@ -152,7 +152,9 @@ public sealed class CharacterBoundary : TextBoundary
             return null;
         }
 
-        return GraphemeEndAfter(Math.Max(0, position));
+        // Dart reads the grapheme at `max(0, position + 1)`: a negative position is before the
+        // first grapheme, whose leading edge 0 is the next boundary.
+        return position < 0 ? 0 : GraphemeEndAfter(position);
     }
 
     public override TextRange GetTextBoundaryAt(int position)
@@ -175,9 +177,10 @@ public sealed class CharacterBoundary : TextBoundary
 
     private int GraphemeStartAtOrBefore(int position)
     {
-        if (_text.Length == 0)
+        // The end of the text is a boundary too (Dart's empty `CharacterRange` at the end).
+        if (position >= _text.Length)
         {
-            return 0;
+            return _text.Length;
         }
 
         int[] boundaries = StringInfo.ParseCombiningCharacters(_text);

@@ -175,7 +175,8 @@ public sealed class MaterialSelectionTests
             new Point(1, 8),
             PointerButtons.Primary,
             now));
-        Assert.Equal(SelectionChangedCause.Tap, cause);
+        // On Android a mouse press sets nothing yet: the selection starts with the drag.
+        Assert.Null(cause);
         binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
             91,
             PointerDeviceKind.Mouse,
@@ -510,7 +511,8 @@ public sealed class MaterialSelectionTests
                         DefaultMaterialLocalizations.Delegate,
                         DefaultCupertinoLocalizations.Delegate,
                     ],
-                    child: new Theme(theme, child))));
+                    // `MaterialApp` provides the text editing shortcuts and the overlay in Dart's tests.
+                    child: new Theme(theme, new DefaultTextEditingShortcuts(Overlay.Wrap(child))))));
     }
 
     private static List<RenderParagraph> FindParagraphs(RenderObject? root)

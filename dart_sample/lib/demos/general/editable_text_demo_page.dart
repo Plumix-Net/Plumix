@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 class EditableTextDemoPage extends StatefulWidget {
@@ -14,6 +15,8 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   late final TextEditingController _caretController;
   late final TextEditingController _longLineController;
   late final TextEditingController _scrollingNotesController;
+  late final TextEditingController _undoableController;
+  late final UndoHistoryController _undoController;
   bool _enabled = true;
   String _lastChange = '(none)';
 
@@ -31,6 +34,8 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _scrollingNotesController = TextEditingController(
       text: 'Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8',
     );
+    _undoableController = TextEditingController();
+    _undoController = UndoHistoryController();
   }
 
   @override
@@ -41,6 +46,8 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     _caretController.dispose();
     _longLineController.dispose();
     _scrollingNotesController.dispose();
+    _undoableController.dispose();
+    _undoController.dispose();
     super.dispose();
   }
 
@@ -183,6 +190,45 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
             () => _lastChange = 'scrolling notes = ${_escapeMultiline(value)}',
           ),
         ),
+        const Text(
+          'Undo history (a formatter upper-cases input)',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        ValueListenableBuilder<UndoHistoryValue>(
+          valueListenable: _undoController,
+          builder:
+              (BuildContext context, UndoHistoryValue value, Widget? child) {
+                return Row(
+                  spacing: 8,
+                  children: <Widget>[
+                    SizedBox(
+                      width: 120,
+                      child: _MenuButton(
+                        label: value.canUndo ? 'Undo' : 'Undo (-)',
+                        onTap: _undoController.undo,
+                        background: const Color(0xFFDCE3ED),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 120,
+                      child: _MenuButton(
+                        label: value.canRedo ? 'Redo' : 'Redo (-)',
+                        onTap: _undoController.redo,
+                        background: const Color(0xFFDCE3ED),
+                      ),
+                    ),
+                  ],
+                );
+              },
+        ),
+        _buildTextField(
+          controller: _undoableController,
+          placeholder: 'Type, then undo/redo (Ctrl+Z / Ctrl+Shift+Z)',
+          undoController: _undoController,
+          inputFormatters: <TextInputFormatter>[_upperCaseFormatter],
+          onChanged: (String value) =>
+              setState(() => _lastChange = 'undoable = $value'),
+        ),
         Text(
           "current: name='${_nameController.text}', notes='${_escapeMultiline(_notesController.text)}'",
           style: const TextStyle(fontSize: 12, color: Colors.black),
@@ -201,9 +247,13 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     double cursorWidth = 2.0,
     Radius? cursorRadius,
     Color? cursorColor,
+    UndoHistoryController? undoController,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return TextField(
       controller: controller,
+      undoController: undoController,
+      inputFormatters: inputFormatters,
       enabled: _enabled,
       maxLines: maxLines ?? (multiline ? null : 1),
       obscureText: obscureText,
@@ -220,6 +270,12 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
       ),
     );
   }
+
+  static final TextInputFormatter _upperCaseFormatter =
+      TextInputFormatter.withFunction(
+        (TextEditingValue oldValue, TextEditingValue newValue) =>
+            newValue.copyWith(text: newValue.text.toUpperCase()),
+      );
 
   String _escapeMultiline(String value) {
     return value.replaceAll('\r', '').replaceAll('\n', r'\n');

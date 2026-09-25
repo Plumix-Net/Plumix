@@ -422,15 +422,32 @@ internal sealed class FakeGestureTimers : IDisposable
         GestureTimer.Factory = Create;
     }
 
+    /// <summary>
+    /// Advances the clock, firing due timers in deadline order (creation order on ties) with the
+    /// clock at each deadline, the way <c>FakeAsync.elapse</c> does: a press deadline fires before
+    /// a long-press deadline even when the long press timer was created first.
+    /// </summary>
     public void Elapse(TimeSpan duration)
     {
-        _now += duration;
-        PendingTimer[] due = _pending.Where(entry => entry.Due <= _now).ToArray();
-        foreach (PendingTimer entry in due)
+        TimeSpan end = _now + duration;
+        int guard = 0;
+        while (_pending.Where(entry => entry.Due <= end).OrderBy(entry => entry.Due).FirstOrDefault() is { } next)
         {
-            _pending.Remove(entry);
-            entry.Timer.FireNow();
+            if (++guard > 10000)
+            {
+                throw new InvalidOperationException("FakeGestureTimers: a timer keeps rescheduling itself.");
+            }
+
+            _pending.Remove(next);
+            if (next.Due > _now)
+            {
+                _now = next.Due;
+            }
+
+            next.Timer.FireNow();
         }
+
+        _now = end;
     }
 
     public void Dispose()

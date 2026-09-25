@@ -36,6 +36,7 @@ public sealed partial class EditableText
                 onNotification: notification =>
                 {
                     HandleContextMenuOnScroll(notification);
+                    _scribbleCacheKey = null;
                     return false;
                 },
                 child: new Scrollable(
@@ -200,7 +201,7 @@ public sealed partial class EditableText
         private void BringIntoViewBySelectionState(
             TextSelection oldSelection,
             TextSelection newSelection,
-            SelectionChangedCause cause)
+            SelectionChangedCause? cause)
         {
             if (RenderEditable is not { HasSize: true } || !EffectiveScrollController.HasClients)
             {
@@ -246,21 +247,6 @@ public sealed partial class EditableText
             {
                 ScheduleShowCaretOnScreen(withAnimation: true);
             }
-        }
-
-        /// Dart's `_updateSelection` for keyboard-driven selection moves: the new extent is revealed
-        /// right away, then the caret is scheduled on screen like any user update.
-        private void RevealKeyboardSelection(TextEditingValue oldValue, TextEditingValue value)
-        {
-            if (!oldValue.Selection.Equals(value.Selection)
-                && RenderEditable is { HasSize: true }
-                && EffectiveScrollController.HasClients
-                && value.Selection.IsValid)
-            {
-                BringIntoView(value.Selection.Extent);
-            }
-
-            ScheduleShowCaretForUserUpdate(oldValue, value);
         }
 
         /// Dart's post-frame `bringIntoView` after a toolbar cut or paste.
@@ -365,6 +351,7 @@ public sealed partial class EditableText
                 return;
             }
 
+            UpdateSelectionRects();
             UpdateComposingRectIfNeeded();
             UpdateCaretRectIfNeeded();
             Scheduler.AddPostFrameCallback(
@@ -522,33 +509,6 @@ public sealed partial class EditableText
                     new Point(lerpX, lerpY),
                     _lastTextPosition.Value,
                     resetLerpValue: lerpValue);
-            }
-        }
-
-        /// Dart's `_handleSelectionChanged`, for the causes this file raises: the selection is set,
-        /// the keyboard requested, the handles shown, and <see cref="EditableText.OnSelectionChanged"/>
-        /// told even when the selection did not move.
-        private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause cause)
-        {
-            TextEditingController controller = _controller!;
-            if (controller.Text.Length < selection.End || controller.Text.Length < selection.Start)
-            {
-                return;
-            }
-
-            bool changed = !controller.Selection.Equals(selection);
-            SetSelection(selection, cause);
-            RequestKeyboard();
-            if (Widget.ShowSelectionHandles
-                && (Widget.SelectionControls is not null || Widget.ContextMenuBuilder is not null)
-                && RenderEditable is { HasSize: true })
-            {
-                ShowHandles();
-            }
-
-            if (!changed)
-            {
-                Widget.OnSelectionChanged?.Invoke(selection, cause);
             }
         }
 

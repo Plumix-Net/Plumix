@@ -655,10 +655,13 @@ public sealed class CupertinoTextField : StatefulWidget
     }
 }
 
-internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextField>
+internal sealed class CupertinoTextFieldState
+    : RestorationState<CupertinoTextField>, ITextSelectionGestureDetectorBuilderDelegate
 {
     private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
         new GlobalObjectKey<EditableText.EditableTextState>(new object());
+    private readonly GlobalKey _clearGlobalKey = new GlobalObjectKey<State>(new object());
+    private CupertinoTextFieldSelectionGestureDetectorBuilder? _selectionGestureDetectorBuilder;
     private TextEditingController? _controller;
     private RestorableTextEditingController? _restorableController;
     private FocusNode? _focusNode;
@@ -666,12 +669,23 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
     private bool _ownsFocusNode;
     private bool _showSelectionHandles;
 
-    private CupertinoTextField Current => (CupertinoTextField)StateWidget;
+    internal CupertinoTextField Current => (CupertinoTextField)StateWidget;
+
+    internal GlobalKey ClearGlobalKey => _clearGlobalKey;
+
+    public GlobalKey<EditableText.EditableTextState> EditableTextKey => _editableTextKey;
+
+    public bool ForcePressEnabled => true;
+
+    public bool SelectionEnabled => Current.EnableInteractiveSelection;
+
+    internal void RequestKeyboard() => _editableTextKey.CurrentState?.RequestKeyboard();
 
     protected override string? RestorationId => Current.RestorationId;
 
     public override void InitState()
     {
+        _selectionGestureDetectorBuilder = new CupertinoTextFieldSelectionGestureDetectorBuilder(this);
         AttachController(Current.Controller);
         AttachFocusNode(Current.FocusNode);
     }
@@ -754,7 +768,7 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             textAlign: Current.TextAlign,
             textDirection: Current.TextDirection,
             keyboardType: Current.KeyboardType,
-            textInputAction: Current.TextInputAction ?? TextInputActionType.Unspecified,
+            textInputAction: Current.TextInputAction,
             textCapitalization: Current.TextCapitalization,
             smartDashesType: Current.SmartDashesType,
             smartQuotesType: Current.SmartQuotesType,
@@ -783,6 +797,9 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             showSelectionHandles: _showSelectionHandles,
             spellCheckConfiguration: spellCheckConfiguration,
             onSelectionChanged: HandleSelectionChanged,
+            onTapOutside: Current.OnTapOutside,
+            onTapUpOutside: Current.OnTapUpOutside,
+            groupId: Current.GroupId,
             rendererIgnoresPointer: true,
             autofillHints: Current.AutofillHints,
             autofillHintText: Current.Placeholder,
@@ -813,11 +830,7 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             color: !Current.Enabled && Current.Decoration is null ? DisabledBackground(context) : null,
             child: content);
         content = new IgnorePointer(ignoring: !Current.Enabled, child: content);
-        content = new TextFieldTapRegion(
-            groupId: Current.GroupId,
-            onTapOutside: Current.OnTapOutside,
-            onTapUpOutside: Current.OnTapUpOutside,
-            child: content);
+        content = new TextFieldTapRegion(groupId: Current.GroupId, child: content);
         return new Semantics(
             enabled: Current.Enabled,
             onTap: Current.Enabled && !Current.ReadOnly ? HandleSemanticTap : null,
@@ -832,19 +845,60 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
         base.Dispose();
     }
 
-    private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
+    private bool ShouldShowSelectionHandles(SelectionChangedCause? cause)
     {
-        bool show = Current.EnableInteractiveSelection
-                    && !selection.IsCollapsed
-                    && cause != SelectionChangedCause.Keyboard
-                    && (!string.IsNullOrEmpty(_controller?.Text)
-                        || cause == SelectionChangedCause.StylusHandwriting);
-        if (show == _showSelectionHandles)
+        // When the text field is activated by something that doesn't trigger the selection
+        // toolbar, we shouldn't show the handles either.
+        if (!_selectionGestureDetectorBuilder!.ShouldShowSelectionToolbar
+            || !_selectionGestureDetectorBuilder.ShouldShowSelectionHandles)
         {
-            return;
+            return false;
         }
 
-        SetState(() => _showSelectionHandles = show);
+        // On iOS, we don't show handles when the selection is collapsed.
+        if (_controller!.Selection.IsCollapsed)
+        {
+            return false;
+        }
+
+        if (cause == SelectionChangedCause.Keyboard)
+        {
+            return false;
+        }
+
+        if (cause == SelectionChangedCause.StylusHandwriting)
+        {
+            return true;
+        }
+
+        return _controller.Text.Length > 0;
+    }
+
+    private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
+    {
+        bool willShowSelectionHandles = ShouldShowSelectionHandles(cause);
+        if (willShowSelectionHandles != _showSelectionHandles)
+        {
+            SetState(() => _showSelectionHandles = willShowSelectionHandles);
+        }
+
+        if (cause == SelectionChangedCause.LongPress)
+        {
+            _editableTextKey.CurrentState?.BringIntoView(selection.Extent);
+        }
+
+        switch (PlatformDefaults.TargetPlatform)
+        {
+            case TargetPlatform.MacOS:
+            case TargetPlatform.Linux:
+            case TargetPlatform.Windows:
+                if (cause == SelectionChangedCause.Drag)
+                {
+                    _editableTextKey.CurrentState?.HideToolbar();
+                }
+
+                break;
+        }
     }
 
     private Widget BuildDecoratedContent(
@@ -905,25 +959,8 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             });
     }
 
-    private Widget BuildGestureDetector(Widget child)
-    {
-        Widget result = new Listener(
-            behavior: HitTestBehavior.Translucent,
-            onPointerDown: @event => _editableTextKey.CurrentState?.HandlePointerDown(@event),
-            onPointerMove: @event => _editableTextKey.CurrentState?.HandlePointerMove(@event),
-            onPointerUp: @event => _editableTextKey.CurrentState?.HandlePointerUp(@event),
-            onPointerCancel: @event => _editableTextKey.CurrentState?.HandlePointerCancel(@event),
-            child: child);
-        return new GestureDetector(
-            behavior: HitTestBehavior.Translucent,
-            excludeFromSemantics: true,
-            dragStartBehavior: Current.DragStartBehavior,
-            onTap: Current.OnTap,
-            onDoubleTap: () => _editableTextKey.CurrentState?.HandleDoubleTap(),
-            onLongPress: () => _editableTextKey.CurrentState?.HandleLongPress(),
-            onSecondaryTap: () => _editableTextKey.CurrentState?.ShowToolbar(),
-            child: result);
-    }
+    private Widget BuildGestureDetector(Widget child) =>
+        _selectionGestureDetectorBuilder!.BuildGestureDetector(behavior: HitTestBehavior.Translucent, child: child);
 
     private Widget? ResolveSuffix(BuildContext context, bool hasText)
     {
@@ -945,6 +982,7 @@ internal sealed class CupertinoTextFieldState : RestorationState<CupertinoTextFi
             label: label,
             onTap: Current.Enabled ? HandleClear : null,
             child: new GestureDetector(
+                key: _clearGlobalKey,
                 onTap: Current.Enabled ? HandleClear : null,
                 child: new Padding(
                     EdgeInsetsGeometry.Symmetric(horizontal: 6.0),
@@ -1366,5 +1404,37 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
     {
         child.Layout(constraints, parentUsesSize: true);
         return child.Size;
+    }
+}
+
+/// Dart's `_CupertinoTextFieldSelectionGestureDetectorBuilder`: a tap on the clear button is left to
+/// the button, the first tap of a series calls <see cref="CupertinoTextField.OnTap"/>, and the end
+/// of a drag requests the keyboard.
+internal sealed class CupertinoTextFieldSelectionGestureDetectorBuilder(CupertinoTextFieldState state)
+    : TextSelectionGestureDetectorBuilder(state)
+{
+    protected override void OnSingleTapUp(TapDragUpDetails details)
+    {
+        // Because TextSelectionGestureDetector listens to taps that happen on widgets in front of
+        // it, tapping the clear button will also trigger this handler. If the clear button widget
+        // recognizes the up event, then do not handle it.
+        if (state.ClearGlobalKey.CurrentContext is not null)
+        {
+            var renderBox = (RenderBox)state.ClearGlobalKey.CurrentContext.FindRenderObject()!;
+            Point localOffset = renderBox.GlobalToLocal(details.GlobalPosition);
+            if (renderBox.HitTest(new BoxHitTestResult(), localOffset))
+            {
+                return;
+            }
+        }
+
+        base.OnSingleTapUp(details);
+        state.Current.OnTap?.Invoke();
+    }
+
+    protected override void OnDragSelectionEnd(TapDragEndDetails details)
+    {
+        state.RequestKeyboard();
+        base.OnDragSelectionEnd(details);
     }
 }

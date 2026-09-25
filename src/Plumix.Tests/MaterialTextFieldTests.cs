@@ -40,7 +40,8 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.Equal("a😀c", changed);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "3/3");
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
+        // Enter goes to the platform text input plugin, which reports the input action.
+        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
         Assert.Equal("a😀c", submitted);
     }
 
@@ -308,11 +309,13 @@ public sealed class MaterialTextFieldTests : IDisposable
         var controller = new TextEditingController();
         using var harness = new WidgetRenderHarness(Wrap(new TextField(
             controller: controller,
+            autofocus: true,
             useDecoration: false,
             spellCheckConfiguration: new SpellCheckConfiguration(spellCheckService: service))));
         harness.Pump(new Size(360, 100));
 
-        controller.Text = "wrold";
+        // Dart spell checks user edits (`_formatAndSetValue`), which typing produces.
+        Assert.True(FocusManager.Instance.HandleTextInput("wrold"));
         await Task.Yield();
         harness.Pump(new Size(360, 100));
 
@@ -339,7 +342,11 @@ public sealed class MaterialTextFieldTests : IDisposable
 
     private static Widget Wrap(Widget child, ThemeData? theme = null) => new Directionality(
         TextDirection.Ltr,
-        new MediaQuery(new MediaQueryData(Size: new Size(360, 640)), new Theme(theme ?? ThemeData.Light, child)));
+        new MediaQuery(
+            new MediaQueryData(Size: new Size(360, 640)),
+            // `MaterialApp` gives Dart's text field tests the text editing shortcuts and the overlay
+            // its selection handles go into.
+            new Theme(theme ?? ThemeData.Light, new DefaultTextEditingShortcuts(Overlay.Wrap(child)))));
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

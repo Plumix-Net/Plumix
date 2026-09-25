@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: EditableText keys run through Actions and DefaultTextEditingShortcuts, not onKeyEvent (editable_text.dart).
+- Breaking: EditableText edits go through `_formatAndSetValue`, batch edits and the remote value (editable_text.dart).
+- Breaking: Enter goes to the platform plugin; `performAction` unfocuses and submits like Dart (editable_text.dart).
+- EditableText iOS scribble: selection rects, scribble element, text placeholders (editable_text.dart).
+- UndoHistory widget, UndoHistoryController and the platform UndoManager channel (undo_history.dart, undo_manager.dart).
+- Breaking: TextField, CupertinoTextField, SelectableText use TextSelectionGestureDetectorBuilder (text_selection.dart).
+- Hosts hand unhandled keys to an emulated text input plugin: macOS selectors, Enter (C#-only `HostTextInputPlugin`).
+- `TextSelection.ExpandTo`/`ExtendTo`; CharacterBoundary edges at -1 and at the text end (text_editing, text_boundary).
+- Breaking: `Actions.Invoke` skips a disabled action instead of throwing (widgets/actions.dart).
 - EditableText lays out text it pushes ahead, so a hover hit test right after typing can't throw (editable_text.dart).
 - Breaking: EditableText scrolls in its own Scrollable: caret on screen, IME geometry (editable_text.dart).
 - EditableText floating cursor, autocorrection prompt rect, context menu hidden while scrolling (editable_text.dart).

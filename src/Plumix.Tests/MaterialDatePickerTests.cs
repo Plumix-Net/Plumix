@@ -201,7 +201,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         harness.Pump(new Size(420, 500));
         Assert.Equal(new DateTime(2026, 4, 1), displayed);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
+        // Enter goes to the platform text input plugin, which reports the input action.
+        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
         Assert.Equal(new DateTime(2026, 4, 1), selected);
     }
 
@@ -471,7 +472,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(formKey.CurrentState.Validate());
         formKey.CurrentState.Save();
         Assert.Equal(new DateTime(2026, 3, 16), saved);
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
+        // Enter goes to the platform text input plugin, which reports the input action.
+        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
         Assert.Equal(new DateTime(2026, 3, 16), submitted);
     }
 

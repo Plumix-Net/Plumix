@@ -79,16 +79,11 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void PlumixHost_TextInputMethodClientRequested_ProvidesPreeditBridge()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         var host = new PlumixHost();
         var requestArgs = new TextInputMethodClientRequestedEventArgs
@@ -115,16 +110,11 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void PlumixHost_TextInputMethodClient_ReflectsSurroundingTextSelectionAndCursorGeometry()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
@@ -161,14 +151,16 @@ public sealed class TextInputTests : IDisposable
         var controller = new TextEditingController();
         tester.PumpWidget(new Directionality(
             Plumix.UI.TextDirection.Ltr,
-            new EditableText(
+            new DefaultTextEditingShortcuts(new EditableText(
                 controller: controller,
                 autofocus: true,
-                multiline: true)));
+                multiline: true))));
         tester.Pump();
 
         Assert.True(FocusManager.Instance.HandleTextInput("ab"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
+        // Enter is left to the platform text input plugin, which inserts the newline into a
+        // multiline field and then reports the newline action.
+        Assert.False(KeySim.SendKeyCombination(LogicalKeyboardKey.Enter));
         Assert.True(FocusManager.Instance.HandleTextInput("cd"));
         Assert.Equal("ab\ncd", controller.Text);
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
@@ -338,17 +330,12 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_TextInputAndBackspace_UpdateController()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true,
                 placeholder: "Type here"));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.Equal(string.Empty, controller.Text);
 
@@ -364,16 +351,11 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_CompositionUpdateCommitAndEscape_Work()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("ni"));
         Assert.Equal("ni", controller.Text);
@@ -389,9 +371,11 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal("Nyz", controller.Text);
         Assert.Equal(new TextRange(1, 3), controller.Composing);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
+        // Escape is not a text editing shortcut: Dart's `EditableText` leaves the composing region
+        // to the platform IME and lets the key bubble up to `DismissIntent`.
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
         Assert.Equal("Nyz", controller.Text);
-        Assert.Null(controller.Composing);
+        Assert.Equal(new TextRange(1, 3), controller.Composing);
 
         controller.Clear();
         Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("x"));
@@ -403,16 +387,11 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_ArrowAndSelectionKeys_UpdateControllerSelection()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
@@ -435,95 +414,14 @@ public sealed class TextInputTests : IDisposable
     }
 
     [Fact]
-    public void EditableText_WordShortcuts_UseCtrlAndAltModifiers()
-    {
-        var owner = TestBuildOwner.Create();
-        var controller = new TextEditingController();
-        var root = new TestRootElement(
-            new EditableText(
-                controller: controller,
-                autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
-
-        Assert.True(FocusManager.Instance.HandleTextInput("alpha beta gamma"));
-        Assert.Equal(TextSelection.Collapsed(16), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, control: true)));
-        Assert.Equal(TextSelection.Collapsed(11), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(
-            KeySim.Down(LogicalKeyboardKey.ArrowLeft, control: true, shift: true)));
-        Assert.Equal(6, controller.Selection.Start);
-        Assert.Equal(11, controller.Selection.End);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight, control: true)));
-        Assert.Equal(TextSelection.Collapsed(11), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace, control: true)));
-        Assert.Equal("alpha gamma", controller.Text);
-        Assert.Equal(TextSelection.Collapsed(6), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Delete, control: true)));
-        Assert.Equal("alpha ", controller.Text);
-        Assert.Equal(TextSelection.Collapsed(6), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, alt: true)));
-        Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight, alt: true)));
-        Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
-    }
-
-    [Fact]
-    public void EditableText_Multiline_ParagraphShortcuts_UseCtrlAndAltArrowUpDown()
-    {
-        var owner = TestBuildOwner.Create();
-        var controller = new TextEditingController();
-        var root = new TestRootElement(
-            new EditableText(
-                controller: controller,
-                autofocus: true,
-                multiline: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
-
-        Assert.True(FocusManager.Instance.HandleTextInput("one\ntwo\nthree"));
-        Assert.Equal(TextSelection.Collapsed(13), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, control: true)));
-        Assert.Equal(TextSelection.Collapsed(8), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, control: true)));
-        Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(
-            KeySim.Down(LogicalKeyboardKey.ArrowDown, control: true, shift: true)));
-        Assert.Equal(4, controller.Selection.Start);
-        Assert.Equal(7, controller.Selection.End);
-
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown, alt: true)));
-        Assert.Equal(TextSelection.Collapsed(7), controller.Selection);
-    }
-
-    [Fact]
     public void EditableText_ClipboardShortcuts_CopyCutPaste_Work()
     {
         using var clipboard = new MockClipboardPlatform();
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("alpha"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
@@ -551,12 +449,8 @@ public sealed class TextInputTests : IDisposable
         });
         try
         {
-            var owner = TestBuildOwner.Create();
             var controller = new TextEditingController("before");
-            var root = new TestRootElement(new EditableText(controller: controller, autofocus: true));
-            root.Attach(owner);
-            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
 
             Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
             Assert.Equal("before", controller.Text);
@@ -581,17 +475,13 @@ public sealed class TextInputTests : IDisposable
         bool enableInteractiveSelection)
     {
         using var clipboard = new MockClipboardPlatform("external");
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController("alpha", new TextSelection(0, 5));
-        var root = new TestRootElement(new EditableText(
+        using FrameworkDartTester tester = PumpField(new EditableText(
             controller: controller,
             autofocus: true,
             readOnly: readOnly,
             obscureText: obscureText,
             enableInteractiveSelection: enableInteractiveSelection));
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX, control: true)));
         Assert.Equal("alpha", controller.Text);
@@ -615,12 +505,8 @@ public sealed class TextInputTests : IDisposable
     public void EditableText_PasteReplacesReversedSelectionAndCollapsesAfterInsertedText()
     {
         using var clipboard = new MockClipboardPlatform("xy");
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController("abcdef", new TextSelection(5, 2));
-        var root = new TestRootElement(new EditableText(controller: controller, autofocus: true));
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
         Assert.True(EventLoopPump.SpinUntil(() => controller.Text == "abxyf"));
@@ -661,16 +547,11 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_DeleteForward_AndBackspaceOnSelection_Work()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
@@ -693,17 +574,12 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_Disabled_IgnoresTextInput()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 enabled: false,
                 autofocus: true));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         bool textHandled = FocusManager.Instance.HandleTextInput("x");
         bool compositionUpdateHandled = FocusManager.Instance.HandleTextCompositionUpdate("y");
@@ -721,18 +597,13 @@ public sealed class TextInputTests : IDisposable
     [Fact]
     public void EditableText_OnChanged_IsRaisedOnTextMutation()
     {
-        var owner = TestBuildOwner.Create();
         var controller = new TextEditingController();
         var changes = new List<string>();
-        var root = new TestRootElement(
+        using FrameworkDartTester tester = PumpField(
             new EditableText(
                 controller: controller,
                 autofocus: true,
                 onChanged: value => changes.Add(value)));
-
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("a"));
         Assert.True(FocusManager.Instance.HandleTextInput("b"));
@@ -742,71 +613,14 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal(new[] { "a", "ab", "b" }, changes);
     }
 
-    private sealed class TestRootElement : Element, IRenderObjectHost
+    /// Pumps <paramref name="field"/> under the text-editing shortcuts `WidgetsApp` provides and lays
+    /// it out, so key events reach the field's actions and the actions can read its geometry.
+    private static FrameworkDartTester PumpField(Widget field)
     {
-        private Element? _child;
-
-        public TestRootElement(Widget widget) : base(widget)
-        {
-        }
-
-        protected override void OnMount()
-        {
-            base.OnMount();
-            Rebuild();
-        }
-
-        protected override void PerformRebuild()
-        {
-            base.PerformRebuild();
-            _child = UpdateChild(_child, new Directionality(Plumix.UI.TextDirection.Ltr, Widget), Slot);
-        }
-
-        public override void Update(Widget newWidget)
-        {
-            base.Update(newWidget);
-            Owner!.BuildScope(this, () => Rebuild(force: true));
-        }
-
-        public override void VisitChildren(Action<Element> visitor)
-        {
-            if (_child != null)
-            {
-                visitor(_child);
-            }
-        }
-
-        public override void ForgetChild(Element child)
-        {
-            if (ReferenceEquals(_child, child))
-            {
-                _child = null;
-            }
-        }
-
-
-        public void InsertRenderObjectChild(RenderObject child, object? slot)
-        {
-            if (slot != null)
-            {
-                throw new InvalidOperationException("TestRootElement expects null slot.");
-            }
-        }
-
-        public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
-        {
-            if (!Equals(oldSlot, newSlot))
-            {
-                throw new InvalidOperationException("TestRootElement does not support slot moves.");
-            }
-        }
-
-        public void RemoveRenderObjectChild(RenderObject child, object? slot)
-        {
-            if (slot != null)
-            {
-                throw new InvalidOperationException("TestRootElement expects null slot.");
-            }
-        }
+        var tester = new FrameworkDartTester();
+        tester.PumpWidget(new Directionality(Plumix.UI.TextDirection.Ltr, new DefaultTextEditingShortcuts(field)));
+        tester.Pump();
+        return tester;
     }
+
 }

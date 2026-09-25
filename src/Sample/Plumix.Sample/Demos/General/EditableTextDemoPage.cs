@@ -1,7 +1,9 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/editable_text_demo_page.dart (exact sample parity)
@@ -24,6 +26,8 @@ internal sealed class EditableTextDemoPageState : State
     private TextEditingController _caretController = null!;
     private TextEditingController _longLineController = null!;
     private TextEditingController _scrollingNotesController = null!;
+    private TextEditingController _undoableController = null!;
+    private UndoHistoryController _undoController = null!;
     private bool _enabled = true;
     private string _lastChange = "(none)";
 
@@ -37,6 +41,8 @@ internal sealed class EditableTextDemoPageState : State
             "This single line is far wider than its field, so typing at the end scrolls to the caret");
         _scrollingNotesController = new TextEditingController(
             "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\nLine 8");
+        _undoableController = new TextEditingController();
+        _undoController = new UndoHistoryController();
     }
 
     public override void Dispose()
@@ -47,6 +53,8 @@ internal sealed class EditableTextDemoPageState : State
         _caretController.Dispose();
         _longLineController.Dispose();
         _scrollingNotesController.Dispose();
+        _undoableController.Dispose();
+        _undoController.Dispose();
 
         base.Dispose();
     }
@@ -155,12 +163,48 @@ internal sealed class EditableTextDemoPageState : State
                     multiline: true,
                     maxLines: 3,
                     onChanged: value => SetState(() => _lastChange = $"scrolling notes = {EscapeMultiline(value)}")),
+                new Text("Undo history (a formatter upper-cases input)", fontSize: 12, color: Colors.DimGray),
+                new ValueListenableBuilder<UndoHistoryValue>(
+                    valueListenable: _undoController,
+                    builder: (_, value, _) => new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            new SizedBox(
+                                width: 120,
+                                child: new CounterTapButton(
+                                    label: value.CanUndo ? "Undo" : "Undo (-)",
+                                    onTap: _undoController.Undo,
+                                    background: Color.Parse("#FFDCE3ED"),
+                                    foreground: Colors.Black,
+                                    fontSize: 12,
+                                    padding: new Thickness(10, 8))),
+                            new SizedBox(
+                                width: 120,
+                                child: new CounterTapButton(
+                                    label: value.CanRedo ? "Redo" : "Redo (-)",
+                                    onTap: _undoController.Redo,
+                                    background: Color.Parse("#FFDCE3ED"),
+                                    foreground: Colors.Black,
+                                    fontSize: 12,
+                                    padding: new Thickness(10, 8))),
+                        ])),
+                new EditableText(
+                    controller: _undoableController,
+                    enabled: _enabled,
+                    undoController: _undoController,
+                    inputFormatters: [UpperCaseFormatter],
+                    placeholder: "Type, then undo/redo (Ctrl+Z / Ctrl+Shift+Z)",
+                    onChanged: value => SetState(() => _lastChange = $"undoable = {value}")),
                 new Text(
                     $"current: name='{_nameController.Text}', notes='{EscapeMultiline(_notesController.Text)}'",
                     fontSize: 12,
                     color: Colors.Black),
             ]);
     }
+
+    private static readonly TextInputFormatter UpperCaseFormatter = TextInputFormatter.WithFunction(
+        (_, newValue) => newValue.CopyWith(text: newValue.Text.ToUpperInvariant()));
 
     private static string EscapeMultiline(string value)
     {

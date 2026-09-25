@@ -35,7 +35,7 @@ public enum ClipboardStatus
 }
 
 /// <summary>Tracks whether the clipboard currently holds pasteable content.</summary>
-public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<ClipboardStatus>, WidgetsBindingObserver
+public class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<ClipboardStatus>, WidgetsBindingObserver
 {
     private ClipboardStatus _value;
     private bool _disposed;
@@ -45,7 +45,7 @@ public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<C
         _value = value;
     }
 
-    public ClipboardStatus Value
+    public virtual ClipboardStatus Value
     {
         get => _value;
         set
@@ -60,7 +60,7 @@ public sealed class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<C
         }
     }
 
-    public async Task Update()
+    public virtual async Task Update()
     {
         if (_disposed)
         {
@@ -379,17 +379,16 @@ public sealed class TextSelectionOverlay : IDisposable
     public bool MagnifierIsVisible => SelectionOverlay.MagnifierIsVisible;
     public bool MagnifierExists => SelectionOverlay.MagnifierExists;
 
+    /// <summary>Builds the handles by inserting them into the context's overlay. Whether they are
+    /// visible is <see cref="HandlesVisible"/>'s call (Dart's <c>showHandles</c>).</summary>
     public void ShowHandles()
     {
-        HandlesVisible = true;
+        UpdateVisibilities();
         SelectionOverlay.ShowHandles();
     }
 
-    public void HideHandles()
-    {
-        HandlesVisible = false;
-        SelectionOverlay.HideHandles();
-    }
+    /// <summary>Destroys the handles by removing them from the overlay (Dart's <c>hideHandles</c>).</summary>
+    public void HideHandles() => SelectionOverlay.HideHandles();
 
     public void ShowToolbar()
     {
@@ -398,6 +397,14 @@ public sealed class TextSelectionOverlay : IDisposable
     }
 
     public void HideToolbar() => SelectionOverlay.HideToolbar();
+
+    /// <summary>Shows the spell check suggestions toolbar built by <paramref name="builder"/> in the
+    /// context menu slot. Dart's <c>showSpellCheckSuggestionsToolbar</c>.</summary>
+    public void ShowSpellCheckSuggestionsToolbar(WidgetBuilder builder)
+    {
+        Update(_value);
+        SelectionOverlay.ShowToolbar(SelectionOverlay.Context, builder);
+    }
 
     public void ShowMagnifier(Point globalPosition)
     {
@@ -467,7 +474,9 @@ public sealed class TextSelectionOverlay : IDisposable
         {
             next = new TextSelection(current.BaseOffset, position);
         }
-        bool cannotCross = PlatformDefaults.TargetPlatform is not (TargetPlatform.IOS or TargetPlatform.MacOS)
+        // Outside Apple platforms the handles of a range cannot cross; a collapsed handle moves freely.
+        bool cannotCross = !current.IsCollapsed
+                           && PlatformDefaults.TargetPlatform is not (TargetPlatform.IOS or TargetPlatform.MacOS)
                            && next.BaseOffset >= next.ExtentOffset;
         if (!cannotCross)
         {

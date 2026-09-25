@@ -95,6 +95,63 @@ public readonly record struct TextSelection(
     /// another, so the conversion is explicit.</remarks>
     public TextRange AsTextRange() => new(Start, End);
 
+    /// <summary>
+    /// Expands the selection to include <paramref name="position"/>: Dart's
+    /// <c>TextSelection.expandTo</c>. The selection's normalization is kept unless
+    /// <paramref name="extentAtIndex"/> is set, which puts the extent at the position.
+    /// </summary>
+    public TextSelection ExpandTo(TextPosition position, bool extentAtIndex = false)
+    {
+        // If position is already within in the selection, there's nothing to do.
+        if (position.Offset >= Start && position.Offset <= End)
+        {
+            return this;
+        }
+
+        bool normalized = BaseOffset <= ExtentOffset;
+        if (position.Offset <= Start)
+        {
+            // Here the position is somewhere before the selection: ..|..[...]....
+            if (extentAtIndex)
+            {
+                return this with { BaseOffset = End, ExtentOffset = position.Offset, Affinity = position.Affinity };
+            }
+
+            return this with
+            {
+                BaseOffset = normalized ? position.Offset : BaseOffset,
+                ExtentOffset = normalized ? ExtentOffset : position.Offset,
+            };
+        }
+
+        // Here the position is somewhere after the selection: ....[...]..|..
+        if (extentAtIndex)
+        {
+            return this with { BaseOffset = Start, ExtentOffset = position.Offset, Affinity = position.Affinity };
+        }
+
+        return this with
+        {
+            BaseOffset = normalized ? BaseOffset : position.Offset,
+            ExtentOffset = normalized ? position.Offset : ExtentOffset,
+        };
+    }
+
+    /// <summary>
+    /// Keeps the base and moves the extent to <paramref name="position"/>: Dart's
+    /// <c>TextSelection.extendTo</c>.
+    /// </summary>
+    public TextSelection ExtendTo(TextPosition position)
+    {
+        // If the selection's extent is at the position already, then nothing happens.
+        if (Extent.Equals(position))
+        {
+            return this;
+        }
+
+        return this with { ExtentOffset = position.Offset, Affinity = position.Affinity };
+    }
+
     internal TextSelection Clamp(int textLength)
     {
         int clampedBaseOffset = Math.Clamp(BaseOffset, 0, textLength);
@@ -917,11 +974,6 @@ public sealed record ToolbarOptions(
     bool Paste = true,
     bool SelectAll = true);
 
-/// <summary>Owns the undo/redo history associated with an editable field.</summary>
-public sealed class UndoHistoryController : ChangeNotifier
-{
-}
-
 /// <summary>Configures rich-content insertion offered by the platform text input service.</summary>
 public sealed record ContentInsertionConfiguration(
     IReadOnlyList<string>? AllowedMimeTypes = null,
@@ -962,7 +1014,7 @@ public sealed partial class EditableText : StatefulWidget
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
-        TextInputActionType textInputAction = TextInputActionType.Unspecified,
+        TextInputActionType? textInputAction = null,
         TextCapitalization textCapitalization = TextCapitalization.None,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
@@ -1008,6 +1060,9 @@ public sealed partial class EditableText : StatefulWidget
         ScrollBehavior? scrollBehavior = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
+        Action<PointerDownEvent>? onTapOutside = null,
+        Action<PointerUpEvent>? onTapUpOutside = null,
+        object? groupId = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -1065,7 +1120,13 @@ public sealed partial class EditableText : StatefulWidget
         EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
-        InputFormatters = inputFormatters;
+        // Dart prepends the single-line formatter to a one-line field's formatters.
+        InputFormatters = MaxLines == 1
+            ? [FilteringTextInputFormatter.SingleLineFormatter, .. inputFormatters ?? []]
+            : inputFormatters;
+        OnTapOutside = onTapOutside;
+        OnTapUpOutside = onTapUpOutside;
+        GroupId = groupId ?? typeof(EditableText);
         ShowCursor = showCursor;
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
@@ -1150,7 +1211,7 @@ public sealed partial class EditableText : StatefulWidget
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
     public TextInputType KeyboardType { get; }
-    public TextInputActionType TextInputAction { get; }
+    public TextInputActionType? TextInputAction { get; }
     public TextCapitalization TextCapitalization { get; }
     public SmartDashesType SmartDashesType { get; }
     public SmartQuotesType SmartQuotesType { get; }
@@ -1165,6 +1226,18 @@ public sealed partial class EditableText : StatefulWidget
     /// <summary>Formatters applied, in order, to every user-driven edit.</summary>
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
 
+    /// <summary>Called for each tap down that occurs outside of the <see cref="TextFieldTapRegion"/>
+    /// group while the field is focused; null invokes <see cref="EditableTextTapOutsideIntent"/>.</summary>
+    public Action<PointerDownEvent>? OnTapOutside { get; }
+
+    /// <summary>Called for each tap up that occurs outside of the <see cref="TextFieldTapRegion"/>
+    /// group after a tap down outside of it; null invokes <see cref="EditableTextTapUpOutsideIntent"/>.
+    /// </summary>
+    public Action<PointerUpEvent>? OnTapUpOutside { get; }
+
+    /// <summary>The group identifier for the <see cref="TextFieldTapRegion"/> of this field.</summary>
+    public object GroupId { get; }
+
     public bool? ShowCursor { get; }
     public double CursorWidth { get; }
     /// <summary>Overrides the caret height; <c>null</c> uses the preferred line height.</summary>
@@ -1176,6 +1249,10 @@ public sealed partial class EditableText : StatefulWidget
     public Point CursorOffset { get; }
     public bool PaintCursorAboveText { get; }
     public bool EnableInteractiveSelection { get; }
+
+    /// <summary>Whether to enable user interface affordances for changing the text selection.
+    /// Dart's <c>selectionEnabled</c>.</summary>
+    public bool SelectionEnabled => EnableInteractiveSelection;
     public bool SelectAllOnFocus { get; }
     public ToolbarOptions ToolbarOptions { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
@@ -1436,8 +1513,6 @@ public sealed partial class EditableText : StatefulWidget
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
-        private VerticalCaretMovementRun? _verticalMovementRun;
-        private TextSelection? _runSelection;
         private readonly ValueNotifier<bool> _cursorVisibilityNotifier = new(false);
         private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
         private RenderEditable? _renderEditable;
@@ -1476,16 +1551,11 @@ public sealed partial class EditableText : StatefulWidget
         private TextSelectionOverlay? _selectionOverlay;
         private SpellCheckResults? _spellCheckResults;
         private int _spellCheckRequest;
-        private PointerDeviceKind _lastPointerKind = PointerDeviceKind.Unknown;
 
         private sealed class EditableRenderKey(Guid id) : GlobalKey
         {
             public Guid Id { get; } = id;
         }
-        private Point? _lastPointerPosition;
-        private int? _pointerSelectionAnchor;
-        private TextSelection _lastSelection;
-        private SelectionChangedCause? _pendingSelectionCause;
         private readonly Ticker _cursorTicker;
         private double _cursorOpacity = 1.0;
         private bool _hadFocus;
@@ -1511,19 +1581,27 @@ public sealed partial class EditableText : StatefulWidget
                 }
                 if (options.Cut && !Widget.ReadOnly && !Widget.ObscureText && hasSelection)
                 {
-                    items.Add(new ContextMenuButtonItem(CutAndHide, ContextMenuButtonType.Cut));
+                    items.Add(new ContextMenuButtonItem(
+                        () => CutSelection(SelectionChangedCause.Toolbar),
+                        ContextMenuButtonType.Cut));
                 }
                 if (options.Copy && !Widget.ObscureText && hasSelection)
                 {
-                    items.Add(new ContextMenuButtonItem(CopyAndHide, ContextMenuButtonType.Copy));
+                    items.Add(new ContextMenuButtonItem(
+                        () => CopySelection(SelectionChangedCause.Toolbar),
+                        ContextMenuButtonType.Copy));
                 }
                 if (options.Paste && !Widget.ReadOnly && _clipboardStatus.Value == ClipboardStatus.Pasteable)
                 {
-                    items.Add(new ContextMenuButtonItem(PasteAndHide, ContextMenuButtonType.Paste));
+                    items.Add(new ContextMenuButtonItem(
+                        () => PasteText(SelectionChangedCause.Toolbar),
+                        ContextMenuButtonType.Paste));
                 }
                 if (options.SelectAll && !selectionCoversAll && controller.Text.Length > 0)
                 {
-                    items.Add(new ContextMenuButtonItem(SelectAllAndHide, ContextMenuButtonType.SelectAll));
+                    items.Add(new ContextMenuButtonItem(
+                        () => SelectAll(SelectionChangedCause.Toolbar),
+                        ContextMenuButtonType.SelectAll));
                 }
                 return items;
             }
@@ -1537,7 +1615,12 @@ public sealed partial class EditableText : StatefulWidget
                 TextSelection selection = controller.Selection.Clamp(controller.Text.Length);
                 Rect start = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.Start);
                 Rect end = ResolveCursorRectangle(_focusNode!, controller.Text.Length, selection.End);
-                Point primary = _lastPointerPosition ?? new Point(
+                if (RenderEditable?.LastSecondaryTapDownPosition is Point secondaryTapDown)
+                {
+                    return new TextSelectionToolbarAnchors(secondaryTapDown);
+                }
+
+                Point primary = new(
                     (start.Center.X + end.Center.X) / 2.0,
                     Math.Min(start.Top, end.Top));
                 Point secondary = new(
@@ -1585,7 +1668,10 @@ public sealed partial class EditableText : StatefulWidget
                     smartQuotesType: Widget.SmartQuotesType,
                     enableSuggestions: Widget.EnableSuggestions,
                     enableInteractiveSelection: Widget.EnableInteractiveSelection,
-                    inputAction: Widget.TextInputAction,
+                    inputAction: Widget.TextInputAction
+                                 ?? (Equals(Widget.KeyboardType, TextInputType.Multiline)
+                                     ? TextInputActionType.Newline
+                                     : TextInputActionType.Done),
                     textCapitalization: Widget.TextCapitalization,
                     keyboardAppearance: Widget.KeyboardAppearance,
                     autofillConfiguration: autofillConfiguration,
@@ -1598,73 +1684,147 @@ public sealed partial class EditableText : StatefulWidget
         public void Autofill(TextEditingValue newEditingValue) => UpdateEditingValue(newEditingValue);
 
         /// <inheritdoc/>
-        public void UpdateEditingValue(TextEditingValue value)
-        {
-            TextEditingController? controller = _controller;
-            if (controller is null || Widget.ReadOnly)
-            {
-                return;
-            }
-
-            if (controller.Value.Equals(value))
-            {
-                return;
-            }
-
-            TextEditingValue oldValue = controller.Value;
-            bool textChanged = !string.Equals(oldValue.Text, value.Text, StringComparison.Ordinal);
-            SelectionChangedCause cause;
-            if (textChanged || !Nullable.Equals(oldValue.Composing, value.Composing))
-            {
-                if (textChanged)
-                {
-                    HideToolbar(hideHandles: false);
-                }
-
-                _currentPromptRectRange = null;
-                cause = SelectionChangedCause.Keyboard;
-            }
-            else
-            {
-                // Only the selection moved: the platform's handwriting, its floating cursor, or keys.
-                cause = _textInputConnection?.ScribbleInProgress ?? false
-                    ? SelectionChangedCause.StylusHandwriting
-                    : _pointOffsetOrigin is not null
-                        ? SelectionChangedCause.ForcePress
-                        : SelectionChangedCause.Keyboard;
-            }
-
-            _pendingSelectionCause = cause;
-            controller.Value = value;
-            _pendingSelectionCause = null;
-            if (textChanged)
-            {
-                Widget.OnChanged?.Invoke(controller.Text);
-            }
-
-            ScheduleShowCaretOnScreen(withAnimation: true);
-        }
-
-        /// <inheritdoc/>
         public void PerformAction(TextInputActionType action)
         {
             switch (action)
             {
+                case TextInputActionType.Newline:
+                    // If this is a multiline EditableText, do nothing for a "newline" action; the
+                    // newline is already inserted. Otherwise, finalize editing.
+                    if (!Widget.Multiline)
+                    {
+                        FinalizeEditing(action, shouldUnfocus: true);
+                    }
+
+                    break;
                 case TextInputActionType.Done:
                 case TextInputActionType.Go:
-                case TextInputActionType.Send:
+                case TextInputActionType.Next:
+                case TextInputActionType.Previous:
                 case TextInputActionType.Search:
-                    Widget.OnEditingComplete?.Invoke();
-                    Widget.OnSubmitted?.Invoke(_controller!.Text);
+                case TextInputActionType.Send:
+                    FinalizeEditing(action, shouldUnfocus: true);
                     break;
-                default:
-                    Widget.OnEditingComplete?.Invoke();
+                case TextInputActionType.ContinueAction:
+                case TextInputActionType.EmergencyCall:
+                case TextInputActionType.Join:
+                case TextInputActionType.None:
+                case TextInputActionType.Route:
+                case TextInputActionType.Unspecified:
+                    // Finalize editing, but don't give up focus because this keyboard action does
+                    // not imply the user is done inputting information.
+                    FinalizeEditing(action, shouldUnfocus: false);
                     break;
             }
         }
 
+        private void FinalizeEditing(TextInputActionType action, bool shouldUnfocus)
+        {
+            // Take any actions necessary now that the user has completed editing.
+            if (Widget.OnEditingComplete is { } onEditingComplete)
+            {
+                try
+                {
+                    onEditingComplete();
+                }
+                catch (Exception exception)
+                {
+                    FlutterError.ReportError(new FlutterErrorDetails(
+                        exception: exception,
+                        stack: exception.StackTrace,
+                        library: "widgets",
+                        context: new ErrorDescription($"while calling onEditingComplete for {action}")));
+                }
+            }
+            else
+            {
+                // Default behavior if the developer did not provide an onEditingComplete callback:
+                // finalize editing and remove focus, or move it to the next/previous field.
+                _ = _controller!.ClearComposing();
+                if (shouldUnfocus)
+                {
+                    switch (action)
+                    {
+                        case TextInputActionType.Next:
+                            _ = _focusNode!.NextFocus();
+                            break;
+                        case TextInputActionType.Previous:
+                            _ = _focusNode!.PreviousFocus();
+                            break;
+                        default:
+                            _focusNode!.Unfocus();
+                            break;
+                    }
+                }
+            }
+
+            Action<string>? onSubmitted = Widget.OnSubmitted;
+            if (onSubmitted is null)
+            {
+                return;
+            }
+
+            // Invoke optional callback with the user's submitted content.
+            try
+            {
+                onSubmitted(_controller!.Text);
+            }
+            catch (Exception exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    stack: exception.StackTrace,
+                    library: "widgets",
+                    context: new ErrorDescription($"while calling onSubmitted for {action}")));
+            }
+
+            // If `shouldUnfocus` is true, the text field should no longer be focused after the
+            // microtask queue is drained. But in case the developer cancelled the focus change in
+            // the `onSubmitted` callback by focusing this input field again, reset the soft keyboard.
+            if (shouldUnfocus)
+            {
+                ScheduleRestartConnection();
+            }
+        }
+
+        private void ScheduleRestartConnection()
+        {
+            if (_restartConnectionScheduled)
+            {
+                return;
+            }
+
+            _restartConnectionScheduled = true;
+            Scheduler.ScheduleMicrotask(RestartConnectionIfNeeded);
+        }
+
+        // Discards the current TextInputConnection and establishes a new one, so the platform's
+        // input control is reset.
+        private void RestartConnectionIfNeeded()
+        {
+            _restartConnectionScheduled = false;
+            if (!HasInputConnection || !ShouldCreateInputConnection)
+            {
+                return;
+            }
+
+            _textInputConnection!.Close();
+            _textInputConnection = null;
+            OpenInputConnection();
+        }
+
+
         /// <inheritdoc/>
-        public void ConnectionClosed() => _textInputConnection = null;
+        public void ConnectionClosed()
+        {
+            if (HasInputConnection)
+            {
+                _textInputConnection!.ConnectionClosedReceived();
+                _textInputConnection = null;
+                _lastKnownRemoteTextEditingValue = null;
+                _focusNode!.Unfocus();
+            }
+        }
 
         /// <inheritdoc/>
         TextEditingValue? ITextInputClient.CurrentTextEditingValue =>
@@ -1687,8 +1847,14 @@ public sealed partial class EditableText : StatefulWidget
 
         private void OpenInputConnection()
         {
+            if (!ShouldCreateInputConnection)
+            {
+                return;
+            }
+
             if (_textInputConnection is { Attached: true })
             {
+                _textInputConnection.Show();
                 return;
             }
 
@@ -1702,7 +1868,9 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             SchedulePeriodicPostFrameCallbacks();
-            _textInputConnection.SetEditingState(CurrentTextEditingValue);
+            TextEditingValue localValue = CurrentTextEditingValue;
+            _lastKnownRemoteTextEditingValue = localValue;
+            _textInputConnection.SetEditingState(localValue);
             _textInputConnection.Show();
             if (NeedsAutofill)
             {
@@ -1714,6 +1882,9 @@ public sealed partial class EditableText : StatefulWidget
         {
             _textInputConnection?.Close();
             _textInputConnection = null;
+            _lastKnownRemoteTextEditingValue = null;
+            _scribbleCacheKey = null;
+            RemoveTextPlaceholder();
         }
 
         private void UpdateAutofillRegistration()
@@ -1740,7 +1911,6 @@ public sealed partial class EditableText : StatefulWidget
         {
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
-            _lastSelection = Widget.Controller.Selection;
             UpdateCursorTicker();
         }
 
@@ -1824,6 +1994,7 @@ public sealed partial class EditableText : StatefulWidget
 
         public override void Dispose()
         {
+            FocusManager.Instance.RemoveListener(UnflagInternalFocus);
             _internalScrollController?.Dispose();
             _floatingCursorResetController?.Dispose();
             _floatingCursorResetController = null;
@@ -1882,6 +2053,11 @@ public sealed partial class EditableText : StatefulWidget
                 return new TextSpan(style: style, text: text);
             }
 
+            if (BuildTextSpanWithScribblePlaceholder(style) is { } placeholderSpan)
+            {
+                return placeholderSpan;
+            }
+
             bool withComposing = !Widget.ReadOnly && _focusNode!.HasFocus;
             if (_spellCheckResults is { } spellCheckResults
                 && Widget.SpellCheckConfiguration?.MisspelledTextStyle is { } misspelledTextStyle)
@@ -1914,98 +2090,177 @@ public sealed partial class EditableText : StatefulWidget
             TextStyle style = EffectiveTextStyle(showPlaceholder);
             _cursorVisibilityNotifier.Value = (Widget.ShowCursor ?? _focusNode.HasFocus) && !showPlaceholder;
 
-            Widget result = new Focus(
-                focusNode: _focusNode,
-                autofocus: Widget.Autofocus,
-                canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
-                onKeyEvent: HandleKeyEvent,
-                onTextInput: HandleTextInput,
-                onTextComposition: HandleTextComposition,
-                onTextInputState: HandleTextInputState,
-                onTextSelectionChanged: HandleTextSelectionChanged,
-                child: new Container(
-                    color: backgroundColor,
-                    padding: Widget.Padding,
-                    child: BuildScrollable(context, offset => new CompositedTransformTarget(
-                        link: _toolbarLayerLink,
-                        child: new EditableRenderObjectWidget(
-                            key: _editableRenderKey,
-                            inlineSpan: BuildTextSpan(showPlaceholder),
-                            value: showPlaceholder
-                                ? new TextEditingValue(selection: TextSelection.Collapsed(0))
-                                : _controller!.Value,
-                            startHandleLayerLink: _startHandleLayerLink,
-                            endHandleLayerLink: _endHandleLayerLink,
-                            cursorColor: CursorColor(selectionStyle),
-                            showCursor: _cursorVisibilityNotifier,
-                            forceLine: true,
-                            readOnly: Widget.ReadOnly,
-                            hasFocus: _focusNode.HasFocus,
-                            maxLines: Widget.MaxLines,
-                            minLines: Widget.MinLines,
-                            expands: Widget.Expands,
-                            strutStyle: Widget.StrutStyle?.InheritFromTextStyle(style)
-                                        ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true),
-                            selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor,
-                            textScaler: MediaQuery.TextScalerOf(context),
-                            textAlign: Widget.TextAlign,
-                            textDirection: Widget.TextDirection ?? Directionality.Of(context),
-                            obscuringCharacter: Widget.ObscuringCharacter,
-                            obscureText: Widget.ObscureText,
-                            offset: offset,
-                            rendererIgnoresPointer: true,
-                            cursorWidth: Widget.CursorWidth,
-                            cursorHeight: Widget.CursorHeight,
-                            cursorRadius: Widget.CursorRadius == default ? null : Widget.CursorRadius,
-                            cursorOffset: Widget.CursorOffset,
-                            paintCursorAboveText: Widget.PaintCursorAboveText,
-                            selectionHeightStyle: Widget.SelectionHeightStyle,
-                            selectionWidthStyle: Widget.SelectionWidthStyle,
-                            enableInteractiveSelection: Widget.EnableInteractiveSelection,
-                            textSelectionDelegate: this,
-                            devicePixelRatio: MediaQuery.MaybeDevicePixelRatioOf(context) ?? 1.0,
-                            clipBehavior: Widget.ClipBehavior,
-                            backgroundCursorColor: Widget.BackgroundCursorColor,
-                            promptRectRange: _currentPromptRectRange,
-                            promptRectColor: Widget.AutocorrectionTextRectColor)))));
-            if (!Widget.RendererIgnoresPointer)
-            {
-                result = new Listener(
-                    behavior: HitTestBehavior.Translucent,
-                    onPointerDown: HandlePointerDown,
-                    onPointerMove: HandlePointerMove,
-                    onPointerUp: HandlePointerUp,
-                    onPointerCancel: HandlePointerCancel,
-                    child: result);
-                result = new GestureDetector(
-                    behavior: HitTestBehavior.Translucent,
-                    onDoubleTap: HandleDoubleTap,
-                    onLongPress: HandleLongPress,
-                    onSecondaryTap: () => ShowToolbar(),
-                    child: result);
-            }
+            Widget BuildEditable(ViewportOffset offset) => new EditableRenderObjectWidget(
+                key: _editableRenderKey,
+                inlineSpan: BuildTextSpan(showPlaceholder),
+                value: showPlaceholder
+                    ? new TextEditingValue(selection: TextSelection.Collapsed(0))
+                    : _controller!.Value,
+                startHandleLayerLink: _startHandleLayerLink,
+                endHandleLayerLink: _endHandleLayerLink,
+                cursorColor: CursorColor(selectionStyle),
+                showCursor: _cursorVisibilityNotifier,
+                forceLine: true,
+                readOnly: Widget.ReadOnly,
+                hasFocus: _focusNode.HasFocus,
+                maxLines: Widget.MaxLines,
+                minLines: Widget.MinLines,
+                expands: Widget.Expands,
+                strutStyle: Widget.StrutStyle?.InheritFromTextStyle(style)
+                            ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true),
+                selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor,
+                textScaler: MediaQuery.TextScalerOf(context),
+                textAlign: Widget.TextAlign,
+                textDirection: Widget.TextDirection ?? Directionality.Of(context),
+                obscuringCharacter: Widget.ObscuringCharacter,
+                obscureText: Widget.ObscureText,
+                offset: offset,
+                rendererIgnoresPointer: Widget.RendererIgnoresPointer,
+                cursorWidth: Widget.CursorWidth,
+                cursorHeight: Widget.CursorHeight,
+                cursorRadius: Widget.CursorRadius == default ? null : Widget.CursorRadius,
+                cursorOffset: Widget.CursorOffset,
+                paintCursorAboveText: Widget.PaintCursorAboveText,
+                selectionHeightStyle: Widget.SelectionHeightStyle,
+                selectionWidthStyle: Widget.SelectionWidthStyle,
+                enableInteractiveSelection: Widget.EnableInteractiveSelection,
+                textSelectionDelegate: this,
+                devicePixelRatio: MediaQuery.MaybeDevicePixelRatioOf(context) ?? 1.0,
+                clipBehavior: Widget.ClipBehavior,
+                backgroundCursorColor: Widget.BackgroundCursorColor,
+                promptRectRange: _currentPromptRectRange,
+                promptRectColor: Widget.AutocorrectionTextRectColor);
 
-            result = new MouseRegion(
-                cursor: Widget.MouseCursor
-                        ?? selectionStyle.MouseCursor
-                        ?? SystemMouseCursors.Text,
-                child: result);
+            Widget BuildViewport(ViewportOffset offset) => new CompositedTransformTarget(
+                link: _toolbarLayerLink,
+                child: new Semantics(
+                    onCopy: SemanticsOnCopy(),
+                    onCut: SemanticsOnCut(),
+                    onPaste: SemanticsOnPaste(),
+                    child: new ScribbleFocusable(
+                        editableKey: _editableRenderKey,
+                        enabled: StylusHandwritingEnabled,
+                        focusNode: _focusNode,
+                        updateSelectionRects: () =>
+                        {
+                            OpenInputConnection();
+                            UpdateSelectionRects(force: true);
+                        },
+                        child: new SizeChangedLayoutNotifier(
+                            child: BuildEditable(offset)))));
 
             return new EditableTextCompositionCallback(
                 compositeCallback: CompositeCallback,
                 enabled: HasInputConnection,
-                child: new Semantics(
-                    label: Widget.SemanticsLabel,
-                    textField: true,
-                    enabled: Widget.Enabled ? true : null,
-                    focused: _focusNode.HasFocus ? true : null,
-                    onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
-                    child: result));
+                child: new Actions(
+                    actions: ActionsMap,
+                    child: new Builder(builder: actionsContext => new TextFieldTapRegion(
+                        groupId: Widget.GroupId,
+                        onTapOutside: _focusNode.HasFocus
+                            ? @event => OnTapOutside(actionsContext, @event)
+                            : null,
+                        onTapUpOutside: @event => OnTapUpOutside(actionsContext, @event),
+                        debugLabel: Constants.KReleaseMode ? null : "EditableText",
+                        child: new MouseRegion(
+                            cursor: Widget.MouseCursor
+                                    ?? selectionStyle.MouseCursor
+                                    ?? SystemMouseCursors.Text,
+                            child: new UndoHistory<TextEditingValue>(
+                                value: Widget.Controller,
+                                onTriggered: value =>
+                                    UserUpdateTextEditingValue(value, SelectionChangedCause.Keyboard),
+                                shouldChangeUndoStack: ShouldChangeUndoStack,
+                                undoStackModifier: value =>
+                                    PlatformDefaults.TargetPlatform == TargetPlatform.Android
+                                        ? new TextEditingValue(value.Text, value.Selection)
+                                        : value,
+                                focusNode: _focusNode,
+                                controller: Widget.UndoController,
+                                child: new Semantics(
+                                    label: Widget.SemanticsLabel,
+                                    textField: true,
+                                    enabled: Widget.Enabled ? true : null,
+                                    focused: _focusNode.HasFocus ? true : null,
+                                    onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
+                                    child: new Focus(
+                                        focusNode: _focusNode,
+                                        includeSemantics: false,
+                                        autofocus: Widget.Autofocus,
+                                        canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
+                                        onKeyEvent: Widget.OnKeyEvent,
+                                        onTextInput: HandleTextInput,
+                                        onTextComposition: HandleTextComposition,
+                                        onTextInputState: HandleTextInputState,
+                                        onTextSelectionChanged: HandleTextSelectionChanged,
+                                        debugLabel: Constants.KReleaseMode ? null : "EditableText",
+                                        child: new Container(
+                                            color: backgroundColor,
+                                            padding: Widget.Padding,
+                                            child: BuildScrollable(context, BuildViewport))))))))));
         }
+
+        /// Dart's `shouldChangeUndoStack` for the text field's `UndoHistory`.
+        private bool ShouldChangeUndoStack(TextEditingValue oldValue, TextEditingValue newValue)
+        {
+            if (!newValue.Selection.IsValid)
+            {
+                return false;
+            }
+
+            // `UndoHistory` hands a value type's missing previous value over as `default`.
+            if (oldValue.Equals(default(TextEditingValue)))
+            {
+                return true;
+            }
+
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.IOS:
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Fuchsia:
+                case TargetPlatform.Linux:
+                case TargetPlatform.Windows:
+                    // Composing text is not counted in history coalescing.
+                    if (_controller!.Value.Composing is { IsCollapsed: false })
+                    {
+                        return false;
+                    }
+
+                    break;
+                case TargetPlatform.Android:
+                    // Gboard on Android puts non-CJK words in composing regions. Coalesce composing
+                    // text in order to allow the saving of partial words in that case.
+                    break;
+            }
+
+            return !string.Equals(oldValue.Text, newValue.Text, StringComparison.Ordinal)
+                   || !Nullable.Equals(oldValue.Composing, newValue.Composing);
+        }
+
+        private Action? SemanticsOnCopy() =>
+            Widget.SelectionEnabled && CopyEnabled && !TextEditingValue.Selection.IsCollapsed
+                ? () => CopySelection(SelectionChangedCause.Toolbar)
+                : null;
+
+        private Action? SemanticsOnCut() =>
+            Widget.SelectionEnabled && CutEnabled && !TextEditingValue.Selection.IsCollapsed
+                ? () => CutSelection(SelectionChangedCause.Toolbar)
+                : null;
+
+        private Action? SemanticsOnPaste() =>
+            Widget.SelectionEnabled && PasteEnabled && _clipboardStatus.Value == ClipboardStatus.Pasteable
+                ? () => PasteText(SelectionChangedCause.Toolbar)
+                : null;
 
         public bool ShowToolbar()
         {
             if (!Widget.EnableInteractiveSelection || Widget.ContextMenuBuilder is null)
+            {
+                return false;
+            }
+
+            // Dart returns false while the toolbar is already showing.
+            if (_selectionOverlay is { ToolbarIsVisible: true })
             {
                 return false;
             }
@@ -2037,11 +2292,18 @@ public sealed partial class EditableText : StatefulWidget
             if (hideHandles) _selectionOverlay?.HideHandles();
         }
 
+        /// <summary>Express interest in interacting with the keyboard. Dart's
+        /// <c>requestKeyboard</c>: opens the input connection of a focused field, or focuses it.</summary>
         public void RequestKeyboard()
         {
-            if (Widget.Enabled && !Widget.ReadOnly && _focusNode?.HasFocus == true)
+            if (_focusNode!.HasFocus)
             {
                 OpenInputConnection();
+            }
+            else if (Widget.Enabled && Widget.CanRequestFocus)
+            {
+                FlagInternalFocus();
+                _focusNode.RequestFocus();
             }
         }
 
@@ -2055,100 +2317,10 @@ public sealed partial class EditableText : StatefulWidget
 
         public bool SelectAllEnabled => Widget.EnableInteractiveSelection;
 
-        public void UserUpdateTextEditingValue(TextEditingValue value, SelectionChangedCause? cause)
-        {
-            TextEditingController controller = _controller!;
-            ScheduleShowCaretForUserUpdate(controller.Value, value);
-            if (cause.HasValue)
-            {
-                _pendingSelectionCause = cause.Value;
-            }
-
-            TextEditingValue oldValue = controller.Value;
-            bool textChanged = !string.Equals(controller.Text, value.Text, StringComparison.Ordinal);
-            controller.Value = value;
-            _pendingSelectionCause = null;
-            if (textChanged)
-            {
-                ApplyInputFormatters(oldValue);
-                Widget.OnChanged?.Invoke(controller.Text);
-            }
-        }
-
-        /// <summary>
-        /// Runs <see cref="EditableText.InputFormatters"/> over the value the user just produced.
-        /// Dart funnels every user edit through <c>_formatAndSetValue</c>; Plumix mutates the
-        /// controller in place, so the formatters run right after the mutation instead.
-        /// </summary>
-        private void ApplyInputFormatters(TextEditingValue oldValue)
-        {
-            IReadOnlyList<TextInputFormatter>? formatters = Widget.InputFormatters;
-            if (formatters is null || formatters.Count == 0) return;
-            TextEditingController controller = _controller!;
-            TextEditingValue value = controller.Value;
-            foreach (TextInputFormatter formatter in formatters)
-            {
-                value = formatter.FormatEditUpdate(oldValue, value);
-            }
-
-            if (!value.Equals(controller.Value))
-            {
-                controller.Value = value;
-            }
-        }
-
-        public void CutSelection(SelectionChangedCause cause) => CutAndHide(cause);
-
-        public void CopySelection(SelectionChangedCause cause) => CopyAndHide(cause);
-
-        public void PasteText(SelectionChangedCause cause) =>
-            Scheduler.RunAsync(() => PasteTextAsync(cause));
-
-        public Task PasteTextAsync(SelectionChangedCause cause) => PasteFromClipboardAsync(cause);
-
-        public void SelectAll(SelectionChangedCause cause)
-        {
-            TextEditingValue oldValue = _controller!.Value;
-            _pendingSelectionCause = cause;
-            _ = _controller.SelectAll();
-            _pendingSelectionCause = null;
-            ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
-            if (cause != SelectionChangedCause.Toolbar)
-            {
-                return;
-            }
-
-            // Dart's `selectAll(toolbar)`: desktop hides the menu, and every platform but Apple's
-            // reveals the end of the selection.
-            switch (PlatformDefaults.TargetPlatform)
-            {
-                case TargetPlatform.MacOS:
-                case TargetPlatform.Linux:
-                case TargetPlatform.Windows:
-                    HideToolbar();
-                    break;
-            }
-
-            switch (PlatformDefaults.TargetPlatform)
-            {
-                case TargetPlatform.Android:
-                case TargetPlatform.Fuchsia:
-                case TargetPlatform.Linux:
-                case TargetPlatform.Windows:
-                    if (RenderEditable is { HasSize: true } && EffectiveScrollController.HasClients)
-                    {
-                        BringIntoView(_controller.Selection.Extent);
-                    }
-
-                    break;
-            }
-        }
-
         private void AttachController(TextEditingController controller)
         {
             _controller = controller;
-            _lastSelection = controller.Selection;
-            _controller.AddListener(HandleControllerChanged);
+            _controller.AddListener(DidChangeTextEditingValue);
         }
 
         private void DetachController()
@@ -2158,7 +2330,7 @@ public sealed partial class EditableText : StatefulWidget
                 return;
             }
 
-            _controller.RemoveListener(HandleControllerChanged);
+            _controller.RemoveListener(DidChangeTextEditingValue);
             _controller = null;
         }
 
@@ -2197,458 +2369,10 @@ public sealed partial class EditableText : StatefulWidget
             _ownsFocusNode = false;
         }
 
-        public void HandlePointerDown(PointerDownEvent @event)
-        {
-            if (!Widget.Enabled)
-            {
-                return;
-            }
-
-            _lastPointerPosition = @event.Position;
-            _lastPointerKind = @event.Kind;
-            if (!@event.Buttons.HasFlag(PointerButtons.Primary))
-            {
-                return;
-            }
-
-            _focusNode!.RequestFocus();
-            int offset = GetTextPosition(@event.Position);
-            _pointerSelectionAnchor = offset;
-            SetSelection(TextSelection.Collapsed(offset), SelectionChangedCause.Tap);
-            if (@event.Kind == PointerDeviceKind.Touch && Widget.ShowSelectionHandles)
-            {
-                ShowHandles();
-            }
-        }
-
-        public void HandlePointerMove(PointerMoveEvent @event)
-        {
-            if (!Widget.EnableInteractiveSelection
-                || !@event.Down
-                || !@event.Buttons.HasFlag(PointerButtons.Primary)
-                || !_pointerSelectionAnchor.HasValue)
-            {
-                return;
-            }
-
-            _lastPointerPosition = @event.Position;
-            SetSelection(
-                new TextSelection(
-                    _pointerSelectionAnchor.Value,
-                    GetTextPosition(@event.Position)),
-                SelectionChangedCause.Drag);
-            if (@event.Kind == PointerDeviceKind.Touch)
-            {
-                TextSelectionOverlay overlay = EnsureSelectionOverlay();
-                overlay.ShowHandles();
-                overlay.ShowMagnifier(@event.Position);
-            }
-        }
-
-        public void HandlePointerUp(PointerUpEvent @event)
-        {
-            _lastPointerPosition = @event.Position;
-            _pointerSelectionAnchor = null;
-            _selectionOverlay?.HideMagnifier();
-        }
-
-        public void HandlePointerCancel(PointerCancelEvent @event)
-        {
-            _pointerSelectionAnchor = null;
-            _selectionOverlay?.HideMagnifier();
-        }
-
-        public void HandleDoubleTap()
-        {
-            if (Widget.Enabled && Widget.EnableInteractiveSelection && _lastPointerPosition.HasValue)
-            {
-                SelectWordAt(_lastPointerPosition.Value, SelectionChangedCause.DoubleTap);
-            }
-        }
-
-        public void HandleLongPress()
-        {
-            if (!Widget.Enabled || !Widget.EnableInteractiveSelection)
-            {
-                return;
-            }
-
-            if (_lastPointerPosition.HasValue && _controller!.Selection.IsCollapsed)
-            {
-                SelectWordAt(_lastPointerPosition.Value, SelectionChangedCause.LongPress);
-            }
-            if (_lastPointerKind is PointerDeviceKind.Touch or PointerDeviceKind.Stylus)
-            {
-                ShowHandles();
-                if (_lastPointerPosition.HasValue) EnsureSelectionOverlay().ShowMagnifier(_lastPointerPosition.Value);
-            }
-            ShowToolbar();
-        }
-
-        private int GetTextPosition(Point globalPosition)
-        {
-            if (RenderEditable is { HasSize: true } renderEditable)
-            {
-                return Math.Clamp(
-                    renderEditable.GetPositionForPoint(globalPosition).Offset,
-                    0,
-                    _controller!.Text.Length);
-            }
-
-            return _controller!.Selection.Clamp(_controller.Text.Length).ExtentOffset;
-        }
-
-        private void SelectWordAt(
-            Point globalPosition,
-            SelectionChangedCause cause)
-        {
-            TextEditingController controller = _controller!;
-            string text = controller.Text;
-            if (text.Length == 0)
-            {
-                return;
-            }
-
-            int index = Math.Clamp(GetTextPosition(globalPosition), 0, text.Length - 1);
-            bool whitespace = char.IsWhiteSpace(text[index]);
-            int start = index;
-            int end = index + 1;
-            while (start > 0 && char.IsWhiteSpace(text[start - 1]) == whitespace)
-            {
-                start--;
-            }
-            while (end < text.Length && char.IsWhiteSpace(text[end]) == whitespace)
-            {
-                end++;
-            }
-
-            if (!whitespace)
-            {
-                while (start > 0 && !char.IsWhiteSpace(text[start - 1]))
-                {
-                    start--;
-                }
-                while (end < text.Length && !char.IsWhiteSpace(text[end]))
-                {
-                    end++;
-                }
-            }
-
-            SetSelection(new TextSelection(start, end), cause);
-        }
-
-        private void CutAndHide() => CutAndHide(SelectionChangedCause.Toolbar);
-
-        private void CutAndHide(SelectionChangedCause cause)
-        {
-            TextEditingController controller = _controller!;
-            if (!Widget.ReadOnly && !Widget.ObscureText && !controller.Selection.IsCollapsed)
-            {
-                TextEditingValue oldValue = controller.Value;
-                CopyToClipboard(controller.SelectedText);
-                _pendingSelectionCause = cause;
-                if (controller.DeleteBackward())
-                {
-                    ScheduleShowCaretForUserUpdate(oldValue, controller.Value);
-                    ApplyInputFormatters(oldValue);
-                    Widget.OnChanged?.Invoke(controller.Text);
-                }
-                _pendingSelectionCause = null;
-                if (cause == SelectionChangedCause.Toolbar)
-                {
-                    BringSelectionIntoViewAfterFrame();
-                }
-            }
-            HideToolbar();
-        }
-
-        private void CopyAndHide() => CopyAndHide(SelectionChangedCause.Toolbar);
-
-        private void CopyAndHide(SelectionChangedCause cause)
-        {
-            TextEditingController controller = _controller!;
-            if (!Widget.ObscureText && !controller.Selection.IsCollapsed)
-            {
-                CopyToClipboard(controller.SelectedText);
-                if (cause == SelectionChangedCause.Toolbar
-                    && RenderEditable is { HasSize: true }
-                    && EffectiveScrollController.HasClients)
-                {
-                    BringIntoView(controller.Selection.Extent);
-                }
-            }
-            HideToolbar();
-        }
-
-        private void PasteAndHide()
-        {
-            Scheduler.RunAsync(() => PasteFromClipboardAsync(SelectionChangedCause.Toolbar));
-        }
-
-        private void CopyToClipboard(string text)
-        {
-            Scheduler.RunAsync(async () =>
-            {
-                try
-                {
-                    await Clipboard.SetData(new ClipboardData(text));
-                }
-                catch (Exception exception)
-                {
-                    ReportClipboardError(exception, "while copying selection to clipboard");
-                }
-            });
-            Scheduler.RunAsync(_clipboardStatus.Update);
-        }
-
-        private async Task PasteFromClipboardAsync(SelectionChangedCause cause)
-        {
-            if (Widget.ReadOnly || !Widget.EnableInteractiveSelection || !_controller!.Selection.IsValid)
-            {
-                return;
-            }
-
-            ClipboardData? data;
-            try
-            {
-                data = await Clipboard.GetData(Clipboard.KTextPlain);
-            }
-            catch (Exception exception)
-            {
-                ReportClipboardError(exception, "while pasting text to EditableText");
-                return;
-            }
-
-            if (!Mounted || Widget.ReadOnly || data?.Text is not string text || !_controller!.Selection.IsValid)
-            {
-                return;
-            }
-
-            TextEditingController controller = _controller;
-            TextEditingValue oldValue = controller.Value;
-            _pendingSelectionCause = cause;
-            if (controller.Insert(LimitInsertion(text)))
-            {
-                ScheduleShowCaretForUserUpdate(oldValue, controller.Value);
-                ApplyInputFormatters(oldValue);
-                Widget.OnChanged?.Invoke(controller.Text);
-            }
-            _pendingSelectionCause = null;
-            if (cause == SelectionChangedCause.Toolbar)
-            {
-                BringSelectionIntoViewAfterFrame();
-                HideToolbar();
-            }
-        }
-
-        private static void ReportClipboardError(Exception exception, string context)
-        {
-            FlutterError.ReportError(new FlutterErrorDetails(
-                exception: exception,
-                stack: exception.StackTrace,
-                library: "widgets library",
-                context: new ErrorDescription(context)));
-        }
-
-        private void SelectAllAndHide()
-        {
-            SelectAll(SelectionChangedCause.Toolbar);
-            HideToolbar();
-        }
-
-        private void SetSelection(
-            TextSelection selection,
-            SelectionChangedCause cause)
-        {
-            TextSelection oldSelection = _controller!.Selection;
-            _pendingSelectionCause = cause;
-            _controller.Selection = selection;
-            _pendingSelectionCause = null;
-            if (!oldSelection.Equals(_controller.Selection)
-                || cause is SelectionChangedCause.LongPress or SelectionChangedCause.Keyboard)
-            {
-                BringIntoViewBySelectionState(oldSelection, _controller.Selection, cause);
-            }
-        }
-
-        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
-        {
-            if (Widget.OnKeyEvent?.Invoke(node, @event) == KeyEventResult.Handled)
-            {
-                return KeyEventResult.Handled;
-            }
-
-            if (!Widget.Enabled || @event is not KeyDownEvent)
-            {
-                return KeyEventResult.Ignored;
-            }
-
-            var controller = _controller!;
-            TextEditingValue valueBeforeKey = controller.Value;
-            LogicalKeyboardKey key = @event.LogicalKey;
-            bool textChanged = false;
-            bool keepVerticalNavigationX = false;
-            bool isEditingShortcut = HardwareKeyboard.Instance.IsControlPressed
-                                     || HardwareKeyboard.Instance.IsMetaPressed;
-            bool isWordShortcut = HardwareKeyboard.Instance.IsControlPressed
-                                  || HardwareKeyboard.Instance.IsAltPressed;
-            bool isParagraphShortcut = Widget.Multiline && isWordShortcut;
-
-            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyA))
-            {
-                if (Widget.EnableInteractiveSelection)
-                {
-                    _pendingSelectionCause = SelectionChangedCause.Keyboard;
-                    _ = controller.SelectAll();
-                    _pendingSelectionCause = null;
-                    RevealKeyboardSelection(valueBeforeKey, controller.Value);
-                }
-                _verticalMovementRun = null;
-                return KeyEventResult.Handled;
-            }
-
-            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyC))
-            {
-                if (Widget.EnableInteractiveSelection && !Widget.ObscureText && !controller.Selection.IsCollapsed)
-                {
-                    CopyToClipboard(controller.SelectedText);
-                }
-
-                _verticalMovementRun = null;
-                return KeyEventResult.Handled;
-            }
-
-            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyX))
-            {
-                if (Widget.EnableInteractiveSelection && !Widget.ReadOnly && !Widget.ObscureText
-                    && !controller.Selection.IsCollapsed)
-                {
-                    CopyToClipboard(controller.SelectedText);
-                    textChanged = !Widget.ReadOnly && controller.DeleteBackward();
-                    if (textChanged)
-                    {
-                        ScheduleShowCaretForUserUpdate(valueBeforeKey, controller.Value);
-                        ApplyInputFormatters(valueBeforeKey);
-                        Widget.OnChanged?.Invoke(controller.Text);
-                    }
-                }
-
-                _verticalMovementRun = null;
-                return KeyEventResult.Handled;
-            }
-
-            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyV))
-            {
-                Scheduler.RunAsync(() => PasteFromClipboardAsync(SelectionChangedCause.Keyboard));
-
-                _verticalMovementRun = null;
-                return KeyEventResult.Handled;
-            }
-
-            if (key.Equals(LogicalKeyboardKey.Backspace))
-            {
-                textChanged = !Widget.ReadOnly && (isWordShortcut
-                    ? controller.DeleteBackwardByWord()
-                    : controller.DeleteBackward());
-            }
-            else if (key.Equals(LogicalKeyboardKey.Delete))
-            {
-                textChanged = !Widget.ReadOnly && (isWordShortcut
-                    ? controller.DeleteForwardByWord()
-                    : controller.DeleteForward());
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowLeft))
-            {
-                _ = isWordShortcut
-                    ? controller.MoveCaretToPreviousWord(extendSelection: HardwareKeyboard.Instance.IsShiftPressed)
-                    : controller.MoveCaretLeft(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowRight))
-            {
-                _ = isWordShortcut
-                    ? controller.MoveCaretToNextWord(extendSelection: HardwareKeyboard.Instance.IsShiftPressed)
-                    : controller.MoveCaretRight(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-            }
-            else if (Widget.Multiline
-                     && key.Equals(LogicalKeyboardKey.ArrowUp))
-            {
-                if (isParagraphShortcut)
-                {
-                    _ = controller.MoveCaretToParagraphStart(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-                }
-                else
-                {
-                    _ = MoveCaretVertical(moveDown: false, extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-                    keepVerticalNavigationX = true;
-                }
-            }
-            else if (Widget.Multiline
-                     && key.Equals(LogicalKeyboardKey.ArrowDown))
-            {
-                if (isParagraphShortcut)
-                {
-                    _ = controller.MoveCaretToParagraphEnd(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-                }
-                else
-                {
-                    _ = MoveCaretVertical(moveDown: true, extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-                    keepVerticalNavigationX = true;
-                }
-            }
-            else if (key.Equals(LogicalKeyboardKey.Home))
-            {
-                _ = controller.MoveCaretToStart(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-            }
-            else if (key.Equals(LogicalKeyboardKey.End))
-            {
-                _ = controller.MoveCaretToEnd(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
-            }
-            else if (key.Equals(LogicalKeyboardKey.Enter))
-            {
-                if (Widget.Multiline && !Widget.ReadOnly)
-                {
-                    textChanged = controller.Insert(LimitInsertion("\n"));
-                }
-                else
-                {
-                    Widget.OnEditingComplete?.Invoke();
-                    Widget.OnSubmitted?.Invoke(controller.Text);
-                }
-            }
-            else if (key.Equals(LogicalKeyboardKey.Escape))
-            {
-                // Dart's `EditableText` only cancels an in-flight composing region on escape and
-                // otherwise lets the key bubble up to `DismissIntent`, which menus and dialogs use.
-                if (!controller.ClearComposing()) return KeyEventResult.Ignored;
-            }
-            else
-            {
-                return KeyEventResult.Ignored;
-            }
-
-            if (!keepVerticalNavigationX)
-            {
-                _verticalMovementRun = null;
-            }
-
-            if (textChanged)
-            {
-                ScheduleShowCaretForUserUpdate(valueBeforeKey, controller.Value);
-            }
-            else
-            {
-                RevealKeyboardSelection(valueBeforeKey, controller.Value);
-            }
-
-            if (textChanged)
-            {
-                ApplyInputFormatters(valueBeforeKey);
-                Widget.OnChanged?.Invoke(controller.Text);
-            }
-
-            return KeyEventResult.Handled;
-        }
-
+        // The host adapter delivers typed text and IME composition through the focus node (see the
+        // `TextInputConnection` row in `docs/ai/DIVERGENCES.md`). Each handler plays the platform
+        // text input plugin: it computes the platform's next editing state and sends it through
+        // `UpdateEditingValue`, exactly like an inbound `TextInputClient.updateEditingState`.
         private bool HandleTextInput(FocusNode node, string text)
         {
             if (!Widget.Enabled || Widget.ReadOnly || string.IsNullOrEmpty(text))
@@ -2660,27 +2384,15 @@ public sealed partial class EditableText : StatefulWidget
                 ? text
                 : text.Replace("\r", string.Empty, StringComparison.Ordinal)
                     .Replace("\n", string.Empty, StringComparison.Ordinal);
+            normalizedInput = LimitInsertion(normalizedInput);
             if (string.IsNullOrEmpty(normalizedInput))
             {
                 return false;
             }
 
-            normalizedInput = LimitInsertion(normalizedInput);
-            if (string.IsNullOrEmpty(normalizedInput)) return false;
-            TextEditingValue oldValue = _controller!.Value;
-            bool changed = _controller.Composing.HasValue
-                ? _controller.CommitComposing(normalizedInput)
-                : _controller.Insert(normalizedInput);
-            if (changed)
-            {
-                _verticalMovementRun = null;
-                _currentPromptRectRange = null;
-                ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
-                ApplyInputFormatters(oldValue);
-                Widget.OnChanged?.Invoke(_controller.Text);
-            }
-
-            return changed;
+            return SendPlatformEdit(controller => controller.Composing.HasValue
+                ? controller.CommitComposing(normalizedInput)
+                : controller.Insert(normalizedInput));
         }
 
         private bool HandleTextComposition(FocusNode node, string text, bool isCommit)
@@ -2691,21 +2403,24 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             string limitedText = LimitInsertion(text);
-            TextEditingValue oldValue = _controller!.Value;
-            bool changed = isCommit
-                ? _controller.CommitComposing(limitedText)
-                : _controller.SetComposing(limitedText);
-            if (changed)
-            {
-                _verticalMovementRun = null;
-                _currentPromptRectRange = null;
+            return SendPlatformEdit(controller => isCommit
+                ? controller.CommitComposing(limitedText)
+                : controller.SetComposing(limitedText));
+        }
 
-                ScheduleShowCaretForUserUpdate(oldValue, _controller.Value);
-                ApplyInputFormatters(oldValue);
-                Widget.OnChanged?.Invoke(_controller.Text);
+        /// Applies <paramref name="edit"/> to a copy of the current value, as the platform's own
+        /// editing model would, and sends the result through <see cref="UpdateEditingValue"/>.
+        private bool SendPlatformEdit(Func<TextEditingController, bool> edit)
+        {
+            TextEditingValue before = EditingValue;
+            using var platformModel = TextEditingController.FromValue(before);
+            if (!edit(platformModel))
+            {
+                return false;
             }
 
-            return changed;
+            UpdateEditingValue(platformModel.Value);
+            return !EditingValue.Equals(before);
         }
 
         private FocusTextInputState? HandleTextInputState(FocusNode node)
@@ -2729,29 +2444,19 @@ public sealed partial class EditableText : StatefulWidget
                 return false;
             }
 
-            var controller = _controller!;
-            int textLength = controller.Text.Length;
+            TextEditingValue value = EditingValue;
+            int textLength = value.Text.Length;
             var nextSelection = new TextSelection(
                 BaseOffset: Math.Clamp(baseOffset, 0, textLength),
                 ExtentOffset: Math.Clamp(extentOffset, 0, textLength));
-            var previousSelection = controller.Selection;
-            if (previousSelection.Equals(nextSelection))
+            if (value.Selection.Equals(nextSelection))
             {
                 return false;
             }
 
-            _pendingSelectionCause = SelectionChangedCause.Keyboard;
-            controller.Selection = nextSelection;
-            _pendingSelectionCause = null;
-            _verticalMovementRun = null;
-            bool selectionChanged = !previousSelection.Equals(controller.Selection);
-            if (selectionChanged)
-            {
-                // The platform IME moved the selection: Dart's `updateEditingValue`.
-                ScheduleShowCaretOnScreen(withAnimation: true);
-            }
-
-            return selectionChanged;
+            // The platform IME moved the selection: Dart's `updateEditingValue`.
+            UpdateEditingValue(value.CopyWith(selection: nextSelection));
+            return !value.Selection.Equals(EditingValue.Selection);
         }
 
         /// The caret rect of <paramref name="caretOffset"/> in root coordinates, for the IME and the
@@ -2778,98 +2483,21 @@ public sealed partial class EditableText : StatefulWidget
                 Math.Max(1, fieldRect.Height - Widget.Padding.Top - Widget.Padding.Bottom));
         }
 
-        /// Moves the caret one line up or down. Dart's `_UpdateTextSelectionVerticallyAction`: a
-        /// <see cref="VerticalCaretMovementRun"/> keeps the caret's horizontal position across
-        /// consecutive moves, and a move past the first or last line goes to the start or end of the
-        /// text.
-        private bool MoveCaretVertical(bool moveDown, bool extendSelection)
-        {
-            if (!Widget.Multiline || RenderEditable is not { HasSize: true } renderEditable)
-            {
-                return false;
-            }
-
-            TextEditingController controller = _controller!;
-            TextEditingValue value = controller.Value;
-            TextSelection selection = value.Selection;
-            if (!Nullable.Equals(_runSelection, selection) || _verticalMovementRun is { IsValid: false })
-            {
-                _verticalMovementRun = null;
-                _runSelection = null;
-            }
-
-            VerticalCaretMovementRun currentRun = _verticalMovementRun
-                                                  ?? renderEditable.StartVerticalCaretMovement(selection.Extent);
-            bool shouldMove = moveDown ? currentRun.MoveNext() : currentRun.MovePrevious();
-            TextPosition newExtent = shouldMove
-                ? currentRun.Current
-                : moveDown
-                    ? new TextPosition(value.Text.Length)
-                    : new TextPosition(0);
-            TextSelection newSelection = extendSelection
-                ? new TextSelection(selection.BaseOffset, newExtent.Offset, newExtent.Affinity)
-                : TextSelection.FromPosition(newExtent);
-
-            TextSelection previousSelection = controller.Selection;
-            controller.Selection = newSelection;
-            if (controller.Selection.Equals(newSelection))
-            {
-                _verticalMovementRun = currentRun;
-                _runSelection = newSelection;
-            }
-
-            return !previousSelection.Equals(controller.Selection);
-        }
-
-        private void HandleControllerChanged()
-        {
-            TextSelection selection = _controller!.Selection;
-            if (RenderEditable is { HasSize: true } renderEditable)
-            {
-                // The selection overlay below reads the editable's geometry before the rebuild reaches
-                // the render object, so the new value is pushed ahead of `UpdateRenderObject`, which
-                // then sees no change. Dart never has new text in the render object between frames, so
-                // the painter is laid out right away: a hover hit test or an IME geometry query can
-                // arrive before the next layout and read it.
-                renderEditable.Text = BuildTextSpan(ShowPlaceholder);
-                renderEditable.Selection = ShowPlaceholder ? TextSelection.Collapsed(0) : selection;
-                if (renderEditable.Attached)
-                {
-                    renderEditable.ComputeTextMetricsIfNeeded();
-                }
-            }
-            if (!_lastSelection.Equals(selection))
-            {
-                _lastSelection = selection;
-                Widget.OnSelectionChanged?.Invoke(selection, _pendingSelectionCause);
-            }
-            if (selection.IsCollapsed)
-            {
-                HideToolbar();
-            }
-            _selectionOverlay?.Update(_controller.Value);
-            Scheduler.RunAsync(() => RequestSpellCheckAsync());
-            SetState(static () => { });
-        }
-
         private void HandleFocusNodeChanged()
         {
-            _verticalMovementRun = null;
             bool hasFocus = _focusNode?.HasFocus == true;
             if (hasFocus)
             {
-                if (!_hadFocus
-                    && Widget.SelectAllOnFocus
-                    && Widget.EnableInteractiveSelection
-                    && !Widget.Multiline)
-                {
-                    _ = _controller!.SelectAll();
-                }
                 OpenInputConnection();
                 StartObservingMetrics();
                 if (!Widget.ReadOnly)
                 {
                     ScheduleShowCaretOnScreen(withAnimation: true);
+                }
+
+                if (!_hadFocus && AdjustedSelectionWhenFocused() is { } updatedSelection)
+                {
+                    HandleSelectionChanged(updatedSelection, null);
                 }
             }
             else
@@ -2882,6 +2510,42 @@ public sealed partial class EditableText : StatefulWidget
             _hadFocus = hasFocus;
             UpdateCursorTicker();
             SetState(static () => { });
+        }
+
+        // Whether the next focus change comes from this field itself (a tap, `requestKeyboard`),
+        // which must not select the text the way a focus traversal does.
+        private bool _nextFocusChangeIsInternal;
+
+        /// Dart's `_flagInternalFocus`: flags the next focus change as internal until the focus
+        /// manager reports it.
+        private void FlagInternalFocus()
+        {
+            _nextFocusChangeIsInternal = true;
+            FocusManager.Instance.AddListener(UnflagInternalFocus);
+        }
+
+        private void UnflagInternalFocus()
+        {
+            _nextFocusChangeIsInternal = false;
+            FocusManager.Instance.RemoveListener(UnflagInternalFocus);
+        }
+
+        /// Dart's `_adjustedSelectionWhenFocused`: a focus traversal into a one-line field selects
+        /// all of it where the platform does.
+        private TextSelection? AdjustedSelectionWhenFocused()
+        {
+            bool shouldSelectAll = Widget.SelectAllOnFocus
+                                   && Widget.SelectionEnabled
+                                   && !Widget.Multiline
+                                   && !_nextFocusChangeIsInternal;
+            if (shouldSelectAll)
+            {
+                // On native web and desktop platforms, single line <input> tags select all when
+                // receiving focus.
+                return new TextSelection(0, EditingValue.Text.Length);
+            }
+
+            return null;
         }
 
         private void UpdateCursorTicker()
@@ -3058,10 +2722,11 @@ public sealed partial class EditableText : StatefulWidget
         public bool SpellCheckEnabled =>
             Widget.SpellCheckConfiguration is { SpellCheckEnabled: true } && !IsPasswordInput;
 
-        private async Task RequestSpellCheckAsync()
+        private async Task RequestSpellCheckAsync(string? text = null)
         {
             SpellCheckConfiguration? configuration = Widget.SpellCheckConfiguration;
-            if (!SpellCheckEnabled || string.IsNullOrEmpty(_controller!.Text)) return;
+            text ??= _controller!.Text;
+            if (!SpellCheckEnabled || string.IsNullOrEmpty(text)) return;
             ISpellCheckService? service = configuration!.SpellCheckService;
             if (service is null && DefaultSpellCheckService.PlatformHandler is not null)
             {
@@ -3072,10 +2737,10 @@ public sealed partial class EditableText : StatefulWidget
             Locale locale = Localizations.MaybeLocaleOf(Context)
                             ?? Locale.FromCultureInfo(CultureInfo.CurrentUICulture);
             IReadOnlyList<SuggestionSpan>? suggestions = await service
-                .FetchSpellCheckSuggestions(locale, _controller.Text)
+                .FetchSpellCheckSuggestions(locale, text)
                 ;
             if (!Mounted || request != _spellCheckRequest || suggestions is null) return;
-            _spellCheckResults = new SpellCheckResults(_controller.Text, suggestions);
+            _spellCheckResults = new SpellCheckResults(text, suggestions);
             SetState(static () => { });
         }
     }

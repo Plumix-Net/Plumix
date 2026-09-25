@@ -16,7 +16,7 @@ namespace Plumix.Widgets;
 /// [WidgetSpan]s will be ignored when passed into a bare paragraph builder. To
 /// properly lay out and paint the [Child] widget, [WidgetSpan] should be passed
 /// into a [Text.Rich] or [RichText] widget.
-public sealed class WidgetSpan : PlaceholderSpan
+public class WidgetSpan : PlaceholderSpan
 {
     /// Creates a [WidgetSpan] with the given values.
     ///

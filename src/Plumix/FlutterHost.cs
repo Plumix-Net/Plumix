@@ -205,6 +205,18 @@ public class PlumixHost : Control
             return;
         }
 
+        // The engine hands keys the framework left unhandled to the platform text input plugin.
+        if (HostTextInputPlugin.HandleKeyEvent(
+                HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol),
+                control: e.KeyModifiers.HasFlag(KeyModifiers.Control),
+                shift: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
+                alt: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
+                meta: e.KeyModifiers.HasFlag(KeyModifiers.Meta)))
+        {
+            e.Handled = true;
+            return;
+        }
+
         bool isBackKey = e.Key is Key.Escape or Key.Back or Key.BrowserBack;
         if (!isBackKey)
         {

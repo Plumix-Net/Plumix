@@ -1,4 +1,5 @@
 using Plumix.UI;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -96,6 +97,30 @@ internal static class KeySim
         // most keys bridge by squeezing the spaces out of the debug name.
         string name = key.DebugName.Replace(" ", string.Empty, StringComparison.Ordinal);
         return PhysicalKeyboardKey.FindKeyByGeneratedName(name) ?? new PhysicalKeyboardKey(key.KeyId);
+    }
+
+    /// <summary>
+    /// flutter_test's <c>sendKeyCombination</c>: presses the key with the given modifiers held and
+    /// releases everything again. A key down the framework leaves unhandled goes on to the platform
+    /// text input plugin, the way <c>simulateKeyDownEvent</c> hands it to
+    /// <c>TestTextInput.handleKeyDownEvent</c> (macOS selectors, and Enter).
+    /// </summary>
+    public static bool SendKeyCombination(
+        LogicalKeyboardKey key,
+        bool control = false,
+        bool shift = false,
+        bool alt = false,
+        bool meta = false)
+    {
+        bool handled = FocusManager.Instance.HandleKeyEvent(Down(key, control, shift, alt, meta));
+        if (!handled)
+        {
+            HostTextInputPlugin.HandleKeyEvent(key, control, shift, alt, meta);
+        }
+
+        _ = FocusManager.Instance.HandleKeyEvent(Up(key, control, shift, alt, meta));
+        SyncModifiers(control: false, shift: false, alt: false, meta: false);
+        return handled;
     }
 
     private static void SyncModifiers(bool control, bool shift, bool alt, bool meta)

@@ -203,7 +203,8 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "True:elephant"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
+        // Enter goes to the platform text input plugin, which reports the input action.
+        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
         harness.Pump(new Size(480, 320));
 
         Assert.Equal("elephant", selected);

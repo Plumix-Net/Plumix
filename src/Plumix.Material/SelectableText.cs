@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -113,15 +114,94 @@ public sealed class SelectableText : StatefulWidget
     }
 }
 
-internal sealed class SelectableTextState : State<SelectableText>
+/// Dart's `_SelectableTextSelectionGestureDetectorBuilder`: a single tap up calls
+/// <see cref="SelectableText.OnTap"/>.
+internal sealed class SelectableTextSelectionGestureDetectorBuilder(SelectableTextState state)
+    : TextSelectionGestureDetectorBuilder(state)
+{
+    protected override void OnSingleTapUp(TapDragUpDetails details)
+    {
+        if (!Delegate.SelectionEnabled)
+        {
+            return;
+        }
+
+        base.OnSingleTapUp(details);
+        state.Current.OnTap?.Invoke();
+    }
+}
+
+internal sealed class SelectableTextState : State<SelectableText>, ITextSelectionGestureDetectorBuilderDelegate
 {
     private readonly TextEditingController _controller = new();
+    private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
+        new GlobalObjectKey<EditableText.EditableTextState>(new object());
+    private SelectableTextSelectionGestureDetectorBuilder? _selectionGestureDetectorBuilder;
     private FocusNode? _focusNode;
     private bool _ownsFocusNode;
-    private SelectableText Current => (SelectableText)StateWidget;
+    private bool _showSelectionHandles;
+    internal SelectableText Current => (SelectableText)StateWidget;
+
+    public GlobalKey<EditableText.EditableTextState> EditableTextKey => _editableTextKey;
+
+    /// Dart sets `forcePressEnabled` in `build`: only iOS has force press.
+    public bool ForcePressEnabled => PlatformDefaults.TargetPlatform == TargetPlatform.IOS;
+
+    public bool SelectionEnabled => Current.EnableInteractiveSelection;
+
+    private bool ShouldShowSelectionHandles(SelectionChangedCause? cause)
+    {
+        // When the text field is activated by something that doesn't trigger the selection
+        // overlay, we shouldn't show the handles either.
+        if (!_selectionGestureDetectorBuilder!.ShouldShowSelectionToolbar)
+        {
+            return false;
+        }
+
+        if (_controller.Selection.IsCollapsed)
+        {
+            return false;
+        }
+
+        if (cause == SelectionChangedCause.Keyboard)
+        {
+            return false;
+        }
+
+        if (cause == SelectionChangedCause.LongPress)
+        {
+            return true;
+        }
+
+        return _controller.Text.Length > 0;
+    }
+
+    private void HandleSelectionChanged(TextSelection selection, SelectionChangedCause? cause)
+    {
+        bool willShowSelectionHandles = ShouldShowSelectionHandles(cause);
+        if (willShowSelectionHandles != _showSelectionHandles)
+        {
+            SetState(() => _showSelectionHandles = willShowSelectionHandles);
+        }
+
+        Current.OnSelectionChanged?.Invoke(selection, cause);
+
+        switch (PlatformDefaults.TargetPlatform)
+        {
+            case TargetPlatform.IOS:
+            case TargetPlatform.MacOS:
+                if (cause == SelectionChangedCause.LongPress)
+                {
+                    _editableTextKey.CurrentState?.BringIntoView(selection.Base);
+                }
+
+                break;
+        }
+    }
 
     public override void InitState()
     {
+        _selectionGestureDetectorBuilder = new SelectableTextSelectionGestureDetectorBuilder(this);
         _controller.Text = Current.Data;
         AttachFocusNode(Current.FocusNode);
     }
@@ -178,9 +258,12 @@ internal sealed class SelectableTextState : State<SelectableText>
             selectionColor: selectionColor,
             cursorColor: cursorColor,
             mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
-            onSelectionChanged: Current.OnSelectionChanged,
+            onSelectionChanged: HandleSelectionChanged,
+            showSelectionHandles: _showSelectionHandles,
+            rendererIgnoresPointer: true,
             contextMenuBuilder: Current.ContextMenuBuilder,
-            magnifierConfiguration: Current.MagnifierConfiguration);
+            magnifierConfiguration: Current.MagnifierConfiguration,
+            key: _editableTextKey);
 
         if (Current.MinLines.HasValue)
         {
@@ -189,10 +272,9 @@ internal sealed class SelectableTextState : State<SelectableText>
                 child: result);
         }
 
-        if (Current.OnTap is not null)
-        {
-            result = new GestureDetector(excludeFromSemantics: true, onTap: Current.OnTap, child: result);
-        }
+        result = _selectionGestureDetectorBuilder!.BuildGestureDetector(
+            behavior: HitTestBehavior.Translucent,
+            child: result);
 
         if (Current.SemanticsLabel is not null)
         {

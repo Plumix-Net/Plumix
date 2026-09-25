@@ -863,9 +863,7 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
                     cursorHeight: Current.CursorHeight,
                     style: effectiveTextStyle,
                     controller: EffectiveTextEditingController,
-                    // Dart routes Enter through `_EnterIntent`; Plumix's `EditableText` consumes the
-                    // key itself and reports it as a submission, so the same handler runs from here.
-                    onSubmitted: _ => HandleEnterKey(),
+                    onSubmitted: _ => HandleSubmitted(),
                     onTap: !Current.Enabled
                         ? null
                         : () => HandlePressed(controller, focusForKeyboard: !CanRequestFocus()),

@@ -177,7 +177,7 @@ public abstract class ContextAction<TIntent> : FlutterAction<TIntent> where TInt
         => new OverridableContextAction<TIntent>(this, context);
 }
 
-public sealed class CallbackAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent
+public class CallbackAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent
 {
     public CallbackAction(Func<TIntent, object?> onInvoke)
     {
@@ -455,12 +455,11 @@ public sealed class Actions : StatefulWidget
                 continue;
             }
 
-            if (!action.IsEnabledObject(intent, context))
-            {
-                throw new InvalidOperationException($"The action for {intentType.Name} is disabled.");
-            }
-
-            return FindDispatcherFromScope(context, scope).InvokeAction(action, intent, context);
+            // Dart invokes the first action found only when it is enabled; a disabled one ends the
+            // search without invoking anything.
+            return action.IsEnabledObject(intent, context)
+                ? FindDispatcherFromScope(context, scope).InvokeAction(action, intent, context)
+                : null;
         }
 
         throw new InvalidOperationException($"Unable to find an action for {intentType.Name}.");

@@ -353,6 +353,10 @@ public static class TextInput
 
     internal static TextInputConnection? CurrentConnection { get; private set; }
 
+    /// <summary>The configuration of <see cref="CurrentConnection"/>: what the engine's platform
+    /// text input plugin keeps from <c>TextInput.setClient</c>.</summary>
+    internal static TextInputConfiguration? CurrentConfiguration => _currentConfiguration;
+
     internal static TextInputConnection? LastConnection { get; private set; }
 
     internal static TextInputControl? CurrentControl => _currentControl;
