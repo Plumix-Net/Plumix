@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Flutter's framework widget tests ported: GlobalKeys, reparenting, inherited, parent data, setState, build scope.
+- `UniqueWidget<T>` (widgets/unique_widget.dart).
+- Breaking: debug frames throw "Build scheduled during frame"; `DebugBuildingDirtyElements` (widgets/binding.dart).
+- Breaking: `ValueKey` compares doubles like Dart, so NaN keys differ (foundation/key.dart).
+- Breaking: `Positioned` is unsealed and hides null offsets in its diagnostics (widgets/basic.dart).
 - `FlutterTimeline` with `debugCollect` timings over a `dart:developer` Timeline/TimelineTask/Flow shim (timeline.dart).
 - Timeline events: frames, BUILD/LAYOUT/PAINT/SEMANTICS, per-widget/per-object profiling, intrinsics (object/box.dart).
 - Scheduler timeline: Frame/Animate/POST_FRAME, warm-up and lock-events tasks, `scheduleTask` flow (scheduler/binding).

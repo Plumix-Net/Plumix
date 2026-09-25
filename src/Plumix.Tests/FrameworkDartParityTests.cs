@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -43,6 +44,22 @@ public sealed class FrameworkDartParityTests
         Assert.NotEqual(key, new UniqueKey());
     }
 
+    // Flutter: framework_test.dart: "ObjectKey control test"
+    [Fact]
+    public void ObjectKeyControlTest()
+    {
+        object a = new();
+        object b = new();
+        Key keyA = new ObjectKey(a);
+        Key keyA2 = new ObjectKey(a);
+        Key keyB = new ObjectKey(b);
+
+        AssertHasOneLineDescription(keyA);
+        Assert.Equal(keyA2, keyA);
+        Assert.Equal(keyA2.GetHashCode(), keyA.GetHashCode());
+        Assert.NotEqual(keyB, keyA);
+    }
+
     // Flutter: framework_test.dart: "GlobalObjectKey toString test"
     [DebugOnlyFact]
     public void GlobalObjectKeyToStringTest()
@@ -60,6 +77,22 @@ public sealed class FrameworkDartParityTests
         Assert.Equal($"[GlobalObjectKey<TestState> {Diagnostics.DescribeIdentity(v2)}]", two.ToString());
         Assert.Equal($"[MyGlobalObjectKey {Diagnostics.DescribeIdentity(v3)}]", three.ToString());
         Assert.Equal($"[MyGlobalObjectKey<TestState> {Diagnostics.DescribeIdentity(v4)}]", four.ToString());
+    }
+
+    // Flutter: framework_test.dart: "GlobalObjectKey control test"
+    [Fact]
+    public void GlobalObjectKeyControlTest()
+    {
+        object a = new();
+        object b = new();
+        Key keyA = new GlobalObjectKey<State>(a);
+        Key keyA2 = new GlobalObjectKey<State>(a);
+        Key keyB = new GlobalObjectKey<State>(b);
+
+        AssertHasOneLineDescription(keyA);
+        Assert.Equal(keyA2, keyA);
+        Assert.Equal(keyA2.GetHashCode(), keyA.GetHashCode());
+        Assert.NotEqual(keyB, keyA);
     }
 
     // ------------------------------------------------------------------ GlobalKey correct cases
@@ -488,6 +521,22 @@ public sealed class FrameworkDartParityTests
         Assert.IsType<FlutterError>(tester.TakeException());
     }
 
+    // Flutter: framework_test.dart: "GlobalKey duplication 11 - double sibling appearance"
+    [DebugOnlyFact]
+    public void GlobalKeyDuplication11DoubleSiblingAppearance()
+    {
+        using var tester = new FrameworkDartTester();
+        Key key = new LabeledGlobalKey<State>("problematic");
+        tester.PumpWidget(new Stack(
+            textDirection: TextDirection.Ltr,
+            children:
+            [
+                new Container(key: key),
+                new Container(key: key),
+            ]));
+        Assert.IsType<FlutterError>(tester.TakeException());
+    }
+
     // Flutter: framework_test.dart: "GlobalKey duplication 12 - all kinds of badness at once"
     [DebugOnlyFact]
     public void GlobalKeyDuplication12AllKindsOfBadnessAtOnce()
@@ -855,6 +904,58 @@ public sealed class FrameworkDartParityTests
         Assert.Equal(0.0, pageController.Page);
     }
 
+    // Flutter: framework_test.dart: "Defunct setState throws exception"
+    [DebugOnlyFact]
+    public void DefunctSetStateThrowsException()
+    {
+        using var tester = new FrameworkDartTester();
+        StateSetter? setState = null;
+
+        tester.PumpWidget(new StatefulBuilder((_, setter) =>
+        {
+            setState = setter;
+            return new Container();
+        }));
+
+        // Control check that setState doesn't throw an exception.
+        setState!(() => { });
+
+        tester.PumpWidget(new Container());
+
+        Assert.ThrowsAny<FlutterError>(() => setState(() => { }));
+    }
+
+    // Flutter: framework_test.dart: "setState() after dispose() error explains asynchronous causes"
+    [DebugOnlyFact]
+    public void SetStateAfterDisposeErrorExplainsAsynchronousCauses()
+    {
+        using var tester = new FrameworkDartTester();
+        StateSetter? setState = null;
+
+        tester.PumpWidget(new StatefulBuilder((_, setter) =>
+        {
+            setState = setter;
+            return new Container();
+        }));
+
+        // Remove the widget from the tree so its State becomes defunct.
+        tester.PumpWidget(new Container());
+
+        // The error should call out asynchronous gaps (the most common cause) and
+        // point at the "mounted" check after an "await".
+        FlutterError error = Assert.ThrowsAny<FlutterError>(() => setState!(() => { }));
+        Assert.Contains("asynchronous", error.ToString());
+        Assert.Contains("await", error.ToString());
+    }
+
+    // Flutter: framework_test.dart: "State toString"
+    [DebugOnlyFact]
+    public void StateToString()
+    {
+        var state = new TestState();
+        Assert.Contains("no widget", state.ToString());
+    }
+
     // ------------------------------------------------------------------ element API and diagnostics
 
     // Flutter: framework_test.dart: "debugPrintGlobalKeyedWidgetLifecycle control test"
@@ -986,6 +1087,66 @@ public sealed class FrameworkDartParityTests
             FrameworkDartTester.IgnoringHashCodes(element.ToStringDeep(wrapWidth: 200)));
     }
 
+    // Flutter: framework_test.dart: "scheduleBuild while debugBuildingDirtyElements is true"
+    [DebugOnlyFact]
+    public void ScheduleBuildWhileDebugBuildingDirtyElementsIsTrue()
+    {
+        // `tester.binding` is flutter_test's WidgetsBinding; Plumix's harness owns no binding, so the
+        // test builds its own (a fresh owner, whose onBuildScheduled has not fired yet).
+        WithLocalWidgetsBinding(binding =>
+        {
+            binding.DebugBuildingDirtyElements = true;
+            FlutterError? error = null;
+            try
+            {
+                binding.BuildOwner.ScheduleBuildFor(
+                    new DirtyElementWithCustomBuildOwner(binding.BuildOwner, new Container()));
+            }
+            catch (FlutterError e)
+            {
+                error = e;
+            }
+            finally
+            {
+                Assert.NotNull(error);
+                Assert.Equal(3, error.Diagnostics.Count);
+                Assert.Equal(DiagnosticLevel.Hint, error.Diagnostics[^1].Level);
+                Assert.Equal(
+                    "This might be because setState() was called from a layout or\n"
+                    + "paint callback. If a change is needed to the widget tree, it\n"
+                    + "should be applied as the tree is being built. Scheduling a change\n"
+                    + "for the subsequent frame instead results in an interface that\n"
+                    + "lags behind by one frame. If this was done to make your build\n"
+                    + "dependent on a size measured at layout time, consider using a\n"
+                    + "LayoutBuilder, CustomSingleChildLayout, or\n"
+                    + "CustomMultiChildLayout. If, on the other hand, the one frame\n"
+                    + "delay is the desired effect, for example because this is an\n"
+                    + "animation, consider scheduling the frame in a post-frame callback\n"
+                    + "using SchedulerBinding.addPostFrameCallback or using an\n"
+                    + "AnimationController to trigger the animation.\n",
+                    FrameworkDartTester.IgnoringHashCodes(error.Diagnostics[^1].ToStringDeep()));
+                Assert.Equal(
+                    "FlutterError\n"
+                    + "   Build scheduled during frame.\n"
+                    + "   While the widget tree was being built, laid out, and painted, a\n"
+                    + "   new frame was scheduled to rebuild the widget tree.\n"
+                    + "   This might be because setState() was called from a layout or\n"
+                    + "   paint callback. If a change is needed to the widget tree, it\n"
+                    + "   should be applied as the tree is being built. Scheduling a change\n"
+                    + "   for the subsequent frame instead results in an interface that\n"
+                    + "   lags behind by one frame. If this was done to make your build\n"
+                    + "   dependent on a size measured at layout time, consider using a\n"
+                    + "   LayoutBuilder, CustomSingleChildLayout, or\n"
+                    + "   CustomMultiChildLayout. If, on the other hand, the one frame\n"
+                    + "   delay is the desired effect, for example because this is an\n"
+                    + "   animation, consider scheduling the frame in a post-frame callback\n"
+                    + "   using SchedulerBinding.addPostFrameCallback or using an\n"
+                    + "   AnimationController to trigger the animation.\n",
+                    error.ToStringDeep());
+            }
+        });
+    }
+
     // Flutter: framework_test.dart: "didUpdateDependencies is not called on a State that never rebuilds"
     [Fact]
     public void DidUpdateDependenciesIsNotCalledOnAStateThatNeverRebuilds()
@@ -1040,6 +1201,23 @@ public sealed class FrameworkDartParityTests
 
         Assert.True(isBuildDecorated);
         Assert.False(isDidChangeDependenciesDecorated);
+    }
+
+    // Flutter: framework_test.dart: group "BuildContext.debugDoingbuild": "StatelessWidget"
+    [DebugOnlyFact]
+    public void BuildContextDebugDoingbuildStatelessWidget()
+    {
+        using var tester = new FrameworkDartTester();
+        bool? debugDoingBuildOnBuild = null;
+        tester.PumpWidget(new StatelessWidgetSpy(onBuild: context =>
+        {
+            debugDoingBuildOnBuild = context.DebugDoingBuild;
+        }));
+
+        Element context = tester.ElementOfType<StatelessWidgetSpy>();
+
+        Assert.False(context.DebugDoingBuild);
+        Assert.True(debugDoingBuildOnBuild);
     }
 
     // Flutter: framework_test.dart: group "BuildContext.debugDoingbuild": "StatefulWidget"
@@ -1179,6 +1357,35 @@ public sealed class FrameworkDartParityTests
             + "the build scope) was:\n"
             + "  StatefulLeaf-[GlobalKey#00000]",
             FrameworkDartTester.IgnoringHashCodes(Assert.IsType<FlutterError>(exception).Message));
+    }
+
+    // Flutter: framework_test.dart:
+    // "Can create BuildOwner that does not interfere with pointer router or raw key event handler"
+    [Fact]
+    public void CanCreateBuildOwnerThatDoesNotInterfereWithPointerRouterOrRawKeyEventHandler()
+    {
+        // flutter_test's binding has its BuildOwner's focus manager registered as the global handler;
+        // a local binding sets up the same state. Plumix has no `RawKeyboard.keyEventHandler`: the key
+        // handler that `FocusManager.registerGlobalHandlers` installs is the KeyEventManager's.
+        WithLocalWidgetsBinding(_ =>
+        {
+            int pointerRouterCount = GestureBinding.Instance.PointerRouter.DebugGlobalRouteCount;
+#pragma warning disable CS0618
+            Func<KeyMessage, bool>? rawKeyEventHandler = KeyEventManager.Instance.KeyMessageHandler;
+            Assert.NotNull(rawKeyEventHandler);
+            var focusManager = new FocusManager();
+            try
+            {
+                GC.KeepAlive(new BuildOwner(focusManager: focusManager));
+                Assert.Equal(pointerRouterCount, GestureBinding.Instance.PointerRouter.DebugGlobalRouteCount);
+                Assert.Same(rawKeyEventHandler, KeyEventManager.Instance.KeyMessageHandler);
+            }
+            finally
+            {
+                focusManager.Dispose();
+            }
+#pragma warning restore CS0618
+        });
     }
 
     // Flutter: framework_test.dart: "Can access debugFillProperties without _LateInitializationError"
@@ -1348,6 +1555,46 @@ public sealed class FrameworkDartParityTests
         Assert.Equal(Key.Create("dependent"), removedDependentWidgetKeys.First());
     }
 
+    // Flutter: framework_test.dart: "RenderObjectElement.unmount disposes of its renderObject"
+    [DebugOnlyFact]
+    public void RenderObjectElementUnmountDisposesOfItsRenderObject()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(new Placeholder());
+        RenderObjectElement element = tester.AllElements().OfType<RenderObjectElement>().Last();
+        RenderObject renderObject = element.RenderObject;
+        Assert.False(renderObject.DebugDisposed);
+
+        tester.PumpWidget(new Container());
+
+        Assert.Throws<AssertionError>(() => element.RenderObject);
+        Assert.True(renderObject.DebugDisposed);
+    }
+
+    // Flutter: framework_test.dart: "Getting the render object of an unmounted element throws"
+    [DebugOnlyFact]
+    public void GettingTheRenderObjectOfAnUnmountedElementThrows()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(new StatefulLeaf());
+        var element = (StatefulElement)tester.ElementOfType<StatefulLeaf>();
+        Assert.IsAssignableFrom<State<StatefulLeaf>>(element.State);
+        Assert.IsType<StatefulLeaf>(element.Widget);
+        // Replace the widget tree to unmount the element.
+        tester.PumpWidget(new Container());
+
+        FlutterError error = Assert.ThrowsAny<FlutterError>(() => element.FindRenderObject());
+        Assert.Equal(
+            "Cannot get renderObject of inactive element.\n"
+            + "In order for an element to have a valid renderObject, it must be active, which means it is "
+            + "part of the tree.\n"
+            + "Instead, this element is in the _ElementLifecycle.defunct state.\n"
+            + "If you called this method from a State object, consider guarding it with State.mounted.\n"
+            + "The findRenderObject() method was called for the following element:\n"
+            + "  StatefulElement#00000(DEFUNCT)",
+            FrameworkDartTester.IgnoringHashCodes(error.Message));
+    }
+
     // Flutter: framework_test.dart: "Elements use the identity hashCode"
     [Fact]
     public void ElementsUseTheIdentityHashCode()
@@ -1388,6 +1635,131 @@ public sealed class FrameworkDartParityTests
         Assert.Null(tester.TakeException());
     }
 
+    // Flutter: framework_test.dart: "BuildScope segregates dirty elements"
+    [Fact]
+    public void BuildScopeSegregatesDirtyElements()
+    {
+        using var tester = new FrameworkDartTester();
+        var buildScope = new BuildScope();
+        tester.PumpWidget(new StatefulBuilder((_, _) =>
+            new CustomBuildScopeWidget(buildScope: buildScope, child: new NullLeaf())));
+        Element rootElement = tester.ElementOfType<StatefulBuilder>();
+        Element scopeElement = tester.ElementOfType<CustomBuildScopeWidget>();
+        Element leafElement = tester.ElementOfType<NullLeaf>();
+        Assert.False(rootElement.Dirty);
+        Assert.False(scopeElement.Dirty);
+        Assert.False(leafElement.Dirty);
+
+        rootElement.MarkNeedsBuild();
+        tester.Pump();
+        Assert.False(rootElement.Dirty);
+        Assert.False(scopeElement.Dirty);
+        Assert.False(leafElement.Dirty);
+
+        scopeElement.MarkNeedsBuild();
+        tester.Pump();
+        Assert.False(rootElement.Dirty);
+        Assert.True(scopeElement.Dirty);
+        Assert.False(leafElement.Dirty);
+
+        scopeElement.Owner!.BuildScope(scopeElement);
+        tester.Pump();
+        Assert.False(rootElement.Dirty);
+        Assert.False(scopeElement.Dirty);
+        Assert.False(leafElement.Dirty);
+
+        leafElement.MarkNeedsBuild();
+        tester.Pump();
+        Assert.False(rootElement.Dirty);
+        Assert.False(scopeElement.Dirty);
+        Assert.True(leafElement.Dirty);
+
+        scopeElement.Owner!.BuildScope(scopeElement);
+        tester.Pump();
+        Assert.False(rootElement.Dirty);
+        Assert.False(scopeElement.Dirty);
+        Assert.False(leafElement.Dirty);
+    }
+
+    // Flutter: framework_test.dart: "reparenting Element to another BuildScope"
+    [Fact]
+    public void ReparentingElementToAnotherBuildScope()
+    {
+        using var tester = new FrameworkDartTester();
+        var buildScope = new BuildScope();
+        GlobalKey key = new LabeledGlobalKey<State>("key");
+        tester.PumpWidget(new DummyMultiChildWidget(
+        [
+            new CustomBuildScopeWidget(
+                // This widget does not call updateChild when rebuild.
+                buildScope: buildScope,
+                child: new NullLeaf()),
+            new NullLeaf(key: key),
+        ]));
+        Element scopeElement = tester.ElementOfType<CustomBuildScopeWidget>();
+        Element keyedWidget = tester.ElementsWithKey(key).Single();
+
+        Assert.False(scopeElement.Dirty);
+        Assert.False(keyedWidget.Dirty);
+
+        // Mark the Element with a GlobalKey dirty and reparent it to another BuildScope.
+        // the Element should not rebuild.
+        keyedWidget.MarkNeedsBuild();
+        tester.PumpWidget(new DummyMultiChildWidget(
+        [
+            new CustomBuildScopeWidget(
+                // This widget does not call updateChild when rebuild.
+                buildScope: buildScope,
+                child: new NullLeaf(key: key)),
+            new NullLeaf(),
+        ]));
+
+        Assert.False(scopeElement.Dirty);
+        Assert.True(keyedWidget.Dirty);
+    }
+
+    // Flutter: framework_test.dart: "Calling scheduleBuildFor on an Element already in dirty list throws"
+    [DebugOnlyFact]
+    public void CallingScheduleBuildForOnAnElementAlreadyInDirtyListThrows()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(new SizedBox());
+        Element element = tester.ElementOfType<SizedBox>();
+        element.MarkNeedsBuild();
+        FlutterError error = Assert.ThrowsAny<FlutterError>(() => element.Owner!.ScheduleBuildFor(element));
+        Assert.Contains(
+            "The BuildOwner.scheduleBuildFor() method called on an Element that is already in the dirty list.",
+            error.Message);
+    }
+
+    // Flutter: framework_test.dart: "widget is not active if throw in deactivated"
+    [DebugOnlyFact]
+    public void WidgetIsNotActiveIfThrowInDeactivated()
+    {
+        using var tester = new FrameworkDartTester();
+        FlutterExceptionHandler? onError = FlutterError.OnError;
+        FlutterError.OnError = _ => { };
+        Element element;
+        try
+        {
+            Widget child = new Placeholder();
+            tester.PumpWidget(new StatefulWidgetSpy(
+                onDeactivate: _ => throw new InvalidOperationException("kaboom"),
+                child: child));
+            element = tester.ElementOfWidget(child);
+            Assert.True(element.DebugIsActive);
+
+            tester.PumpWidget(new SizedBox());
+        }
+        finally
+        {
+            FlutterError.OnError = onError;
+        }
+
+        Assert.False(element.DebugIsActive);
+        Assert.False(element.DebugIsDefunct);
+    }
+
     // Flutter: framework_test.dart: "widget is not active if throw in activated"
     [Fact]
     public void WidgetIsNotActiveIfThrowInActivated()
@@ -1415,6 +1787,32 @@ public sealed class FrameworkDartParityTests
 
         Assert.False(element.DebugIsActive);
         Assert.False(element.DebugIsDefunct);
+    }
+
+    // Flutter: framework_test.dart: "widget is unmounted if throw in dispose"
+    [DebugOnlyFact]
+    public void WidgetIsUnmountedIfThrowInDispose()
+    {
+        using var tester = new FrameworkDartTester();
+        FlutterExceptionHandler? onError = FlutterError.OnError;
+        FlutterError.OnError = _ => { };
+        Element element;
+        try
+        {
+            Widget child = new Placeholder();
+            Widget widget = new StatefulWidgetSpy(
+                onDispose: _ => throw new InvalidOperationException("kaboom"),
+                child: child);
+            tester.PumpWidget(widget);
+            element = tester.ElementOfWidget(child);
+            tester.PumpWidget(child);
+        }
+        finally
+        {
+            FlutterError.OnError = onError;
+        }
+
+        Assert.True(element.DebugIsDefunct);
     }
 
     // ------------------------------------------------------------------------------------ helpers
@@ -1458,6 +1856,29 @@ public sealed class FrameworkDartParityTests
 
     private static StatefulState StatefulStateAt(FrameworkDartTester tester, int index)
         => (StatefulState)((StatefulElement)tester.ElementsOfType<Stateful>()[index]).State;
+
+    /// <summary>
+    /// Runs <paramref name="body"/> against a freshly constructed <see cref="WidgetsBinding"/>, the
+    /// stand-in for flutter_test's <c>tester.binding</c>. Its build owner registers a new focus
+    /// manager as the global input handler, so the handler it replaced is restored afterwards.
+    /// </summary>
+    private static void WithLocalWidgetsBinding(Action<WidgetsBinding> body)
+    {
+#pragma warning disable CS0618
+        Func<KeyMessage, bool>? previousKeyMessageHandler = KeyEventManager.Instance.KeyMessageHandler;
+        var binding = new WidgetsBinding();
+        try
+        {
+            body(binding);
+        }
+        finally
+        {
+            binding.DebugBuildingDirtyElements = false;
+            binding.FocusManager.Dispose();
+            KeyEventManager.Instance.KeyMessageHandler = previousKeyMessageHandler;
+        }
+#pragma warning restore CS0618
+    }
 
     /// <summary>Flutter's <c>hasOneLineDescription</c> matcher.</summary>
     private static void AssertHasOneLineDescription(object value)
@@ -1684,6 +2105,27 @@ public sealed class FrameworkDartParityTests
         }
     }
 
+    private sealed class DirtyElementWithCustomBuildOwner : Element
+    {
+        // Dart mixes in RootElementMixin for `assignOwner`; Plumix's counterpart is Element.Attach.
+        // Dart's `dirty => true` override is the initial state of a fresh element.
+        public DirtyElementWithCustomBuildOwner(BuildOwner buildOwner, Widget widget) : base(widget)
+        {
+            Attach(buildOwner);
+        }
+
+        public override bool DebugDoingBuild => throw new NotImplementedException();
+    }
+
+    private sealed class StatelessWidgetSpy(Action<BuildContext> onBuild, Key? key = null) : StatelessWidget(key)
+    {
+        public override Widget Build(BuildContext context)
+        {
+            onBuild(context);
+            return new Container();
+        }
+    }
+
     private sealed class StatefulWidgetSpy(
         Key? key = null,
         Action<BuildContext>? onBuild = null,
@@ -1813,6 +2255,120 @@ public sealed class FrameworkDartParityTests
     private sealed class EmptyElement(EmptyWidget widget) : Element(widget)
     {
         public override bool DebugDoingBuild => false;
+    }
+
+    private sealed class CustomBuildScopeWidget(BuildScope? buildScope, Widget child) : ProxyWidget(child)
+    {
+        public BuildScope? CustomBuildScope { get; } = buildScope;
+
+        public override Element CreateElement() => new CustomBuildScopeElement(this);
+    }
+
+    private sealed class CustomBuildScopeElement(CustomBuildScopeWidget widget) : Element(widget)
+    {
+        private Element? _child;
+
+        public override BuildScope BuildScope => ((CustomBuildScopeWidget)Widget).CustomBuildScope ?? base.BuildScope;
+
+        public override bool DebugDoingBuild => throw new NotImplementedException();
+
+        protected override void OnMount()
+        {
+            base.OnMount();
+            Rebuild(force: true);
+            // Only does tree walk on mount.
+            _child = UpdateChild(_child, ((CustomBuildScopeWidget)Widget).Child, Slot);
+        }
+
+        public override void VisitChildren(Action<Element> visitor)
+        {
+            Element? child = _child;
+            if (child != null)
+            {
+                visitor(child);
+            }
+        }
+    }
+
+    private sealed class DummyMultiChildWidget(IReadOnlyList<Widget> children) : Widget
+    {
+        public IReadOnlyList<Widget> Children { get; } = children;
+
+        public override Element CreateElement() => new DummyMultiChildElement(this);
+    }
+
+    private sealed class DummyMultiChildElement(DummyMultiChildWidget widget) : Element(widget)
+    {
+        private readonly HashSet<Element> _forgottenChildren = [];
+        private List<Element> _children = [];
+
+        public override bool DebugDoingBuild => throw new NotImplementedException();
+
+        public override Element? RenderObjectAttachingChild => null;
+
+        protected override void OnMount()
+        {
+            base.OnMount();
+            IReadOnlyList<Widget> childWidgets = ((DummyMultiChildWidget)Widget).Children;
+
+            Element? previousChild = null;
+            var children = new List<Element>(childWidgets.Count);
+            for (int i = 0; i < childWidgets.Count; i++)
+            {
+                Element child = previousChild = InflateWidget(
+                    childWidgets[i],
+                    new IndexedSlot<Element?>(i, previousChild));
+                children.Add(child);
+            }
+
+            _children = children;
+        }
+
+        public override void Update(Widget newWidget)
+        {
+            base.Update(newWidget);
+            _children = UpdateChildren(
+                _children,
+                ((DummyMultiChildWidget)newWidget).Children,
+                forgottenChildren: _forgottenChildren);
+            _forgottenChildren.Clear();
+        }
+
+        public override void VisitChildren(Action<Element> visitor)
+        {
+            foreach (Element child in _children)
+            {
+                if (!_forgottenChildren.Contains(child))
+                {
+                    visitor(child);
+                }
+            }
+        }
+
+        public override void ForgetChild(Element child)
+        {
+            DebugAssertions.Assert(_children.Contains(child));
+            DebugAssertions.Assert(!_forgottenChildren.Contains(child));
+            _forgottenChildren.Add(child);
+            base.ForgetChild(child);
+        }
+    }
+
+    private sealed class NullLeaf(Key? key = null) : Widget(key)
+    {
+        public override Element CreateElement() => new NullLeafElement(this);
+    }
+
+    // Dart's `_NullElement` (framework_test.dart's own, not framework.dart's private one).
+    private sealed class NullLeafElement(NullLeaf widget) : Element(widget)
+    {
+        protected override void OnMount()
+        {
+            base.OnMount();
+            Rebuild(force: true);
+        }
+
+        public override bool DebugDoingBuild => throw new NotImplementedException();
     }
 
     private sealed class TestLeaderLayerWidget(LayerLink? link = null, Widget? child = null)

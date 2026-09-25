@@ -66,7 +66,32 @@ public class ValueKey<T>(T value) : LocalKey
     {
         return obj is ValueKey<T> other
             && other.GetType() == GetType()
-            && EqualityComparer<T>.Default.Equals(other.Value, Value);
+            && ValuesEqual(other.Value, Value);
+    }
+
+    /// <summary>
+    /// Dart's <c>other.value == value</c>. Dart compares doubles by IEEE rules, so a NaN value is not
+    /// equal to itself; the default comparer's <see cref="double.Equals(double)"/> would say it is.
+    /// </summary>
+    private static bool ValuesEqual(T left, T right)
+    {
+        // The typeof checks are JIT-time constants, so value-typed keys never box here.
+        if (typeof(T) == typeof(double))
+        {
+            return (double)(object)left! == (double)(object)right!;
+        }
+
+        if (typeof(T) == typeof(float))
+        {
+            return (float)(object)left! == (float)(object)right!;
+        }
+
+        if (!typeof(T).IsValueType && left is double leftDouble && right is double rightDouble)
+        {
+            return leftDouble == rightDouble;
+        }
+
+        return EqualityComparer<T>.Default.Equals(left, right);
     }
 
     public override int GetHashCode() => HashCode.Combine(GetType(), Value);

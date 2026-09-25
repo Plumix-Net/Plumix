@@ -1146,7 +1146,7 @@ public class Stack : MultiChildRenderObjectWidget
 }
 
 /// <summary>Controls where a child of a <see cref="Stack"/> is positioned.</summary>
-public sealed class Positioned : ParentDataWidget<StackParentData>
+public class Positioned : ParentDataWidget<StackParentData>
 {
     public Positioned(
         Widget child,
@@ -1327,12 +1327,12 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
     {
         ArgumentNullException.ThrowIfNull(properties);
         base.DebugFillProperties(properties);
-        properties.Add(new DoubleProperty("left", Left, defaultValue: null));
-        properties.Add(new DoubleProperty("top", Top, defaultValue: null));
-        properties.Add(new DoubleProperty("right", Right, defaultValue: null));
-        properties.Add(new DoubleProperty("bottom", Bottom, defaultValue: null));
-        properties.Add(new DoubleProperty("width", Width, defaultValue: null));
-        properties.Add(new DoubleProperty("height", Height, defaultValue: null));
+        properties.Add(new DoubleProperty("left", Left, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("top", Top, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("right", Right, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("bottom", Bottom, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
     }
 }
 

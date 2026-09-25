@@ -110,10 +110,33 @@ public partial class WidgetsBinding
     /// </remarks>
     public void DrawFrame()
     {
-        BuildDirtyWidgets();
-        RendererBinding.Instance.DrawFrame();
-        FinalizeTree();
+        DebugAssertions.Assert(!DebugBuildingDirtyElements);
+        if (Constants.KDebugMode)
+        {
+            DebugBuildingDirtyElements = true;
+        }
+
+        try
+        {
+            BuildDirtyWidgets();
+            RendererBinding.Instance.DrawFrame();
+            FinalizeTree();
+        }
+        finally
+        {
+            if (Constants.KDebugMode)
+            {
+                DebugBuildingDirtyElements = false;
+            }
+        }
     }
+
+    /// <summary>
+    /// Whether the binding is currently in a frame. Used to verify that frames are not scheduled
+    /// redundantly; public so that test frameworks can change it. Not used in release builds.
+    /// </summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.debugBuildingDirtyElements</c>.</remarks>
+    public bool DebugBuildingDirtyElements { get; set; }
 
     /// <summary>Rebuilds the dirty widgets of the binding-owned tree.</summary>
     /// <remarks>
@@ -200,6 +223,32 @@ public partial class WidgetsBinding
 
     private void HandleBuildScheduled()
     {
+        // If we're in the process of building dirty elements, then changes should not trigger a new
+        // frame.
+        if (Constants.KDebugMode && DebugBuildingDirtyElements)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("Build scheduled during frame."),
+                new ErrorDescription(
+                    "While the widget tree was being built, laid out, and painted, "
+                    + "a new frame was scheduled to rebuild the widget tree."),
+                new ErrorHint(
+                    "This might be because setState() was called from a layout or "
+                    + "paint callback. "
+                    + "If a change is needed to the widget tree, it should be applied "
+                    + "as the tree is being built. Scheduling a change for the subsequent "
+                    + "frame instead results in an interface that lags behind by one frame. "
+                    + "If this was done to make your build dependent on a size measured at "
+                    + "layout time, consider using a LayoutBuilder, CustomSingleChildLayout, "
+                    + "or CustomMultiChildLayout. If, on the other hand, the one frame delay "
+                    + "is the desired effect, for example because this is an "
+                    + "animation, consider scheduling the frame in a post-frame callback "
+                    + "using SchedulerBinding.addPostFrameCallback or "
+                    + "using an AnimationController to trigger the animation."),
+            ]);
+        }
+
         if (_readyToProduceFrames)
         {
             Scheduler.EnsureVisualUpdate();
