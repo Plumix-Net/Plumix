@@ -719,16 +719,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
         focusNode.RequestFocus();
         harness.Pump(new Size(480, 320));
 
-        RenderDecoratedBox surface = FindOptionsSurface(harness.RenderView);
-        Assert.Equal(expectedColor, surface.AsBoxDecoration.Color);
-        var shadows = surface.AsBoxDecoration.BoxShadows!;
-        for (int index = 0; index < shadows.Count; index += 1)
-        {
-            var shadow = shadows[index];
-            Assert.Equal(expectedShadowColor.Red, shadow.Color.Red);
-            Assert.Equal(expectedShadowColor.Green, shadow.Color.Green);
-            Assert.Equal(expectedShadowColor.Blue, shadow.Color.Blue);
-        }
+        MaterialSurfaceProbe surface = FindOptionsSurface(harness.RenderView);
+        Assert.Equal(expectedColor, surface.Color);
+        Assert.Equal(expectedShadowColor, surface.ShadowColor);
     }
 
     private static InkWell FindOptionInkWell<T>(WidgetRenderHarness harness, T option)
@@ -738,12 +731,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
             inkWell => inkWell.Key is GlobalObjectKey<State> key && Equals(key.Value, option));
     }
 
-    private static RenderDecoratedBox FindOptionsSurface(RenderObject? root)
+    private static MaterialSurfaceProbe FindOptionsSurface(RenderObject? root)
     {
-        return Assert.Single(
-            FindDescendants<RenderDecoratedBox>(root),
-            decorated => decorated.AsBoxDecoration.BoxShadows is not null
-                         && decorated.AsBoxDecoration.BoxShadows!.Count > 0);
+        return Assert.Single(MaterialSurfaceProbe.FindAll(root), surface => surface.HasShadow);
     }
 
     private static double VerticalCenter(RenderBox renderBox) => GlobalRect(renderBox).Center.Y;

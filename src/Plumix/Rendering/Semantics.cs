@@ -670,6 +670,10 @@ public sealed class SemanticsConfiguration
     private string _identifier = string.Empty;
     private bool _hasBeenTextAnnotated;
 
+    // Dart's `_hasBeenAnnotated` as set by a flag setter whose value leaves `Flags` unchanged (the
+    // rest of `HasBeenAnnotated` is derived from the configuration's state).
+    private bool _hasBeenFlagAnnotated;
+
     /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.headingLevel</c>.</remarks>
     public int HeadingLevel
@@ -1071,6 +1075,9 @@ public sealed class SemanticsConfiguration
         get => Flags.HasFlag(SemanticsFlags.IsFocusable);
         set
         {
+            // Dart's setter marks the configuration annotated whatever the value, so a
+            // `Semantics(focusable: false)` (every non-focusable `Focus`) still contributes a node.
+            _hasBeenFlagAnnotated = true;
             if (!value)
             {
                 Flags &= ~(SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused);
@@ -1701,6 +1708,7 @@ public sealed class SemanticsConfiguration
             SortKey = SortKey,
             _textDirection = _textDirection,
             _hasBeenTextAnnotated = _hasBeenTextAnnotated,
+            _hasBeenFlagAnnotated = _hasBeenFlagAnnotated,
             ScrollPosition = ScrollPosition,
             ScrollExtentMax = ScrollExtentMax,
             ScrollExtentMin = ScrollExtentMin,
@@ -1791,6 +1799,7 @@ public sealed class SemanticsConfiguration
 
     internal bool HasBeenAnnotated =>
         _hasBeenTextAnnotated
+        || _hasBeenFlagAnnotated
         || !string.IsNullOrWhiteSpace(Label)
         || !string.IsNullOrWhiteSpace(Hint)
         || !string.IsNullOrWhiteSpace(OnTapHint)
@@ -1978,6 +1987,7 @@ public sealed class SemanticsConfiguration
             return;
         }
 
+        _hasBeenFlagAnnotated |= child._hasBeenFlagAnnotated;
         Flags |= child.Flags;
         Actions |= child.EffectiveActions;
         AccessibilityFocusBlockType = _accessibilityFocusBlockType.Merge(child.AccessibilityFocusBlockType);
@@ -2126,8 +2136,13 @@ public sealed partial class SemanticsNode
     /// counter that wraps at 16 bits, because the engine reserves the upper bits for its own ids.
     /// </remarks>
     internal SemanticsNode(string? debugOwner = null, Action? showOnScreen = null)
+        : this(GenerateNewId(), debugOwner, showOnScreen)
     {
-        Id = GenerateNewId();
+    }
+
+    private SemanticsNode(int id, string? debugOwner, Action? showOnScreen)
+    {
+        Id = id;
         DebugOwner = debugOwner;
         ShowOnScreenRequest = showOnScreen;
     }
@@ -2139,7 +2154,8 @@ public sealed partial class SemanticsNode
         string? debugOwner = null,
         Action? showOnScreen = null)
     {
-        var node = new SemanticsNode(debugOwner, showOnScreen) { Id = 0 };
+        // Dart's `SemanticsNode.root` initializes `_id = 0` directly and never draws from the counter.
+        var node = new SemanticsNode(0, debugOwner, showOnScreen);
         node.Attach(owner);
         return node;
     }

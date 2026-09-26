@@ -153,21 +153,13 @@ public sealed class MaterialScaffoldTests
                 && Math.Abs(constraints.MaxWidth - 280) < 0.001);
         Assert.NotNull(constrained);
 
-        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        var decorated = MaterialSurfaceProbe.Find(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.CadetBlue, decorated!.AsBoxDecoration.Color);
-        Assert.NotNull(decorated.AsBoxDecoration.BoxShadows);
+        Assert.Equal(Colors.CadetBlue, decorated!.Color);
+        Assert.True(decorated.HasShadow);
 
-        var shadows = decorated.AsBoxDecoration.BoxShadows!;
-        Assert.True(shadows.Count > 0);
-        for (int i = 0; i < shadows.Count; i++)
-        {
-            var shadow = shadows[i];
-            Assert.Equal(Colors.Goldenrod.Red, shadow.Color.Red);
-            Assert.Equal(Colors.Goldenrod.Green, shadow.Color.Green);
-            Assert.Equal(Colors.Goldenrod.Blue, shadow.Color.Blue);
-            Assert.True(shadow.Color.Alpha > 0);
-        }
+        Assert.Equal(Colors.Goldenrod, decorated.ShadowColor);
+        Assert.Equal(12.0, decorated.Elevation);
     }
 
     [Fact]
@@ -205,21 +197,13 @@ public sealed class MaterialScaffoldTests
                 && Math.Abs(constraints.MaxWidth - 240) < 0.001);
         Assert.NotNull(constrained);
 
-        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        var decorated = MaterialSurfaceProbe.Find(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Crimson, decorated!.AsBoxDecoration.Color);
-        Assert.NotNull(decorated.AsBoxDecoration.BoxShadows);
+        Assert.Equal(Colors.Crimson, decorated!.Color);
+        Assert.True(decorated.HasShadow);
 
-        var shadows = decorated.AsBoxDecoration.BoxShadows!;
-        Assert.True(shadows.Count > 0);
-        for (int i = 0; i < shadows.Count; i++)
-        {
-            var shadow = shadows[i];
-            Assert.Equal(Colors.DarkGreen.Red, shadow.Color.Red);
-            Assert.Equal(Colors.DarkGreen.Green, shadow.Color.Green);
-            Assert.Equal(Colors.DarkGreen.Blue, shadow.Color.Blue);
-            Assert.True(shadow.Color.Alpha > 0);
-        }
+        Assert.Equal(Colors.DarkGreen, decorated.ShadowColor);
+        Assert.Equal(6.0, decorated.Elevation);
     }
 
     [Fact]
@@ -245,8 +229,9 @@ public sealed class MaterialScaffoldTests
         Assert.NotNull(constrained);
     }
 
-    [Fact]
-    public void Drawer_InvalidThemedElevation_ThrowsArgumentOutOfRange()
+    // Dart's `Material` asserts `elevation >= 0.0`, so a negative themed elevation fails that assert.
+    [DebugOnlyFact]
+    public void Drawer_InvalidThemedElevation_FailsMaterialElevationAssert()
     {
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(
@@ -258,14 +243,12 @@ public sealed class MaterialScaffoldTests
                 child: new Drawer(
                     child: new SizedBox(width: 24, height: 12))));
 
-        var exception = BuildErrors.Throws<ArgumentOutOfRangeException>(() =>
+        BuildErrors.Throws<AssertionError>(() =>
         {
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         });
-
-        Assert.Equal("elevation", exception.ParamName);
     }
 
     [Fact]
@@ -3949,9 +3932,9 @@ public sealed class MaterialScaffoldTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
+        var decorated = MaterialSurfaceProbe.Find(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
-        Assert.Equal(BorderRadius.Circular(18), decorated!.AsBoxDecoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(18), decorated!.BorderRadius);
     }
 
     [Fact]

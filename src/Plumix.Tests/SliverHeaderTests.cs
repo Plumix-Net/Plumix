@@ -157,7 +157,7 @@ public sealed class SliverHeaderTests
         Assert.Equal(ScrollDirection.Forward, directionWhileScrolling);
         Assert.Equal(ScrollDirection.Idle, position.UserScrollDirection);
         Assert.Equal([true, false], values);
-        Assert.InRange(Curves.EaseInOut(0.25), 0.1290, 0.1293);
+        Assert.Equal(0.12868531048297882, Curves.EaseInOut(0.25), 12);
         position.Dispose();
     }
 

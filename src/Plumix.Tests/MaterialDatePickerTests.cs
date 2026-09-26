@@ -584,8 +584,8 @@ public sealed class MaterialDatePickerTests : IDisposable
             node.Label is "Switch to input" or "Switch to calendar"));
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box => box.Color == Colors.Orange);
         Assert.Contains(
-            FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == Colors.Purple);
+            MaterialSurfaceProbe.FindAll(harness.RenderView),
+            box => box.Color == Colors.Purple);
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.PlainText == "Choose birthday");

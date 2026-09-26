@@ -193,6 +193,36 @@ public readonly record struct EdgeInsetsGeometry
         return DirectionalOnly(value.Start, value.Top, value.End, value.Bottom);
     }
 
+    /// <summary>Dart's <c>EdgeInsetsGeometry.toString</c>.</summary>
+    public override string ToString()
+    {
+        if (Start == 0.0 && End == 0.0)
+        {
+            if (Left == 0.0 && Right == 0.0 && Top == 0.0 && Bottom == 0.0)
+            {
+                return "EdgeInsets.zero";
+            }
+
+            if (Left == Right && Right == Top && Top == Bottom)
+            {
+                return $"EdgeInsets.all({Fixed1(Left)})";
+            }
+
+            return $"EdgeInsets({Fixed1(Left)}, {Fixed1(Top)}, {Fixed1(Right)}, {Fixed1(Bottom)})";
+        }
+
+        if (Left == 0.0 && Right == 0.0)
+        {
+            return $"EdgeInsetsDirectional({Fixed1(Start)}, {Fixed1(Top)}, {Fixed1(End)}, {Fixed1(Bottom)})";
+        }
+
+        return $"EdgeInsets({Fixed1(Left)}, {Fixed1(Top)}, {Fixed1(Right)}, {Fixed1(Bottom)})"
+               + $" + EdgeInsetsDirectional({Fixed1(Start)}, 0.0, {Fixed1(End)}, 0.0)";
+    }
+
+    private static string Fixed1(double value) =>
+        value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture);
+
     private static double LerpDouble(double a, double b, double t)
     {
         return a + ((b - a) * t);

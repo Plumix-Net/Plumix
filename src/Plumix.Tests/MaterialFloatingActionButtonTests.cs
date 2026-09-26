@@ -37,10 +37,10 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var decorated = MaterialSurfaceProbe.Find(renderRoot);
 
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Moccasin, decorated!.AsBoxDecoration.Color);
+        Assert.Equal(Colors.Moccasin, decorated!.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.MediumBlue, capturedIconTheme!.Color);
         Assert.Equal(24, capturedIconTheme.Size);
@@ -106,7 +106,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
-        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var decorated = MaterialSurfaceProbe.Find(renderRoot);
 
         Assert.NotNull(constrainedBox);
         Assert.Equal(56, constrainedBox!.AdditionalConstraints.MinWidth);
@@ -115,7 +115,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Equal(56, constrainedBox.AdditionalConstraints.MaxHeight);
 
         Assert.NotNull(decorated);
-        Assert.Equal(BorderRadius.Circular(16), decorated!.AsBoxDecoration.BorderRadius);
+        Assert.Equal(BorderRadius.Circular(16), decorated!.BorderRadius);
     }
 
     [Fact]
@@ -153,8 +153,9 @@ public sealed class MaterialFloatingActionButtonTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
+        // Dart's Material clips through its physical shape (RenderPhysicalShape.clipBehavior).
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        Assert.NotNull(FindDescendant<RenderClipPath>(renderRoot));
+        Assert.Equal(Clip.HardEdge, MaterialSurfaceProbe.Find(renderRoot)!.ClipBehavior);
     }
 
     [Fact]
@@ -545,13 +546,13 @@ public sealed class MaterialFloatingActionButtonTests
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
-        var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var decorated = MaterialSurfaceProbe.Find(renderRoot);
 
         Assert.NotNull(constrainedBox);
         Assert.Equal(60, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(60, constrainedBox.AdditionalConstraints.MaxWidth);
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Orange, decorated!.AsBoxDecoration.Color);
+        Assert.Equal(Colors.Orange, decorated!.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.White, capturedIconTheme!.Color);
     }
@@ -675,9 +676,9 @@ public sealed class MaterialFloatingActionButtonTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Purple, decorated!.AsBoxDecoration.Color);
+        Assert.Equal(Colors.Purple, decorated!.Color);
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.Yellow, capturedIconTheme!.Color);
     }
@@ -699,9 +700,9 @@ public sealed class MaterialFloatingActionButtonTests
         var size = new Size(200, 120);
         harness.Pump(size);
 
-        var defaultDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var defaultDecorated = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(defaultDecorated);
-        Assert.Equal(2, RequirePrimaryShadow(defaultDecorated!).Offset.Y);
+        Assert.Equal(2.0, defaultDecorated!.Elevation);
 
         var hoverListener = FindHoverPointerListener(harness.RenderView);
         Assert.NotNull(hoverListener);
@@ -716,9 +717,9 @@ public sealed class MaterialFloatingActionButtonTests
         // `hoverElevation` once the implicit animation has settled.
         harness.Settle(size, TimeSpan.FromSeconds(1));
 
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var hoveredDecorated = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(4, RequirePrimaryShadow(hoveredDecorated!).Offset.Y);
+        Assert.Equal(4.0, hoveredDecorated!.Elevation);
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
@@ -730,9 +731,9 @@ public sealed class MaterialFloatingActionButtonTests
                 DateTime.UtcNow));
         harness.Settle(size, TimeSpan.FromSeconds(3));
 
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var pressedDecorated = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(pressedDecorated);
-        Assert.Equal(7, RequirePrimaryShadow(pressedDecorated!).Offset.Y);
+        Assert.Equal(7.0, pressedDecorated!.Elevation);
     }
 
     [Fact]
@@ -751,9 +752,9 @@ public sealed class MaterialFloatingActionButtonTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(5, RequirePrimaryShadow(decorated!).Offset.Y);
+        Assert.Equal(5.0, decorated!.Elevation);
     }
 
     [Fact]
@@ -1046,14 +1047,6 @@ public sealed class MaterialFloatingActionButtonTests
             result = FindParagraphByText(child, text);
         });
         return result;
-    }
-
-    private static Plumix.Rendering.BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
-    {
-        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated.AsBoxDecoration.BoxShadows;
-        Assert.NotNull(shadows);
-        Assert.True(shadows.Count > 0);
-        return shadows[0];
     }
 
     private sealed class CaptureIconThemeWidget : StatelessWidget

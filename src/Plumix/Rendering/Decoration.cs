@@ -467,6 +467,101 @@ public readonly record struct BorderRadiusGeometry
         return a + ((b - a) * t);
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Dart's <c>BorderRadiusGeometry.toString</c>: the physical part as <c>BorderRadius.circular</c>/
+    /// <c>.all</c>/<c>.only</c>, the directional part as <c>BorderRadiusDirectional.*</c>, joined with
+    /// <c> + </c> when both are non-zero, and <c>BorderRadius.zero</c> when neither is.
+    /// </remarks>
+    public override string ToString()
+    {
+        string? visual = null;
+        string? logical = null;
+        Radius topLeft = Physical.TopLeftRadius;
+        Radius topRight = Physical.TopRightRadius;
+        Radius bottomLeft = Physical.BottomLeftRadius;
+        Radius bottomRight = Physical.BottomRightRadius;
+        if (topLeft == topRight && topRight == bottomLeft && bottomLeft == bottomRight)
+        {
+            if (topLeft != Radius.Zero)
+            {
+                visual = topLeft.X == topLeft.Y
+                    ? $"BorderRadius.circular({FormatDouble(topLeft.X)})"
+                    : $"BorderRadius.all({DescribeRadius(topLeft)})";
+            }
+        }
+        else
+        {
+            visual = DescribeOnly(
+                "BorderRadius.only(",
+                ("topLeft", topLeft),
+                ("topRight", topRight),
+                ("bottomLeft", bottomLeft),
+                ("bottomRight", bottomRight));
+        }
+
+        Radius topStart = Radius.Circular(Directional.TopStart);
+        Radius topEnd = Radius.Circular(Directional.TopEnd);
+        Radius bottomEnd = Radius.Circular(Directional.BottomEnd);
+        Radius bottomStart = Radius.Circular(Directional.BottomStart);
+        if (topStart == topEnd && topEnd == bottomEnd && bottomEnd == bottomStart)
+        {
+            if (topStart != Radius.Zero)
+            {
+                logical = $"BorderRadiusDirectional.circular({FormatDouble(topStart.X)})";
+            }
+        }
+        else
+        {
+            logical = DescribeOnly(
+                "BorderRadiusDirectional.only(",
+                ("topStart", topStart),
+                ("topEnd", topEnd),
+                ("bottomStart", bottomStart),
+                ("bottomEnd", bottomEnd));
+        }
+
+        if (visual is not null && logical is not null)
+        {
+            return $"{visual} + {logical}";
+        }
+
+        return visual ?? logical ?? "BorderRadius.zero";
+    }
+
+    private static string DescribeOnly(string prefix, params (string Name, Radius Radius)[] corners)
+    {
+        var result = new System.Text.StringBuilder(prefix);
+        bool comma = false;
+        foreach ((string name, Radius radius) in corners)
+        {
+            if (radius == Radius.Zero)
+            {
+                continue;
+            }
+
+            if (comma)
+            {
+                result.Append(", ");
+            }
+
+            result.Append(name).Append(": ").Append(DescribeRadius(radius));
+            comma = true;
+        }
+
+        result.Append(')');
+        return result.ToString();
+    }
+
+    // dart:ui's `Radius.toString`.
+    private static string DescribeRadius(Radius radius) => radius.X == radius.Y
+        ? $"Radius.circular({FormatDouble(radius.X)})"
+        : $"Radius.elliptical({FormatDouble(radius.X)}, {FormatDouble(radius.Y)})";
+
+    // Dart's `toStringAsFixed(1)`.
+    private static string FormatDouble(double value) =>
+        value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
+
     /// <summary>
     /// Adds a directional corner to a physical one. Directional corners are circular, so the
     /// physical corner keeps its own (possibly elliptical) shape when nothing is added to it.

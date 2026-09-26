@@ -43,8 +43,7 @@ internal sealed class RangeSliderDemoPageState : State
                     DisabledActiveTrackColor: new Color(0x66212121),
                     DisabledInactiveTrackColor: new Color(0x1F212121),
                     DisabledThumbColor: new Color(0x66212121),
-                    TrackHeight: 6,
-                    ThumbRadius: 11)
+                    TrackHeight: 6)
                 : new SliderThemeData()
         };
 

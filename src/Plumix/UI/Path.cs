@@ -196,9 +196,20 @@ public sealed class Path
             var point = new Point(
                 center.X + (Math.Cos(angle) * radiusX),
                 center.Y + (Math.Sin(angle) * radiusY));
-            if (segment == 0 && !forceMoveTo && _currentPoints!.Count > 0)
+            if (segment == 0 && _currentPoints!.Count > 0)
             {
-                continue;
+                // Skia's `arcTo`: `forceMoveTo` starts a new contour at the arc's start; otherwise a
+                // line joins the current point to the start (skipped when they coincide).
+                if (forceMoveTo)
+                {
+                    MoveTo(point.X, point.Y);
+                    continue;
+                }
+
+                if (_currentPoints[^1] == point)
+                {
+                    continue;
+                }
             }
 
             _currentPoints!.Add(point);
@@ -231,6 +242,7 @@ public sealed class Path
     public void AddRoundedRect(Rect rect, double radius)
     {
         FinishCurrentContour();
+        rect = Sorted(rect);
         double clampedRadius = Math.Clamp(radius, 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
         _contours.Add(PathContour.RoundedRectangle(rect, clampedRadius));
     }
@@ -238,6 +250,12 @@ public sealed class Path
     // Dart parity source: dart:ui Path.addRRect.
     public void AddRRect(RRect rrect)
     {
+        // dart:ui keeps an unsorted rect as given; Skia sorts it when the contour is added.
+        if (rrect.Width < 0.0 || rrect.Height < 0.0)
+        {
+            rrect = new RRect(Sorted(rrect.Rect), rrect.TopLeft, rrect.TopRight, rrect.BottomRight, rrect.BottomLeft);
+        }
+
         RRect scaled = rrect.ScaleRadii();
         Plumix.Rendering.Radius topLeft = scaled.TopLeft;
         bool uniformCircular = topLeft.X == topLeft.Y
@@ -251,6 +269,19 @@ public sealed class Path
         }
 
         AddPath(scaled.ToPath());
+    }
+
+    // Skia's `SkRect::sort`: a rect whose right/bottom lie before its left/top is normalized.
+    private static Rect Sorted(Rect rect)
+    {
+        if (rect.Width >= 0.0 && rect.Height >= 0.0)
+        {
+            return rect;
+        }
+
+        double left = Math.Min(rect.Left, rect.Right);
+        double top = Math.Min(rect.Top, rect.Bottom);
+        return new Rect(left, top, Math.Abs(rect.Width), Math.Abs(rect.Height));
     }
 
     // Dart parity source: dart:ui Path.addRSuperellipse.
@@ -328,9 +359,10 @@ public sealed class Path
         }
 
         IReadOnlyList<PathContour> contours = SnapshotContours();
+        bool inside;
         if (FillType == PathFillType.EvenOdd)
         {
-            bool inside = false;
+            inside = false;
             foreach (PathContour contour in contours)
             {
                 if (contour.Contains(point))
@@ -338,17 +370,33 @@ public sealed class Path
                     inside = !inside;
                 }
             }
+        }
+        else
+        {
+            int winding = 0;
+            foreach (PathContour contour in contours)
+            {
+                winding += contour.WindingNumber(point);
+            }
 
-            return inside;
+            inside = winding != 0;
         }
 
-        int winding = 0;
+        if (inside)
+        {
+            return true;
+        }
+
+        // Skia's `SkPath::contains` (what dart:ui's `Path.contains` calls) also answers true for a point
+        // that lies on the outline once (`onCurveCount` odd), such as a polygon vertex. An even count
+        // needs Skia's tangent test; it is treated as outside, like two cancelling edges.
+        int onCurveCount = 0;
         foreach (PathContour contour in contours)
         {
-            winding += contour.WindingNumber(point);
+            onCurveCount += contour.OnCurveCount(point);
         }
 
-        return winding != 0;
+        return (onCurveCount & 1) != 0;
     }
 
     internal Geometry ToGeometry()
@@ -553,6 +601,55 @@ public sealed class Path
                 PathContourKind.Ellipse => ContainsEllipse(point),
                 _ => WindingNumber(point) != 0,
             };
+        }
+
+        /// <summary>
+        /// Skia's <c>winding_line</c> on-curve bookkeeping over the flattened outline (always closed, as
+        /// <c>SkPath::contains</c> treats it): a vertex counts for the edge that starts at it, an edge
+        /// interior point counts once, a horizontal edge counts its span except its end point. Curved
+        /// and rectangular kinds already include their boundary in <see cref="Contains"/>.
+        /// </summary>
+        public int OnCurveCount(Point point)
+        {
+            if (Kind != PathContourKind.Polygon || !ContainsBoundsInclusive(Bounds, point))
+            {
+                return 0;
+            }
+
+            int count = 0;
+            IReadOnlyList<Point> points = FlattenedPoints;
+            for (int index = 0; index < points.Count; index++)
+            {
+                Point start = points[index];
+                Point end = points[(index + 1) % points.Count];
+                if (start.Y == end.Y)
+                {
+                    if (point.Y == start.Y
+                        && (start.X - point.X) * (end.X - point.X) <= 0.0
+                        && point.X != end.X)
+                    {
+                        count += 1;
+                    }
+
+                    continue;
+                }
+
+                if (point.Y < Math.Min(start.Y, end.Y) || point.Y > Math.Max(start.Y, end.Y))
+                {
+                    continue;
+                }
+
+                if (point.X == start.X && point.Y == start.Y)
+                {
+                    count += 1;
+                }
+                else if (!(point.X == end.X && point.Y == end.Y) && Cross(start, end, point) == 0.0)
+                {
+                    count += 1;
+                }
+            }
+
+            return count;
         }
 
         public int WindingNumber(Point point)

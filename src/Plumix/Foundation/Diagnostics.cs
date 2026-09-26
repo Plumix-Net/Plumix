@@ -183,6 +183,33 @@ public static class Diagnostics
     internal static string ToStringAsFixed(double value, int fractionDigits) =>
         value.ToString("F" + fractionDigits.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
 
+    /// <summary>
+    /// Dart's <c>double.toStringAsPrecision(precision)</c>: <paramref name="precision"/> significant
+    /// digits, in exponential notation when the decimal exponent is below -6 or at least the precision.
+    /// </summary>
+    internal static string ToStringAsPrecision(double value, int precision)
+    {
+        if (double.IsNaN(value) || double.IsInfinity(value))
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
+        // The "E" format rounds to the requested significant digits first, so a carry into the next
+        // decade (9.995 -> 1.00e1) is already reflected in the exponent.
+        string exponential = value.ToString(
+            "E" + (precision - 1).ToString(CultureInfo.InvariantCulture),
+            CultureInfo.InvariantCulture);
+        int split = exponential.IndexOf('E');
+        int exponent = int.Parse(exponential.AsSpan(split + 1), CultureInfo.InvariantCulture);
+        if (exponent < -6 || exponent >= precision)
+        {
+            string sign = exponent < 0 ? "-" : "+";
+            return $"{exponential[..split]}e{sign}{Math.Abs(exponent).ToString(CultureInfo.InvariantCulture)}";
+        }
+
+        return ToStringAsFixed(value, precision - 1 - exponent);
+    }
+
     private static string ToLowerCamelCase(string name)
     {
         if (name.Length == 0 || !char.IsUpper(name[0]))

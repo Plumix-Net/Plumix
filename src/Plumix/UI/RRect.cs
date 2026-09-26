@@ -85,6 +85,31 @@ public readonly record struct RRect
         return new RRect(rect, radius, radius, radius, radius);
     }
 
+    /// <summary>Dart's <c>RRect.fromLTRBR</c>: one radius on all four corners.</summary>
+    /// <remarks>Stored sorted, like <see cref="FromLTRBXY"/>.</remarks>
+    public static RRect FromLTRBR(double left, double top, double right, double bottom, Radius radius) =>
+        FromLTRBAndCorners(left, top, right, bottom, radius, radius, radius, radius);
+
+    /// <summary>Dart's <c>RRect.fromLTRBAndCorners</c>; omitted corners are <c>Radius.zero</c>.</summary>
+    /// <remarks>Stored sorted, like <see cref="FromLTRBXY"/>.</remarks>
+    public static RRect FromLTRBAndCorners(
+        double left,
+        double top,
+        double right,
+        double bottom,
+        Radius topLeft = default,
+        Radius topRight = default,
+        Radius bottomRight = default,
+        Radius bottomLeft = default)
+    {
+        var rect = new Rect(
+            Math.Min(left, right),
+            Math.Min(top, bottom),
+            Math.Abs(right - left),
+            Math.Abs(bottom - top));
+        return new RRect(rect, topLeft, topRight, bottomRight, bottomLeft);
+    }
+
     /// Moves each edge out by the matching inset and grows every radius by the same amounts.
     // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.inflateRRect.
     /// <remarks>Dart's <c>RRect.shift</c>.</remarks>

@@ -239,7 +239,9 @@ public sealed class MaterialDataTableTests : IDisposable
         Assert.Equal(31.0, data.FontSize);
         Assert.Equal(headingColor, Assert.IsType<SolidColorBrush>(heading.Foreground).Color);
         Assert.Equal(dataColor, Assert.IsType<SolidColorBrush>(data.Foreground).Color);
-        Assert.Single(harness.FindWidgets<AnimatedDefaultTextStyle>());
+        // The DataTable's own cell style, plus the one its transparency `Material` wraps the table in
+        // (material.dart's `AnimatedDefaultTextStyle` around a non-null child).
+        Assert.Equal(2, harness.FindWidgets<AnimatedDefaultTextStyle>().Count());
     }
 
     [Fact]

@@ -1,7 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
+using Plumix.Painting;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -49,8 +49,7 @@ internal sealed class SliderDemoPageState : State
                 DisabledInactiveTrackColor: _useThemeOverrides ? new Color(0x1F212121) : null,
                 DisabledThumbColor: _useThemeOverrides ? new Color(0x66212121) : null,
                 TrackHeight: _useThemeOverrides ? 6 : null,
-                ThumbShape: _customShape ? new DemoSliderThumbShape() : null,
-                ThumbRadius: _useThemeOverrides ? 11 : null)
+                ThumbShape: _customShape ? new DemoSliderThumbShape() : null)
         };
 
         return new Theme(
@@ -264,7 +263,7 @@ internal sealed class DemoSliderThumbShape : SliderComponentShape
         Animation<double> activationAnimation,
         Animation<double> enableAnimation,
         bool isDiscrete,
-        TextLayout? labelLayout,
+        TextPainter labelPainter,
         RenderBox parentBox,
         SliderThemeData sliderTheme,
         TextDirection textDirection,

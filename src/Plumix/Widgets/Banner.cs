@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using BoxShadow = Plumix.Rendering.BoxShadow;
@@ -34,7 +34,10 @@ public sealed class BannerPainter : CustomPainter
         color: Color.FromARGB(0x7F, 0, 0, 0),
         blurRadius: 6.0);
 
-    private TextLayout? _textLayout;
+    private bool _prepared;
+    private TextPainter? _textPainter;
+    private Paint _paintShadow = null!;
+    private Paint _paintBanner = null!;
     private bool _disposed;
 
     public BannerPainter(
@@ -98,16 +101,21 @@ public sealed class BannerPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_prepared)
+        {
+            Prepare();
+        }
 
-        context.Canvas.Translate(TranslationX(size.Width), TranslationY(size.Height));
-        context.Canvas.Rotate(Rotation);
-        context.Canvas.DrawRectangle(
-            Brushes.Transparent,
-            null,
-            BannerRect,
-            boxShadows: new BoxShadows(Shadow.ToAvalonia()));
-        context.Canvas.DrawRectangle(new SolidColorBrush(Color), null, BannerRect);
-        PaintText(context);
+        Canvas canvas = context.Canvas;
+        canvas.Translate(TranslationX(size.Width), TranslationY(size.Height));
+        canvas.Rotate(Rotation);
+        canvas.DrawRect(BannerRect, _paintShadow);
+        canvas.DrawRect(BannerRect, _paintBanner);
+        const double width = Offset * 2.0;
+        _textPainter!.Layout(minWidth: width, maxWidth: width);
+        _textPainter.Paint(
+            canvas,
+            BannerRect.TopLeft + new Vector(0.0, (BannerRect.Height - _textPainter.Height) / 2.0));
     }
 
     public bool ShouldRepaint(BannerPainter oldDelegate)
@@ -126,42 +134,21 @@ public sealed class BannerPainter : CustomPainter
     public override void Dispose()
     {
         _disposed = true;
-        _textLayout = null;
+        _textPainter?.Dispose();
+        _textPainter = null;
     }
 
-    private void PaintText(PaintingContext context)
+    private void Prepare()
     {
-        try
-        {
-            _textLayout ??= new TextLayout(
-                text: Message,
-                typeface: new Typeface(
-                    TextStyle.FontFamily ?? FontFamily.Default,
-                    TextStyle.FontStyle ?? FontStyle.Normal,
-                    TextStyle.FontWeight ?? FontWeight.Normal,
-                    FontStretch.Normal),
-                fontSize: TextStyle.FontSize ?? DefaultTextStyle.FontSize!.Value,
-                foreground: new SolidColorBrush(TextStyle.Color ?? new Color(0xFFFFFFFF)),
-                textAlignment: TextAlignment.Center,
-                textWrapping: TextWrapping.NoWrap,
-                flowDirection: TextDirection == TextDirection.Rtl
-                    ? FlowDirection.RightToLeft
-                    : FlowDirection.LeftToRight,
-                maxWidth: Offset * 2.0,
-                maxHeight: double.PositiveInfinity,
-                lineHeight: (TextStyle.FontSize ?? DefaultTextStyle.FontSize!.Value) * (TextStyle.Height ?? 1.0),
-                letterSpacing: TextStyle.LetterSpacing ?? 0);
-
-            context.Canvas.DrawTextLayout(
-                _textLayout,
-                BannerRect.TopLeft + new Vector(0, (BannerRect.Height - _textLayout.Height) / 2.0));
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            // Font services are absent in host-less render tests.
-        }
+        _paintShadow = Shadow.ToPaint();
+        _paintBanner = new Paint { Color = Color };
+        _textPainter?.Dispose();
+        _textPainter = new TextPainter(
+            text: new TextSpan(style: TextStyle, text: Message),
+            textAlign: TextAlign.Center,
+            textDirection: TextDirection);
+        _prepared = true;
     }
-
 }
 
 public sealed class Banner : StatefulWidget

@@ -56,14 +56,16 @@ public sealed class CupertinoThumbPainter
     public void Paint(PaintingContext context, Rect rect)
     {
         ArgumentNullException.ThrowIfNull(context);
+        // Paint RRects instead of RSuperellipses here, because practically
+        // [CupertinoSlider] only draws circular thumbs.
         double radius = Math.Min(rect.Width, rect.Height) / 2.0;
-        var borderRadius = BorderRadius.Circular(radius);
-        context.Canvas.DrawRectangle(
-            new SolidColorBrush(Color),
-            null,
-            rect,
-            borderRadius,
-            Shadows.ToAvalonia());
+        RRect thumbShape = RRect.FromRectAndRadius(rect, radius);
+
+        foreach (BoxShadow shadow in Shadows)
+        {
+            context.Canvas.DrawRRect(thumbShape.Shift(shadow.Offset), shadow.ToPaint());
+        }
+
         context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect.Inflate(0.5), radius + 0.5),
             new SolidColorBrush(ThumbBorderColor),

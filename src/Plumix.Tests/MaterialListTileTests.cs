@@ -40,7 +40,7 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 200));
 
-        var material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var material = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(material);
         Assert.Equal(300, material!.Size.Width, 3);
         Assert.Equal(56, material.Size.Height, 3);
@@ -57,7 +57,7 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 200));
 
-        var material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var material = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(material);
         Assert.Equal(48, material!.Size.Height, 3);
     }
@@ -73,7 +73,7 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 220));
 
-        var material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var material = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(material);
         Assert.Equal(72, material!.Size.Height, 3);
     }
@@ -90,7 +90,7 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 240));
 
-        var material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        var material = MaterialSurfaceProbe.Find(harness.RenderView);
         Assert.NotNull(material);
         Assert.Equal(88, material!.Size.Height, 3);
     }

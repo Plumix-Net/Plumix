@@ -145,10 +145,10 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(800, 400));
 
         // Material 3 tokens: surfaceContainerLow, elevation 1 with a transparent shadow, and top-only 28px corners.
-        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == surfaceContainerLow);
-        Assert.Equal(BorderRadius.Only(topLeft: 28.0, topRight: 28.0), surface.AsBoxDecoration.EffectiveBorderRadius);
-        Assert.Null(surface.AsBoxDecoration.BoxShadows);
+        var surface = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == surfaceContainerLow);
+        Assert.Equal(BorderRadius.Only(topLeft: 28.0, topRight: 28.0), surface.BorderRadius);
+        Assert.False(surface.HasShadow);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.AsBoxDecoration.Color == onSurfaceVariant && box.Size == new Size(32, 4));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
@@ -169,10 +169,10 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(800, 400));
 
         // Material 2 supplies no defaults: the Material falls back to the canvas color, elevation 0 and no shape.
-        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == theme.CanvasColor);
-        Assert.Equal(BorderRadius.Zero, surface.AsBoxDecoration.EffectiveBorderRadius);
-        Assert.Null(surface.AsBoxDecoration.BoxShadows);
+        var surface = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == theme.CanvasColor);
+        Assert.Equal(BorderRadius.Zero, surface.BorderRadius);
+        Assert.False(surface.HasShadow);
         Assert.DoesNotContain(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MaxWidth == 640);
     }
@@ -203,9 +203,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 enableDrag: false)));
         var semantics = harness.PumpAndGetSemantics(new Size(800, 400));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Orange
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(8));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.Orange
+            && box.BorderRadius == BorderRadius.Circular(8));
         // The drag handle keeps resolving through the theme.
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.AsBoxDecoration.Color == Colors.Green
@@ -238,9 +238,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 enableDrag: false)));
         harness.Pump(new Size(800, 400));
 
-        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(12));
-        Assert.NotNull(surface.AsBoxDecoration.BoxShadows);
+        var surface = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.BorderRadius == BorderRadius.Circular(12));
+        Assert.True(surface.HasShadow);
     }
 
     [Fact]
@@ -702,10 +702,10 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PumpAnimation();
         harness.Pump(new Size(500, 400));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Orange);
-        Assert.DoesNotContain(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Purple);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.Orange);
+        Assert.DoesNotContain(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.Purple);
     }
 
     [Fact]

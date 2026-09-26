@@ -409,14 +409,14 @@ public sealed class MaterialSliverAppBarTests
 
         // The header now composes a real AppBar, so its Material owns the surface: the widget's
         // background and shape win over the theme's, tinted at the theme's scrolled-under elevation.
-        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(BorderRadius.Circular(8), surface.AsBoxDecoration.EffectiveBorderRadius);
+        var surface = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView));
+        Assert.Equal(BorderRadius.Circular(8), surface.BorderRadius);
         Assert.Equal(
             ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 5),
-            surface.AsBoxDecoration.Color);
+            surface.Color);
         Assert.NotEqual(
             ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 0),
-            surface.AsBoxDecoration.Color);
+            surface.Color);
     }
 
     [Fact]
@@ -443,9 +443,9 @@ public sealed class MaterialSliverAppBarTests
 
         harness.Pump(new Size(360, 320));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), value =>
-            value.AsBoxDecoration.Color == Colors.CadetBlue
-            && value.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(12));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), value =>
+            value.Color == Colors.CadetBlue
+            && value.BorderRadius == BorderRadius.Circular(12));
     }
 
     [Fact]

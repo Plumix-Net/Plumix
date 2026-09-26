@@ -232,6 +232,11 @@ public sealed class WidgetStatePropertyAll<T> : WidgetStateProperty<T>
     }
 
     public override int GetHashCode() => Value?.GetHashCode() ?? 0;
+
+    /// <summary>Dart's <c>WidgetStatePropertyAll.toString</c>.</summary>
+    public override string ToString() => Value is double number
+        ? $"WidgetStatePropertyAll({DoubleProperty.FormatDouble(number)})"
+        : $"WidgetStatePropertyAll({Diagnostics.DescribeValue(Value)})";
 }
 
 internal sealed class WidgetStatePropertyResolver<T> : WidgetStateProperty<T>

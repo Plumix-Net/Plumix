@@ -92,12 +92,8 @@ public sealed class MaterialApp : StatefulWidget
                          || effectiveRoutes.Count > 0
                          || onGenerateRoute != null
                          || onUnknownRoute != null;
-        if (!hasRoutes && builder == null)
-        {
-            throw new ArgumentException(
-                "Either routing properties or builder must provide the application content.");
-        }
-
+        // Dart's WidgetsApp content assert is always met by MaterialApp, which hands WidgetsApp its
+        // own non-null `_materialBuilder`, so a MaterialApp with neither routes nor a builder is valid.
         if (!hasRoutes
             && (navigatorKey != null || initialRoute != null || effectiveObservers.Count > 0))
         {

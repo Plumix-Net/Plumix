@@ -1243,6 +1243,8 @@ public sealed class RenderConstraintsTransformBox : RenderAligningShiftedBox
     public override void Dispose()
     {
         _clipRectLayer.Layer = null;
+        // The mixed-in `DebugOverflowIndicatorMixin.dispose` releases the label painters.
+        _debugOverflowIndicator.Dispose();
         base.Dispose();
     }
 

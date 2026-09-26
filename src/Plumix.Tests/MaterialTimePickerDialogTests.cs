@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -111,11 +112,11 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         var painter = FindPainter(harness);
         Assert.Equal(
             new[] { "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11" },
-            painter.PrimaryLabels.Select(label => label.Text).ToArray());
+            painter.PrimaryLabels.Select(label => ((TextSpan)label.Painter.Text!).Text).ToArray());
         Assert.All(painter.PrimaryLabels, label => Assert.False(label.Inner));
         Assert.Equal(
-            painter.PrimaryLabels.Select(label => label.Text),
-            painter.SelectedLabels.Select(label => label.Text));
+            painter.PrimaryLabels.Select(label => ((TextSpan)label.Painter.Text!).Text),
+            painter.SelectedLabels.Select(label => ((TextSpan)label.Painter.Text!).Text));
     }
 
     [Fact]
@@ -127,9 +128,9 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         harness.Pump(ViewSize);
         var painter = FindPainter(harness);
         Assert.Equal(24, painter.PrimaryLabels.Count);
-        Assert.Equal("00", painter.PrimaryLabels[0].Text);
-        Assert.Equal("1", painter.PrimaryLabels[1].Text);
-        Assert.Equal("23", painter.PrimaryLabels[23].Text);
+        Assert.Equal("00", ((TextSpan)painter.PrimaryLabels[0].Painter.Text!).Text);
+        Assert.Equal("1", ((TextSpan)painter.PrimaryLabels[1].Painter.Text!).Text);
+        Assert.Equal("23", ((TextSpan)painter.PrimaryLabels[23].Painter.Text!).Text);
         for (int index = 0; index < painter.PrimaryLabels.Count; index++)
         {
             Assert.Equal(index >= 12, painter.PrimaryLabels[index].Inner);
@@ -147,8 +148,169 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         var painter = FindPainter(harness);
         Assert.Equal(
             new[] { "00", "02", "04", "06", "08", "10", "12", "14", "16", "18", "20", "22" },
-            painter.PrimaryLabels.Select(label => label.Text).ToArray());
+            painter.PrimaryLabels.Select(label => ((TextSpan)label.Painter.Text!).Text).ToArray());
         Assert.All(painter.PrimaryLabels, label => Assert.False(label.Inner));
+    }
+
+    // time_picker_theme_test.dart "Material3 - Passing no TimePickerThemeData uses defaults": the
+    // primary labels are bodyLarge in onSurface, the selected ones bodyLarge in onPrimary.
+    [Fact]
+    public void Dial_Material3LabelStylesAreBodyLargeInOnSurfaceAndOnPrimary()
+    {
+        using var harness = CreateHarness(DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15))));
+        harness.Pump(ViewSize);
+        var painter = FindPainter(harness);
+        ThemeData theme = ThemeData.Light;
+        TextStyle primary = painter.PrimaryLabels[0].Painter.Text!.Style!;
+        TextStyle selected = painter.SelectedLabels[0].Painter.Text!.Style!;
+        Assert.Equal(theme.ColorScheme.OnSurface, primary.Color);
+        Assert.Equal(theme.ColorScheme.OnPrimary, selected.Color);
+        Assert.Equal(16.0, primary.FontSize);
+        Assert.Equal(16.0, selected.FontSize);
+        Assert.Equal(TextDirection.Ltr, painter.PrimaryLabels[0].Painter.TextDirection);
+    }
+
+    // time_picker_theme_test.dart "Material3 - Time picker uses values from TimePickerThemeData": a
+    // WidgetStateColor dialTextColor resolves without states for the primary labels and with
+    // WidgetState.selected for the selected labels and the dot.
+    [Fact]
+    public void Dial_ThemeDialTextColorResolvesPerLabelList()
+    {
+        var selectedColor = new Color(0xFFC8E6C9);
+        var unselectedColor = new Color(0xFFA5D6A7);
+        using var harness = CreateHarness(new TimePickerTheme(
+            new TimePickerThemeData(
+                DialTextColor: WidgetStateColor.ResolveWith(
+                    states => states.Contains(WidgetState.Selected) ? selectedColor : unselectedColor)),
+            DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15)))));
+        harness.Pump(ViewSize);
+        var painter = FindPainter(harness);
+        Assert.All(painter.PrimaryLabels, label => Assert.Equal(unselectedColor, label.Painter.Text!.Style!.Color));
+        Assert.All(painter.SelectedLabels, label => Assert.Equal(selectedColor, label.Painter.Text!.Style!.Color));
+        Assert.Equal(selectedColor, painter.DotColor);
+    }
+
+    // `_buildTappableLabel`: every label is laid out with the ambient text scaler clamped to 2.0.
+    [Fact]
+    public void Dial_LabelTextScalerIsClampedToTwo()
+    {
+        using var harness = CreateHarness(
+            DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15))),
+            textScaler: TextScaler.Linear(3.0));
+        harness.Pump(ViewSize);
+        var painter = FindPainter(harness);
+        Assert.All(painter.PrimaryLabels, label => Assert.Equal(32.0, label.Painter.TextScaler.Scale(16.0)));
+
+        using var unscaled = CreateHarness(
+            DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15))),
+            textScaler: TextScaler.Linear(1.5));
+        unscaled.Pump(ViewSize);
+        Assert.All(
+            FindPainter(unscaled).PrimaryLabels,
+            label => Assert.Equal(24.0, label.Painter.TextScaler.Scale(16.0)));
+    }
+
+    // `_DialState.build` disposes the previous painter, and `_DialPainter.dispose` disposes and clears
+    // both label lists.
+    [Fact]
+    public void Dial_RebuildDisposesThePreviousPainterAndItsLabels()
+    {
+        using var harness = CreateHarness(DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15))));
+        harness.Pump(ViewSize);
+        var first = FindPainter(harness);
+        TextPainter firstLabel = first.PrimaryLabels[0].Painter;
+
+        TapDial(harness, 50, 0);
+        harness.Pump(ViewSize);
+        var second = FindPainter(harness);
+
+        Assert.NotSame(first, second);
+        Assert.Empty(first.PrimaryLabels);
+        Assert.Empty(first.SelectedLabels);
+        if (Constants.KDebugMode)
+        {
+            Assert.True(firstLabel.DebugDisposed);
+        }
+
+        Assert.NotEmpty(second.PrimaryLabels);
+    }
+
+    // time_picker_test.dart "Material3 - Dial background uses correct default color": the background
+    // circle, then the label paragraphs, then the hand circles in primary.
+    [Fact]
+    public void Dial_PaintsBackgroundThenLabelsThenHand()
+    {
+        using var harness = CreateHarness(DialogRoute(new TimePickerDialog(new TimeOfDay(7, 15))));
+        harness.Pump(ViewSize);
+        RenderCustomPaint dial = FindDescendants<RenderCustomPaint>(harness.RenderView)
+            .First(paint => paint.Painter is TimeDialPainter);
+        ColorScheme scheme = ThemeData.Light.ColorScheme;
+        PaintAssert.Paints(
+            dial,
+            PaintPattern.Paints
+                .Circle(color: scheme.SurfaceContainerHighest)
+                .Paragraph()
+                .Circle(color: scheme.Primary, radius: 4)
+                .Circle(color: scheme.Primary, radius: 24)
+                .Line(color: scheme.Primary, strokeWidth: 2)
+                .Save()
+                .ClipPath()
+                .Paragraph()
+                .Restore());
+    }
+
+    // The "dot between labels" check uses Dart's `%`, which is never negative even for the negative
+    // label increment: at 7 minutes the selector sits between the 5 and 10 labels and gets the dot.
+    [Theory]
+    [InlineData(7, true)]
+    [InlineData(10, false)]
+    public void DialPainter_DrawsTheSmallDotOnlyBetweenLabels(int minute, bool expectDot)
+    {
+        var labels = new List<TappableLabel>();
+        var selected = new List<TappableLabel>();
+        for (int index = 0; index < 12; index++)
+        {
+            labels.Add(new TappableLabel(index * 5, false, NewLabelPainter(index), () => { }));
+            selected.Add(new TappableLabel(index * 5, false, NewLabelPainter(index), () => { }));
+        }
+
+        double theta = Modulo((Math.PI / 2) - ((minute / 60.0) * 2 * Math.PI), 2 * Math.PI);
+        var dotColor = new Color(0xFF123456);
+        var painter = new TimeDialPainter(
+            primaryLabels: labels,
+            selectedLabels: selected,
+            backgroundColor: new Color(0xFFEEEEEE),
+            handColor: new Color(0xFF6750A4),
+            handWidth: 2,
+            dotColor: dotColor,
+            dotRadius: 24,
+            centerRadius: 4,
+            theta: theta,
+            radius: 1,
+            textDirection: TextDirection.Ltr,
+            selectedValue: minute);
+        var context = new TestRecordingPaintingContext();
+        painter.Paint(context, new Size(256, 256));
+
+        Assert.Equal(
+            expectDot,
+            context.Calls.Any(call => call.Method == "drawCircle" && call.Radius == 2 && call.Color == dotColor));
+        painter.Dispose();
+
+        static TextPainter NewLabelPainter(int index)
+        {
+            var textPainter = new TextPainter(
+                text: new TextSpan(text: (index * 5).ToString(System.Globalization.CultureInfo.InvariantCulture)),
+                textDirection: TextDirection.Ltr);
+            textPainter.Layout();
+            return textPainter;
+        }
+
+        static double Modulo(double value, double modulus)
+        {
+            double result = value % modulus;
+            return result < 0 ? result + modulus : result;
+        }
     }
 
     [Fact]
@@ -822,14 +984,16 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Widget child,
         ThemeData? theme = null,
         Size? mediaSize = null,
-        bool alwaysUse24HourFormat = false) => new(
+        bool alwaysUse24HourFormat = false,
+        TextScaler? textScaler = null) => new(
         // `MaterialApp` is what installs the traversal scope in Flutter's own tests; this helper
         // stands in for it, and Tab moves nothing without it.
         AppTraversalScope.Wrap(
             new MediaQuery(
                 new MediaQueryData(
                     Size: mediaSize ?? ViewSize,
-                    AlwaysUse24HourFormat: alwaysUse24HourFormat),
+                    AlwaysUse24HourFormat: alwaysUse24HourFormat,
+                    TextScaler: textScaler),
                 new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child)))));
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;

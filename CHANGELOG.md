@@ -8,6 +8,45 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Material` paints through `AnimatedPhysicalModel`/`_MaterialInterior`'s `PhysicalShape` (material.dart).
+- Breaking: `Material` clips via its physical model and paints its border with `_ShapeBorderPaint`, not a ClipPath.
+- Breaking: `MaterialInkController` is an interface implemented by the ink render object `Material.Of` returns.
+- Breaking: `InkFeature.PaintFeature(Canvas, Matrix4)`; `Controller`/`OnRemoved` public; Dart's paint-transform walk.
+- Breaking: `Material.BorderRadius` is `BorderRadiusGeometry?`; its argument checks are debug `AssertionError`s.
+- Breaking: `MaterialEdges.ForType` is `MaterialEdges.KMaterialEdges`; the internal `MaterialSurface` helper is gone.
+- `ShapeBorderTween`, `RectCallback`, `Material.DefaultSplashRadius`, `Material.DebugFillProperties` (material.dart).
+- `ImplicitlyAnimatedWidget`, `ImplicitlyAnimatedWidgetState`, `AnimatedWidgetBaseState` (implicit_animations.dart).
+- `Animatable.Evaluate(Animation<double>)` (tween.dart); concrete `LayoutChangedNotification` (notification_listener).
+- `MaterialDebug.DebugCheckHasMaterial` (material debug.dart); `MaterialApp` with no content builds, as in Dart.
+- `BorderRadiusGeometry.ToString` prints Dart's `BorderRadius.circular(...)` spelling (painting/border_radius.dart).
+- Flutter's `material_test.dart` ported (golden tests skipped); seven slider paint tests un-skipped.
+- Breaking: Material slider family is a strict port: theme, parts, value-indicator shapes, `Slider`, `RangeSlider`.
+- Breaking: slider value indicators paint in an `OverlayPortal` follower, their labels via `TextPainter` (slider.dart).
+- Breaking: slider shapes take Dart's `TextPainter labelPainter`; `SliderShapes.cs` is split into Dart's three files.
+- Breaking: `SliderThemeData` has Dart's fields only (no `ThumbRadius`/`TickMarkRadius`...); `OverlayColor` is `Color?`.
+- Breaking: `RangeValues`/`RangeLabels` are classes with Dart equality/`toString`; `RangeThumbSelector` takes `Size`.
+- Breaking: `Slider`/`RangeSlider` drop `materialTapTargetSize`; argument checks are Dart's debug asserts (slider.dart).
+- Breaking: `Slider` keys follow Dart's shortcuts (arrows only); default cursor is `WidgetStateMouseCursor.clickable`.
+- Flutter's `slider_test`, `range_slider_test` and `slider_theme_test` ported (210 tests).
+- `Slider`/`RangeSlider` assert `debugCheckHasMaterial` like Dart (slider.dart, range_slider.dart).
+- Breaking: time-picker dial labels are `TextPainter`s clamped to 2.0 text scale, disposed per build (time_picker.dart).
+- Time-picker dial draws the between-labels dot with Dart's non-negative `%` (it never showed) (time_picker.dart).
+- `BannerPainter` paints Dart's `drawRect(shadow.toPaint())` and a centred `TextPainter` label (banner.dart).
+- Breaking: `DebugOverflowIndicator` is strict: Dart's regions, label placement/rotation, `toStringAsPrecision`.
+- Breaking: `RenderButton` uses `TextPainter`; `TextLayoutFallback` and `Canvas.DrawTextLayout` are removed.
+- `MediaQueryData.BoldText`, `MediaQuery.BoldTextOf`/`MaybeBoldTextOf` (media_query.dart).
+- `Canvas.DrawRect`/`DrawRRect(…, Paint)` with mask-filter blur; `BoxShadow.ToPaint` (dart:ui, box_shadow.dart).
+- `RRect.FromLTRBR`/`FromLTRBAndCorners`; `Path` sorts inverted rects like Skia; `ArcTo` joins/moves like Skia.
+- `Path.Contains` counts points on the outline as inside, like Skia (dart:ui).
+- Breaking: cubic curves bisect to Dart's 0.001 bound (`Cubic.transformInternal`), so eased values match Flutter's.
+- Headless paragraphs round each line height like SkParagraph, so fractional font sizes stack whole-pixel lines.
+- `CupertinoThumbPainter` draws one `drawRRect(shadow.toPaint())` per shadow, then border and fill (thumb_painter.dart).
+- Breaking: semantics root no longer consumes id 1; `Detach` keeps a render object's semantics node (semantics.dart).
+- Setting `SemanticsConfiguration.IsFocusable` marks the configuration annotated, like Dart (semantics.dart).
+- Breaking: `WidgetsApp` drops a non-Dart `FocusScope` above `TapRegionSurface` (widgets/app.dart).
+- `Route.DidAdd` focuses the navigator's scope in a microtask, like Dart's `TickerFuture` chain (navigator.dart).
+- `EdgeInsetsGeometry`, `WidgetStatePropertyAll` and slider shapes print Dart's `toString`.
+- Canvas debug recording logs circles, lines, paths, shadows and transforms; shared test `paints` matcher (mock_canvas).
 - Breaking: `RenderSliverGrid.performLayout` is Dart's: garbage first, `overlap` overflow, no clamping (sliver_grid).
 - Breaking: grid delegates reverse the cross axis for RTL/`AxisDirection.left`, so RTL grids start at the right.
 - Breaking: grid delegates/layouts assert like Dart (`AssertionError`, debug only); `SliverGridGeometry` is a class.

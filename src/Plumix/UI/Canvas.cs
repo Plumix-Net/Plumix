@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -48,17 +47,48 @@ internal readonly record struct CanvasCommand(
 /// flutter_test's <c>TestRecordingCanvas</c> keeps for its <c>paints</c> matcher.
 /// </summary>
 /// <remarks>Recorded only in debug builds; <see cref="Method"/> is the Dart method name
-/// (<c>drawRect</c>, <c>drawRRect</c>, <c>drawParagraph</c>, <c>clipRect</c>, ...).</remarks>
+/// (<c>drawRect</c>, <c>drawPath</c>, <c>drawCircle</c>, <c>drawParagraph</c>, <c>save</c>, ...).</remarks>
 internal readonly record struct CanvasCall(
     string Method,
     Rect? Rect = null,
     RRect? RRect = null,
     IBrush? Brush = null,
     IPen? Pen = null,
-    Point? Offset = null)
+    Point? Offset = null,
+    Path? Path = null,
+    Point? Center = null,
+    double? Radius = null,
+    Point? EndOffset = null,
+    Color? ShadowColor = null,
+    double? Elevation = null,
+    double? Dx = null,
+    double? Dy = null,
+    MaskFilter? MaskFilter = null)
 {
-    /// <summary>The fill color, when the call was made with a solid-color brush.</summary>
-    public Color? Color => Brush is ISolidColorBrush solid ? (Color)solid.Color : null;
+    /// <summary>
+    /// The paint colour (Dart's <c>Paint.color</c>): the shadow colour, else the fill brush's, else the
+    /// stroke pen's.
+    /// </summary>
+    public Color? Color => RecordedColor ?? ResolvePaintColor();
+
+    /// <summary>The paint colour captured when the call was recorded.</summary>
+    public Color? RecordedColor { get; init; }
+
+    internal Color? ResolvePaintColor() => ShadowColor ?? SolidColor(Brush) ?? SolidColor(Pen?.Brush);
+
+    // A mutable Avalonia brush is thread-affine; one created on another thread reports no colour.
+    private static Color? SolidColor(IBrush? brush) => brush switch
+    {
+        ISolidColorBrush solid when brush is not Avalonia.AvaloniaObject owner || owner.CheckAccess() =>
+            (Color)solid.Color,
+        _ => null,
+    };
+
+    /// <summary>Dart's <c>Paint.style</c>: a pen without a brush strokes, anything else fills.</summary>
+    public PaintingStyle Style => Brush is null && Pen is not null ? PaintingStyle.Stroke : PaintingStyle.Fill;
+
+    /// <summary>Dart's <c>Paint.strokeWidth</c>: the pen thickness of a stroke, 0 for a fill.</summary>
+    public double StrokeWidth => Brush is null && Pen is not null ? Pen.Thickness : 0.0;
 }
 
 /// <summary>An object representing a sequence of recorded graphical operations.</summary>
@@ -228,7 +258,9 @@ public sealed partial class Canvas
     {
         if (Constants.KDebugMode)
         {
-            _debugCalls.Add(call);
+            // Avalonia brushes are thread-affine: read the paint colour while recording, on the
+            // painting thread, so tests can inspect it from any thread.
+            _debugCalls.Add(call with { RecordedColor = call.ResolvePaintColor() });
         }
     }
 
@@ -239,6 +271,7 @@ public sealed partial class Canvas
     /// <summary>Saves a copy of the current transform and clip on the save stack.</summary>
     public void Save()
     {
+        DebugRecordCall(new CanvasCall("save"));
         _saveCount++;
         _commands.Add(CanvasCommand.ForSave());
     }
@@ -254,6 +287,7 @@ public sealed partial class Canvas
     /// </remarks>
     public void SaveLayer(Rect bounds)
     {
+        DebugRecordCall(new CanvasCall("saveLayer", Rect: bounds));
         _saveCount++;
         _commands.Add(CanvasCommand.ForSave());
         _commands.Add(CanvasCommand.ForPush(context => context.PushOpacity(1.0)));
@@ -262,6 +296,7 @@ public sealed partial class Canvas
     /// <summary>Pops the current save stack, if there is anything to pop.</summary>
     public void Restore()
     {
+        DebugRecordCall(new CanvasCall("restore"));
         if (_saveCount <= 1)
         {
             return;
@@ -283,6 +318,7 @@ public sealed partial class Canvas
     /// <summary>Adds a translation to the current transform.</summary>
     public void Translate(double dx, double dy)
     {
+        DebugRecordCall(new CanvasCall("translate", Dx: dx, Dy: dy));
         if (dx == 0.0 && dy == 0.0)
         {
             return;
@@ -296,12 +332,14 @@ public sealed partial class Canvas
     public void Scale(double sx, double? sy = null)
     {
         double scaleY = sy ?? sx;
+        DebugRecordCall(new CanvasCall("scale", Dx: sx, Dy: scaleY));
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateScale(sx, scaleY))));
     }
 
     /// <summary>Adds a rotation, in radians, to the current transform.</summary>
     public void Rotate(double radians)
     {
+        DebugRecordCall(new CanvasCall("rotate", Radius: radians));
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateRotation(radians))));
     }
 
@@ -325,6 +363,7 @@ public sealed partial class Canvas
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rounded rect.</summary>
     public void ClipRRect(RRect rrect, bool doAntiAlias = true)
     {
+        DebugRecordCall(new CanvasCall("clipRRect", RRect: rrect));
         PushEdgeMode(doAntiAlias);
         _commands.Add(CanvasCommand.ForPush(context => Layer.PushRoundedRectClip(context, rrect)));
     }
@@ -339,6 +378,7 @@ public sealed partial class Canvas
     public void ClipPath(Path path, bool doAntiAlias = true)
     {
         ArgumentNullException.ThrowIfNull(path);
+        DebugRecordCall(new CanvasCall("clipPath", Path: path));
         PushEdgeMode(doAntiAlias);
 
         // The backend geometry is built on playback: recording must not need a render backend.

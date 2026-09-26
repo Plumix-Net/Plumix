@@ -213,10 +213,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var layout = Assert.Single(FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
         Assert.Equal(40, ((BoxParentData)layout.Child!.parentData!).offset.X, precision: 3);
         Assert.Equal(30, ((BoxParentData)layout.Child.parentData!).offset.Y, precision: 3);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == ThemeData.Light.ColorScheme.SurfaceContainer
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(4)
-            && box.AsBoxDecoration.BoxShadows is not null);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == ThemeData.Light.ColorScheme.SurfaceContainer
+            && box.BorderRadius == BorderRadius.Circular(4)
+            && box.HasShadow);
         var viewport = Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         Assert.True(viewport.Size.Height < 360);
         Assert.NotNull(FindSemantics(semantics, node =>
@@ -308,10 +308,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
         PumpAnimation();
         harness.Pump(new Size(500, 360));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Orange
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(3)
-            && box.AsBoxDecoration.BoxShadows is null);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.Orange
+            && box.BorderRadius == BorderRadius.Circular(3)
+            && !box.HasShadow);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
             padding.Padding == new Thickness(7));
     }
@@ -512,8 +512,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
             position: new RelativeRect(20, 20, 400, 290));
         PumpAnimation();
         localHarness.Pump(new Size(500, 360));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(localHarness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Purple);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(localHarness.RenderView), box =>
+            box.Color == Colors.Purple);
 
         BuildContext globalContext = null!;
         Widget BuildRoot(Color color) => Wrap(
@@ -532,13 +532,13 @@ public sealed class MaterialPopupMenuTests : IDisposable
             position: new RelativeRect(20, 20, 400, 290));
         PumpAnimation();
         globalHarness.Pump(new Size(500, 360));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Green);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(globalHarness.RenderView), box =>
+            box.Color == Colors.Green);
 
         globalHarness.UpdateRoot(BuildRoot(Colors.Orange));
         globalHarness.Pump(new Size(500, 360));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(globalHarness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Orange);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(globalHarness.RenderView), box =>
+            box.Color == Colors.Orange);
     }
 
     [Fact]
@@ -816,7 +816,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
         RenderPopupMenuPositionLayout layout = Assert.Single(
             FindDescendants<RenderPopupMenuPositionLayout>(harness.RenderView));
         Assert.Equal(180, layout.Child!.Size.Width);
-        Assert.NotEmpty(FindDescendants<RenderClipPath>(harness.RenderView));
+        // Dart's Material clips through its physical shape (RenderPhysicalShape.clipBehavior).
+        Assert.Contains(
+            MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.ClipBehavior == Clip.HardEdge);
 
         int previousBuilds = positionBuilds;
         harness.UpdateRoot(BuildRoot(new Size(640, 420)));

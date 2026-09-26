@@ -397,11 +397,16 @@ public abstract class Route
     }
 
     /// <summary>Called when the route is inserted without an entering transition.</summary>
+    /// <remarks>
+    /// Like Dart's <c>Route.didAdd</c>, the navigator's enclosing scope is focused after an asynchronous gap
+    /// (Dart's <c>TickerFuture.complete().then</c>): a <see cref="ModalRoute"/>'s focus scope only attaches
+    /// to the navigator after its <c>initState</c>, and the navigator can be disposed in between.
+    /// </remarks>
     public virtual void DidAdd()
     {
         if (RequestFocus)
         {
-            Navigator?.FocusNode.Scope?.RequestFirstFocus();
+            Scheduler.ScheduleMicrotask(() => Navigator?.FocusNode.Scope?.RequestFirstFocus());
         }
     }
 

@@ -1,9 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
+using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
@@ -16,29 +16,55 @@ namespace Plumix.Rendering;
 /// Dart's `DebugOverflowIndicatorMixin`. C# has no mixins, so the mixin's state and body live on
 /// this helper and each render object that "mixes it in" owns one instance.
 /// </remarks>
-internal sealed class DebugOverflowIndicator
+internal sealed class DebugOverflowIndicator : IDisposable
 {
+    private static readonly Color Black = new(0xBF000000);
+    private static readonly Color Yellow = new(0xBFFFFF00);
+
+    // The fraction of the container that the indicator covers.
     private const double IndicatorFraction = 0.1;
-    private const double TileSize = 10.0;
-    private const double LabelFontSize = 7.5;
-    private const double LabelPadding = 1.0;
-    private static readonly IBrush LabelBackgroundBrush = new SolidColorBrush(Colors.White);
-    private static readonly IBrush LabelForegroundBrush = new SolidColorBrush(new Color(0xFF900000));
-    private static readonly IBrush IndicatorBrush = new LinearGradientBrush
+    private const double IndicatorFontSizePixels = 7.5;
+    private const double IndicatorLabelPaddingPixels = 1.0;
+
+    private static readonly TextStyle IndicatorTextStyle = new(
+        Color: new Color(0xFF900000),
+        FontSize: IndicatorFontSizePixels,
+        FontWeight: FontWeight.ExtraBold);
+
+    private static readonly IBrush IndicatorPaint = new LinearGradientBrush
     {
-        StartPoint = new RelativePoint(0, 0, RelativeUnit.Absolute),
-        EndPoint = new RelativePoint(TileSize, TileSize, RelativeUnit.Absolute),
+        StartPoint = new RelativePoint(0.0, 0.0, RelativeUnit.Absolute),
+        EndPoint = new RelativePoint(10.0, 10.0, RelativeUnit.Absolute),
         SpreadMethod = GradientSpreadMethod.Repeat,
         GradientStops = new GradientStops
         {
-            new GradientStop(Color.FromARGB(0xBF, 0x00, 0x00, 0x00), 0.25),
-            new GradientStop(Color.FromARGB(0xBF, 0xFF, 0xFF, 0x00), 0.25),
-            new GradientStop(Color.FromARGB(0xBF, 0xFF, 0xFF, 0x00), 0.75),
-            new GradientStop(Color.FromARGB(0xBF, 0x00, 0x00, 0x00), 0.75),
+            new GradientStop(Black, 0.25),
+            new GradientStop(Yellow, 0.25),
+            new GradientStop(Yellow, 0.75),
+            new GradientStop(Black, 0.75),
         },
-    };
+    }.ToImmutable();
 
+    private static readonly IBrush LabelBackgroundPaint = new SolidColorBrush(new Color(0xFFFFFFFF)).ToImmutable();
+
+    // One label painter per `_OverflowSide`; the labels are in English.
+    private readonly TextPainter[] _indicatorLabel =
+    [
+        .. Enumerable.Range(0, 4).Select(_ => new TextPainter(textDirection: TextDirection.Ltr)),
+    ];
+
+    // Set to true to trigger a debug message in the console upon the next paint call. Will be reset
+    // after each paint.
     private bool _overflowReportNeeded = true;
+
+    /// <summary>Dart's mixin <c>dispose</c>: releases the four label painters.</summary>
+    public void Dispose()
+    {
+        foreach (TextPainter painter in _indicatorLabel)
+        {
+            painter.Dispose();
+        }
+    }
 
     /// <summary>
     /// Dart's <c>DebugOverflowIndicatorMixin.reassemble</c>: users expect the overflow error to be
@@ -53,102 +79,82 @@ internal sealed class DebugOverflowIndicator
         }
     }
 
-    /// To be called when the overflow indicators should be painted.
-    ///
-    /// Typically only called if there is an overflow, and only from within a debug build.
-    public void PaintOverflowIndicator(
-        RenderObject self,
-        PaintingContext context,
-        Point paintOffset,
-        Rect containerRect,
-        Rect childRect,
-        List<DiagnosticsNode>? overflowHints = null)
+    private static string FormatPixels(double value)
     {
-        Rect translatedContainer = containerRect.Translate(paintOffset);
-        Rect translatedChild = childRect.Translate(paintOffset);
-        double overflowLeft = Math.Max(0, translatedContainer.Left - translatedChild.Left);
-        double overflowTop = Math.Max(0, translatedContainer.Top - translatedChild.Top);
-        double overflowRight = Math.Max(0, translatedChild.Right - translatedContainer.Right);
-        double overflowBottom = Math.Max(0, translatedChild.Bottom - translatedContainer.Bottom);
-
-        if (overflowLeft > Constants.PrecisionErrorTolerance)
+        DebugAssert(value > 0.0, "value > 0.0");
+        return value switch
         {
-            var marker = new Rect(
-                translatedContainer.X,
-                translatedContainer.Y,
-                translatedContainer.Width * IndicatorFraction,
-                translatedContainer.Height);
-            PaintMarker(context, marker);
-            PaintLabel(
-                context,
-                $"LEFT OVERFLOWED BY {FormatPixels(overflowLeft)} PIXELS",
-                new Point(marker.Right - LabelFontSize - LabelPadding, marker.Center.Y),
-                -Math.PI / 2.0);
+            > 10.0 => Diagnostics.ToStringAsFixed(value, 0),
+            > 1.0 => Diagnostics.ToStringAsFixed(value, 1),
+            _ => Diagnostics.ToStringAsPrecision(value, 3),
+        };
+    }
+
+    private static List<OverflowRegionData> CalculateOverflowRegions(RelativeRect overflow, Rect containerRect)
+    {
+        var regions = new List<OverflowRegionData>();
+        if (overflow.Left > 0.0)
+        {
+            var markerRect = new Rect(0.0, 0.0, containerRect.Width * IndicatorFraction, containerRect.Height);
+            regions.Add(new OverflowRegionData(
+                Rect: markerRect,
+                Label: $"LEFT OVERFLOWED BY {FormatPixels(overflow.Left)} PIXELS",
+                LabelOffset: new Point(markerRect.Left, markerRect.Center.Y)
+                             + new Point(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
+                Rotation: Math.PI / 2.0,
+                Side: OverflowSide.Left));
         }
 
-        if (overflowRight > Constants.PrecisionErrorTolerance)
+        if (overflow.Right > 0.0)
         {
-            var marker = new Rect(
-                translatedContainer.Right - translatedContainer.Width * IndicatorFraction,
-                translatedContainer.Y,
-                translatedContainer.Width * IndicatorFraction,
-                translatedContainer.Height);
-            PaintMarker(context, marker);
-            PaintLabel(
-                context,
-                $"RIGHT OVERFLOWED BY {FormatPixels(overflowRight)} PIXELS",
-                new Point(marker.Right - LabelFontSize - LabelPadding, marker.Center.Y),
-                -Math.PI / 2.0);
+            var markerRect = new Rect(
+                containerRect.Width * (1.0 - IndicatorFraction),
+                0.0,
+                containerRect.Width * IndicatorFraction,
+                containerRect.Height);
+            regions.Add(new OverflowRegionData(
+                Rect: markerRect,
+                Label: $"RIGHT OVERFLOWED BY {FormatPixels(overflow.Right)} PIXELS",
+                LabelOffset: new Point(markerRect.Right, markerRect.Center.Y)
+                             - new Point(IndicatorFontSizePixels + IndicatorLabelPaddingPixels, 0.0),
+                Rotation: -Math.PI / 2.0,
+                Side: OverflowSide.Right));
         }
 
-        if (overflowTop > Constants.PrecisionErrorTolerance)
+        if (overflow.Top > 0.0)
         {
-            var marker = new Rect(
-                translatedContainer.X,
-                translatedContainer.Y,
-                translatedContainer.Width,
-                translatedContainer.Height * IndicatorFraction);
-            PaintMarker(context, marker);
-            PaintLabel(
-                context,
-                $"TOP OVERFLOWED BY {FormatPixels(overflowTop)} PIXELS",
-                new Point(marker.Center.X, marker.Bottom - LabelFontSize - LabelPadding),
-                0);
+            var markerRect = new Rect(0.0, 0.0, containerRect.Width, containerRect.Height * IndicatorFraction);
+            regions.Add(new OverflowRegionData(
+                Rect: markerRect,
+                Label: $"TOP OVERFLOWED BY {FormatPixels(overflow.Top)} PIXELS",
+                LabelOffset: new Point(markerRect.Center.X, markerRect.Top)
+                             + new Point(0.0, IndicatorLabelPaddingPixels),
+                Rotation: 0.0,
+                Side: OverflowSide.Top));
         }
 
-        if (overflowBottom > Constants.PrecisionErrorTolerance)
+        if (overflow.Bottom > 0.0)
         {
-            var marker = new Rect(
-                translatedContainer.X,
-                translatedContainer.Bottom - translatedContainer.Height * IndicatorFraction,
-                translatedContainer.Width,
-                translatedContainer.Height * IndicatorFraction);
-            PaintMarker(context, marker);
-            PaintLabel(
-                context,
-                $"BOTTOM OVERFLOWED BY {FormatPixels(overflowBottom)} PIXELS",
-                new Point(marker.Center.X, marker.Bottom - LabelFontSize - LabelPadding),
-                0);
+            var markerRect = new Rect(
+                0.0,
+                containerRect.Height * (1.0 - IndicatorFraction),
+                containerRect.Width,
+                containerRect.Height * IndicatorFraction);
+            regions.Add(new OverflowRegionData(
+                Rect: markerRect,
+                Label: $"BOTTOM OVERFLOWED BY {FormatPixels(overflow.Bottom)} PIXELS",
+                LabelOffset: new Point(markerRect.Center.X, markerRect.Bottom)
+                             - new Point(0.0, IndicatorFontSizePixels + IndicatorLabelPaddingPixels),
+                Rotation: 0.0,
+                Side: OverflowSide.Bottom));
         }
 
-        if (overflowLeft <= 0.0 && overflowRight <= 0.0 && overflowTop <= 0.0 && overflowBottom <= 0.0)
-        {
-            return;
-        }
-
-        if (_overflowReportNeeded)
-        {
-            _overflowReportNeeded = false;
-            ReportOverflow(self, overflowLeft, overflowTop, overflowRight, overflowBottom, overflowHints);
-        }
+        return regions;
     }
 
     private static void ReportOverflow(
         RenderObject self,
-        double overflowLeft,
-        double overflowTop,
-        double overflowRight,
-        double overflowBottom,
+        RelativeRect overflow,
         List<DiagnosticsNode>? overflowHints)
     {
         string runtimeType = Diagnostics.DescribeType(self.GetType());
@@ -170,11 +176,14 @@ internal sealed class DebugOverflowIndicator
 
         List<string> overflows =
         [
-            .. overflowLeft > 0.0 ? new[] { $"{FormatPixels(overflowLeft)} pixels on the left" } : [],
-            .. overflowTop > 0.0 ? new[] { $"{FormatPixels(overflowTop)} pixels on the top" } : [],
-            .. overflowBottom > 0.0 ? new[] { $"{FormatPixels(overflowBottom)} pixels on the bottom" } : [],
-            .. overflowRight > 0.0 ? new[] { $"{FormatPixels(overflowRight)} pixels on the right" } : [],
+            .. overflow.Left > 0.0 ? new[] { $"{FormatPixels(overflow.Left)} pixels on the left" } : [],
+            .. overflow.Top > 0.0 ? new[] { $"{FormatPixels(overflow.Top)} pixels on the top" } : [],
+            .. overflow.Bottom > 0.0 ? new[] { $"{FormatPixels(overflow.Bottom)} pixels on the bottom" } : [],
+            .. overflow.Right > 0.0 ? new[] { $"{FormatPixels(overflow.Right)} pixels on the right" } : [],
         ];
+        DebugAssert(
+            overflows.Count > 0,
+            $"Somehow {runtimeType} didn't actually overflow like it thought it did.");
         string overflowText;
         switch (overflows.Count)
         {
@@ -205,59 +214,79 @@ internal sealed class DebugOverflowIndicator
             ]));
     }
 
-    private static void PaintMarker(PaintingContext context, Rect marker)
-    {
-        if (marker.Width > 0 && marker.Height > 0)
-        {
-            context.Canvas.DrawRectangle(IndicatorBrush, null, marker);
-        }
-    }
-
-    private static void PaintLabel(
+    /// To be called when the overflow indicators should be painted.
+    ///
+    /// Typically only called if there is an overflow, and only from within a debug build.
+    ///
+    /// See example code in [DebugOverflowIndicatorMixin] documentation.
+    public void PaintOverflowIndicator(
+        RenderObject self,
         PaintingContext context,
-        string label,
-        Point labelOffset,
-        double rotation)
+        Point offset,
+        Rect containerRect,
+        Rect childRect,
+        List<DiagnosticsNode>? overflowHints = null)
     {
-        try
-        {
-            var layout = new TextLayout(
-                text: label,
-                typeface: new Typeface(
-                    FontFamily.Default,
-                    FontStyle.Normal,
-                    FontWeight.ExtraBold,
-                    FontStretch.Normal),
-                fontSize: LabelFontSize,
-                foreground: LabelForegroundBrush);
-            var labelOrigin = new Point(-layout.Width / 2.0, 0);
-            var background = new Rect(labelOrigin, new Size(layout.Width, layout.Height));
+        RelativeRect overflow = RelativeRect.FromRect(containerRect, childRect);
 
-            context.Canvas.Save();
-            context.Canvas.Translate(labelOffset.X, labelOffset.Y);
-            if (Math.Abs(rotation) > Constants.PrecisionErrorTolerance)
+        if (overflow.Left <= 0.0 && overflow.Right <= 0.0 && overflow.Top <= 0.0 && overflow.Bottom <= 0.0)
+        {
+            return;
+        }
+
+        List<OverflowRegionData> overflowRegions = CalculateOverflowRegions(overflow, containerRect);
+        foreach (OverflowRegionData region in overflowRegions)
+        {
+            context.Canvas.DrawRectangle(IndicatorPaint, null, region.Rect.Translate((Vector)offset));
+            TextPainter label = _indicatorLabel[(int)region.Side];
+            var textSpan = label.Text as TextSpan;
+            if (textSpan?.Text != region.Label)
             {
-                context.Canvas.Rotate(rotation);
+                label.Text = new TextSpan(text: region.Label, style: IndicatorTextStyle);
+                label.Layout();
             }
 
-            context.Canvas.DrawRectangle(LabelBackgroundBrush, null, background);
-            context.Canvas.DrawTextLayout(layout, labelOrigin);
+            Point labelOffset = region.LabelOffset + offset;
+            var centerOffset = new Point(-label.Width / 2.0, 0.0);
+            var textBackgroundRect = new Rect(centerOffset, label.Size);
+            context.Canvas.Save();
+            context.Canvas.Translate(labelOffset.X, labelOffset.Y);
+            context.Canvas.Rotate(region.Rotation);
+            context.Canvas.DrawRectangle(LabelBackgroundPaint, null, textBackgroundRect);
+            label.Paint(context.Canvas, centerOffset);
             context.Canvas.Restore();
         }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
+
+        if (_overflowReportNeeded)
         {
-            // Host-less tests may not have a font manager; the striped marker remains visible.
+            _overflowReportNeeded = false;
+            ReportOverflow(self, overflow, overflowHints);
         }
     }
 
-    private static string FormatPixels(double value)
+    // Dart's `assert` for this file.
+    private static void DebugAssert(bool condition, string message)
     {
-        return value switch
+        if (Constants.KDebugMode && !condition)
         {
-            > 10.0 => value.ToString("F0", System.Globalization.CultureInfo.InvariantCulture),
-            > 1.0 => value.ToString("F1", System.Globalization.CultureInfo.InvariantCulture),
-            _ => value.ToString("G3", System.Globalization.CultureInfo.InvariantCulture),
-        };
+            throw new AssertionError(message);
+        }
     }
 
+    // Describes which side the region data overflows on.
+    private enum OverflowSide
+    {
+        Left,
+        Top,
+        Bottom,
+        Right,
+    }
+
+    // Data used by the DebugOverflowIndicator to manage the regions and labels for the indicators.
+    private readonly record struct OverflowRegionData(
+        Rect Rect,
+        string Label,
+        Point LabelOffset,
+        double Rotation,
+        OverflowSide Side);
 }

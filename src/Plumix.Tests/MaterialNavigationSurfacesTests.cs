@@ -49,8 +49,8 @@ public sealed class MaterialNavigationSurfacesTests
 
         harness.Pump(new Size(320, 160));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == Colors.DarkSlateBlue);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.Color == Colors.DarkSlateBlue);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
@@ -86,8 +86,8 @@ public sealed class MaterialNavigationSurfacesTests
 
         harness.Pump(new Size(320, 160));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == Colors.Purple);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.Color == Colors.Purple);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.Gold);
         Assert.NotNull(FindParagraph(harness.RenderView, "One"));
@@ -117,8 +117,8 @@ public sealed class MaterialNavigationSurfacesTests
             colors.Surface,
             colors.OnSurface,
             3.0);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(barHarness.RenderView),
-            box => box.AsBoxDecoration.Color == expectedBackground);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(barHarness.RenderView),
+            surface => surface.Color == expectedBackground);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(barHarness.RenderView),
             box => box.AsBoxDecoration.Color == expectedIndicator);
         Assert.Equal(11, FindParagraph(barHarness.RenderView, "One")!.FontSize);
@@ -361,8 +361,8 @@ public sealed class MaterialNavigationSurfacesTests
 
         harness.Pump(new Size(420, 320));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == Colors.DarkSlateBlue);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.Color == Colors.DarkSlateBlue);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
@@ -487,8 +487,8 @@ public sealed class MaterialNavigationSurfacesTests
 
         harness.Pump(new Size(420, 320));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == Colors.DarkBlue);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.Color == Colors.DarkBlue);
         // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
         // material as an ink decoration rather than as a `DecoratedBox`.
         Assert.Contains(FindDescendants<RenderInkDecoration>(harness.RenderView),
@@ -507,7 +507,7 @@ public sealed class MaterialNavigationSurfacesTests
     {
         var background = Colors.White;
         var tint = Colors.DarkRed;
-        var expected = MaterialSurface.ApplySurfaceTint(background, tint, 1);
+        var expected = ElevationOverlay.ApplySurfaceTint(background, tint, 1);
         var theme = ThemeData.Light with
         {
             NavigationDrawerTheme = new NavigationDrawerThemeData(
@@ -521,8 +521,8 @@ public sealed class MaterialNavigationSurfacesTests
 
         harness.Pump(new Size(420, 320));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color == expected);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.Color == expected);
     }
 
     [Fact]

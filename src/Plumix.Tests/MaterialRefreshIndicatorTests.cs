@@ -430,6 +430,12 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     {
         foreach (var render in FindDescendants(root))
         {
+            // Dart's `Material(type: MaterialType.circle)` paints through a RenderPhysicalShape.
+            if (MaterialSurfaceProbe.From(render) is { Shape: CircleBorder } surface)
+            {
+                return surface.Color;
+            }
+
             if (render is RenderDecoratedBox decoratedBox)
             {
                 // `RenderDecoratedBox.Decoration` is Dart's untyped `Decoration`; a circle may be painted

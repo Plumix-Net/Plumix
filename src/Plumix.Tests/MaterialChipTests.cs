@@ -269,8 +269,8 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(MaterialColors.Transparent, ChipSide(decoration).Color);
         // The elevation shadow is painted by the chip's `Material`, not by its `Ink` decoration.
         Assert.Contains(
-            FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.BoxShadows is { Count: > 0 });
+            MaterialSurfaceProbe.FindAll(harness.RenderView),
+            surface => surface.HasShadow);
     }
 
     [Fact]
@@ -563,8 +563,8 @@ public sealed class MaterialChipTests : IDisposable
         enabled.Pump(new Size(320, 120));
         Assert.Equal(Colors.MediumPurple, FindChipDecoration(enabled.RenderView).Color);
         Assert.Contains(
-            FindDescendants<RenderDecoratedBox>(enabled.RenderView),
-            box => box.AsBoxDecoration.BoxShadows is { Count: > 0 });
+            MaterialSurfaceProbe.FindAll(enabled.RenderView),
+            surface => surface.HasShadow);
 
         using var disabled = new WidgetRenderHarness(Root(
             theme,

@@ -206,13 +206,17 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(new Theme(theme, material));
         MountAndFlush(root, owner);
-        var decorations = new List<DecoratedBox>();
-        CollectWidgets(root, decorations);
-        DecoratedBox decoration = Assert.Single(decorations);
-        ShapeDecoration boxDecoration = Assert.IsType<ShapeDecoration>(decoration.Decoration);
+        // Dart's Material hands the resolved colour to its physical model (PhysicalModel/PhysicalShape).
+        var physicalModels = new List<Widget>();
+        CollectWidgets(root, physicalModels);
+        Color color = Assert.Single(physicalModels.Where(widget => widget is PhysicalModel or PhysicalShape)) switch
+        {
+            PhysicalModel model => model.Color,
+            PhysicalShape shape => shape.Color,
+            _ => throw new InvalidOperationException("Material did not resolve a surface color."),
+        };
         root.UnmountRoot();
-        return boxDecoration.Color
-               ?? throw new InvalidOperationException("Material did not resolve a surface color.");
+        return color;
     }
 
     private static void CollectWidgets<T>(Element element, List<T> results) where T : Widget

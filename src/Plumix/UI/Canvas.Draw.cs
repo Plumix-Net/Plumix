@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using Avalonia.Media.TextFormatting;
 using Plumix.Rendering;
 
 namespace Plumix.UI;
@@ -62,6 +61,56 @@ public sealed partial class Canvas
         });
     }
 
+    /// <summary>Draws a rectangle with the given <see cref="Paint"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawRect(rect, paint)</c>. The paint's colour (or shader), style, stroke width
+    /// and mask filter are honoured; a <see cref="MaskFilter"/> blur is drawn with the same Gaussian
+    /// ring technique as <see cref="DrawRSuperellipseBlur"/>, because Avalonia's drawing context has no
+    /// mask-filter paint (<c>BlurStyle.outer</c>/<c>inner</c> are drawn as <c>normal</c>).
+    /// </remarks>
+    public void DrawRect(Rect rect, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        bool stroke = paint.Style == PaintingStyle.Stroke;
+        IPen? pen = stroke
+            ? new Pen(
+                brush,
+                paint.StrokeWidth,
+                lineCap: ToPenLineCap(paint.StrokeCap),
+                lineJoin: ToPenLineJoin(paint.StrokeJoin))
+            : null;
+        DebugRecordCall(new CanvasCall(
+            "drawRect",
+            Rect: rect,
+            Brush: stroke ? null : brush,
+            Pen: pen,
+            MaskFilter: paint.MaskFilter));
+        if (paint.MaskFilter is { } maskFilter && !stroke)
+        {
+            var path = new Path();
+            path.AddRect(rect);
+            DrawBlurredGeometry(path.ToGeometry(), paint.Color, maskFilter.Sigma);
+            return;
+        }
+
+        AddDrawCommand(context => context.DrawRectangle(stroke ? null : brush, pen, rect));
+    }
+
+    private static PenLineCap ToPenLineCap(StrokeCap cap) => cap switch
+    {
+        StrokeCap.Round => PenLineCap.Round,
+        StrokeCap.Square => PenLineCap.Square,
+        _ => PenLineCap.Flat,
+    };
+
+    private static PenLineJoin ToPenLineJoin(StrokeJoin join) => join switch
+    {
+        StrokeJoin.Round => PenLineJoin.Round,
+        StrokeJoin.Bevel => PenLineJoin.Bevel,
+        _ => PenLineJoin.Miter,
+    };
+
     // Dart parity source: dart:ui Canvas.drawPaint.
     /// <summary>Fills the canvas's current clip with the given brush. Avalonia exposes no clip-bounds
     /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
@@ -80,6 +129,45 @@ public sealed partial class Canvas
         path.AddRRect(rrect);
         Geometry? geometry = null;
         AddDrawCommand(context => context.DrawGeometry(brush, pen, geometry ??= path.ToGeometry()));
+    }
+
+    /// <summary>Draws a rounded rectangle with the given <see cref="Paint"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawRRect(rrect, paint)</c>. Like <see cref="DrawRect(Rect, Paint)"/>, the paint's
+    /// colour (or shader), style, stroke width and mask filter are honoured; a blur mask filter is drawn
+    /// with the Gaussian ring technique.
+    /// </remarks>
+    public void DrawRRect(RRect rrect, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        bool stroke = paint.Style == PaintingStyle.Stroke;
+        IPen? pen = stroke
+            ? new Pen(
+                brush,
+                paint.StrokeWidth,
+                lineCap: ToPenLineCap(paint.StrokeCap),
+                lineJoin: ToPenLineJoin(paint.StrokeJoin))
+            : null;
+        DebugRecordCall(new CanvasCall(
+            "drawRRect",
+            RRect: rrect,
+            Brush: stroke ? null : brush,
+            Pen: pen,
+            MaskFilter: paint.MaskFilter));
+        var path = new Path();
+        path.AddRRect(rrect);
+        if (paint.MaskFilter is { } maskFilter && !stroke)
+        {
+            DrawBlurredGeometry(path.ToGeometry(), paint.Color, maskFilter.Sigma);
+            return;
+        }
+
+        Geometry? geometry = null;
+        AddDrawCommand(context => context.DrawGeometry(
+            stroke ? null : brush,
+            pen,
+            geometry ??= path.ToGeometry()));
     }
 
     // Dart parity source: dart:ui Canvas.drawRSuperellipse.
@@ -113,6 +201,13 @@ public sealed partial class Canvas
     public void DrawRSuperellipseBlur(RSuperellipse rsuperellipse, Color color, double blurSigma)
     {
         Geometry geometry = rsuperellipse.ToPath().ToGeometry();
+        DrawBlurredGeometry(geometry, color, blurSigma);
+    }
+
+    // Concentric strokes sampled from one Gaussian falloff: the contour stays exact while the blur is
+    // backend-independent; the shape itself is filled last, under the innermost ring.
+    private void DrawBlurredGeometry(Geometry geometry, Color color, double blurSigma)
+    {
         if (blurSigma <= 0.0)
         {
             DrawGeometry(new SolidColorBrush(color), null, geometry);
@@ -162,6 +257,7 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawOval.
     public void DrawOval(Rect oval, IBrush? brush, IPen? pen)
     {
+        DebugRecordCall(new CanvasCall("drawOval", Rect: oval, Brush: brush, Pen: pen));
         AddDrawCommand(context =>
             context.DrawEllipse(brush, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
     }
@@ -170,7 +266,7 @@ public sealed partial class Canvas
     public void DrawPath(Path path, IBrush? brush, IPen? pen)
     {
         ArgumentNullException.ThrowIfNull(path);
-        DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen));
+        DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen, Path: path));
 
         // The backend geometry is built on playback: recording must not need a render backend.
         Geometry? geometry = null;
@@ -180,6 +276,7 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawCircle.
     public void DrawCircle(IBrush? brush, IPen? pen, Point center, double radius)
     {
+        DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
         AddDrawCommand(context => context.DrawEllipse(brush, pen, center, clampedRadius, clampedRadius));
     }
@@ -187,6 +284,7 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawArc.
     public void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
     {
+        DebugRecordCall(new CanvasCall("drawArc", Rect: rect, Pen: pen));
         if (rect.Width <= 0 || rect.Height <= 0)
         {
             return;
@@ -223,6 +321,7 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawLine.
     public void DrawLine(IPen pen, Point startPoint, Point endPoint)
     {
+        DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
         AddDrawCommand(context => context.DrawLine(pen, startPoint, endPoint));
     }
 
@@ -284,6 +383,7 @@ public sealed partial class Canvas
         Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
+        DebugRecordCall(new CanvasCall("drawShadow", ShadowColor: color, Elevation: elevation));
         DrawShadowCore(() => geometry, color, elevation, transparentOccluder, geometryOffset);
     }
 
@@ -299,6 +399,7 @@ public sealed partial class Canvas
         Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(path);
+        DebugRecordCall(new CanvasCall("drawShadow", Path: path, ShadowColor: color, Elevation: elevation));
         Geometry? geometry = null;
         DrawShadowCore(() => geometry ??= path.ToGeometry(), color, elevation, transparentOccluder, geometryOffset);
     }
@@ -335,13 +436,6 @@ public sealed partial class Canvas
                 context.DrawGeometry(transparentOccluder ? shadowBrush : null, shadowPen, geometry);
             }
         });
-    }
-
-    // Dart parity source: dart:ui Canvas.drawParagraph.
-    public void DrawTextLayout(TextLayout layout, Point point)
-    {
-        ArgumentNullException.ThrowIfNull(layout);
-        AddDrawCommand(context => layout.Draw(context, point));
     }
 
     // Dart parity source: dart:ui Canvas.drawImageRect.

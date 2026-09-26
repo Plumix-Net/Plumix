@@ -1,7 +1,6 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Gestures;
 using Plumix.Foundation;
 using Plumix.Painting;
@@ -1257,56 +1256,32 @@ internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
 
 internal sealed class TappableLabel
 {
-    public TappableLabel(int value, bool inner, string text, TextStyle style)
+    public TappableLabel(int value, bool inner, TextPainter painter, Action onTap)
     {
         Value = value;
         Inner = inner;
-        Text = text;
-        Style = style;
+        Painter = painter;
+        OnTap = onTap;
     }
 
+    /// The value this label is displaying.
     public int Value { get; }
+
+    /// This value is part of the "inner" ring of values on the dial, used for 24 hour input.
     public bool Inner { get; }
-    public string Text { get; }
-    public TextStyle Style { get; }
 
-    private TextLayout? _layout;
-    private bool _layoutResolved;
+    /// The painter for the text that is to be displayed.
+    public TextPainter Painter { get; }
 
-    public TextLayout? Layout
-    {
-        get
-        {
-            if (_layoutResolved) return _layout;
-            _layoutResolved = true;
-            try
-            {
-                var typeface = new Typeface(
-                    Style.FontFamily ?? FontFamily.Default,
-                    Style.FontStyle ?? Avalonia.Media.FontStyle.Normal,
-                    Style.FontWeight ?? FontWeight.Normal,
-                    FontStretch.Normal);
-                _layout = new TextLayout(
-                    Text,
-                    typeface,
-                    Style.FontSize ?? 16.0,
-                    new SolidColorBrush(Style.Color ?? Colors.Black));
-            }
-            catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-            {
-                _layout = null;
-            }
-
-            return _layout;
-        }
-    }
+    /// The callback to call when this label is tapped.
+    public Action OnTap { get; }
 }
 
 internal sealed class TimeDialPainter : CustomPainter
 {
     public TimeDialPainter(
-        IReadOnlyList<TappableLabel> primaryLabels,
-        IReadOnlyList<TappableLabel> selectedLabels,
+        List<TappableLabel> primaryLabels,
+        List<TappableLabel> selectedLabels,
         Color backgroundColor,
         Color handColor,
         double handWidth,
@@ -1314,7 +1289,9 @@ internal sealed class TimeDialPainter : CustomPainter
         double dotRadius,
         double centerRadius,
         double theta,
-        double radius)
+        double radius,
+        TextDirection textDirection,
+        int selectedValue)
     {
         PrimaryLabels = primaryLabels;
         SelectedLabels = selectedLabels;
@@ -1326,10 +1303,12 @@ internal sealed class TimeDialPainter : CustomPainter
         CenterRadius = centerRadius;
         Theta = theta;
         Radius = radius;
+        TextDirection = textDirection;
+        SelectedValue = selectedValue;
     }
 
-    public IReadOnlyList<TappableLabel> PrimaryLabels { get; }
-    public IReadOnlyList<TappableLabel> SelectedLabels { get; }
+    public List<TappableLabel> PrimaryLabels { get; }
+    public List<TappableLabel> SelectedLabels { get; }
     public Color BackgroundColor { get; }
     public Color HandColor { get; }
     public double HandWidth { get; }
@@ -1338,78 +1317,112 @@ internal sealed class TimeDialPainter : CustomPainter
     public double CenterRadius { get; }
     public double Theta { get; }
     public double Radius { get; }
+    public TextDirection TextDirection { get; }
+    public int SelectedValue { get; }
+
+    public override void Dispose()
+    {
+        foreach (TappableLabel label in PrimaryLabels)
+        {
+            label.Painter.Dispose();
+        }
+
+        foreach (TappableLabel label in SelectedLabels)
+        {
+            label.Painter.Dispose();
+        }
+
+        PrimaryLabels.Clear();
+        SelectedLabels.Clear();
+    }
 
     public override void Paint(PaintingContext context, Size size)
     {
+        Canvas canvas = context.Canvas;
         double dialRadius = Math.Max(
             Math.Min(size.Width, size.Height) / 2,
             TimePickerConstants.DialMinRadius + DotRadius);
-        double labelRadius = Math.Max(dialRadius - TimePickerConstants.DialPadding, 50);
+        double labelRadius = Math.Max(
+            dialRadius - TimePickerConstants.DialPadding,
+            TimePickerConstants.DialMinRadius);
         double innerLabelRadius = Math.Max(labelRadius - TimePickerConstants.InnerDialOffset, 0);
         double handleRadius = Math.Max(
             labelRadius - ((Radius < 0.5 ? 1 : 0) * (labelRadius - innerLabelRadius)),
-            50);
+            TimePickerConstants.DialMinRadius);
         var center = new Point(size.Width / 2, size.Height / 2);
+        Point centerPoint = center;
+        canvas.DrawCircle(new SolidColorBrush(BackgroundColor), null, centerPoint, dialRadius);
 
-        Point OffsetForTheta(double theta, double radius) => new(
+        Point GetOffsetForTheta(double theta, double radius) => new(
             center.X + (radius * Math.Cos(theta)),
             center.Y - (radius * Math.Sin(theta)));
 
-        void PaintLabels(PaintingContext target, IReadOnlyList<TappableLabel> labels, double radius)
+        void PaintLabels(List<TappableLabel> labels, double radius)
         {
-            if (labels.Count == 0) return;
+            if (labels.Count == 0)
+            {
+                return;
+            }
+
             double labelThetaIncrement = -TimePickerConstants.TwoPi / labels.Count;
             double labelTheta = Math.PI / 2;
-            foreach (var label in labels)
-            {
-                var layout = label.Layout;
-                if (layout is not null)
-                {
-                    var position = OffsetForTheta(labelTheta, radius);
-                    target.Canvas.DrawTextLayout(
-                        layout,
-                        new Point(position.X - (layout.Width / 2), position.Y - (layout.Height / 2)));
-                }
 
+            foreach (TappableLabel label in labels)
+            {
+                TextPainter labelPainter = label.Painter;
+                var labelOffset = new Vector(-labelPainter.Width / 2, -labelPainter.Height / 2);
+                labelPainter.Paint(canvas, GetOffsetForTheta(labelTheta, radius) + labelOffset);
                 labelTheta += labelThetaIncrement;
             }
         }
 
-        void PaintInnerOuterLabels(PaintingContext target, IReadOnlyList<TappableLabel> labels)
+        void PaintInnerOuterLabels(List<TappableLabel>? labels)
         {
-            PaintLabels(target, labels.Where(label => !label.Inner).ToList(), labelRadius);
-            PaintLabels(target, labels.Where(label => label.Inner).ToList(), innerLabelRadius);
-        }
-
-        context.Canvas.DrawCircle(new SolidColorBrush(BackgroundColor), null, center, dialRadius);
-        PaintInnerOuterLabels(context, PrimaryLabels);
-
-        var handBrush = new SolidColorBrush(HandColor);
-        var focusedPoint = OffsetForTheta(Theta, handleRadius);
-        context.Canvas.DrawCircle(handBrush, null, center, CenterRadius);
-        context.Canvas.DrawCircle(handBrush, null, focusedPoint, DotRadius);
-        context.Canvas.DrawLine(new Pen(handBrush, HandWidth), center, focusedPoint);
-
-        if (PrimaryLabels.Count > 0)
-        {
-            double labelThetaIncrement = -TimePickerConstants.TwoPi / PrimaryLabels.Count;
-            double remainder = Theta - (Math.Floor(Theta / labelThetaIncrement) * labelThetaIncrement);
-            if (remainder is > 0.1 and < 0.45)
+            if (labels is null)
             {
-                context.Canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
+                return;
             }
+
+            PaintLabels(labels.Where(label => !label.Inner).ToList(), labelRadius);
+            PaintLabels(labels.Where(label => label.Inner).ToList(), innerLabelRadius);
         }
 
-        var dotPath = new Plumix.UI.Path();
-        dotPath.AddOval(new Rect(
+        PaintInnerOuterLabels(PrimaryLabels);
+
+        var selectorPaint = new SolidColorBrush(HandColor);
+        Point focusedPoint = GetOffsetForTheta(Theta, handleRadius);
+        canvas.DrawCircle(selectorPaint, null, centerPoint, CenterRadius);
+        canvas.DrawCircle(selectorPaint, null, focusedPoint, DotRadius);
+        canvas.DrawLine(new Pen(selectorPaint, HandWidth), centerPoint, focusedPoint);
+
+        // Add a dot inside the selector but only when it isn't over the labels.
+        // This checks that the selector's theta is between two labels. A remainder
+        // between 0.1 and 0.45 indicates that the selector is roughly not above any
+        // labels. The values were derived by manually testing the dial.
+        double labelThetaIncrement = -TimePickerConstants.TwoPi / PrimaryLabels.Count;
+        if (DartModulo(Theta, labelThetaIncrement) > 0.1 && DartModulo(Theta, labelThetaIncrement) < 0.45)
+        {
+            canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
+        }
+
+        Rect focusedRect = new Rect(
             focusedPoint.X - DotRadius,
             focusedPoint.Y - DotRadius,
             DotRadius * 2,
-            DotRadius * 2));
-        context.Canvas.Save();
-        context.Canvas.ClipPath(dotPath);
-        PaintInnerOuterLabels(context, SelectedLabels);
-        context.Canvas.Restore();
+            DotRadius * 2);
+        var clip = new Plumix.UI.Path();
+        clip.AddOval(focusedRect);
+        canvas.Save();
+        canvas.ClipPath(clip);
+        PaintInnerOuterLabels(SelectedLabels);
+        canvas.Restore();
+    }
+
+    // Dart's `num %`: the Euclidean remainder, never negative, even for a negative divisor.
+    private static double DartModulo(double value, double divisor)
+    {
+        double result = value % divisor;
+        return result < 0 ? result + Math.Abs(divisor) : result;
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate) => oldDelegate is not TimeDialPainter old
@@ -1417,7 +1430,7 @@ internal sealed class TimeDialPainter : CustomPainter
         || !ReferenceEquals(old.SelectedLabels, SelectedLabels)
         || old.BackgroundColor != BackgroundColor
         || old.HandColor != HandColor
-        || Math.Abs(old.Theta - Theta) > double.Epsilon;
+        || old.Theta != Theta;
 }
 
 internal sealed class Dial : StatefulWidget
@@ -1460,6 +1473,7 @@ internal sealed class DialState : State<Dial>
     private Point _position;
     private Point _center;
     private Size _dialSize;
+    private TimeDialPainter? _painter;
 
     private Dial Current => (Dial)StateWidget;
 
@@ -1491,6 +1505,7 @@ internal sealed class DialState : State<Dial>
     {
         _controller?.Dispose();
         _controller = null;
+        _painter?.Dispose();
 
         base.Dispose();
     }
@@ -1661,64 +1676,139 @@ internal sealed class DialState : State<Dial>
         _dialSize = default;
     }
 
-    private IReadOnlyList<TappableLabel> Build24HourRing(TextStyle style, bool useMaterial3)
+    private void SelectHour(int hour)
+    {
+        TimeOfDay time;
+
+        TimeOfDay GetAmPmTime()
+        {
+            return Current.SelectedTime.Period switch
+            {
+                DayPeriod.Am => new TimeOfDay(hour, Current.SelectedTime.Minute),
+                _ => new TimeOfDay(hour + TimeOfDay.HoursPerPeriod, Current.SelectedTime.Minute),
+            };
+        }
+
+        switch (Current.HourMinuteMode)
+        {
+            case HourMinuteMode.Hour:
+                time = Current.HourDialType switch
+                {
+                    HourDialType.TwentyFourHour or HourDialType.TwentyFourHourDoubleRing =>
+                        new TimeOfDay(hour, Current.SelectedTime.Minute),
+                    _ => GetAmPmTime(),
+                };
+                break;
+            default:
+                time = GetAmPmTime();
+                break;
+        }
+
+        double angle = GetThetaForTime(time);
+        _thetaTween!.Begin = angle;
+        _thetaTween.End = angle;
+        NotifyOnChangedIfNeeded();
+    }
+
+    private void SelectMinute(int minute)
+    {
+        var time = new TimeOfDay(Current.SelectedTime.Hour, minute);
+        double angle = GetThetaForTime(time);
+        _thetaTween!.Begin = angle;
+        _thetaTween.End = angle;
+        NotifyOnChangedIfNeeded();
+    }
+
+    private TappableLabel BuildTappableLabel(
+        TextStyle? textStyle,
+        int selectedValue,
+        int value,
+        bool inner,
+        string label,
+        Action onTap)
+    {
+        var painter = new TextPainter(
+            text: new TextSpan(style: textStyle, text: label),
+            textDirection: TextDirection.Ltr,
+            textScaler: MediaQuery.TextScalerOf(Context).Clamp(maxScaleFactor: 2.0));
+        painter.Layout();
+        return new TappableLabel(value: value, inner: inner, painter: painter, onTap: onTap);
+    }
+
+    private List<TappableLabel> Build24HourRing(TextStyle? textStyle, int selectedValue)
     {
         var localizations = MaterialLocalizations.Of(Context);
         var labels = new List<TappableLabel>();
-        if (useMaterial3)
+        if (Theme.Of(Context).UseMaterial3)
         {
             for (int hour = 0; hour < TimeOfDay.HoursPerDay; hour++)
             {
                 var timeOfDay = new TimeOfDay(hour, 0);
-                labels.Add(new TappableLabel(
-                    value: hour,
-                    inner: hour >= 12,
-                    text: hour != 0
-                        ? localizations.FormatDecimal(hour)
+                labels.Add(BuildTappableLabel(
+                    textStyle: textStyle,
+                    selectedValue: selectedValue,
+                    inner: timeOfDay.Hour >= 12,
+                    value: timeOfDay.Hour,
+                    // The M3 specs for 24-hour ring show 0 hour as 00, but for 1-9, the specs show
+                    // single digit.
+                    label: timeOfDay.Hour != 0
+                        ? localizations.FormatDecimal(timeOfDay.Hour)
                         : localizations.FormatHour(timeOfDay, alwaysUse24HourFormat: true),
-                    style: style));
+                    onTap: () => SelectHour(timeOfDay.Hour)));
             }
-
-            return labels;
         }
-
-        foreach (int hour in TwentyFourHoursM2)
+        else
         {
-            var timeOfDay = new TimeOfDay(hour, 0);
-            labels.Add(new TappableLabel(
-                value: hour,
-                inner: false,
-                text: localizations.FormatHour(timeOfDay, alwaysUse24HourFormat: true),
-                style: style));
+            foreach (int hour in TwentyFourHoursM2)
+            {
+                var timeOfDay = new TimeOfDay(hour, 0);
+                labels.Add(BuildTappableLabel(
+                    textStyle: textStyle,
+                    selectedValue: selectedValue,
+                    inner: false,
+                    value: timeOfDay.Hour,
+                    label: localizations.FormatHour(timeOfDay, alwaysUse24HourFormat: true),
+                    onTap: () => SelectHour(timeOfDay.Hour)));
+            }
         }
 
         return labels;
     }
 
-    private IReadOnlyList<TappableLabel> Build12HourRing(TextStyle style)
+    private List<TappableLabel> Build12HourRing(TextStyle? textStyle, int selectedValue)
     {
         var localizations = MaterialLocalizations.Of(Context);
         bool alwaysUse24HourFormat = MediaQuery.MaybeAlwaysUse24HourFormatOf(Context) ?? false;
-        return AmHours
-            .Select(hour => new TappableLabel(
-                value: hour,
+        var labels = new List<TappableLabel>();
+        foreach (int hour in AmHours)
+        {
+            var timeOfDay = new TimeOfDay(hour, 0);
+            labels.Add(BuildTappableLabel(
+                textStyle: textStyle,
+                selectedValue: selectedValue,
                 inner: false,
-                text: localizations.FormatHour(new TimeOfDay(hour % 24, 0), alwaysUse24HourFormat),
-                style: style))
-            .ToList();
+                value: timeOfDay.Hour,
+                label: localizations.FormatHour(timeOfDay, alwaysUse24HourFormat),
+                onTap: () => SelectHour(timeOfDay.Hour)));
+        }
+
+        return labels;
     }
 
-    private IReadOnlyList<TappableLabel> BuildMinutes(TextStyle style)
+    private List<TappableLabel> BuildMinutes(TextStyle? textStyle, int selectedValue)
     {
         var localizations = MaterialLocalizations.Of(Context);
         var labels = new List<TappableLabel>();
         for (int minute = 0; minute < TimeOfDay.MinutesPerHour; minute += 5)
         {
-            labels.Add(new TappableLabel(
-                value: minute,
+            var timeOfDay = new TimeOfDay(0, minute);
+            labels.Add(BuildTappableLabel(
+                textStyle: textStyle,
+                selectedValue: selectedValue,
                 inner: false,
-                text: localizations.FormatMinute(new TimeOfDay(0, minute)),
-                style: style));
+                value: timeOfDay.Minute,
+                label: localizations.FormatMinute(timeOfDay),
+                onTap: () => SelectMinute(timeOfDay.Minute)));
         }
 
         return labels;
@@ -1729,34 +1819,59 @@ internal sealed class DialState : State<Dial>
         var theme = Theme.Of(context);
         var pickerTheme = TimePickerModel.ThemeOf(context);
         var defaultTheme = TimePickerModel.DefaultThemeOf(context);
-        var dialTextColor = pickerTheme.DialTextColor ?? defaultTheme.DialTextColor;
-        var dialTextStyle = pickerTheme.DialTextStyle ?? defaultTheme.DialTextStyle;
-        var primaryStyle = dialTextStyle.CopyWith(
-            color: WidgetStateProperty<Color>.ResolveAs(dialTextColor, new HashSet<WidgetState>()));
-        var selectedStyle = dialTextStyle.CopyWith(color: WidgetStateProperty<Color>.ResolveAs(dialTextColor, 
-            new HashSet<WidgetState> { WidgetState.Selected }));
+        Color backgroundColor = pickerTheme.DialBackgroundColor ?? defaultTheme.DialBackgroundColor;
+        Color dialHandColor = pickerTheme.DialHandColor ?? defaultTheme.DialHandColor;
+        TextStyle labelStyle = pickerTheme.DialTextStyle ?? defaultTheme.DialTextStyle;
+        Color dialTextUnselectedColor = WidgetStateProperty<Color>.ResolveAs(
+            pickerTheme.DialTextColor ?? defaultTheme.DialTextColor,
+            new HashSet<WidgetState>());
+        Color dialTextSelectedColor = WidgetStateProperty<Color>.ResolveAs(
+            pickerTheme.DialTextColor ?? defaultTheme.DialTextColor,
+            new HashSet<WidgetState> { WidgetState.Selected });
+        TextStyle resolvedUnselectedLabelStyle = labelStyle.CopyWith(color: dialTextUnselectedColor);
+        TextStyle resolvedSelectedLabelStyle = labelStyle.CopyWith(color: dialTextSelectedColor);
+        Color dotColor = dialTextSelectedColor;
 
-        IReadOnlyList<TappableLabel> primaryLabels;
-        IReadOnlyList<TappableLabel> selectedLabels;
+        List<TappableLabel> primaryLabels;
+        List<TappableLabel> selectedLabels;
+        int selectedDialValue;
         double radiusValue;
         switch (Current.HourMinuteMode)
         {
             case HourMinuteMode.Hour when Current.HourDialType == HourDialType.TwelveHour:
-                primaryLabels = Build12HourRing(primaryStyle);
-                selectedLabels = Build12HourRing(selectedStyle);
+                selectedDialValue = Current.SelectedTime.HourOfPeriod;
+                primaryLabels = Build12HourRing(resolvedUnselectedLabelStyle, selectedDialValue);
+                selectedLabels = Build12HourRing(resolvedSelectedLabelStyle, selectedDialValue);
                 radiusValue = 1;
                 break;
             case HourMinuteMode.Hour:
-                primaryLabels = Build24HourRing(primaryStyle, theme.UseMaterial3);
-                selectedLabels = Build24HourRing(selectedStyle, theme.UseMaterial3);
+                selectedDialValue = Current.SelectedTime.Hour;
+                primaryLabels = Build24HourRing(resolvedUnselectedLabelStyle, selectedDialValue);
+                selectedLabels = Build24HourRing(resolvedSelectedLabelStyle, selectedDialValue);
                 radiusValue = theme.UseMaterial3 ? _radius!.Value : 1;
                 break;
             default:
-                primaryLabels = BuildMinutes(primaryStyle);
-                selectedLabels = BuildMinutes(selectedStyle);
+                selectedDialValue = Current.SelectedTime.Minute;
+                primaryLabels = BuildMinutes(resolvedUnselectedLabelStyle, selectedDialValue);
+                selectedLabels = BuildMinutes(resolvedSelectedLabelStyle, selectedDialValue);
                 radiusValue = 1;
                 break;
         }
+
+        _painter?.Dispose();
+        _painter = new TimeDialPainter(
+            selectedValue: selectedDialValue,
+            primaryLabels: primaryLabels,
+            selectedLabels: selectedLabels,
+            backgroundColor: backgroundColor,
+            handColor: dialHandColor,
+            handWidth: defaultTheme.HandWidth,
+            dotColor: dotColor,
+            dotRadius: defaultTheme.DotRadius,
+            centerRadius: defaultTheme.CenterRadius,
+            theta: _theta!.Value,
+            radius: radiusValue,
+            textDirection: Directionality.Of(context));
 
         // Dart's `_Dial.build` uses a plain GestureDetector for the dial's pan and tap handling.
         return new GestureDetector(
@@ -1765,20 +1880,7 @@ internal sealed class DialState : State<Dial>
             onPanUpdate: HandlePanUpdate,
             onPanEnd: _ => HandlePanEnd(),
             onTapUp: details => HandleTapUp(details.GlobalPosition),
-            child: new CustomPaint(
-                painter: new TimeDialPainter(
-                    primaryLabels: primaryLabels,
-                    selectedLabels: selectedLabels,
-                    backgroundColor: pickerTheme.DialBackgroundColor ?? defaultTheme.DialBackgroundColor,
-                    handColor: pickerTheme.DialHandColor ?? defaultTheme.DialHandColor,
-                    handWidth: defaultTheme.HandWidth,
-                    dotColor: WidgetStateProperty<Color>.ResolveAs(
-                        dialTextColor,
-                        new HashSet<WidgetState> { WidgetState.Selected }),
-                    dotRadius: defaultTheme.DotRadius,
-                    centerRadius: defaultTheme.CenterRadius,
-                    theta: _theta!.Value,
-                    radius: radiusValue)));
+            child: new CustomPaint(painter: _painter));
     }
 }
 

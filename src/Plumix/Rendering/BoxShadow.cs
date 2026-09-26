@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -167,6 +168,27 @@ public sealed record BoxShadow : Shadow
 
     /// <summary>The <see cref="Plumix.Rendering.BlurStyle"/> to use for this shadow.</summary>
     public BlurStyle BlurStyle { get; }
+
+    /// <summary>Create the <see cref="Paint"/> object that corresponds to this shadow description.</summary>
+    /// <remarks>
+    /// Dart's <c>BoxShadow.toPaint</c>. The <see cref="Shadow.Offset"/> and <see cref="SpreadRadius"/>
+    /// are not represented in the paint. When <see cref="RenderingDebug.DisableShadows"/> is true (in a
+    /// debug build) the paint carries no mask filter.
+    /// </remarks>
+    public Paint ToPaint()
+    {
+        var result = new Paint
+        {
+            Color = Color,
+            MaskFilter = MaskFilter.Blur(BlurStyle, BlurSigma),
+        };
+        if (Foundation.Constants.KDebugMode && RenderingDebug.DisableShadows)
+        {
+            result.MaskFilter = null;
+        }
+
+        return result;
+    }
 
     public override BoxShadow Scale(double factor)
     {

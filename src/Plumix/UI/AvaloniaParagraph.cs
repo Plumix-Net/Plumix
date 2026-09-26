@@ -38,8 +38,9 @@ internal static class ParagraphBackend
             _ = FontManager.Current;
             s_hasFontManager = true;
         }
-        catch (InvalidOperationException exception) when (TextLayoutFallback.IsMissingFontManager(exception)
-                                                            || exception.Message.Contains("FontManager"))
+        catch (InvalidOperationException exception) when (exception.Message.Contains(
+                                                               "FontManager",
+                                                               StringComparison.Ordinal))
         {
             s_hasFontManager = false;
         }

@@ -87,16 +87,16 @@ public sealed class MaterialInkResponseTests : IDisposable
                     child: new SizedBox(width: 80.0, height: 48.0)))));
         harness.Pump(new Size(120.0, 80.0));
 
-        RenderMaterialInkFeatures controller = Assert.Single(
-            FindDescendants<RenderMaterialInkFeatures>(harness.RenderView));
+        RenderInkFeatures controller = Assert.Single(
+            FindDescendants<RenderInkFeatures>(harness.RenderView));
         RenderInkDecoration decoration = Assert.Single(
             FindDescendants<RenderInkDecoration>(harness.RenderView));
         RenderInkResponsePaint response = Assert.Single(
             FindDescendants<RenderInkResponsePaint>(harness.RenderView));
 
-        Assert.Equal(2, controller.FeatureCount);
-        Assert.Same(controller.Controller, decoration.Controller);
-        Assert.Same(controller.Controller, response.Controller);
+        Assert.Equal(2, controller.DebugInkFeatures!.Count);
+        Assert.Same(controller, decoration.Controller);
+        Assert.Same(controller, response.Controller);
     }
 
     [Fact]
@@ -203,13 +203,17 @@ public sealed class MaterialInkResponseTests : IDisposable
     [Fact]
     public void CircleMaterialUsesOvalClipForNonSquareChildren()
     {
+        // Dart asserts a circle Material has a color (MaterialType.circle has no theme default).
         using var harness = CreateHarness(new Plumix.Material.Material(
             type: MaterialType.Circle,
+            color: Colors.White,
             clipBehavior: Clip.AntiAlias,
             child: new SizedBox(width: 80.0, height: 48.0)));
         harness.Pump(new Size(120.0, 80.0));
 
-        RenderClipPath clip = Assert.Single(FindDescendants<RenderClipPath>(harness.RenderView));
+        // Dart's Material clips through its physical shape (RenderPhysicalShape with a ShapeBorderClipper).
+        RenderPhysicalShape clip = Assert.Single(FindDescendants<RenderPhysicalShape>(harness.RenderView));
+        Assert.Equal(Clip.AntiAlias, clip.ClipBehavior);
         var clipper = Assert.IsType<ShapeBorderClipper>(clip.Clipper);
         Assert.IsType<CircleBorder>(clipper.Shape);
         Assert.Empty(FindDescendants<RenderClipRRect>(harness.RenderView));

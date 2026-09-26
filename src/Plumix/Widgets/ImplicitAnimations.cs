@@ -48,6 +48,219 @@ public sealed class DecorationTween : Tween<Decoration>
     }
 }
 
+/// <summary>
+/// An abstract class for building widgets that animate changes to their properties. Dart's
+/// <c>ImplicitlyAnimatedWidget</c>.
+/// </summary>
+public abstract class ImplicitlyAnimatedWidget : StatefulWidget
+{
+    /// <summary>Initializes fields for subclasses. <paramref name="curve"/> defaults to <c>Curves.linear</c>.</summary>
+    protected ImplicitlyAnimatedWidget(
+        TimeSpan duration,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(key)
+    {
+        Curve = curve ?? Curves.Linear;
+        Duration = duration;
+        OnEnd = onEnd;
+    }
+
+    /// <summary>The curve to apply when animating the parameters of this container.</summary>
+    public Curve Curve { get; }
+
+    /// <summary>The duration over which to animate the parameters of this container.</summary>
+    public TimeSpan Duration { get; }
+
+    /// <summary>Called every time an animation completes.</summary>
+    public Action? OnEnd { get; }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new IntProperty("duration", (int)Duration.TotalMilliseconds, unit: "ms"));
+    }
+}
+
+/// <summary>
+/// Signature for a <see cref="Tween{T}"/> factory. Dart's <c>TweenConstructor</c>.
+/// </summary>
+public delegate Tween<T> TweenConstructor<T>(T targetValue);
+
+/// <summary>
+/// Dart's <c>TweenVisitor&lt;dynamic&gt;</c>: the function <see cref="ImplicitlyAnimatedWidgetState{T}.ForEachTween"/>
+/// calls for every tween. C# cannot pass a generic lambda, so the visitor is an object with a generic method.
+/// </summary>
+public abstract class TweenVisitor
+{
+    /// <summary>
+    /// Visits one tween: returns the (possibly newly constructed) tween to store, or null when
+    /// <paramref name="targetValue"/> is null.
+    /// </summary>
+    public abstract Tween<T>? Visit<T>(Tween<T>? tween, T? targetValue, TweenConstructor<T> constructor);
+}
+
+/// <summary>
+/// A base class for the <see cref="State"/> of widgets with implicit animations. Dart's
+/// <c>ImplicitlyAnimatedWidgetState</c>.
+/// </summary>
+public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : ImplicitlyAnimatedWidget
+{
+    private AnimationController? _controller;
+    private CurvedAnimation? _animation;
+
+    /// <summary>The animation controller driving this widget's implicit animations.</summary>
+    protected AnimationController Controller => _controller ??= new AnimationController(
+        duration: Widget.Duration,
+        debugLabel: Constants.KDebugMode ? Widget.ToStringShort() : null,
+        vsync: this);
+
+    /// <summary>The animation driving this widget's implicit animations.</summary>
+    public Animation<double> Animation => _animation ??= CreateCurve();
+
+    /// <inheritdoc />
+    public override void InitState()
+    {
+        base.InitState();
+        Controller.AddStatusListener(status =>
+        {
+            if (status == AnimationStatus.Completed)
+            {
+                Widget.OnEnd?.Invoke();
+            }
+        });
+        ConstructTweens();
+        DidUpdateTweens();
+    }
+
+    /// <inheritdoc />
+    public override void DidUpdateWidget(T oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        if (Widget.Curve != oldWidget.Curve)
+        {
+            _animation?.Dispose();
+            _animation = CreateCurve();
+        }
+
+        Controller.Duration = Widget.Duration;
+        if (ConstructTweens())
+        {
+            ForEachTween(new UpdateTweenVisitor(Animation));
+            Controller.Forward(from: 0.0);
+            DidUpdateTweens();
+        }
+    }
+
+    private CurvedAnimation CreateCurve()
+    {
+        return new CurvedAnimation(parent: Controller, curve: Widget.Curve);
+    }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _animation?.Dispose();
+        Controller.Dispose();
+        base.Dispose();
+    }
+
+    private bool ConstructTweens()
+    {
+        var visitor = new ConstructTweenVisitor();
+        ForEachTween(visitor);
+        return visitor.ShouldStartAnimation;
+    }
+
+    /// <summary>
+    /// Visits each tween controlled by this state with <paramref name="visitor"/>, storing the tween
+    /// the visitor returns. Dart's <c>forEachTween</c>.
+    /// </summary>
+    protected abstract void ForEachTween(TweenVisitor visitor);
+
+    /// <summary>Optional hook for subclasses that runs after all tweens have been updated.</summary>
+    protected virtual void DidUpdateTweens()
+    {
+    }
+
+    // Dart's `tween.end ?? tween.begin`.
+    private static TValue? EndOrBegin<TValue>(Tween<TValue> tween)
+    {
+        return tween.HasEndValue ? tween.End : tween.Begin;
+    }
+
+    private sealed class ConstructTweenVisitor : TweenVisitor
+    {
+        public bool ShouldStartAnimation { get; private set; }
+
+        public override Tween<TValue>? Visit<TValue>(
+            Tween<TValue>? tween,
+            TValue? targetValue,
+            TweenConstructor<TValue> constructor) where TValue : default
+        {
+            if (targetValue is not null)
+            {
+                tween ??= constructor(targetValue);
+                if (!Equals(targetValue, EndOrBegin(tween)))
+                {
+                    ShouldStartAnimation = true;
+                }
+                else if (!tween.HasEndValue)
+                {
+                    tween.End = tween.Begin;
+                }
+            }
+            else
+            {
+                tween = null;
+            }
+
+            return tween;
+        }
+    }
+
+    private sealed class UpdateTweenVisitor(Animation<double> animation) : TweenVisitor
+    {
+        public override Tween<TValue>? Visit<TValue>(
+            Tween<TValue>? tween,
+            TValue? targetValue,
+            TweenConstructor<TValue> constructor) where TValue : default
+        {
+            if (tween is not null)
+            {
+                tween.Begin = tween.Evaluate(animation);
+                tween.End = targetValue;
+            }
+
+            return tween;
+        }
+    }
+}
+
+/// <summary>
+/// A base class for widgets with implicit animations that need to rebuild their widget tree as the
+/// animation runs. Dart's <c>AnimatedWidgetBaseState</c>.
+/// </summary>
+public abstract class AnimatedWidgetBaseState<T> : ImplicitlyAnimatedWidgetState<T>
+    where T : ImplicitlyAnimatedWidget
+{
+    /// <inheritdoc />
+    public override void InitState()
+    {
+        base.InitState();
+        Controller.AddListener(HandleAnimationChanged);
+    }
+
+    private void HandleAnimationChanged()
+    {
+        SetState(() =>
+        {
+            // The animation ticked. Rebuild with new animation value.
+        });
+    }
+}
+
 public sealed class AnimatedOpacity : StatefulWidget
 {
     public AnimatedOpacity(

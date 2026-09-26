@@ -490,7 +490,7 @@ public sealed class MergeableMaterial : StatefulWidget
 
         private BorderRadius ResolveBorderRadius(int index, bool start, bool end)
         {
-            BorderRadius cardBorderRadius = MaterialEdges.ForType(MaterialType.Card) ?? BorderRadius.Zero;
+            BorderRadius cardBorderRadius = MaterialEdges.KMaterialEdges[MaterialType.Card] ?? BorderRadius.Zero;
             double cardRadius = cardBorderRadius.Radius;
             double startRadius = 0.0;
             double endRadius = 0.0;
@@ -687,7 +687,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
             var rect = new Rect(parentData.offset + offset, child.Size);
             if (index % 2 == 0 && Elevation != 0.0)
             {
-                double radius = (MaterialEdges.ForType(MaterialType.Card) ?? BorderRadius.Zero).Radius;
+                double radius = (MaterialEdges.KMaterialEdges[MaterialType.Card] ?? BorderRadius.Zero).Radius;
                 context.Canvas.DrawShadow(
                     new RectangleGeometry(rect, radius, radius),
                     Colors.Black,

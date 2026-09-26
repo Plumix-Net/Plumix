@@ -71,7 +71,8 @@ public sealed record MediaQueryData
         BorderRadius? DisplayCornerRadii = null,
         IReadOnlyList<DisplayFeature>? DisplayFeatures = null,
         bool OnOffSwitchLabels = false,
-        DeviceGestureSettings? GestureSettings = null)
+        DeviceGestureSettings? GestureSettings = null,
+        bool BoldText = false)
     {
         if (TextScaler is not null && TextScaleFactor != 1.0)
         {
@@ -100,6 +101,7 @@ public sealed record MediaQueryData
         this.DisplayCornerRadii = DisplayCornerRadii;
         this.DisplayFeatures = DisplayFeatures;
         this.GestureSettings = GestureSettings;
+        this.BoldText = BoldText;
     }
 
     public Size Size { get; init; }
@@ -133,6 +135,12 @@ public sealed record MediaQueryData
     public bool HighContrast { get; init; }
 
     public bool OnOffSwitchLabels { get; init; }
+
+    /// <summary>
+    /// Whether the platform is requesting that text be drawn with a bold font weight. Ports Dart's
+    /// `MediaQueryData.boldText`.
+    /// </summary>
+    public bool BoldText { get; init; }
 
     public bool SupportsAnnounce { get; init; }
 
@@ -180,7 +188,8 @@ public sealed record MediaQueryData
         bool clearDisplayCornerRadii = false,
         IReadOnlyList<DisplayFeature>? displayFeatures = null,
         bool? onOffSwitchLabels = null,
-        DeviceGestureSettings? gestureSettings = null)
+        DeviceGestureSettings? gestureSettings = null,
+        bool? boldText = null)
     {
         if (textScaleFactor is not null && textScaler is not null)
         {
@@ -210,7 +219,8 @@ public sealed record MediaQueryData
             ViewId: viewId ?? ViewId,
             DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
             DisplayFeatures: displayFeatures ?? DisplayFeatures,
-            GestureSettings: gestureSettings ?? GestureSettings);
+            GestureSettings: gestureSettings ?? GestureSettings,
+            BoldText: boldText ?? BoldText);
     }
 
     public MediaQueryData RemovePadding(
@@ -363,7 +373,8 @@ public sealed record MediaQueryData
             DisplayCornerRadii: view.DisplayCornerRadii,
             DisplayFeatures: view.DisplayFeatures,
             OnOffSwitchLabels: platformData?.OnOffSwitchLabels ?? false,
-            GestureSettings: view.GestureSettings);
+            GestureSettings: view.GestureSettings,
+            BoldText: platformData?.BoldText ?? false);
     }
 
     /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
@@ -542,6 +553,11 @@ public sealed class MediaQuery : InheritedModel<object>
     public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
 
     public static bool? MaybeHighContrastOf(BuildContext context) => MaybeOf(context)?.HighContrast;
+
+    /// <summary>Dart's <c>MediaQuery.boldTextOf</c>: false when there is no ancestor.</summary>
+    public static bool BoldTextOf(BuildContext context) => MaybeBoldTextOf(context) ?? false;
+
+    public static bool? MaybeBoldTextOf(BuildContext context) => MaybeOf(context)?.BoldText;
 
     public static bool OnOffSwitchLabelsOf(BuildContext context) => Of(context).OnOffSwitchLabels;
 

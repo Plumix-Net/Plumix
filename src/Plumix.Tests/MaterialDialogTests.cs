@@ -60,9 +60,9 @@ public sealed class MaterialDialogTests : IDisposable
             padding.Padding == new Thickness(43, 29, 47, 35));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MinWidth == 280);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == ThemeData.Light.ColorScheme.SurfaceContainerHigh
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(28));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == ThemeData.Light.ColorScheme.SurfaceContainerHigh
+            && box.BorderRadius == BorderRadius.Circular(28));
         Assert.NotNull(FindSemantics(semantics, node => node.Role == SemanticsRole.Dialog));
     }
 
@@ -85,9 +85,9 @@ public sealed class MaterialDialogTests : IDisposable
             global,
             new DialogTheme(local, new Dialog(child: new Text("themed")))));
         themed.Pump(new Size(500, 300));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(themed.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Purple
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(12));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(themed.RenderView), box =>
+            box.Color == Colors.Purple
+            && box.BorderRadius == BorderRadius.Circular(12));
         Assert.Contains(FindDescendants<RenderPadding>(themed.RenderView), padding => padding.Padding == new Thickness(9));
 
         using var widget = new WidgetRenderHarness(Wrap(
@@ -98,9 +98,9 @@ public sealed class MaterialDialogTests : IDisposable
                 shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(6)),
                 child: new Text("widget"))));
         widget.Pump(new Size(500, 300));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(widget.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Orange
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(6));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(widget.RenderView), box =>
+            box.Color == Colors.Orange
+            && box.BorderRadius == BorderRadius.Circular(6));
     }
 
     [Fact]
@@ -112,10 +112,10 @@ public sealed class MaterialDialogTests : IDisposable
             new Dialog(child: new Text("M2 dialog"))));
         harness.Pump(new Size(500, 300));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.White
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(4)
-            && box.AsBoxDecoration.BoxShadows is not null);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.White
+            && box.BorderRadius == BorderRadius.Circular(4)
+            && box.HasShadow);
     }
 
     [Fact]
@@ -374,8 +374,8 @@ public sealed class MaterialDialogTests : IDisposable
         harness.Pump(new Size(600, 400));
         Assert.NotNull(FindParagraph(harness.RenderView, "Underlying"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Route dialog"));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.Purple);
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.Purple);
         Assert.False(result.IsCompleted);
 
         // Flutter completes the dialog future on pop; the exit fade still runs afterwards.

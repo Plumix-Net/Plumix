@@ -167,20 +167,8 @@ public static class Curves
         };
     }
 
-    public static double FastOutSlowIn(double t)
-    {
-        t = Math.Clamp(t, 0, 1);
-        double parameter = t;
-        for (int i = 0; i < 8; i++)
-        {
-            double x = Cubic(parameter, 0.4, 0.2) - t;
-            if (Math.Abs(x) < 1e-7) break;
-            double derivative = CubicDerivative(parameter, 0.4, 0.2);
-            if (Math.Abs(derivative) < 1e-7) break;
-            parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
-        }
-        return Cubic(parameter, 0, 1);
-    }
+    // Flutter Curves.fastOutSlowIn: Cubic(0.4, 0.0, 0.2, 1.0).
+    public static double FastOutSlowIn(double t) => CubicBezier(t, 0.4, 0.0, 0.2, 1.0);
 
     public static Curve ThreePointCubic(
         Point firstControlPoint,
@@ -238,42 +226,65 @@ public static class Curves
     // Flutter Curves.linearToEaseOut: Cubic(0.35, 0.91, 0.33, 0.97).
     public static Curve LinearToEaseOut { get; } = Cubic(0.35, 0.91, 0.33, 0.97);
 
+    // Dart's `Cubic._cubicErrorBound`.
+    private const double CubicErrorBound = 0.001;
+
+    // Dart's `Cubic.transformInternal` (curves.dart): bisection on the x curve until the estimate is
+    // within `_cubicErrorBound` of t, then the y curve at that parameter. Exact animation values
+    // (paint positions in Flutter's own tests) depend on this bisection, not on an exact solve.
     private static double CubicBezier(double t, double x1, double y1, double x2, double y2)
     {
-        t = Math.Clamp(t, 0, 1);
-        double parameter = t;
-        for (int i = 0; i < 8; i++)
+        if (double.IsNaN(t))
         {
-            double x = Cubic(parameter, x1, x2) - t;
-            if (Math.Abs(x) < 1e-7) break;
-            double derivative = CubicDerivative(parameter, x1, x2);
-            if (Math.Abs(derivative) < 1e-7) break;
-            parameter = Math.Clamp(parameter - (x / derivative), 0, 1);
+            throw new ArgumentException("must not be NaN", nameof(t));
         }
 
-        return Cubic(parameter, y1, y2);
+        if (t <= 0.0)
+        {
+            return 0.0;
+        }
+
+        if (t >= 1.0)
+        {
+            return 1.0;
+        }
+
+        double start = 0.0;
+        double end = 1.0;
+        while (true)
+        {
+            double midpoint = (start + end) / 2;
+            double estimate = Cubic(midpoint, x1, x2);
+            if (Math.Abs(t - estimate) < CubicErrorBound)
+            {
+                return Cubic(midpoint, y1, y2);
+            }
+
+            if (estimate < t)
+            {
+                start = midpoint;
+            }
+            else
+            {
+                end = midpoint;
+            }
+        }
     }
 
-    private static double Cubic(double t, double firstControl, double secondControl)
+    // Dart's `Cubic._evaluateCubic(a, b, m)`, in Dart's operation order.
+    private static double Cubic(double m, double a, double b)
     {
-        double inverse = 1 - t;
-        return (3 * inverse * inverse * t * firstControl)
-               + (3 * inverse * t * t * secondControl)
-               + (t * t * t);
-    }
-
-    private static double CubicDerivative(double t, double firstControl, double secondControl)
-    {
-        double inverse = 1 - t;
-        return (3 * inverse * inverse * firstControl)
-               + (6 * inverse * t * (secondControl - firstControl))
-               + (3 * t * t * (1 - secondControl));
+        return (3 * a * (1 - m) * (1 - m) * m) + (3 * b * (1 - m) * m * m) + (m * m * m);
     }
 }
 
 public abstract class Animatable<T>
 {
     public abstract T Transform(double t);
+
+    /// <summary>The current value of this object for the given <paramref name="animation"/>.</summary>
+    /// <remarks>Dart's <c>Animatable.evaluate</c>: <c>transform(animation.value)</c>.</remarks>
+    public T Evaluate(Animation<double> animation) => Transform(animation.Value);
 
     public Animation<T> Animate(Animation<double> parent)
     {

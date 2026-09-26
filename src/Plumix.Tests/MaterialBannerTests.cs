@@ -119,10 +119,9 @@ public sealed class MaterialBannerTests
             new MaterialBannerTheme(data, Banner())));
         local.Pump(new Size(360, 180));
         var localBackground = Assert.Single(
-            FindDescendants<RenderDecoratedBox>(local.RenderView),
-            box => box.AsBoxDecoration.Color != null);
-        Assert.Equal(Colors.DarkCyan, localBackground.AsBoxDecoration.Color);
-        Assert.NotNull(localBackground.AsBoxDecoration.BoxShadows);
+            MaterialSurfaceProbe.FindAll(local.RenderView));
+        Assert.Equal(Colors.DarkCyan, localBackground.Color);
+        Assert.True(localBackground.HasShadow);
     }
 
     [Fact]
@@ -140,14 +139,13 @@ public sealed class MaterialBannerTests
         m3.Pump(new Size(360, 180));
 
         var m3Background = Assert.Single(
-            FindDescendants<RenderDecoratedBox>(m3.RenderView),
-            box => box.AsBoxDecoration.Color != null);
+            MaterialSurfaceProbe.FindAll(m3.RenderView));
         var m3Divider = Assert.Single(
             FindDescendants<RenderDecoratedBox>(m3.RenderView),
             box => box.AsBoxDecoration.Border is Plumix.Rendering.Border { Bottom.Style: BorderStyle.Solid });
-        Assert.Equal(m3Surface, m3Background.AsBoxDecoration.Color);
+        Assert.Equal(m3Surface, m3Background.Color);
         Assert.Equal(m3Outline, ((Plumix.Rendering.Border)m3Divider.AsBoxDecoration.Border!).Bottom.Color);
-        Assert.Null(m3Background.AsBoxDecoration.BoxShadows);
+        Assert.False(m3Background.HasShadow);
 
         Color m2Surface = new Color(0xFF708090);
         var m2Theme = ThemeData.Light with
@@ -159,10 +157,9 @@ public sealed class MaterialBannerTests
         m2.Pump(new Size(360, 180));
 
         var m2Background = Assert.Single(
-            FindDescendants<RenderDecoratedBox>(m2.RenderView),
-            box => box.AsBoxDecoration.Color != null);
-        Assert.Equal(m2Surface, m2Background.AsBoxDecoration.Color);
-        Assert.Null(m2Background.AsBoxDecoration.BoxShadows);
+            MaterialSurfaceProbe.FindAll(m2.RenderView));
+        Assert.Equal(m2Surface, m2Background.Color);
+        Assert.False(m2Background.HasShadow);
     }
 
     [Fact]
@@ -172,10 +169,9 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 180));
 
         var decoration = Assert.Single(
-            FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.AsBoxDecoration.Color != null);
-        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.AsBoxDecoration.Color);
-        Assert.Null(decoration.AsBoxDecoration.BoxShadows);
+            MaterialSurfaceProbe.FindAll(harness.RenderView));
+        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.Color);
+        Assert.False(decoration.HasShadow);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding == new Thickness(16, 2, 0, 0));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
@@ -259,10 +255,9 @@ public sealed class MaterialBannerTests
         themed.Pump(new Size(360, 180));
 
         var decoration = Assert.Single(
-            FindDescendants<RenderDecoratedBox>(themed.RenderView),
-            box => box.AsBoxDecoration.Color != null);
-        Assert.Equal(Colors.Purple, decoration.AsBoxDecoration.Color);
-        Assert.NotNull(decoration.AsBoxDecoration.BoxShadows);
+            MaterialSurfaceProbe.FindAll(themed.RenderView));
+        Assert.Equal(Colors.Purple, decoration.Color);
+        Assert.True(decoration.HasShadow);
         Assert.Equal(Colors.Orange,
             Assert.IsType<SolidColorBrush>(FindParagraph(themed.RenderView, "Content")!.Foreground).Color);
         Assert.Equal(18, FindParagraph(themed.RenderView, "Content")!.FontSize);
@@ -277,8 +272,7 @@ public sealed class MaterialBannerTests
         explicitColor.Pump(new Size(360, 180));
         Assert.Equal(Colors.Green,
             Assert.Single(
-                FindDescendants<RenderDecoratedBox>(explicitColor.RenderView),
-                box => box.AsBoxDecoration.Color != null).AsBoxDecoration.Color);
+                MaterialSurfaceProbe.FindAll(explicitColor.RenderView)).Color);
     }
 
     [Fact]

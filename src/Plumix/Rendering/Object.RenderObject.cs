@@ -426,7 +426,9 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
 
         OnDetach();
-        ClearOwnSemantics();
+        // Dart's `detach` keeps the semantics cache: a render object reparented by a GlobalKey (or
+        // re-attached in the same frame) keeps its SemanticsNode and id. `ClearSemantics` is only for
+        // the semantics owner going away.
         Owner = null;
         Debug.Assert(Parent is null || Attached == Parent.Attached);
 

@@ -1,7 +1,7 @@
+using System.Globalization;
 using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -11,12 +11,35 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/range_slider.dart
 
-public readonly record struct RangeValues(double Start, double End);
+/// <summary>
+/// <see cref="RangeSlider"/> uses this callback to paint the value indicator on the overlay.
+/// </summary>
+/// <remarks>
+/// Since the value indicator is painted on the Overlay; this method paints the value indicator in a
+/// <see cref="RenderBox"/> that appears in the <see cref="Overlay"/>.
+/// </remarks>
+public delegate void PaintRangeValueIndicator(PaintingContext context, Point offset);
 
-public delegate string SemanticFormatterCallback(double value);
-
-public sealed class RangeSlider : StatefulWidget
+/// <summary>
+/// A Material Design range slider.
+/// </summary>
+/// <remarks>
+/// Used to select a range from a range of values. The range slider will be disabled if
+/// <see cref="OnChanged"/> is null or if the range given by <see cref="Min"/>..<see cref="Max"/> is empty.
+/// By default, a slider will be as wide as possible, centered vertically. When given unbounded constraints,
+/// it will attempt to make the track 144 pixels wide (including margins on each side) and will shrink-wrap
+/// vertically. Requires one of its ancestors to be a <see cref="Material"/> widget and a
+/// <see cref="MediaQuery"/> widget.
+/// </remarks>
+public class RangeSlider : StatefulWidget
 {
+    /// <summary>Creates a Material Design range slider.</summary>
+    /// <remarks>
+    /// The <see cref="Min"/> must be less than or equal to the <see cref="Max"/>. The start of
+    /// <see cref="Values"/> must be less than or equal to its end, and both must lie in
+    /// [<see cref="Min"/>, <see cref="Max"/>]. The <see cref="Divisions"/> parameter must be null or greater
+    /// than zero.
+    /// </remarks>
     public RangeSlider(
         RangeValues values,
         Action<RangeValues>? onChanged,
@@ -25,69 +48,23 @@ public sealed class RangeSlider : StatefulWidget
         double min = 0.0,
         double max = 1.0,
         int? divisions = null,
+        RangeLabels? labels = null,
         Color? activeColor = null,
         Color? inactiveColor = null,
         WidgetStateProperty<Color?>? overlayColor = null,
-        MaterialTapTargetSize? materialTapTargetSize = null,
-        SemanticFormatterCallback? semanticFormatterCallback = null,
-        Key? key = null,
-        RangeLabels? labels = null,
         WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        SemanticFormatterCallback? semanticFormatterCallback = null,
         EdgeInsetsGeometry? padding = null,
-        bool? year2023 = null) : base(key)
+        bool? year2023 = null,
+        Key? key = null) : base(key)
     {
-        if (double.IsNaN(min) || double.IsInfinity(min))
-        {
-            throw new ArgumentOutOfRangeException(nameof(min), "RangeSlider min must be finite.");
-        }
-
-        if (double.IsNaN(max) || double.IsInfinity(max))
-        {
-            throw new ArgumentOutOfRangeException(nameof(max), "RangeSlider max must be finite.");
-        }
-
-        if (max < min)
-        {
-            throw new ArgumentException("RangeSlider max must be greater than or equal to min.", nameof(max));
-        }
-
-        if (double.IsNaN(values.Start) || double.IsInfinity(values.Start))
-        {
-            throw new ArgumentOutOfRangeException(nameof(values), "RangeSlider start value must be finite.");
-        }
-
-        if (double.IsNaN(values.End) || double.IsInfinity(values.End))
-        {
-            throw new ArgumentOutOfRangeException(nameof(values), "RangeSlider end value must be finite.");
-        }
-
-        if (values.Start > values.End)
-        {
-            throw new ArgumentException("RangeSlider start value must be less than or equal to end value.", nameof(values));
-        }
-
-        if (values.Start < min || values.Start > max)
-        {
-            throw new ArgumentOutOfRangeException(nameof(values), "RangeSlider start value must be between min and max.");
-        }
-
-        if (values.End < min || values.End > max)
-        {
-            throw new ArgumentOutOfRangeException(nameof(values), "RangeSlider end value must be between min and max.");
-        }
-
-        if (divisions.HasValue && divisions.Value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(divisions), "RangeSlider divisions must be greater than zero.");
-        }
-
-        if (padding.HasValue && (padding.Value.Left < 0 || padding.Value.Top < 0
-                                 || padding.Value.Right < 0 || padding.Value.Bottom < 0
-                                 || padding.Value.Start < 0 || padding.Value.End < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(padding), "RangeSlider padding cannot be negative.");
-        }
-
+        DebugAssertions.Assert(min <= max, "min <= max");
+        DebugAssertions.Assert(values.Start <= values.End, "values.start <= values.end");
+        DebugAssertions.Assert(
+            values.Start >= min && values.Start <= max,
+            "values.start >= min && values.start <= max");
+        DebugAssertions.Assert(values.End >= min && values.End <= max, "values.end >= min && values.end <= max");
+        DebugAssertions.Assert(divisions == null || divisions > 0, "divisions == null || divisions > 0");
         Values = values;
         OnChanged = onChanged;
         OnChangeStart = onChangeStart;
@@ -100,13 +77,656 @@ public sealed class RangeSlider : StatefulWidget
         InactiveColor = inactiveColor;
         OverlayColor = overlayColor;
         MouseCursor = mouseCursor;
-        MaterialTapTargetSize = materialTapTargetSize;
         SemanticFormatterCallback = semanticFormatterCallback;
         Padding = padding;
+#pragma warning disable CS0618 // Mirrors Flutter's deprecated `year2023` field.
         Year2023 = year2023;
+#pragma warning restore CS0618
+    }
+
+    /// <summary>The currently selected values for this range slider.</summary>
+    public RangeValues Values { get; }
+
+    /// <summary>
+    /// Called when the user is selecting a new value for the slider by dragging. If null, the slider will be
+    /// displayed as disabled.
+    /// </summary>
+    public Action<RangeValues>? OnChanged { get; }
+
+    /// <summary>Called when the user starts selecting new values for the slider.</summary>
+    public Action<RangeValues>? OnChangeStart { get; }
+
+    /// <summary>Called when the user is done selecting new values for the slider.</summary>
+    public Action<RangeValues>? OnChangeEnd { get; }
+
+    /// <summary>The minimum value the user can select. Defaults to 0.0.</summary>
+    public double Min { get; }
+
+    /// <summary>The maximum value the user can select. Defaults to 1.0.</summary>
+    public double Max { get; }
+
+    /// <summary>The number of discrete divisions. If null, the slider is continuous.</summary>
+    public int? Divisions { get; }
+
+    /// <summary>
+    /// Labels to show as text in the <see cref="SliderThemeData.RangeValueIndicatorShape"/> when the slider is
+    /// active and <see cref="SliderThemeData.ShowValueIndicator"/> is satisfied. If null, then the value
+    /// indicator will not be displayed.
+    /// </summary>
+    public RangeLabels? Labels { get; }
+
+    /// <summary>The color of the track's active segment, i.e. the span of track between the thumbs.</summary>
+    public Color? ActiveColor { get; }
+
+    /// <summary>The color of the track's inactive segments.</summary>
+    public Color? InactiveColor { get; }
+
+    /// <summary>
+    /// The highlight color that's typically used to indicate that the range slider thumb is hovered or
+    /// dragged.
+    /// </summary>
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
+
+    /// <summary>The cursor for a mouse pointer when it enters or is hovering over the widget.</summary>
+    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
+
+    /// <summary>
+    /// The callback used to create a semantic value from the slider's values. Defaults to formatting values
+    /// as a percentage.
+    /// </summary>
+    public SemanticFormatterCallback? SemanticFormatterCallback { get; }
+
+    /// <summary>Determines the padding around the <see cref="RangeSlider"/>.</summary>
+    public EdgeInsetsGeometry? Padding { get; }
+
+    /// <summary>
+    /// When true, the <see cref="RangeSlider"/> will use the 2023 Material Design 3 appearance. Defaults to
+    /// true. If <see cref="ThemeData.UseMaterial3"/> is false, then this property is ignored.
+    /// </summary>
+    [Obsolete(
+        "Set this flag to false to opt into the 2024 range slider appearance. Defaults to true. "
+        + "In the future, this flag will default to false. Use SliderThemeData to customize individual "
+        + "properties. This feature was deprecated after v3.30.0-0.1.pre.")]
+    public bool? Year2023 { get; }
+
+    // Touch width for the tap boundary of the slider thumbs.
+    private const double MinTouchTargetWidth = WidgetConstants.MinInteractiveDimension;
+
+    public override State CreateState() => new RangeSliderState();
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("valueStart", Values.Start));
+        properties.Add(new DoubleProperty("valueEnd", Values.End));
+        properties.Add(new ObjectFlagProperty<Action<RangeValues>>("onChanged", OnChanged, ifNull: "disabled"));
+        properties.Add(ObjectFlagProperty<Action<RangeValues>>.Has("onChangeStart", OnChangeStart));
+        properties.Add(ObjectFlagProperty<Action<RangeValues>>.Has("onChangeEnd", OnChangeEnd));
+        properties.Add(new DoubleProperty("min", Min));
+        properties.Add(new DoubleProperty("max", Max));
+        properties.Add(new IntProperty("divisions", Divisions));
+        properties.Add(new StringProperty("labelStart", Labels?.Start));
+        properties.Add(new StringProperty("labelEnd", Labels?.End));
+        properties.Add(new ColorProperty("activeColor", ActiveColor));
+        properties.Add(new ColorProperty("inactiveColor", InactiveColor));
+        properties.Add(
+            ObjectFlagProperty<SemanticFormatterCallback>.Has("semanticFormatterCallback", SemanticFormatterCallback));
+    }
+
+    /// <summary>Flutter's private <c>_RangeSliderState</c>.</summary>
+    /// <remarks>
+    /// Internal rather than private: <see cref="RenderRangeSlider"/> drives its controllers, and Flutter's own
+    /// tests reach <c>startFocusNode</c>/<c>endFocusNode</c> through <c>tester.state(...)</c>.
+    /// </remarks>
+    internal sealed class RangeSliderState : State<RangeSlider>
+    {
+        private static readonly TimeSpan EnableAnimationDuration = TimeSpan.FromMilliseconds(75);
+        private static readonly TimeSpan ValueIndicatorAnimationDuration = TimeSpan.FromMilliseconds(100);
+
+        public FocusNode StartFocusNode { get; } = new FocusNode();
+
+        public FocusNode EndFocusNode { get; } = new FocusNode();
+
+        // Animation controller that is run when the overlay (a.k.a radial reaction)
+        // changes visibility in response to user interaction.
+        public AnimationController OverlayController { get; private set; } = null!;
+
+        // Animation controller that is run when the value indicators change visibility.
+        public AnimationController ValueIndicatorController { get; private set; } = null!;
+
+        // Animation controller that is run when enabling/disabling the slider.
+        public AnimationController EnableController { get; private set; } = null!;
+
+        // Animation controllers that are run when transitioning between one value
+        // and the next on a discrete slider.
+        public AnimationController StartPositionController { get; private set; } = null!;
+
+        public AnimationController EndPositionController { get; private set; } = null!;
+
+        public GestureTimer? InteractionTimer { get; set; }
+
+        // Value Indicator paint Animation that appears on the Overlay.
+        public PaintRangeValueIndicator? PaintTopValueIndicator { get; set; }
+
+        public PaintRangeValueIndicator? PaintBottomValueIndicator { get; set; }
+
+        private bool Enabled => Widget.OnChanged != null;
+
+        private bool _dragging;
+
+        private bool _hovering;
+
+        private bool _showHoverHighlight;
+
+        private void HandleHoverChanged(bool hovering)
+        {
+            if (hovering != _hovering)
+            {
+                SetState(() =>
+                {
+                    _hovering = hovering;
+                    _showHoverHighlight = hovering && Enabled;
+                });
+            }
+        }
+
+        // Always keep the ValueIndicator visible on the Overlay; otherwise, it cannot be updated during the
+        // build phase.
+        private readonly OverlayPortalController _valueIndicatorOverlayPortalController =
+            CreateShownOverlayPortalController();
+
+        private static OverlayPortalController CreateShownOverlayPortalController()
+        {
+            var controller = new OverlayPortalController(debugLabel: "RangeSlider ValueIndicator");
+            controller.Show();
+            return controller;
+        }
+
+        public override void InitState()
+        {
+            base.InitState();
+            OverlayController = new AnimationController(duration: KRadialReactionDuration, vsync: this);
+            ValueIndicatorController = new AnimationController(
+                duration: ValueIndicatorAnimationDuration,
+                vsync: this);
+            EnableController = new AnimationController(
+                duration: EnableAnimationDuration,
+                vsync: this,
+                value: Enabled ? 1.0 : 0.0);
+            StartPositionController = new AnimationController(
+                duration: TimeSpan.Zero,
+                vsync: this,
+                value: Unlerp(Widget.Values.Start));
+            EndPositionController = new AnimationController(
+                duration: TimeSpan.Zero,
+                vsync: this,
+                value: Unlerp(Widget.Values.End));
+        }
+
+        public override void DidUpdateWidget(RangeSlider oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            if (oldWidget.OnChanged == Widget.OnChanged)
+            {
+                return;
+            }
+
+            bool wasEnabled = oldWidget.OnChanged != null;
+            bool isEnabled = Enabled;
+            if (wasEnabled != isEnabled)
+            {
+                if (isEnabled)
+                {
+                    EnableController.Forward();
+                }
+                else
+                {
+                    EnableController.Reverse();
+                }
+
+                _showHoverHighlight = _hovering && isEnabled;
+            }
+        }
+
+        public override void Dispose()
+        {
+            InteractionTimer?.Cancel();
+            OverlayController.Dispose();
+            ValueIndicatorController.Dispose();
+            EnableController.Dispose();
+            StartPositionController.Dispose();
+            EndPositionController.Dispose();
+            StartFocusNode.Dispose();
+            EndFocusNode.Dispose();
+            base.Dispose();
+        }
+
+        private void HandleChanged(RangeValues values)
+        {
+            DebugAssertions.Assert(Enabled, "_enabled");
+            RangeValues lerpValues = LerpRangeValues(values);
+            if (lerpValues != Widget.Values)
+            {
+                Widget.OnChanged!(lerpValues);
+            }
+        }
+
+        private void HandleDragStart(RangeValues values)
+        {
+            SetState(() => _dragging = true);
+            Widget.OnChangeStart?.Invoke(LerpRangeValues(values));
+        }
+
+        private void HandleDragEnd(RangeValues values)
+        {
+            SetState(() => _dragging = false);
+            Widget.OnChangeEnd?.Invoke(LerpRangeValues(values));
+        }
+
+        // Returns a number between min and max, proportional to value, which must
+        // be between 0.0 and 1.0.
+        internal double Lerp(double value) => LerpDouble(Widget.Min, Widget.Max, value);
+
+        // Returns a new range value with the start and end lerped.
+        private RangeValues LerpRangeValues(RangeValues values)
+        {
+            return new RangeValues(Lerp(values.Start), Lerp(values.End));
+        }
+
+        // Returns a number between 0.0 and 1.0, given a value between min and max.
+        private double Unlerp(double value)
+        {
+            DebugAssertions.Assert(value <= Widget.Max, "value <= widget.max");
+            DebugAssertions.Assert(value >= Widget.Min, "value >= widget.min");
+            return Widget.Max > Widget.Min ? (value - Widget.Min) / (Widget.Max - Widget.Min) : 0.0;
+        }
+
+        // Returns a new range value with the start and end unlerped.
+        private RangeValues UnlerpRangeValues(RangeValues values)
+        {
+            return new RangeValues(Unlerp(values.Start), Unlerp(values.End));
+        }
+
+        // Finds the closest thumb. If both thumbs are close to each other and within
+        // the touch radius, neither is selected immediately while the drag
+        // displacement is zero. The first non-zero displacement determines which
+        // thumb is selected: a negative displacement selects the left thumb,
+        // a positive one selects the right thumb.
+        // If only one or zero thumbs are within the touch radius,
+        // the closest one is selected.
+        private Thumb? DefaultRangeThumbSelector(
+            TextDirection textDirection,
+            RangeValues values,
+            double tapValue,
+            Size thumbSize,
+            Size trackSize,
+            double dx) // The horizontal delta or displacement of the drag update.
+        {
+            double touchRadius = Math.Max(thumbSize.Width, MinTouchTargetWidth) / 2;
+            bool inStartTouchTarget = Math.Abs(tapValue - values.Start) * trackSize.Width < touchRadius;
+            bool inEndTouchTarget = Math.Abs(tapValue - values.End) * trackSize.Width < touchRadius;
+
+            // Use dx if the thumb touch targets overlap. If dx is 0 and the drag
+            // position is in both touch targets, no thumb is selected because it is
+            // ambiguous to which thumb should be selected. If the dx is non-zero, the
+            // thumb selection is determined by the direction of the dx. The left thumb
+            // is chosen for negative dx, and the right thumb is chosen for positive dx.
+            if (inStartTouchTarget && inEndTouchTarget)
+            {
+                (bool towardsStart, bool towardsEnd) = textDirection switch
+                {
+                    TextDirection.Ltr => (dx < 0, dx > 0),
+                    TextDirection.Rtl => (dx > 0, dx < 0),
+                    _ => throw new ArgumentOutOfRangeException(nameof(textDirection)),
+                };
+                if (towardsStart)
+                {
+                    return Thumb.Start;
+                }
+
+                if (towardsEnd)
+                {
+                    return Thumb.End;
+                }
+            }
+            else
+            {
+                // Choose the closest thumb and snap position.
+                if (tapValue * 2 < values.Start + values.End)
+                {
+                    return Thumb.Start;
+                }
+
+                return Thumb.End;
+            }
+
+            return null;
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            MaterialDebug.DebugCheckHasMaterial(context);
+            // Dart also asserts debugCheckHasMediaQuery(context), which is not ported; the MediaQuery lookups
+            // below throw the MediaQuery error themselves.
+
+            ThemeData theme = Theme.Of(context);
+            SliderThemeData sliderTheme = SliderTheme.Of(context);
+#pragma warning disable CS0618 // Mirrors Flutter's deprecated `year2023` flag.
+            bool year2023 = Widget.Year2023 ?? sliderTheme.Year2023 ?? true;
+#pragma warning restore CS0618
+            SliderThemeData defaults = theme.UseMaterial3 && !year2023
+                ? new RangeSliderDefaultsM3(context)
+                : new RangeSliderDefaultsM2(context);
+
+            // If the widget has active or inactive colors specified, then we plug them
+            // in to the slider theme as best we can. If the developer wants more
+            // control than that, then they need to use a SliderTheme. The default
+            // colors come from the ThemeData.colorScheme. These colors, along with
+            // the default shapes and text styles are aligned to the Material
+            // Guidelines.
+
+            var states = new HashSet<WidgetState>();
+            if (!Enabled)
+            {
+                states.Add(WidgetState.Disabled);
+            }
+
+            if (_hovering)
+            {
+                states.Add(WidgetState.Hovered);
+            }
+
+            if (_dragging)
+            {
+                states.Add(WidgetState.Dragged);
+            }
+
+            // The value indicator's color is not the same as the thumb and active track
+            // (which can be defined by activeColor) if the
+            // RectangularSliderValueIndicatorShape is used. In all other cases, the
+            // value indicator is assumed to be the same as the active color.
+            RangeSliderValueIndicatorShape valueIndicatorShape =
+                sliderTheme.RangeValueIndicatorShape ?? defaults.RangeValueIndicatorShape!;
+            Color valueIndicatorColor;
+            if (valueIndicatorShape is RectangularRangeSliderValueIndicatorShape)
+            {
+                valueIndicatorColor =
+                    sliderTheme.ValueIndicatorColor
+                    ?? Color.AlphaBlend(
+                        theme.ColorScheme.OnSurface.WithOpacity(0.60),
+                        theme.ColorScheme.Surface.WithOpacity(0.90));
+            }
+            else
+            {
+                valueIndicatorColor =
+                    Widget.ActiveColor ?? sliderTheme.ValueIndicatorColor ?? defaults.ValueIndicatorColor!;
+            }
+
+            Color? EffectiveOverlayColor()
+            {
+                return Widget.OverlayColor?.Resolve(states)
+                       ?? Widget.ActiveColor?.WithOpacity(0.12)
+                       ?? WidgetStateProperty<Color?>.ResolveAs(sliderTheme.OverlayColor, states)
+                       ?? defaults.OverlayColor;
+            }
+
+            sliderTheme = sliderTheme.CopyWith(
+                trackHeight: sliderTheme.TrackHeight ?? defaults.TrackHeight,
+                activeTrackColor:
+                    Widget.ActiveColor ?? sliderTheme.ActiveTrackColor ?? defaults.ActiveTrackColor,
+                inactiveTrackColor:
+                    Widget.InactiveColor ?? sliderTheme.InactiveTrackColor ?? defaults.InactiveTrackColor,
+                disabledActiveTrackColor:
+                    sliderTheme.DisabledActiveTrackColor ?? defaults.DisabledActiveTrackColor,
+                disabledInactiveTrackColor:
+                    sliderTheme.DisabledInactiveTrackColor ?? defaults.DisabledInactiveTrackColor,
+                activeTickMarkColor:
+                    Widget.InactiveColor ?? sliderTheme.ActiveTickMarkColor ?? defaults.ActiveTickMarkColor,
+                inactiveTickMarkColor:
+                    Widget.ActiveColor ?? sliderTheme.InactiveTickMarkColor ?? defaults.InactiveTickMarkColor,
+                disabledActiveTickMarkColor:
+                    sliderTheme.DisabledActiveTickMarkColor ?? defaults.DisabledActiveTickMarkColor,
+                disabledInactiveTickMarkColor:
+                    sliderTheme.DisabledInactiveTickMarkColor ?? defaults.DisabledInactiveTickMarkColor,
+                thumbColor: Widget.ActiveColor ?? sliderTheme.ThumbColor ?? defaults.ThumbColor,
+                overlappingShapeStrokeColor:
+                    sliderTheme.OverlappingShapeStrokeColor ?? defaults.OverlappingShapeStrokeColor,
+                disabledThumbColor: sliderTheme.DisabledThumbColor ?? defaults.DisabledThumbColor,
+                overlayColor: EffectiveOverlayColor(),
+                valueIndicatorColor: valueIndicatorColor,
+                rangeTrackShape: sliderTheme.RangeTrackShape ?? defaults.RangeTrackShape,
+                rangeTickMarkShape: sliderTheme.RangeTickMarkShape ?? defaults.RangeTickMarkShape,
+                rangeThumbShape: sliderTheme.RangeThumbShape ?? defaults.RangeThumbShape,
+                overlayShape: sliderTheme.OverlayShape ?? defaults.OverlayShape,
+                rangeValueIndicatorShape: valueIndicatorShape,
+                showValueIndicator: sliderTheme.ShowValueIndicator ?? defaults.ShowValueIndicator,
+                valueIndicatorTextStyle:
+                    sliderTheme.ValueIndicatorTextStyle ?? defaults.ValueIndicatorTextStyle,
+                minThumbSeparation: sliderTheme.MinThumbSeparation ?? defaults.MinThumbSeparation,
+                thumbSelector: sliderTheme.ThumbSelector ?? new RangeThumbSelector(DefaultRangeThumbSelector),
+                padding: Widget.Padding ?? sliderTheme.Padding,
+                thumbSize: sliderTheme.ThumbSize ?? defaults.ThumbSize,
+                trackGap: sliderTheme.TrackGap ?? defaults.TrackGap);
+            MouseCursor effectiveMouseCursor =
+                Widget.MouseCursor?.Resolve(states)
+                ?? sliderTheme.MouseCursor?.Resolve(states)
+                ?? WidgetStateMouseCursor.Clickable.Resolve(states)!;
+
+            // This size is used as the max bounds for the painting of the value
+            // indicators. It must be kept in sync with the function with the same name
+            // in slider.dart.
+            Size ScreenSize() => MediaQuery.SizeOf(context);
+
+            double fontSize = sliderTheme.ValueIndicatorTextStyle?.FontSize ?? TextDefaults.DefaultFontSize;
+            double fontSizeToScale = fontSize == 0.0 ? TextDefaults.DefaultFontSize : fontSize;
+            double effectiveTextScale =
+                MediaQuery.TextScalerOf(context).Scale(fontSizeToScale) / fontSizeToScale;
+
+            SliderThemeData effectiveSliderTheme = sliderTheme;
+            Widget result = new CompositedTransformTarget(
+                link: _layerLink,
+                child: new OverlayPortal(
+                    controller: _valueIndicatorOverlayPortalController,
+                    overlayChildBuilder: (BuildContext overlayContext) =>
+                        BuildValueIndicator(effectiveSliderTheme.ShowValueIndicator!.Value),
+                    child: new RangeSliderRenderObjectWidget(
+                        values: UnlerpRangeValues(Widget.Values),
+                        divisions: Widget.Divisions,
+                        labels: Widget.Labels,
+                        sliderTheme: sliderTheme,
+                        textScaleFactor: effectiveTextScale,
+                        screenSize: ScreenSize(),
+                        onChanged: Enabled && (Widget.Max > Widget.Min) ? HandleChanged : null,
+                        onChangeStart: HandleDragStart,
+                        onChangeEnd: HandleDragEnd,
+                        state: this,
+                        semanticFormatterCallback: Widget.SemanticFormatterCallback,
+                        hovering: _showHoverHighlight)));
+
+            EdgeInsetsGeometry? padding = Widget.Padding ?? sliderTheme.Padding;
+            if (padding != null)
+            {
+                result = new Padding(padding.Value, child: result);
+            }
+
+            return new Stack(
+                children:
+                [
+                    // Adds two invisible focus nodes to the range slider for its two thumbs.
+                    new Row(
+                        children:
+                        [
+                            new Focus(
+                                focusNode: StartFocusNode,
+                                includeSemantics: false,
+                                child: SizedBox.Shrink()),
+                            new Focus(focusNode: EndFocusNode, includeSemantics: false, child: SizedBox.Shrink()),
+                        ]),
+                    new MouseRegion(
+                        onEnter: _ => HandleHoverChanged(true),
+                        onExit: _ => HandleHoverChanged(false),
+                        cursor: effectiveMouseCursor,
+                        child: result),
+                ]);
+        }
+
+        private readonly LayerLink _layerLink = new();
+
+        private Widget BuildValueIndicator(ShowValueIndicator showValueIndicator)
+        {
+            Widget valueIndicator = new CompositedTransformFollower(
+                link: _layerLink,
+                child: new ValueIndicatorRenderObjectWidget(state: this));
+#pragma warning disable CS0618 // Dart's switch lists the deprecated `ShowValueIndicator.always`.
+            return showValueIndicator switch
+            {
+                ShowValueIndicator.Never => SizedBox.Shrink(),
+                ShowValueIndicator.OnlyForDiscrete =>
+                    Widget.Divisions != null ? valueIndicator : SizedBox.Shrink(),
+                ShowValueIndicator.OnlyForContinuous =>
+                    Widget.Divisions == null ? valueIndicator : SizedBox.Shrink(),
+                ShowValueIndicator.AlwaysVisible
+                    or ShowValueIndicator.Always
+                    or ShowValueIndicator.OnDrag => valueIndicator,
+                _ => throw new ArgumentOutOfRangeException(nameof(showValueIndicator)),
+            };
+#pragma warning restore CS0618
+        }
+    }
+
+    /// <summary>Flutter's private <c>_ValueIndicatorRenderObjectWidget</c> (range variant).</summary>
+    private sealed class ValueIndicatorRenderObjectWidget : LeafRenderObjectWidget
+    {
+        public ValueIndicatorRenderObjectWidget(RangeSliderState state)
+        {
+            State = state;
+        }
+
+        public RangeSliderState State { get; }
+
+        public override RenderObject CreateRenderObject(BuildContext context)
+        {
+            return new RenderValueIndicator(state: State);
+        }
+
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        {
+            ((RenderValueIndicator)renderObject)._state = State;
+        }
+    }
+
+    /// <summary>Flutter's private <c>_RenderValueIndicator</c> (range variant).</summary>
+    /// <remarks>
+    /// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported; this render object
+    /// has no <c>systemFontsDidChange</c> override of its own, so nothing is lost beyond the relayout.
+    /// </remarks>
+    private sealed class RenderValueIndicator : RenderBox
+    {
+        public RenderValueIndicator(RangeSliderState state)
+        {
+            _state = state;
+            _valueIndicatorAnimation = new CurvedAnimation(
+                parent: _state.ValueIndicatorController,
+                curve: Curves.FastOutSlowIn);
+        }
+
+        private readonly CurvedAnimation _valueIndicatorAnimation;
+
+        internal RangeSliderState _state;
+
+        protected override bool SizedByParent => true;
+
+        protected override void OnAttach()
+        {
+            base.OnAttach();
+            _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
+            _state.StartPositionController.AddListener(MarkNeedsPaint);
+            _state.EndPositionController.AddListener(MarkNeedsPaint);
+        }
+
+        protected override void OnDetach()
+        {
+            _valueIndicatorAnimation.RemoveListener(MarkNeedsPaint);
+            _state.StartPositionController.RemoveListener(MarkNeedsPaint);
+            _state.EndPositionController.RemoveListener(MarkNeedsPaint);
+            base.OnDetach();
+        }
+
+        public override void Paint(PaintingContext context, Point offset)
+        {
+            _state.PaintBottomValueIndicator?.Invoke(context, offset);
+            _state.PaintTopValueIndicator?.Invoke(context, offset);
+        }
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints)
+        {
+            return constraints.Smallest;
+        }
+
+        public override void Dispose()
+        {
+            _valueIndicatorAnimation.Dispose();
+            base.Dispose();
+        }
+    }
+
+    /// <summary>Material's <c>kRadialReactionDuration</c> (constants.dart).</summary>
+    private static readonly TimeSpan KRadialReactionDuration = TimeSpan.FromMilliseconds(100);
+
+    /// <summary>dart:ui's <c>lerpDouble</c> for non-null operands.</summary>
+    private static double LerpDouble(double a, double b, double t)
+    {
+        if (a == b || (double.IsNaN(a) && double.IsNaN(b)))
+        {
+            return a;
+        }
+
+        return (a * (1.0 - t)) + (b * t);
+    }
+}
+
+/// <summary>Flutter's private <c>_RangeSliderRenderObjectWidget</c>.</summary>
+internal sealed class RangeSliderRenderObjectWidget : LeafRenderObjectWidget
+{
+    public RangeSliderRenderObjectWidget(
+        RangeValues values,
+        int? divisions,
+        RangeLabels? labels,
+        SliderThemeData sliderTheme,
+        double textScaleFactor,
+        Size screenSize,
+        Action<RangeValues>? onChanged,
+        Action<RangeValues>? onChangeStart,
+        Action<RangeValues>? onChangeEnd,
+        RangeSlider.RangeSliderState state,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        bool hovering)
+    {
+        Values = values;
+        Divisions = divisions;
+        Labels = labels;
+        SliderTheme = sliderTheme;
+        TextScaleFactor = textScaleFactor;
+        ScreenSize = screenSize;
+        OnChanged = onChanged;
+        OnChangeStart = onChangeStart;
+        OnChangeEnd = onChangeEnd;
+        State = state;
+        SemanticFormatterCallback = semanticFormatterCallback;
+        Hovering = hovering;
     }
 
     public RangeValues Values { get; }
+
+    public int? Divisions { get; }
+
+    public RangeLabels? Labels { get; }
+
+    public SliderThemeData SliderTheme { get; }
+
+    public double TextScaleFactor { get; }
+
+    public Size ScreenSize { get; }
 
     public Action<RangeValues>? OnChanged { get; }
 
@@ -114,1990 +734,267 @@ public sealed class RangeSlider : StatefulWidget
 
     public Action<RangeValues>? OnChangeEnd { get; }
 
-    public double Min { get; }
-
-    public double Max { get; }
-
-    public int? Divisions { get; }
-
-    public RangeLabels? Labels { get; }
-
-    public Color? ActiveColor { get; }
-
-    public Color? InactiveColor { get; }
-
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
-
-    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
-
-    public MaterialTapTargetSize? MaterialTapTargetSize { get; }
-
     public SemanticFormatterCallback? SemanticFormatterCallback { get; }
 
-    public EdgeInsetsGeometry? Padding { get; }
-
-    public bool? Year2023 { get; }
-
-    public override State CreateState()
-    {
-        return new RangeSliderState();
-    }
-
-    /// <remarks>
-    /// Flutter's <c>_RangeSliderState</c> is private, but <c>startFocusNode</c>/<c>endFocusNode</c> are
-    /// public fields on it and its own tests reach them through <c>tester.state(...)</c>. C# has no
-    /// <c>dynamic</c>-friendly equivalent for a private nested type, so the state is <c>internal</c>.
-    /// </remarks>
-    internal sealed class RangeSliderState : State<RangeSlider>
-    {
-        private const double DefaultTrackHeight = 4.0;
-        private const double DefaultThumbRadius = 10.0;
-        private const double PaddedTapTargetExtent = 48.0;
-        private const double Epsilon = 0.0001;
-
-        /// <summary>The focus node for the start thumb.</summary>
-        /// <remarks>
-        /// Flutter's <c>_RangeSliderState.startFocusNode</c>: a range slider always owns both nodes — unlike
-        /// <see cref="Slider"/>, it takes no <c>focusNode</c> parameter.
-        /// </remarks>
-        public FocusNode StartFocusNode { get; } = new FocusNode();
-
-        /// <summary>The focus node for the end thumb.</summary>
-        /// <remarks>Flutter's <c>_RangeSliderState.endFocusNode</c>.</remarks>
-        public FocusNode EndFocusNode { get; } = new FocusNode();
-
-        private RangeSlider CurrentWidget => (RangeSlider)StateWidget;
-
-        private bool IsInteractive => CurrentWidget.OnChanged is not null && CurrentWidget.Max > CurrentWidget.Min;
-
-        public override void Dispose()
-        {
-            StartFocusNode.Dispose();
-            EndFocusNode.Dispose();
-
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var theme = Theme.Of(context);
-            var sliderTheme = SliderTheme.Of(context);
-            bool year2023 = !theme.UseMaterial3 || (CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
-            double trackHeight = ResolveTrackHeight(sliderTheme, theme, year2023);
-            double thumbRadius = ResolveThumbRadius(sliderTheme);
-            var tapTargetSize = CurrentWidget.MaterialTapTargetSize
-                                ?? sliderTheme.MaterialTapTargetSize
-                                ?? theme.MaterialTapTargetSize;
-            double minPreferredHeight = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
-                ? Math.Max(PaddedTapTargetExtent, thumbRadius * 2)
-                : Math.Max(trackHeight, thumbRadius * 2);
-            double overlayRadius = sliderTheme.OverlayRadius
-                                   ?? Math.Max(thumbRadius, theme.UseMaterial3 ? 20.0 : 16.0);
-            TextDirection textDirection = Directionality.Of(context);
-            EdgeInsetsGeometry? paddingGeometry = CurrentWidget.Padding ?? sliderTheme.Padding;
-            Thickness padding = paddingGeometry?.Resolve(textDirection) ?? new Thickness();
-            var showValueIndicator = sliderTheme.ShowValueIndicator
-                                     ?? Plumix.Material.ShowValueIndicator.OnlyForDiscrete;
-            double tickMarkRadius = sliderTheme.TickMarkRadius ?? Math.Max(1.0, trackHeight / 4.0);
-            double trackGap = year2023 ? 0.0 : sliderTheme.TrackGap ?? 6.0;
-            var thumbStates = BuildStates(interactive: IsInteractive);
-            Size thumbSize = sliderTheme.ThumbSize?.Resolve(thumbStates)
-                             ?? (year2023
-                                 ? new Size(thumbRadius * 2.0, thumbRadius * 2.0)
-                                 : new Size(4.0, 44.0));
-            minPreferredHeight = Math.Max(minPreferredHeight, thumbSize.Height);
-
-            var activeTrackColor = ResolveActiveTrackColor(theme, sliderTheme);
-            var inactiveTrackColor = ResolveInactiveTrackColor(theme, sliderTheme);
-            var thumbColor = ResolveThumbColor(theme, sliderTheme);
-            var disabledActiveTrackColor = ResolveDisabledActiveTrackColor(theme, sliderTheme);
-            var disabledInactiveTrackColor = ResolveDisabledInactiveTrackColor(theme, sliderTheme);
-            var disabledThumbColor = ResolveDisabledThumbColor(theme, sliderTheme);
-            var activeTickMarkColor = ResolveActiveTickMarkColor(theme, sliderTheme, year2023);
-            var inactiveTickMarkColor = ResolveInactiveTickMarkColor(theme, sliderTheme, year2023);
-            var valueIndicatorColor = sliderTheme.ValueIndicatorColor
-                                      ?? (theme.UseMaterial3 && !year2023
-                                          ? theme.ColorScheme.InverseSurface
-                                          : theme.ColorScheme.Primary);
-            var valueIndicatorTextStyle = sliderTheme.ValueIndicatorTextStyle
-                                          ?? (theme.UseMaterial3 && !year2023
-                                              ? theme.TextTheme.LabelLarge.CopyWith(
-                                                  color: theme.ColorScheme.OnInverseSurface)
-                                              : theme.TextTheme.BodyLarge.CopyWith(
-                                                  color: theme.ColorScheme.OnPrimary));
-
-            var focusedStates = BuildStates(interactive: IsInteractive, focused: true);
-            var hoveredStates = BuildStates(interactive: IsInteractive, hovered: true);
-            var draggedStates = BuildStates(interactive: IsInteractive, dragged: true);
-            var overlayFocusedColor = ResolveOverlayColor(theme, sliderTheme, focusedStates);
-            var overlayHoveredColor = ResolveOverlayColor(theme, sliderTheme, hoveredStates);
-            var overlayDraggedColor = ResolveOverlayColor(theme, sliderTheme, draggedStates);
-            RangeSliderValueIndicatorShape valueIndicatorShape = sliderTheme.RangeValueIndicatorShape
-                                                                 ?? (theme.UseMaterial3 && !year2023
-                                                                     ? new RoundedRectRangeSliderValueIndicatorShape()
-                                                                     : new RectangularRangeSliderValueIndicatorShape());
-            if (valueIndicatorShape is RectangularRangeSliderValueIndicatorShape
-                && sliderTheme.ValueIndicatorColor == null)
-            {
-                valueIndicatorColor = AlphaBlend(
-                    theme.ColorScheme.OnSurface.WithOpacity(0.60),
-                    theme.ColorScheme.Surface.WithOpacity(0.90));
-            }
-
-            var effectiveSliderTheme = new SliderThemeData(
-                TrackHeight: trackHeight,
-                ActiveTrackColor: activeTrackColor,
-                InactiveTrackColor: inactiveTrackColor,
-                DisabledActiveTrackColor: disabledActiveTrackColor,
-                DisabledInactiveTrackColor: disabledInactiveTrackColor,
-                ActiveTickMarkColor: activeTickMarkColor,
-                InactiveTickMarkColor: inactiveTickMarkColor,
-                DisabledActiveTickMarkColor: activeTickMarkColor,
-                DisabledInactiveTickMarkColor: inactiveTickMarkColor,
-                ThumbColor: thumbColor,
-                OverlappingShapeStrokeColor: sliderTheme.OverlappingShapeStrokeColor
-                                             ?? theme.ColorScheme.Surface,
-                DisabledThumbColor: disabledThumbColor,
-                OverlayColor: WidgetStateProperty<Color?>.All(overlayDraggedColor),
-                ValueIndicatorColor: valueIndicatorColor,
-                ValueIndicatorStrokeColor: sliderTheme.ValueIndicatorStrokeColor,
-                OverlayShape: sliderTheme.OverlayShape ?? new RoundSliderOverlayShape(overlayRadius),
-                RangeTickMarkShape: sliderTheme.RangeTickMarkShape
-                                    ?? new RoundRangeSliderTickMarkShape(tickMarkRadius),
-                RangeThumbShape: sliderTheme.RangeThumbShape
-                                 ?? (year2023
-                                     ? new RoundRangeSliderThumbShape(thumbRadius)
-                                     : new HandleRangeSliderThumbShape()),
-                RangeTrackShape: sliderTheme.RangeTrackShape
-                                 ?? (year2023
-                                     ? new RoundedRectRangeSliderTrackShape()
-                                     : new GappedRangeSliderTrackShape()),
-                RangeValueIndicatorShape: valueIndicatorShape,
-                ShowValueIndicator: showValueIndicator,
-                ValueIndicatorTextStyle: valueIndicatorTextStyle,
-                MinThumbSeparation: sliderTheme.MinThumbSeparation ?? (year2023 ? 8.0 : 0.0),
-                ThumbSelector: sliderTheme.ThumbSelector,
-                MouseCursor: sliderTheme.MouseCursor,
-                Padding: paddingGeometry,
-                ThumbSize: sliderTheme.ThumbSize ?? WidgetStateProperty<Size?>.All(thumbSize),
-                TrackGap: trackGap,
-                Year2023: year2023);
-
-            var normalizedValues = Normalize(CurrentWidget.Values);
-
-            // Dart parks two zero-size `Focus` boxes in a `Row` behind the slider: their order gives Tab
-            // traversal start-then-end, and `includeSemantics: false` keeps them out of the semantics tree
-            // so the only slider nodes are the two `_RenderRangeSlider.assembleSemanticsNode` produces.
-            Widget result = new Stack(
-                children:
-                [
-                    new Row(
-                        children:
-                        [
-                            new Focus(
-                                focusNode: StartFocusNode,
-                                includeSemantics: false,
-                                child: new SizedBox(width: 0, height: 0)),
-                            new Focus(
-                                focusNode: EndFocusNode,
-                                includeSemantics: false,
-                                child: new SizedBox(width: 0, height: 0)),
-                        ]),
-                    new RangeSliderRenderWidget(
-                        sliderTheme: effectiveSliderTheme,
-                        startValueNormalized: normalizedValues.Start,
-                        endValueNormalized: normalizedValues.End,
-                        divisions: CurrentWidget.Divisions,
-                        isInteractive: IsInteractive,
-                        state: this,
-                        trackHeight: trackHeight,
-                        thumbRadius: thumbRadius,
-                        thumbSize: thumbSize,
-                        overlayRadius: overlayRadius,
-                        minPreferredHeight: minPreferredHeight,
-                        activeTrackColor: IsInteractive ? activeTrackColor : disabledActiveTrackColor,
-                        inactiveTrackColor: IsInteractive ? inactiveTrackColor : disabledInactiveTrackColor,
-                        thumbColor: IsInteractive ? thumbColor : disabledThumbColor,
-                        overlayFocusedColor: overlayFocusedColor,
-                        overlayHoveredColor: overlayHoveredColor,
-                        overlayDraggedColor: overlayDraggedColor,
-                        activeTickMarkColor: activeTickMarkColor,
-                        inactiveTickMarkColor: inactiveTickMarkColor,
-                        tickMarkRadius: tickMarkRadius,
-                        labels: CurrentWidget.Labels,
-                        showValueIndicator: showValueIndicator,
-                        valueIndicatorColor: valueIndicatorColor,
-                        valueIndicatorTextStyle: valueIndicatorTextStyle,
-                        padding: padding,
-                        trackGap: trackGap,
-                        textDirection: Directionality.Of(context),
-                        min: CurrentWidget.Min,
-                        max: CurrentWidget.Max,
-                        semanticFormatterCallback: CurrentWidget.SemanticFormatterCallback,
-                        adjustmentUnit: ResolveAdjustmentUnit(theme),
-                        onChangeStartNormalized: IsInteractive ? HandleChangeStartNormalized : null,
-                        onChangedNormalized: IsInteractive ? HandleChangedNormalized : null,
-                        onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null),
-                ]);
-
-            // Dart's `RangeSlider` never adds `WidgetState.focused` to the cursor state set — only the
-            // disabled/hovered/dragged triple — because focus lives on the two thumbs, not the widget.
-            var cursorStates = BuildStates(interactive: IsInteractive, focused: false);
-            MouseCursor cursor = CurrentWidget.MouseCursor?.Resolve(cursorStates)
-                                 ?? sliderTheme.MouseCursor?.Resolve(cursorStates)
-                                 ?? (IsInteractive ? SystemMouseCursors.Click : SystemMouseCursors.Basic);
-            return new MouseRegion(cursor: cursor, child: result);
-        }
-
-        /// <remarks>
-        /// Flutter's <c>_RenderRangeSlider._adjustmentUnit</c> maps only iOS to <c>0.1</c>; macOS steps by
-        /// <c>0.05</c> here even though <c>_RenderSlider._adjustmentUnit</c> gives it <c>0.1</c>.
-        /// </remarks>
-        private double ResolveAdjustmentUnit(ThemeData theme)
-        {
-            return theme.Platform is TargetPlatform.IOS ? 0.1 : 0.05;
-        }
-
-        private void HandleChangeStartNormalized(NormalizedRangeValues normalized)
-        {
-            if (!IsInteractive)
-            {
-                return;
-            }
-
-            CurrentWidget.OnChangeStart?.Invoke(Denormalize(SnapNormalized(normalized)));
-        }
-
-        private void HandleChangedNormalized(NormalizedRangeValues normalized)
-        {
-            if (!IsInteractive)
-            {
-                return;
-            }
-
-            var nextValues = Denormalize(SnapNormalized(normalized));
-            if (Math.Abs(nextValues.Start - CurrentWidget.Values.Start) <= Epsilon
-                && Math.Abs(nextValues.End - CurrentWidget.Values.End) <= Epsilon)
-            {
-                return;
-            }
-
-            CurrentWidget.OnChanged?.Invoke(nextValues);
-        }
-
-        private void HandleChangeEndNormalized(NormalizedRangeValues normalized)
-        {
-            if (!IsInteractive)
-            {
-                return;
-            }
-
-            CurrentWidget.OnChangeEnd?.Invoke(Denormalize(SnapNormalized(normalized)));
-        }
-
-        private NormalizedRangeValues Normalize(RangeValues values)
-        {
-            double range = CurrentWidget.Max - CurrentWidget.Min;
-            if (range <= 0)
-            {
-                return new NormalizedRangeValues(0.0, 0.0);
-            }
-
-            double start = Math.Clamp((values.Start - CurrentWidget.Min) / range, 0.0, 1.0);
-            double end = Math.Clamp((values.End - CurrentWidget.Min) / range, 0.0, 1.0);
-            if (end < start)
-            {
-                (start, end) = (end, start);
-            }
-
-            return new NormalizedRangeValues(start, end);
-        }
-
-        private RangeValues Denormalize(NormalizedRangeValues normalized)
-        {
-            var snapped = SnapNormalized(normalized);
-            double start = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.Start);
-            double end = CurrentWidget.Min + ((CurrentWidget.Max - CurrentWidget.Min) * snapped.End);
-            return new RangeValues(start, end);
-        }
-
-        private NormalizedRangeValues SnapNormalized(NormalizedRangeValues normalized)
-        {
-            double start = SnapNormalized(normalized.Start);
-            double end = SnapNormalized(normalized.End);
-            if (end < start)
-            {
-                (start, end) = (end, start);
-            }
-
-            return new NormalizedRangeValues(start, end);
-        }
-
-        private double SnapNormalized(double normalized)
-        {
-            double clamped = Math.Clamp(normalized, 0.0, 1.0);
-            if (!CurrentWidget.Divisions.HasValue || CurrentWidget.Divisions.Value <= 0)
-            {
-                return clamped;
-            }
-
-            int divisions = CurrentWidget.Divisions.Value;
-            return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
-        }
-
-        private static double ResolveTrackHeight(
-            SliderThemeData sliderTheme,
-            ThemeData theme,
-            bool year2023)
-        {
-            double defaultHeight = theme.UseMaterial3 && !year2023 ? 16.0 : DefaultTrackHeight;
-            double resolved = sliderTheme.TrackHeight ?? defaultHeight;
-            if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
-            {
-                return defaultHeight;
-            }
-
-            return resolved;
-        }
-
-        private double ResolveThumbRadius(SliderThemeData sliderTheme)
-        {
-            double resolved = sliderTheme.ThumbRadius ?? DefaultThumbRadius;
-            if (double.IsNaN(resolved) || double.IsInfinity(resolved) || resolved <= 0)
-            {
-                return DefaultThumbRadius;
-            }
-
-            return resolved;
-        }
-
-        private Color ResolveActiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            return CurrentWidget.ActiveColor
-                   ?? sliderTheme.ActiveTrackColor
-                   ?? theme.ColorScheme.Primary;
-        }
-
-        private Color ResolveInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            bool year2023 = !theme.UseMaterial3 || (CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
-            return CurrentWidget.InactiveColor
-                   ?? sliderTheme.InactiveTrackColor
-                   ?? (theme.UseMaterial3 && !year2023
-                       ? theme.ColorScheme.SecondaryContainer
-                       : theme.ColorScheme.Primary.WithOpacity(0.24));
-        }
-
-        private Color ResolveThumbColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            return CurrentWidget.ActiveColor
-                   ?? sliderTheme.ThumbColor
-                   ?? theme.ColorScheme.Primary;
-        }
-
-        private Color ResolveDisabledActiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            bool useLatest = theme.UseMaterial3
-                             && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
-            return sliderTheme.DisabledActiveTrackColor
-                   ?? theme.ColorScheme.OnSurface.WithOpacity(useLatest ? 0.38 : 0.32);
-        }
-
-        private Color ResolveDisabledInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            return sliderTheme.DisabledInactiveTrackColor
-                   ?? theme.ColorScheme.OnSurface.WithOpacity(0.12);
-        }
-
-        private Color ResolveDisabledThumbColor(ThemeData theme, SliderThemeData sliderTheme)
-        {
-            bool useLatest = theme.UseMaterial3
-                             && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
-            return sliderTheme.DisabledThumbColor
-                   ?? (useLatest
-                       ? theme.ColorScheme.OnSurface.WithOpacity(0.38)
-                       : AlphaBlend(
-                           theme.ColorScheme.OnSurface.WithOpacity(0.38),
-                           theme.ColorScheme.Surface));
-        }
-
-        private Color ResolveActiveTickMarkColor(
-            ThemeData theme,
-            SliderThemeData sliderTheme,
-            bool year2023)
-        {
-            Color fallback = theme.UseMaterial3 && !year2023
-                ? theme.ColorScheme.OnPrimary
-                : theme.ColorScheme.OnPrimary.WithOpacity(0.54);
-            return IsInteractive
-                ? sliderTheme.ActiveTickMarkColor ?? fallback
-                : sliderTheme.DisabledActiveTickMarkColor
-                  ?? (theme.UseMaterial3 && !year2023
-                      ? theme.ColorScheme.OnInverseSurface
-                      : theme.ColorScheme.OnPrimary.WithOpacity(0.12));
-        }
-
-        private Color ResolveInactiveTickMarkColor(
-            ThemeData theme,
-            SliderThemeData sliderTheme,
-            bool year2023)
-        {
-            Color fallback = theme.UseMaterial3 && !year2023
-                ? theme.ColorScheme.OnSecondaryContainer
-                : theme.ColorScheme.Primary.WithOpacity(0.54);
-            return IsInteractive
-                ? sliderTheme.InactiveTickMarkColor ?? fallback
-                : sliderTheme.DisabledInactiveTickMarkColor
-                  ?? (theme.UseMaterial3 && !year2023
-                      ? theme.ColorScheme.OnSurface
-                      : theme.ColorScheme.OnSurface.WithOpacity(0.12));
-        }
-
-        private Color? ResolveOverlayColor(
-            ThemeData theme,
-            SliderThemeData sliderTheme,
-            IReadOnlySet<WidgetState> states)
-        {
-            var widgetOverlay = CurrentWidget.OverlayColor?.Resolve(states);
-            if (widgetOverlay != null)
-            {
-                return widgetOverlay!;
-            }
-
-            if (CurrentWidget.ActiveColor != null)
-            {
-                return states.Contains(WidgetState.Disabled)
-                    ? null
-                    : CurrentWidget.ActiveColor!.WithOpacity(0.12);
-            }
-
-            var themeOverlay = sliderTheme.OverlayColor?.Resolve(states);
-            if (themeOverlay != null)
-            {
-                return themeOverlay!;
-            }
-
-            Color baseColor = theme.ColorScheme.Primary;
-
-            if (!theme.UseMaterial3)
-            {
-                return states.Contains(WidgetState.Disabled)
-                    ? null
-                    : baseColor.WithOpacity(0.12);
-            }
-
-            if (states.Contains(WidgetState.Dragged))
-            {
-                return baseColor.WithOpacity(0.10);
-            }
-
-            if (states.Contains(WidgetState.Hovered))
-            {
-                return baseColor.WithOpacity(0.08);
-            }
-
-            if (states.Contains(WidgetState.Focused))
-            {
-                return baseColor.WithOpacity(0.10);
-            }
-
-            return null;
-        }
-
-private static Color AlphaBlend(Color foreground, Color background) => Color.AlphaBlend(foreground, background);
-
-        private static IReadOnlySet<WidgetState> BuildStates(
-            bool interactive,
-            bool focused = false,
-            bool hovered = false,
-            bool dragged = false)
-        {
-            var states = new HashSet<WidgetState>();
-            if (!interactive)
-            {
-                states.Add(WidgetState.Disabled);
-            }
-            if (focused)
-            {
-                states.Add(WidgetState.Focused);
-            }
-
-            if (hovered)
-            {
-                states.Add(WidgetState.Hovered);
-            }
-
-            if (dragged)
-            {
-                states.Add(WidgetState.Dragged);
-            }
-
-            return states;
-        }
-
-        private static bool AreEqual(NormalizedRangeValues a, NormalizedRangeValues b)
-        {
-            return Math.Abs(a.Start - b.Start) <= Epsilon
-                   && Math.Abs(a.End - b.End) <= Epsilon;
-        }
-    }
-}
-
-internal enum RangeSliderThumb
-{
-    Start,
-    End,
-}
-
-internal readonly record struct NormalizedRangeValues(double Start, double End);
-
-internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
-{
-    public RangeSliderRenderWidget(
-        SliderThemeData sliderTheme,
-        double startValueNormalized,
-        double endValueNormalized,
-        int? divisions,
-        bool isInteractive,
-        RangeSlider.RangeSliderState state,
-        double trackHeight,
-        double thumbRadius,
-        Size thumbSize,
-        double overlayRadius,
-        double minPreferredHeight,
-        Color activeTrackColor,
-        Color inactiveTrackColor,
-        Color thumbColor,
-        Color? overlayFocusedColor,
-        Color? overlayHoveredColor,
-        Color? overlayDraggedColor,
-        Color activeTickMarkColor,
-        Color inactiveTickMarkColor,
-        double tickMarkRadius,
-        RangeLabels? labels,
-        ShowValueIndicator showValueIndicator,
-        Color valueIndicatorColor,
-        TextStyle valueIndicatorTextStyle,
-        Thickness padding,
-        double trackGap,
-        TextDirection textDirection,
-        double min,
-        double max,
-        SemanticFormatterCallback? semanticFormatterCallback,
-        double adjustmentUnit,
-        Action<NormalizedRangeValues>? onChangeStartNormalized,
-        Action<NormalizedRangeValues>? onChangedNormalized,
-        Action<NormalizedRangeValues>? onChangeEndNormalized,
-        Key? key = null) : base(key)
-    {
-        SliderTheme = sliderTheme;
-        StartValueNormalized = startValueNormalized;
-        EndValueNormalized = endValueNormalized;
-        Divisions = divisions;
-        IsInteractive = isInteractive;
-        State = state;
-        TrackHeight = trackHeight;
-        ThumbRadius = thumbRadius;
-        ThumbSize = thumbSize;
-        OverlayRadius = overlayRadius;
-        MinPreferredHeight = minPreferredHeight;
-        ActiveTrackColor = activeTrackColor;
-        InactiveTrackColor = inactiveTrackColor;
-        ThumbColor = thumbColor;
-        OverlayFocusedColor = overlayFocusedColor;
-        OverlayHoveredColor = overlayHoveredColor;
-        OverlayDraggedColor = overlayDraggedColor;
-        ActiveTickMarkColor = activeTickMarkColor;
-        InactiveTickMarkColor = inactiveTickMarkColor;
-        TickMarkRadius = tickMarkRadius;
-        Labels = labels;
-        ShowValueIndicator = showValueIndicator;
-        ValueIndicatorColor = valueIndicatorColor;
-        ValueIndicatorTextStyle = valueIndicatorTextStyle;
-        Padding = padding;
-        TrackGap = trackGap;
-        TextDirection = textDirection;
-        Min = min;
-        Max = max;
-        SemanticFormatterCallback = semanticFormatterCallback;
-        AdjustmentUnit = adjustmentUnit;
-        OnChangeStartNormalized = onChangeStartNormalized;
-        OnChangedNormalized = onChangedNormalized;
-        OnChangeEndNormalized = onChangeEndNormalized;
-    }
-
-    public SliderThemeData SliderTheme { get; }
-
-    public double StartValueNormalized { get; }
-
-    public double EndValueNormalized { get; }
-
-    public int? Divisions { get; }
-
-    public bool IsInteractive { get; }
-
-    /// <summary>The state that owns the two thumb focus nodes.</summary>
-    /// <remarks>Flutter passes <c>state: this</c> into <c>_RangeSliderRenderObjectWidget</c> the same way.</remarks>
     public RangeSlider.RangeSliderState State { get; }
 
-    public double TrackHeight { get; }
-
-    public double ThumbRadius { get; }
-
-    public Size ThumbSize { get; }
-
-    public double OverlayRadius { get; }
-
-    public double MinPreferredHeight { get; }
-
-    public Color ActiveTrackColor { get; }
-
-    public Color InactiveTrackColor { get; }
-
-    public Color ThumbColor { get; }
-
-    public Color? OverlayFocusedColor { get; }
-
-    public Color? OverlayHoveredColor { get; }
-
-    public Color? OverlayDraggedColor { get; }
-
-    public Color ActiveTickMarkColor { get; }
-
-    public Color InactiveTickMarkColor { get; }
-
-    public double TickMarkRadius { get; }
-
-    public RangeLabels? Labels { get; }
-
-    public ShowValueIndicator ShowValueIndicator { get; }
-
-    public Color ValueIndicatorColor { get; }
-
-    public TextStyle ValueIndicatorTextStyle { get; }
-
-    public Thickness Padding { get; }
-
-    public double TrackGap { get; }
-
-    public TextDirection TextDirection { get; }
-
-    public double Min { get; }
-
-    public double Max { get; }
-
-    public SemanticFormatterCallback? SemanticFormatterCallback { get; }
-
-    public double AdjustmentUnit { get; }
-
-    public Action<NormalizedRangeValues>? OnChangeStartNormalized { get; }
-
-    public Action<NormalizedRangeValues>? OnChangedNormalized { get; }
-
-    public Action<NormalizedRangeValues>? OnChangeEndNormalized { get; }
+    public bool Hovering { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderRangeSlider(
-            sliderTheme: SliderTheme,
-            startValueNormalized: StartValueNormalized,
-            endValueNormalized: EndValueNormalized,
+            values: Values,
             divisions: Divisions,
-            isInteractive: IsInteractive,
-            state: State,
-            trackHeight: TrackHeight,
-            thumbRadius: ThumbRadius,
-            thumbSize: ThumbSize,
-            overlayRadius: OverlayRadius,
-            minPreferredHeight: MinPreferredHeight,
-            activeTrackColor: ActiveTrackColor,
-            inactiveTrackColor: InactiveTrackColor,
-            thumbColor: ThumbColor,
-            overlayFocusedColor: OverlayFocusedColor,
-            overlayHoveredColor: OverlayHoveredColor,
-            overlayDraggedColor: OverlayDraggedColor,
-            activeTickMarkColor: ActiveTickMarkColor,
-            inactiveTickMarkColor: InactiveTickMarkColor,
-            tickMarkRadius: TickMarkRadius,
             labels: Labels,
-            showValueIndicator: ShowValueIndicator,
-            valueIndicatorColor: ValueIndicatorColor,
-            valueIndicatorTextStyle: ValueIndicatorTextStyle,
-            padding: Padding,
-            trackGap: TrackGap,
-            textDirection: TextDirection,
-            min: Min,
-            max: Max,
+            sliderTheme: SliderTheme,
+            theme: Theme.Of(context),
+            textScaleFactor: TextScaleFactor,
+            screenSize: ScreenSize,
+            onChanged: OnChanged,
+            onChangeStart: OnChangeStart,
+            onChangeEnd: OnChangeEnd,
+            state: State,
+            textDirection: Directionality.Of(context),
             semanticFormatterCallback: SemanticFormatterCallback,
-            adjustmentUnit: AdjustmentUnit,
-            onChangeStartNormalized: OnChangeStartNormalized,
-            onChangedNormalized: OnChangedNormalized,
-            onChangeEndNormalized: OnChangeEndNormalized);
+            platform: Theme.Of(context).Platform,
+            hovering: Hovering,
+            gestureSettings: MediaQuery.GestureSettingsOf(context));
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var rangeSlider = (RenderRangeSlider)renderObject;
-        rangeSlider.SliderTheme = SliderTheme;
-        rangeSlider.StartValueNormalized = StartValueNormalized;
-        rangeSlider.EndValueNormalized = EndValueNormalized;
-        rangeSlider.Divisions = Divisions;
-        rangeSlider.IsInteractive = IsInteractive;
-        rangeSlider.State = State;
-        rangeSlider.TrackHeight = TrackHeight;
-        rangeSlider.ThumbRadius = ThumbRadius;
-        rangeSlider.ThumbSize = ThumbSize;
-        rangeSlider.OverlayRadius = OverlayRadius;
-        rangeSlider.MinPreferredHeight = MinPreferredHeight;
-        rangeSlider.ActiveTrackColor = ActiveTrackColor;
-        rangeSlider.InactiveTrackColor = InactiveTrackColor;
-        rangeSlider.ThumbColor = ThumbColor;
-        rangeSlider.OverlayFocusedColor = OverlayFocusedColor;
-        rangeSlider.OverlayHoveredColor = OverlayHoveredColor;
-        rangeSlider.OverlayDraggedColor = OverlayDraggedColor;
-        rangeSlider.ActiveTickMarkColor = ActiveTickMarkColor;
-        rangeSlider.InactiveTickMarkColor = InactiveTickMarkColor;
-        rangeSlider.TickMarkRadius = TickMarkRadius;
-        rangeSlider.Labels = Labels;
-        rangeSlider.ShowValueIndicator = ShowValueIndicator;
-        rangeSlider.ValueIndicatorColor = ValueIndicatorColor;
-        rangeSlider.ValueIndicatorTextStyle = ValueIndicatorTextStyle;
-        rangeSlider.Padding = Padding;
-        rangeSlider.TrackGap = TrackGap;
-        rangeSlider.TextDirection = TextDirection;
-        rangeSlider.Min = Min;
-        rangeSlider.Max = Max;
-        rangeSlider.SemanticFormatterCallback = SemanticFormatterCallback;
-        rangeSlider.AdjustmentUnit = AdjustmentUnit;
-        rangeSlider.OnChangeStartNormalized = OnChangeStartNormalized;
-        rangeSlider.OnChangedNormalized = OnChangedNormalized;
-        rangeSlider.OnChangeEndNormalized = OnChangeEndNormalized;
+        var slider = (RenderRangeSlider)renderObject;
+        // We should update the `divisions` ahead of `values`, because the `values`
+        // setter dependent on the `divisions`.
+        slider.Divisions = Divisions;
+        slider.Values = Values;
+        slider.Labels = Labels;
+        slider.SliderTheme = SliderTheme;
+        slider.Theme = Theme.Of(context);
+        slider.TextScaleFactor = TextScaleFactor;
+        slider.ScreenSize = ScreenSize;
+        slider.OnChanged = OnChanged;
+        slider.OnChangeStart = OnChangeStart;
+        slider.OnChangeEnd = OnChangeEnd;
+        slider.TextDirection = Directionality.Of(context);
+        slider.SemanticFormatterCallback = SemanticFormatterCallback;
+        slider.Platform = Theme.Of(context).Platform;
+        slider.Hovering = Hovering;
+        slider.GestureSettings = MediaQuery.GestureSettingsOf(context);
     }
 }
 
+/// <summary>Flutter's private <c>_RenderRangeSlider</c>.</summary>
+/// <remarks>
+/// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported (tracked in
+/// docs/ai/BACKLOG.md); <see cref="SystemFontsDidChange"/> keeps Dart's body but nothing calls it yet.
+/// </remarks>
 internal sealed class RenderRangeSlider : RenderBox
 {
-    private const double DefaultTrackWidth = 144.0;
-    private const double Epsilon = 0.0001;
+    public RenderRangeSlider(
+        RangeValues values,
+        int? divisions,
+        RangeLabels? labels,
+        SliderThemeData sliderTheme,
+        ThemeData? theme,
+        double textScaleFactor,
+        Size screenSize,
+        TargetPlatform platform,
+        Action<RangeValues>? onChanged,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        Action<RangeValues>? onChangeStart,
+        Action<RangeValues>? onChangeEnd,
+        RangeSlider.RangeSliderState state,
+        TextDirection textDirection,
+        bool hovering,
+        DeviceGestureSettings? gestureSettings)
+    {
+        DebugAssertions.Assert(
+            values.Start >= 0.0 && values.Start <= 1.0,
+            "_values.start >= 0.0 && _values.start <= 1.0");
+        DebugAssertions.Assert(values.End >= 0.0 && values.End <= 1.0, "_values.end >= 0.0 && _values.end <= 1.0");
+        _values = values;
+        _divisions = divisions;
+        _labels = labels;
+        _sliderTheme = sliderTheme;
+        _theme = theme;
+        _textScaleFactor = textScaleFactor;
+        _screenSize = screenSize;
+        _platform = platform;
+        _onChanged = onChanged;
+        _semanticFormatterCallback = semanticFormatterCallback;
+        OnChangeStart = onChangeStart;
+        OnChangeEnd = onChangeEnd;
+        _state = state;
+        _textDirection = textDirection;
+        _hovering = hovering;
+        UpdateLabelPainters();
+        var team = new GestureArenaTeam();
+        _drag = new HorizontalDragGestureRecognizer
+        {
+            Team = team,
+            OnStart = HandleDragStart,
+            OnUpdate = HandleDragUpdate,
+            OnEnd = HandleDragEnd,
+            OnCancel = HandleDragCancel,
+            GestureSettings = gestureSettings,
+        };
+        _tap = new TapGestureRecognizer
+        {
+            Team = team,
+            OnTapDown = HandleTapDown,
+            OnTapUp = HandleTapUp,
+            GestureSettings = gestureSettings,
+        };
+        _overlayAnimation = new CurvedAnimation(parent: _state.OverlayController, curve: Curves.FastOutSlowIn);
+        _valueIndicatorAnimation = new CurvedAnimation(
+            parent: _state.ValueIndicatorController,
+            curve: Curves.FastOutSlowIn);
+        _enableAnimation = new CurvedAnimation(parent: _state.EnableController, curve: Curves.EaseInOut);
+    }
 
-    private SliderThemeData _sliderTheme;
-    private double _startValueNormalized;
-    private double _endValueNormalized;
-    private int? _divisions;
-    private bool _isInteractive;
-    private RangeSlider.RangeSliderState _state;
-    private double _trackHeight;
-    private double _thumbRadius;
-    private Size _thumbSize;
-    private double _overlayRadius;
-    private double _minPreferredHeight;
-    private Color _activeTrackColor;
-    private Color _inactiveTrackColor;
-    private Color _thumbColor;
-    private Color? _overlayFocusedColor;
-    private Color? _overlayHoveredColor;
-    private Color? _overlayDraggedColor;
-    private Color _activeTickMarkColor;
-    private Color _inactiveTickMarkColor;
-    private double _tickMarkRadius;
-    private RangeLabels? _labels;
-    private ShowValueIndicator _showValueIndicator;
-    private Color _valueIndicatorColor;
-    private TextStyle _valueIndicatorTextStyle;
-    private Thickness _padding;
-    private double _trackGap;
-    private TextDirection _textDirection;
-    private double _min;
-    private double _max;
-    private SemanticFormatterCallback? _semanticFormatterCallback;
-    private double _adjustmentUnit;
+    // Keep track of the last selected thumb so they can be drawn in the
+    // right order.
+    private Thumb? _lastThumbSelection;
+
+    private static readonly TimeSpan PositionAnimationDuration = TimeSpan.FromMilliseconds(75);
+
+    // This value is the touch target, 48, multiplied by 3.
+    private const double MinPreferredTrackWidth = 144.0;
+
+    // Compute the largest width and height needed to paint the slider shapes,
+    // other than the track shape. It is assumed that these shapes are vertically
+    // centered on the track.
+    private double MaxSliderPartWidth => SliderPartSizes.Select(static size => size.Width).Aggregate(Math.Max);
+
+    private double MaxSliderPartHeight => SliderPartSizes.Select(static size => size.Height).Aggregate(Math.Max);
+
+    private double ThumbSizeHeight => _sliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete).Height;
+
+    private double OverlayHeight => _sliderTheme.OverlayShape!.GetPreferredSize(IsEnabled, IsDiscrete).Height;
+
+    private List<Size> SliderPartSizes =>
+    [
+        new Size(
+            _sliderTheme.OverlayShape!.GetPreferredSize(IsEnabled, IsDiscrete).Width,
+            _sliderTheme.Padding != null ? ThumbSizeHeight : OverlayHeight),
+        _sliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete),
+        _sliderTheme.RangeTickMarkShape!.GetPreferredSize(isEnabled: IsEnabled, sliderTheme: SliderTheme),
+    ];
+
+    private double? MinPreferredTrackHeight => _sliderTheme.TrackHeight;
+
+    // This rect is used in gesture calculations, where the gesture coordinates
+    // are relative to the sliders origin. Therefore, the offset is passed as
+    // (0,0).
+    private Rect TrackRect => _sliderTheme.RangeTrackShape!.GetPreferredRect(
+        parentBox: this,
+        sliderTheme: _sliderTheme,
+        isDiscrete: false);
+
+    private static readonly TimeSpan MinimumInteractionTime = TimeSpan.FromMilliseconds(500);
+
+    private readonly RangeSlider.RangeSliderState _state;
+    private readonly CurvedAnimation _overlayAnimation;
+    private readonly CurvedAnimation _valueIndicatorAnimation;
+    private readonly CurvedAnimation _enableAnimation;
+    private readonly TextPainter _startLabelPainter = new();
+    private readonly TextPainter _endLabelPainter = new();
+    private readonly HorizontalDragGestureRecognizer _drag;
+    private readonly TapGestureRecognizer _tap;
+    private bool _active;
+    private RangeValues _newValues = null!;
     private Point _startThumbCenter;
     private Point _endThumbCenter;
-    private SemanticsNode? _startSemanticsNode;
-    private SemanticsNode? _endSemanticsNode;
-    private Action<NormalizedRangeValues>? _onChangeStartNormalized;
-    private Action<NormalizedRangeValues>? _onChangedNormalized;
-    private Action<NormalizedRangeValues>? _onChangeEndNormalized;
 
-    private bool _hovered;
-    private bool _dragging;
-    private int? _activePointer;
-    private RangeSliderThumb? _activeThumb;
-    private NormalizedRangeValues? _dragValues;
-    private double? _lastGlobalPointerX;
+    internal Rect? OverlayStartRect { get; set; }
 
-    public RenderRangeSlider(
-        SliderThemeData sliderTheme,
-        double startValueNormalized,
-        double endValueNormalized,
-        int? divisions,
-        bool isInteractive,
-        RangeSlider.RangeSliderState state,
-        double trackHeight,
-        double thumbRadius,
-        Size thumbSize,
-        double overlayRadius,
-        double minPreferredHeight,
-        Color activeTrackColor,
-        Color inactiveTrackColor,
-        Color thumbColor,
-        Color? overlayFocusedColor,
-        Color? overlayHoveredColor,
-        Color? overlayDraggedColor,
-        Color activeTickMarkColor,
-        Color inactiveTickMarkColor,
-        double tickMarkRadius,
-        RangeLabels? labels,
-        ShowValueIndicator showValueIndicator,
-        Color valueIndicatorColor,
-        TextStyle valueIndicatorTextStyle,
-        Thickness padding,
-        double trackGap,
-        TextDirection textDirection,
-        double min,
-        double max,
-        SemanticFormatterCallback? semanticFormatterCallback,
-        double adjustmentUnit,
-        Action<NormalizedRangeValues>? onChangeStartNormalized,
-        Action<NormalizedRangeValues>? onChangedNormalized,
-        Action<NormalizedRangeValues>? onChangeEndNormalized)
+    internal Rect? OverlayEndRect { get; set; }
+
+    public bool IsEnabled => OnChanged != null;
+
+    public bool IsDiscrete => Divisions != null && Divisions > 0;
+
+    private double MinThumbSeparationValue =>
+        IsDiscrete ? 0 : SliderTheme.MinThumbSeparation!.Value / TrackRect.Width;
+
+    public RangeValues Values
     {
-        _sliderTheme = sliderTheme;
-        var initial = OrderAndClamp(startValueNormalized, endValueNormalized);
-        _startValueNormalized = initial.Start;
-        _endValueNormalized = initial.End;
-        _divisions = divisions;
-        _isInteractive = isInteractive;
-        _state = state;
-        _trackHeight = trackHeight;
-        _thumbRadius = thumbRadius;
-        _thumbSize = thumbSize;
-        _overlayRadius = overlayRadius;
-        _minPreferredHeight = minPreferredHeight;
-        _activeTrackColor = activeTrackColor;
-        _inactiveTrackColor = inactiveTrackColor;
-        _thumbColor = thumbColor;
-        _overlayFocusedColor = overlayFocusedColor;
-        _overlayHoveredColor = overlayHoveredColor;
-        _overlayDraggedColor = overlayDraggedColor;
-        _activeTickMarkColor = activeTickMarkColor;
-        _inactiveTickMarkColor = inactiveTickMarkColor;
-        _tickMarkRadius = tickMarkRadius;
-        _labels = labels;
-        _showValueIndicator = showValueIndicator;
-        _valueIndicatorColor = valueIndicatorColor;
-        _valueIndicatorTextStyle = valueIndicatorTextStyle;
-        _padding = padding;
-        _trackGap = trackGap;
-        _textDirection = textDirection;
-        _min = min;
-        _max = max;
-        _semanticFormatterCallback = semanticFormatterCallback;
-        _adjustmentUnit = adjustmentUnit;
-        _onChangeStartNormalized = onChangeStartNormalized;
-        _onChangedNormalized = onChangedNormalized;
-        _onChangeEndNormalized = onChangeEndNormalized;
-    }
-
-    public SliderThemeData SliderTheme
-    {
-        get => _sliderTheme;
+        get => _values;
         set
         {
-            if (Equals(_sliderTheme, value))
+            DebugAssertions.Assert(
+                value.Start >= 0.0 && value.Start <= 1.0,
+                "newValues.start >= 0.0 && newValues.start <= 1.0");
+            DebugAssertions.Assert(
+                value.End >= 0.0 && value.End <= 1.0,
+                "newValues.end >= 0.0 && newValues.end <= 1.0");
+            DebugAssertions.Assert(value.Start <= value.End, "newValues.start <= newValues.end");
+            RangeValues convertedValues = IsDiscrete ? DiscretizeRangeValues(value) : value;
+            if (convertedValues == _values)
             {
                 return;
             }
 
-            _sliderTheme = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public double StartValueNormalized
-    {
-        get => _startValueNormalized;
-        set
-        {
-            var normalized = OrderAndClamp(value, _endValueNormalized);
-            if (Math.Abs(_startValueNormalized - normalized.Start) <= Epsilon
-                && Math.Abs(_endValueNormalized - normalized.End) <= Epsilon)
+            _values = convertedValues;
+            if (IsDiscrete)
             {
-                return;
+                // Reset the duration to match the distance that we're traveling, so that
+                // whatever the distance, we still do it in _positionAnimationDuration,
+                // and if we get re-targeted in the middle, it still takes that long to
+                // get to the new location.
+                double startDistance = Math.Abs(_values.Start - _state.StartPositionController.Value);
+                _state.StartPositionController.Duration = startDistance != 0.0
+                    ? MultiplyDuration(PositionAnimationDuration, 1.0 / startDistance)
+                    : TimeSpan.Zero;
+                _state.StartPositionController.AnimateTo(_values.Start, curve: Curves.EaseInOut);
+                double endDistance = Math.Abs(_values.End - _state.EndPositionController.Value);
+                _state.EndPositionController.Duration = endDistance != 0.0
+                    ? MultiplyDuration(PositionAnimationDuration, 1.0 / endDistance)
+                    : TimeSpan.Zero;
+                _state.EndPositionController.AnimateTo(_values.End, curve: Curves.EaseInOut);
+            }
+            else
+            {
+                _state.StartPositionController.SetValue(convertedValues.Start);
+                _state.EndPositionController.SetValue(convertedValues.End);
             }
 
-            _startValueNormalized = normalized.Start;
-            _endValueNormalized = normalized.End;
-            if (!_dragging)
-            {
-                MarkNeedsPaint();
-            }
-        }
-    }
-
-    public double EndValueNormalized
-    {
-        get => _endValueNormalized;
-        set
-        {
-            var normalized = OrderAndClamp(_startValueNormalized, value);
-            if (Math.Abs(_startValueNormalized - normalized.Start) <= Epsilon
-                && Math.Abs(_endValueNormalized - normalized.End) <= Epsilon)
-            {
-                return;
-            }
-
-            _startValueNormalized = normalized.Start;
-            _endValueNormalized = normalized.End;
-            if (!_dragging)
-            {
-                MarkNeedsPaint();
-            }
-        }
-    }
-
-    public int? Divisions
-    {
-        get => _divisions;
-        set
-        {
-            if (_divisions == value)
-            {
-                return;
-            }
-
-            _divisions = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public bool IsInteractive
-    {
-        get => _isInteractive;
-        set
-        {
-            if (_isInteractive == value)
-            {
-                return;
-            }
-
-            _isInteractive = value;
-            if (!_isInteractive)
-            {
-                EndDragIfNeeded(canceled: true);
-            }
-
-            MarkNeedsPaint();
-        }
-    }
-
-    /// <summary>The state whose two focus nodes drive the per-thumb focus overlays and semantics.</summary>
-    public RangeSlider.RangeSliderState State
-    {
-        get => _state;
-        set
-        {
-            if (ReferenceEquals(_state, value))
-            {
-                return;
-            }
-
-            if (Attached)
-            {
-                DetachFocusListeners(_state);
-                AttachFocusListeners(value);
-            }
-
-            _state = value;
-            MarkNeedsPaint();
             MarkNeedsSemanticsUpdate();
         }
     }
 
-    /// <summary>Whether either thumb currently holds focus.</summary>
-    /// <remarks>
-    /// Dart has no `isFocused` on `_RenderRangeSlider`; it reads `_state.startFocusNode.hasFocus` and
-    /// `_state.endFocusNode.hasFocus` at each use site. Plumix keeps this aggregate only for the overlay
-    /// colour resolution, which is per-widget rather than per-thumb.
-    /// </remarks>
-    private bool IsFocused => _state.StartFocusNode.HasFocus || _state.EndFocusNode.HasFocus;
+    private RangeValues _values;
 
-    public double TrackHeight
+    private TargetPlatform _platform;
+
+    public TargetPlatform Platform
     {
-        get => _trackHeight;
+        get => _platform;
         set
         {
-            if (Math.Abs(_trackHeight - value) <= Epsilon)
+            if (_platform == value)
             {
                 return;
             }
 
-            _trackHeight = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public double ThumbRadius
-    {
-        get => _thumbRadius;
-        set
-        {
-            if (Math.Abs(_thumbRadius - value) <= Epsilon)
-            {
-                return;
-            }
-
-            _thumbRadius = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public Size ThumbSize
-    {
-        get => _thumbSize;
-        set
-        {
-            if (_thumbSize == value) return;
-            _thumbSize = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public double OverlayRadius
-    {
-        get => _overlayRadius;
-        set
-        {
-            if (Math.Abs(_overlayRadius - value) <= Epsilon)
-            {
-                return;
-            }
-
-            _overlayRadius = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public double MinPreferredHeight
-    {
-        get => _minPreferredHeight;
-        set
-        {
-            if (Math.Abs(_minPreferredHeight - value) <= Epsilon)
-            {
-                return;
-            }
-
-            _minPreferredHeight = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color ActiveTrackColor
-    {
-        get => _activeTrackColor;
-        set
-        {
-            if (_activeTrackColor == value)
-            {
-                return;
-            }
-
-            _activeTrackColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color InactiveTrackColor
-    {
-        get => _inactiveTrackColor;
-        set
-        {
-            if (_inactiveTrackColor == value)
-            {
-                return;
-            }
-
-            _inactiveTrackColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color ThumbColor
-    {
-        get => _thumbColor;
-        set
-        {
-            if (_thumbColor == value)
-            {
-                return;
-            }
-
-            _thumbColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color? OverlayFocusedColor
-    {
-        get => _overlayFocusedColor;
-        set
-        {
-            if (_overlayFocusedColor == value)
-            {
-                return;
-            }
-
-            _overlayFocusedColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color? OverlayHoveredColor
-    {
-        get => _overlayHoveredColor;
-        set
-        {
-            if (_overlayHoveredColor == value)
-            {
-                return;
-            }
-
-            _overlayHoveredColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color? OverlayDraggedColor
-    {
-        get => _overlayDraggedColor;
-        set
-        {
-            if (_overlayDraggedColor == value)
-            {
-                return;
-            }
-
-            _overlayDraggedColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color ActiveTickMarkColor
-    {
-        get => _activeTickMarkColor;
-        set { if (_activeTickMarkColor != value) { _activeTickMarkColor = value; MarkNeedsPaint(); } }
-    }
-
-    public Color InactiveTickMarkColor
-    {
-        get => _inactiveTickMarkColor;
-        set { if (_inactiveTickMarkColor != value) { _inactiveTickMarkColor = value; MarkNeedsPaint(); } }
-    }
-
-    public double TickMarkRadius
-    {
-        get => _tickMarkRadius;
-        set { if (Math.Abs(_tickMarkRadius - value) > Epsilon) { _tickMarkRadius = value; MarkNeedsPaint(); } }
-    }
-
-    public RangeLabels? Labels
-    {
-        get => _labels;
-        set { if (_labels != value) { _labels = value; MarkNeedsPaint(); } }
-    }
-
-    public ShowValueIndicator ShowValueIndicator
-    {
-        get => _showValueIndicator;
-        set { if (_showValueIndicator != value) { _showValueIndicator = value; MarkNeedsPaint(); } }
-    }
-
-    public Color ValueIndicatorColor
-    {
-        get => _valueIndicatorColor;
-        set { if (_valueIndicatorColor != value) { _valueIndicatorColor = value; MarkNeedsPaint(); } }
-    }
-
-    public TextStyle ValueIndicatorTextStyle
-    {
-        get => _valueIndicatorTextStyle;
-        set { if (!Equals(_valueIndicatorTextStyle, value)) { _valueIndicatorTextStyle = value; MarkNeedsPaint(); } }
-    }
-
-    public Thickness Padding
-    {
-        get => _padding;
-        set
-        {
-            if (_padding == value) return;
-            _padding = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public double TrackGap
-    {
-        get => _trackGap;
-        set { if (Math.Abs(_trackGap - value) > Epsilon) { _trackGap = value; MarkNeedsPaint(); } }
-    }
-
-    public TextDirection TextDirection
-    {
-        get => _textDirection;
-        set
-        {
-            if (_textDirection == value)
-            {
-                return;
-            }
-
-            _textDirection = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Action<NormalizedRangeValues>? OnChangeStartNormalized
-    {
-        get => _onChangeStartNormalized;
-        set => _onChangeStartNormalized = value;
-    }
-
-    public Action<NormalizedRangeValues>? OnChangedNormalized
-    {
-        get => _onChangedNormalized;
-        set => _onChangedNormalized = value;
-    }
-
-    public Action<NormalizedRangeValues>? OnChangeEndNormalized
-    {
-        get => _onChangeEndNormalized;
-        set => _onChangeEndNormalized = value;
-    }
-
-    protected override bool HitTestSelf(Point position)
-    {
-        return true;
-    }
-
-    protected override double ComputeMinIntrinsicWidth(double height) => PreferredWidth;
-
-    protected override double ComputeMaxIntrinsicWidth(double height) => PreferredWidth;
-
-    protected override double ComputeMinIntrinsicHeight(double width) => PreferredHeight;
-
-    protected override double ComputeMaxIntrinsicHeight(double width) => PreferredHeight;
-
-    private double PreferredWidth => DefaultTrackWidth + MaxSliderPartSize.Width;
-
-    private double PreferredHeight => Math.Max(TrackHeight, MaxSliderPartSize.Height);
-
-    private Size MaxSliderPartSize
-    {
-        get
-        {
-            bool discrete = Divisions.HasValue;
-            Size overlay = SliderTheme.OverlayShape!.GetPreferredSize(IsInteractive, discrete);
-            Size thumb = SliderTheme.RangeThumbShape!.GetPreferredSize(IsInteractive, discrete);
-            Size tick = SliderTheme.RangeTickMarkShape!.GetPreferredSize(SliderTheme, IsInteractive);
-            double overlayHeight = SliderTheme.Padding.HasValue ? thumb.Height : overlay.Height;
-            return new Size(
-                Math.Max(overlay.Width, Math.Max(thumb.Width, tick.Width)),
-                Math.Max(overlayHeight, Math.Max(thumb.Height, tick.Height)));
-        }
-    }
-
-    /// <inheritdoc />
-    /// <remarks>Flutter's <c>_RenderRangeSlider.sizedByParent</c>.</remarks>
-    protected override bool SizedByParent => true;
-
-    /// <inheritdoc />
-    /// <remarks>Flutter's <c>_RenderRangeSlider.computeDryLayout</c>.</remarks>
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
-    {
-        double desiredWidth = constraints.HasBoundedWidth ? constraints.MaxWidth : PreferredWidth;
-        if (!double.IsFinite(desiredWidth) || desiredWidth <= 0)
-        {
-            desiredWidth = DefaultTrackWidth;
-        }
-
-        double contentHeight = Math.Max(MinPreferredHeight, PreferredHeight);
-        double desiredHeight = contentHeight + Padding.Top + Padding.Bottom;
-        if (!double.IsFinite(desiredHeight) || desiredHeight <= 0)
-        {
-            desiredHeight = Math.Max(TrackHeight, ThumbSize.Height);
-        }
-
-        return constraints.Constrain(new Size(desiredWidth, desiredHeight));
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        if (Size.Width <= 0 || Size.Height <= 0)
-        {
-            return;
-        }
-
-        var values = ResolveVisualValues();
-        bool discrete = Divisions.HasValue;
-        RangeSliderTrackShape trackShape = SliderTheme.RangeTrackShape!;
-        Rect trackRect = trackShape.GetPreferredRect(this, offset, SliderTheme, IsInteractive, discrete);
-        var geometry = new TrackGeometry(trackRect.Left, trackRect.Right);
-        var startCenter = new Point(
-            ResolveThumbCenterX(geometry, values.Start),
-            trackRect.Center.Y);
-        var endCenter = new Point(
-            ResolveThumbCenterX(geometry, values.End),
-            trackRect.Center.Y);
-        // Flutter caches the two thumb centres in `paint` and reuses them for the semantics rects, so the
-        // rects follow the position animation. Plumix caches them without the paint `offset`, because a
-        // `SemanticsNode.Rect` is in its owning render object's own coordinate system and the parent node's
-        // transform already carries the offset — adding it here would count the position twice.
-        _startThumbCenter = new Point(startCenter.X - offset.X, startCenter.Y - offset.Y);
-        _endThumbCenter = new Point(endCenter.X - offset.X, endCenter.Y - offset.Y);
-
-        var enableAnimation = new ConstantAnimation<double>(IsInteractive ? 1.0 : 0.0);
-        bool active = _dragging || _hovered;
-        var activationAnimation = new ConstantAnimation<double>(active ? 1.0 : 0.0);
-        trackShape.Paint(
-            ctx,
-            offset,
-            startCenter,
-            endCenter,
-            enableAnimation,
-            discrete,
-            IsInteractive,
-            this,
-            SliderTheme,
-            TextDirection);
-
-        Color? overlayColor = ResolveOverlayColor();
-        SliderThemeData paintTheme = SliderTheme.CopyWith(
-            overlayColor: WidgetStateProperty<Color?>.All(overlayColor));
-
-        // Flutter paints a fully-activated overlay under each *focused* thumb, before the
-        // activation-driven overlay, so keyboard focus highlights the thumb that actually has it rather
-        // than whichever thumb was dragged last.
-        if (overlayColor is { Alpha: > 0 })
-        {
-            if (_state.StartFocusNode.HasFocus)
-            {
-                PaintThumbOverlay(ctx, paintTheme, startCenter, values.Start, discrete, enableAnimation);
-            }
-
-            if (_state.EndFocusNode.HasFocus)
-            {
-                PaintThumbOverlay(ctx, paintTheme, endCenter, values.End, discrete, enableAnimation);
-            }
-        }
-
-        if (active && overlayColor is { Alpha: > 0 })
-        {
-            Point overlayCenter = _activeThumb == RangeSliderThumb.Start ? startCenter : endCenter;
-            paintTheme.OverlayShape!.Paint(
-                ctx,
-                overlayCenter,
-                activationAnimation,
-                enableAnimation,
-                discrete,
-                null,
-                this,
-                paintTheme,
-                TextDirection,
-                _activeThumb == RangeSliderThumb.Start ? values.Start : values.End,
-                1.0,
-                Size);
-        }
-
-        PaintTickMarks(ctx, geometry, trackRect.Center.Y, values);
-        bool startIsTop = _activeThumb == RangeSliderThumb.Start;
-        Point bottomCenter = startIsTop ? endCenter : startCenter;
-        Point topCenter = startIsTop ? startCenter : endCenter;
-        Thumb bottomThumb = startIsTop ? Thumb.End : Thumb.Start;
-        Thumb topThumb = startIsTop ? Thumb.Start : Thumb.End;
-        RangeSliderThumbShape thumbShape = paintTheme.RangeThumbShape!;
-        double distance = Math.Abs(startCenter.X - endCenter.X);
-        bool overlaps = distance < thumbShape.GetPreferredSize(IsInteractive, discrete).Width;
-
-        PaintRangeValueIndicator(
-            ctx,
-            bottomCenter,
-            bottomThumb,
-            isOnTop: false,
-            activationAnimation,
-            enableAnimation,
-            paintTheme,
-            discrete);
-        thumbShape.Paint(
-            ctx,
-            bottomCenter,
-            activationAnimation,
-            enableAnimation,
-            discrete,
-            isOnTop: false,
-            isPressed: false,
-            paintTheme,
-            TextDirection,
-            bottomThumb);
-        PaintRangeValueIndicator(
-            ctx,
-            topCenter,
-            topThumb,
-            overlaps,
-            activationAnimation,
-            enableAnimation,
-            paintTheme,
-            discrete);
-        thumbShape.Paint(
-            ctx,
-            topCenter,
-            activationAnimation,
-            enableAnimation,
-            discrete,
-            overlaps,
-            isPressed: _dragging,
-            paintTheme,
-            TextDirection,
-            topThumb);
-    }
-
-    private void PaintTrackSegment(
-        PaintingContext context,
-        double start,
-        double end,
-        double centerY,
-        Color color)
-    {
-        double left = start;
-        double width = end - start;
-        if (width <= Epsilon)
-        {
-            return;
-        }
-
-        context.Canvas.DrawRectangle(
-            brush: new SolidColorBrush(color),
-            pen: null,
-            rect: new Rect(left, centerY - (TrackHeight / 2.0), width, TrackHeight),
-            radiusX: TrackHeight / 2.0,
-            radiusY: TrackHeight / 2.0);
-    }
-
-    private void PaintTickMarks(
-        PaintingContext context,
-        TrackGeometry geometry,
-        double centerY,
-        NormalizedRangeValues values)
-    {
-        if (!Divisions.HasValue || Divisions.Value <= 0 || TickMarkRadius <= 0)
-        {
-            return;
-        }
-
-        int divisions = Divisions.Value;
-        RangeSliderTickMarkShape tickShape = SliderTheme.RangeTickMarkShape!;
-        Size tickSize = tickShape.GetPreferredSize(SliderTheme, IsInteractive);
-        double spacing = geometry.Width / divisions;
-        if (spacing < tickSize.Width * 3.0)
-        {
-            return;
-        }
-
-        var enableAnimation = new ConstantAnimation<double>(IsInteractive ? 1.0 : 0.0);
-        var startCenter = new Point(ResolveThumbCenterX(geometry, values.Start), centerY);
-        var endCenter = new Point(ResolveThumbCenterX(geometry, values.End), centerY);
-        for (int index = 0; index <= divisions; index++)
-        {
-            double value = (double)index / divisions;
-            double centerX = ResolveThumbCenterX(geometry, value);
-            tickShape.Paint(
-                context,
-                new Point(centerX, centerY),
-                startCenter,
-                endCenter,
-                enableAnimation,
-                SliderTheme,
-                TextDirection);
-        }
-    }
-
-    private void PaintRangeValueIndicator(
-        PaintingContext context,
-        Point center,
-        Thumb thumb,
-        bool isOnTop,
-        Animation<double> activationAnimation,
-        Animation<double> enableAnimation,
-        SliderThemeData sliderTheme,
-        bool isDiscrete)
-    {
-        if (!ShouldShowValueIndicator() || !Labels.HasValue)
-        {
-            return;
-        }
-
-        string label = thumb == Thumb.Start ? Labels.Value.Start : Labels.Value.End;
-        TextLayout? layout = CreateLabelLayout(label);
-        if (layout is null)
-        {
-            return;
-        }
-
-        sliderTheme.RangeValueIndicatorShape!.Paint(
-            context,
-            center,
-            new ConstantAnimation<double>(1.0),
-            enableAnimation,
-            isDiscrete,
-            isOnTop,
-            layout,
-            this,
-            sliderTheme,
-            TextDirection,
-            thumb,
-            thumb == Thumb.Start ? StartValueNormalized : EndValueNormalized,
-            1.0,
-            Size);
-    }
-
-    private TextLayout? CreateLabelLayout(string label)
-    {
-        try
-        {
-            var typeface = new Typeface(
-                ValueIndicatorTextStyle.FontFamily ?? FontFamily.Default,
-                ValueIndicatorTextStyle.FontStyle ?? FontStyle.Normal,
-                ValueIndicatorTextStyle.FontWeight ?? FontWeight.Normal,
-                FontStretch.Normal);
-            return new TextLayout(
-                label,
-                typeface,
-                ValueIndicatorTextStyle.FontSize ?? 14.0,
-                new SolidColorBrush(ValueIndicatorTextStyle.Color ?? Colors.White));
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            return null;
-        }
-    }
-
-    private void PaintThumb(PaintingContext context, Point center)
-    {
-        var thumbRect = new Rect(
-            center.X - (ThumbSize.Width / 2.0),
-            center.Y - (ThumbSize.Height / 2.0),
-            ThumbSize.Width,
-            ThumbSize.Height);
-        double radius = Math.Min(ThumbSize.Width, ThumbSize.Height) / 2.0;
-        context.Canvas.DrawRectangle(
-            brush: new SolidColorBrush(ThumbColor),
-            pen: null,
-            rect: thumbRect,
-            radiusX: radius,
-            radiusY: radius);
-    }
-
-    private bool ShouldShowValueIndicator()
-    {
-        if (!IsInteractive || !Labels.HasValue)
-        {
-            return false;
-        }
-
-        return ShowValueIndicator switch
-        {
-            Plumix.Material.ShowValueIndicator.AlwaysVisible => true,
-            Plumix.Material.ShowValueIndicator.Never => false,
-            Plumix.Material.ShowValueIndicator.OnlyForDiscrete => _dragging && Divisions.HasValue,
-            Plumix.Material.ShowValueIndicator.OnlyForContinuous => _dragging && !Divisions.HasValue,
-            _ => _dragging,
-        };
-    }
-
-    private void PaintValueIndicator(PaintingContext context, Point thumbCenter, string label)
-    {
-        const double horizontalPadding = 8.0;
-        const double verticalPadding = 4.0;
-        try
-        {
-            var typeface = new Typeface(
-                ValueIndicatorTextStyle.FontFamily ?? FontFamily.Default,
-                ValueIndicatorTextStyle.FontStyle ?? FontStyle.Normal,
-                ValueIndicatorTextStyle.FontWeight ?? FontWeight.Normal,
-                FontStretch.Normal);
-            var textLayout = new TextLayout(
-                text: label,
-                typeface: typeface,
-                fontSize: ValueIndicatorTextStyle.FontSize ?? 14.0,
-                foreground: new SolidColorBrush(ValueIndicatorTextStyle.Color ?? Colors.White));
-            double width = Math.Max(32.0, textLayout.Width + (horizontalPadding * 2.0));
-            double height = textLayout.Height + (verticalPadding * 2.0);
-            double bottom = thumbCenter.Y - (ThumbSize.Height / 2.0) - 8.0;
-            var indicatorRect = new Rect(thumbCenter.X - (width / 2.0), bottom - height, width, height);
-            context.Canvas.DrawRectangle(
-                brush: new SolidColorBrush(ValueIndicatorColor),
-                pen: null,
-                rect: indicatorRect,
-                radiusX: height / 2.0,
-                radiusY: height / 2.0);
-            context.Canvas.DrawTextLayout(
-                textLayout,
-                new Point(indicatorRect.X + ((width - textLayout.Width) / 2.0), indicatorRect.Y + verticalPadding));
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            // Host-less tests may not have a font manager; the indicator surface still remains testable.
-        }
-    }
-
-    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
-    {
-        DebugHandleEvent(@event, entry);
-        switch (@event)
-        {
-            case PointerDownEvent downEvent:
-                HandlePointerDown(downEvent);
-                break;
-            case PointerMoveEvent moveEvent:
-                HandlePointerMove(moveEvent);
-                break;
-            case PointerUpEvent upEvent:
-                HandlePointerUp(upEvent);
-                break;
-            case PointerCancelEvent cancelEvent:
-                HandlePointerCancel(cancelEvent);
-                break;
-            case PointerEnterEvent:
-                HandlePointerEnter();
-                break;
-            case PointerExitEvent:
-                HandlePointerExit();
-                break;
-        }
-    }
-
-    private void HandlePointerDown(PointerDownEvent @event)
-    {
-        if (!IsInteractive || !IsPrimaryButton(@event.Buttons))
-        {
-            return;
-        }
-
-        _activePointer = @event.Pointer;
-        _dragging = true;
-        _hovered = true;
-        _dragValues = ResolveVisualValues();
-        _activeThumb = ResolveClosestThumb(@event.LocalPosition.X, _dragValues.Value);
-        _lastGlobalPointerX = @event.Position.X;
-
-        if (_activeThumb.HasValue)
-        {
-            // Flutter's `_startInteraction` moves focus onto the thumb the pointer picked, before the drag
-            // starts. `Slider` deliberately does not do this — only `RangeSlider`.
-            switch (_activeThumb.Value)
-            {
-                case RangeSliderThumb.Start:
-                    _state.StartFocusNode.RequestFocus();
-                    break;
-                case RangeSliderThumb.End:
-                    _state.EndFocusNode.RequestFocus();
-                    break;
-            }
-
-            OnChangeStartNormalized?.Invoke(_dragValues.Value);
-            UpdateActiveThumbFromLocalX(@event.LocalPosition.X);
-        }
-
-        MarkNeedsPaint();
-    }
-
-    private void HandlePointerMove(PointerMoveEvent @event)
-    {
-        if (!IsInteractive || _activePointer != @event.Pointer)
-        {
-            return;
-        }
-
-        double deltaX = _lastGlobalPointerX.HasValue
-            ? @event.Position.X - _lastGlobalPointerX.Value
-            : @event.Delta.X;
-        _lastGlobalPointerX = @event.Position.X;
-        UpdateActiveThumbFromDeltaX(deltaX);
-    }
-
-    private void HandlePointerUp(PointerUpEvent @event)
-    {
-        if (_activePointer != @event.Pointer)
-        {
-            return;
-        }
-
-        EndDragIfNeeded(canceled: false);
-    }
-
-    private void HandlePointerCancel(PointerCancelEvent @event)
-    {
-        if (_activePointer != @event.Pointer)
-        {
-            return;
-        }
-
-        EndDragIfNeeded(canceled: true);
-    }
-
-    private void HandlePointerEnter()
-    {
-        if (!IsInteractive || _hovered)
-        {
-            return;
-        }
-
-        _hovered = true;
-        MarkNeedsPaint();
-    }
-
-    private void HandlePointerExit()
-    {
-        if (!_hovered)
-        {
-            return;
-        }
-
-        _hovered = false;
-        MarkNeedsPaint();
-    }
-
-    private void UpdateActiveThumbFromLocalX(double localX)
-    {
-        if (!_activeThumb.HasValue)
-        {
-            return;
-        }
-
-        var current = ResolveVisualValues();
-        double nextNormalized = ResolveNormalizedFromLocalX(localX);
-        var next = UpdateThumbValue(current, _activeThumb.Value, nextNormalized);
-        if (AreEqual(current, next))
-        {
-            return;
-        }
-
-        _dragValues = next;
-        OnChangedNormalized?.Invoke(next);
-        MarkNeedsPaint();
-    }
-
-    private void UpdateActiveThumbFromDeltaX(double deltaX)
-    {
-        if (!_activeThumb.HasValue)
-        {
-            return;
-        }
-
-        var current = ResolveVisualValues();
-        var geometry = ResolveTrackGeometry(offsetX: 0);
-        if (geometry.Width <= Epsilon)
-        {
-            return;
-        }
-
-        double directionMultiplier = TextDirection == TextDirection.Rtl ? -1.0 : 1.0;
-        double normalizedDelta = (deltaX / geometry.Width) * directionMultiplier;
-        if (Math.Abs(normalizedDelta) <= Epsilon)
-        {
-            return;
-        }
-
-        double baseValue = _activeThumb.Value == RangeSliderThumb.Start ? current.Start : current.End;
-        var next = UpdateThumbValue(current, _activeThumb.Value, baseValue + normalizedDelta);
-        if (AreEqual(current, next))
-        {
-            return;
-        }
-
-        _dragValues = next;
-        OnChangedNormalized?.Invoke(next);
-        MarkNeedsPaint();
-    }
-
-    private void EndDragIfNeeded(bool canceled)
-    {
-        if (!_dragging && _activePointer is null)
-        {
-            return;
-        }
-
-        var finalValues = ResolveVisualValues();
-        _activePointer = null;
-        _dragging = false;
-        _activeThumb = null;
-        _dragValues = null;
-        _lastGlobalPointerX = null;
-
-        if (!canceled)
-        {
-            OnChangeEndNormalized?.Invoke(finalValues);
-        }
-
-        MarkNeedsPaint();
-    }
-
-    private NormalizedRangeValues ResolveVisualValues()
-    {
-        if (_dragging && _dragValues.HasValue)
-        {
-            return OrderAndClamp(_dragValues.Value.Start, _dragValues.Value.End);
-        }
-
-        return OrderAndClamp(StartValueNormalized, EndValueNormalized);
-    }
-
-    private double ResolveNormalizedFromLocalX(double localX)
-    {
-        var geometry = ResolveTrackGeometry(offsetX: 0);
-        if (geometry.Width <= Epsilon)
-        {
-            return 0.0;
-        }
-
-        double relative = Math.Clamp(localX - geometry.Left, 0.0, geometry.Width);
-        double normalized = relative / geometry.Width;
-        if (TextDirection == TextDirection.Rtl)
-        {
-            normalized = 1.0 - normalized;
-        }
-
-        return SnapNormalized(normalized);
-    }
-
-    private RangeSliderThumb ResolveClosestThumb(double localX, NormalizedRangeValues values)
-    {
-        double tapValue = ResolveNormalizedFromLocalX(localX);
-        Rect trackRect = SliderTheme.RangeTrackShape!.GetPreferredRect(
-            this,
-            default,
-            SliderTheme,
-            IsInteractive,
-            Divisions.HasValue);
-        Size thumbSize = SliderTheme.RangeThumbShape!.GetPreferredSize(IsInteractive, Divisions.HasValue);
-        Thumb? selectedThumb = SliderTheme.ThumbSelector?.Invoke(
-            TextDirection,
-            new RangeValues(values.Start, values.End),
-            tapValue,
-            thumbSize,
-            trackRect.Size,
-            localX - trackRect.Left);
-        if (selectedThumb.HasValue)
-        {
-            return selectedThumb.Value == Thumb.Start ? RangeSliderThumb.Start : RangeSliderThumb.End;
-        }
-
-        double distanceToStart = Math.Abs(tapValue - values.Start);
-        double distanceToEnd = Math.Abs(tapValue - values.End);
-        if (Math.Abs(distanceToStart - distanceToEnd) <= Epsilon)
-        {
-            return tapValue <= ((values.Start + values.End) / 2.0)
-                ? RangeSliderThumb.Start
-                : RangeSliderThumb.End;
-        }
-
-        return distanceToStart < distanceToEnd
-            ? RangeSliderThumb.Start
-            : RangeSliderThumb.End;
-    }
-
-    private NormalizedRangeValues UpdateThumbValue(
-        NormalizedRangeValues current,
-        RangeSliderThumb thumb,
-        double nextRawValue)
-    {
-        double nextValue = SnapNormalized(nextRawValue);
-        var geometry = ResolveTrackGeometry(offsetX: 0.0);
-        double minimumSeparation = Divisions.HasValue || geometry.Width <= Epsilon
-            ? 0.0
-            : (SliderTheme.MinThumbSeparation ?? 0.0) / geometry.Width;
-        if (thumb == RangeSliderThumb.Start)
-        {
-            double nextStart = Math.Clamp(nextValue, 0.0, Math.Max(0.0, current.End - minimumSeparation));
-            return OrderAndClamp(nextStart, current.End);
-        }
-
-        double nextEnd = Math.Clamp(nextValue, Math.Min(1.0, current.Start + minimumSeparation), 1.0);
-        return OrderAndClamp(current.Start, nextEnd);
-    }
-
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        AttachFocusListeners(_state);
-    }
-
-    protected override void OnDetach()
-    {
-        DetachFocusListeners(_state);
-        base.OnDetach();
-    }
-
-    /// <remarks>
-    /// Flutter subscribes both focus nodes to <c>markNeedsPaint</c> and <c>markNeedsSemanticsUpdate</c> in
-    /// <c>attach</c>: the paint listener drives the per-thumb focus overlay, the semantics listener is what
-    /// makes keyboard focus show up as <c>isFocused</c> on the matching thumb node.
-    /// </remarks>
-    private void AttachFocusListeners(RangeSlider.RangeSliderState state)
-    {
-        state.StartFocusNode.AddListener(MarkNeedsPaint);
-        state.StartFocusNode.AddListener(MarkNeedsSemanticsUpdate);
-        state.EndFocusNode.AddListener(MarkNeedsPaint);
-        state.EndFocusNode.AddListener(MarkNeedsSemanticsUpdate);
-    }
-
-    private void DetachFocusListeners(RangeSlider.RangeSliderState state)
-    {
-        state.StartFocusNode.RemoveListener(MarkNeedsPaint);
-        state.StartFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
-        state.EndFocusNode.RemoveListener(MarkNeedsPaint);
-        state.EndFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
-    }
-
-    /// <summary>The lower bound the normalized values are mapped back onto for semantics.</summary>
-    public double Min
-    {
-        get => _min;
-        set
-        {
-            if (_min.Equals(value))
-            {
-                return;
-            }
-
-            _min = value;
+            _platform = value;
             MarkNeedsSemanticsUpdate();
         }
     }
 
-    /// <summary>The upper bound the normalized values are mapped back onto for semantics.</summary>
-    public double Max
+    public DeviceGestureSettings? GestureSettings
     {
-        get => _max;
+        get => _drag.GestureSettings;
         set
         {
-            if (_max.Equals(value))
-            {
-                return;
-            }
-
-            _max = value;
-            MarkNeedsSemanticsUpdate();
+            _drag.GestureSettings = value;
+            _tap.GestureSettings = value;
         }
     }
 
-    /// <remarks>Flutter's <c>_RenderRangeSlider.semanticFormatterCallback</c>.</remarks>
+    private SemanticFormatterCallback? _semanticFormatterCallback;
+
     public SemanticFormatterCallback? SemanticFormatterCallback
     {
         get => _semanticFormatterCallback;
@@ -2113,131 +1010,933 @@ internal sealed class RenderRangeSlider : RenderBox
         }
     }
 
-    /// <summary>The platform-derived step a semantics adjustment moves a continuous thumb by.</summary>
-    /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider._adjustmentUnit</c> maps macOS to <c>0.05</c>, unlike
-    /// <c>_RenderSlider._adjustmentUnit</c>, which maps it to <c>0.1</c>. Plumix resolves it in the state and
-    /// reproduces that asymmetry there.
-    /// </remarks>
-    public double AdjustmentUnit
+    public int? Divisions
     {
-        get => _adjustmentUnit;
+        get => _divisions;
         set
         {
-            if (_adjustmentUnit.Equals(value))
+            if (value == _divisions)
             {
                 return;
             }
 
-            _adjustmentUnit = value;
-            MarkNeedsSemanticsUpdate();
+            _divisions = value;
+            MarkNeedsPaint();
         }
     }
 
-    /// <remarks>Flutter's <c>_RenderRangeSlider._semanticActionUnit</c>.</remarks>
-    private double SemanticActionUnit => Divisions is { } divisions ? 1.0 / divisions : AdjustmentUnit;
+    private int? _divisions;
 
-    /// <summary>
-    /// The minimum gap the two thumbs must keep, in normalized units.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider._minThumbSeparationValue</c>: zero for a discrete slider, and
-    /// otherwise the theme's separation divided by the track width — so it is layout-dependent, and the
-    /// increase/decrease values that read it change with the slider's size.
-    /// </remarks>
-    private double MinThumbSeparationValue
+    public RangeLabels? Labels
     {
-        get
+        get => _labels;
+        set
         {
-            if (Divisions is { } divisions && divisions > 0)
+            if (value == _labels)
             {
-                return 0.0;
+                return;
             }
 
-            double trackWidth = ResolveTrackGeometry(offsetX: 0).Width;
-            return trackWidth > 0 ? (SliderTheme.MinThumbSeparation ?? 0.0) / trackWidth : 0.0;
+            _labels = value;
+            UpdateLabelPainters();
         }
     }
 
-    /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider._increasedStartValue</c>. The <c>toStringAsFixed(2)</c> round-trip is
-    /// Dart's own guard against <c>0.4 + 0.2 == 0.6000000000000001</c>, and the separation bound saturates to
-    /// the current value rather than clamping to the neighbour.
-    /// </remarks>
-    private double IncreasedStartValue
+    private RangeLabels? _labels;
+
+    public SliderThemeData SliderTheme
+    {
+        get => _sliderTheme;
+        set
+        {
+            if (value == _sliderTheme)
+            {
+                return;
+            }
+
+            _sliderTheme = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    private SliderThemeData _sliderTheme;
+
+    public ThemeData? Theme
+    {
+        get => _theme;
+        set
+        {
+            if (value == _theme)
+            {
+                return;
+            }
+
+            _theme = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    private ThemeData? _theme;
+
+    public double TextScaleFactor
+    {
+        get => _textScaleFactor;
+        set
+        {
+            if (value == _textScaleFactor)
+            {
+                return;
+            }
+
+            _textScaleFactor = value;
+            UpdateLabelPainters();
+        }
+    }
+
+    private double _textScaleFactor;
+
+    public Size ScreenSize
+    {
+        get => _screenSize;
+        set
+        {
+            if (value == ScreenSize)
+            {
+                return;
+            }
+
+            _screenSize = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    private Size _screenSize;
+
+    public Action<RangeValues>? OnChanged
+    {
+        get => _onChanged;
+        set
+        {
+            if (value == _onChanged)
+            {
+                return;
+            }
+
+            bool wasEnabled = IsEnabled;
+            _onChanged = value;
+            if (wasEnabled != IsEnabled)
+            {
+                MarkNeedsPaint();
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    private Action<RangeValues>? _onChanged;
+
+    public Action<RangeValues>? OnChangeStart { get; set; }
+
+    public Action<RangeValues>? OnChangeEnd { get; set; }
+
+    public TextDirection TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (value == _textDirection)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            UpdateLabelPainters();
+        }
+    }
+
+    private TextDirection _textDirection;
+
+    /// <summary>True if this slider is being hovered over by a pointer.</summary>
+    public bool Hovering
+    {
+        get => _hovering;
+        set
+        {
+            if (value == _hovering)
+            {
+                return;
+            }
+
+            _hovering = value;
+            UpdateForHover(_hovering);
+        }
+    }
+
+    private bool _hovering;
+
+    /// <summary>True if the slider is interactive and the start thumb is being hovered over by a pointer.</summary>
+    private bool _hoveringStartThumb;
+
+    public bool HoveringStartThumb
+    {
+        get => _hoveringStartThumb;
+        set
+        {
+            if (value == _hoveringStartThumb)
+            {
+                return;
+            }
+
+            _hoveringStartThumb = value;
+            UpdateForHover(_hovering);
+        }
+    }
+
+    /// <summary>True if the slider is interactive and the end thumb is being hovered over by a pointer.</summary>
+    private bool _hoveringEndThumb;
+
+    public bool HoveringEndThumb
+    {
+        get => _hoveringEndThumb;
+        set
+        {
+            if (value == _hoveringEndThumb)
+            {
+                return;
+            }
+
+            _hoveringEndThumb = value;
+            UpdateForHover(_hovering);
+        }
+    }
+
+    private void UpdateForHover(bool hovered)
+    {
+        // Only show overlay when pointer is hovering the thumb.
+        if (hovered && (HoveringStartThumb || HoveringEndThumb))
+        {
+            _state.OverlayController.Forward();
+        }
+        else
+        {
+            _state.OverlayController.Reverse();
+        }
+    }
+
+    public bool ShouldAlwaysShowValueIndicator =>
+        _sliderTheme.ShowValueIndicator == ShowValueIndicator.AlwaysVisible;
+
+#pragma warning disable CS0618 // Dart's switch lists the deprecated `ShowValueIndicator.always`.
+    public bool ShouldShowValueIndicatorWhenDragged => _sliderTheme.ShowValueIndicator!.Value switch
+    {
+        ShowValueIndicator.OnlyForDiscrete => IsDiscrete,
+        ShowValueIndicator.OnlyForContinuous => !IsDiscrete,
+        ShowValueIndicator.AlwaysVisible or ShowValueIndicator.Always or ShowValueIndicator.OnDrag => true,
+        ShowValueIndicator.Never => false,
+        _ => throw new InvalidOperationException(),
+    };
+#pragma warning restore CS0618
+
+    private Size ThumbSize => _sliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete);
+
+    private double AdjustmentUnit
     {
         get
         {
-            double increased = RoundToTwoDecimals(StartValueNormalized + SemanticActionUnit);
-            return increased <= EndValueNormalized - MinThumbSeparationValue ? increased : StartValueNormalized;
+            switch (_platform)
+            {
+                case TargetPlatform.IOS:
+                    // Matches iOS implementation of material slider.
+                    return 0.1;
+                case TargetPlatform.Android:
+                case TargetPlatform.Fuchsia:
+                case TargetPlatform.Linux:
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Windows:
+                default:
+                    // Matches Android implementation of material slider.
+                    return 0.05;
+            }
         }
     }
 
-    /// <remarks>Flutter's <c>_RenderRangeSlider._decreasedStartValue</c> — clamped, no separation bound.</remarks>
-    private double DecreasedStartValue => Math.Clamp(StartValueNormalized - SemanticActionUnit, 0.0, 1.0);
-
-    /// <remarks>Flutter's <c>_RenderRangeSlider._increasedEndValue</c> — clamped, no separation bound.</remarks>
-    private double IncreasedEndValue => Math.Clamp(EndValueNormalized + SemanticActionUnit, 0.0, 1.0);
-
-    /// <remarks>Flutter's <c>_RenderRangeSlider._decreasedEndValue</c> — separation-bounded, not clamped.</remarks>
-    private double DecreasedEndValue
+    private void UpdateLabelPainters()
     {
-        get
-        {
-            double decreased = EndValueNormalized - SemanticActionUnit;
-            return decreased >= StartValueNormalized + MinThumbSeparationValue ? decreased : EndValueNormalized;
-        }
+        UpdateLabelPainter(Thumb.Start);
+        UpdateLabelPainter(Thumb.End);
     }
 
-    /// <remarks>Dart's <c>double.parse(value.toStringAsFixed(2))</c>, which rounds half away from zero.</remarks>
-    private static double RoundToTwoDecimals(double value) =>
-        Math.Round(value, 2, MidpointRounding.AwayFromZero);
-
-    private void IncreaseStartAction() => InvokeRangeChange(IncreasedStartValue, EndValueNormalized);
-
-    private void DecreaseStartAction() => InvokeRangeChange(DecreasedStartValue, EndValueNormalized);
-
-    private void IncreaseEndAction() => InvokeRangeChange(StartValueNormalized, IncreasedEndValue);
-
-    private void DecreaseEndAction() => InvokeRangeChange(StartValueNormalized, DecreasedEndValue);
-
-    /// <remarks>
-    /// Flutter's four range actions call <c>onChanged</c> only — unlike <c>Slider</c>, they never fire
-    /// <c>onChangeStart</c>/<c>onChangeEnd</c>.
-    /// </remarks>
-    private void InvokeRangeChange(double startNormalized, double endNormalized)
+    private void UpdateLabelPainter(Thumb thumb)
     {
-        if (!IsInteractive)
+        RangeLabels? labels = Labels;
+        if (labels == null)
         {
             return;
         }
 
-        OnChangedNormalized?.Invoke(new NormalizedRangeValues(startNormalized, endNormalized));
+        (string text, TextPainter labelPainter) = thumb switch
+        {
+            Thumb.Start => (labels.Start, _startLabelPainter),
+            Thumb.End => (labels.End, _endLabelPainter),
+            _ => throw new ArgumentOutOfRangeException(nameof(thumb)),
+        };
+
+        labelPainter.Text = new TextSpan(style: _sliderTheme.ValueIndicatorTextStyle, text: text);
+        labelPainter.TextDirection = TextDirection;
+        labelPainter.TextScaler = TextScaler.Linear(TextScaleFactor);
+        labelPainter.Layout();
+        // Changing the textDirection can result in the layout changing, because the
+        // bidi algorithm might line up the glyphs differently which can result in
+        // different ligatures, different shapes, etc. So we always markNeedsLayout.
+        MarkNeedsLayout();
     }
 
-    /// <remarks>Flutter's <c>_RangeSliderState._lerp</c>.</remarks>
-    private double Lerp(double normalized) => Min + ((Max - Min) * normalized);
-
-    private string FormatSemanticValue(double normalized)
-    {
-        return SemanticFormatterCallback is { } formatter
-            ? formatter(Lerp(normalized))
-            : FormattableString.Invariant($"{Math.Round(normalized * 100.0, MidpointRounding.AwayFromZero)}%");
-    }
-
+    /// <summary>Dart's <c>systemFontsDidChange</c> override.</summary>
     /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider.describeSemanticsConfiguration</c> sets nothing but the boundary flag:
-    /// every readable property lives on the two thumb nodes that
-    /// <see cref="AssembleSemanticsNode"/> builds.
+    /// <c>RelayoutWhenSystemFontsChangeMixin</c> is not ported, so nothing calls this yet.
     /// </remarks>
-    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    internal void SystemFontsDidChange()
     {
-        base.DescribeSemanticsConfiguration(configuration);
-        configuration.IsSemanticBoundary = true;
+        _startLabelPainter.MarkNeedsLayout();
+        _endLabelPainter.MarkNeedsLayout();
+        UpdateLabelPainters();
     }
 
-    /// <remarks>Flutter's <c>_RenderRangeSlider._createSemanticsConfiguration</c>.</remarks>
-    private SemanticsConfiguration CreateThumbSemanticsConfiguration(
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _overlayAnimation.AddListener(MarkNeedsPaint);
+        _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
+        _enableAnimation.AddListener(MarkNeedsPaint);
+        _state.StartPositionController.AddListener(MarkNeedsPaint);
+        _state.EndPositionController.AddListener(MarkNeedsPaint);
+        _state.StartFocusNode.AddListener(MarkNeedsPaint);
+        _state.StartFocusNode.AddListener(MarkNeedsSemanticsUpdate);
+        _state.EndFocusNode.AddListener(MarkNeedsPaint);
+        _state.EndFocusNode.AddListener(MarkNeedsSemanticsUpdate);
+    }
+
+    protected override void OnDetach()
+    {
+        _overlayAnimation.RemoveListener(MarkNeedsPaint);
+        _valueIndicatorAnimation.RemoveListener(MarkNeedsPaint);
+        _enableAnimation.RemoveListener(MarkNeedsPaint);
+        _state.StartPositionController.RemoveListener(MarkNeedsPaint);
+        _state.EndPositionController.RemoveListener(MarkNeedsPaint);
+        _state.StartFocusNode.RemoveListener(MarkNeedsPaint);
+        _state.StartFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
+        _state.EndFocusNode.RemoveListener(MarkNeedsPaint);
+        _state.EndFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
+        base.OnDetach();
+    }
+
+    public override void Dispose()
+    {
+        _drag.Dispose();
+        _tap.Dispose();
+        _startLabelPainter.Dispose();
+        _endLabelPainter.Dispose();
+        _enableAnimation.Dispose();
+        _valueIndicatorAnimation.Dispose();
+        _overlayAnimation.Dispose();
+        base.Dispose();
+    }
+
+    private double GetValueFromVisualPosition(double visualPosition)
+    {
+        return TextDirection switch
+        {
+            TextDirection.Rtl => 1.0 - visualPosition,
+            TextDirection.Ltr => visualPosition,
+            _ => throw new InvalidOperationException(),
+        };
+    }
+
+    private double GetValueFromGlobalPosition(Point globalPosition)
+    {
+        double visualPosition = (GlobalToLocal(globalPosition).X - TrackRect.Left) / TrackRect.Width;
+        return GetValueFromVisualPosition(visualPosition);
+    }
+
+    private double Discretize(double value)
+    {
+        double result = BoxConstraints.ClampDouble(value, 0.0, 1.0);
+        if (IsDiscrete)
+        {
+            result = DartRound(result * Divisions!.Value) / Divisions!.Value;
+        }
+
+        return result;
+    }
+
+    private RangeValues DiscretizeRangeValues(RangeValues values)
+    {
+        return new RangeValues(Discretize(values.Start), Discretize(values.End));
+    }
+
+    private void StartInteraction(Point globalPosition)
+    {
+        if (_active)
+        {
+            return;
+        }
+
+        double tapValue = BoxConstraints.ClampDouble(GetValueFromGlobalPosition(globalPosition), 0.0, 1.0);
+        _lastThumbSelection = SliderTheme.ThumbSelector!(
+            TextDirection,
+            Values,
+            tapValue,
+            ThumbSize,
+            Size,
+            0);
+
+        if (_lastThumbSelection != null)
+        {
+            switch (_lastThumbSelection.Value)
+            {
+                case Thumb.Start:
+                    _state.StartFocusNode.RequestFocus();
+                    break;
+                case Thumb.End:
+                    _state.EndFocusNode.RequestFocus();
+                    break;
+            }
+
+            _active = true;
+            // We supply the *current* values as the start locations, so that if we have
+            // a tap, it consists of a call to onChangeStart with the previous value and
+            // a call to onChangeEnd with the new value.
+            RangeValues currentValues = DiscretizeRangeValues(Values);
+            _newValues = _lastThumbSelection.Value switch
+            {
+                Thumb.Start => new RangeValues(tapValue, currentValues.End),
+                Thumb.End => new RangeValues(currentValues.Start, tapValue),
+                _ => throw new InvalidOperationException(),
+            };
+            UpdateLabelPainter(_lastThumbSelection.Value);
+
+            OnChangeStart?.Invoke(currentValues);
+
+            OnChanged!(DiscretizeRangeValues(_newValues));
+
+            _state.OverlayController.Forward();
+            if (ShouldShowValueIndicatorWhenDragged)
+            {
+                _state.ValueIndicatorController.Forward();
+                _state.InteractionTimer?.Cancel();
+                _state.InteractionTimer = GestureTimer.Start(
+                    MultiplyDuration(MinimumInteractionTime, Scheduler.TimeDilation),
+                    () =>
+                    {
+                        _state.InteractionTimer = null;
+                        if (!_active && _state.ValueIndicatorController.Status.IsCompleted())
+                        {
+                            _state.ValueIndicatorController.Reverse();
+                        }
+                    });
+            }
+        }
+    }
+
+    private void HandleDragUpdate(DragUpdateDetails details)
+    {
+        if (!_state.Mounted)
+        {
+            return;
+        }
+
+        double dragValue = GetValueFromGlobalPosition(details.GlobalPosition);
+
+        // If no selection has been made yet, test for thumb selection again now
+        // that the value of dx can be non-zero. If this is the first selection of
+        // the interaction, then onChangeStart must be called.
+        bool shouldCallOnChangeStart = false;
+        if (_lastThumbSelection == null)
+        {
+            _lastThumbSelection = SliderTheme.ThumbSelector!(
+                TextDirection,
+                Values,
+                dragValue,
+                ThumbSize,
+                Size,
+                details.Delta.X);
+            if (_lastThumbSelection != null)
+            {
+                shouldCallOnChangeStart = true;
+                _active = true;
+                _state.OverlayController.Forward();
+                if (ShouldShowValueIndicatorWhenDragged)
+                {
+                    _state.ValueIndicatorController.Forward();
+                }
+            }
+        }
+
+        if (IsEnabled && _lastThumbSelection != null)
+        {
+            RangeValues currentValues = DiscretizeRangeValues(Values);
+            if (OnChangeStart != null && shouldCallOnChangeStart)
+            {
+                OnChangeStart(currentValues);
+            }
+
+            double currentDragValue = Discretize(dragValue);
+
+            _newValues = _lastThumbSelection.Value switch
+            {
+                Thumb.Start => new RangeValues(
+                    Math.Min(currentDragValue, currentValues.End - MinThumbSeparationValue),
+                    currentValues.End),
+                Thumb.End => new RangeValues(
+                    currentValues.Start,
+                    Math.Max(currentDragValue, currentValues.Start + MinThumbSeparationValue)),
+                _ => throw new InvalidOperationException(),
+            };
+            OnChanged!(DiscretizeRangeValues(_newValues));
+        }
+    }
+
+    private void EndInteraction()
+    {
+        if (!_state.Mounted)
+        {
+            return;
+        }
+
+        if (ShouldShowValueIndicatorWhenDragged && _state.InteractionTimer == null)
+        {
+            _state.ValueIndicatorController.Reverse();
+        }
+
+        if (_active && _state.Mounted && _lastThumbSelection != null)
+        {
+            RangeValues discreteValues = DiscretizeRangeValues(_newValues);
+            OnChangeEnd?.Invoke(discreteValues);
+            _active = false;
+        }
+
+        _state.OverlayController.Reverse();
+    }
+
+    private void HandleDragStart(DragStartDetails details)
+    {
+        StartInteraction(details.GlobalPosition);
+    }
+
+    private void HandleDragEnd(DragEndDetails details)
+    {
+        EndInteraction();
+    }
+
+    private void HandleDragCancel()
+    {
+        EndInteraction();
+    }
+
+    private void HandleTapDown(TapDownDetails details)
+    {
+        StartInteraction(details.GlobalPosition);
+    }
+
+    private void HandleTapUp(TapUpDetails details)
+    {
+        EndInteraction();
+    }
+
+    protected override bool HitTestSelf(Point position) => true;
+
+    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        if (Constants.KDebugMode)
+        {
+            DebugHandleEvent(@event, entry);
+        }
+
+        if (@event is PointerDownEvent downEvent && IsEnabled)
+        {
+            // We need to add the drag first so that it has priority.
+            _drag.AddPointer(downEvent);
+            _tap.AddPointer(downEvent);
+        }
+
+        if (IsEnabled)
+        {
+            if (OverlayStartRect != null)
+            {
+                HoveringStartThumb = OverlayStartRect.Value.ContainsHalfOpen(@event.LocalPosition);
+            }
+
+            if (OverlayEndRect != null)
+            {
+                HoveringEndThumb = OverlayEndRect.Value.ContainsHalfOpen(@event.LocalPosition);
+            }
+        }
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        MinPreferredTrackWidth + MaxSliderPartWidth;
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        MinPreferredTrackWidth + MaxSliderPartWidth;
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        Math.Max(MinPreferredTrackHeight!.Value, MaxSliderPartHeight);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        Math.Max(MinPreferredTrackHeight!.Value, MaxSliderPartHeight);
+
+    protected override bool SizedByParent => true;
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        return new Size(
+            constraints.HasBoundedWidth
+                ? constraints.MaxWidth
+                : MinPreferredTrackWidth + MaxSliderPartWidth,
+            constraints.HasBoundedHeight
+                ? constraints.MaxHeight
+                : Math.Max(MinPreferredTrackHeight!.Value, MaxSliderPartHeight));
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        double startValue = _state.StartPositionController.Value;
+        double endValue = _state.EndPositionController.Value;
+
+        // The visual position is the position of the thumb from 0 to 1 from left
+        // to right. In left to right, this is the same as the value, but it is
+        // reversed for right to left text.
+        (double startVisualPosition, double endVisualPosition) = TextDirection switch
+        {
+            TextDirection.Rtl => (1.0 - startValue, 1.0 - endValue),
+            TextDirection.Ltr => (startValue, endValue),
+            _ => throw new InvalidOperationException(),
+        };
+
+        Rect trackRect = _sliderTheme.RangeTrackShape!.GetPreferredRect(
+            parentBox: this,
+            offset: offset,
+            sliderTheme: _sliderTheme,
+            isDiscrete: IsDiscrete);
+        double padding = _sliderTheme.RangeTrackShape!.IsRounded ? trackRect.Height : 0.0;
+        double thumbYOffset = trackRect.Center.Y;
+        double startThumbPosition = IsDiscrete
+            ? trackRect.Left + (startVisualPosition * (trackRect.Width - padding)) + (padding / 2)
+            : trackRect.Left + (startVisualPosition * trackRect.Width);
+        double endThumbPosition = IsDiscrete
+            ? trackRect.Left + (endVisualPosition * (trackRect.Width - padding)) + (padding / 2)
+            : trackRect.Left + (endVisualPosition * trackRect.Width);
+        Size thumbPreferredSize = _sliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete);
+        double thumbPadding = padding > thumbPreferredSize.Width / 2 ? padding / 2 : 0;
+        _startThumbCenter = new Point(
+            BoxConstraints.ClampDouble(
+                startThumbPosition,
+                trackRect.Left + thumbPadding,
+                trackRect.Right - thumbPadding),
+            thumbYOffset);
+        _endThumbCenter = new Point(
+            BoxConstraints.ClampDouble(endThumbPosition, trackRect.Left + thumbPadding, trackRect.Right - thumbPadding),
+            thumbYOffset);
+        if (IsEnabled)
+        {
+            Size overlaySize = SliderTheme.OverlayShape!.GetPreferredSize(IsEnabled, false);
+            OverlayStartRect = RectFromCircle(center: _startThumbCenter, radius: overlaySize.Width / 2.0);
+            OverlayEndRect = RectFromCircle(center: _endThumbCenter, radius: overlaySize.Width / 2.0);
+        }
+
+        // If [RangeSlider.year2023] is false, the thumbs uses handle thumb shape and gapped track shape.
+        // The handle width and track gaps are adjusted when the thumb is pressed.
+        var noStates = new HashSet<WidgetState>();
+        double? thumbWidth = _sliderTheme.ThumbSize?.Resolve(noStates)?.Width;
+        double? thumbHeight = _sliderTheme.ThumbSize?.Resolve(noStates)?.Height;
+        double? trackGap = _sliderTheme.TrackGap;
+        double? pressedThumbWidth = _sliderTheme.ThumbSize?.Resolve(
+            new HashSet<WidgetState> { WidgetState.Pressed })?.Width;
+        double delta;
+        if (_active && thumbWidth != null && pressedThumbWidth != null && trackGap != null)
+        {
+            delta = thumbWidth.Value - pressedThumbWidth.Value;
+            thumbWidth = pressedThumbWidth;
+            if (trackGap > 0.0)
+            {
+                trackGap = trackGap.Value - (delta / 2);
+            }
+        }
+
+        _sliderTheme.RangeTrackShape!.Paint(
+            context,
+            offset,
+            parentBox: this,
+            sliderTheme: _sliderTheme.CopyWith(trackGap: trackGap),
+            enableAnimation: _enableAnimation,
+            textDirection: _textDirection,
+            startThumbCenter: _startThumbCenter,
+            endThumbCenter: _endThumbCenter,
+            isDiscrete: IsDiscrete,
+            isEnabled: IsEnabled);
+
+        bool startThumbSelected = _lastThumbSelection == Thumb.Start && !HoveringEndThumb;
+        bool endThumbSelected = _lastThumbSelection == Thumb.End && !HoveringStartThumb;
+        Size resolvedscreenSize = ScreenSize.IsEmpty ? Size : ScreenSize;
+
+        if (_state.StartFocusNode.HasFocus)
+        {
+            _sliderTheme.OverlayShape!.Paint(
+                context,
+                _startThumbCenter,
+                activationAnimation: new AlwaysStoppedAnimation<double>(1.0),
+                enableAnimation: _enableAnimation,
+                isDiscrete: IsDiscrete,
+                labelPainter: _startLabelPainter,
+                parentBox: this,
+                sliderTheme: _sliderTheme,
+                textDirection: _textDirection,
+                value: startValue,
+                textScaleFactor: _textScaleFactor,
+                sizeWithOverflow: resolvedscreenSize);
+        }
+
+        if (_state.EndFocusNode.HasFocus)
+        {
+            _sliderTheme.OverlayShape!.Paint(
+                context,
+                _endThumbCenter,
+                activationAnimation: new AlwaysStoppedAnimation<double>(1.0),
+                enableAnimation: _enableAnimation,
+                isDiscrete: IsDiscrete,
+                labelPainter: _endLabelPainter,
+                parentBox: this,
+                sliderTheme: _sliderTheme,
+                textDirection: _textDirection,
+                value: endValue,
+                textScaleFactor: _textScaleFactor,
+                sizeWithOverflow: resolvedscreenSize);
+        }
+
+        if (!_overlayAnimation.Status.IsDismissed())
+        {
+            if (startThumbSelected || HoveringStartThumb)
+            {
+                _sliderTheme.OverlayShape!.Paint(
+                    context,
+                    _startThumbCenter,
+                    activationAnimation: _overlayAnimation,
+                    enableAnimation: _enableAnimation,
+                    isDiscrete: IsDiscrete,
+                    labelPainter: _startLabelPainter,
+                    parentBox: this,
+                    sliderTheme: _sliderTheme,
+                    textDirection: _textDirection,
+                    value: startValue,
+                    textScaleFactor: _textScaleFactor,
+                    sizeWithOverflow: resolvedscreenSize);
+            }
+
+            if (endThumbSelected || HoveringEndThumb)
+            {
+                _sliderTheme.OverlayShape!.Paint(
+                    context,
+                    _endThumbCenter,
+                    activationAnimation: _overlayAnimation,
+                    enableAnimation: _enableAnimation,
+                    isDiscrete: IsDiscrete,
+                    labelPainter: _endLabelPainter,
+                    parentBox: this,
+                    sliderTheme: _sliderTheme,
+                    textDirection: _textDirection,
+                    value: endValue,
+                    textScaleFactor: _textScaleFactor,
+                    sizeWithOverflow: resolvedscreenSize);
+            }
+        }
+
+        if (IsDiscrete)
+        {
+            double tickMarkWidth = _sliderTheme.RangeTickMarkShape!
+                .GetPreferredSize(isEnabled: IsEnabled, sliderTheme: _sliderTheme)
+                .Width;
+            double discreteTrackPadding = trackRect.Height;
+            double adjustedTrackWidth = trackRect.Width - discreteTrackPadding;
+            // If the tick marks would be too dense, don't bother painting them.
+            if (adjustedTrackWidth / Divisions!.Value >= 3.0 * tickMarkWidth)
+            {
+                double dy = trackRect.Center.Y;
+                for (int i = 0; i <= Divisions!.Value; i++)
+                {
+                    double value = (double)i / Divisions!.Value;
+                    // The ticks are mapped to be within the track, so the tick mark width
+                    // must be subtracted from the track width.
+                    double dx = trackRect.Left + (value * adjustedTrackWidth) + (discreteTrackPadding / 2);
+                    var tickMarkOffset = new Point(dx, dy);
+                    _sliderTheme.RangeTickMarkShape!.Paint(
+                        context,
+                        tickMarkOffset,
+                        parentBox: this,
+                        sliderTheme: _sliderTheme,
+                        enableAnimation: _enableAnimation,
+                        textDirection: _textDirection,
+                        startThumbCenter: _startThumbCenter,
+                        endThumbCenter: _endThumbCenter,
+                        isEnabled: IsEnabled);
+                }
+            }
+        }
+
+        double thumbDelta = Math.Abs(_endThumbCenter.X - _startThumbCenter.X);
+
+        bool isLastThumbStart = _lastThumbSelection == Thumb.Start;
+        Thumb bottomThumb = isLastThumbStart ? Thumb.End : Thumb.Start;
+        Thumb topThumb = isLastThumbStart ? Thumb.Start : Thumb.End;
+        Point bottomThumbCenter = isLastThumbStart ? _endThumbCenter : _startThumbCenter;
+        Point topThumbCenter = isLastThumbStart ? _startThumbCenter : _endThumbCenter;
+        TextPainter bottomLabelPainter = isLastThumbStart ? _endLabelPainter : _startLabelPainter;
+        TextPainter topLabelPainter = isLastThumbStart ? _startLabelPainter : _endLabelPainter;
+        double bottomValue = isLastThumbStart ? endValue : startValue;
+        double topValue = isLastThumbStart ? startValue : endValue;
+        bool shouldPaintValueIndicators =
+            IsEnabled
+            && Labels != null
+            && ((ShouldShowValueIndicatorWhenDragged && !_valueIndicatorAnimation.Status.IsDismissed())
+                || ShouldAlwaysShowValueIndicator);
+
+        if (shouldPaintValueIndicators)
+        {
+            _state.PaintBottomValueIndicator = (PaintingContext indicatorContext, Point indicatorOffset) =>
+            {
+                if (Attached)
+                {
+                    _sliderTheme.RangeValueIndicatorShape!.Paint(
+                        indicatorContext,
+                        bottomThumbCenter,
+                        activationAnimation: ShouldAlwaysShowValueIndicator
+                            ? new AlwaysStoppedAnimation<double>(1)
+                            : _valueIndicatorAnimation,
+                        enableAnimation: ShouldAlwaysShowValueIndicator
+                            ? new AlwaysStoppedAnimation<double>(1)
+                            : _enableAnimation,
+                        isDiscrete: IsDiscrete,
+                        isOnTop: false,
+                        labelPainter: bottomLabelPainter,
+                        parentBox: this,
+                        sliderTheme: _sliderTheme,
+                        textDirection: _textDirection,
+                        thumb: bottomThumb,
+                        value: bottomValue,
+                        textScaleFactor: TextScaleFactor,
+                        sizeWithOverflow: resolvedscreenSize);
+                }
+            };
+        }
+
+        _sliderTheme.RangeThumbShape!.Paint(
+            context,
+            bottomThumbCenter,
+            activationAnimation: _valueIndicatorAnimation,
+            enableAnimation: _enableAnimation,
+            isDiscrete: IsDiscrete,
+            isOnTop: false,
+            textDirection: TextDirection,
+            sliderTheme: thumbWidth != null && thumbHeight != null
+                ? _sliderTheme.CopyWith(
+                    thumbSize: new WidgetStatePropertyAll<Size?>(new Size(thumbWidth.Value, thumbHeight.Value)))
+                : _sliderTheme,
+            thumb: bottomThumb,
+            isPressed: bottomThumb == Thumb.Start ? startThumbSelected : endThumbSelected);
+
+        if (shouldPaintValueIndicators)
+        {
+            double startOffset = SliderTheme.RangeValueIndicatorShape!.GetHorizontalShift(
+                parentBox: this,
+                center: _startThumbCenter,
+                labelPainter: _startLabelPainter,
+                activationAnimation: _valueIndicatorAnimation,
+                textScaleFactor: TextScaleFactor,
+                sizeWithOverflow: resolvedscreenSize);
+            double endOffset = SliderTheme.RangeValueIndicatorShape!.GetHorizontalShift(
+                parentBox: this,
+                center: _endThumbCenter,
+                labelPainter: _endLabelPainter,
+                activationAnimation: _valueIndicatorAnimation,
+                textScaleFactor: TextScaleFactor,
+                sizeWithOverflow: resolvedscreenSize);
+            double startHalfWidth =
+                SliderTheme.RangeValueIndicatorShape!
+                    .GetPreferredSize(
+                        IsEnabled,
+                        IsDiscrete,
+                        labelPainter: _startLabelPainter,
+                        textScaleFactor: TextScaleFactor)
+                    .Width
+                / 2;
+            double endHalfWidth =
+                SliderTheme.RangeValueIndicatorShape!
+                    .GetPreferredSize(
+                        IsEnabled,
+                        IsDiscrete,
+                        labelPainter: _endLabelPainter,
+                        textScaleFactor: TextScaleFactor)
+                    .Width
+                / 2;
+            double innerOverflow =
+                startHalfWidth
+                + endHalfWidth
+                + TextDirection switch
+                {
+                    TextDirection.Ltr => startOffset - endOffset,
+                    TextDirection.Rtl => endOffset - startOffset,
+                    _ => throw new InvalidOperationException(),
+                };
+
+            _state.PaintTopValueIndicator = (PaintingContext indicatorContext, Point indicatorOffset) =>
+            {
+                if (Attached)
+                {
+                    _sliderTheme.RangeValueIndicatorShape!.Paint(
+                        indicatorContext,
+                        topThumbCenter,
+                        activationAnimation: ShouldAlwaysShowValueIndicator
+                            ? new AlwaysStoppedAnimation<double>(1)
+                            : _valueIndicatorAnimation,
+                        enableAnimation: ShouldAlwaysShowValueIndicator
+                            ? new AlwaysStoppedAnimation<double>(1)
+                            : _enableAnimation,
+                        isDiscrete: IsDiscrete,
+                        isOnTop: thumbDelta < innerOverflow,
+                        labelPainter: topLabelPainter,
+                        parentBox: this,
+                        sliderTheme: _sliderTheme,
+                        textDirection: _textDirection,
+                        thumb: topThumb,
+                        value: topValue,
+                        textScaleFactor: TextScaleFactor,
+                        sizeWithOverflow: resolvedscreenSize);
+                }
+            };
+        }
+
+        _sliderTheme.RangeThumbShape!.Paint(
+            context,
+            topThumbCenter,
+            activationAnimation: _overlayAnimation,
+            enableAnimation: _enableAnimation,
+            isDiscrete: IsDiscrete,
+            isOnTop: thumbDelta < SliderTheme.RangeThumbShape!.GetPreferredSize(IsEnabled, IsDiscrete).Width,
+            textDirection: TextDirection,
+            sliderTheme: thumbWidth != null && thumbHeight != null
+                ? _sliderTheme.CopyWith(
+                    thumbSize: new WidgetStatePropertyAll<Size?>(new Size(thumbWidth.Value, thumbHeight.Value)))
+                : _sliderTheme,
+            thumb: topThumb,
+            isPressed: topThumb == Thumb.Start ? startThumbSelected : endThumbSelected);
+    }
+
+    /// <summary>Describe the semantics of the start thumb.</summary>
+    private SemanticsNode? _startSemanticsNode;
+
+    /// <summary>Describe the semantics of the end thumb.</summary>
+    private SemanticsNode? _endSemanticsNode;
+
+    // Create the semantics configuration for a single value.
+    private SemanticsConfiguration CreateSemanticsConfiguration(
         double value,
         double increasedValue,
         double decreasedValue,
@@ -2245,83 +1944,90 @@ internal sealed class RenderRangeSlider : RenderBox
         Action decreaseAction,
         bool focused)
     {
-        var configuration = new SemanticsConfiguration
+        var config = new SemanticsConfiguration();
+        config.IsEnabled = IsEnabled;
+        config.TextDirection = TextDirection;
+        config.IsSlider = true;
+        config.IsFocusable = true;
+        config.IsFocused = focused;
+        if (IsEnabled)
         {
-            IsEnabled = IsInteractive,
-            TextDirection = TextDirection,
-            IsSlider = true,
-            IsFocused = focused,
-            Value = FormatSemanticValue(value),
-            IncreasedValue = FormatSemanticValue(increasedValue),
-            DecreasedValue = FormatSemanticValue(decreasedValue),
-        };
-
-        if (IsInteractive)
-        {
-            configuration.OnIncrease = increaseAction;
-            configuration.OnDecrease = decreaseAction;
+            config.OnIncrease = increaseAction;
+            config.OnDecrease = decreaseAction;
         }
 
-        return configuration;
+        if (SemanticFormatterCallback != null)
+        {
+            config.Value = SemanticFormatterCallback(_state.Lerp(value));
+            config.IncreasedValue = SemanticFormatterCallback(_state.Lerp(increasedValue));
+            config.DecreasedValue = SemanticFormatterCallback(_state.Lerp(decreasedValue));
+        }
+        else
+        {
+            config.Value = $"{FormatPercent(value)}%";
+            config.IncreasedValue = $"{FormatPercent(increasedValue)}%";
+            config.DecreasedValue = $"{FormatPercent(decreasedValue)}%";
+        }
+
+        return config;
     }
 
-    /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider.assembleSemanticsNode</c>. The rects are 48x48 boxes centred on each
-    /// thumb; under RTL the two are swapped, so the <em>start</em> node carries the rect that sits where the
-    /// end thumb is painted. That looks like a bug but is contractual — Flutter's own RTL test asserts it.
-    /// </remarks>
     protected override void AssembleSemanticsNode(
         SemanticsNode node,
         SemanticsConfiguration config,
         IReadOnlyList<SemanticsNode> children)
     {
-        SemanticsConfiguration startConfiguration = CreateThumbSemanticsConfiguration(
-            StartValueNormalized,
+        DebugAssertions.Assert(children.Count == 0, "children.isEmpty");
+
+        SemanticsConfiguration startSemanticsConfiguration = CreateSemanticsConfiguration(
+            Values.Start,
             IncreasedStartValue,
             DecreasedStartValue,
             IncreaseStartAction,
             DecreaseStartAction,
             focused: _state.StartFocusNode.HasFocus);
-        SemanticsConfiguration endConfiguration = CreateThumbSemanticsConfiguration(
-            EndValueNormalized,
+        SemanticsConfiguration endSemanticsConfiguration = CreateSemanticsConfiguration(
+            Values.End,
             IncreasedEndValue,
             DecreasedEndValue,
             IncreaseEndAction,
             DecreaseEndAction,
             focused: _state.EndFocusNode.HasFocus);
 
-        Rect leftRect = ThumbSemanticsRect(_startThumbCenter);
-        Rect rightRect = ThumbSemanticsRect(_endThumbCenter);
+        // Split the semantics node area between the start and end nodes.
+        Rect leftRect = RectFromCenter(
+            center: _startThumbCenter,
+            width: WidgetConstants.MinInteractiveDimension,
+            height: WidgetConstants.MinInteractiveDimension);
+        Rect rightRect = RectFromCenter(
+            center: _endThumbCenter,
+            width: WidgetConstants.MinInteractiveDimension,
+            height: WidgetConstants.MinInteractiveDimension);
 
-        _startSemanticsNode ??= Owner!.SemanticsOwner!.CreateDetachedNode(this);
-        _endSemanticsNode ??= Owner!.SemanticsOwner!.CreateDetachedNode(this);
+        _startSemanticsNode ??= new SemanticsNode();
+        _endSemanticsNode ??= new SemanticsNode();
 
-        if (TextDirection == TextDirection.Rtl)
+        switch (TextDirection)
         {
-            _startSemanticsNode.Rect = rightRect;
-            _endSemanticsNode.Rect = leftRect;
-        }
-        else
-        {
-            _startSemanticsNode.Rect = leftRect;
-            _endSemanticsNode.Rect = rightRect;
+            case TextDirection.Ltr:
+                _startSemanticsNode.Rect = leftRect;
+                _endSemanticsNode.Rect = rightRect;
+                break;
+            case TextDirection.Rtl:
+                _startSemanticsNode.Rect = rightRect;
+                _endSemanticsNode.Rect = leftRect;
+                break;
         }
 
-        _startSemanticsNode.UpdateWith(startConfiguration);
-        _endSemanticsNode.UpdateWith(endConfiguration);
-        node.UpdateWith(config, [_startSemanticsNode, _endSemanticsNode]);
+        _startSemanticsNode.UpdateWith(config: startSemanticsConfiguration);
+        _endSemanticsNode.UpdateWith(config: endSemanticsConfiguration);
+
+        List<SemanticsNode> finalChildren = [_startSemanticsNode, _endSemanticsNode];
+
+        node.UpdateWith(config: config, childrenInInversePaintOrder: finalChildren);
     }
 
-    private static Rect ThumbSemanticsRect(Point center)
-    {
-        double extent = WidgetConstants.MinInteractiveDimension;
-        return new Rect(center.X - (extent / 2.0), center.Y - (extent / 2.0), extent, extent);
-    }
-
-    /// <remarks>
-    /// Flutter's <c>_RenderRangeSlider.clearSemantics</c> drops both synthesized nodes so a later semantics
-    /// pass rebuilds them against the new owner instead of reusing nodes the old owner disposed.
-    /// </remarks>
+    /// <remarks>Dart overrides <c>clearSemantics</c>; Plumix's per-object half of it is overridable.</remarks>
     protected override void ClearOwnSemantics()
     {
         base.ClearOwnSemantics();
@@ -2329,145 +2035,278 @@ internal sealed class RenderRangeSlider : RenderBox
         _endSemanticsNode = null;
     }
 
-    private double ResolveThumbCenterX(TrackGeometry geometry, double normalizedValue)
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration config)
     {
-        double value = ClampNormalized(normalizedValue);
-        double visualValue = TextDirection == TextDirection.Rtl
-            ? 1.0 - value
-            : value;
-        return geometry.Left + (geometry.Width * visualValue);
+        base.DescribeSemanticsConfiguration(config);
+        config.IsSemanticBoundary = true;
     }
 
-    private TrackGeometry ResolveTrackGeometry(double offsetX)
+    private double SemanticActionUnit => Divisions != null ? 1.0 / Divisions.Value : AdjustmentUnit;
+
+    private void IncreaseStartAction()
     {
-        Rect preferredRect = SliderTheme.RangeTrackShape!.GetPreferredRect(
-            this,
-            new Point(offsetX, 0.0),
-            SliderTheme,
-            IsInteractive,
-            Divisions.HasValue);
-        double left = preferredRect.Left;
-        double right = preferredRect.Right;
-        if (right < left)
+        if (IsEnabled)
         {
-            double center = offsetX + (Size.Width / 2.0);
-            left = center;
-            right = center;
+            OnChanged!(new RangeValues(IncreasedStartValue, Values.End));
         }
-
-        return new TrackGeometry(left, right);
     }
 
-    private void PaintThumbOverlay(
-        PaintingContext ctx,
-        SliderThemeData paintTheme,
-        Point center,
-        double value,
-        bool discrete,
-        Animation<double> enableAnimation)
+    private void DecreaseStartAction()
     {
-        paintTheme.OverlayShape!.Paint(
-            ctx,
-            center,
-            new ConstantAnimation<double>(1.0),
-            enableAnimation,
-            discrete,
-            null,
-            this,
-            paintTheme,
-            TextDirection,
-            value,
-            1.0,
-            Size);
+        if (IsEnabled)
+        {
+            OnChanged!(new RangeValues(DecreasedStartValue, Values.End));
+        }
     }
 
-    private double ResolveOverlayCenterX(double startThumbCenterX, double endThumbCenterX)
+    private void IncreaseEndAction()
     {
-        if (_activeThumb == RangeSliderThumb.Start)
+        if (IsEnabled)
         {
-            return startThumbCenterX;
+            OnChanged!(new RangeValues(Values.Start, IncreasedEndValue));
         }
-
-        if (_activeThumb == RangeSliderThumb.End)
-        {
-            return endThumbCenterX;
-        }
-
-        return (startThumbCenterX + endThumbCenterX) / 2.0;
     }
 
-    private Color? ResolveOverlayColor()
+    private void DecreaseEndAction()
     {
-        if (!IsInteractive)
+        if (IsEnabled)
         {
-            return null;
+            OnChanged!(new RangeValues(Values.Start, DecreasedEndValue));
         }
-
-        if (_dragging && _activeThumb.HasValue && OverlayDraggedColor != null && OverlayDraggedColor!.Alpha > 0)
-        {
-            return OverlayDraggedColor!;
-        }
-
-        if (_hovered && OverlayHoveredColor != null && OverlayHoveredColor!.Alpha > 0)
-        {
-            return OverlayHoveredColor!;
-        }
-
-        if (IsFocused && OverlayFocusedColor != null && OverlayFocusedColor!.Alpha > 0)
-        {
-            return OverlayFocusedColor!;
-        }
-
-        return null;
     }
 
-    private double SnapNormalized(double normalized)
+    private double IncreasedStartValue
     {
-        double clamped = ClampNormalized(normalized);
-        if (!Divisions.HasValue || Divisions.Value <= 0)
+        get
         {
-            return clamped;
+            // Due to floating-point operations, this value can actually be greater than
+            // expected (e.g. 0.4 + 0.2 = 0.600000000001), so we limit to 2 decimal points.
+            double increasedStartValue = double.Parse(
+                Diagnostics.ToStringAsFixed(Values.Start + SemanticActionUnit, 2),
+                CultureInfo.InvariantCulture);
+            return increasedStartValue <= Values.End - MinThumbSeparationValue
+                ? increasedStartValue
+                : Values.Start;
         }
-
-        int divisions = Divisions.Value;
-        return Math.Clamp(Math.Round(clamped * divisions) / divisions, 0.0, 1.0);
     }
 
-    private static bool IsPrimaryButton(PointerButtons buttons)
-    {
-        return buttons.HasFlag(PointerButtons.Primary);
-    }
+    private double DecreasedStartValue =>
+        BoxConstraints.ClampDouble(Values.Start - SemanticActionUnit, 0.0, 1.0);
 
-    private static double ClampNormalized(double value)
+    private double IncreasedEndValue =>
+        BoxConstraints.ClampDouble(Values.End + SemanticActionUnit, 0.0, 1.0);
+
+    private double DecreasedEndValue
     {
-        if (double.IsNaN(value) || double.IsInfinity(value))
+        get
         {
-            return 0.0;
+            double decreasedEndValue = Values.End - SemanticActionUnit;
+            return decreasedEndValue >= Values.Start + MinThumbSeparationValue
+                ? decreasedEndValue
+                : Values.End;
         }
-
-        return Math.Clamp(value, 0.0, 1.0);
     }
 
-    private static NormalizedRangeValues OrderAndClamp(double start, double end)
-    {
-        double clampedStart = ClampNormalized(start);
-        double clampedEnd = ClampNormalized(end);
-        if (clampedEnd < clampedStart)
-        {
-            (clampedStart, clampedEnd) = (clampedEnd, clampedStart);
-        }
+    /// <summary>Dart's <c>(value * 100).round()</c>, printed as an integer.</summary>
+    private static string FormatPercent(double value) =>
+        ((long)DartRound(value * 100)).ToString(CultureInfo.InvariantCulture);
 
-        return new NormalizedRangeValues(clampedStart, clampedEnd);
-    }
+    /// <summary>Dart's <c>double.round()</c>: half away from zero.</summary>
+    private static double DartRound(double value) => Math.Round(value, MidpointRounding.AwayFromZero);
 
-    private static bool AreEqual(NormalizedRangeValues a, NormalizedRangeValues b)
-    {
-        return Math.Abs(a.Start - b.Start) <= Epsilon
-               && Math.Abs(a.End - b.End) <= Epsilon;
-    }
+    /// <summary>Dart's <c>Duration * num</c>: the product rounded to whole microseconds.</summary>
+    private static TimeSpan MultiplyDuration(TimeSpan duration, double factor) =>
+        TimeSpan.FromMicroseconds((long)DartRound(duration.Ticks / TimeSpan.TicksPerMicrosecond * factor));
 
-    private readonly record struct TrackGeometry(double Left, double Right)
-    {
-        public double Width => Math.Max(0, Right - Left);
-    }
+    /// <summary>Dart's <c>Rect.fromCircle</c>.</summary>
+    private static Rect RectFromCircle(Point center, double radius) =>
+        RectFromCenter(center, radius * 2, radius * 2);
+
+    /// <summary>Dart's <c>Rect.fromCenter</c>, built from its left/top/right/bottom edges.</summary>
+    private static Rect RectFromCenter(Point center, double width, double height) =>
+        new(
+            new Point(center.X - (width / 2), center.Y - (height / 2)),
+            new Point(center.X + (width / 2), center.Y + (height / 2)));
 }
+
+/// <summary>Flutter's private <c>_RangeSliderDefaultsM2</c>.</summary>
+/// <remarks>
+/// The shape getters return one shared instance each, standing in for Dart's canonicalized <c>const</c>
+/// constructors so that rebuilding does not make <see cref="SliderThemeData"/> compare unequal.
+/// </remarks>
+internal sealed record RangeSliderDefaultsM2 : SliderThemeData
+{
+    private static readonly RangeSliderTrackShape DefaultRangeTrackShape = new RoundedRectRangeSliderTrackShape();
+    private static readonly RangeSliderTickMarkShape DefaultRangeTickMarkShape = new RoundRangeSliderTickMarkShape();
+    private static readonly RangeSliderThumbShape DefaultRangeThumbShape = new RoundRangeSliderThumbShape();
+    private static readonly SliderComponentShape DefaultOverlayShape = new RoundSliderOverlayShape();
+
+    private static readonly RangeSliderValueIndicatorShape DefaultRangeValueIndicatorShape =
+        new RectangularRangeSliderValueIndicatorShape();
+
+    private readonly BuildContext _context;
+    private ColorScheme? _colors;
+
+    public RangeSliderDefaultsM2(BuildContext context) : base(TrackHeight: 4)
+    {
+        _context = context;
+    }
+
+    // Dart also declares `late final SliderThemeData sliderTheme = SliderTheme.of(context)`, which nothing
+    // reads; it is not ported.
+    private ColorScheme Scheme => _colors ??= Plumix.Material.Theme.Of(_context).ColorScheme;
+
+    public override Color? ActiveTrackColor => Scheme.Primary;
+
+    public override Color? InactiveTrackColor => Scheme.Primary.WithOpacity(0.24);
+
+    public override Color? DisabledActiveTrackColor => Scheme.OnSurface.WithOpacity(0.32);
+
+    public override Color? DisabledInactiveTrackColor => Scheme.OnSurface.WithOpacity(0.12);
+
+    public override Color? ActiveTickMarkColor => Scheme.OnPrimary.WithOpacity(0.54);
+
+    public override Color? InactiveTickMarkColor => Scheme.Primary.WithOpacity(0.54);
+
+    public override Color? DisabledActiveTickMarkColor => Scheme.OnPrimary.WithOpacity(0.12);
+
+    public override Color? DisabledInactiveTickMarkColor => Scheme.OnSurface.WithOpacity(0.12);
+
+    public override Color? ThumbColor => Scheme.Primary;
+
+    public override Color? OverlappingShapeStrokeColor => Scheme.Surface;
+
+    public override Color? DisabledThumbColor =>
+        Color.AlphaBlend(Scheme.OnSurface.WithOpacity(.38), Scheme.Surface);
+
+    public override Color? OverlayColor => Scheme.Primary.WithOpacity(0.12);
+
+    public override TextStyle? ValueIndicatorTextStyle =>
+        Plumix.Material.Theme.Of(_context).TextTheme.BodyLarge.CopyWith(color: Scheme.OnPrimary);
+
+    public override Color? ValueIndicatorColor => Scheme.Primary;
+
+    public override RangeSliderTrackShape? RangeTrackShape => DefaultRangeTrackShape;
+
+    public override RangeSliderTickMarkShape? RangeTickMarkShape => DefaultRangeTickMarkShape;
+
+    public override RangeSliderThumbShape? RangeThumbShape => DefaultRangeThumbShape;
+
+    public override SliderComponentShape? OverlayShape => DefaultOverlayShape;
+
+    public override RangeSliderValueIndicatorShape? RangeValueIndicatorShape => DefaultRangeValueIndicatorShape;
+
+    public override ShowValueIndicator? ShowValueIndicator => Plumix.Material.ShowValueIndicator.OnlyForDiscrete;
+
+    public override double? MinThumbSeparation => 8;
+}
+
+// BEGIN GENERATED TOKEN PROPERTIES - RangeSlider
+
+// Do not edit by hand. The code between the "BEGIN GENERATED" and
+// "END GENERATED" comments are generated from data in the Material
+// Design token database by the script:
+//   dev/tools/gen_defaults/bin/gen_defaults.dart.
+
+/// <summary>Flutter's private <c>_RangeSliderDefaultsM3</c>.</summary>
+internal sealed record RangeSliderDefaultsM3 : SliderThemeData
+{
+    private static readonly RangeSliderTrackShape DefaultRangeTrackShape = new GappedRangeSliderTrackShape();
+
+    private static readonly RangeSliderTickMarkShape DefaultRangeTickMarkShape =
+        new RoundRangeSliderTickMarkShape(tickMarkRadius: 4.0 / 2);
+
+    private static readonly RangeSliderThumbShape DefaultRangeThumbShape = new HandleRangeSliderThumbShape();
+    private static readonly SliderComponentShape DefaultOverlayShape = new RoundSliderOverlayShape();
+
+    private static readonly RangeSliderValueIndicatorShape DefaultRangeValueIndicatorShape =
+        new RoundedRectRangeSliderValueIndicatorShape();
+
+    private readonly BuildContext _context;
+    private ColorScheme? _colors;
+
+    public RangeSliderDefaultsM3(BuildContext context) : base(TrackHeight: 16.0)
+    {
+        _context = context;
+    }
+
+    private ColorScheme Scheme => _colors ??= Plumix.Material.Theme.Of(_context).ColorScheme;
+
+    public override Color? ActiveTrackColor => Scheme.Primary;
+
+    public override Color? InactiveTrackColor => Scheme.SecondaryContainer;
+
+    public override Color? DisabledActiveTrackColor => Scheme.OnSurface.WithOpacity(0.38);
+
+    public override Color? DisabledInactiveTrackColor => Scheme.OnSurface.WithOpacity(0.12);
+
+    public override Color? ActiveTickMarkColor => Scheme.OnPrimary.WithOpacity(1.0);
+
+    public override Color? InactiveTickMarkColor => Scheme.OnSecondaryContainer.WithOpacity(1.0);
+
+    public override Color? DisabledActiveTickMarkColor => Scheme.OnInverseSurface;
+
+    public override Color? DisabledInactiveTickMarkColor => Scheme.OnSurface;
+
+    public override Color? ThumbColor => Scheme.Primary;
+
+    public override Color? OverlappingShapeStrokeColor => Scheme.Surface;
+
+    public override Color? DisabledThumbColor => Scheme.OnSurface.WithOpacity(0.38);
+
+    public override Color? OverlayColor => Scheme.Primary.WithOpacity(0.12);
+
+    public override TextStyle? ValueIndicatorTextStyle =>
+        Plumix.Material.Theme.Of(_context).TextTheme.LabelLarge.CopyWith(color: Scheme.OnInverseSurface);
+
+    public override Color? ValueIndicatorColor => Scheme.InverseSurface;
+
+    public override RangeSliderTrackShape? RangeTrackShape => DefaultRangeTrackShape;
+
+    public override RangeSliderTickMarkShape? RangeTickMarkShape => DefaultRangeTickMarkShape;
+
+    public override RangeSliderThumbShape? RangeThumbShape => DefaultRangeThumbShape;
+
+    public override SliderComponentShape? OverlayShape => DefaultOverlayShape;
+
+    public override RangeSliderValueIndicatorShape? RangeValueIndicatorShape => DefaultRangeValueIndicatorShape;
+
+    public override ShowValueIndicator? ShowValueIndicator => Plumix.Material.ShowValueIndicator.OnlyForDiscrete;
+
+    public override double? MinThumbSeparation => 0;
+
+    public override WidgetStateProperty<Size?>? ThumbSize
+    {
+        get
+        {
+            return WidgetStateProperty<Size?>.ResolveWith(states =>
+            {
+                if (states.Contains(WidgetState.Disabled))
+                {
+                    return new Size(4.0, 44.0);
+                }
+
+                if (states.Contains(WidgetState.Hovered))
+                {
+                    return new Size(4.0, 44.0);
+                }
+
+                if (states.Contains(WidgetState.Focused))
+                {
+                    return new Size(2.0, 44.0);
+                }
+
+                if (states.Contains(WidgetState.Pressed))
+                {
+                    return new Size(2.0, 44.0);
+                }
+
+                return new Size(4.0, 44.0);
+            });
+        }
+    }
+
+    public override double? TrackGap => 6.0;
+}
+
+// END GENERATED TOKEN PROPERTIES - RangeSlider

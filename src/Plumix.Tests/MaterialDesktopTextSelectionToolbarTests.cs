@@ -82,12 +82,13 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints == BoxConstraints.TightFor(width: 222));
-        Assert.Contains(FindDescendants<RenderClipPath>(harness.RenderView), clip =>
+        // Dart's Material clips through its physical shape (RenderPhysicalShape with a ShapeBorderClipper).
+        Assert.Contains(FindDescendants<RenderPhysicalShape>(harness.RenderView), clip =>
             clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
             && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(7));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == ThemeData.Light.CardColor
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(7));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == ThemeData.Light.CardColor
+            && box.BorderRadius == BorderRadius.Circular(7));
     }
 
     [Fact]
@@ -261,12 +262,13 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(new Point(152, 72), layoutDelegate.AnchorAbove);
         Assert.Equal(new Point(152, 120), layoutDelegate.AnchorBelow);
         Assert.True(layoutDelegate.FitsAbove);
-        Assert.Contains(FindDescendants<RenderClipPath>(harness.RenderView), clip =>
+        // Dart's Material clips through its physical shape (RenderPhysicalShape with a ShapeBorderClipper).
+        Assert.Contains(FindDescendants<RenderPhysicalShape>(harness.RenderView), clip =>
             clip.Clipper is ShapeBorderClipper { Shape: RoundedRectangleBorder rounded }
             && rounded.BorderRadius.Resolve(TextDirection.Ltr) == BorderRadius.Circular(22));
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.AsBoxDecoration.Color == Colors.White
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(22));
+        Assert.Contains(MaterialSurfaceProbe.FindAll(harness.RenderView), box =>
+            box.Color == Colors.White
+            && box.BorderRadius == BorderRadius.Circular(22));
     }
 
     [Fact]

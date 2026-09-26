@@ -192,11 +192,11 @@ public sealed class MaterialDropdownMenuTests : IDisposable
     {
         var theme = ThemeData.Light;
         using var harness = Open(new DropdownMenu<string>(Entries("Item 0", "Item 1")), out _);
-        var panel = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.AsBoxDecoration.BoxShadows is { Count: > 0 })
+        var panel = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView)
+            .Where(surface => surface.HasShadow)
             .ToList());
-        Assert.Equal(theme.ColorScheme.SurfaceContainer, panel.AsBoxDecoration.Color);
-        Assert.Equal(BorderRadius.Circular(4), panel.AsBoxDecoration.EffectiveBorderRadius);
+        Assert.Equal(theme.ColorScheme.SurfaceContainer, panel.Color);
+        Assert.Equal(BorderRadius.Circular(4), panel.BorderRadius);
     }
 
     [Fact]
@@ -210,8 +210,8 @@ public sealed class MaterialDropdownMenuTests : IDisposable
 
         Assert.Equal("Item 1", TextControllerOf(harness).Text);
         Assert.Equal(1, HighlightOf(state));
-        var highlighted = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.AsBoxDecoration.Color == theme.ColorScheme.OnSurface.WithOpacity(0.12))
+        var highlighted = Assert.Single(MaterialSurfaceProbe.FindAll(harness.RenderView)
+            .Where(surface => surface.Color == theme.ColorScheme.OnSurface.WithOpacity(0.12))
             .ToList());
         Assert.NotNull(highlighted);
     }

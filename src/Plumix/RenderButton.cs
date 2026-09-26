@@ -1,8 +1,9 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // C#-only infrastructure: an early hand-written demo render object with no Dart counterpart.
 
@@ -17,7 +18,7 @@ public sealed class RenderButton : RenderBox
     private double _fontSize;
     private readonly Thickness _padding;
 
-    private TextLayout? _layout;
+    private readonly TextPainter _textPainter = new(textDirection: TextDirection.Ltr);
 
     public RenderButton(
         string label,
@@ -117,24 +118,11 @@ public sealed class RenderButton : RenderBox
         double maxTextWidth = double.IsInfinity(Constraints.MaxWidth)
             ? double.PositiveInfinity
             : Math.Max(0, Constraints.MaxWidth - _padding.Left - _padding.Right);
-        Size measuredTextSize;
-
-        try
-        {
-            _layout = new TextLayout(
-                text: Label,
-                typeface: new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.Normal, FontStretch.Normal),
-                fontSize: FontSize,
-                foreground: new SolidColorBrush(Foreground),
-                maxWidth: maxTextWidth);
-
-            measuredTextSize = new Size(_layout.Width, _layout.Height);
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            _layout = null;
-            measuredTextSize = TextLayoutFallback.EstimateTextSize(Label, FontSize, maxTextWidth);
-        }
+        _textPainter.Text = new TextSpan(
+            text: Label,
+            style: new TextStyle(Color: Foreground, FontSize: FontSize));
+        _textPainter.Layout(maxWidth: maxTextWidth);
+        Size measuredTextSize = _textPainter.Size;
 
         var desired = new Size(
             measuredTextSize.Width + _padding.Left + _padding.Right,
@@ -152,14 +140,15 @@ public sealed class RenderButton : RenderBox
         var rect = new Rect(offset, Size);
         ctx.Canvas.DrawRectangle(background, null, rect, 10, 10);
 
-        if (_layout == null)
-        {
-            return;
-        }
+        double textX = offset.X + (Size.Width - _textPainter.Width) / 2;
+        double textY = offset.Y + (Size.Height - _textPainter.Height) / 2;
+        _textPainter.Paint(ctx.Canvas, new Point(textX, textY));
+    }
 
-        double textX = offset.X + (Size.Width - _layout.Width) / 2;
-        double textY = offset.Y + (Size.Height - _layout.Height) / 2;
-        ctx.Canvas.DrawTextLayout(_layout, new Point(textX, textY));
+    public override void Dispose()
+    {
+        _textPainter.Dispose();
+        base.Dispose();
     }
 
     protected override bool HitTestSelf(Point position)

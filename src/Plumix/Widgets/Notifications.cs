@@ -30,7 +30,11 @@ public abstract class Notification
     }
 }
 
-public abstract class LayoutChangedNotification : Notification
+/// <summary>
+/// A notification that a change in layout has occurred. Dart's <c>LayoutChangedNotification</c>
+/// (widgets/notification_listener.dart), which is concrete: <c>const LayoutChangedNotification()</c>.
+/// </summary>
+public class LayoutChangedNotification : Notification
 {
 }
 

@@ -581,7 +581,10 @@ internal sealed class HeadlessParagraph : Paragraph
             line.UnscaledAscent = metrics.UnscaledAscent;
             line.UnscaledDescent = metrics.UnscaledDescent;
             line.Baseline = top + ascent;
-            top += ascent + descent;
+
+            // SkParagraph's `InternalLineMetrics::height()` rounds each line's height to whole pixels
+            // (`::round(descent - ascent + leading)`), so fractional font sizes stack integral lines.
+            top += Math.Round(ascent + descent, MidpointRounding.AwayFromZero);
             PositionLine(line, lineIndex == _lines.Count - 1);
             _longestLine = Math.Max(_longestLine, line.ContentWidth);
         }
