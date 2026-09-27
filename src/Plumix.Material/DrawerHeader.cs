@@ -252,7 +252,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
             _animation = new CurvedAnimation(
                 parent: _controller,
                 curve: Curves.FastOutSlowIn,
-                reverseCurve: Curves.Flipped(Curves.FastOutSlowIn));
+                reverseCurve: new FlippedCurve(Curves.FastOutSlowIn));
             _animation.AddListener(HandleAnimationChanged);
         }
 

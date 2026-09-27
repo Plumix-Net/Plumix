@@ -127,7 +127,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
             {
                 double converted = TransformInterval(value.Value, 0.1, 0.33);
                 arrowheadScale = converted;
-                double headValue = 1.05 * Curves.FastOutSlowIn(converted);
+                double headValue = 1.05 * Curves.FastOutSlowIn.Transform(converted);
                 double offsetValue = converted * 0.5;
                 double rotationValue = converted * 0.3;
                 arcSweep = Math.Max(0.001, Math.Min(FullSweep, headValue * Math.PI * 1.5));
@@ -245,8 +245,8 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
         {
             double t = Math.Clamp(value, 0.0, 1.0);
             double pathValue = SawTooth(t, 2222);
-            double head = Curves.FastOutSlowIn(Math.Clamp(pathValue / 0.5, 0.0, 1.0));
-            double tail = Curves.FastOutSlowIn(Math.Clamp((pathValue - 0.5) / 0.5, 0.0, 1.0));
+            double head = Curves.FastOutSlowIn.Transform(Math.Clamp(pathValue / 0.5, 0.0, 1.0));
+            double tail = Curves.FastOutSlowIn.Transform(Math.Clamp((pathValue - 0.5) / 0.5, 0.0, 1.0));
             double rotationValue = SawTooth(t, 1333);
             start = -Math.PI / 2.0
                     + (tail * Math.PI * 1.5)

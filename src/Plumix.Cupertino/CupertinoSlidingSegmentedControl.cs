@@ -898,7 +898,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
     private double _thumbScale;
     private bool _proportionalWidth;
     private CupertinoSlidingSegmentedControlState<T> _state;
-    private Animatable<Rect>? _thumbAnimatable;
+    private Animatable<Rect?>? _thumbAnimatable;
     private Rect? _thumbAnimatableEnd;
 
     public RenderCupertinoSlidingSegmentedControl(
@@ -1395,7 +1395,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
         {
             Rect begin = MoveThumbRectInBounds(CurrentThumbRect ?? boundedTarget);
             _thumbAnimatable = new RectTween(begin: begin, end: boundedTarget)
-                .Chain(new CurveTween(Curves.Interval(controller.Value, 1.0)));
+                .Chain(new CurveTween(new Interval(controller.Value, 1.0)));
             _thumbAnimatableEnd = boundedTarget;
         }
         else if (!controller.IsAnimating)

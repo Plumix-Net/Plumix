@@ -490,7 +490,7 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
             : new AnimatedOpacity(
                 opacity: isScrolledUnder ? 1.0 : 0.0,
                 duration: TimeSpan.FromMilliseconds(500),
-                curve: Curves.Cubic(0.2, 0.0, 0.0, 1.0),
+                curve: new Cubic(0.2, 0.0, 0.0, 1.0),
                 child: toolbarTitle);
 
         Widget? flexibleSpace = _flexibleSpace;

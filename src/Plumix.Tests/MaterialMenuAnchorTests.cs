@@ -334,10 +334,10 @@ public sealed class MaterialMenuAnchorTests
         Curve opacity = MenuConstants.PanelOpacityForwardCurve;
         Curve height = MenuConstants.PanelHeightForwardCurve;
 
-        Assert.Equal(0.2, opacity(0.02), 6);
-        Assert.Equal(1.0, opacity(0.1), 6);
-        Assert.InRange(height(0.2) * 160.0, 59.5, 61.5);
-        Assert.InRange(height(0.8) * 160.0, 156.5, 158.5);
+        Assert.Equal(0.2, opacity.Transform(0.02), 6);
+        Assert.Equal(1.0, opacity.Transform(0.1), 6);
+        Assert.InRange(height.Transform(0.2) * 160.0, 59.5, 61.5);
+        Assert.InRange(height.Transform(0.8) * 160.0, 156.5, 158.5);
     }
 
     [Fact]
@@ -348,15 +348,17 @@ public sealed class MaterialMenuAnchorTests
 
         // Curves take the controller value, which runs 1 -> 0 while closing. The panel keeps full
         // opacity for the first 100 of 150 ms (value 1 -> 1/3) and fades over the last 50 ms.
-        Assert.Equal(1.0, opacity(1.0), 6);
-        Assert.Equal(1.0, opacity(1.0 / 3.0), 6);
-        Assert.Equal(0.5, opacity(1.0 / 6.0), 6);
-        Assert.Equal(0.0, opacity(0.0), 6);
+        Assert.Equal(1.0, opacity.Transform(1.0), 6);
+        Assert.Equal(1.0, opacity.Transform(1.0 / 3.0), 6);
+        Assert.Equal(0.5, opacity.Transform(1.0 / 6.0), 6);
+        Assert.Equal(0.0, opacity.Transform(0.0), 6);
 
-        // `_TweenCurve(0.35, 1)` remaps the output range, so a full reverse still lands on zero.
-        Assert.Equal(1.0, height(1.0), 6);
-        Assert.Equal(0.35, height(0.0), 6);
-        Assert.InRange(height(50.0 / 150.0) * 160.0, 60.0, 130.0);
+        // `_TweenCurve(0.35, 1)` remaps the output range between the ends, while `Curve.transform`
+        // still maps 0 and 1 to themselves, so a full reverse lands on zero.
+        Assert.Equal(1.0, height.Transform(1.0), 6);
+        Assert.Equal(0.0, height.Transform(0.0), 6);
+        Assert.Equal(0.35, height.TransformInternal(0.0), 6);
+        Assert.InRange(height.Transform(50.0 / 150.0) * 160.0, 60.0, 130.0);
     }
 
     [Fact]
@@ -391,19 +393,19 @@ public sealed class MaterialMenuAnchorTests
         for (int index = 0; index < 4; index++)
         {
             (Curve forward, _) = MenuConstants.ItemFadeCurves(index, 4);
-            Assert.Equal(expectedAt100Ms[index], forward(0.2), 3);
+            Assert.Equal(expectedAt100Ms[index], forward.Transform(0.2), 3);
         }
 
         // A single item spans the first half of the opening and the first third of the closing.
         (Curve onlyForward, Curve onlyReverse) = MenuConstants.ItemFadeCurves(0, 1);
-        Assert.Equal(1.0, onlyForward(0.5), 6);
-        Assert.Equal(1.0, onlyReverse(1.0 / 3.0), 6);
+        Assert.Equal(1.0, onlyForward.Transform(0.5), 6);
+        Assert.Equal(1.0, onlyReverse.Transform(1.0 / 3.0), 6);
 
         // The last of four items finishes exactly at the end of the opening animation.
         (Curve lastForward, Curve lastReverse) = MenuConstants.ItemFadeCurves(3, 4);
-        Assert.Equal(0.0, lastForward(0.5), 6);
-        Assert.Equal(1.0, lastForward(1.0), 6);
-        Assert.Equal(1.0, lastReverse(2.0 / 3.0), 6);
+        Assert.Equal(0.0, lastForward.Transform(0.5), 6);
+        Assert.Equal(1.0, lastForward.Transform(1.0), 6);
+        Assert.Equal(1.0, lastReverse.Transform(2.0 / 3.0), 6);
     }
 
     [Fact]

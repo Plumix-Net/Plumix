@@ -32,15 +32,15 @@ internal static class MenuConstants
     public const double ItemRelativeFadeOutDuration = 1.0 / 3.0;
     public const double ItemRelativeFadeOutDelay = 1.0 / 3.0;
 
-    public static Curve PanelHeightForwardCurve { get; } = Curves.Cubic(0.3, 0.0, 0.0, 1.0);
+    public static Curve PanelHeightForwardCurve { get; } = new Cubic(0.3, 0.0, 0.0, 1.0);
 
     public static Curve PanelHeightReverseCurve { get; } =
-        Curves.TweenCurve(0.35, 1.0, Curves.Flipped(Curves.EmphasizedAccelerate));
+        new MenuTweenCurve(0.35, 1.0, curve: new FlippedCurve(Easing.EmphasizedAccelerate));
 
-    public static Curve PanelOpacityForwardCurve { get; } = Curves.Interval(0.0, 50.0 / 500.0);
+    public static Curve PanelOpacityForwardCurve { get; } = new Interval(0.0, 50.0 / 500.0);
 
     public static Curve PanelOpacityReverseCurve { get; } =
-        Curves.Flipped(Curves.Interval(100.0 / 150.0, 150.0 / 150.0));
+        new FlippedCurve(new Interval(100.0 / 150.0, 150.0 / 150.0));
 
     /// <summary>
     /// The staggered fade curves for menu item <paramref name="index"/> of <paramref name="itemCount"/>.
@@ -55,8 +55,8 @@ internal static class MenuConstants
         double forwardProgress = itemFadeInGap * index;
         double reverseProgress = itemFadeOutGap * index;
         return (
-            Curves.Interval(forwardProgress, Math.Min(1.0, forwardProgress + ItemRelativeFadeInDuration)),
-            Curves.Interval(reverseProgress, Math.Min(1.0, reverseProgress + ItemRelativeFadeOutDuration)));
+            new Interval(forwardProgress, Math.Min(1.0, forwardProgress + ItemRelativeFadeInDuration)),
+            new Interval(reverseProgress, Math.Min(1.0, reverseProgress + ItemRelativeFadeOutDuration)));
     }
 
     /// <summary>The shortcut map installed on every Material menu panel and menu bar.</summary>
@@ -72,6 +72,40 @@ internal static class MenuConstants
             [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] = new DirectionalFocusIntent(TraversalDirection.Left),
             [new SingleActivator(LogicalKeyboardKey.ArrowRight)] = new DirectionalFocusIntent(TraversalDirection.Right),
         };
+}
+
+/// <summary>
+/// Dart's private <c>_TweenCurve</c>: the curve is applied first, and the result is then linearly
+/// interpolated between <see cref="Begin"/> and <see cref="End"/> (an <see cref="Interval"/> remaps the
+/// input instead).
+/// </summary>
+internal sealed class MenuTweenCurve : Curve
+{
+    public MenuTweenCurve(double begin, double end, Curve curve)
+    {
+        DebugAssertions.Assert(begin >= 0.0);
+        DebugAssertions.Assert(begin <= 1.0);
+        DebugAssertions.Assert(end >= 0.0);
+        DebugAssertions.Assert(end <= 1.0);
+        DebugAssertions.Assert(end >= begin);
+        Begin = begin;
+        End = end;
+        Curve = curve;
+    }
+
+    public double Begin { get; }
+
+    public double End { get; }
+
+    public Curve Curve { get; }
+
+    public override double TransformInternal(double t)
+    {
+        t = Curve.Transform(t);
+        return (Begin * (1.0 - t)) + (End * t);
+    }
+
+    public override string ToString() => $"_TweenCurve({Begin}, {End}, {Curve})";
 }
 
 public class MenuAnchor : StatefulWidget

@@ -21,10 +21,10 @@ internal static class SearchViewChoreography
 {
     internal static readonly TimeSpan OpenViewDuration = TimeSpan.FromMilliseconds(600);
     internal static readonly TimeSpan AnchorFadeDuration = TimeSpan.FromMilliseconds(150);
-    internal static readonly Curve ViewFadeOnInterval = Curves.Interval(0.0, 1.0 / 2.0);
-    internal static readonly Curve ViewIconsFadeOnInterval = Curves.Interval(1.0 / 6.0, 2.0 / 6.0);
-    internal static readonly Curve ViewDividerFadeOnInterval = Curves.Interval(0.0, 1.0 / 6.0);
-    internal static readonly Curve ViewListFadeOnInterval = Curves.Interval(133.0 / 600.0, 233.0 / 600.0);
+    internal static readonly Curve ViewFadeOnInterval = new Interval(0.0, 1.0 / 2.0);
+    internal static readonly Curve ViewIconsFadeOnInterval = new Interval(1.0 / 6.0, 2.0 / 6.0);
+    internal static readonly Curve ViewDividerFadeOnInterval = new Interval(0.0, 1.0 / 6.0);
+    internal static readonly Curve ViewListFadeOnInterval = new Interval(133.0 / 600.0, 233.0 / 600.0);
     internal const double DisableSearchBarOpacity = 0.38;
 
     internal static double ClampDouble(double value, double min, double max)
@@ -648,15 +648,15 @@ public class SearchAnchor : StatefulWidget
                         _curvedAnimation ??= new CurvedAnimation(
                             Animation,
                             Curves.EaseInOutCubicEmphasized,
-                            Curves.Flipped(Curves.EaseInOutCubicEmphasized));
-                        Rect viewRect = _rectTween.Evaluate(_curvedAnimation.Value);
+                            new FlippedCurve(Curves.EaseInOutCubicEmphasized));
+                        Rect viewRect = _rectTween.Transform(_curvedAnimation.Value)!.Value;
                         double topPadding = _showFullScreenView
                             ? LerpDouble(0.0, MediaQuery.PaddingOf(builderContext).Top, _curvedAnimation.Value)
                             : 0.0;
                         _viewFadeOnIntervalCurve ??= new CurvedAnimation(
                             Animation,
                             SearchViewChoreography.ViewFadeOnInterval,
-                            Curves.Flipped(SearchViewChoreography.ViewFadeOnInterval));
+                            new FlippedCurve(SearchViewChoreography.ViewFadeOnInterval));
                         return new FadeTransition(
                             opacity: _viewFadeOnIntervalCurve,
                             child: _capturedThemes.Wrap(new SearchViewContent(
@@ -892,16 +892,16 @@ internal sealed class SearchViewContent : StatefulWidget
             _viewIconsFade = new CurvedAnimation(
                 Current.Animation,
                 SearchViewChoreography.ViewIconsFadeOnInterval,
-                Curves.Flipped(SearchViewChoreography.ViewIconsFadeOnInterval));
+                new FlippedCurve(SearchViewChoreography.ViewIconsFadeOnInterval));
             // Upstream quirk: the divider reverses along the whole-view fade interval, not its own.
             _viewDividerFade = new CurvedAnimation(
                 Current.Animation,
                 SearchViewChoreography.ViewDividerFadeOnInterval,
-                Curves.Flipped(SearchViewChoreography.ViewFadeOnInterval));
+                new FlippedCurve(SearchViewChoreography.ViewFadeOnInterval));
             _viewListFade = new CurvedAnimation(
                 Current.Animation,
                 SearchViewChoreography.ViewListFadeOnInterval,
-                Curves.Flipped(SearchViewChoreography.ViewListFadeOnInterval));
+                new FlippedCurve(SearchViewChoreography.ViewListFadeOnInterval));
         }
 
         public override void DidUpdateWidget(SearchViewContent oldWidget)

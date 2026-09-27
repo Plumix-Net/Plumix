@@ -520,7 +520,7 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
                 else
                 {
                     applyXOffset = true;
-                    double labelOpacity = Curves.Interval(0.0, 0.25)(widget.ExtendedProgress);
+                    double labelOpacity = new Interval(0.0, 0.25).Transform(widget.ExtendedProgress);
                     double effectiveMinWidth = widget.MinWidth
                                                + ((widget.MinExtendedWidth - widget.MinWidth)
                                                   * widget.ExtendedProgress);
@@ -553,7 +553,9 @@ internal sealed class NavigationRailDestinationTileState : State<NavigationRailD
             {
                 double appearingAnimationValue = selectionProgress;
                 double verticalPadding = 24.0 + ((16.0 - 24.0) * appearingAnimationValue);
-                double labelOpacity = Curves.Interval(widget.Selected ? 0.25 : 0.75, widget.Selected ? 0.75 : 1.0)(
+                double labelOpacity = new Interval(
+                    widget.Selected ? 0.25 : 0.75,
+                    widget.Selected ? 0.75 : 1.0).Transform(
                     selectionProgress);
                 indicatorOffset = ResolveLabelIndicatorOffset(
                     widget.MinWidth,

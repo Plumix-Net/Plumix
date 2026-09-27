@@ -198,7 +198,7 @@ public sealed class ExpansionTile : StatefulWidget
         {
             ThemeData theme = Theme.Of(context);
             ExpansionTileThemeData defaults = ResolveDefaults(theme);
-            double progress = Curves.EaseIn(animation.Value);
+            double progress = Curves.EaseIn.Transform(animation.Value);
             Color expandedTextColor = CurrentWidget.TextColor
                                       ?? expansionTheme.TextColor
                                       ?? defaults.TextColor!;
@@ -292,7 +292,7 @@ public sealed class ExpansionTile : StatefulWidget
             ExpansionTileThemeData expansionTheme)
         {
             ThemeData theme = Theme.Of(Context);
-            double progress = Curves.EaseOut(animation.Value);
+            double progress = Curves.EaseOut.Transform(animation.Value);
             Color? background = MaterialThemeLerp.Color(
                 CurrentWidget.CollapsedBackgroundColor ?? expansionTheme.CollapsedBackgroundColor,
                 CurrentWidget.BackgroundColor ?? expansionTheme.BackgroundColor,
@@ -357,7 +357,7 @@ public sealed class ExpansionTile : StatefulWidget
 
         private Widget BuildArrow(Animation<double> animation, Color color)
         {
-            double turns = Curves.EaseIn(animation.Value) * 0.5;
+            double turns = Curves.EaseIn.Transform(animation.Value) * 0.5;
             return new RotationTransition(
                 turns: new ConstantAnimation<double>(turns, animation.Status),
                 child: new Icon(Icons.ExpandMore, color: color));
@@ -447,7 +447,7 @@ public sealed class ExpansionTile : StatefulWidget
 
         private static Color LerpColor(Color from, Color to, double progress)
         {
-            return new ColorTween().Evaluate(Math.Clamp(progress, 0.0, 1.0), from, to);
+            return Color.Lerp(from, to, Math.Clamp(progress, 0.0, 1.0))!;
         }
     }
 }

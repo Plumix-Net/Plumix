@@ -181,6 +181,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/menu_style.dart` | `src/Plumix.Material/MenuStyle.cs` | — | — |
 | `material_ui/menu_theme.dart` | `src/Plumix.Material/MenuTheme.cs` | — | — |
 | `material_ui/mergeable_material.dart` | `src/Plumix.Material/MergeableMaterial.cs` | `src/Plumix.Tests/MaterialMergeableMaterialTests.cs` | — |
+| `material_ui/motion.dart` | `src/Plumix.Material/Motion.cs` | — | — |
 | `material_ui/navigation_bar.dart` | `src/Plumix.Material/NavigationBar.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialBottomNavigationBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/material/bottom_navigation_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/BottomNavigationBarDemoPage.cs` |
 | `material_ui/navigation_bar_theme.dart` | `src/Plumix.Material/NavigationBarTheme.cs` | — | — |
 | `material_ui/navigation_drawer.dart` | `src/Plumix.Material/NavigationDrawer.cs` | — | `dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs` |
@@ -258,6 +259,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `animation/animation_controller.dart` | `src/Plumix/AnimationController.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs` | — |
 | `animation/animation_style.dart` | `src/Plumix/AnimationStyle.cs` | — | — |
 | `animation/animations.dart` | `src/Plumix/Animation.cs`<br>`src/Plumix/CompoundAnimation.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
+| `animation/curves.dart` | `src/Plumix/Curves.cs` | `src/Plumix.Tests/CurvesDartParityTests.cs` | — |
+| `animation/tween.dart` | `src/Plumix/Tween.cs` | `src/Plumix.Tests/Matrix4TweenTests.cs`<br>`src/Plumix.Tests/TweenDartParityTests.cs` | — |
+| `animation/tween_sequence.dart` | `src/Plumix/TweenSequence.cs` | — | — |
 | `foundation/assertions.dart` | `src/Plumix/Foundation/Assertions.cs` | `src/Plumix.Tests/AssertionsTests.cs` | — |
 | `foundation/binding.dart` | `src/Plumix/Foundation/Binding.cs`<br>`src/Plumix/HotReload.cs` _(reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)_ | `src/Plumix.Tests/GestureBindingParityTests.cs`<br>`src/Plumix.Tests/HotReloadTests.cs`<br>`src/Plumix.Tests/RendererBindingDartParityTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RendererBindingTests.cs`<br>`src/Plumix.Tests/SchedulerBindingTests.cs`<br>`src/Plumix.Tests/WidgetsBindingBootstrapTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
@@ -578,6 +582,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/Developer/Timeline.cs`
 - `src/Plumix/FlutterExtensions.cs`
+- `src/Plumix/Foundation/DartRandom.cs`
 - `src/Plumix/Foundation/DartStopwatch.cs`
 - `src/Plumix/Foundation/Intl/DartDateTime.cs`
 - `src/Plumix/Foundation/Intl/DateBuilder.cs`
@@ -653,9 +658,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 546
-- C# files carrying a marker: 728
-- C# files without a marker: 61
+- Flutter files mapped: 550
+- C# files carrying a marker: 732
+- C# files without a marker: 62
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 7
 

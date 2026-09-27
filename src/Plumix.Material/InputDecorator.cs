@@ -432,7 +432,7 @@ public sealed class InputDecorator : StatefulWidget
             _floatingLabelAnimation = new CurvedAnimation(
                 _floatingLabelController,
                 Curves.FastOutSlowIn,
-                Curves.Flipped(Curves.FastOutSlowIn));
+                new FlippedCurve(Curves.FastOutSlowIn));
             _shakingLabelController = new AnimationController(
                 duration: InputDecoration.TransitionDuration,
                 vsync: this);
@@ -1278,7 +1278,7 @@ internal sealed class BorderContainer : StatefulWidget
             _borderAnimation = new CurvedAnimation(
                 _controller,
                 Curves.FastOutSlowIn,
-                Curves.Flipped(Curves.FastOutSlowIn));
+                new FlippedCurve(Curves.FastOutSlowIn));
             _hoverColorController = new AnimationController(duration: HoverDuration, vsync: this);
             _hoverColorController.SetValue(Current.IsHovering ? 1.0 : 0.0);
             _hoverColorController.AddListener(HandleChange);

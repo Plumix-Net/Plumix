@@ -297,28 +297,28 @@ internal sealed class BottomNavigationTile : StatelessWidget
         {
             bottomPadding = new DoubleTween(
                 begin: selectedIconDiff / 2.0,
-                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Transform(Animation.Value);
             topPadding = new DoubleTween(
                 begin: selectedFontSize + (selectedIconDiff / 2.0),
-                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Transform(Animation.Value);
         }
         else if (!ShowSelectedLabels && !ShowUnselectedLabels)
         {
             bottomPadding = new DoubleTween(
                 begin: selectedIconDiff / 2.0,
-                end: unselectedIconDiff / 2.0).Evaluate(Animation.Value);
+                end: unselectedIconDiff / 2.0).Transform(Animation.Value);
             topPadding = new DoubleTween(
                 begin: selectedFontSize + (selectedIconDiff / 2.0),
-                end: selectedFontSize + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+                end: selectedFontSize + (unselectedIconDiff / 2.0)).Transform(Animation.Value);
         }
         else
         {
             bottomPadding = new DoubleTween(
                 begin: (selectedFontSize / 2.0) + (selectedIconDiff / 2.0),
-                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Transform(Animation.Value);
             topPadding = new DoubleTween(
                 begin: (selectedFontSize / 2.0) + (selectedIconDiff / 2.0),
-                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Transform(Animation.Value);
         }
 
         string? effectiveTooltip = Item.Tooltip == string.Empty ? null : Item.Tooltip;
@@ -455,7 +455,7 @@ internal sealed class BottomNavigationTileIcon : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        Color? iconColor = ColorTween?.Evaluate(Animation.Value);
+        Color? iconColor = ColorTween?.Transform(Animation.Value);
         var defaultIconTheme = new IconThemeData(Color: iconColor, Size: IconSize);
         IconThemeData iconThemeData = IconThemeData.Lerp(
             defaultIconTheme.Merge(UnselectedIconTheme),
@@ -519,12 +519,12 @@ internal sealed class BottomNavigationTileLabel : StatelessWidget
 
         double scale = new DoubleTween(
             begin: (unselectedFontSize ?? 0.0) / (selectedFontSize ?? 1.0),
-            end: 1.0).Evaluate(Animation.Value);
+            end: 1.0).Transform(Animation.Value);
 
         Widget text = DefaultTextStyle.Merge(
             style: customStyle.CopyWith(
                 fontSize: selectedFontSize,
-                color: ColorTween?.Evaluate(Animation.Value)),
+                color: ColorTween?.Transform(Animation.Value)),
             child: new Transform(
                 transform: Matrix4.Diagonal3Values(scale, scale, scale),
                 alignment: Alignment.BottomCenter,
@@ -731,7 +731,7 @@ internal sealed class BottomNavigationBarState : State<BottomNavigationBar>
             _animations.Add(new CurvedAnimation(
                 parent: _controllers[index],
                 curve: Curves.FastOutSlowIn,
-                reverseCurve: Curves.Flipped(Curves.FastOutSlowIn)));
+                reverseCurve: new FlippedCurve(Curves.FastOutSlowIn)));
         }
 
         _controllers[Widget.CurrentIndex].SetValue(1.0);
@@ -776,7 +776,7 @@ internal sealed class BottomNavigationBarState : State<BottomNavigationBar>
         _circles.Enqueue(circle);
     }
 
-    internal double EvaluateFlex(Animation<double> animation) => FlexTween.Evaluate(animation.Value);
+    internal double EvaluateFlex(Animation<double> animation) => FlexTween.Transform(animation.Value);
 
     private List<Widget> CreateTiles(
         BuildContext context,
@@ -1115,7 +1115,7 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
             };
             var center = new Point(leftFraction * size.Width, size.Height / 2.0);
             double radius = new DoubleTween(begin: 0.0, end: MaxRadius(center, size))
-                .Evaluate(circle.Animation.Value);
+                .Transform(circle.Animation.Value);
             context.Canvas.Save();
             context.Canvas.ClipRect(rect, doAntiAlias: false);
             context.Canvas.DrawCircle(brush, null, center, radius);

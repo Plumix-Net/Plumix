@@ -14,10 +14,7 @@ public sealed class ThemeDataTween : Tween<ThemeData>
         End = end;
     }
 
-    public override ThemeData Lerp(ThemeData a, ThemeData b, double t)
-    {
-        return ThemeData.Lerp(a, b, t);
-    }
+    public override ThemeData Lerp(double t) => ThemeData.Lerp(Begin!, End!, t);
 }
 
 public sealed class Theme : StatelessWidget

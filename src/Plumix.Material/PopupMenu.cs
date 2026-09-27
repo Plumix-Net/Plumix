@@ -828,7 +828,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
             Curve curve = Animation.Status == AnimationStatus.Reverse
                 ? AnimationStyle?.ReverseCurve ?? DefaultReverseCurve
                 : AnimationStyle?.Curve ?? Curves.Linear;
-            return Math.Clamp(curve(value), 0, 1);
+            return Math.Clamp(curve.Transform(value), 0, 1);
         }
     }
 
@@ -896,7 +896,7 @@ internal sealed class PopupMenuRoute<T> : PageRoute
         }
     }
 
-    private static double DefaultReverseCurve(double value) => Math.Clamp(value / (2.0 / 3.0), 0, 1);
+    private static readonly Curve DefaultReverseCurve = new Interval(0.0, 2.0 / 3.0);
 }
 
 internal sealed class PopupMenuPanel<T> : StatelessWidget

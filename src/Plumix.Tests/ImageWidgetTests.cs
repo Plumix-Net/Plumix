@@ -81,8 +81,8 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(300), fade.FadeOutDuration);
         Assert.Equal(TimeSpan.FromMilliseconds(700), fade.FadeInDuration);
         // Dart's `Cubic.transformInternal` bisects to within `_cubicErrorBound` (0.001).
-        Assert.Equal(0.68359375, fade.FadeOutCurve(0.5));
-        Assert.Equal(0.31640625, fade.FadeInCurve(0.5));
+        Assert.Equal(0.68359375, fade.FadeOutCurve.Transform(0.5));
+        Assert.Equal(0.31640625, fade.FadeInCurve.Transform(0.5));
         Assert.Equal(FilterQuality.Medium, fade.FilterQuality);
         Assert.Null(fade.PlaceholderFilterQuality);
         Assert.Equal((AlignmentGeometry)Alignment.Center, fade.Alignment);

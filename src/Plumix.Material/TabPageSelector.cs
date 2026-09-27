@@ -213,6 +213,6 @@ public sealed class TabPageSelector : StatefulWidget
         }
 
         private static Color LerpColor(Color from, Color to, double t) =>
-            new ColorTween().Evaluate(Math.Clamp(t, 0, 1), from, to);
+            Color.Lerp(from, to, Math.Clamp(t, 0, 1))!;
     }
 }

@@ -90,7 +90,7 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
                 return;
             }
 
-            T current = _currentTween.Evaluate(_controller.Evaluate());
+            T current = _currentTween.Transform(_controller.Evaluate());
             _currentTween.SetBeginValue(current);
             _currentTween.SetEndValue(target);
             _controller.Forward(from: 0.0);
@@ -98,7 +98,7 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            T value = _currentTween!.Evaluate(_controller!.Evaluate());
+            T value = _currentTween!.Transform(_controller!.Evaluate());
             return CurrentWidget.Builder(context, value, CurrentWidget.Child);
         }
 

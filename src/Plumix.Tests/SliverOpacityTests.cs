@@ -233,7 +233,7 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(0.4, opacity.Opacity);
         Assert.Equal(TimeSpan.FromMilliseconds(200), opacity.Duration);
         Assert.Null(opacity.Sliver);
-        Assert.Equal(Curves.Linear(0.3), opacity.Curve(0.3));
+        Assert.Equal(Curves.Linear.Transform(0.3), opacity.Curve.Transform(0.3));
         Assert.Null(opacity.OnEnd);
         Assert.False(opacity.AlwaysIncludeSemantics);
         Assert.Throws<ArgumentOutOfRangeException>(() => new SliverAnimatedOpacity(

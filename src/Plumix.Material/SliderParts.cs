@@ -194,8 +194,8 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
         (IBrush leftTrackPaint, IBrush rightTrackPaint) = textDirection switch
         {
             TextDirection.Ltr => (activePaint, inactivePaint),
@@ -243,7 +243,7 @@ public class RectangularSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value));
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
             Rect secondaryTrackSegment = textDirection switch
             {
                 TextDirection.Rtl => DartGeometry.RectFromLTRB(
@@ -346,8 +346,8 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
         (IBrush leftTrackPaint, IBrush rightTrackPaint) = textDirection switch
         {
             TextDirection.Ltr => (activePaint, inactivePaint),
@@ -406,7 +406,7 @@ public class RoundedRectSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value));
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
             if (isLTR)
             {
                 context.Canvas.DrawRRect(
@@ -502,7 +502,7 @@ public class RoundSliderTickMarkShape : SliderTickMarkShape
                 sliderTheme.DisabledActiveTickMarkColor,
                 sliderTheme.ActiveTickMarkColor),
         };
-        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value));
+        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!);
 
         // The tick marks are tiny circles that are the same height as the track.
         double tickMarkRadius =
@@ -603,7 +603,7 @@ public class RoundSliderThumbShape : SliderComponentShape
             begin: sliderTheme.DisabledThumbColor,
             end: sliderTheme.ThumbColor);
 
-        Color color = colorTween.Transform(enableAnimation.Value);
+        Color color = colorTween.Transform(enableAnimation.Value)!;
         double radius = radiusTween.Transform(enableAnimation.Value);
 
         var elevationTween = new DoubleTween(begin: Elevation, end: PressedElevation);
@@ -877,7 +877,7 @@ public class HandleThumbShape : SliderComponentShape
         var colorTween = new ColorTween(
             begin: sliderTheme.DisabledThumbColor,
             end: sliderTheme.ThumbColor);
-        Color color = colorTween.Transform(enableAnimation.Value);
+        Color color = colorTween.Transform(enableAnimation.Value)!;
 
         Canvas canvas = context.Canvas;
         Size thumbSize = sliderTheme.ThumbSize!.Resolve(
@@ -973,8 +973,8 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
         IBrush leftTrackPaint;
         IBrush rightTrackPaint;
         switch (textDirection)
@@ -1057,7 +1057,7 @@ public class GappedSliderTrackShape : BaseSliderTrackShape
                 begin: sliderTheme.DisabledSecondaryActiveTrackColor,
                 end: sliderTheme.SecondaryActiveTrackColor);
             var secondaryTrackPaint =
-                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value));
+                new SolidColorBrush(secondaryTrackColorTween.Transform(enableAnimation.Value)!);
             if (isLTR)
             {
                 context.Canvas.DrawRRect(

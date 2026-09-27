@@ -313,7 +313,7 @@ public sealed class MaterialBannerTests
             translation => translation.Translation == new Point(0, 0));
         Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => align.HeightFactor.HasValue
-                     && Math.Abs(align.HeightFactor.Value - Curves.FastOutSlowIn(0.5)) < 0.001);
+                     && Math.Abs(align.HeightFactor.Value - Curves.FastOutSlowIn.Transform(0.5)) < 0.001);
         var semantics = harness.PumpAndGetSemantics(new Size(360, 180));
         var liveRegion = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsLiveRegion));
         Assert.NotNull(liveRegion);

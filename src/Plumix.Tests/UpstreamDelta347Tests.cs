@@ -86,11 +86,17 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
         // Curves blend as the weighted average of the two transforms, not a t < 0.5 snap.
         Curve blended = half.Curve!;
-        Assert.Equal((Curves.Linear(0.25) * 0.5) + (Curves.EaseIn(0.25) * 0.5), blended(0.25), 10);
+        Assert.Equal(
+            (Curves.Linear.Transform(0.25) * 0.5) + (Curves.EaseIn.Transform(0.25) * 0.5),
+            blended.Transform(0.25),
+            10);
 
         // A null curve stands in as Curves.linear.
         Curve againstNull = AnimationStyle.Lerp(new AnimationStyle(), b, 0.5)!.Curve!;
-        Assert.Equal((Curves.Linear(0.4) * 0.5) + (Curves.EaseIn(0.4) * 0.5), againstNull(0.4), 10);
+        Assert.Equal(
+            (Curves.Linear.Transform(0.4) * 0.5) + (Curves.EaseIn.Transform(0.4) * 0.5),
+            againstNull.Transform(0.4),
+            10);
     }
 
     [Fact]

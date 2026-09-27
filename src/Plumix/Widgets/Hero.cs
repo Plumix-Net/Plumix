@@ -7,10 +7,9 @@ using Plumix.Rendering;
 namespace Plumix.Widgets;
 
 /// <summary>
-/// Dart's `CreateRectTween`. Plumix's <see cref="Rect"/> is a value type, so the endpoints are
-/// non-nullable where Dart uses `Rect?`.
+/// A function that can be used by a hero to create a rect tween for its flight. Dart's `CreateRectTween`.
 /// </summary>
-public delegate Tween<Rect> CreateRectTween(Rect begin, Rect end);
+public delegate Tween<Rect?> CreateRectTween(Rect? begin, Rect? end);
 
 /// <summary>Dart's `HeroPlaceholderBuilder`.</summary>
 public delegate Widget HeroPlaceholderBuilder(BuildContext context, Size heroSize, Widget child);
@@ -316,12 +315,12 @@ internal sealed class HeroFlightManifest : IDisposable
                 case HeroFlightDirection.Push:
                     parent = ToRoute.Animation;
                     curve = ToHero.CurrentWidget.Curve;
-                    reverseCurve = ToHero.CurrentWidget.ReverseCurve ?? Curves.Flipped(curve);
+                    reverseCurve = ToHero.CurrentWidget.ReverseCurve ?? curve.Flipped;
                     break;
                 default:
                     parent = FromRoute.Animation;
                     curve = FromHero.CurrentWidget.Curve;
-                    reverseCurve = FromHero.CurrentWidget.ReverseCurve ?? Curves.Flipped(curve);
+                    reverseCurve = FromHero.CurrentWidget.ReverseCurve ?? curve.Flipped;
                     break;
             }
 
@@ -349,7 +348,7 @@ internal sealed class HeroFlightManifest : IDisposable
 
     public void Dispose() => _animation?.Dispose();
 
-    public Tween<Rect> CreateHeroRectTween(Rect begin, Rect end)
+    public Tween<Rect?> CreateHeroRectTween(Rect? begin, Rect? end)
     {
         CreateRectTween? createRectTween = ToHero.CurrentWidget.CreateRectTween ?? CreateRectTween;
         return createRectTween?.Invoke(begin, end) ?? new RectTween(begin: begin, end: end);
@@ -407,7 +406,7 @@ internal sealed class HeroFlight : IDisposable
         _proxyAnimation.AddStatusListener(HandleAnimationUpdate);
     }
 
-    public Tween<Rect> HeroRectTween { get; private set; } = new RectTween();
+    public Tween<Rect?> HeroRectTween { get; private set; } = new RectTween();
 
     public Widget? Shuttle { get; private set; }
 
@@ -460,7 +459,7 @@ internal sealed class HeroFlight : IDisposable
             // A push flight was interrupted by a pop. The same heroRect tween is used in reverse, so the
             // pop flight path is the same (in reverse) as the push flight path.
             _proxyAnimation.Parent = new ReverseAnimation(newManifest.Animation);
-            HeroRectTween = new ReverseTween<Rect>(HeroRectTween);
+            HeroRectTween = new ReverseTween<Rect?>(HeroRectTween);
         }
         else if (Manifest.Type == HeroFlightDirection.Pop && newManifest.Type == HeroFlightDirection.Push)
         {
@@ -472,21 +471,21 @@ internal sealed class HeroFlight : IDisposable
                 Manifest.FromHero.EndFlight(keepPlaceholder: true);
                 newManifest.ToHero.StartFlight();
                 HeroRectTween = Manifest.CreateHeroRectTween(
-                    HeroRectTween.GetEndValue(),
+                    HeroRectTween.End,
                     newManifest.ToHeroLocation);
             }
             else
             {
                 HeroRectTween = Manifest.CreateHeroRectTween(
-                    HeroRectTween.GetEndValue(),
-                    HeroRectTween.GetBeginValue());
+                    HeroRectTween.End,
+                    HeroRectTween.Begin);
             }
         }
         else
         {
             // A push or pop flight is heading to a new route, i.e. the same type of flight.
             HeroRectTween = Manifest.CreateHeroRectTween(
-                HeroRectTween.Evaluate(_proxyAnimation.Value),
+                HeroRectTween.Transform(_proxyAnimation.Value),
                 newManifest.ToHeroLocation);
             Shuttle = null;
 
@@ -610,7 +609,7 @@ internal sealed class HeroFlight : IDisposable
             child: Shuttle,
             builder: (BuildContext _, Widget? child) =>
             {
-                Rect rect = HeroRectTween.Evaluate(_proxyAnimation.Value);
+                Rect rect = HeroRectTween.Evaluate(_proxyAnimation)!.Value;
                 Rendering.RelativeRect offsets = Rendering.RelativeRect.FromSize(
                     rect,
                     Manifest.NavigatorSize);
@@ -638,11 +637,11 @@ internal sealed class HeroFlight : IDisposable
 
         if (toHeroOrigin is { } origin && double.IsFinite(origin.X) && double.IsFinite(origin.Y))
         {
-            Rect end = HeroRectTween.GetEndValue();
+            Rect end = HeroRectTween.End!.Value;
             if (origin != end.TopLeft)
             {
                 var heroRectEnd = new Rect(origin, end.Size);
-                HeroRectTween = Manifest.CreateHeroRectTween(HeroRectTween.GetBeginValue(), heroRectEnd);
+                HeroRectTween = Manifest.CreateHeroRectTween(HeroRectTween.Begin, heroRectEnd);
             }
         }
         else if (_heroOpacity.Status == AnimationStatus.Completed)
@@ -650,7 +649,7 @@ internal sealed class HeroFlight : IDisposable
             // The toHero no longer exists or it's no longer the flight's destination. Continue flying
             // while fading out.
             _heroOpacity = _proxyAnimation.Drive(
-                ReverseTweenValue.Chain(new CurveTween(Curves.Interval(_proxyAnimation.Value, 1.0))));
+                ReverseTweenValue.Chain(new CurveTween(new Interval(_proxyAnimation.Value, 1.0))));
         }
 
         // Update _aborted for the next animation tick.
@@ -920,9 +919,9 @@ public sealed class HeroController : NavigatorObserver, IDisposable
                 {
                     Padding = flightDirection == HeroFlightDirection.Push
                         ? new EdgeInsetsTween(begin: fromHeroPadding, end: toHeroPadding)
-                            .Evaluate(animation.Value)
+                            .Transform(animation.Value)
                         : new EdgeInsetsTween(begin: toHeroPadding, end: fromHeroPadding)
-                            .Evaluate(animation.Value),
+                            .Transform(animation.Value),
                 },
                 child: toHero.Child));
     }

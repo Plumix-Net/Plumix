@@ -317,8 +317,8 @@ public sealed class Stepper : StatefulWidget
                     ? CrossFadeState.ShowSecond
                     : CrossFadeState.ShowFirst,
                 duration: MaterialConstants.ThemeAnimationDuration,
-                firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
-                secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                firstCurve: new Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                secondCurve: new Interval(0.4, 1.0, Curves.FastOutSlowIn),
                 sizeCurve: Curves.FastOutSlowIn);
             return new Stack(children: [connector, body]);
         }
@@ -434,8 +434,8 @@ public sealed class Stepper : StatefulWidget
                     ? CrossFadeState.ShowSecond
                     : CrossFadeState.ShowFirst,
                 duration: MaterialConstants.ThemeAnimationDuration,
-                firstCurve: Curves.Interval(0.0, 0.6, Curves.FastOutSlowIn),
-                secondCurve: Curves.Interval(0.4, 1.0, Curves.FastOutSlowIn),
+                firstCurve: new Interval(0.0, 0.6, Curves.FastOutSlowIn),
+                secondCurve: new Interval(0.4, 1.0, Curves.FastOutSlowIn),
                 sizeCurve: Curves.FastOutSlowIn);
         }
 

@@ -52,6 +52,18 @@ public abstract class Animation<T> : IValueListenable<T>
     public abstract void RemoveStatusListener(Action<AnimationStatus> listener);
 }
 
+public static class AnimationDriveExtensions
+{
+    /// <summary>
+    /// Chain a <see cref="Tween{T}"/> (or <see cref="CurveTween"/>) to this <see cref="Animation{T}"/>.
+    /// Dart's <c>Animation&lt;double&gt;.drive</c>.
+    /// </summary>
+    public static Animation<TResult> Drive<TResult>(this Animation<double> animation, Animatable<TResult> child)
+    {
+        return child.Animate(animation);
+    }
+}
+
 public sealed class ConstantAnimation<T> : Animation<T>
 {
     public ConstantAnimation(T value, AnimationStatus status = AnimationStatus.Completed)
@@ -309,116 +321,97 @@ public sealed class ReverseAnimation : Animation<double>
     }
 }
 
-public sealed class CurvedAnimation : Animation<double>, IDisposable
+/// <summary>An animation that applies a curve to another animation.</summary>
+public class CurvedAnimation : AnimationWithParentMixin<double>, IDisposable
 {
-    private readonly Animation<double> _parent;
-    private readonly List<Action> _listeners = [];
-    private readonly List<Action<AnimationStatus>> _statusListeners = [];
     private AnimationStatus? _curveDirection;
-    private bool _disposed;
 
-    public CurvedAnimation(
-        Animation<double> parent,
-        Curve curve,
-        Curve? reverseCurve = null)
+    /// <summary>Creates a curved animation.</summary>
+    public CurvedAnimation(Animation<double> parent, Curve curve, Curve? reverseCurve = null)
     {
-        _parent = parent ?? throw new ArgumentNullException(nameof(parent));
-        Curve = curve ?? throw new ArgumentNullException(nameof(curve));
+        Parent = parent;
+        Curve = curve;
         ReverseCurve = reverseCurve;
-        _parent.AddListener(NotifyListeners);
-        _parent.AddStatusListener(HandleStatusChanged);
+        UpdateCurveDirection(parent.Status);
+        parent.AddStatusListener(UpdateCurveDirection);
     }
 
+    /// <summary>The animation to which this animation applies a curve.</summary>
+    public override Animation<double> Parent { get; }
+
+    /// <summary>The curve to use in the forward direction.</summary>
     public Curve Curve { get; set; }
 
+    /// <summary>The curve to use in the reverse direction; when null, <see cref="Curve"/> is used.</summary>
     public Curve? ReverseCurve { get; set; }
 
-    /// <summary>The animation this curved animation derives its value from.</summary>
-    public Animation<double> Parent => _parent;
+    /// <summary>A flag that is true when <see cref="Dispose"/> has been called.</summary>
+    public bool IsDisposed { get; private set; }
+
+    private void UpdateCurveDirection(AnimationStatus status)
+    {
+        _curveDirection = status.IsAnimating() ? _curveDirection ?? status : null;
+    }
+
+    private bool UseForwardCurve =>
+        ReverseCurve is null || (_curveDirection ?? Parent.Status) != AnimationStatus.Reverse;
+
+    /// <summary>Cleans up any listeners added by this CurvedAnimation.</summary>
+    public void Dispose()
+    {
+        IsDisposed = true;
+        Parent.RemoveStatusListener(UpdateCurveDirection);
+    }
 
     public override double Value
     {
         get
         {
-            Curve activeCurve = _curveDirection == AnimationStatus.Reverse
-                ? ReverseCurve ?? Curve
-                : Curve;
-            return activeCurve(Math.Clamp(_parent.Value, 0.0, 1.0));
+            Curve? activeCurve = UseForwardCurve ? Curve : ReverseCurve;
+
+            double t = Parent.Value;
+            if (activeCurve is null)
+            {
+                return t;
+            }
+
+            if (t == 0.0 || t == 1.0)
+            {
+                if (Constants.KDebugMode)
+                {
+                    double transformedValue = activeCurve.Transform(t);
+                    double roundedTransformedValue = Math.Round(transformedValue, MidpointRounding.AwayFromZero);
+                    if (roundedTransformedValue != t)
+                    {
+                        throw new FlutterError(
+                            $"Invalid curve endpoint at {Diagnostics.DescribeValue(t)}.\n"
+                            + "Curves must map 0.0 to near zero and 1.0 to near one but "
+                            + $"{Diagnostics.DescribeType(activeCurve.GetType())} mapped "
+                            + $"{Diagnostics.DescribeValue(t)} to {Diagnostics.DescribeValue(transformedValue)}, "
+                            + $"which is near {Diagnostics.DescribeValue(roundedTransformedValue)}.");
+                    }
+                }
+
+                return t;
+            }
+
+            return activeCurve.Transform(t);
         }
     }
 
-    public override AnimationStatus Status => _parent.Status;
-
-    public override void AddListener(Action listener)
+    public override string ToString()
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        _listeners.Add(listener ?? throw new ArgumentNullException(nameof(listener)));
-    }
-
-    public override void RemoveListener(Action listener)
-    {
-        if (!_disposed)
+        if (ReverseCurve is null)
         {
-            _ = _listeners.Remove(listener);
+            return $"{Parent}\u27A9{Curve}";
         }
-    }
 
-    public override void AddStatusListener(Action<AnimationStatus> listener)
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        _statusListeners.Add(listener ?? throw new ArgumentNullException(nameof(listener)));
-    }
-
-    public override void RemoveStatusListener(Action<AnimationStatus> listener)
-    {
-        if (!_disposed)
+        if (UseForwardCurve)
         {
-            _ = _statusListeners.Remove(listener);
-        }
-    }
-
-    public void Dispose()
-    {
-        if (_disposed)
-        {
-            return;
+            return $"{Parent}\u27A9{Curve}\u2092\u2099/{ReverseCurve}";
         }
 
-        _parent.RemoveListener(NotifyListeners);
-        _parent.RemoveStatusListener(HandleStatusChanged);
-        _listeners.Clear();
-        _statusListeners.Clear();
-        _disposed = true;
-    }
-
-    private void HandleStatusChanged(AnimationStatus status)
-    {
-        switch (status)
-        {
-            case AnimationStatus.Dismissed:
-            case AnimationStatus.Completed:
-                _curveDirection = null;
-                break;
-            case AnimationStatus.Forward:
-                _curveDirection = AnimationStatus.Forward;
-                break;
-            case AnimationStatus.Reverse when _curveDirection != AnimationStatus.Forward:
-                _curveDirection = AnimationStatus.Reverse;
-                break;
-        }
-
-        foreach (var listener in _statusListeners.ToArray())
-        {
-            listener(status);
-        }
-    }
-
-    private void NotifyListeners()
-    {
-        foreach (var listener in _listeners.ToArray())
-        {
-            listener();
-        }
+        return $"{Parent}\u27A9{Curve}/{ReverseCurve}\u2092\u2099";
     }
 }
 

@@ -1370,7 +1370,7 @@ public sealed class StandardBottomSheetState : State<StandardBottomSheet>
     private void HandleDragEnd(DragEndDetails details, bool isClosing)
     {
         // Allow the bottom sheet to animate smoothly from its current position.
-        _animationCurve = Curves.Split(
+        _animationCurve = new Split(
             CurrentWidget.AnimationController.Value,
             endCurve: StandardBottomSheetCurve);
     }
@@ -1417,7 +1417,7 @@ public sealed class StandardBottomSheetState : State<StandardBottomSheet>
             animation: widget.AnimationController,
             builder: (_, child) => new Align(
                 alignment: AlignmentDirectional.TopStart,
-                heightFactor: _animationCurve(widget.AnimationController.Value),
+                heightFactor: _animationCurve.Transform(widget.AnimationController.Value),
                 child: child),
             child: new Semantics(
                 container: true,

@@ -408,7 +408,7 @@ public sealed class MaterialApp : StatefulWidget
     public static HeroController CreateMaterialHeroController()
     {
         return new HeroController(
-            createRectTween: (Rect begin, Rect end) => new MaterialRectArcTween(begin: begin, end: end));
+            createRectTween: (Rect? begin, Rect? end) => new MaterialRectArcTween(begin: begin, end: end));
     }
 
     public override State CreateState() => new MaterialAppState();

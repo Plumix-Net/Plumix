@@ -177,11 +177,45 @@ public static class Diagnostics
     }
 
     /// <summary>Dart's <c>toStringAsFixed(1)</c>.</summary>
-    private static string Fixed(double value) => value.ToString("F1", CultureInfo.InvariantCulture);
+    private static string Fixed(double value) => ToStringAsFixed(value, 1);
 
     /// <summary>Dart's <c>double.toStringAsFixed(fractionDigits)</c>.</summary>
-    internal static string ToStringAsFixed(double value, int fractionDigits) =>
-        value.ToString("F" + fractionDigits.ToString(CultureInfo.InvariantCulture), CultureInfo.InvariantCulture);
+    /// <remarks>
+    /// .NET's <c>"F"</c> format is correctly rounded but breaks an exact tie to even (0.125 → "0.12"),
+    /// while Dart, like JavaScript's <c>toFixed</c>, picks the larger magnitude (0.125 → "0.13"). A tie
+    /// is only possible when the double's exact expansion ends one digit past
+    /// <paramref name="fractionDigits"/> with a 5, so that case is detected and rounded away from zero.
+    /// </remarks>
+    internal static string ToStringAsFixed(double value, int fractionDigits)
+    {
+        string format = "F" + fractionDigits.ToString(CultureInfo.InvariantCulture);
+        if (!double.IsFinite(value))
+        {
+            return value.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        string exact = value.ToString(
+            "F" + (fractionDigits + 40).ToString(CultureInfo.InvariantCulture),
+            CultureInfo.InvariantCulture);
+        int dot = exact.IndexOf('.', StringComparison.Ordinal);
+        string tail = exact[(dot + 1 + fractionDigits)..];
+        if (tail[0] == '5' && tail.AsSpan(1).Trim('0').IsEmpty)
+        {
+            decimal step = 1m;
+            for (int i = 0; i < fractionDigits; i++)
+            {
+                step /= 10m;
+            }
+
+            decimal truncated = decimal.Parse(
+                exact[..(dot + 1 + fractionDigits)].TrimEnd('.'),
+                CultureInfo.InvariantCulture);
+            decimal rounded = truncated + (value < 0 ? -step : step);
+            return rounded.ToString(format, CultureInfo.InvariantCulture);
+        }
+
+        return value.ToString(format, CultureInfo.InvariantCulture);
+    }
 
     /// <summary>
     /// Dart's <c>double.toStringAsPrecision(precision)</c>: <paramref name="precision"/> significant

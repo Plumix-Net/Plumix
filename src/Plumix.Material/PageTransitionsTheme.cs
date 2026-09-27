@@ -65,7 +65,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                     position: Map(
                         forwardAnimation,
                         value => new Vector(
-                            0.25 * (1.0 - Curves.EaseInOutCubicEmphasized(value)),
+                            0.25 * (1.0 - Curves.EaseInOutCubicEmphasized.Transform(value)),
                             0.0)),
                     child: transitionChild)),
             reverseBuilder: (_, reverseAnimation, transitionChild) => new IgnorePointer(
@@ -76,7 +76,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                         position: Map(
                             reverseAnimation,
                             value => new Vector(
-                                0.25 * Curves.EaseInOutCubicEmphasized(value),
+                                0.25 * Curves.EaseInOutCubicEmphasized.Transform(value),
                                 0.0)),
                         child: transitionChild))),
             child: delegatedChild);
@@ -108,7 +108,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                     position: Map(
                         animation,
                         value => new Vector(
-                            -0.25 * (1.0 - Curves.EaseInOutCubicEmphasized(value)),
+                            -0.25 * (1.0 - Curves.EaseInOutCubicEmphasized.Transform(value)),
                             0.0)),
                     child: transitionChild)),
             reverseBuilder: (_, animation, transitionChild) => new FadeTransition(
@@ -117,7 +117,7 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
                     position: Map(
                         animation,
                         value => new Vector(
-                            -0.25 * Curves.EaseInOutCubicEmphasized(value),
+                            -0.25 * Curves.EaseInOutCubicEmphasized.Transform(value),
                             0.0)),
                     child: transitionChild)),
             child: child);
@@ -396,11 +396,11 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
         if (value <= firstWeight)
         {
             double local = value / firstWeight;
-            return 0.4 * Curves.Cubic(0.05, 0.0, 0.133333, 0.06)(local);
+            return 0.4 * new Cubic(0.05, 0.0, 0.133333, 0.06).Transform(local);
         }
 
         double second = (value - firstWeight) / (1.0 - firstWeight);
-        return 0.4 + (0.6 * Curves.Cubic(0.208333, 0.82, 0.25, 1.0)(second));
+        return 0.4 + (0.6 * new Cubic(0.208333, 0.82, 0.25, 1.0).Transform(second));
     }
 
     private static double Interval(double value, double begin, double end)
@@ -986,9 +986,9 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     Vector offset;
                     if (_phase == PredictiveBackPhase.Commit)
                     {
-                        progress = Curves.EaseInOutCubicEmphasized(
+                        progress = Curves.EaseInOutCubicEmphasized.Transform(
                             Math.Clamp(animationProgress / (400.0 / 450.0), 0.0, 1.0));
-                        double startScale = 1.0 - (0.10 * Curves.EaseInOutCubicEmphasized(
+                        double startScale = 1.0 - (0.10 * Curves.EaseInOutCubicEmphasized.Transform(
                             _lastGestureProgress));
                         scale = Lerp(startScale, 1.0, progress);
                         opacity = 1.0 - progress;
@@ -997,7 +997,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     }
                     else
                     {
-                        progress = Curves.EaseInOutCubicEmphasized(animationProgress);
+                        progress = Curves.EaseInOutCubicEmphasized.Transform(animationProgress);
                         scale = Lerp(1.0, 0.90, progress);
                         opacity = 1.0;
                         radius = Lerp(0.0, 32.0, progress);
@@ -1074,7 +1074,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
             _lastGestureProgress = Math.Clamp(1.0 - CurrentWidget.Animation.Value, 0.0, 1.0);
             _lastGestureOffset = CalculateGestureOffset(
                 size,
-                Curves.EaseInOutCubicEmphasized(_lastGestureProgress));
+                Curves.EaseInOutCubicEmphasized.Transform(_lastGestureProgress));
         }
 
         private Vector CalculateGestureOffset(Size screenSize, double progress)
@@ -1097,7 +1097,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
             double yShiftMax = screenSize.Height / 20.0 - 8.0;
             double rawYShift = current.Y - start.Y;
             double normalized = Math.Clamp(Math.Abs(rawYShift) / screenSize.Height, 0.0, 1.0);
-            double y = Curves.EaseOut(normalized) * Math.Sign(rawYShift) * yShiftMax;
+            double y = Curves.EaseOut.Transform(normalized) * Math.Sign(rawYShift) * yShiftMax;
             return new Vector(x, Math.Clamp(y, -yShiftMax, yShiftMax));
         }
 

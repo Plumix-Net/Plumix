@@ -961,7 +961,7 @@ public sealed class HeroNavigatorTests
             Assert.True(raw is > 0.0 and < 1.0);
             Assert.NotNull(recordingTween);
             Assert.NotNull(recordingTween!.LastT);
-            Assert.Equal(Curves.FastOutSlowIn(raw), recordingTween.LastT!.Value, 3);
+            Assert.Equal(Curves.FastOutSlowIn.Transform(raw), recordingTween.LastT!.Value, 3);
 
             AdvanceHeroTransition(harness, viewportSize);
         }
@@ -1397,16 +1397,16 @@ public sealed class HeroNavigatorTests
     /// <summary>A <see cref="RectTween"/> that records the progress the flight last sampled it at.</summary>
     private sealed class RecordingRectTween : RectTween
     {
-        public RecordingRectTween(Rect begin, Rect end) : base(begin: begin, end: end)
+        public RecordingRectTween(Rect? begin, Rect? end) : base(begin: begin, end: end)
         {
         }
 
         public double? LastT { get; private set; }
 
-        public override Rect Lerp(Rect a, Rect b, double t)
+        public override Rect? Lerp(double t)
         {
             LastT = t;
-            return base.Lerp(a, b, t);
+            return base.Lerp(t);
         }
     }
 
@@ -1415,15 +1415,15 @@ public sealed class HeroNavigatorTests
     {
         private readonly Action _onLerp;
 
-        public TrackingRectTween(Rect begin, Rect end, Action onLerp) : base(begin: begin, end: end)
+        public TrackingRectTween(Rect? begin, Rect? end, Action onLerp) : base(begin: begin, end: end)
         {
             _onLerp = onLerp ?? throw new ArgumentNullException(nameof(onLerp));
         }
 
-        public override Rect Lerp(Rect a, Rect b, double t)
+        public override Rect? Lerp(double t)
         {
             _onLerp();
-            return base.Lerp(a, b, t);
+            return base.Lerp(t);
         }
     }
 

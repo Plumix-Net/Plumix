@@ -624,7 +624,7 @@ public sealed class MaterialThemeDataTests
 
         public override ProbeExtension Lerp(ProbeExtension? other, double t)
         {
-            return other is null ? this : new ProbeExtension(new ColorTween().Evaluate(t, Value, other.Value));
+            return other is null ? this : new ProbeExtension(Color.Lerp(Value, other.Value, t)!);
         }
     }
 }

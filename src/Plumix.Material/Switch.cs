@@ -812,7 +812,7 @@ internal sealed class MaterialSwitchState : ToggleableState<MaterialSwitch>
         if (Theme.Of(Context).UseMaterial3)
         {
             PositionAnimation.Curve = Curves.EaseOutBack;
-            PositionAnimation.ReverseCurve = Curves.Flipped(Curves.EaseOutBack);
+            PositionAnimation.ReverseCurve = new FlippedCurve(Curves.EaseOutBack);
         }
         else
         {
@@ -1749,12 +1749,12 @@ internal sealed class SwitchPainter : ToggleablePainter
             ? new TweenSequence<Size>(
             [
                 new TweenSequenceItem<Size>(
-                    new SizeTween(inactiveThumbSize, _transitionalThumbSize)
-                        .Chain(new CurveTween(Curves.Cubic(0.31, 0.00, 0.56, 1.00))),
+                    new Tween<Size>(inactiveThumbSize, _transitionalThumbSize)
+                        .Chain(new CurveTween(new Cubic(0.31, 0.00, 0.56, 1.00))),
                     11.0),
                 new TweenSequenceItem<Size>(
-                    new SizeTween(_transitionalThumbSize, activeThumbSize)
-                        .Chain(new CurveTween(Curves.Cubic(0.20, 0.00, 0.00, 1.00))),
+                    new Tween<Size>(_transitionalThumbSize, activeThumbSize)
+                        .Chain(new CurveTween(new Cubic(0.20, 0.00, 0.00, 1.00))),
                     72.0),
                 new TweenSequenceItem<Size>(new ConstantTween<Size>(activeThumbSize), 17.0),
             ])
@@ -1762,14 +1762,14 @@ internal sealed class SwitchPainter : ToggleablePainter
             [
                 new TweenSequenceItem<Size>(new ConstantTween<Size>(inactiveThumbSize), 17.0),
                 new TweenSequenceItem<Size>(
-                    new SizeTween(inactiveThumbSize, _transitionalThumbSize)
+                    new Tween<Size>(inactiveThumbSize, _transitionalThumbSize)
                         .Chain(new CurveTween(
-                            Curves.Flipped(Curves.Cubic(0.20, 0.00, 0.00, 1.00)))),
+                            new FlippedCurve(new Cubic(0.20, 0.00, 0.00, 1.00)))),
                     72.0),
                 new TweenSequenceItem<Size>(
-                    new SizeTween(_transitionalThumbSize, activeThumbSize)
+                    new Tween<Size>(_transitionalThumbSize, activeThumbSize)
                         .Chain(new CurveTween(
-                            Curves.Flipped(Curves.Cubic(0.31, 0.00, 0.56, 1.00)))),
+                            new FlippedCurve(new Cubic(0.31, 0.00, 0.56, 1.00)))),
                     11.0),
             ]);
         return sequence.Transform(_positionController.Value);
@@ -1897,18 +1897,5 @@ internal sealed class SwitchPainter : ToggleablePainter
             from.Width + ((to.Width - from.Width) * t),
             from.Height + ((to.Height - from.Height) * t));
     }
-
-    private sealed class SizeTween : Tween<Size>
-    {
-        public SizeTween(Size begin, Size end)
-        {
-            Begin = begin;
-            End = end;
-        }
-
-        public override Size Lerp(Size a, Size b, double t)
-        {
-            return LerpSize(a, b, t);
-        }
-    }
 }
+

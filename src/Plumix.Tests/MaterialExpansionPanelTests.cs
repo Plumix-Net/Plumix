@@ -204,9 +204,9 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         var crossFade = Assert.Single(harness.FindWidgets<AnimatedCrossFade>());
         Assert.Equal(TimeSpan.FromMilliseconds(800), crossFade.Duration);
         Assert.Equal(CrossFadeState.ShowFirst, crossFade.CrossFadeState);
-        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.FirstCurve(0.3), precision: 6);
-        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.SecondCurve(0.7), precision: 6);
-        Assert.Equal(Curves.FastOutSlowIn(0.5), crossFade.SizeCurve(0.5), precision: 6);
+        Assert.Equal(Curves.FastOutSlowIn.Transform(0.5), crossFade.FirstCurve.Transform(0.3), precision: 6);
+        Assert.Equal(Curves.FastOutSlowIn.Transform(0.5), crossFade.SecondCurve.Transform(0.7), precision: 6);
+        Assert.Equal(Curves.FastOutSlowIn.Transform(0.5), crossFade.SizeCurve.Transform(0.5), precision: 6);
 
         var inkWell = Assert.Single(harness.FindWidgets<InkWell>(), ink => ink.SplashColor == splash);
         Assert.Equal(highlight, inkWell.HighlightColor);

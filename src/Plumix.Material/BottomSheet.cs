@@ -22,7 +22,7 @@ public sealed class BottomSheet : StatefulWidget
     public static readonly TimeSpan EnterDuration = TimeSpan.FromMilliseconds(250);
     public static readonly TimeSpan ExitDuration = TimeSpan.FromMilliseconds(200);
 
-    internal static readonly Curve ModalBottomSheetCurve = Curves.LegacyDecelerate;
+    internal static readonly Curve ModalBottomSheetCurve = Easing.LegacyDecelerate;
     internal const double MinFlingVelocity = 700.0;
     internal const double CloseProgressThreshold = 0.5;
 
@@ -661,10 +661,10 @@ internal sealed class ModalBottomSheetWidgetState<T> : State<ModalBottomSheetWid
         double currentProgress = CurrentWidget.Route.Animation.Value;
         _sheetAnimation.Parent = new CurvedAnimation(
             CurrentWidget.Route.Animation,
-            curve: Curves.Split(
+            curve: new Split(
                 currentProgress,
                 endCurve: style?.Curve ?? BottomSheet.ModalBottomSheetCurve),
-            reverseCurve: Curves.Split(
+            reverseCurve: new Split(
                 currentProgress,
                 endCurve: style?.ReverseCurve ?? BottomSheet.ModalBottomSheetCurve));
     }

@@ -277,7 +277,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             child: new SizedBox());
 
         Assert.Equal(TimeSpan.FromMilliseconds(200), animatedTheme.Duration);
-        Assert.Equal(Curves.Linear(0.3), animatedTheme.Curve(0.3));
+        Assert.Equal(Curves.Linear.Transform(0.3), animatedTheme.Curve.Transform(0.3));
         Assert.Null(animatedTheme.OnEnd);
         Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedTheme(
             data: ThemeData.Light,
@@ -379,8 +379,8 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             return other is null
                 ? this
                 : new ColorThemeExtension(
-                    new ColorTween().Evaluate(t, First, other.First),
-                    new ColorTween().Evaluate(t, Second, other.Second));
+                    Color.Lerp(First, other.First, t)!,
+                    Color.Lerp(Second, other.Second, t)!);
         }
     }
 

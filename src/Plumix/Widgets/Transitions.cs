@@ -412,15 +412,7 @@ public sealed class RelativeRectTween : Tween<RelativeRect>
         }
     }
 
-    public override RelativeRect Evaluate(double t)
-    {
-        return RelativeRect.Lerp(Begin, End, t);
-    }
-
-    public override RelativeRect Lerp(RelativeRect a, RelativeRect b, double t)
-    {
-        return RelativeRect.Lerp(a, b, t);
-    }
+    public override RelativeRect Lerp(double t) => RelativeRect.Lerp(Begin, End, t);
 }
 
 public sealed class PositionedTransition : AnimatedWidget
@@ -558,7 +550,7 @@ public sealed class TextStyleTween : Plumix.Tween<TextStyle>
         End = end;
     }
 
-    public override TextStyle Lerp(TextStyle a, TextStyle b, double t) => TextStyle.Lerp(a, b, t)!;
+    public override TextStyle Lerp(double t) => TextStyle.Lerp(Begin, End, t)!;
 }
 
 public sealed class SliverFadeTransition : SingleChildRenderObjectWidget

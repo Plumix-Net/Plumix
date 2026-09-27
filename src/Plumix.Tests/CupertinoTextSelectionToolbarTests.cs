@@ -423,7 +423,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         Assert.Single(harness.FindWidgets<FadeTransition>().Where(fade => fade.Child is AnimatedSize));
         AnimatedSize animatedSize = Assert.Single(harness.FindWidgets<AnimatedSize>());
         Assert.Equal(TimeSpan.FromMilliseconds(125), animatedSize.Duration);
-        Assert.Equal(0.75, animatedSize.Curve(0.5));
+        Assert.Equal(0.75, animatedSize.Curve.Transform(0.5));
 
         GestureDetector detector = Assert.Single(
             harness.FindWidgets<GestureDetector>().Where(value => value.OnHorizontalDragEnd is not null));

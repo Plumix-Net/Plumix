@@ -209,7 +209,7 @@ public abstract class FloatingActionButtonAnimator
 
     private sealed class ScalingFabMotionAnimator : FloatingActionButtonAnimator
     {
-        private static readonly Curve ScaleCurve = Curves.Interval(0.5, 1.0, Curves.Ease);
+        private static readonly Curve ScaleCurve = new Interval(0.5, 1.0, Curves.Ease);
 
         // Animate the scale down from 1 to 0 in the first half of the animation, then scale back up from
         // 0 to 1 in the second half. The `flipped` curve is used so that the animation is symmetric.
@@ -217,7 +217,7 @@ public abstract class FloatingActionButtonAnimator
             begin: 1.0 - (FloatingActionButtonConstants.TurnInterval * 2.0),
             end: 1.0);
 
-        private static readonly Animatable<double> ThresholdCenterTween = new CurveTween(Curves.Threshold(0.5));
+        private static readonly Animatable<double> ThresholdCenterTween = new CurveTween(new Threshold(0.5));
 
         public override Point GetOffset(Point begin, Point end, double progress) => progress < 0.5 ? begin : end;
 
@@ -225,7 +225,7 @@ public abstract class FloatingActionButtonAnimator
         {
             ArgumentNullException.ThrowIfNull(parent);
             return new AnimationSwap<double>(
-                new ReverseAnimation(parent.Drive(new CurveTween(Curves.Flipped(ScaleCurve)))),
+                new ReverseAnimation(parent.Drive(new CurveTween(new FlippedCurve(ScaleCurve)))),
                 parent.Drive(new CurveTween(ScaleCurve)),
                 parent,
                 0.5);

@@ -98,19 +98,20 @@ public sealed class TransitionsTests : IDisposable
     [Fact]
     public void ThresholdCurveAndVectorTween_MatchFlutterEndpointAndInterpolationContracts()
     {
-        Curve threshold = Curves.Threshold(0.25);
+        Curve threshold = new Threshold(0.25);
 
-        Assert.Equal(0.0, threshold(0.0));
-        Assert.Equal(0.0, threshold(0.249));
-        Assert.Equal(1.0, threshold(0.25));
-        Assert.Equal(1.0, threshold(1.0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Curves.Threshold(-0.01));
-        Assert.Throws<ArgumentOutOfRangeException>(() => Curves.Threshold(1.01));
+        Assert.Equal(0.0, threshold.Transform(0.0));
+        Assert.Equal(0.0, threshold.Transform(0.249));
+        Assert.Equal(1.0, threshold.Transform(0.25));
+        Assert.Equal(1.0, threshold.Transform(1.0));
+        // Dart asserts the threshold range when the curve is evaluated, not when it is built.
+        Assert.Throws<AssertionError>(() => new Threshold(-0.01).Transform(0.5));
+        Assert.Throws<AssertionError>(() => new Threshold(1.01).Transform(0.5));
 
         var tween = new VectorTween(
             begin: new Vector(2.0, -4.0),
             end: new Vector(10.0, 8.0));
-        Assert.Equal(new Vector(4.0, -1.0), tween.Evaluate(0.25));
+        Assert.Equal(new Vector(4.0, -1.0), tween.Transform(0.25));
         Assert.False(AnimationStatus.Forward.IsCompleted());
         Assert.True(AnimationStatus.Completed.IsCompleted());
     }
@@ -431,9 +432,9 @@ public sealed class TransitionsTests : IDisposable
         var tween = new RelativeRectTween(
             begin: new RelativeRect(0, 10, 20, 30),
             end: new RelativeRect(40, 30, 10, 0));
-        Assert.Equal(new RelativeRect(10, 15, 17.5, 22.5), tween.Evaluate(0.25));
-        Assert.Equal(new RelativeRect(60, 40, 5, -15), tween.Evaluate(1.5));
-        Assert.Equal(RelativeRect.Fill, new RelativeRectTween().Evaluate(0.5));
+        Assert.Equal(new RelativeRect(10, 15, 17.5, 22.5), tween.Transform(0.25));
+        Assert.Equal(new RelativeRect(60, 40, 5, -15), tween.Transform(1.5));
+        Assert.Equal(RelativeRect.Fill, new RelativeRectTween().Transform(0.5));
 
         Assert.Throws<ArgumentNullException>(() => new PositionedTransition(null!, child));
         Assert.Throws<ArgumentNullException>(() => new PositionedTransition(relativeRectAnimation, null!));
@@ -698,18 +699,18 @@ public sealed class TransitionsTests : IDisposable
         Assert.Same(begin, tween.Begin);
         Assert.Same(end, tween.End);
 
-        var midpoint = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
+        var midpoint = Assert.IsType<BoxDecoration>(tween.Transform(0.5));
         Assert.Equal(new Color(0xFF506070), midpoint.Color);
         Assert.Equal(4, ((Plumix.Rendering.Border)midpoint.Border!).Top.Width);
         Assert.Equal(12, midpoint.BorderRadius!.Value.Radius);
 
         tween.Begin = null;
-        var scaled = Assert.IsType<BoxDecoration>(tween.Evaluate(0.5));
+        var scaled = Assert.IsType<BoxDecoration>(tween.Transform(0.5));
         Assert.Equal(0.5, scaled.Color!.A);
         Assert.Equal(3, ((Plumix.Rendering.Border)scaled.Border!).Top.Width);
 
         tween.End = null;
-        Assert.Throws<InvalidOperationException>(() => tween.Evaluate(0.5));
+        Assert.Throws<InvalidOperationException>(() => tween.Transform(0.5));
     }
 
     [Fact]

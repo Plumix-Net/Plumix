@@ -501,7 +501,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
         {
             return new MappedDoubleAnimation(
                 _controller!,
-                value => inverted ? 1.0 - curve(value) : curve(value));
+                value => inverted ? 1.0 - curve.Transform(value) : curve.Transform(value));
         }
 
         private void HandleStatusChanged(AnimationStatus status)

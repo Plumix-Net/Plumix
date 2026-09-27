@@ -343,7 +343,7 @@ public sealed class MaterialBanner : StatefulWidget
             }
 
             _heightAnimation = new CurvedAnimation(animation, Curves.FastOutSlowIn);
-            _slideOutCurvedAnimation = new CurvedAnimation(animation, Curves.Threshold(0.0));
+            _slideOutCurvedAnimation = new CurvedAnimation(animation, new Threshold(0.0));
         }
 
         private void HandleAnimationStatusChanged(AnimationStatus status)

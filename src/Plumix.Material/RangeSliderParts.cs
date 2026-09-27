@@ -350,8 +350,8 @@ public class RectangularRangeSliderTrackShape : BaseRangeSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Evaluate(enableAnimation!.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Evaluate(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation!.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
 
         (Point leftThumbOffset, Point rightThumbOffset) = textDirection switch
         {
@@ -484,8 +484,8 @@ public class RoundedRectRangeSliderTrackShape : BaseRangeSliderTrackShape
         var inactiveTrackColorTween = new ColorTween(
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Evaluate(enableAnimation.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Evaluate(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
 
         (Point leftThumbOffset, Point rightThumbOffset) = textDirection switch
         {
@@ -607,7 +607,7 @@ public class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
         Color? end = isBetweenThumbs
             ? sliderTheme.ActiveTickMarkColor
             : sliderTheme.InactiveTickMarkColor;
-        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Evaluate(enableAnimation.Value));
+        var paint = new SolidColorBrush(new ColorTween(begin: begin, end: end).Transform(enableAnimation.Value)!);
 
         // The tick marks are tiny circles that are the same height as the track.
         double tickMarkRadius =
@@ -691,7 +691,7 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
         var colorTween = new ColorTween(
             begin: sliderTheme.DisabledThumbColor,
             end: sliderTheme.ThumbColor);
-        double radius = radiusTween.Evaluate(enableAnimation.Value);
+        double radius = radiusTween.Transform(enableAnimation.Value);
         var elevationTween = new DoubleTween(begin: Elevation, end: PressedElevation);
 
         // Add a stroke of 1dp around the circle if this thumb would overlap
@@ -702,10 +702,10 @@ public class RoundRangeSliderThumbShape : RangeSliderThumbShape
             canvas.DrawCircle(null, strokePaint, center, radius);
         }
 
-        Color color = colorTween.Evaluate(enableAnimation.Value);
+        Color color = colorTween.Transform(enableAnimation.Value)!;
 
         double evaluatedElevation = isPressed!.Value
-            ? elevationTween.Evaluate(activationAnimation.Value)
+            ? elevationTween.Transform(activationAnimation.Value)
             : Elevation;
         var shadowPath = new Path();
         shadowPath.AddArc(
@@ -964,8 +964,8 @@ public class GappedRangeSliderTrackShape : BaseRangeSliderTrackShape
             begin: sliderTheme.DisabledInactiveTrackColor,
             end: sliderTheme.InactiveTrackColor);
 
-        var activePaint = new SolidColorBrush(activeTrackColorTween.Evaluate(enableAnimation.Value));
-        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Evaluate(enableAnimation.Value));
+        var activePaint = new SolidColorBrush(activeTrackColorTween.Transform(enableAnimation.Value)!);
+        var inactivePaint = new SolidColorBrush(inactiveTrackColorTween.Transform(enableAnimation.Value)!);
 
         Rect trackRect = GetPreferredRect(
             parentBox: parentBox,
@@ -1123,7 +1123,7 @@ public class HandleRangeSliderThumbShape : RangeSliderThumbShape
         var colorTween = new ColorTween(
             begin: sliderTheme.DisabledThumbColor,
             end: sliderTheme.ThumbColor);
-        Color color = colorTween.Evaluate(enableAnimation.Value);
+        Color color = colorTween.Transform(enableAnimation.Value)!;
         Canvas canvas = context.Canvas;
 
         Size thumbSize = sliderTheme.ThumbSize!.Resolve(

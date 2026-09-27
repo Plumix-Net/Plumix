@@ -979,6 +979,6 @@ public sealed record ColorScheme
 
     private static Color ToColor(RgbColor color) => Color.FromARGB(0xFF, color.Red, color.Green, color.Blue);
 
-    private static Color LerpColor(Color a, Color b, double t) => new ColorTween().Evaluate(t, a, b);
+    private static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t)!;
 
 }

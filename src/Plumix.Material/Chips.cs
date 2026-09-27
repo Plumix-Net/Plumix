@@ -1239,7 +1239,7 @@ public sealed class RawChip : StatefulWidget
                 && (_selectionController?.IsAnimating == true || _selectionProgress is > 0 and < 1))
             {
                 var from = unselected ?? selectedColor.WithAlpha(0);
-                return new ColorTween().Evaluate(_selectionProgress, from, selectedColor!);
+                return Plumix.UI.Color.Lerp(from, selectedColor!, _selectionProgress)!;
             }
 
             return target ?? Colors.Transparent;
@@ -1372,9 +1372,9 @@ public sealed class RawChip : StatefulWidget
                 Curves.FastOutSlowIn,
                 Curves.FastOutSlowIn);
             Curve checkmarkCurve = _selectionController!.Status == AnimationStatus.Reverse
-                ? Curves.Interval(1.0 - (50.0 / 195.0), 1.0, Curves.FastOutSlowIn)
-                : Curves.Interval(1.0 - (150.0 / 195.0), 1.0, Curves.FastOutSlowIn);
-            _checkmarkProgress = checkmarkCurve(_selectionController.Value);
+                ? new Interval(1.0 - (50.0 / 195.0), 1.0, Curves.FastOutSlowIn)
+                : new Interval(1.0 - (150.0 / 195.0), 1.0, Curves.FastOutSlowIn);
+            _checkmarkProgress = checkmarkCurve.Transform(_selectionController.Value);
         }
 
         private void UpdateAvatarDrawerProgress()
@@ -1384,7 +1384,7 @@ public sealed class RawChip : StatefulWidget
                 _avatarDrawerController!,
                 style,
                 Curves.FastOutSlowIn,
-                Curves.Interval(1.0 - (100.0 / 195.0), 1.0, Curves.FastOutSlowIn));
+                new Interval(1.0 - (100.0 / 195.0), 1.0, Curves.FastOutSlowIn));
         }
 
         private void UpdateDeleteProgress()
@@ -1417,7 +1417,7 @@ public sealed class RawChip : StatefulWidget
             Curve curve = reversing
                 ? style?.ReverseCurve ?? style?.Curve ?? defaultReverseCurve
                 : style?.Curve ?? defaultCurve;
-            return curve(Math.Clamp(controller.Value, 0.0, 1.0));
+            return curve.Transform(Math.Clamp(controller.Value, 0.0, 1.0));
         }
 
         private static Color ResolveDefaultCheckmarkColor(Brightness brightness, bool hasAvatar)

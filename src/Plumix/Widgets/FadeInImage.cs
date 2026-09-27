@@ -505,7 +505,7 @@ public sealed class FadeInImage : StatefulWidget
             }
 
             double progress = (elapsed - fadeOutMilliseconds) / fadeInMilliseconds;
-            return Lerp(begin, 1.0, CurrentWidget.FadeInCurve(Math.Clamp(progress, 0.0, 1.0)));
+            return Lerp(begin, 1.0, CurrentWidget.FadeInCurve.Transform(Math.Clamp(progress, 0.0, 1.0)));
         }
 
         private double EvaluatePlaceholder(double value, double begin)
@@ -519,7 +519,7 @@ public sealed class FadeInImage : StatefulWidget
 
             double elapsed = value * (fadeOutMilliseconds + fadeInMilliseconds);
             double progress = elapsed / fadeOutMilliseconds;
-            return Lerp(begin, 0.0, CurrentWidget.FadeOutCurve(Math.Clamp(progress, 0.0, 1.0)));
+            return Lerp(begin, 0.0, CurrentWidget.FadeOutCurve.Transform(Math.Clamp(progress, 0.0, 1.0)));
         }
 
         private void CompleteSynchronously()

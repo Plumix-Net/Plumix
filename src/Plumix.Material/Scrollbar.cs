@@ -193,10 +193,10 @@ public sealed class Scrollbar : StatelessWidget
                         return _scrollbarTheme.ThumbColor?.Resolve(states) ?? hoverColor;
                     }
 
-                    return new ColorTween().Evaluate(
-                        _hoverAnimationController.Value,
+                    return Color.Lerp(
                         _scrollbarTheme.ThumbColor?.Resolve(states) ?? idleColor,
-                        _scrollbarTheme.ThumbColor?.Resolve(states) ?? hoverColor);
+                        _scrollbarTheme.ThumbColor?.Resolve(states) ?? hoverColor,
+                        _hoverAnimationController.Value)!;
                 });
             }
         }

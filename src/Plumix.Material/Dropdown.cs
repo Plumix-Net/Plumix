@@ -224,13 +224,13 @@ internal sealed class DropdownMenuItemButtonState<T> : State<DropdownMenuItemBut
         double unit = 0.5 / (route.Items.Count + 1.5);
         if (widget.ItemIndex == route.SelectedIndex)
         {
-            _opacityAnimation = new CurvedAnimation(route.Animation, Curves.Threshold(0.0));
+            _opacityAnimation = new CurvedAnimation(route.Animation, new Threshold(0.0));
             return;
         }
 
         double start = Math.Clamp(0.5 + ((widget.ItemIndex + 1) * unit), 0.0, 1.0);
         double end = Math.Clamp(start + (1.5 * unit), 0.0, 1.0);
-        _opacityAnimation = new CurvedAnimation(route.Animation, Curves.Interval(start, end));
+        _opacityAnimation = new CurvedAnimation(route.Animation, new Interval(start, end));
     }
 
     private void HandleFocusChange(bool focused)
@@ -317,8 +317,8 @@ internal sealed class DropdownMenuPanelState<T> : State<DropdownMenuPanel<T>>
         // The `_fadeOpacity`/`_resize` animations are created here, not in `build`, so that their
         // curve direction survives a reversal (Dart keeps them in state for the same reason).
         Animation<double> animation = CurrentWidget.Route.Animation;
-        _fadeOpacity = new CurvedAnimation(animation, Curves.Interval(0.0, 0.25), Curves.Interval(0.75, 1.0));
-        _resize = new CurvedAnimation(animation, Curves.Interval(0.25, 0.5), Curves.Threshold(0.0));
+        _fadeOpacity = new CurvedAnimation(animation, new Interval(0.0, 0.25), new Interval(0.75, 1.0));
+        _resize = new CurvedAnimation(animation, new Interval(0.25, 0.5), new Threshold(0.0));
     }
 
     public override void Dispose()

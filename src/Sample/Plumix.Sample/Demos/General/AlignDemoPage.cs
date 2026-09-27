@@ -65,14 +65,13 @@ internal sealed class AlignDemoPageState : State
             end: new RelativeRect(160, 72, 10, 18));
         _explicitPositionAnimation = new DerivedAnimation<RelativeRect>(
             _explicitTransitionsController,
-            positionTween.Evaluate);
-        var rectTween = new RectTween();
+            positionTween.Transform);
+        var rectTween = new RectTween(
+            begin: new Rect(12, 74, 70, 40),
+            end: new Rect(158, 14, 70, 40));
         _explicitRelativePositionAnimation = new DerivedAnimation<Rect?>(
             _explicitTransitionsController,
-            value => rectTween.Evaluate(
-                value,
-                new Rect(12, 74, 70, 40),
-                new Rect(158, 14, 70, 40)));
+            rectTween.Transform);
         _explicitAlignmentAnimation = new DerivedAnimation<AlignmentGeometry>(
             _explicitTransitionsController,
             value => new Alignment(-1.0 + (2.0 * value), -1.0 + (2.0 * value)));

@@ -66,8 +66,8 @@ public sealed record AnimationStyle(
         return new AnimationStyle(
             Duration: LerpValue(a?.Duration, b?.Duration, t, LerpDuration),
             ReverseDuration: LerpValue(a?.ReverseDuration, b?.ReverseDuration, t, LerpDuration),
-            Curve: LerpValue(a?.Curve, b?.Curve, t, LerpedCurve),
-            ReverseCurve: LerpValue(a?.ReverseCurve, b?.ReverseCurve, t, LerpedCurve));
+            Curve: LerpValue(a?.Curve, b?.Curve, t, LerpCurve),
+            ReverseCurve: LerpValue(a?.ReverseCurve, b?.ReverseCurve, t, LerpCurve));
     }
 
     private static TimeSpan? LerpValue(
@@ -106,13 +106,37 @@ public sealed record AnimationStyle(
                                   * TimeSpan.TicksPerMicrosecond);
     }
 
+    private static Curve LerpCurve(Curve? a, Curve? b, double t) => new LerpedCurve(a, b, t);
+
     /// Ports Dart's private `_LerpedCurve`: the weighted average of the two
     /// curves' transforms, with a null curve standing in as `Curves.linear`.
-    private static Curve LerpedCurve(Curve? a, Curve? b, double t)
+    private sealed class LerpedCurve(Curve? a, Curve? b, double t) : Curve
     {
-        Curve first = a ?? Curves.Linear;
-        Curve second = b ?? Curves.Linear;
-        return progress => (first(progress) * (1.0 - t)) + (second(progress) * t);
+        public Curve First { get; } = a ?? Curves.Linear;
+
+        public Curve Second { get; } = b ?? Curves.Linear;
+
+        private readonly double _t = t;
+
+        public override double Transform(double t)
+        {
+            double a = First.Transform(t);
+            double b = Second.Transform(t);
+
+            return (a * (1.0 - _t)) + (b * _t);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is LerpedCurve other
+                   && Equals(other.First, First)
+                   && Equals(other.Second, Second)
+                   && other._t == _t;
+        }
+
+        public override int GetHashCode() => HashCode.Combine(First, Second, _t);
+
+        public override string ToString() => $"_LerpedCurve({First}, {Second}, t: {_t})";
     }
 
     /// <inheritdoc />

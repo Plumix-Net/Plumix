@@ -393,6 +393,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/Animation.cs`
   - `src/Plumix/AnimationController.cs`
+  - `src/Plumix/Curves.cs`, `src/Plumix/Tween.cs`, `src/Plumix/TweenSequence.cs`
   - `src/Plumix/Widgets/TickerProvider.cs`
   - `src/Plumix/Widgets/Transitions.cs`
   - `src/Plumix/Rendering/Decoration.cs`

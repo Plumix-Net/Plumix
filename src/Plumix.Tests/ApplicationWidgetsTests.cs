@@ -459,7 +459,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         Assert.Equal(ThemeMode.System, app.ThemeMode);
         Assert.Equal(AnimatedTheme.DefaultDuration, app.ThemeAnimationDuration);
-        Assert.Equal(Curves.Linear(0.37), app.ThemeAnimationCurve(0.37));
+        Assert.Equal(Curves.Linear.Transform(0.37), app.ThemeAnimationCurve.Transform(0.37));
         Assert.Single(app.SupportedLocales);
         Assert.False(app.DebugShowMaterialGrid);
 

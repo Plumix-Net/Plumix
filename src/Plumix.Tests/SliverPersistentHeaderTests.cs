@@ -33,7 +33,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         var snap = new FloatingHeaderSnapConfiguration();
         Assert.Equal(TimeSpan.FromMilliseconds(300), snap.Duration);
-        Assert.Equal(Curves.Ease(0.4), snap.Curve(0.4));
+        Assert.Equal(Curves.Ease.Transform(0.4), snap.Curve.Transform(0.4));
 
         var showOnScreen = new PersistentHeaderShowOnScreenConfiguration();
         Assert.Equal(double.NegativeInfinity, showOnScreen.MinShowOnScreenExtent);
@@ -447,7 +447,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         if (snapConfiguration is not null)
         {
             Assert.Equal(TimeSpan.FromMilliseconds(200), snapConfiguration.Duration);
-            Assert.Equal(Curves.EaseOut(0.4), snapConfiguration.Curve(0.4));
+            Assert.Equal(Curves.EaseOut.Transform(0.4), snapConfiguration.Curve.Transform(0.4));
             Assert.Equal(double.PositiveInfinity, showOnScreen!.MinShowOnScreenExtent);
         }
 

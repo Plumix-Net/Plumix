@@ -29,8 +29,8 @@ public sealed class AnimatedSwitcherTests : IDisposable
 
         Assert.Equal(TimeSpan.FromMilliseconds(240), switcher.Duration);
         Assert.Null(switcher.ReverseDuration);
-        Assert.Equal(Curves.Linear(0.35), switcher.SwitchInCurve(0.35));
-        Assert.Equal(Curves.Linear(0.35), switcher.SwitchOutCurve(0.35));
+        Assert.Equal(Curves.Linear.Transform(0.35), switcher.SwitchInCurve.Transform(0.35));
+        Assert.Equal(Curves.Linear.Transform(0.35), switcher.SwitchOutCurve.Transform(0.35));
         Assert.IsType<FadeTransition>(switcher.TransitionBuilder(switcher.Child!, new TestAnimation(0.4)));
         var defaultLayout = Assert.IsType<Stack>(switcher.LayoutBuilder(switcher.Child, []));
         Assert.Equal(Clip.HardEdge, defaultLayout.ClipBehavior);
@@ -179,9 +179,9 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal((AlignmentGeometry)Alignment.TopCenter, crossFade.Alignment);
         Assert.True(crossFade.ExcludeBottomFocus);
         Assert.Null(crossFade.OnEnd);
-        Assert.Equal(Curves.Linear(0.25), crossFade.FirstCurve(0.25));
-        Assert.Equal(Curves.Linear(0.25), crossFade.SecondCurve(0.25));
-        Assert.Equal(Curves.Linear(0.25), crossFade.SizeCurve(0.25));
+        Assert.Equal(Curves.Linear.Transform(0.25), crossFade.FirstCurve.Transform(0.25));
+        Assert.Equal(Curves.Linear.Transform(0.25), crossFade.SecondCurve.Transform(0.25));
+        Assert.Equal(Curves.Linear.Transform(0.25), crossFade.SizeCurve.Transform(0.25));
 
         var topKey = new ValueKey<string>("top");
         var bottomKey = new ValueKey<string>("bottom");

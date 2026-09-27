@@ -8,6 +8,19 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Curve` is Dart's class hierarchy, not a delegate: call `curve.Transform(t)` (curves.dart).
+- Breaking: `Curves.X` are shared `Cubic`/`Curve` instances; `Curves.Cubic/Interval/Flipped/Split...(...)` are gone.
+- Breaking: `Curves.EaseOutCubic` is Dart's `Cubic(0.215, 0.61, 0.355, 1.0)`; `Transform` asserts [0, 1] (curves.dart).
+- `SawTooth`, `CatmullRomSpline`/`CatmullRomCurve`, `Curve2D`, the Penner/bounce/elastic `Curves` (curves.dart).
+- Breaking: `Tween.Transform` returns `Begin`/`End` at 0/1 and never clamps; `Lerp(double t)` replaces `Lerp(a, b, t)`.
+- Breaking: `Tween<T>` is concrete with Dart's default lerp and errors; `Evaluate(double)` is `Transform` (tween.dart).
+- Breaking: `ColorTween`/`RectTween`/`SizeTween` are `Tween<Color?>`/`<Rect?>`/`<Size?>` with Dart's null lerps.
+- Breaking: `CurveTween` is an `Animatable<double>`; `IntTween`, `StepTween`, `Animatable.FromCallback` (tween.dart).
+- Breaking: `TweenSequence` asserts like Dart; `TweenSequenceItem` is a class; `FlippedTweenSequence` (tween_sequence).
+- Breaking: `CurvedAnimation` forwards listeners to its parent, keeps its first direction until settled (animations).
+- Breaking: `CreateRectTween` is `Tween<Rect?> (Rect?, Rect?)`, as in Dart (heroes.dart).
+- `Durations` and `Easing` (material motion.dart); `Diagnostics.ToStringAsFixed` breaks exact ties away from zero.
+- Flutter's `curves_test.dart`, `tween_test.dart` and the tween/curve cases of `animations_test.dart` ported.
 - Breaking: `Scrollable` requires a `View` without a `MediaQuery` ratio (widgets/scrollable.dart).
 - Breaking: viewports visit semantics children in paint order; directional traversal sorts them (rendering/viewport.dart).
 - Breaking: Material debug checks now cover localizations, Scaffold and ScaffoldMessenger (debug.dart).

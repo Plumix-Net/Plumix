@@ -74,9 +74,9 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     [Fact]
     public void EmphasizedCurveAndTweenSequence_MatchFlutterControlPointsAndWeights()
     {
-        Assert.Equal(0.0, Curves.EaseInOutCubicEmphasized(0.0), precision: 6);
-        Assert.Equal(0.4, Curves.EaseInOutCubicEmphasized(0.166666), precision: 5);
-        Assert.Equal(1.0, Curves.EaseInOutCubicEmphasized(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.EaseInOutCubicEmphasized.Transform(0.0), precision: 6);
+        Assert.Equal(0.4, Curves.EaseInOutCubicEmphasized.Transform(0.166666), precision: 5);
+        Assert.Equal(1.0, Curves.EaseInOutCubicEmphasized.Transform(1.0), precision: 6);
 
         var sequence = new TweenSequence<double>(
         [
@@ -87,13 +87,13 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Assert.Equal(0.4, sequence.Transform(0.166666), precision: 5);
         Assert.Equal(1.0, sequence.Transform(1.0), precision: 6);
 
-        Assert.Equal(0.0, Curves.FastEaseInToSlowEaseOut(0.0), precision: 6);
-        Assert.Equal(0.541, Curves.FastEaseInToSlowEaseOut(0.198), precision: 5);
-        Assert.Equal(1.0, Curves.FastEaseInToSlowEaseOut(1.0), precision: 6);
-        Assert.Equal(0.0, Curves.EaseInToLinear(0.0), precision: 6);
-        Assert.Equal(1.0, Curves.EaseInToLinear(1.0), precision: 6);
-        Assert.Equal(0.0, Curves.LinearToEaseOut(0.0), precision: 6);
-        Assert.Equal(1.0, Curves.LinearToEaseOut(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.FastEaseInToSlowEaseOut.Transform(0.0), precision: 6);
+        Assert.Equal(0.541, Curves.FastEaseInToSlowEaseOut.Transform(0.198), precision: 5);
+        Assert.Equal(1.0, Curves.FastEaseInToSlowEaseOut.Transform(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.EaseInToLinear.Transform(0.0), precision: 6);
+        Assert.Equal(1.0, Curves.EaseInToLinear.Transform(1.0), precision: 6);
+        Assert.Equal(0.0, Curves.LinearToEaseOut.Transform(0.0), precision: 6);
+        Assert.Equal(1.0, Curves.LinearToEaseOut.Transform(1.0), precision: 6);
     }
 
     [Theory]

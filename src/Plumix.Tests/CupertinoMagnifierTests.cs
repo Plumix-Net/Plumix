@@ -129,7 +129,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
 
         Assert.Same(controller, magnifier.Controller);
         Assert.Same(info, magnifier.MagnifierInfo);
-        Assert.Equal(Curves.EaseOut(0.25), magnifier.AnimationCurve(0.25), 9);
+        Assert.Equal(Curves.EaseOut.Transform(0.25), magnifier.AnimationCurve.Transform(0.25), 9);
         Assert.Equal(10.0, magnifier.DragResistance);
         Assert.Equal(48.0, magnifier.HideBelowThreshold);
         Assert.Equal(10.0, magnifier.HorizontalScreenEdgePadding);
@@ -162,7 +162,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
 
         AnimatedPositioned positioned = Assert.Single(harness.FindWidgets<AnimatedPositioned>());
         Assert.Equal(TimeSpan.FromMilliseconds(45), positioned.Duration);
-        Assert.Equal(Curves.EaseOut(0.25), positioned.Curve(0.25), 9);
+        Assert.Equal(Curves.EaseOut.Transform(0.25), positioned.Curve.Transform(0.25), 9);
         Assert.Equal(
             ReasonableTextField.Center.X - (CupertinoMagnifier.DefaultSize.Width / 2.0),
             positioned.Left!.Value,
@@ -300,10 +300,10 @@ public sealed class CupertinoMagnifierTests : IDisposable
         harness.Pump(ScreenSize);
 
         CupertinoMagnifier magnifier = Assert.Single(harness.FindWidgets<CupertinoMagnifier>());
-        Assert.Equal(Curves.EaseOut(0.5), magnifier.InOutAnimation!.Value, 6);
+        Assert.Equal(Curves.EaseOut.Transform(0.5), magnifier.InOutAnimation!.Value, 6);
 
         RawMagnifier raw = Assert.Single(harness.FindWidgets<RawMagnifier>());
-        Assert.Equal(Curves.EaseOut(0.5), raw.Decoration.Opacity, 6);
+        Assert.Equal(Curves.EaseOut.Transform(0.5), raw.Decoration.Opacity, 6);
     }
 
     [Fact]

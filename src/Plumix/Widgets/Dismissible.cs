@@ -597,7 +597,7 @@ public sealed class Dismissible : StatefulWidget
             _resizeController.AddStatusListener(HandleResizeStatusChanged);
             _resizeAnimation = new MappedDoubleAnimation(
                 _resizeController,
-                value => 1.0 - Curves.Ease(Math.Clamp((value - 0.4) / 0.6, 0.0, 1.0)));
+                value => 1.0 - Curves.Ease.Transform(Math.Clamp((value - 0.4) / 0.6, 0.0, 1.0)));
             SetState(() => { });
             _resizeController.Forward();
         }

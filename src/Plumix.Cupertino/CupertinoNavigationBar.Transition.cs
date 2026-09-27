@@ -10,28 +10,6 @@ namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/nav_bar.dart
 
-/// <summary>Dart's `Tween&lt;Offset&gt;` instantiation used by the nav bar transition.</summary>
-internal sealed class NavBarPointTween : Plumix.Tween<Point>
-{
-    public NavBarPointTween(Point? begin = null, Point? end = null)
-    {
-        if (begin.HasValue)
-        {
-            SetBeginValue(begin.Value);
-        }
-
-        if (end.HasValue)
-        {
-            SetEndValue(end.Value);
-        }
-    }
-
-    public override Point Lerp(Point a, Point b, double t)
-    {
-        return new Point(a.X + ((b.X - a.X) * t), a.Y + ((b.Y - a.Y) * t));
-    }
-}
-
 /// <summary>
 /// Dart's `_FixedSizeSlidingTransition`: imposes a fixed size on its child and shifts it in the
 /// parent stack, driven by `offsetAnimation`.
@@ -384,7 +362,7 @@ internal sealed class NavigationBarComponentsTransition
         Widget child,
         Curve? curve = null)
     {
-        curve ??= Curves.Interval(0.0, 1.0);
+        curve ??= new Interval(0.0, 1.0);
         var fromBox = (RenderBox)fromKey.CurrentContext!.FindRenderObject()!;
         var toBox = (RenderBox)toKey.CurrentContext!.FindRenderObject()!;
 
@@ -408,7 +386,7 @@ internal sealed class NavigationBarComponentsTransition
             isLtr ? fromBoxMargin.Left : fromBoxMargin.Right,
             fromBoxMargin.Top);
 
-        var anchorMovementInTransitionBox = new NavBarPointTween(
+        var anchorMovementInTransitionBox = new Plumix.Tween<Point>(
             begin: fromOriginInTransitionBox,
             end: fromOriginInTransitionBox + translation);
 
@@ -422,12 +400,12 @@ internal sealed class NavigationBarComponentsTransition
 
     public Animation<double> FadeInFrom(double t, Curve? curve = null)
     {
-        return Animation.Drive(FadeInTween.Chain(new CurveTween(Curves.Interval(t, 1.0, curve ?? Curves.EaseIn))));
+        return Animation.Drive(FadeInTween.Chain(new CurveTween(new Interval(t, 1.0, curve ?? Curves.EaseIn))));
     }
 
     public Animation<double> FadeOutBy(double t, Curve? curve = null)
     {
-        return Animation.Drive(FadeOutTween.Chain(new CurveTween(Curves.Interval(0.0, t, curve ?? Curves.EaseOut))));
+        return Animation.Drive(FadeOutTween.Chain(new CurveTween(new Interval(0.0, t, curve ?? Curves.EaseOut))));
     }
 
     /// <summary>The parent of the hero animation, which is the route animation.</summary>
@@ -446,7 +424,7 @@ internal sealed class NavigationBarComponentsTransition
 
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
                 ? Curves.FastEaseInToSlowEaseOut
-                : Curves.Flipped(Curves.FastEaseInToSlowEaseOut);
+                : new FlippedCurve(Curves.FastEaseInToSlowEaseOut);
 
             var pageTransitionAnimation = RouteAnimation.Drive(
                 new CurveTween(UserGestureInProgress ? Curves.Linear : animationCurve));
@@ -608,7 +586,7 @@ internal sealed class NavigationBarComponentsTransition
                     fromNavBarBox: BottomNavBarBox,
                     toKey: TopComponents.BackLabelKey,
                     toNavBarBox: TopNavBarBox,
-                    curve: Curves.Interval(0.0, Animation.Status == AnimationStatus.Forward ? 0.7 : 1.0),
+                    curve: new Interval(0.0, Animation.Status == AnimationStatus.Forward ? 0.7 : 1.0),
                     child: new FadeTransition(
                         opacity: FadeOutBy(0.6),
                         child: new Align(
@@ -680,7 +658,7 @@ internal sealed class NavigationBarComponentsTransition
             Widget child = bottomNavBarBottom.Child;
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
                 ? NavBarStatics.BottomNavBarHeaderTransitionCurve
-                : Curves.Flipped(NavBarStatics.BottomNavBarHeaderTransitionCurve);
+                : new FlippedCurve(NavBarStatics.BottomNavBarHeaderTransitionCurve);
 
             // Fade out only if this is not a CupertinoSliverNavigationBar.search to
             // CupertinoSliverNavigationBar.search transition.
@@ -709,7 +687,7 @@ internal sealed class NavigationBarComponentsTransition
 
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
                 ? Curves.FastEaseInToSlowEaseOut
-                : Curves.Flipped(Curves.FastEaseInToSlowEaseOut);
+                : new FlippedCurve(Curves.FastEaseInToSlowEaseOut);
 
             var pageTransitionAnimation = RouteAnimation.Drive(
                 new CurveTween(UserGestureInProgress ? Curves.Linear : animationCurve));
@@ -768,13 +746,13 @@ internal sealed class NavigationBarComponentsTransition
             Curve effectivePositionCurve;
             if (Animation.Status == AnimationStatus.Forward)
             {
-                effectiveScaleCurve = Curves.Interval(0.0, 0.2);
-                effectivePositionCurve = Curves.Interval(0.0, 0.5);
+                effectiveScaleCurve = new Interval(0.0, 0.2);
+                effectivePositionCurve = new Interval(0.0, 0.5);
             }
             else
             {
-                effectiveScaleCurve = Curves.Interval(0.8, 1.0);
-                effectivePositionCurve = Curves.Interval(0.5, 1.0);
+                effectiveScaleCurve = new Interval(0.8, 1.0);
+                effectivePositionCurve = new Interval(0.5, 1.0);
             }
 
             // If it's the first page with a back chevron, shrink and shift in slightly from the
@@ -796,7 +774,7 @@ internal sealed class NavigationBarComponentsTransition
             return new PositionedTransition(
                 rect: RouteAnimation.Drive(new CurveTween(effectivePositionCurve)).Drive(positionTween),
                 child: new FadeTransition(
-                    opacity: RouteAnimation.Drive(new CurveTween(Curves.Interval(
+                    opacity: RouteAnimation.Drive(new CurveTween(new Interval(
                         // Fades faster going back from the first page with a back chevron.
                         bottomBackChevron == null && Animation.Status != AnimationStatus.Forward
                             ? 0.9
@@ -843,7 +821,7 @@ internal sealed class NavigationBarComponentsTransition
                     fromNavBarBox: BottomNavBarBox,
                     toKey: TopComponents.BackLabelKey,
                     toNavBarBox: TopNavBarBox,
-                    curve: Curves.Interval(0.0, Animation.Status == AnimationStatus.Forward ? 0.7 : 1.0),
+                    curve: new Interval(0.0, Animation.Status == AnimationStatus.Forward ? 0.7 : 1.0),
                     child: new FadeTransition(
                         opacity: midClickOpacity ?? FadeInFrom(0.4),
                         child: new DefaultTextStyleTransition(
@@ -904,7 +882,7 @@ internal sealed class NavigationBarComponentsTransition
             var toAnchorInTransitionBox = new Point(isLtr ? to.Left : to.Right, to.Top);
 
             // Shift in from the trailing edge of the screen.
-            var anchorMovementInTransitionBox = new NavBarPointTween(
+            var anchorMovementInTransitionBox = new Plumix.Tween<Point>(
                 begin: new Point(
                     // The "width / 2" here makes the middle widget's horizontal center on the
                     // trailing edge of the top nav bar.
@@ -958,7 +936,7 @@ internal sealed class NavigationBarComponentsTransition
 
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
                 ? NavBarStatics.TopNavBarHeaderTransitionCurve
-                : Curves.Flipped(NavBarStatics.TopNavBarHeaderTransitionCurve);
+                : new FlippedCurve(NavBarStatics.TopNavBarHeaderTransitionCurve);
 
             return new PositionedTransition(
                 // The large title animates linearly during a backswipe by a user gesture.
@@ -995,7 +973,7 @@ internal sealed class NavigationBarComponentsTransition
 
             Curve animationCurve = Animation.Status == AnimationStatus.Forward
                 ? NavBarStatics.TopNavBarHeaderTransitionCurve
-                : Curves.Flipped(NavBarStatics.TopNavBarHeaderTransitionCurve);
+                : new FlippedCurve(NavBarStatics.TopNavBarHeaderTransitionCurve);
 
             // Fade in only if this is not a CupertinoSliverNavigationBar.search to
             // CupertinoSliverNavigationBar.search transition.
@@ -1021,14 +999,14 @@ internal static class NavBarTransitions
     /// Dart's `_linearTranslateWithLargestRectSizeTween`: moves between the static bars but keeps a
     /// constant size that's the bigger of both navigation bars.
     /// </summary>
-    public static Plumix.Tween<Rect> LinearTranslateWithLargestRectSizeTween(Rect begin, Rect end)
+    public static Plumix.RectTween LinearTranslateWithLargestRectSizeTween(Rect? begin, Rect? end)
     {
         var largestSize = new Size(
-            Math.Max(begin.Size.Width, end.Size.Width),
-            Math.Max(begin.Size.Height, end.Size.Height));
+            Math.Max(begin!.Value.Size.Width, end!.Value.Size.Width),
+            Math.Max(begin.Value.Size.Height, end.Value.Size.Height));
         return new Plumix.RectTween(
-            begin: new Rect(begin.TopLeft, largestSize),
-            end: new Rect(end.TopLeft, largestSize));
+            begin: new Rect(begin.Value.TopLeft, largestSize),
+            end: new Rect(end.Value.TopLeft, largestSize));
     }
 
     /// <summary>Dart's `_navBarHeroLaunchPadBuilder`.</summary>

@@ -622,10 +622,7 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
 
         if (_controller == null)
         {
-            _controller = AnimationController.Unbounded(
-                value: _effectiveScrollOffset ?? 0.0,
-                vsync: _vsync,
-                duration: duration <= TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration);
+            _controller = new AnimationController(vsync: _vsync, duration: duration);
             _controller.AddListener(HandleAnimationTick);
         }
 

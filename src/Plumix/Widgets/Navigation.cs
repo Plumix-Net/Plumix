@@ -1472,7 +1472,7 @@ public abstract class ModalRoute : TransitionRoute
         }
 
         public override Color? Value => Color.FromARGB(
-            (byte)Math.Round(_color.Alpha * _curve(Math.Clamp(_parent.Value, 0.0, 1.0))),
+            (byte)Math.Round(_color.Alpha * _curve.Transform(Math.Clamp(_parent.Value, 0.0, 1.0))),
             _color.Red,
             _color.Green,
             _color.Blue);

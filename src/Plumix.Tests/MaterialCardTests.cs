@@ -244,7 +244,7 @@ public sealed class MaterialCardTests
         Assert.Equal(new Thickness(6, 8, 10, 12), midpoint.Margin);
         Assert.Equal(8, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
         Assert.Equal(2, ShapeBorderGeometry.SideOrNone(midpoint.Shape).Width);
-        Assert.Equal(new ColorTween().Evaluate(0.5, Colors.Red, Colors.Blue), midpoint.Color);
+        Assert.Equal(Color.Lerp(Colors.Red, Colors.Blue, 0.5)!, midpoint.Color);
 
         CardThemeData scaled = Assert.IsType<CardThemeData>(
             CardThemeData.Lerp(null, new CardThemeData(
@@ -284,7 +284,7 @@ public sealed class MaterialCardTests
 
         ThemeData midpoint = ThemeData.Lerp(a, b, 0.5);
 
-        Assert.Equal(new ColorTween().Evaluate(0.5, Colors.Red, Colors.Blue), midpoint.CardTheme.Color);
+        Assert.Equal(Color.Lerp(Colors.Red, Colors.Blue, 0.5)!, midpoint.CardTheme.Color);
         Assert.Equal(6, midpoint.CardTheme.Elevation);
         Assert.Equal(new Thickness(6), midpoint.CardTheme.Margin);
     }

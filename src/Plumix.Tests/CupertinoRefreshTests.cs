@@ -49,7 +49,7 @@ public sealed class CupertinoRefreshTests
         Assert.Equal(0.0, dragPosition.Left);
         Assert.Equal(0.0, dragPosition.Right);
         var dragOpacity = Assert.IsType<Opacity>(dragPosition.Child);
-        Assert.Equal(Curves.Interval(0.0, 0.35, Curves.EaseInOut)(0.5), dragOpacity.Value, 8);
+        Assert.Equal(new Interval(0.0, 0.35, Curves.EaseInOut).Transform(0.5), dragOpacity.Value, 8);
         var partial = Assert.IsType<CupertinoActivityIndicator>(dragOpacity.Child);
         Assert.False(partial.Animating);
         Assert.Equal(14.0, partial.Radius);

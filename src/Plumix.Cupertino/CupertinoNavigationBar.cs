@@ -77,10 +77,10 @@ internal static class NavBarStatics
         bottom: new BorderSide(new Color(0x00000000), width: 0.0));
 
     /// <summary>`_kTopNavBarHeaderTransitionCurve`.</summary>
-    public static Curve TopNavBarHeaderTransitionCurve { get; } = Curves.Cubic(0.0, 0.45, 0.45, 0.98);
+    public static Curve TopNavBarHeaderTransitionCurve { get; } = new Cubic(0.0, 0.45, 0.45, 0.98);
 
     /// <summary>`_kBottomNavBarHeaderTransitionCurve`.</summary>
-    public static Curve BottomNavBarHeaderTransitionCurve { get; } = Curves.Cubic(0.05, 0.90, 0.90, 0.95);
+    public static Curve BottomNavBarHeaderTransitionCurve { get; } = new Cubic(0.05, 0.90, 0.90, 0.95);
 
     /// <summary>`_defaultHeroTag`.</summary>
     public static readonly object DefaultHeroTag = new NavigationBarHeroTag(null);

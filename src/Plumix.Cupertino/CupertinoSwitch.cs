@@ -165,7 +165,7 @@ public sealed class CupertinoSwitch : StatefulWidget
             PositionController.Duration = TimeSpan.FromMilliseconds(200.0);
             ReactionController.Duration = TimeSpan.FromMilliseconds(300.0);
             PositionAnimation.Curve = Curves.Ease;
-            PositionAnimation.ReverseCurve = Curves.Flipped(Curves.Ease);
+            PositionAnimation.ReverseCurve = new FlippedCurve(Curves.Ease);
             _painter = new CupertinoSwitchPainter(
                 Position,
                 Reaction,
@@ -640,8 +640,8 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     {
         double value = Math.Clamp(_positionController.Value, 0.0, 1.0);
         return _positionController.Status == AnimationStatus.Reverse
-            ? Curves.EaseIn(value)
-            : Curves.EaseOut(value);
+            ? Curves.EaseIn.Transform(value)
+            : Curves.EaseOut.Transform(value);
     }
 
     private Color ResolveThumbColor(double currentValue)

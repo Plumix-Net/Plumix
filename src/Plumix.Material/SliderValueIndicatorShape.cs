@@ -132,7 +132,7 @@ public class RoundSliderOverlayShape : SliderComponentShape
             new SolidColorBrush(sliderTheme.OverlayColor!),
             null,
             center,
-            radiusTween.Evaluate(activationAnimation.Value));
+            radiusTween.Transform(activationAnimation.Value));
     }
 }
 
@@ -475,7 +475,7 @@ public class PaddleSliderValueIndicatorShape : SliderComponentShape
         _pathPainter.Paint(
             context.Canvas,
             center,
-            new Plumix.UI.Paint { Color = enableColor.Evaluate(enableAnimation.Value) },
+            new Plumix.UI.Paint { Color = enableColor.Transform(enableAnimation.Value)! },
             activationAnimation.Value,
             labelPainter,
             textScaleFactor,
@@ -557,7 +557,7 @@ public class PaddleRangeSliderValueIndicatorShape : RangeSliderValueIndicatorSha
         _pathPainter.Paint(
             context.Canvas,
             center,
-            new Plumix.UI.Paint { Color = enableColor.Evaluate(enableAnimation.Value) },
+            new Plumix.UI.Paint { Color = enableColor.Transform(enableAnimation.Value)! },
             activationAnimation.Value,
             labelPainter,
             textScaleFactor!.Value,

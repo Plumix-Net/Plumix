@@ -661,27 +661,7 @@ public sealed class ShapeBorderTween : Tween<ShapeBorder?>
     }
 
     /// <summary>Returns the value this tween has at the given animation clock value.</summary>
-    public override ShapeBorder? Lerp(ShapeBorder? a, ShapeBorder? b, double t)
-    {
-        return ShapeBorder.Lerp(a, b, t);
-    }
-
-    /// <inheritdoc />
-    /// <remarks>Dart's <c>Tween.transform</c>: exactly <c>begin</c> at 0, <c>end</c> at 1, else the lerp.</remarks>
-    public override ShapeBorder? Evaluate(double t)
-    {
-        if (t == 0.0)
-        {
-            return Begin;
-        }
-
-        if (t == 1.0)
-        {
-            return End;
-        }
-
-        return Lerp(Begin, End, t);
-    }
+    public override ShapeBorder? Lerp(double t) => ShapeBorder.Lerp(Begin, End, t);
 }
 
 // Dart's `_MaterialInterior`: the interior of non-transparent material. Animates elevation,
@@ -764,12 +744,12 @@ internal sealed class MaterialInteriorState : AnimatedWidgetBaseState<MaterialIn
             _elevation,
             Widget.Elevation,
             value => new DoubleTween(begin: value));
-        _shadowColor = visitor.Visit<Color>(
+        _shadowColor = visitor.Visit<Color?>(
             _shadowColor,
             Widget.ShadowColor,
             value => new ColorTween(begin: value)) as ColorTween;
         _surfaceTintColor = Widget.SurfaceTintColor is not null
-            ? visitor.Visit<Color>(
+            ? visitor.Visit<Color?>(
                 _surfaceTintColor,
                 Widget.SurfaceTintColor,
                 value => new ColorTween(begin: value)) as ColorTween

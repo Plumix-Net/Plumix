@@ -5758,7 +5758,7 @@ public sealed class MaterialButtonsTests
             IconButtonThemeData.Lerp(a, b, 0.5));
 
         Assert.Equal(
-            new ColorTween().Evaluate(0.5, Colors.Black, Colors.White),
+            Color.Lerp(Colors.Black, Colors.White, 0.5)!,
             midpoint.Style!.ForegroundColor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(24, midpoint.Style.IconSize!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(VisualDensity.Standard, midpoint.Style.VisualDensity);

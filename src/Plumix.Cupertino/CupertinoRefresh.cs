@@ -300,9 +300,9 @@ public sealed class CupertinoSliverRefreshControl : StatefulWidget
         switch (refreshState)
         {
             case RefreshIndicatorMode.Drag:
-                Curve opacityCurve = Curves.Interval(0.0, 0.35, Curves.EaseInOut);
+                Curve opacityCurve = new Interval(0.0, 0.35, Curves.EaseInOut);
                 return new Opacity(
-                    opacity: opacityCurve(percentageComplete),
+                    opacity: opacityCurve.Transform(percentageComplete),
                     child: CupertinoActivityIndicator.PartiallyRevealed(
                         radius: radius,
                         progress: percentageComplete));

@@ -10,41 +10,16 @@ namespace Plumix.Widgets;
 
 public sealed class DecorationTween : Tween<Decoration>
 {
-    private sealed record NullDecoration : Decoration
-    {
-        public override BoxPainter CreateBoxPainter(Action? onChanged = null)
-        {
-            throw new InvalidOperationException("The null decoration sentinel cannot be painted.");
-        }
-    }
-
-    private static readonly Decoration BeginNull = new NullDecoration();
-    private static readonly Decoration EndNull = new NullDecoration();
-
     public DecorationTween(Decoration? begin = null, Decoration? end = null)
+        : base(begin, end)
     {
-        Begin = begin;
-        End = end;
     }
 
-    public new Decoration? Begin
+    public override Decoration Lerp(double t)
     {
-        get => ReferenceEquals(GetBeginValue(), BeginNull) ? null : GetBeginValue();
-        set => SetBeginValue(value ?? BeginNull);
-    }
-
-    public new Decoration? End
-    {
-        get => ReferenceEquals(GetEndValue(), EndNull) ? null : GetEndValue();
-        set => SetEndValue(value ?? EndNull);
-    }
-
-    public override Decoration Lerp(Decoration a, Decoration b, double t)
-    {
-        Decoration? begin = ReferenceEquals(a, BeginNull) ? null : a;
-        Decoration? end = ReferenceEquals(b, EndNull) ? null : b;
-        return Decoration.Lerp(begin, end, t)
-               ?? throw new InvalidOperationException("DecorationTween cannot interpolate two null decorations.");
+        // Dart's `Decoration.lerp(begin, end, t)!`: two null ends fail the null check.
+        return Decoration.Lerp(Begin, End, t)
+               ?? throw new InvalidOperationException("Null check operator used on a null value");
     }
 }
 
@@ -1019,7 +994,7 @@ public sealed class AnimatedContainer : StatefulWidget
         private static Matrix4? LerpMatrix(Matrix4? a, Matrix4? b, double t)
         {
             if (a is null || b is null) return t < 1 ? a : b;
-            return new Matrix4Tween(a, b).Lerp(a, b, t);
+            return new Matrix4Tween(a, b).Lerp(t);
         }
 
         private static double LerpConstraint(double a, double b, double t)
@@ -1915,7 +1890,6 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
 
     private sealed class AnimatedPhysicalModelState : State<AnimatedPhysicalModel>
     {
-        private readonly ColorTween _colorTween = new();
         private AnimationController? _controller;
         private AnimatedPhysicalModelValues _begin;
         private AnimatedPhysicalModelValues _end;
@@ -1986,8 +1960,8 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
             return new AnimatedPhysicalModelValues(
                 Plumix.Rendering.BorderRadius.Circular(radius),
                 elevation,
-                _colorTween.Evaluate(t, _begin.Color, _end.Color),
-                _colorTween.Evaluate(t, _begin.ShadowColor, _end.ShadowColor));
+                Color.Lerp(_begin.Color, _end.Color, t)!,
+                Color.Lerp(_begin.ShadowColor, _end.ShadowColor, t)!);
         }
 
         private void HandleChanged() => SetState(() => { });
@@ -2328,10 +2302,10 @@ public sealed class Matrix4Tween : Tween<Matrix4>
         End = end;
     }
 
-    public override Matrix4 Lerp(Matrix4 a, Matrix4 b, double t)
+    public override Matrix4 Lerp(double t)
     {
-        ArgumentNullException.ThrowIfNull(a);
-        ArgumentNullException.ThrowIfNull(b);
+        Matrix4 a = Begin!;
+        Matrix4 b = End!;
         Vector3 beginTranslation = Vector3.Zero();
         Vector3 endTranslation = Vector3.Zero();
         Quaternion beginRotation = Quaternion.Identity();

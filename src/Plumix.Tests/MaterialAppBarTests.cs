@@ -432,7 +432,7 @@ public sealed class MaterialAppBarTests
     [Fact]
     public void AppBar_ToolbarOpacity_FadesTextStylesAndIconThemesThroughTheInterval()
     {
-        double expected = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(0.5);
+        double expected = new Interval(0.25, 1.0, Curves.FastOutSlowIn).Transform(0.5);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(
             primary: false,
@@ -457,7 +457,7 @@ public sealed class MaterialAppBarTests
     [Fact]
     public void AppBar_BottomOpacity_WrapsTheBottomInAnOpacity()
     {
-        double expected = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(0.5);
+        double expected = new Interval(0.25, 1.0, Curves.FastOutSlowIn).Transform(0.5);
         var owner = TestBuildOwner.Create();
         var root = new TestRootElement(Wrap(new AppBar(
             primary: false,

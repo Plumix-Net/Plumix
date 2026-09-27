@@ -348,7 +348,7 @@ internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegment
         AnimationController controller = _selectionControllers[index];
         if (controller.IsAnimating)
         {
-            return TextColorTween().Evaluate(controller.Value);
+            return TextColorTween().Transform(controller.Value)!;
         }
 
         return EqualityComparer<T?>.Default.Equals(CurrentWidget.GroupValue, key)
@@ -367,7 +367,7 @@ internal sealed class CupertinoSegmentedControlState<T> : State<CupertinoSegment
         AnimationController controller = _selectionControllers[index];
         if (controller.IsAnimating)
         {
-            return _childTweens[index].Evaluate(controller.Value);
+            return _childTweens[index].Transform(controller.Value)!;
         }
 
         if (selected)

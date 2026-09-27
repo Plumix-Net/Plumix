@@ -155,9 +155,7 @@ public class MaterialPointArcTween : Tween<Point>
         }
     }
 
-    public override Point Lerp(Point a, Point b, double t) => Evaluate(t);
-
-    public override Point Evaluate(double t)
+    public override Point Lerp(double t)
     {
         if (_dirty)
         {
@@ -179,11 +177,11 @@ public class MaterialPointArcTween : Tween<Point>
         if (_beginAngle is null || _endAngle is null)
         {
             return new Point(
-                begin.X + ((end.X - begin.X) * t),
-                begin.Y + ((end.Y - begin.Y) * t));
+                (begin.X * (1.0 - t)) + (end.X * t),
+                (begin.Y * (1.0 - t)) + (end.Y * t));
         }
 
-        double angle = _beginAngle.Value + ((_endAngle.Value - _beginAngle.Value) * t);
+        double angle = (_beginAngle.Value * (1.0 - t)) + (_endAngle.Value * t);
         double x = Math.Cos(angle) * _radius!.Value;
         double y = Math.Sin(angle) * _radius!.Value;
         return _center!.Value + new Vector(x, y);
@@ -384,15 +382,15 @@ public class MaterialRectArcTween : RectTween
         }
     }
 
-    public override Rect Evaluate(double t)
+    public override Rect? Lerp(double t)
     {
         if (_dirty)
         {
             Initialize();
         }
 
-        Rect begin = GetBeginValue();
-        Rect end = GetEndValue();
+        Rect begin = Begin!.Value;
+        Rect end = End!.Value;
         if (t == 0.0)
         {
             return begin;
@@ -403,7 +401,7 @@ public class MaterialRectArcTween : RectTween
             return end;
         }
 
-        return ArcGeometry.RectFromPoints(_beginArc.Evaluate(t), _endArc.Evaluate(t));
+        return ArcGeometry.RectFromPoints(_beginArc.Lerp(t), _endArc.Lerp(t));
     }
 
     public override string ToString()
@@ -424,8 +422,8 @@ public class MaterialRectArcTween : RectTween
 
     private void Initialize()
     {
-        Rect begin = GetBeginValue();
-        Rect end = GetEndValue();
+        Rect begin = Begin!.Value;
+        Rect end = End!.Value;
         Point centersVector = end.Center - begin.Center;
         Diagonal diagonal = AllDiagonals[0];
         double? maxKey = null;
@@ -515,15 +513,15 @@ public class MaterialRectCenterArcTween : RectTween
         }
     }
 
-    public override Rect Evaluate(double t)
+    public override Rect? Lerp(double t)
     {
         if (_dirty)
         {
             Initialize();
         }
 
-        Rect begin = GetBeginValue();
-        Rect end = GetEndValue();
+        Rect begin = Begin!.Value;
+        Rect end = End!.Value;
         if (t == 0.0)
         {
             return begin;
@@ -534,9 +532,9 @@ public class MaterialRectCenterArcTween : RectTween
             return end;
         }
 
-        Point center = _centerArc.Evaluate(t);
-        double width = begin.Width + ((end.Width - begin.Width) * t);
-        double height = begin.Height + ((end.Height - begin.Height) * t);
+        Point center = _centerArc.Lerp(t);
+        double width = (begin.Width * (1.0 - t)) + (end.Width * t);
+        double height = (begin.Height * (1.0 - t)) + (end.Height * t);
         return new Rect(center.X - (width / 2.0), center.Y - (height / 2.0), width, height);
     }
 
@@ -547,7 +545,7 @@ public class MaterialRectCenterArcTween : RectTween
 
     private void Initialize()
     {
-        _centerArc = new MaterialPointArcTween(begin: GetBeginValue().Center, end: GetEndValue().Center);
+        _centerArc = new MaterialPointArcTween(begin: Begin!.Value.Center, end: End!.Value.Center);
         _dirty = false;
     }
 }

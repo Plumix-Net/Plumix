@@ -45,11 +45,11 @@ internal static class SnackBarConstants
 
     internal static readonly Curve M3HeightCurve = Curves.EaseInOutQuart;
 
-    internal static readonly Curve FadeInCurve = Curves.Interval(0.4, 1.0);
+    internal static readonly Curve FadeInCurve = new Interval(0.4, 1.0);
 
-    internal static readonly Curve M3FadeInCurve = Curves.Interval(0.4, 0.6, Curves.EaseInCirc);
+    internal static readonly Curve M3FadeInCurve = new Interval(0.4, 0.6, Curves.EaseInCirc);
 
-    internal static readonly Curve FadeOutCurve = Curves.Interval(0.72, 1.0, Curves.FastOutSlowIn);
+    internal static readonly Curve FadeOutCurve = new Interval(0.72, 1.0, Curves.FastOutSlowIn);
 }
 
 /// A button for a [SnackBar], known as an "action".
@@ -392,11 +392,11 @@ public sealed class SnackBar : StatefulWidget
             _fadeOutAnimation = new CurvedAnimation(
                 parent,
                 SnackBarConstants.FadeOutCurve,
-                Curves.Threshold(0.0));
+                new Threshold(0.0));
             _heightM3Animation = new CurvedAnimation(
                 parent,
                 SnackBarConstants.M3HeightCurve,
-                Curves.Threshold(0.0));
+                new Threshold(0.0));
         }
 
         private void DisposeAnimations()

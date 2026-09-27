@@ -234,7 +234,7 @@ internal sealed class CupertinoSheetTransitionState : State<CupertinoSheetTransi
         Curve primaryCurve = CurrentWidget.LinearTransition ? Curves.Linear : Curves.FastEaseInToSlowEaseOut;
         Curve primaryReverseCurve = CurrentWidget.LinearTransition
             ? Curves.Linear
-            : Curves.Flipped(Curves.FastEaseInToSlowEaseOut);
+            : new FlippedCurve(Curves.FastEaseInToSlowEaseOut);
         _primaryCurve = new CurvedAnimation(
             CurrentWidget.PrimaryRouteAnimation,
             primaryCurve,

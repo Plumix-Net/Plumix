@@ -570,7 +570,7 @@ internal sealed class FloatingActionButtonTransitionState : State<FloatingAction
                 new TrainHoppingAnimation(currentEntranceRotationAnimation, moveRotationAnimation);
         }
 
-        _extendedCurrentScaleAnimation = _currentScaleAnimation.Drive(new CurveTween(Curves.Interval(0.0, 0.1)));
+        _extendedCurrentScaleAnimation = _currentScaleAnimation.Drive(new CurveTween(new Interval(0.0, 0.1)));
         _currentScaleAnimation.AddListener(HandleProgressChanged);
         _previousScaleAnimation.AddListener(HandleProgressChanged);
     }

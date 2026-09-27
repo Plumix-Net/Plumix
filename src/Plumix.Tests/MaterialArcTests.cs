@@ -37,13 +37,13 @@ public sealed class MaterialArcTests
     public void OnAxis_MaterialPointArcTween_LerpsLinearly()
     {
         var tween = new MaterialPointArcTween(begin: new Point(0, 0), end: new Point(0.0, 10.0));
-        Assert.Equal(new Point(0.0, 5.0), tween.Evaluate(0.5));
+        Assert.Equal(new Point(0.0, 5.0), tween.Transform(0.5));
         Assert.Null(tween.Center);
         Assert.Null(tween.Radius);
         Assert.Null(tween.BeginAngle);
 
         tween = new MaterialPointArcTween(begin: new Point(0, 0), end: new Point(10.0, 0.0));
-        Assert.Equal(new Point(5.0, 0.0), tween.Evaluate(0.5));
+        Assert.Equal(new Point(5.0, 0.0), tween.Transform(0.5));
     }
 
     [Fact]
@@ -52,12 +52,12 @@ public sealed class MaterialArcTests
         var tween = new MaterialRectArcTween(
             begin: new Rect(0.0, 0.0, 10.0, 10.0),
             end: new Rect(0.0, 10.0, 10.0, 10.0));
-        Assert.Equal(new Rect(0.0, 5.0, 10.0, 10.0), tween.Evaluate(0.5));
+        Assert.Equal(new Rect(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
 
         tween = new MaterialRectArcTween(
             begin: new Rect(0.0, 0.0, 10.0, 10.0),
             end: new Rect(10.0, 0.0, 10.0, 10.0));
-        Assert.Equal(new Rect(5.0, 0.0, 10.0, 10.0), tween.Evaluate(0.5));
+        Assert.Equal(new Rect(5.0, 0.0, 10.0, 10.0), tween.Transform(0.5));
     }
 
     [Fact]
@@ -67,16 +67,16 @@ public sealed class MaterialArcTests
         var end = new Point(37.0, 250.0);
 
         var tween = new MaterialPointArcTween(begin: begin, end: end);
-        Assert.Equal(begin, tween.Evaluate(0.0));
-        AssertWithin(new Point(126.0, 120.0), tween.Evaluate(0.25), 2.0);
-        AssertWithin(new Point(48.0, 196.0), tween.Evaluate(0.75), 2.0);
-        Assert.Equal(end, tween.Evaluate(1.0));
+        Assert.Equal(begin, tween.Transform(0.0));
+        AssertWithin(new Point(126.0, 120.0), tween.Transform(0.25), 2.0);
+        AssertWithin(new Point(48.0, 196.0), tween.Transform(0.75), 2.0);
+        Assert.Equal(end, tween.Transform(1.0));
 
         tween = new MaterialPointArcTween(begin: end, end: begin);
-        Assert.Equal(end, tween.Evaluate(0.0));
-        AssertWithin(new Point(91.0, 239.0), tween.Evaluate(0.25), 2.0);
-        AssertWithin(new Point(168.3, 163.8), tween.Evaluate(0.75), 2.0);
-        Assert.Equal(begin, tween.Evaluate(1.0));
+        Assert.Equal(end, tween.Transform(0.0));
+        AssertWithin(new Point(91.0, 239.0), tween.Transform(0.25), 2.0);
+        AssertWithin(new Point(168.3, 163.8), tween.Transform(0.75), 2.0);
+        Assert.Equal(begin, tween.Transform(1.0));
     }
 
     [Fact]
@@ -86,16 +86,16 @@ public sealed class MaterialArcTests
         var end = new Rect(new Point(32.0, 275.0), new Point(132.0, 425.0));
 
         var tween = new MaterialRectArcTween(begin: begin, end: end);
-        Assert.Equal(begin, tween.Evaluate(0.0));
-        AssertSameRect(new Rect(new Point(120.0, 113.0), new Point(259.0, 237.0)), tween.Evaluate(0.25));
-        AssertSameRect(new Rect(new Point(42.3, 206.5), new Point(153.5, 354.7)), tween.Evaluate(0.75));
-        Assert.Equal(end, tween.Evaluate(1.0));
+        Assert.Equal(begin, tween.Transform(0.0));
+        AssertSameRect(new Rect(new Point(120.0, 113.0), new Point(259.0, 237.0)), tween.Transform(0.25)!.Value);
+        AssertSameRect(new Rect(new Point(42.3, 206.5), new Point(153.5, 354.7)), tween.Transform(0.75)!.Value);
+        Assert.Equal(end, tween.Transform(1.0));
 
         tween = new MaterialRectArcTween(begin: end, end: begin);
-        Assert.Equal(end, tween.Evaluate(0.0));
-        AssertSameRect(new Rect(new Point(92.0, 262.0), new Point(203.0, 388.0)), tween.Evaluate(0.25));
-        AssertSameRect(new Rect(new Point(169.7, 168.5), new Point(308.5, 270.3)), tween.Evaluate(0.75));
-        Assert.Equal(begin, tween.Evaluate(1.0));
+        Assert.Equal(end, tween.Transform(0.0));
+        AssertSameRect(new Rect(new Point(92.0, 262.0), new Point(203.0, 388.0)), tween.Transform(0.25)!.Value);
+        AssertSameRect(new Rect(new Point(169.7, 168.5), new Point(308.5, 270.3)), tween.Transform(0.75)!.Value);
+        Assert.Equal(begin, tween.Transform(1.0));
     }
 
     [Fact]
@@ -104,10 +104,10 @@ public sealed class MaterialArcTests
         var tween = new MaterialRectArcTween(
             begin: new Rect(0.0, 0.0, 10.0, 10.0),
             end: new Rect(0.0, 10.0, 10.0, 10.0));
-        Assert.Equal(new Rect(0.0, 5.0, 10.0, 10.0), tween.Evaluate(0.5));
+        Assert.Equal(new Rect(0.0, 5.0, 10.0, 10.0), tween.Transform(0.5));
 
         tween.End = new Rect(0.0, 20.0, 10.0, 10.0);
-        Assert.Equal(new Rect(0.0, 10.0, 10.0, 10.0), tween.Evaluate(0.5));
+        Assert.Equal(new Rect(0.0, 10.0, 10.0, 10.0), tween.Transform(0.5));
     }
 
     [Fact]
@@ -117,16 +117,16 @@ public sealed class MaterialArcTests
         var end = new Rect(0.0, 100.0, 20.0, 20.0);
         var tween = new MaterialRectCenterArcTween(begin: begin, end: end);
 
-        Assert.Equal(begin, tween.Evaluate(0.0));
-        Assert.Equal(end, tween.Evaluate(1.0));
+        Assert.Equal(begin, tween.Transform(0.0));
+        Assert.Equal(end, tween.Transform(1.0));
 
         // Centres are on-axis (dx delta is 5 <= 2? no: 5 > 2, dy delta 105 > 2), so the centre arcs.
         Assert.NotNull(tween.CenterArc);
 
-        Rect mid = tween.Evaluate(0.5);
+        Rect mid = tween.Transform(0.5)!.Value;
         Assert.Equal(15.0, mid.Width, 6);
         Assert.Equal(15.0, mid.Height, 6);
-        Point center = tween.CenterArc!.Evaluate(0.5);
+        Point center = tween.CenterArc!.Transform(0.5);
         Assert.Equal(center.X - (mid.Width / 2.0), mid.X, 6);
         Assert.Equal(center.Y - (mid.Height / 2.0), mid.Y, 6);
     }
@@ -147,13 +147,13 @@ public sealed class MaterialArcTests
         HeroController controller = MaterialApp.CreateMaterialHeroController();
 
         Assert.NotNull(controller.CreateRectTween);
-        Tween<Rect> tween = controller.CreateRectTween!(
+        Tween<Rect?> tween = controller.CreateRectTween!(
             new Rect(0.0, 0.0, 10.0, 10.0),
             new Rect(100.0, 200.0, 20.0, 20.0));
 
         var arcTween = Assert.IsType<MaterialRectArcTween>(tween);
-        Assert.Equal(new Rect(0.0, 0.0, 10.0, 10.0), arcTween.Evaluate(0.0));
-        Assert.Equal(new Rect(100.0, 200.0, 20.0, 20.0), arcTween.Evaluate(1.0));
+        Assert.Equal(new Rect(0.0, 0.0, 10.0, 10.0), arcTween.Transform(0.0));
+        Assert.Equal(new Rect(100.0, 200.0, 20.0, 20.0), arcTween.Transform(1.0));
         Assert.NotNull(arcTween.BeginArc);
         Assert.NotNull(arcTween.EndArc);
     }

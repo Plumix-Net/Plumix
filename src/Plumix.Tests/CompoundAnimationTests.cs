@@ -143,7 +143,7 @@ public sealed class CompoundAnimationTests
         Assert.Equal(1.0, driven.Value, 6);
 
         parent.SetValue(0.5);
-        double expected = 0.875 + (0.125 * Curves.EaseIn(0.5));
+        double expected = 0.875 + (0.125 * Curves.EaseIn.Transform(0.5));
         Assert.Equal(expected, driven.Value, 6);
     }
 }

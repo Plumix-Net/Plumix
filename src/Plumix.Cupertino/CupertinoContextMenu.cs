@@ -332,8 +332,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
             double normalized = Controller.Value / AnimationOpensAt;
             double rectProgress = normalized <= 1.0 / 6.0
                 ? 0.0
-                : Curves.EaseOutSine((normalized - (1.0 / 6.0)) / (5.0 / 6.0));
-            Rect rect = new RectTween(BeginRect, EndRect).Transform(rectProgress);
+                : Curves.EaseOutSine.Transform((normalized - (1.0 / 6.0)) / (5.0 / 6.0));
+            Rect rect = new RectTween(BeginRect, EndRect).Transform(rectProgress)!.Value;
             Widget preview;
             if (Child is not null)
             {
@@ -523,10 +523,10 @@ public sealed class CupertinoContextMenu : StatefulWidget
                 : Orientation.Portrait;
             Point translatedOffset = TranslateDragOffset(_dragOffset);
             Point effectiveOffset = _moveController.Status.IsAnimating()
-                ? LerpPoint(_returnBegin, default, Curves.ElasticIn(_moveController.Value))
+                ? LerpPoint(_returnBegin, default, Curves.ElasticIn.Transform(_moveController.Value))
                 : translatedOffset;
             double routeValue = Math.Clamp(Current.Animation.Value, 0.0, 1.0);
-            double previewScale = Lerp(Current.ScaleFactor, _lastScale, Curves.EaseOutBack(routeValue));
+            double previewScale = Lerp(Current.ScaleFactor, _lastScale, Curves.EaseOutBack.Transform(routeValue));
             double sheetVisibility = 1.0 - _sheetController.Value;
             double sheetScale = routeValue * sheetVisibility;
             double sheetOpacity = routeValue * sheetVisibility;
@@ -765,7 +765,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
             (Point finalChild, Point finalMenu) = GetFinalPositions(size, childSize, menuSize);
             Point beginChild = new(PreviousChildRect.X, PreviousChildRect.Y);
             Point beginMenu = GetInitialMenuPosition(menuSize);
-            double progress = Curves.EaseOutBack(AnimationValue);
+            double progress = Curves.EaseOutBack.Transform(AnimationValue);
             PositionChild(ContextMenuChild.Child, LerpPoint(beginChild, finalChild, progress));
             PositionChild(ContextMenuChild.MenuSheet, LerpPoint(beginMenu, finalMenu, progress));
         }

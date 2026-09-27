@@ -53,7 +53,7 @@ public sealed class MaterialDrawerHeaderTests
             duration: TimeSpan.FromMilliseconds(400),
             curve: Curves.EaseOut);
         Assert.Equal(TimeSpan.FromMilliseconds(400), header.Duration);
-        Assert.Equal(Curves.EaseOut(0.3), header.Curve(0.3));
+        Assert.Equal(Curves.EaseOut.Transform(0.3), header.Curve.Transform(0.3));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DrawerHeader(
             child: null,
             duration: TimeSpan.FromMilliseconds(-1)));
@@ -77,9 +77,9 @@ public sealed class MaterialDrawerHeaderTests
         Assert.Equal(EdgeInsetsGeometry.Only(bottom: 8.0), header.Margin);
         Assert.Equal(EdgeInsetsGeometry.FromLTRB(16.0, 16.0, 16.0, 8.0), header.Padding);
         Assert.Equal(TimeSpan.FromMilliseconds(250), header.Duration);
-        Assert.Equal(0, header.Curve(0));
-        Assert.InRange(header.Curve(0.5), 0.77, 0.78);
-        Assert.Equal(1, header.Curve(1));
+        Assert.Equal(0, header.Curve.Transform(0));
+        Assert.InRange(header.Curve.Transform(0.5), 0.77, 0.78);
+        Assert.Equal(1, header.Curve.Transform(1));
     }
 
     [Fact]

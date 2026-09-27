@@ -490,7 +490,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
             if (widget.ToolbarOpacity != 1.0)
             {
-                double opacity = Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(widget.ToolbarOpacity);
+                double opacity = new Interval(0.25, 1.0, Curves.FastOutSlowIn).Transform(widget.ToolbarOpacity);
                 if (titleTextStyle.Color != null)
                 {
                     titleTextStyle = titleTextStyle.CopyWith(
@@ -630,7 +630,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                         widget.BottomOpacity == 1.0
                             ? (Widget)bottom
                             : new Opacity(
-                                opacity: Curves.Interval(0.25, 1.0, Curves.FastOutSlowIn)(widget.BottomOpacity),
+                                opacity: new Interval(0.25, 1.0, Curves.FastOutSlowIn).Transform(widget.BottomOpacity),
                                 child: (Widget)bottom),
                     ]);
             }

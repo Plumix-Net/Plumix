@@ -322,7 +322,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
                 .Drive(new DoubleTween(begin: 0.8, end: 1.0));
             _sizeAnimation.Parent = CupertinoMenuAnimations.AlwaysComplete;
             _fadeAnimation.Parent = Current.VisibilityAnimation.Drive(
-                new CurveTween(Curves.EaseInCurve).Chain(new CupertinoMenuClampTween(0.0, 1.0)));
+                new CurveTween(Curves.EaseIn).Chain(new CupertinoMenuClampTween(0.0, 1.0)));
             return;
         }
 
@@ -332,7 +332,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
         _sizeAnimation.Parent = Current.VisibilityAnimation
             .Drive(new DoubleTween(begin: 0.8, end: 1.0));
         _fadeAnimation.Parent = Current.VisibilityAnimation.Drive(
-            new CurveTween(Curves.EaseInCurve).Chain(new CupertinoMenuClampTween(0.0, 1.0)));
+            new CurveTween(Curves.EaseIn).Chain(new CupertinoMenuClampTween(0.0, 1.0)));
     }
 
     /// <summary>Dart parity source: <c>_MenuOverlayState._resolvePosition</c>.</summary>

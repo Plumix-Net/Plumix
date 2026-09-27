@@ -694,9 +694,9 @@ public sealed class DataTable : StatelessWidget
 
             public override Widget Build(BuildContext context)
             {
-                double opacity = Curves.FastOutSlowIn(_opacityController!.Value);
+                double opacity = Curves.FastOutSlowIn.Transform(_opacityController!.Value);
                 double angle = _orientationOffset
-                               + (Math.PI * Curves.EaseIn(_orientationController!.Value));
+                               + (Math.PI * Curves.EaseIn.Transform(_orientationController!.Value));
                 double cosine = Math.Cos(angle);
                 double sine = Math.Sin(angle);
                 var transform = new Matrix4(

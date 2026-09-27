@@ -266,7 +266,7 @@ public sealed record AppBarThemeData(
 
         var from = a ?? Color.FromARGB(0, b!.Red, b!.Green, b!.Blue);
         var to = b ?? Color.FromARGB(0, a!.Red, a!.Green, a!.Blue);
-        return new ColorTween().Evaluate(t, from, to);
+        return Color.Lerp(from, to, t)!;
     }
     private static IconThemeData? LerpIconTheme(IconThemeData? a, IconThemeData? b, double t)
     {
@@ -1675,7 +1675,7 @@ public sealed record ThemeData : IDiagnosticable
 
     private static Color LerpColor(Color a, Color b, double t)
     {
-        return new ColorTween().Evaluate(t, a, b);
+        return Color.Lerp(a, b, t)!;
     }
 
     private static InteractiveInkFeatureFactory ResolveDefaultSplashFactory(

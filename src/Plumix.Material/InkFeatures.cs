@@ -283,7 +283,7 @@ public sealed class InkRipple : InteractiveInkFeature
         bool canceled)
     {
         double t = Math.Clamp(progress, 0.0, 1.0);
-        double eased = Curves.Ease(t);
+        double eased = Curves.Ease.Transform(t);
         Point targetCenter = new(size.Width / 2.0, size.Height / 2.0);
         Point center = new(
             position.X + ((targetCenter.X - position.X) * eased),
@@ -371,7 +371,7 @@ public sealed class InkSparkle : InteractiveInkFeature
         bool canceled)
     {
         double t = Math.Clamp(progress, 0.0, 1.0);
-        double radiusProgress = t < 0.75 ? Curves.FastOutSlowIn(t / 0.75) : 1.0;
+        double radiusProgress = t < 0.75 ? Curves.FastOutSlowIn.Transform(t / 0.75) : 1.0;
         double centerProgress = Math.Clamp(radiusProgress * 2.0, 0.0, 1.0);
         Point targetCenter = new(size.Width / 2.0, size.Height / 2.0);
         Point center = new(

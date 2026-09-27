@@ -342,7 +342,7 @@ public sealed class NavigationIndicator : StatelessWidget
     {
         double scale = AnimationValue <= 0
             ? 0
-            : 0.4 + (0.6 * Curves.EaseInOutCubicEmphasized(AnimationValue));
+            : 0.4 + (0.6 * Curves.EaseInOutCubicEmphasized.Transform(AnimationValue));
         var shape = Shape ?? new RoundedRectangleBorder(borderRadius:
             Plumix.Rendering.BorderRadius.Circular(BorderRadius.Radius));
         return Plumix.Widgets.Transform.Scale(
@@ -483,7 +483,7 @@ internal sealed class NavigationBarDestinationTileState : State<NavigationBarDes
         {
             NavigationDestinationLabelBehavior.AlwaysShow => 1.0,
             NavigationDestinationLabelBehavior.AlwaysHide => 0.0,
-            _ => Curves.EaseInOutCubicEmphasized(progress),
+            _ => Curves.EaseInOutCubicEmphasized.Transform(progress),
         };
         AnimationStatus layoutStatus = layoutProgress switch
         {

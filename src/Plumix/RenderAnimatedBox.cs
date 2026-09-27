@@ -16,8 +16,6 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
     private readonly AnimationController _controller;
 
     // Интерполируем ширину, высоту и цвет
-    private readonly DoubleTween _double = new();
-    private readonly ColorTween _color = new();
 
     private readonly double _fromW, _toW;
     private readonly double _fromH, _toH;
@@ -48,9 +46,9 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
     {
         double t = _controller.Evaluate();
 
-        double nextW = _double.Evaluate(t, _fromW, _toW);
-        double nextH = _double.Evaluate(t, _fromH, _toH);
-        var nextC = _color.Evaluate(t, _fromC, _toC);
+        double nextW = _fromW + ((_toW - _fromW) * t);
+        double nextH = _fromH + ((_toH - _fromH) * t);
+        var nextC = Color.Lerp(_fromC, _toC, t)!;
 
         bool affectsLayout = !MathEx.Near(nextW, _currentW) || !MathEx.Near(nextH, _currentH);
 

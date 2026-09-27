@@ -415,7 +415,7 @@ public sealed class ReorderableListView : StatefulWidget
             return new AnimatedBuilder(
                 animation: animation,
                 builder: (_, animatedChild) => new Material(
-                    elevation: 6.0 * Curves.EaseInOut(animation.Value),
+                    elevation: 6.0 * Curves.EaseInOut.Transform(animation.Value),
                     child: animatedChild),
                 child: child);
         }

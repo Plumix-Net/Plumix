@@ -429,7 +429,7 @@ public sealed class CupertinoPageTransition : StatefulWidget
                 _primaryPositionCurve = new CurvedAnimation(
                     CurrentWidget.PrimaryRouteAnimation,
                     Curves.FastEaseInToSlowEaseOut,
-                    Curves.Flipped(Curves.FastEaseInToSlowEaseOut));
+                    new FlippedCurve(Curves.FastEaseInToSlowEaseOut));
                 _secondaryPositionCurve = new CurvedAnimation(
                     CurrentWidget.SecondaryRouteAnimation,
                     Curves.LinearToEaseOut,
@@ -539,7 +539,7 @@ public sealed class CupertinoFullscreenDialogTransition : StatefulWidget
             _primaryPositionCurve = new CurvedAnimation(
                 CurrentWidget.PrimaryRouteAnimation,
                 Curves.LinearToEaseOut,
-                Curves.Flipped(Curves.LinearToEaseOut));
+                new FlippedCurve(Curves.LinearToEaseOut));
             _primaryPositionAnimation = _primaryPositionCurve.Drive(CupertinoRouteTweens.BottomUp);
             Animation<double> secondaryParent;
             if (CurrentWidget.LinearTransition)
@@ -742,8 +742,8 @@ internal sealed class DirectionalCurveAnimation : Animation<double>
     }
 
     public override double Value => Status == AnimationStatus.Reverse
-        ? _reverseCurve(_parent.Value)
-        : _forwardCurve(_parent.Value);
+        ? _reverseCurve.Transform(_parent.Value)
+        : _forwardCurve.Transform(_parent.Value);
 
     public override AnimationStatus Status => _parent.Status;
 

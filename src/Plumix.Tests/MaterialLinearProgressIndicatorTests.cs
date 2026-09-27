@@ -49,7 +49,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         var explicitRender = FindDescendantByTypeName(explicitHarness.RenderView, "RenderLinearProgressIndicator");
         Assert.NotNull(explicitRender);
         Assert.Null(ReadNullableProperty<double>(explicitRender!, "Value"));
-        Assert.Equal(Curves.EaseIn(0.5), ReadProperty<double>(explicitRender, "AnimationValue"), 3);
+        Assert.Equal(Curves.EaseIn.Transform(0.5), ReadProperty<double>(explicitRender, "AnimationValue"), 3);
 
         using var themedController = new AnimationController(duration: TimeSpan.FromSeconds(1))
         {
@@ -74,7 +74,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         var themedRender = FindDescendantByTypeName(themedHarness.RenderView, "RenderLinearProgressIndicator");
         Assert.NotNull(themedRender);
         Assert.Null(ReadNullableProperty<double>(themedRender!, "Value"));
-        Assert.Equal(Curves.EaseIn(0.5), ReadProperty<double>(themedRender, "AnimationValue"), 3);
+        Assert.Equal(Curves.EaseIn.Transform(0.5), ReadProperty<double>(themedRender, "AnimationValue"), 3);
     }
 
     [Fact]

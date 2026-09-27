@@ -879,7 +879,7 @@ public sealed class SliverReorderableListState : State<SliverReorderableList>
     {
         if (_dropping)
         {
-            double t = Curves.EaseOut(_proxyAnimation!.Value);
+            double t = Curves.EaseOut.Transform(_proxyAnimation!.Value);
             return new Point(
                 _dropTargetPosition.X + ((_dropStartPosition.X - _dropTargetPosition.X) * t),
                 _dropTargetPosition.Y + ((_dropStartPosition.Y - _dropTargetPosition.Y) * t));

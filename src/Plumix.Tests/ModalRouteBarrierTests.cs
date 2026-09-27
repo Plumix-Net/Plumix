@@ -37,7 +37,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         Assert.True(route.SemanticsDismissible);
         Assert.Null(route.BarrierColor);
         Assert.Null(route.BarrierLabel);
-        Assert.Equal(Curves.Ease(0.25), route.BarrierCurve(0.25), precision: 9);
+        Assert.Equal(Curves.Ease.Transform(0.25), route.BarrierCurve.Transform(0.25), precision: 9);
     }
 
     [Fact]
@@ -73,7 +73,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         double progress = route.Animation.Value;
         Assert.InRange(progress, 0.2, 0.8);
         Assert.Equal(
-            (byte)Math.Round(255 * Curves.Ease(progress)),
+            (byte)Math.Round(255 * Curves.Ease.Transform(progress)),
             barrier.Color.Value!.Alpha);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));

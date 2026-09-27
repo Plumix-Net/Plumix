@@ -223,7 +223,7 @@ public sealed class BuilderWidgetsTests : IDisposable
 
         Assert.Same(tween, widget.Tween);
         Assert.Equal(TimeSpan.FromMilliseconds(200), widget.Duration);
-        Assert.Equal(Curves.Linear(0.3), widget.Curve(0.3));
+        Assert.Equal(Curves.Linear.Transform(0.3), widget.Curve.Transform(0.3));
         Assert.Same(builder, widget.Builder);
         Assert.Null(widget.OnEnd);
         Assert.Same(child, widget.Child);
@@ -509,7 +509,7 @@ public sealed class BuilderWidgetsTests : IDisposable
 
         Assert.Same(tween, widget.Animatable);
         Assert.Equal(TimeSpan.FromMilliseconds(300), widget.Duration);
-        Assert.Equal(Curves.Linear(0.3), widget.Curve(0.3));
+        Assert.Equal(Curves.Linear.Transform(0.3), widget.Curve.Transform(0.3));
         Assert.Same(builder, widget.Builder);
         Assert.Equal(RepeatMode.Restart, widget.RepeatMode);
         Assert.False(widget.Paused);
