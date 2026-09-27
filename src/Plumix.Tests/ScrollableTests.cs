@@ -142,6 +142,31 @@ public sealed class ScrollableTests
     }
 
     [Fact]
+    public void DevicePixelRatio_FallsBackToTheViewWithoutMediaQuery()
+    {
+        BuildContext? itemContext = null;
+        using var harness = new RestorationHarness(
+            Wrap(BuildList(controller: null, onItemBuilt: context => itemContext = context)),
+            devicePixelRatio: 2.5);
+        harness.Pump(Surface);
+
+        Assert.Equal(2.5, Scrollable.Of(itemContext!).DevicePixelRatio);
+    }
+
+    [Fact]
+    public void DevicePixelRatio_PrefersMediaQueryOverTheView()
+    {
+        BuildContext? itemContext = null;
+        Widget list = BuildList(controller: null, onItemBuilt: context => itemContext = context);
+        using var harness = new RestorationHarness(
+            Wrap(new MediaQuery(new MediaQueryData(DevicePixelRatio: 1.75), list)),
+            devicePixelRatio: 2.5);
+        harness.Pump(Surface);
+
+        Assert.Equal(1.75, Scrollable.Of(itemContext!).DevicePixelRatio);
+    }
+
+    [Fact]
     public void DebugFillProperties_ReportsAxisDirectionPhysicsAndRestorationId()
     {
         var properties = new DiagnosticPropertiesBuilder();

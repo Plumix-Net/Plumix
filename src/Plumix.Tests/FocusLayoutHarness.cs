@@ -18,7 +18,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
-        _rootElement = new HarnessRootElement(RenderView, widget);
+        _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
@@ -53,7 +53,7 @@ internal sealed class FocusLayoutHarness : IDisposable
 
     public void Update(Widget widget, Size size)
     {
-        _rootElement.Update(widget);
+        _rootElement.Update(new ViewScope(RenderView.FlutterView, widget));
         Layout(size);
     }
 

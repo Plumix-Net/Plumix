@@ -305,12 +305,14 @@ internal sealed class RestorationHarness : IDisposable
     private readonly HarnessRootElement _root;
     private readonly PipelineOwner _pipeline;
 
-    public RestorationHarness(Widget widget)
+    public RestorationHarness(Widget widget, double devicePixelRatio = 1.0)
     {
-        RenderView = new RenderView(new FlutterView(new Size(800, 600)));
+        RenderView = new RenderView(new FlutterView(
+            new Size(800 * devicePixelRatio, 600 * devicePixelRatio),
+            devicePixelRatio));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
-        _root = new HarnessRootElement(RenderView, widget);
+        _root = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _root.Attach(_owner);
         _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
@@ -325,7 +327,7 @@ internal sealed class RestorationHarness : IDisposable
 
     public void Update(Widget widget)
     {
-        _root.UpdateWidget(widget);
+        _root.UpdateWidget(new ViewScope(RenderView.FlutterView, widget));
         _owner.FlushBuild();
     }
 

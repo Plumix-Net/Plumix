@@ -828,7 +828,7 @@ public sealed class NestedScrollViewTests : IDisposable
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();

@@ -1645,7 +1645,7 @@ public sealed class ListWheelScrollViewTests
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -1667,7 +1667,7 @@ public sealed class ListWheelScrollViewTests
 
         public void Replace(Widget child)
         {
-            _rootElement.Update(new Directionality(TextDirection.Ltr, child));
+            _rootElement.Update(new ViewScope(RenderView.FlutterView, new Directionality(TextDirection.Ltr, child)));
             _owner.FlushBuild();
         }
 

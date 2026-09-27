@@ -851,7 +851,7 @@ public sealed class ViewportRevealTests
 
             _rootElement = new HarnessRootElement(
                 RenderView,
-                new Directionality(TextDirection.Ltr, child: rootWidget));
+                new ViewScope(RenderView.FlutterView, new Directionality(TextDirection.Ltr, child: rootWidget)));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();

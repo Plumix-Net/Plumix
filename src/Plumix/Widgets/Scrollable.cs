@@ -439,11 +439,8 @@ public class ScrollableState : RestorationState<Scrollable>, IScrollContext
     public override void DidChangeDependencies()
     {
         _mediaQueryGestureSettings = MediaQuery.MaybeGestureSettingsOf(Context);
-        // Dart falls back to View.of(context); Plumix's headless harness roots mount without a View,
-        // so the last resort is 1.0 (see docs/ai/DIVERGENCES.md).
         _devicePixelRatio = MediaQuery.MaybeDevicePixelRatioOf(Context)
-            ?? View.MaybeOf(Context)?.DevicePixelRatio
-            ?? 1.0;
+            ?? View.Of(Context).DevicePixelRatio;
         UpdatePosition();
         base.DidChangeDependencies();
     }

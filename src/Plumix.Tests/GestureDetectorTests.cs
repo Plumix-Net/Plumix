@@ -587,7 +587,7 @@ public sealed class GestureDetectorTests
     [DebugOnlyFact]
     public void SyncAll_RejectsAFactoryRegisteredUnderTheWrongType()
     {
-        var harness = new ScrollSemanticsHarness(new SizedBox(width: 4.0, height: 4.0));
+        var harness = new ScrollSemanticsHarness(new SizedBox(width: 4.0, height: 4.0), withViewScope: false);
         harness.Pump(SurfaceSize);
         Assert.Throws<FlutterError>(() =>
         {

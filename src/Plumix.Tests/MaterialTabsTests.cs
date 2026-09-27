@@ -1553,7 +1553,7 @@ public sealed class MaterialTabsTests
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _root = new HarnessRootElement(RenderView, widget);
+            _root = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -1583,7 +1583,7 @@ public sealed class MaterialTabsTests
 
         public void Update(Widget widget)
         {
-            _root.Update(widget);
+            _root.Update(new ViewScope(RenderView.FlutterView, widget));
             _owner.FlushBuild();
         }
 

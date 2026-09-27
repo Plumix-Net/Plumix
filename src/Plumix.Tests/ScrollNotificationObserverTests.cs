@@ -296,13 +296,15 @@ public sealed class ScrollNotificationObserverTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
+        private readonly FlutterView _view;
 
         public WidgetRenderHarness(Widget widget)
         {
             var renderView = new RenderView(new FlutterView(new Size(800, 600)));
+            _view = renderView.FlutterView;
             _pipeline = new PipelineOwner(renderView);
             _pipeline.Attach(renderView);
-            _root = new HarnessRootElement(renderView, widget);
+            _root = new HarnessRootElement(renderView, new ViewScope(renderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -310,7 +312,7 @@ public sealed class ScrollNotificationObserverTests
 
         public void Update(Widget widget)
         {
-            _root.UpdateWidget(widget);
+            _root.UpdateWidget(new ViewScope(_view, widget));
             _owner.FlushBuild();
         }
 

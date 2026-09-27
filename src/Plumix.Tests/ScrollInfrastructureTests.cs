@@ -151,12 +151,14 @@ public sealed class ScrollInfrastructureTests
         var owner = TestBuildOwner.Create();
         using var controller = new ScrollController();
         var root = new TestRootElement(
-            new ScrollConfiguration(
-                behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
-                child: new PrimaryScrollController(
-                    controller,
-                    new CustomScrollView(
-                        slivers: [new SliverToBoxAdapter(new SizedBox(width: 10, height: 100))]))));
+            new ViewScope(
+                new FlutterView(new Size(800, 600)),
+                new ScrollConfiguration(
+                    behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
+                    child: new PrimaryScrollController(
+                        controller,
+                        new CustomScrollView(
+                            slivers: [new SliverToBoxAdapter(new SizedBox(width: 10, height: 100))])))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -171,17 +173,19 @@ public sealed class ScrollInfrastructureTests
         var owner = TestBuildOwner.Create();
         using var controller = new TestScrollController();
         var root = new TestRootElement(
-            new ScrollConfiguration(
-                behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
-                child: new PrimaryScrollController(
-                    controller,
-                    new CustomScrollView(
-                        slivers:
-                        [
-                            new SliverToBoxAdapter(
-                                new SingleChildScrollView(
-                                    child: new SizedBox(width: 10, height: 100))),
-                        ]))));
+            new ViewScope(
+                new FlutterView(new Size(800, 600)),
+                new ScrollConfiguration(
+                    behavior: new FixedPlatformScrollBehavior(TargetPlatform.Android),
+                    child: new PrimaryScrollController(
+                        controller,
+                        new CustomScrollView(
+                            slivers:
+                            [
+                                new SliverToBoxAdapter(
+                                    new SingleChildScrollView(
+                                        child: new SizedBox(width: 10, height: 100))),
+                            ])))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

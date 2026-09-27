@@ -19,14 +19,16 @@ internal sealed class ScrollSemanticsHarness
     private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly HarnessRootElement _rootElement;
     private readonly PipelineOwner _pipeline;
+    private readonly bool _withViewScope;
 
-    public ScrollSemanticsHarness(Widget rootWidget)
+    public ScrollSemanticsHarness(Widget rootWidget, bool withViewScope = true)
     {
+        _withViewScope = withViewScope;
         RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
 
-        _rootElement = new HarnessRootElement(RenderView, rootWidget);
+        _rootElement = new HarnessRootElement(RenderView, Wrap(rootWidget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
@@ -37,8 +39,12 @@ internal sealed class ScrollSemanticsHarness
     /// <summary>Rebuilds the tree from a new root widget, the way a `setState` above it would.</summary>
     public void UpdateRoot(Widget rootWidget)
     {
-        _rootElement.Update(rootWidget);
+        _rootElement.Update(Wrap(rootWidget));
     }
+
+    private Widget Wrap(Widget widget) => _withViewScope
+        ? new ViewScope(RenderView.FlutterView, widget)
+        : widget;
 
     /// <summary>The element hosting the root widget, for `FindRenderObject`-style lookups.</summary>
     public Element RootElement => _rootElement;

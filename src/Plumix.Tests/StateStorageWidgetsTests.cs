@@ -423,15 +423,17 @@ public sealed class StateStorageWidgetsTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
+        private readonly FlutterView _view;
 
         public WidgetRenderHarness(Widget widget)
         {
             var renderView = new RenderView(new FlutterView(new Size(800, 600)));
+            _view = renderView.FlutterView;
             _pipeline = new PipelineOwner(renderView);
             _pipeline.Attach(renderView);
             _root = new HarnessRootElement(
                 renderView,
-                new Directionality(TextDirection.Ltr, child: widget));
+                new ViewScope(renderView.FlutterView, new Directionality(TextDirection.Ltr, child: widget)));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -439,7 +441,9 @@ public sealed class StateStorageWidgetsTests
 
         public void Update(Widget widget)
         {
-            _root.UpdateWidget(new Directionality(TextDirection.Ltr, child: widget));
+            _root.UpdateWidget(new ViewScope(
+                _view,
+                new Directionality(TextDirection.Ltr, child: widget)));
             _owner.FlushBuild();
         }
 

@@ -1036,7 +1036,7 @@ public sealed class DraggableScrollableSheetTests
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, BuildTree());
+            _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, BuildTree()));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -1137,7 +1137,7 @@ public sealed class DraggableScrollableSheetTests
             _snapSizes = snapSizes ?? _snapSizes;
             _physics = physics ?? _physics;
             _controller = controller ?? _controller;
-            _rootElement.UpdateChildWidget(BuildTree());
+            _rootElement.UpdateChildWidget(new ViewScope(RenderView.FlutterView, BuildTree()));
             Pump();
         }
 
