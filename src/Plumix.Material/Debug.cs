@@ -3,7 +3,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source: material_ui/lib/src/debug.dart (subset: debugCheckHasMaterial)
+// Dart parity source: material_ui/lib/src/debug.dart
 
 /// <summary>The debug checks of Flutter's Material <c>debug.dart</c>.</summary>
 public static class MaterialDebug
@@ -46,6 +46,78 @@ public static class MaterialDebug
             + "include one, or use a widget that contains Material itself, "
             + "such as a Card, Dialog, Drawer, or Scaffold."));
         information.AddRange(context.DescribeMissingAncestor(typeof(Material)));
+        throw new FlutterError(information);
+    }
+
+    /// <summary>Asserts that a Localizations ancestor provides MaterialLocalizations.</summary>
+    public static bool DebugCheckHasMaterialLocalizations(BuildContext context)
+    {
+        if (!Constants.KDebugMode || Localizations.MaybeOf<MaterialLocalizations>(context) is not null)
+        {
+            return true;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("No MaterialLocalizations found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require MaterialLocalizations "
+                + "to be provided by a Localizations widget ancestor."),
+            new ErrorDescription(
+                "The material library uses Localizations to generate messages, "
+                + "labels, and abbreviations."),
+            new ErrorHint(
+                "To introduce a MaterialLocalizations, either use a "
+                + "MaterialApp at the root of your application to include them "
+                + "automatically, or add a Localization widget with a "
+                + "MaterialLocalizations delegate."),
+        };
+        information.AddRange(context.DescribeMissingAncestor(typeof(MaterialLocalizations)));
+        throw new FlutterError(information);
+    }
+
+    /// <summary>Asserts that the current widget or an ancestor is a Scaffold.</summary>
+    public static bool DebugCheckHasScaffold(BuildContext context)
+    {
+        if (!Constants.KDebugMode
+            || context.Widget is Scaffold
+            || context.FindAncestorWidgetOfExactType<Scaffold>() is not null)
+        {
+            return true;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("No Scaffold widget found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a Scaffold widget ancestor."),
+        };
+        information.AddRange(context.DescribeMissingAncestor(typeof(Scaffold)));
+        information.Add(new ErrorHint(
+            "Typically, the Scaffold widget is introduced by the MaterialApp or "
+            + "WidgetsApp widget at the top of your application widget tree."));
+        throw new FlutterError(information);
+    }
+
+    /// <summary>Asserts that a ScaffoldMessenger is an ancestor of the current widget.</summary>
+    public static bool DebugCheckHasScaffoldMessenger(BuildContext context)
+    {
+        if (!Constants.KDebugMode || context.FindAncestorWidgetOfExactType<ScaffoldMessenger>() is not null)
+        {
+            return true;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("No ScaffoldMessenger widget found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a "
+                + "ScaffoldMessenger widget ancestor."),
+        };
+        information.AddRange(context.DescribeMissingAncestor(typeof(ScaffoldMessenger)));
+        information.Add(new ErrorHint(
+            "Typically, the ScaffoldMessenger widget is introduced by the MaterialApp "
+            + "at the top of your application widget tree."));
         throw new FlutterError(information);
     }
 }

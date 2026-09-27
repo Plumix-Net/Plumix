@@ -45,8 +45,11 @@ public sealed class ScaffoldMessenger : StatefulWidget
 
     public override State CreateState() => new ScaffoldMessengerState();
 
-    public static ScaffoldMessengerState Of(BuildContext context) =>
-        MaybeOf(context) ?? throw new InvalidOperationException("ScaffoldMessenger not found in context.");
+    public static ScaffoldMessengerState Of(BuildContext context)
+    {
+        MaterialDebug.DebugCheckHasScaffoldMessenger(context);
+        return MaybeOf(context) ?? throw new InvalidOperationException("ScaffoldMessenger not found in context.");
+    }
 
     public static ScaffoldMessengerState? MaybeOf(BuildContext context) =>
         context.DependOnInheritedWidgetOfExactType<ScaffoldMessengerScope>()?.Messenger;

@@ -12,6 +12,7 @@ Document rules:
 
 | Area | Primary tests | What is covered | Typical gap to watch |
 | --- | --- | --- | --- |
+| Material debug ancestor checks (`debug.dart`) | `src/Plumix.Tests/MaterialDebugDartParityTests.cs`, `MaterialDartParityTests.cs` | All four helpers' missing-ancestor diagnostics, order and successful lookups; Material hidden by a `LookupBoundary`. | The core widgets debug helpers remain open in `BACKLOG.md`. |
 | Widget feedback (`widgets/feedback.dart`) | `src/Plumix.Tests/FeedbackTests.cs` | Tap and long-press semantics events, accessibility-channel payloads, platform sound/haptic branches, null wrappers and feedback-before-callback order. | Native sound and haptic output remains host-specific. |
 | Painting basic types (`painting/basic_types.dart`) | `src/Plumix.Tests/BasicTypesTests.cs` | Enum order and all axis, axis-direction and text-direction conversions. | No widget or paint behavior lives in this source file. |
 | Color (dart:ui `Color`, `ColorSpace`) and its subtypes | `src/Plumix.Tests/ColorTests.cs`, `ColorSubtypeTests.cs`, `ColorMatchers.cs` | Ports the engine's `color_test.dart` (accessors, runtime-type equality, lerp and alphaBlend across colour spaces, luminance, P3/extended-sRGB transforms, overridden `value`); `ColorSwatch`/`MaterialColor`, `CupertinoDynamicColor` and `WidgetStateColor` held in plain `Color` slots and recovered by type; flutter_test's `isSameColorAs` for interpolated colours. | Wide-gamut colours are quantised to 8-bit sRGB at the Avalonia backend. |

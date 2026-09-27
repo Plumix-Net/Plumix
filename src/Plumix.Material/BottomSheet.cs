@@ -918,8 +918,10 @@ public static class MaterialBottomSheets
         bool? enableDrag = null,
         bool? showDragHandle = null,
         AnimationController? transitionAnimationController = null,
-        AnimationStyle? sheetAnimationStyle = null) =>
-        Scaffold.Of(context).ShowBottomSheet(
+        AnimationStyle? sheetAnimationStyle = null)
+    {
+        MaterialDebug.DebugCheckHasScaffold(context);
+        return Scaffold.Of(context).ShowBottomSheet(
             builder,
             backgroundColor,
             elevation,
@@ -930,4 +932,5 @@ public static class MaterialBottomSheets
             showDragHandle,
             transitionAnimationController,
             sheetAnimationStyle);
+    }
 }
