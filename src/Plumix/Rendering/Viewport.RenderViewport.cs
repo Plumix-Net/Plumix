@@ -882,9 +882,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox,
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        // Flutter walks `childrenInPaintOrder` here; Plumix has no geometry-driven traversal sort, so
-        // it keeps first-to-last order and applies only the visible-or-cached filter.
-        foreach (RenderSliver child in ChildrenFirstToLast())
+        foreach (RenderSliver child in ChildrenInPaintOrder)
         {
             if (IsSemanticallyRelevant(child))
             {

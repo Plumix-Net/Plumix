@@ -1196,7 +1196,7 @@ public sealed class ScrollSemanticsDartParityTests
 
         /// <summary>
         /// Dart's <c>expect(semantics, hasSemantics(expected, ignoreId: true, ignoreRect: true,
-        /// ignoreTransform: true))</c> in inverse-hit-test child order.
+        /// ignoreTransform: true))</c> in traversal order.
         /// </summary>
         public void ExpectHasSemantics(TestSemantics expected)
         {
@@ -1283,7 +1283,10 @@ public sealed class ScrollSemanticsDartParityTests
                 errors.Append($" role: expected None but found {data.Role};");
             }
 
-            int childrenCount = node.MergeAllDescendantsIntoThisNode ? 0 : node.Children.Count;
+            IReadOnlyList<SemanticsNode> actualChildren = node.MergeAllDescendantsIntoThisNode
+                ? []
+                : node.ChildrenInTraversalOrder;
+            int childrenCount = actualChildren.Count;
             if (_children.Count != childrenCount)
             {
                 errors.Append($" expected {_children.Count} children but found {childrenCount};");
@@ -1296,7 +1299,7 @@ public sealed class ScrollSemanticsDartParityTests
 
             for (int i = 0; i < _children.Count; i += 1)
             {
-                string? childFailure = _children[i].Match(node.Children[i], $"{path}/{i}");
+                string? childFailure = _children[i].Match(actualChildren[i], $"{path}/{i}");
                 if (childFailure != null)
                 {
                     return childFailure;

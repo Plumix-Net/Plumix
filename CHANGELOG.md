@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: viewports visit semantics children in paint order; directional traversal sorts them (rendering/viewport.dart).
 - Breaking: Material debug checks now cover localizations, Scaffold and ScaffoldMessenger (debug.dart).
 - Breaking: `Material` paints through `AnimatedPhysicalModel`/`_MaterialInterior`'s `PhysicalShape` (material.dart).
 - Breaking: `Material` clips via its physical model and paints its border with `_ShapeBorderPaint`, not a ClipPath.

@@ -176,6 +176,24 @@ public class ViewportPortTests
         Assert.Equal([second, first], viewport.ChildrenInHitTestOrder.ToList());
     }
 
+    [Fact]
+    public void RenderViewport_VisitsSemanticsChildrenInPaintOrder()
+    {
+        var first = new FixedSliver(100);
+        var second = new FixedSliver(100);
+        RenderViewport viewport = BuildViewport(new TestViewportOffset(), [first, second]);
+        Layout(viewport, new Size(100, 200));
+
+        var visited = new List<RenderObject>();
+        viewport.VisitChildrenForSemantics(visited.Add);
+        Assert.Equal([second, first], visited);
+
+        viewport.PaintOrder = SliverPaintOrder.LastIsTop;
+        visited.Clear();
+        viewport.VisitChildrenForSemantics(visited.Add);
+        Assert.Equal([first, second], visited);
+    }
+
     [Theory]
     [InlineData(null, 250.0)]
     [InlineData(0.0, 0.0)]

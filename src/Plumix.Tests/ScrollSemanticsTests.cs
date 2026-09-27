@@ -22,6 +22,34 @@ public sealed class ScrollSemanticsTests
     private static readonly Size Surface = new(300, 400);
 
     [Fact]
+    public void IndividualSliversTraverseInReadingOrderDespiteReversePaintOrder()
+    {
+        var harness = new ScrollSemanticsHarness(new Semantics(
+            textDirection: TextDirection.Ltr,
+            child: new Directionality(
+                TextDirection.Ltr,
+                new CustomScrollView(slivers: [
+                    new SliverToBoxAdapter(new Semantics(
+                        label: "first",
+                        container: true,
+                        child: new SizedBox(height: ItemHeight))),
+                    new SliverToBoxAdapter(new Semantics(
+                        label: "second",
+                        container: true,
+                        child: new SizedBox(height: ItemHeight))),
+                ]))));
+        harness.Pump(Surface);
+
+        SemanticsNode scrolling = RequireScrollingNode(harness);
+        Assert.Equal(
+            ["second", "first"],
+            scrolling.Children.Select(static node => node.Label));
+        Assert.Equal(
+            ["first", "second"],
+            scrolling.ChildrenInTraversalOrder.Select(static node => node.Label));
+    }
+
+    [Fact]
     public void ScrollableExposesTheCorrectSemanticActions()
     {
         var controller = new ScrollController();
