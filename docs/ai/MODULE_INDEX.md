@@ -411,6 +411,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/AsyncBuilderTests.cs`
   - `src/Plumix.Tests/AnimatedSwitcherTests.cs`
   - `src/Plumix.Tests/ImplicitAnimationsTests.cs`
+  - `src/Plumix.Tests/ImplicitAnimationsDartParityTests.cs`
+  - `src/Plumix.Tests/ImplicitAnimationsWidgetsDartParityTests.cs`
   - `src/Plumix.Tests/TickerProviderTickerModeTests.cs`
   - `src/Plumix.Tests/TransitionsTests.cs`
   - `src/Plumix.Tests/SliverOpacityTests.cs`

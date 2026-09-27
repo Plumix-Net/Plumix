@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -8,17 +9,251 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/implicit_animations.dart
 
-public sealed class DecorationTween : Tween<Decoration>
+/// <summary>An interpolation between two <see cref="BoxConstraints"/>.</summary>
+public class BoxConstraintsTween : Tween<BoxConstraints>
 {
+    /// <summary>
+    /// Creates a <see cref="BoxConstraints"/> tween. A <c>null</c> end is unset, as in Dart.
+    /// </summary>
+    public BoxConstraintsTween(BoxConstraints? begin = null, BoxConstraints? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    /// <inheritdoc cref="Tween{T}.Begin" />
+    public new BoxConstraints? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set => SetOrClearBegin(value);
+    }
+
+    /// <inheritdoc cref="Tween{T}.End" />
+    public new BoxConstraints? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set => SetOrClearEnd(value);
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override BoxConstraints Lerp(double t) => BoxConstraints.Lerp(Begin, End, t)!.Value;
+
+    private void SetOrClearBegin(BoxConstraints? value)
+    {
+        if (value is { } constraints)
+        {
+            SetBeginValue(constraints);
+        }
+        else
+        {
+            ClearBeginValue();
+        }
+    }
+
+    private void SetOrClearEnd(BoxConstraints? value)
+    {
+        if (value is { } constraints)
+        {
+            SetEndValue(constraints);
+        }
+        else
+        {
+            ClearEndValue();
+        }
+    }
+}
+
+/// <summary>An interpolation between two <see cref="Decoration"/>s.</summary>
+public class DecorationTween : Tween<Decoration>
+{
+    /// <summary>Creates a decoration tween.</summary>
     public DecorationTween(Decoration? begin = null, Decoration? end = null)
         : base(begin, end)
     {
     }
 
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
     public override Decoration Lerp(double t)
     {
         // Dart's `Decoration.lerp(begin, end, t)!`: two null ends fail the null check.
         return Decoration.Lerp(Begin, End, t)
+               ?? throw new InvalidOperationException("Null check operator used on a null value");
+    }
+}
+
+/// <summary>An interpolation between two <see cref="EdgeInsets"/>s.</summary>
+public class EdgeInsetsTween : Tween<EdgeInsets>
+{
+    /// <summary>Creates an <see cref="EdgeInsets"/> tween. A <c>null</c> end is unset, as in Dart.</summary>
+    public EdgeInsetsTween(EdgeInsets? begin = null, EdgeInsets? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    /// <inheritdoc cref="Tween{T}.Begin" />
+    public new EdgeInsets? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value is { } insets)
+            {
+                SetBeginValue(insets);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    /// <inheritdoc cref="Tween{T}.End" />
+    public new EdgeInsets? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value is { } insets)
+            {
+                SetEndValue(insets);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override EdgeInsets Lerp(double t) => EdgeInsets.Lerp(Begin, End, t)!.Value;
+}
+
+/// <summary>An interpolation between two <see cref="EdgeInsetsGeometry"/>s.</summary>
+public class EdgeInsetsGeometryTween : Tween<EdgeInsetsGeometry>
+{
+    /// <summary>
+    /// Creates an <see cref="EdgeInsetsGeometry"/> tween. A <c>null</c> end is unset, as in Dart.
+    /// </summary>
+    public EdgeInsetsGeometryTween(EdgeInsetsGeometry? begin = null, EdgeInsetsGeometry? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    /// <inheritdoc cref="Tween{T}.Begin" />
+    public new EdgeInsetsGeometry? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value is { } insets)
+            {
+                SetBeginValue(insets);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    /// <inheritdoc cref="Tween{T}.End" />
+    public new EdgeInsetsGeometry? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value is { } insets)
+            {
+                SetEndValue(insets);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override EdgeInsetsGeometry Lerp(double t) => EdgeInsetsGeometry.Lerp(Begin, End, t)!.Value;
+}
+
+/// <summary>An interpolation between two <see cref="BorderRadius"/>s.</summary>
+public class BorderRadiusTween : Tween<BorderRadius?>
+{
+    /// <summary>Creates a <see cref="BorderRadius"/> tween.</summary>
+    public BorderRadiusTween(BorderRadius? begin = null, BorderRadius? end = null)
+        : base(begin, end)
+    {
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override BorderRadius? Lerp(double t) => BorderRadius.Lerp(Begin, End, t);
+}
+
+/// <summary>An interpolation between two <see cref="Border"/>s.</summary>
+public class BorderTween : Tween<Border?>
+{
+    /// <summary>Creates a <see cref="Border"/> tween.</summary>
+    public BorderTween(Border? begin = null, Border? end = null)
+        : base(begin, end)
+    {
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override Border? Lerp(double t) => Border.Lerp(Begin, End, t);
+}
+
+/// <summary>An interpolation between two <see cref="Matrix4"/>s.</summary>
+/// <remarks>
+/// Each end is decomposed into translation, rotation and scale, the three parts are interpolated
+/// separately, and the result is recomposed. Rotation uses a normalized linear quaternion blend, so a
+/// constant-speed rotation is approximated rather than exact.
+/// </remarks>
+public class Matrix4Tween : Tween<Matrix4>
+{
+    /// <summary>Creates a <see cref="Matrix4"/> tween.</summary>
+    public Matrix4Tween(Matrix4? begin = null, Matrix4? end = null)
+        : base(begin, end)
+    {
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override Matrix4 Lerp(double t)
+    {
+        DebugAssertions.Assert(Begin is not null);
+        DebugAssertions.Assert(End is not null);
+        Vector3 beginTranslation = Vector3.Zero();
+        Vector3 endTranslation = Vector3.Zero();
+        Quaternion beginRotation = Quaternion.Identity();
+        Quaternion endRotation = Quaternion.Identity();
+        Vector3 beginScale = Vector3.Zero();
+        Vector3 endScale = Vector3.Zero();
+        Begin!.Decompose(beginTranslation, beginRotation, beginScale);
+        End!.Decompose(endTranslation, endRotation, endScale);
+        Vector3 lerpTranslation = (beginTranslation * (1.0 - t)) + (endTranslation * t);
+        Quaternion lerpRotation = (beginRotation.Scaled(1.0 - t) + endRotation.Scaled(t)).Normalized();
+        Vector3 lerpScale = (beginScale * (1.0 - t)) + (endScale * t);
+        return Matrix4.Compose(lerpTranslation, lerpRotation, lerpScale);
+    }
+}
+
+/// <summary>An interpolation between two <see cref="TextStyle"/>s.</summary>
+/// <remarks>This will not work well if the styles don't set the same fields.</remarks>
+public class TextStyleTween : Tween<TextStyle>
+{
+    /// <summary>Creates a text style tween.</summary>
+    public TextStyleTween(TextStyle? begin = null, TextStyle? end = null)
+        : base(begin, end)
+    {
+    }
+
+    /// <summary>Returns the value this variable has at the given animation clock value.</summary>
+    public override TextStyle Lerp(double t)
+    {
+        // Dart's `TextStyle.lerp(begin, end, t)!`.
+        return TextStyle.Lerp(Begin, End, t)
                ?? throw new InvalidOperationException("Null check operator used on a null value");
     }
 }
@@ -29,7 +264,9 @@ public sealed class DecorationTween : Tween<Decoration>
 /// </summary>
 public abstract class ImplicitlyAnimatedWidget : StatefulWidget
 {
-    /// <summary>Initializes fields for subclasses. <paramref name="curve"/> defaults to <c>Curves.linear</c>.</summary>
+    /// <summary>
+    /// Initializes fields for subclasses. <paramref name="curve"/> defaults to <c>Curves.linear</c>.
+    /// </summary>
     protected ImplicitlyAnimatedWidget(
         TimeSpan duration,
         Curve? curve = null,
@@ -64,35 +301,71 @@ public abstract class ImplicitlyAnimatedWidget : StatefulWidget
 public delegate Tween<T> TweenConstructor<T>(T targetValue);
 
 /// <summary>
-/// Dart's <c>TweenVisitor&lt;dynamic&gt;</c>: the function <see cref="ImplicitlyAnimatedWidgetState{T}.ForEachTween"/>
-/// calls for every tween. C# cannot pass a generic lambda, so the visitor is an object with a generic method.
+/// Dart's <c>TweenVisitor&lt;dynamic&gt;</c>: the function
+/// <see cref="ImplicitlyAnimatedWidgetState{T}.ForEachTween"/> calls for every tween.
 /// </summary>
+/// <remarks>
+/// C# cannot pass a generic lambda, so the visitor is an object with a generic method. Dart's target is
+/// a nullable <c>T</c>; C#'s <c>T?</c> on an unconstrained type parameter cannot hold <c>null</c> for a
+/// value type, so a value-type target goes through the <see cref="Nullable{T}"/> overload.
+/// </remarks>
 public abstract class TweenVisitor
 {
     /// <summary>
-    /// Visits one tween: returns the (possibly newly constructed) tween to store, or null when
-    /// <paramref name="targetValue"/> is null.
+    /// Visits one tween whose target is a reference type (or a <see cref="Nullable{T}"/> tween type):
+    /// returns the (possibly newly constructed) tween to store, or <c>null</c> when
+    /// <paramref name="targetValue"/> is <c>null</c>.
     /// </summary>
-    public abstract Tween<T>? Visit<T>(Tween<T>? tween, T? targetValue, TweenConstructor<T> constructor);
+    public Tween<T>? Visit<T>(Tween<T>? tween, T? targetValue, TweenConstructor<T> constructor)
+    {
+        return VisitTween(tween, targetValue is not null, targetValue!, constructor);
+    }
+
+    /// <summary>Visits one tween whose target is a value type; see the other overload.</summary>
+    public Tween<T>? Visit<T>(Tween<T>? tween, T? targetValue, TweenConstructor<T> constructor)
+        where T : struct
+    {
+        return VisitTween(tween, targetValue.HasValue, targetValue.GetValueOrDefault(), constructor);
+    }
+
+    /// <summary>
+    /// The visitor body: <paramref name="hasTargetValue"/> is <c>false</c> where Dart's target is
+    /// <c>null</c>.
+    /// </summary>
+    protected abstract Tween<T>? VisitTween<T>(
+        Tween<T>? tween,
+        bool hasTargetValue,
+        T targetValue,
+        TweenConstructor<T> constructor);
 }
 
 /// <summary>
 /// A base class for the <see cref="State"/> of widgets with implicit animations. Dart's
 /// <c>ImplicitlyAnimatedWidgetState</c>.
 /// </summary>
+/// <remarks>
+/// Dart mixes in <c>SingleTickerProviderStateMixin</c>; every Plumix <see cref="State"/> is already a
+/// ticker provider (see DIVERGENCES.md).
+/// </remarks>
 public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : ImplicitlyAnimatedWidget
 {
     private AnimationController? _controller;
     private CurvedAnimation? _animation;
 
-    /// <summary>The animation controller driving this widget's implicit animations.</summary>
+    /// <summary>
+    /// The animation controller driving this widget's implicit animations. Dart's <c>late final</c>
+    /// field: created on first access.
+    /// </summary>
     protected AnimationController Controller => _controller ??= new AnimationController(
         duration: Widget.Duration,
         debugLabel: Constants.KDebugMode ? Widget.ToStringShort() : null,
         vsync: this);
 
     /// <summary>The animation driving this widget's implicit animations.</summary>
-    public Animation<double> Animation => _animation ??= CreateCurve();
+    public Animation<double> Animation => CurrentAnimation;
+
+    // Dart's `late CurvedAnimation _animation = _createCurve()`: created on first read.
+    private CurvedAnimation CurrentAnimation => _animation ??= CreateCurve();
 
     /// <inheritdoc />
     public override void InitState()
@@ -100,7 +373,7 @@ public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : Impl
         base.InitState();
         Controller.AddStatusListener(status =>
         {
-            if (status == AnimationStatus.Completed)
+            if (status.IsCompleted())
             {
                 Widget.OnEnd?.Invoke();
             }
@@ -115,14 +388,14 @@ public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : Impl
         base.DidUpdateWidget(oldWidget);
         if (Widget.Curve != oldWidget.Curve)
         {
-            _animation?.Dispose();
+            CurrentAnimation.Dispose();
             _animation = CreateCurve();
         }
 
         Controller.Duration = Widget.Duration;
         if (ConstructTweens())
         {
-            ForEachTween(new UpdateTweenVisitor(Animation));
+            ForEachTween(new RetargetTweenVisitor(CurrentAnimation));
             Controller.Forward(from: 0.0);
             DidUpdateTweens();
         }
@@ -136,7 +409,7 @@ public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : Impl
     /// <inheritdoc />
     public override void Dispose()
     {
-        _animation?.Dispose();
+        CurrentAnimation.Dispose();
         Controller.Dispose();
         base.Dispose();
     }
@@ -152,38 +425,51 @@ public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : Impl
     /// Visits each tween controlled by this state with <paramref name="visitor"/>, storing the tween
     /// the visitor returns. Dart's <c>forEachTween</c>.
     /// </summary>
+    /// <remarks>
+    /// A tween is stored as <c>_x = (XTween?)visitor.Visit(_x, targetValue, value =&gt; new XTween(value))</c>.
+    /// </remarks>
     protected abstract void ForEachTween(TweenVisitor visitor);
 
-    /// <summary>Optional hook for subclasses that runs after all tweens have been updated.</summary>
+    /// <summary>
+    /// Optional hook for subclasses that runs after all tweens have been updated (and therefore after
+    /// the animation changed).
+    /// </summary>
     protected virtual void DidUpdateTweens()
     {
     }
 
     // Dart's `tween.end ?? tween.begin`.
-    private static TValue? EndOrBegin<TValue>(Tween<TValue> tween)
+    private static object? EndOrBegin<TValue>(Tween<TValue> tween)
     {
-        return tween.HasEndValue ? tween.End : tween.Begin;
+        if (tween.HasEndValue)
+        {
+            return tween.GetEndValue();
+        }
+
+        return tween.HasBeginValue ? tween.GetBeginValue() : null;
     }
 
     private sealed class ConstructTweenVisitor : TweenVisitor
     {
         public bool ShouldStartAnimation { get; private set; }
 
-        public override Tween<TValue>? Visit<TValue>(
+        protected override Tween<TValue>? VisitTween<TValue>(
             Tween<TValue>? tween,
-            TValue? targetValue,
-            TweenConstructor<TValue> constructor) where TValue : default
+            bool hasTargetValue,
+            TValue targetValue,
+            TweenConstructor<TValue> constructor)
         {
-            if (targetValue is not null)
+            if (hasTargetValue)
             {
                 tween ??= constructor(targetValue);
                 if (!Equals(targetValue, EndOrBegin(tween)))
                 {
                     ShouldStartAnimation = true;
                 }
-                else if (!tween.HasEndValue)
+                else if (!tween.HasEndValue && tween.HasBeginValue)
                 {
-                    tween.End = tween.Begin;
+                    // Dart's `tween.end ??= tween.begin`.
+                    tween.SetEndValue(tween.GetBeginValue());
                 }
             }
             else
@@ -195,17 +481,37 @@ public abstract class ImplicitlyAnimatedWidgetState<T> : State<T> where T : Impl
         }
     }
 
-    private sealed class UpdateTweenVisitor(Animation<double> animation) : TweenVisitor
+    // Dart's inline visitor in `didUpdateWidget`: `tween?..begin = tween.evaluate(_animation)..end = targetValue`.
+    private sealed class RetargetTweenVisitor(Animation<double> animation) : TweenVisitor
     {
-        public override Tween<TValue>? Visit<TValue>(
+        protected override Tween<TValue>? VisitTween<TValue>(
             Tween<TValue>? tween,
-            TValue? targetValue,
-            TweenConstructor<TValue> constructor) where TValue : default
+            bool hasTargetValue,
+            TValue targetValue,
+            TweenConstructor<TValue> constructor)
         {
-            if (tween is not null)
+            if (tween is null)
             {
-                tween.Begin = tween.Evaluate(animation);
-                tween.End = targetValue;
+                return null;
+            }
+
+            TValue current = tween.Evaluate(animation);
+            if (current is null)
+            {
+                tween.ClearBeginValue();
+            }
+            else
+            {
+                tween.SetBeginValue(current);
+            }
+
+            if (hasTargetValue && targetValue is not null)
+            {
+                tween.SetEndValue(targetValue);
+            }
+            else
+            {
+                tween.ClearEndValue();
             }
 
             return tween;
@@ -236,1114 +542,450 @@ public abstract class AnimatedWidgetBaseState<T> : ImplicitlyAnimatedWidgetState
     }
 }
 
-public sealed class AnimatedOpacity : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Container"/> that gradually changes its values over a period of time.
+/// </summary>
+public class AnimatedContainer : ImplicitlyAnimatedWidget
 {
-    public AnimatedOpacity(
-        double opacity,
-        TimeSpan duration,
-        Widget? child = null,
-        Curve? curve = null,
-        Action? onEnd = null,
-        bool alwaysIncludeSemantics = false,
-        Key? key = null) : base(key)
-    {
-        if (!double.IsFinite(opacity) || opacity < 0.0 || opacity > 1.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between zero and one.");
-        }
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-
-        Opacity = opacity;
-        Duration = duration;
-        Child = child;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
-        AlwaysIncludeSemantics = alwaysIncludeSemantics;
-    }
-
-    public double Opacity { get; }
-
-    public TimeSpan Duration { get; }
-
-    public Widget? Child { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
-    public bool AlwaysIncludeSemantics { get; }
-
-    public override State CreateState() => new AnimatedOpacityState();
-
-    private sealed class AnimatedOpacityState : State<AnimatedOpacity>
-    {
-        private AnimationController? _controller;
-        private double _begin;
-        private double _end;
-
-        private AnimatedOpacity CurrentWidget => (AnimatedOpacity)StateWidget;
-
-        public override void InitState()
-        {
-            _begin = _end = CurrentWidget.Opacity;
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(AnimatedOpacity oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            double current = Evaluate(_controller.Evaluate());
-            if (CurrentWidget.Opacity != _end)
-            {
-                _begin = current;
-                _end = CurrentWidget.Opacity;
-                _controller.Forward(from: 0.0);
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            return new Opacity(
-                opacity: Evaluate(_controller!.Evaluate()),
-                alwaysIncludeSemantics: CurrentWidget.AlwaysIncludeSemantics,
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-
-            base.Dispose();
-        }
-
-        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-}
-
-public sealed class SliverAnimatedOpacity : StatefulWidget
-{
-    public SliverAnimatedOpacity(
-        double opacity,
-        TimeSpan duration,
-        Widget? sliver = null,
-        Curve? curve = null,
-        Action? onEnd = null,
-        bool alwaysIncludeSemantics = false,
-        Key? key = null) : base(key)
-    {
-        if (!double.IsFinite(opacity) || opacity < 0.0 || opacity > 1.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(opacity), "Opacity must be between zero and one.");
-        }
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-
-        Opacity = opacity;
-        Duration = duration;
-        Sliver = sliver;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
-        AlwaysIncludeSemantics = alwaysIncludeSemantics;
-    }
-
-    public double Opacity { get; }
-
-    public TimeSpan Duration { get; }
-
-    public Widget? Sliver { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
-    public bool AlwaysIncludeSemantics { get; }
-
-    public override State CreateState() => new SliverAnimatedOpacityState();
-
-    private sealed class SliverAnimatedOpacityState : State<SliverAnimatedOpacity>
-    {
-        private AnimationController? _controller;
-        private CurvedAnimation? _animation;
-        private MappedDoubleAnimation? _opacityAnimation;
-        private double _begin;
-        private double _end;
-
-        private SliverAnimatedOpacity CurrentWidget => (SliverAnimatedOpacity)StateWidget;
-
-        public override void InitState()
-        {
-            _begin = _end = CurrentWidget.Opacity;
-            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this);
-            _animation = new CurvedAnimation(_controller, CurrentWidget.Curve);
-            _opacityAnimation = new MappedDoubleAnimation(_animation, Evaluate);
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(SliverAnimatedOpacity oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _animation!.Curve = CurrentWidget.Curve;
-            double current = Evaluate(_animation.Value);
-            if (CurrentWidget.Opacity != _end)
-            {
-                _begin = current;
-                _end = CurrentWidget.Opacity;
-                _controller.Forward(from: 0.0);
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            return new SliverFadeTransition(
-                opacity: _opacityAnimation!,
-                sliver: CurrentWidget.Sliver,
-                alwaysIncludeSemantics: CurrentWidget.AlwaysIncludeSemantics);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Completed -= HandleCompleted;
-            _opacityAnimation!.Dispose();
-            _animation!.Dispose();
-            _controller.Dispose();
-            _opacityAnimation = null;
-            _animation = null;
-            _controller = null;
-
-            base.Dispose();
-        }
-
-        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
-
-        private void HandleCompleted()
-        {
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-}
-
-public sealed class AnimatedSlide : StatefulWidget
-{
-    public AnimatedSlide(
-        Vector offset,
-        TimeSpan duration,
-        Widget? child = null,
-        Curve? curve = null,
-        Action? onEnd = null,
-        Key? key = null) : base(key)
-    {
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-
-        Offset = offset;
-        Duration = duration;
-        Child = child;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
-    }
-
-    public Vector Offset { get; }
-
-    public TimeSpan Duration { get; }
-
-    public Widget? Child { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
-    public override State CreateState() => new AnimatedSlideState();
-
-    private sealed class AnimatedSlideState : State<AnimatedSlide>
-    {
-        private AnimationController? _controller;
-        private Vector _begin;
-        private Vector _end;
-
-        private AnimatedSlide CurrentWidget => (AnimatedSlide)StateWidget;
-
-        public override void InitState()
-        {
-            _begin = _end = CurrentWidget.Offset;
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(AnimatedSlide oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            Vector current = Evaluate(_controller.Evaluate());
-            if (CurrentWidget.Offset != _end)
-            {
-                _begin = current;
-                _end = CurrentWidget.Offset;
-                _controller.Forward(from: 0.0);
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            Vector translation = Evaluate(_controller!.Evaluate());
-            return new FractionalTranslation(
-                translation: new Point(translation.X, translation.Y),
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-
-            base.Dispose();
-        }
-
-        private Vector Evaluate(double t)
-        {
-            return new Vector(
-                _begin.X + ((_end.X - _begin.X) * t),
-                _begin.Y + ((_end.Y - _begin.Y) * t));
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-}
-
-public sealed class AnimatedScale : StatefulWidget
-{
-    public AnimatedScale(
-        double scale,
-        TimeSpan duration,
-        Widget? child = null,
-        Alignment alignment = default,
-        FilterQuality? filterQuality = null,
-        Curve? curve = null,
-        Action? onEnd = null,
-        Key? key = null) : base(key)
-    {
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-
-        Scale = scale;
-        Duration = duration;
-        Child = child;
-        Alignment = alignment;
-        FilterQuality = filterQuality;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
-    }
-
-    public double Scale { get; }
-
-    public TimeSpan Duration { get; }
-
-    public Widget? Child { get; }
-
-    public Alignment Alignment { get; }
-
-    public FilterQuality? FilterQuality { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
-    public override State CreateState() => new AnimatedScaleState();
-
-    private sealed class AnimatedScaleState : State<AnimatedScale>
-    {
-        private AnimationController? _controller;
-        private double _begin;
-        private double _end;
-
-        private AnimatedScale CurrentWidget => (AnimatedScale)StateWidget;
-
-        public override void InitState()
-        {
-            _begin = _end = CurrentWidget.Scale;
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedScale oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            double current = Evaluate(_controller.Evaluate());
-            if (CurrentWidget.Scale != _end)
-            {
-                _begin = current;
-                _end = CurrentWidget.Scale;
-                _controller.Forward(from: 0.0);
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            double scale = Evaluate(_controller!.Evaluate());
-            return new Transform(
-                transform: Matrix4.Diagonal3Values(scale, scale, 1.0),
-                alignment: CurrentWidget.Alignment,
-                filterQuality: CurrentWidget.FilterQuality,
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            DisposeController();
-
-            base.Dispose();
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-}
-
-public sealed class AnimatedRotation : StatefulWidget
-{
-    public AnimatedRotation(
-        double turns,
-        TimeSpan duration,
-        Widget? child = null,
-        Alignment alignment = default,
-        FilterQuality? filterQuality = null,
-        Curve? curve = null,
-        Action? onEnd = null,
-        Key? key = null) : base(key)
-    {
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-        if (!double.IsFinite(turns))
-        {
-            throw new ArgumentOutOfRangeException(nameof(turns));
-        }
-
-        Turns = turns;
-        Duration = duration;
-        Child = child;
-        Alignment = alignment;
-        FilterQuality = filterQuality;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
-    }
-
-    public double Turns { get; }
-
-    public TimeSpan Duration { get; }
-
-    public Widget? Child { get; }
-
-    public Alignment Alignment { get; }
-
-    public FilterQuality? FilterQuality { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
-    public override State CreateState() => new AnimatedRotationState();
-
-    private sealed class AnimatedRotationState : State<AnimatedRotation>
-    {
-        private AnimationController? _controller;
-        private double _begin;
-        private double _end;
-
-        private AnimatedRotation CurrentWidget => (AnimatedRotation)StateWidget;
-
-        public override void InitState()
-        {
-            _begin = _end = CurrentWidget.Turns;
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedRotation oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            double current = Evaluate(_controller.Evaluate());
-            if (CurrentWidget.Turns != _end)
-            {
-                _begin = current;
-                _end = CurrentWidget.Turns;
-                _controller.Forward(from: 0.0);
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            double radians = Evaluate(_controller!.Evaluate()) * Math.PI * 2.0;
-            return Transform.Rotate(
-                angle: radians,
-                alignment: CurrentWidget.Alignment,
-                filterQuality: CurrentWidget.FilterQuality,
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            DisposeController();
-
-            base.Dispose();
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private double Evaluate(double t) => _begin + ((_end - _begin) * t);
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-}
-
-public sealed class AnimatedContainer : StatefulWidget
-{
+    /// <summary>
+    /// Creates a container that animates its parameters implicitly. <paramref name="color"/>,
+    /// <paramref name="width"/> and <paramref name="height"/> are shorthands folded into
+    /// <see cref="Decoration"/> and <see cref="Constraints"/>.
+    /// </summary>
     public AnimatedContainer(
         TimeSpan duration,
-        Widget? child = null,
-        Alignment? alignment = null,
-        Thickness? padding = null,
+        AlignmentGeometry? alignment = null,
+        EdgeInsetsGeometry? padding = null,
         Color? color = null,
         Decoration? decoration = null,
         Decoration? foregroundDecoration = null,
         double? width = null,
         double? height = null,
         BoxConstraints? constraints = null,
-        Thickness? margin = null,
+        EdgeInsetsGeometry? margin = null,
         Matrix4? transform = null,
+        AlignmentGeometry? transformAlignment = null,
+        Widget? child = null,
+        Clip clipBehavior = Clip.None,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
-        if (color != null && decoration is not null)
+        if (Constants.KDebugMode)
         {
-            throw new ArgumentException("color and decoration cannot both be specified.");
-        }
-        ValidateThickness(padding, nameof(padding));
-        ValidateThickness(margin, nameof(margin));
+            if (margin is { } marginValue && !marginValue.IsNonNegative)
+            {
+                throw new AssertionError("margin == null || margin.isNonNegative");
+            }
 
-        Duration = duration;
-        Child = child;
+            if (padding is { } paddingValue && !paddingValue.IsNonNegative)
+            {
+                throw new AssertionError("padding == null || padding.isNonNegative");
+            }
+
+            constraints?.DebugAssertIsValid();
+            if (color is not null && decoration is not null)
+            {
+                throw new AssertionError(
+                    "Cannot provide both a color and a decoration\n"
+                    + "The color argument is just a shorthand for \"decoration: BoxDecoration(color: color)\".");
+            }
+        }
+
         Alignment = alignment;
         Padding = padding;
-        Decoration = decoration ?? (color != null ? new BoxDecoration(Color: color) : null);
+        Decoration = decoration ?? (color is not null ? new BoxDecoration(Color: color) : null);
         ForegroundDecoration = foregroundDecoration;
-        Constraints = width.HasValue || height.HasValue
+        Constraints = width is not null || height is not null
             ? constraints?.Tighten(width: width, height: height)
               ?? BoxConstraints.TightFor(width: width, height: height)
             : constraints;
         Margin = margin;
         Transform = transform;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
+        TransformAlignment = transformAlignment;
+        Child = child;
+        ClipBehavior = clipBehavior;
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget? Child { get; }
-    public Alignment? Alignment { get; }
-    public Thickness? Padding { get; }
-    public Decoration? Decoration { get; }
-    public Decoration? ForegroundDecoration { get; }
-    public BoxConstraints? Constraints { get; }
-    public Thickness? Margin { get; }
-    public Matrix4? Transform { get; }
-    public TimeSpan Duration { get; }
-    public Curve Curve { get; }
-    public Action? OnEnd { get; }
 
+    /// <summary>Align the child within the container.</summary>
+    public AlignmentGeometry? Alignment { get; }
+
+    /// <summary>Empty space to inscribe inside the decoration.</summary>
+    public EdgeInsetsGeometry? Padding { get; }
+
+    /// <summary>The decoration to paint behind the child.</summary>
+    public Decoration? Decoration { get; }
+
+    /// <summary>The decoration to paint in front of the child.</summary>
+    public Decoration? ForegroundDecoration { get; }
+
+    /// <summary>Additional constraints to apply to the child.</summary>
+    public BoxConstraints? Constraints { get; }
+
+    /// <summary>Empty space to surround the decoration and child.</summary>
+    public EdgeInsetsGeometry? Margin { get; }
+
+    /// <summary>The transformation matrix to apply before painting the container.</summary>
+    public Matrix4? Transform { get; }
+
+    /// <summary>The alignment of the origin, relative to the size of the container.</summary>
+    public AlignmentGeometry? TransformAlignment { get; }
+
+    /// <summary>The clip behavior when <see cref="Decoration"/> is not null.</summary>
+    public Clip ClipBehavior { get; }
+
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedContainerState();
 
-    private static void ValidateThickness(Thickness? value, string parameterName)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (value is not { } thickness) return;
-        if (thickness.Left < 0 || thickness.Top < 0 || thickness.Right < 0 || thickness.Bottom < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Insets must be non-negative.");
-        }
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry?>(
+            "alignment",
+            Alignment,
+            showName: false,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "padding",
+            Padding,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Decoration>(
+            "bg",
+            Decoration,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Decoration>(
+            "fg",
+            ForegroundDecoration,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "constraints",
+            Constraints,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            showName: false));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "margin",
+            Margin,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(ObjectFlagProperty<Matrix4>.Has("transform", Transform));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry?>(
+            "transformAlignment",
+            TransformAlignment,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior));
     }
 
-    private sealed class AnimatedContainerState : State<AnimatedContainer>
+    private sealed class AnimatedContainerState : AnimatedWidgetBaseState<AnimatedContainer>
     {
-        private AnimationController? _controller;
-        private AnimatedContainerValues _begin = null!;
-        private AnimatedContainerValues _end = null!;
+        private AlignmentGeometryTween? _alignment;
+        private EdgeInsetsGeometryTween? _padding;
+        private DecorationTween? _decoration;
+        private DecorationTween? _foregroundDecoration;
+        private BoxConstraintsTween? _constraints;
+        private EdgeInsetsGeometryTween? _margin;
+        private Matrix4Tween? _transform;
+        private AlignmentGeometryTween? _transformAlignment;
 
-        private AnimatedContainer CurrentWidget => (AnimatedContainer)StateWidget;
-
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = AnimatedContainerValues.From(CurrentWidget);
-            CreateController(CurrentWidget.Duration);
-        }
-
-        public override void DidUpdateWidget(AnimatedContainer oldWidget)
-        {
-            var oldContainer = (AnimatedContainer)oldWidget;
-            var current = Evaluate(_controller!.Evaluate());
-            var target = AnimatedContainerValues.From(CurrentWidget);
-            bool targetChanged = target != _end;
-            bool durationChanged = oldContainer.Duration != CurrentWidget.Duration;
-            bool wasAnimating = _controller.IsAnimating;
-
-            if (durationChanged)
-            {
-                DisposeController();
-                CreateController(CurrentWidget.Duration);
-            }
-            else
-            {
-                _controller.Curve = CurrentWidget.Curve;
-            }
-
-            if (targetChanged)
-            {
-                _begin = current;
-                _end = target;
-                _controller.Forward(from: 0);
-            }
-            else if (durationChanged)
-            {
-                if (wasAnimating && current != target)
-                {
-                    _begin = current;
-                    _end = target;
-                    _controller.Forward(from: 0);
-                }
-                else
-                {
-                    _begin = _end = target;
-                }
-            }
+            _alignment = (AlignmentGeometryTween?)visitor.Visit(
+                _alignment,
+                Widget.Alignment,
+                value => new AlignmentGeometryTween(begin: value));
+            _padding = (EdgeInsetsGeometryTween?)visitor.Visit(
+                _padding,
+                Widget.Padding,
+                value => new EdgeInsetsGeometryTween(begin: value));
+            _decoration = (DecorationTween?)visitor.Visit(
+                _decoration,
+                Widget.Decoration,
+                value => new DecorationTween(begin: value));
+            _foregroundDecoration = (DecorationTween?)visitor.Visit(
+                _foregroundDecoration,
+                Widget.ForegroundDecoration,
+                value => new DecorationTween(begin: value));
+            _constraints = (BoxConstraintsTween?)visitor.Visit(
+                _constraints,
+                Widget.Constraints,
+                value => new BoxConstraintsTween(begin: value));
+            _margin = (EdgeInsetsGeometryTween?)visitor.Visit(
+                _margin,
+                Widget.Margin,
+                value => new EdgeInsetsGeometryTween(begin: value));
+            _transform = (Matrix4Tween?)visitor.Visit(
+                _transform,
+                Widget.Transform,
+                value => new Matrix4Tween(begin: value));
+            _transformAlignment = (AlignmentGeometryTween?)visitor.Visit(
+                _transformAlignment,
+                Widget.TransformAlignment,
+                value => new AlignmentGeometryTween(begin: value));
         }
 
         public override Widget Build(BuildContext context)
         {
-            var values = Evaluate(_controller!.Evaluate());
+            Animation<double> animation = Animation;
             return new Container(
-                child: CurrentWidget.Child,
-                alignment: values.Alignment,
-                padding: values.Padding,
-                decoration: values.Decoration,
-                constraints: values.Constraints,
-                margin: values.Margin,
-                transform: values.Transform,
-                foregroundDecoration: values.ForegroundDecoration);
+                alignment: _alignment?.Evaluate(animation),
+                padding: EvaluateInsets(_padding, animation),
+                decoration: _decoration?.Evaluate(animation),
+                foregroundDecoration: _foregroundDecoration?.Evaluate(animation),
+                constraints: EvaluateConstraints(_constraints, animation),
+                margin: EvaluateInsets(_margin, animation),
+                transform: _transform?.Evaluate(animation),
+                transformAlignment: _transformAlignment?.Evaluate(animation),
+                clipBehavior: Widget.ClipBehavior,
+                child: Widget.Child);
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            DisposeController();
-
-            base.Dispose();
+            base.DebugFillProperties(properties);
+            properties.Add(new DiagnosticsProperty<AlignmentGeometryTween>(
+                "alignment",
+                _alignment,
+                showName: false,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<EdgeInsetsGeometryTween>(
+                "padding",
+                _padding,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<DecorationTween>(
+                "bg",
+                _decoration,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<DecorationTween>(
+                "fg",
+                _foregroundDecoration,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<BoxConstraintsTween>(
+                "constraints",
+                _constraints,
+                showName: false,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<EdgeInsetsGeometryTween>(
+                "margin",
+                _margin,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(ObjectFlagProperty<Matrix4Tween>.Has("transform", _transform));
+            properties.Add(new DiagnosticsProperty<AlignmentGeometryTween>(
+                "transformAlignment",
+                _transformAlignment,
+                defaultValue: DiagnosticsDefaults.NullValue));
         }
 
-        private void CreateController(TimeSpan duration)
+        // Dart's `tween?.evaluate(animation)` over a value-type tween.
+        private static EdgeInsetsGeometry? EvaluateInsets(EdgeInsetsGeometryTween? tween, Animation<double> animation)
         {
-            _controller = new AnimationController(duration: duration, vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
+            return tween is null ? null : tween.Evaluate(animation);
         }
 
-        private void DisposeController()
+        private static BoxConstraints? EvaluateConstraints(BoxConstraintsTween? tween, Animation<double> animation)
         {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private AnimatedContainerValues Evaluate(double t)
-        {
-            return new AnimatedContainerValues(
-                Alignment: LerpAlignment(_begin.Alignment, _end.Alignment, t),
-                Padding: LerpThickness(_begin.Padding, _end.Padding, t),
-                Decoration: Decoration.Lerp(_begin.Decoration, _end.Decoration, t),
-                ForegroundDecoration: Decoration.Lerp(
-                    _begin.ForegroundDecoration,
-                    _end.ForegroundDecoration,
-                    t),
-                Constraints: LerpConstraints(_begin.Constraints, _end.Constraints, t),
-                Margin: LerpThickness(_begin.Margin, _end.Margin, t),
-                Transform: LerpMatrix(_begin.Transform, _end.Transform, t));
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-
-        private static Alignment? LerpAlignment(Alignment? a, Alignment? b, double t)
-        {
-            if (!a.HasValue || !b.HasValue) return t < 1 ? a : b;
-            return new Alignment(
-                LerpDouble(a.Value.X, b.Value.X, t),
-                LerpDouble(a.Value.Y, b.Value.Y, t));
-        }
-
-        private static Thickness? LerpThickness(Thickness? a, Thickness? b, double t)
-        {
-            if (!a.HasValue && !b.HasValue) return null;
-            var from = a ?? default;
-            var to = b ?? default;
-            return new Thickness(
-                LerpDouble(from.Left, to.Left, t),
-                LerpDouble(from.Top, to.Top, t),
-                LerpDouble(from.Right, to.Right, t),
-                LerpDouble(from.Bottom, to.Bottom, t));
-        }
-
-        private static BoxConstraints? LerpConstraints(BoxConstraints? a, BoxConstraints? b, double t)
-        {
-            if (!a.HasValue && !b.HasValue) return null;
-            var from = a ?? new BoxConstraints(0, 0, 0, 0);
-            var to = b ?? new BoxConstraints(0, 0, 0, 0);
-            return new BoxConstraints(
-                MinWidth: LerpConstraint(from.MinWidth, to.MinWidth, t),
-                MaxWidth: LerpConstraint(from.MaxWidth, to.MaxWidth, t),
-                MinHeight: LerpConstraint(from.MinHeight, to.MinHeight, t),
-                MaxHeight: LerpConstraint(from.MaxHeight, to.MaxHeight, t));
-        }
-
-        private static Matrix4? LerpMatrix(Matrix4? a, Matrix4? b, double t)
-        {
-            if (a is null || b is null) return t < 1 ? a : b;
-            return new Matrix4Tween(a, b).Lerp(t);
-        }
-
-        private static double LerpConstraint(double a, double b, double t)
-        {
-            if (double.IsPositiveInfinity(a) && double.IsPositiveInfinity(b)) return double.PositiveInfinity;
-            if (double.IsPositiveInfinity(a) || double.IsPositiveInfinity(b)) return t < 0.5 ? a : b;
-            return LerpDouble(a, b, t);
-        }
-
-        private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
-    }
-
-    private sealed record AnimatedContainerValues(
-        Alignment? Alignment,
-        Thickness? Padding,
-        Decoration? Decoration,
-        Decoration? ForegroundDecoration,
-        BoxConstraints? Constraints,
-        Thickness? Margin,
-        Matrix4? Transform)
-    {
-        public static AnimatedContainerValues From(AnimatedContainer widget)
-        {
-            return new AnimatedContainerValues(
-                widget.Alignment,
-                widget.Padding,
-                widget.Decoration,
-                widget.ForegroundDecoration,
-                widget.Constraints,
-                widget.Margin,
-                widget.Transform);
+            return tween is null ? null : tween.Evaluate(animation);
         }
     }
 }
 
-public sealed class AnimatedPadding : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Widgets.Padding"/> which automatically transitions the indentation
+/// over a given duration whenever the given inset changes.
+/// </summary>
+public class AnimatedPadding : ImplicitlyAnimatedWidget
 {
+    /// <summary>Creates a widget that insets its child by a value that animates implicitly.</summary>
     public AnimatedPadding(
-        Thickness padding,
+        EdgeInsetsGeometry padding,
         TimeSpan duration,
         Widget? child = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
-        ValidatePadding(padding);
+        if (Constants.KDebugMode && !padding.IsNonNegative)
+        {
+            throw new AssertionError("padding.isNonNegative");
+        }
 
         Padding = padding;
-        Duration = duration;
         Child = child;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
-    public Thickness Padding { get; }
+    /// <summary>The amount of space by which to inset the child.</summary>
+    public EdgeInsetsGeometry Padding { get; }
 
-    public TimeSpan Duration { get; }
-
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget? Child { get; }
 
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedPaddingState();
 
-    private static void ValidatePadding(Thickness padding)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (!(padding.Left >= 0) || !(padding.Top >= 0) || !(padding.Right >= 0) || !(padding.Bottom >= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(padding), "Insets must be non-negative.");
-        }
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry>("padding", Padding));
     }
 
-    private sealed class AnimatedPaddingState : State<AnimatedPadding>
+    private sealed class AnimatedPaddingState : AnimatedWidgetBaseState<AnimatedPadding>
     {
-        private AnimationController? _controller;
-        private Thickness _begin;
-        private Thickness _end;
+        private EdgeInsetsGeometryTween? _padding;
 
-        private AnimatedPadding CurrentWidget => (AnimatedPadding)StateWidget;
-
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = CurrentWidget.Padding;
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedPadding oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            Thickness current = Evaluate(_controller!.Evaluate());
-            bool targetChanged = CurrentWidget.Padding != _end;
-
-            if (targetChanged)
-            {
-                _begin = current;
-                _end = CurrentWidget.Padding;
-                _controller.Forward(from: 0);
-            }
+            _padding = (EdgeInsetsGeometryTween?)visitor.Visit(
+                _padding,
+                (EdgeInsetsGeometry?)Widget.Padding,
+                value => new EdgeInsetsGeometryTween(begin: value));
         }
 
         public override Widget Build(BuildContext context)
         {
-            return new Padding(Evaluate(_controller!.Evaluate()), CurrentWidget.Child);
+            return new Padding(
+                _padding!.Evaluate(Animation).Clamp(EdgeInsets.Zero, EdgeInsetsGeometry.Infinity),
+                Widget.Child);
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            DisposeController();
-
-            base.Dispose();
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private Thickness Evaluate(double t)
-        {
-            return new Thickness(
-                Math.Max(0, LerpDouble(_begin.Left, _end.Left, t)),
-                Math.Max(0, LerpDouble(_begin.Top, _end.Top, t)),
-                Math.Max(0, LerpDouble(_begin.Right, _end.Right, t)),
-                Math.Max(0, LerpDouble(_begin.Bottom, _end.Bottom, t)));
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
+            base.DebugFillProperties(properties);
+            properties.Add(new DiagnosticsProperty<EdgeInsetsGeometryTween>(
+                "padding",
+                _padding,
+                defaultValue: DiagnosticsDefaults.NullValue));
         }
     }
-
-    private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 }
 
-public sealed class AnimatedAlign : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Align"/> which automatically transitions the child's position over a
+/// given duration whenever the given alignment changes.
+/// </summary>
+public class AnimatedAlign : ImplicitlyAnimatedWidget
 {
+    /// <summary>Creates a widget that positions its child by an alignment that animates implicitly.</summary>
     public AnimatedAlign(
-        Alignment alignment,
+        AlignmentGeometry alignment,
         TimeSpan duration,
         Widget? child = null,
         double? heightFactor = null,
         double? widthFactor = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
-        if (widthFactor is double width && !(width >= 0))
+        if (Constants.KDebugMode)
         {
-            throw new ArgumentOutOfRangeException(nameof(widthFactor));
-        }
-        if (heightFactor is double height && !(height >= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(heightFactor));
+            if (widthFactor is double width && !(width >= 0.0))
+            {
+                throw new AssertionError("widthFactor == null || widthFactor >= 0.0");
+            }
+
+            if (heightFactor is double height && !(height >= 0.0))
+            {
+                throw new AssertionError("heightFactor == null || heightFactor >= 0.0");
+            }
         }
 
         Alignment = alignment;
-        Duration = duration;
         Child = child;
         HeightFactor = heightFactor;
         WidthFactor = widthFactor;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
-    public Alignment Alignment { get; }
+    /// <summary>How to align the child.</summary>
+    public AlignmentGeometry Alignment { get; }
 
-    public TimeSpan Duration { get; }
-
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget? Child { get; }
 
+    /// <summary>If non-null, sets its height to the child's height multiplied by this factor.</summary>
     public double? HeightFactor { get; }
 
+    /// <summary>If non-null, sets its width to the child's width multiplied by this factor.</summary>
     public double? WidthFactor { get; }
 
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedAlignState();
 
-    private sealed class AnimatedAlignState : State<AnimatedAlign>
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        private AnimationController? _controller;
-        private AnimatedAlignValues _begin = null!;
-        private AnimatedAlignValues _end = null!;
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+    }
 
-        private AnimatedAlign CurrentWidget => (AnimatedAlign)StateWidget;
+    private sealed class AnimatedAlignState : AnimatedWidgetBaseState<AnimatedAlign>
+    {
+        private AlignmentGeometryTween? _alignment;
+        private DoubleTween? _heightFactorTween;
+        private DoubleTween? _widthFactorTween;
 
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = AnimatedAlignValues.From(CurrentWidget);
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedAlign oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            AnimatedAlignValues current = Evaluate(_controller!.Evaluate());
-            AnimatedAlignValues target = AnimatedAlignValues.From(CurrentWidget);
-            bool shouldStart = target.Alignment != _end.Alignment
-                               || IsTweenTargetChanged(_end.HeightFactor, target.HeightFactor)
-                               || IsTweenTargetChanged(_end.WidthFactor, target.WidthFactor);
-
-            if (shouldStart)
+            _alignment = (AlignmentGeometryTween?)visitor.Visit(
+                _alignment,
+                (AlignmentGeometry?)Widget.Alignment,
+                value => new AlignmentGeometryTween(begin: value));
+            if (Widget.HeightFactor is not null)
             {
-                _begin = new AnimatedAlignValues(
-                    Alignment: current.Alignment,
-                    HeightFactor: ResolveTweenBegin(
-                        current.HeightFactor,
-                        _end.HeightFactor,
-                        target.HeightFactor),
-                    WidthFactor: ResolveTweenBegin(
-                        current.WidthFactor,
-                        _end.WidthFactor,
-                        target.WidthFactor));
-                _end = target;
-                _controller.Forward(from: 0);
+                _heightFactorTween = (DoubleTween?)visitor.Visit(
+                    _heightFactorTween,
+                    Widget.HeightFactor,
+                    value => new DoubleTween(begin: value));
             }
-            else
+
+            if (Widget.WidthFactor is not null)
             {
-                _begin = _begin with
-                {
-                    HeightFactor = ResolveUnanimatedTarget(_begin.HeightFactor, target.HeightFactor),
-                    WidthFactor = ResolveUnanimatedTarget(_begin.WidthFactor, target.WidthFactor)
-                };
-                _end = _end with
-                {
-                    HeightFactor = target.HeightFactor,
-                    WidthFactor = target.WidthFactor
-                };
+                _widthFactorTween = (DoubleTween?)visitor.Visit(
+                    _widthFactorTween,
+                    Widget.WidthFactor,
+                    value => new DoubleTween(begin: value));
             }
         }
 
         public override Widget Build(BuildContext context)
         {
-            AnimatedAlignValues values = Evaluate(_controller!.Evaluate());
             return new Align(
-                alignment: values.Alignment,
-                heightFactor: values.HeightFactor,
-                widthFactor: values.WidthFactor,
-                child: CurrentWidget.Child);
+                alignment: _alignment!.Evaluate(Animation)!.Value,
+                heightFactor: _heightFactorTween?.Evaluate(Animation),
+                widthFactor: _widthFactorTween?.Evaluate(Animation),
+                child: Widget.Child);
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            DisposeController();
-
-            base.Dispose();
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private AnimatedAlignValues Evaluate(double t)
-        {
-            return new AnimatedAlignValues(
-                Alignment: new Alignment(
-                    LerpDouble(_begin.Alignment.X, _end.Alignment.X, t),
-                    LerpDouble(_begin.Alignment.Y, _end.Alignment.Y, t)),
-                HeightFactor: LerpNullableDouble(_begin.HeightFactor, _end.HeightFactor, t),
-                WidthFactor: LerpNullableDouble(_begin.WidthFactor, _end.WidthFactor, t));
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-
-        private static double? LerpNullableDouble(double? a, double? b, double t)
-        {
-            if (!b.HasValue) return null;
-            if (!a.HasValue) return b;
-            return LerpDouble(a.Value, b.Value, t);
-        }
-
-        private static bool IsTweenTargetChanged(double? previousTarget, double? target)
-        {
-            return previousTarget.HasValue && target.HasValue && previousTarget != target;
-        }
-
-        private static double? ResolveTweenBegin(double? current, double? previousTarget, double? target)
-        {
-            if (!target.HasValue) return null;
-            return previousTarget.HasValue ? current : target;
-        }
-
-        private static double? ResolveUnanimatedTarget(double? begin, double? target)
-        {
-            return target.HasValue ? begin ?? target : null;
+            base.DebugFillProperties(properties);
+            properties.Add(new DiagnosticsProperty<AlignmentGeometryTween>(
+                "alignment",
+                _alignment,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<Tween<double>>(
+                "widthFactor",
+                _widthFactorTween,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<Tween<double>>(
+                "heightFactor",
+                _heightFactorTween,
+                defaultValue: DiagnosticsDefaults.NullValue));
         }
     }
-
-    private sealed record AnimatedAlignValues(
-        Alignment Alignment,
-        double? HeightFactor,
-        double? WidthFactor)
-    {
-        public static AnimatedAlignValues From(AnimatedAlign widget)
-        {
-            return new AnimatedAlignValues(widget.Alignment, widget.HeightFactor, widget.WidthFactor);
-        }
-    }
-
-    private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
 }
 
-public sealed class AnimatedPositioned : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Positioned"/> which automatically transitions the child's position
+/// over a given duration whenever the given position changes.
+/// </summary>
+public class AnimatedPositioned : ImplicitlyAnimatedWidget
 {
+    /// <summary>
+    /// Creates a widget that animates its position implicitly. Only two out of the three horizontal
+    /// values (<paramref name="left"/>, <paramref name="right"/>, <paramref name="width"/>), and only two
+    /// out of the three vertical values, can be set.
+    /// </summary>
     public AnimatedPositioned(
         Widget child,
         TimeSpan duration,
@@ -1355,43 +997,47 @@ public sealed class AnimatedPositioned : StatefulWidget
         double? height = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        ValidatePosition(left, top, right, bottom, width, height);
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        if (Constants.KDebugMode)
+        {
+            if (left is not null && right is not null && width is not null)
+            {
+                throw new AssertionError("left == null || right == null || width == null");
+            }
+
+            if (top is not null && bottom is not null && height is not null)
+            {
+                throw new AssertionError("top == null || bottom == null || height == null");
+            }
+        }
 
         Child = child;
-        Duration = duration;
         Left = left;
         Top = top;
         Right = right;
         Bottom = bottom;
         Width = width;
         Height = height;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
-    public Widget Child { get; }
+    // Dart's `fromRect` initializer list, without the default constructor's asserts.
+    private AnimatedPositioned(
+        Widget child,
+        Rect rect,
+        TimeSpan duration,
+        Curve? curve,
+        Action? onEnd,
+        Key? key) : base(duration, curve, onEnd, key)
+    {
+        Child = child;
+        Left = rect.Left;
+        Top = rect.Top;
+        Width = rect.Width;
+        Height = rect.Height;
+    }
 
-    public TimeSpan Duration { get; }
-
-    public double? Left { get; }
-
-    public double? Top { get; }
-
-    public double? Right { get; }
-
-    public double? Bottom { get; }
-
-    public double? Width { get; }
-
-    public double? Height { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <summary>Creates a widget that animates the rectangle it occupies implicitly. Dart's <c>fromRect</c>.</summary>
     public static AnimatedPositioned FromRect(
         Rect rect,
         Widget child,
@@ -1400,132 +1046,106 @@ public sealed class AnimatedPositioned : StatefulWidget
         Action? onEnd = null,
         Key? key = null)
     {
-        return new AnimatedPositioned(
-            child: child,
-            duration: duration,
-            left: rect.Left,
-            top: rect.Top,
-            width: rect.Width,
-            height: rect.Height,
-            curve: curve,
-            onEnd: onEnd,
-            key: key);
+        return new AnimatedPositioned(child, rect, duration, curve, onEnd, key);
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget Child { get; }
+
+    /// <summary>The offset of the child's left edge from the left of the stack.</summary>
+    public double? Left { get; }
+
+    /// <summary>The offset of the child's top edge from the top of the stack.</summary>
+    public double? Top { get; }
+
+    /// <summary>The offset of the child's right edge from the right of the stack.</summary>
+    public double? Right { get; }
+
+    /// <summary>The offset of the child's bottom edge from the bottom of the stack.</summary>
+    public double? Bottom { get; }
+
+    /// <summary>The child's width.</summary>
+    public double? Width { get; }
+
+    /// <summary>The child's height.</summary>
+    public double? Height { get; }
+
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedPositionedState();
 
-    private static void ValidatePosition(
-        double? left,
-        double? top,
-        double? right,
-        double? bottom,
-        double? width,
-        double? height)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (left.HasValue && right.HasValue && width.HasValue)
-        {
-            throw new ArgumentException("Cannot provide left, right, and width simultaneously.");
-        }
-
-        if (top.HasValue && bottom.HasValue && height.HasValue)
-        {
-            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
-        }
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("left", Left, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("top", Top, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("right", Right, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("bottom", Bottom, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
     }
 
-    private sealed class AnimatedPositionedState : State<AnimatedPositioned>
+    private sealed class AnimatedPositionedState : AnimatedWidgetBaseState<AnimatedPositioned>
     {
-        private AnimationController? _controller;
-        private AnimatedPositionedValues _begin = null!;
-        private AnimatedPositionedValues _end = null!;
+        private DoubleTween? _left;
+        private DoubleTween? _top;
+        private DoubleTween? _right;
+        private DoubleTween? _bottom;
+        private DoubleTween? _width;
+        private DoubleTween? _height;
 
-        private AnimatedPositioned CurrentWidget => (AnimatedPositioned)StateWidget;
-
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = AnimatedPositionedValues.From(CurrentWidget);
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedPositioned oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            AnimatedPositionedValues current = Evaluate(_controller.Evaluate());
-            AnimatedPositionedValues target = AnimatedPositionedValues.From(CurrentWidget);
-            UpdateTweens(current, target);
+            _left = VisitDouble(visitor, _left, Widget.Left);
+            _top = VisitDouble(visitor, _top, Widget.Top);
+            _right = VisitDouble(visitor, _right, Widget.Right);
+            _bottom = VisitDouble(visitor, _bottom, Widget.Bottom);
+            _width = VisitDouble(visitor, _width, Widget.Width);
+            _height = VisitDouble(visitor, _height, Widget.Height);
         }
 
         public override Widget Build(BuildContext context)
         {
-            AnimatedPositionedValues values = Evaluate(_controller!.Evaluate());
             return new Positioned(
-                child: CurrentWidget.Child,
-                left: values.Left,
-                top: values.Top,
-                right: values.Right,
-                bottom: values.Bottom,
-                width: values.Width,
-                height: values.Height);
+                child: Widget.Child,
+                left: _left?.Evaluate(Animation),
+                top: _top?.Evaluate(Animation),
+                right: _right?.Evaluate(Animation),
+                bottom: _bottom?.Evaluate(Animation),
+                width: _width?.Evaluate(Animation),
+                height: _height?.Evaluate(Animation));
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            DisposeController();
-
-            base.Dispose();
+            base.DebugFillProperties(properties);
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("left", _left));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("top", _top));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("right", _right));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("bottom", _bottom));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("width", _width));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("height", _height));
         }
+    }
 
-        private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
-        {
-            bool shouldStart = AnimatedPositionedValues.HasAnimatedChange(_end, target);
-            if (shouldStart)
-            {
-                _begin = AnimatedPositionedValues.TweenBegins(current, _end, target);
-                _end = target;
-                _controller!.Forward(from: 0);
-                return;
-            }
-
-            _begin = AnimatedPositionedValues.ApplyNullTransitions(_begin, _end, target);
-            _end = AnimatedPositionedValues.ApplyNullTransitions(_end, _end, target);
-        }
-
-        private AnimatedPositionedValues Evaluate(double t)
-        {
-            return AnimatedPositionedValues.Lerp(_begin, _end, t);
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
+    internal static DoubleTween? VisitDouble(TweenVisitor visitor, DoubleTween? tween, double? targetValue)
+    {
+        return (DoubleTween?)visitor.Visit(tween, targetValue, value => new DoubleTween(begin: value));
     }
 }
 
-public sealed class AnimatedPositionedDirectional : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Positioned"/> (which takes a specific <see cref="TextDirection"/>)
+/// which automatically transitions the child's position over a given duration whenever the given
+/// position changes.
+/// </summary>
+public class AnimatedPositionedDirectional : ImplicitlyAnimatedWidget
 {
+    /// <summary>
+    /// Creates a widget that animates its position implicitly. Only two out of the three horizontal
+    /// values (<paramref name="start"/>, <paramref name="end"/>, <paramref name="width"/>), and only two
+    /// out of the three vertical values, can be set.
+    /// </summary>
     public AnimatedPositionedDirectional(
         Widget child,
         TimeSpan duration,
@@ -1537,162 +1157,493 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
         double? height = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        ValidatePosition(start, top, end, bottom, width, height);
-        if (duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        if (Constants.KDebugMode)
+        {
+            if (start is not null && end is not null && width is not null)
+            {
+                throw new AssertionError("start == null || end == null || width == null");
+            }
+
+            if (top is not null && bottom is not null && height is not null)
+            {
+                throw new AssertionError("top == null || bottom == null || height == null");
+            }
+        }
 
         Child = child;
-        Duration = duration;
         Start = start;
         Top = top;
         End = end;
         Bottom = bottom;
         Width = width;
         Height = height;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget Child { get; }
 
-    public TimeSpan Duration { get; }
-
+    /// <summary>The offset of the child's start edge from the start of the stack.</summary>
     public double? Start { get; }
 
+    /// <summary>The offset of the child's top edge from the top of the stack.</summary>
     public double? Top { get; }
 
+    /// <summary>The offset of the child's end edge from the end of the stack.</summary>
     public double? End { get; }
 
+    /// <summary>The offset of the child's bottom edge from the bottom of the stack.</summary>
     public double? Bottom { get; }
 
+    /// <summary>The child's width.</summary>
     public double? Width { get; }
 
+    /// <summary>The child's height.</summary>
     public double? Height { get; }
 
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedPositionedDirectionalState();
 
-    private static void ValidatePosition(
-        double? start,
-        double? top,
-        double? end,
-        double? bottom,
-        double? width,
-        double? height)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (start.HasValue && end.HasValue && width.HasValue)
-        {
-            throw new ArgumentException("Cannot provide start, end, and width simultaneously.");
-        }
-
-        if (top.HasValue && bottom.HasValue && height.HasValue)
-        {
-            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
-        }
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("start", Start, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("top", Top, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("end", End, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("bottom", Bottom, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
     }
 
-    private sealed class AnimatedPositionedDirectionalState : State<AnimatedPositionedDirectional>
+    private sealed class AnimatedPositionedDirectionalState
+        : AnimatedWidgetBaseState<AnimatedPositionedDirectional>
     {
-        private AnimationController? _controller;
-        private AnimatedPositionedValues _begin = null!;
-        private AnimatedPositionedValues _end = null!;
+        private DoubleTween? _start;
+        private DoubleTween? _top;
+        private DoubleTween? _end;
+        private DoubleTween? _bottom;
+        private DoubleTween? _width;
+        private DoubleTween? _height;
 
-        private AnimatedPositionedDirectional CurrentWidget =>
-            (AnimatedPositionedDirectional)StateWidget;
-
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = AnimatedPositionedValues.From(CurrentWidget);
-            CreateController();
-        }
-
-        public override void DidUpdateWidget(AnimatedPositionedDirectional oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            AnimatedPositionedValues current = Evaluate(_controller.Evaluate());
-            AnimatedPositionedValues target = AnimatedPositionedValues.From(CurrentWidget);
-            UpdateTweens(current, target);
+            _start = AnimatedPositioned.VisitDouble(visitor, _start, Widget.Start);
+            _top = AnimatedPositioned.VisitDouble(visitor, _top, Widget.Top);
+            _end = AnimatedPositioned.VisitDouble(visitor, _end, Widget.End);
+            _bottom = AnimatedPositioned.VisitDouble(visitor, _bottom, Widget.Bottom);
+            _width = AnimatedPositioned.VisitDouble(visitor, _width, Widget.Width);
+            _height = AnimatedPositioned.VisitDouble(visitor, _height, Widget.Height);
         }
 
         public override Widget Build(BuildContext context)
         {
-            AnimatedPositionedValues values = Evaluate(_controller!.Evaluate());
-            TextDirection textDirection = Directionality.MaybeOf(context)
-                ?? throw new InvalidOperationException(
-                    "AnimatedPositionedDirectional requires a Directionality ancestor.");
+            DebugAssertions.Assert(WidgetsDebug.DebugCheckHasDirectionality(context));
             return Positioned.Directional(
-                textDirection: textDirection,
-                child: CurrentWidget.Child,
-                start: values.Left,
-                top: values.Top,
-                end: values.Right,
-                bottom: values.Bottom,
-                width: values.Width,
-                height: values.Height);
+                textDirection: Directionality.Of(context),
+                start: _start?.Evaluate(Animation),
+                top: _top?.Evaluate(Animation),
+                end: _end?.Evaluate(Animation),
+                bottom: _bottom?.Evaluate(Animation),
+                width: _width?.Evaluate(Animation),
+                height: _height?.Evaluate(Animation),
+                child: Widget.Child);
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            DisposeController();
-
-            base.Dispose();
-        }
-
-        private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
-        {
-            bool shouldStart = AnimatedPositionedValues.HasAnimatedChange(_end, target);
-            if (shouldStart)
-            {
-                _begin = AnimatedPositionedValues.TweenBegins(current, _end, target);
-                _end = target;
-                _controller!.Forward(from: 0);
-                return;
-            }
-
-            _begin = AnimatedPositionedValues.ApplyNullTransitions(_begin, _end, target);
-            _end = AnimatedPositionedValues.ApplyNullTransitions(_end, _end, target);
-        }
-
-        private AnimatedPositionedValues Evaluate(double t)
-        {
-            return AnimatedPositionedValues.Lerp(_begin, _end, t);
-        }
-
-        private void CreateController()
-        {
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        private void DisposeController()
-        {
-            if (_controller is null) return;
-            _controller.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
+            base.DebugFillProperties(properties);
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("start", _start));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("top", _top));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("end", _end));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("bottom", _bottom));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("width", _width));
+            properties.Add(ObjectFlagProperty<Tween<double>>.Has("height", _height));
         }
     }
 }
 
-public sealed class AnimatedDefaultTextStyle : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="Transform.Scale"/> which automatically transitions the child's scale
+/// over a given duration whenever the given scale changes.
+/// </summary>
+public class AnimatedScale : ImplicitlyAnimatedWidget
 {
+    /// <summary>
+    /// Creates a widget that animates its scale implicitly. <paramref name="alignment"/> defaults to
+    /// <c>Alignment.center</c>.
+    /// </summary>
+    public AnimatedScale(
+        double scale,
+        TimeSpan duration,
+        Widget? child = null,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(duration, curve, onEnd, key)
+    {
+        Child = child;
+        Scale = scale;
+        Alignment = alignment;
+        FilterQuality = filterQuality;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>The target scale.</summary>
+    public double Scale { get; }
+
+    /// <summary>The alignment of the origin of the coordinate system in which the scale takes place.</summary>
+    public Alignment Alignment { get; }
+
+    /// <summary>The filter quality with which to apply the transform as a bitmap operation.</summary>
+    public FilterQuality? FilterQuality { get; }
+
+    /// <inheritdoc />
+    public override State CreateState() => new AnimatedScaleState();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("scale", Scale));
+        properties.Add(new DiagnosticsProperty<Alignment>(
+            "alignment",
+            Alignment,
+            defaultValue: Rendering.Alignment.Center));
+        properties.Add(new EnumProperty<FilterQuality>(
+            "filterQuality",
+            FilterQuality,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
+
+    private sealed class AnimatedScaleState : ImplicitlyAnimatedWidgetState<AnimatedScale>
+    {
+        private DoubleTween? _scale;
+        private Animation<double> _scaleAnimation = null!;
+
+        protected override void ForEachTween(TweenVisitor visitor)
+        {
+            _scale = (DoubleTween?)visitor.Visit(_scale, Widget.Scale, value => new DoubleTween(begin: value));
+        }
+
+        protected override void DidUpdateTweens()
+        {
+            _scaleAnimation = Animation.Drive(_scale!);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new ScaleTransition(
+                scale: _scaleAnimation,
+                alignment: Widget.Alignment,
+                filterQuality: Widget.FilterQuality,
+                child: Widget.Child);
+        }
+    }
+}
+
+/// <summary>
+/// Animated version of <see cref="Transform.Rotate"/> which automatically transitions the child's
+/// rotation over a given duration whenever the given rotation changes.
+/// </summary>
+public class AnimatedRotation : ImplicitlyAnimatedWidget
+{
+    /// <summary>
+    /// Creates a widget that animates its rotation implicitly. <paramref name="alignment"/> defaults to
+    /// <c>Alignment.center</c>.
+    /// </summary>
+    public AnimatedRotation(
+        double turns,
+        TimeSpan duration,
+        Widget? child = null,
+        Alignment alignment = default,
+        FilterQuality? filterQuality = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(duration, curve, onEnd, key)
+    {
+        Child = child;
+        Turns = turns;
+        Alignment = alignment;
+        FilterQuality = filterQuality;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>The animation that controls the rotation of the child, in turns.</summary>
+    public double Turns { get; }
+
+    /// <summary>The alignment of the origin of the coordinate system in which the rotation takes place.</summary>
+    public Alignment Alignment { get; }
+
+    /// <summary>The filter quality with which to apply the transform as a bitmap operation.</summary>
+    public FilterQuality? FilterQuality { get; }
+
+    /// <inheritdoc />
+    public override State CreateState() => new AnimatedRotationState();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("turns", Turns));
+        properties.Add(new DiagnosticsProperty<Alignment>(
+            "alignment",
+            Alignment,
+            defaultValue: Rendering.Alignment.Center));
+        properties.Add(new EnumProperty<FilterQuality>(
+            "filterQuality",
+            FilterQuality,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
+
+    private sealed class AnimatedRotationState : ImplicitlyAnimatedWidgetState<AnimatedRotation>
+    {
+        private DoubleTween? _turns;
+        private Animation<double> _turnsAnimation = null!;
+
+        protected override void ForEachTween(TweenVisitor visitor)
+        {
+            _turns = (DoubleTween?)visitor.Visit(_turns, Widget.Turns, value => new DoubleTween(begin: value));
+        }
+
+        protected override void DidUpdateTweens()
+        {
+            _turnsAnimation = Animation.Drive(_turns!);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new RotationTransition(
+                turns: _turnsAnimation,
+                alignment: Widget.Alignment,
+                filterQuality: Widget.FilterQuality,
+                child: Widget.Child);
+        }
+    }
+}
+
+/// <summary>
+/// Widget which automatically transitions the child's offset relative to its normal position whenever
+/// the given offset changes.
+/// </summary>
+public class AnimatedSlide : ImplicitlyAnimatedWidget
+{
+    /// <summary>Creates a widget that animates its offset translation implicitly.</summary>
+    public AnimatedSlide(
+        Vector offset,
+        TimeSpan duration,
+        Widget? child = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        Key? key = null) : base(duration, curve, onEnd, key)
+    {
+        Child = child;
+        Offset = offset;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>The target offset, a fraction of the child's size.</summary>
+    public Vector Offset { get; }
+
+    /// <inheritdoc />
+    public override State CreateState() => new AnimatedSlideState();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Vector>("offset", Offset));
+    }
+
+    private sealed class AnimatedSlideState : ImplicitlyAnimatedWidgetState<AnimatedSlide>
+    {
+        private VectorTween? _offset;
+        private Animation<Vector> _offsetAnimation = null!;
+
+        protected override void ForEachTween(TweenVisitor visitor)
+        {
+            _offset = (VectorTween?)visitor.Visit(_offset, Widget.Offset, value => new VectorTween(begin: value));
+        }
+
+        protected override void DidUpdateTweens()
+        {
+            _offsetAnimation = Animation.Drive(_offset!);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new SlideTransition(position: _offsetAnimation, child: Widget.Child);
+        }
+    }
+}
+
+/// <summary>
+/// Animated version of <see cref="Opacity"/> which automatically transitions the child's opacity over a
+/// given duration whenever the given opacity changes.
+/// </summary>
+public class AnimatedOpacity : ImplicitlyAnimatedWidget
+{
+    /// <summary>Creates a widget that animates its opacity implicitly.</summary>
+    public AnimatedOpacity(
+        double opacity,
+        TimeSpan duration,
+        Widget? child = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(duration, curve, onEnd, key)
+    {
+        if (Constants.KDebugMode && !(opacity >= 0.0 && opacity <= 1.0))
+        {
+            throw new AssertionError("opacity >= 0.0 && opacity <= 1.0");
+        }
+
+        Child = child;
+        Opacity = opacity;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>The target opacity, between 0.0 and 1.0 (inclusive).</summary>
+    public double Opacity { get; }
+
+    /// <summary>Whether the semantic information of the children is always included.</summary>
+    public bool AlwaysIncludeSemantics { get; }
+
+    /// <inheritdoc />
+    public override State CreateState() => new AnimatedOpacityState();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Opacity));
+    }
+
+    private sealed class AnimatedOpacityState : ImplicitlyAnimatedWidgetState<AnimatedOpacity>
+    {
+        private DoubleTween? _opacity;
+        private Animation<double> _opacityAnimation = null!;
+
+        protected override void ForEachTween(TweenVisitor visitor)
+        {
+            _opacity = (DoubleTween?)visitor.Visit(
+                _opacity,
+                Widget.Opacity,
+                value => new DoubleTween(begin: value));
+        }
+
+        protected override void DidUpdateTweens()
+        {
+            _opacityAnimation = Animation.Drive(_opacity!);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new FadeTransition(
+                opacity: _opacityAnimation,
+                alwaysIncludeSemantics: Widget.AlwaysIncludeSemantics,
+                child: Widget.Child);
+        }
+    }
+}
+
+/// <summary>
+/// Animated version of <see cref="SliverOpacity"/> which automatically transitions the sliver child's
+/// opacity over a given duration whenever the given opacity changes.
+/// </summary>
+public class SliverAnimatedOpacity : ImplicitlyAnimatedWidget
+{
+    /// <summary>Creates a widget that animates its opacity implicitly.</summary>
+    public SliverAnimatedOpacity(
+        double opacity,
+        TimeSpan duration,
+        Widget? sliver = null,
+        Curve? curve = null,
+        Action? onEnd = null,
+        bool alwaysIncludeSemantics = false,
+        Key? key = null) : base(duration, curve, onEnd, key)
+    {
+        if (Constants.KDebugMode && !(opacity >= 0.0 && opacity <= 1.0))
+        {
+            throw new AssertionError("opacity >= 0.0 && opacity <= 1.0");
+        }
+
+        Sliver = sliver;
+        Opacity = opacity;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
+    }
+
+    /// <summary>The sliver below this widget in the tree.</summary>
+    public Widget? Sliver { get; }
+
+    /// <summary>The target opacity, between 0.0 and 1.0 (inclusive).</summary>
+    public double Opacity { get; }
+
+    /// <summary>Whether the semantic information of the children is always included.</summary>
+    public bool AlwaysIncludeSemantics { get; }
+
+    /// <inheritdoc />
+    public override State CreateState() => new SliverAnimatedOpacityState();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Opacity));
+    }
+
+    private sealed class SliverAnimatedOpacityState : ImplicitlyAnimatedWidgetState<SliverAnimatedOpacity>
+    {
+        private DoubleTween? _opacity;
+        private Animation<double> _opacityAnimation = null!;
+
+        protected override void ForEachTween(TweenVisitor visitor)
+        {
+            _opacity = (DoubleTween?)visitor.Visit(
+                _opacity,
+                Widget.Opacity,
+                value => new DoubleTween(begin: value));
+        }
+
+        protected override void DidUpdateTweens()
+        {
+            _opacityAnimation = Animation.Drive(_opacity!);
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new SliverFadeTransition(
+                opacity: _opacityAnimation,
+                sliver: Widget.Sliver,
+                alwaysIncludeSemantics: Widget.AlwaysIncludeSemantics);
+        }
+    }
+}
+
+/// <summary>
+/// Animated version of <see cref="DefaultTextStyle"/> which automatically transitions the default text
+/// style (the text style to apply to descendant <see cref="Text"/> widgets without explicit style) over
+/// a given duration whenever the given style changes.
+/// </summary>
+/// <remarks>
+/// The <see cref="TextAlign"/>, <see cref="SoftWrap"/>, <see cref="Overflow"/>, <see cref="MaxLines"/>,
+/// <see cref="TextWidthBasis"/> and <see cref="TextHeightBehavior"/> properties are not animated and
+/// take effect immediately when changed.
+/// </remarks>
+public class AnimatedDefaultTextStyle : ImplicitlyAnimatedWidget
+{
+    /// <summary>Creates a widget that animates the default text style implicitly.</summary>
     public AnimatedDefaultTextStyle(
         Widget child,
         TextStyle style,
@@ -1705,124 +1656,116 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
         TextHeightBehavior? textHeightBehavior = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        ArgumentNullException.ThrowIfNull(child);
-        ArgumentNullException.ThrowIfNull(style);
-        if (duration < TimeSpan.Zero)
+        if (Constants.KDebugMode && maxLines is not null && !(maxLines > 0))
         {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-        if (maxLines is <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxLines), "Max lines must be greater than zero.");
+            throw new AssertionError("maxLines == null || maxLines > 0");
         }
 
         Child = child;
         Style = style;
-        Duration = duration;
         TextAlign = textAlign;
         SoftWrap = softWrap;
         Overflow = overflow;
         MaxLines = maxLines;
         TextWidthBasis = textWidthBasis;
         TextHeightBehavior = textHeightBehavior;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget Child { get; }
 
+    /// <summary>The target text style.</summary>
     public TextStyle Style { get; }
 
+    /// <summary>How the text should be aligned horizontally.</summary>
     public TextAlign? TextAlign { get; }
 
+    /// <summary>Whether the text should break at soft line breaks.</summary>
     public bool SoftWrap { get; }
 
+    /// <summary>How visual overflow should be handled.</summary>
     public TextOverflow Overflow { get; }
 
+    /// <summary>An optional maximum number of lines for the text to span, wrapping if necessary.</summary>
     public int? MaxLines { get; }
 
+    /// <summary>The strategy to use when calculating the width of the text.</summary>
     public TextWidthBasis TextWidthBasis { get; }
 
+    /// <summary>How the paragraph's line heights apply to its first and last lines.</summary>
     public TextHeightBehavior? TextHeightBehavior { get; }
 
-    public TimeSpan Duration { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedDefaultTextStyleState();
 
-    private sealed class AnimatedDefaultTextStyleState : State<AnimatedDefaultTextStyle>
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        private AnimationController? _controller;
-        private TextStyle _begin = null!;
-        private TextStyle _end = null!;
+        base.DebugFillProperties(properties);
+        Style.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<TextAlign>(
+            "textAlign",
+            TextAlign,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new FlagProperty(
+            "softWrap",
+            value: SoftWrap,
+            ifTrue: "wrapping at box width",
+            ifFalse: "no wrapping except at line break characters",
+            showName: true));
+        properties.Add(new EnumProperty<TextOverflow>(
+            "overflow",
+            Overflow,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new IntProperty("maxLines", MaxLines, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<TextWidthBasis>(
+            "textWidthBasis",
+            TextWidthBasis,
+            defaultValue: TextWidthBasis.Parent));
+        properties.Add(new DiagnosticsProperty<TextHeightBehavior?>(
+            "textHeightBehavior",
+            TextHeightBehavior,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
 
-        private AnimatedDefaultTextStyle CurrentWidget => (AnimatedDefaultTextStyle)StateWidget;
+    private sealed class AnimatedDefaultTextStyleState : AnimatedWidgetBaseState<AnimatedDefaultTextStyle>
+    {
+        private TextStyleTween? _style;
 
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = CurrentWidget.Style;
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(AnimatedDefaultTextStyle oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            TextStyle current = Evaluate(_controller.Evaluate());
-            if (!Equals(CurrentWidget.Style, _end))
-            {
-                _begin = current;
-                _end = CurrentWidget.Style;
-                _controller.Forward(from: 0.0);
-            }
+            _style = (TextStyleTween?)visitor.Visit(
+                _style,
+                Widget.Style,
+                value => new TextStyleTween(begin: value));
         }
 
         public override Widget Build(BuildContext context)
         {
             return new DefaultTextStyle(
-                style: Evaluate(_controller!.Evaluate()),
-                textAlign: CurrentWidget.TextAlign,
-                softWrap: CurrentWidget.SoftWrap,
-                overflow: CurrentWidget.Overflow,
-                maxLines: CurrentWidget.MaxLines,
-                textWidthBasis: CurrentWidget.TextWidthBasis,
-                textHeightBehavior: CurrentWidget.TextHeightBehavior,
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-
-            base.Dispose();
-        }
-
-        private TextStyle Evaluate(double t) => TextStyle.Lerp(_begin, _end, t)!;
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
+                style: _style!.Evaluate(Animation),
+                textAlign: Widget.TextAlign,
+                softWrap: Widget.SoftWrap,
+                overflow: Widget.Overflow,
+                maxLines: Widget.MaxLines,
+                textWidthBasis: Widget.TextWidthBasis,
+                textHeightBehavior: Widget.TextHeightBehavior,
+                child: Widget.Child);
         }
     }
 }
 
-public sealed class AnimatedPhysicalModel : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="PhysicalModel"/>. The <see cref="BorderRadius"/> and
+/// <see cref="Elevation"/> are animated; <see cref="Color"/> and <see cref="ShadowColor"/> are animated
+/// when <see cref="AnimateColor"/> and <see cref="AnimateShadowColor"/> are set; the
+/// <see cref="Shape"/> is not animated.
+/// </summary>
+public class AnimatedPhysicalModel : ImplicitlyAnimatedWidget
 {
+    /// <summary>Creates a widget that animates the properties of a <see cref="PhysicalModel"/>.</summary>
     public AnimatedPhysicalModel(
         Widget child,
         Color color,
@@ -1836,16 +1779,11 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
         bool animateShadowColor = true,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        ArgumentNullException.ThrowIfNull(child);
-        if (duration < TimeSpan.Zero)
+        if (Constants.KDebugMode && !(elevation >= 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-        if (!double.IsFinite(elevation) || elevation < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
+            throw new AssertionError("elevation >= 0.0");
         }
 
         Child = child;
@@ -1857,466 +1795,218 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
         AnimateColor = animateColor;
         ShadowColor = shadowColor;
         AnimateShadowColor = animateShadowColor;
-        Duration = duration;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget Child { get; }
 
+    /// <summary>The type of shape. This property is not animated.</summary>
     public BoxShape Shape { get; }
 
+    /// <summary>The content will be clipped (or not) according to this option.</summary>
     public Clip ClipBehavior { get; }
 
+    /// <summary>The target border radius of the rounded corners for a rectangle shape.</summary>
     public BorderRadius? BorderRadius { get; }
 
+    /// <summary>The target z-coordinate relative to the parent at which to place this physical object.</summary>
     public double Elevation { get; }
 
+    /// <summary>The target background color.</summary>
     public Color Color { get; }
 
+    /// <summary>Whether the color should be animated.</summary>
     public bool AnimateColor { get; }
 
+    /// <summary>The target shadow color.</summary>
     public Color ShadowColor { get; }
 
+    /// <summary>Whether the shadow color should be animated.</summary>
     public bool AnimateShadowColor { get; }
 
-    public TimeSpan Duration { get; }
-
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedPhysicalModelState();
 
-    private sealed class AnimatedPhysicalModelState : State<AnimatedPhysicalModel>
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        private AnimationController? _controller;
-        private AnimatedPhysicalModelValues _begin;
-        private AnimatedPhysicalModelValues _end;
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<BoxShape>("shape", Shape));
+        properties.Add(new DiagnosticsProperty<BorderRadius?>("borderRadius", BorderRadius));
+        properties.Add(new DoubleProperty("elevation", Elevation));
+        properties.Add(new ColorProperty("color", Color));
+        properties.Add(new DiagnosticsProperty<bool>("animateColor", AnimateColor));
+        properties.Add(new ColorProperty("shadowColor", ShadowColor));
+        properties.Add(new DiagnosticsProperty<bool>("animateShadowColor", AnimateShadowColor));
+    }
 
-        private AnimatedPhysicalModel CurrentWidget => (AnimatedPhysicalModel)StateWidget;
+    private sealed class AnimatedPhysicalModelState : AnimatedWidgetBaseState<AnimatedPhysicalModel>
+    {
+        private BorderRadiusTween? _borderRadius;
+        private DoubleTween? _elevation;
+        private ColorTween? _color;
+        private ColorTween? _shadowColor;
 
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _begin = _end = ValuesFromWidget();
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(AnimatedPhysicalModel oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            AnimatedPhysicalModelValues current = Evaluate(_controller.Evaluate());
-            AnimatedPhysicalModelValues target = ValuesFromWidget();
-            if (target != _end)
-            {
-                _begin = current;
-                _end = target;
-                _controller.Forward(from: 0.0);
-            }
+            _borderRadius = (BorderRadiusTween?)visitor.Visit(
+                _borderRadius,
+                Widget.BorderRadius ?? Rendering.BorderRadius.Zero,
+                value => new BorderRadiusTween(begin: value));
+            _elevation = (DoubleTween?)visitor.Visit(
+                _elevation,
+                Widget.Elevation,
+                value => new DoubleTween(begin: value));
+            _color = (ColorTween?)visitor.Visit(
+                _color,
+                Widget.Color,
+                value => new ColorTween(begin: value));
+            _shadowColor = (ColorTween?)visitor.Visit(
+                _shadowColor,
+                Widget.ShadowColor,
+                value => new ColorTween(begin: value));
         }
 
         public override Widget Build(BuildContext context)
         {
-            AnimatedPhysicalModelValues values = Evaluate(_controller!.Evaluate());
             return new PhysicalModel(
-                shape: CurrentWidget.Shape,
-                clipBehavior: CurrentWidget.ClipBehavior,
-                borderRadius: values.BorderRadius,
-                elevation: values.Elevation,
-                color: CurrentWidget.AnimateColor ? values.Color : CurrentWidget.Color,
-                shadowColor: CurrentWidget.AnimateShadowColor ? values.ShadowColor : CurrentWidget.ShadowColor,
-                child: CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-
-            base.Dispose();
-        }
-
-        private AnimatedPhysicalModelValues ValuesFromWidget()
-        {
-            return new AnimatedPhysicalModelValues(
-                CurrentWidget.BorderRadius ?? Plumix.Rendering.BorderRadius.Zero,
-                CurrentWidget.Elevation,
-                CurrentWidget.Color,
-                CurrentWidget.ShadowColor);
-        }
-
-        private AnimatedPhysicalModelValues Evaluate(double t)
-        {
-            double radius = _begin.BorderRadius.Radius
-                + ((_end.BorderRadius.Radius - _begin.BorderRadius.Radius) * t);
-            double elevation = _begin.Elevation + ((_end.Elevation - _begin.Elevation) * t);
-            return new AnimatedPhysicalModelValues(
-                Plumix.Rendering.BorderRadius.Circular(radius),
-                elevation,
-                Color.Lerp(_begin.Color, _end.Color, t)!,
-                Color.Lerp(_begin.ShadowColor, _end.ShadowColor, t)!);
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
+                shape: Widget.Shape,
+                clipBehavior: Widget.ClipBehavior,
+                borderRadius: _borderRadius!.Evaluate(Animation),
+                elevation: _elevation!.Evaluate(Animation),
+                color: Widget.AnimateColor ? _color!.Evaluate(Animation)! : Widget.Color,
+                shadowColor: Widget.AnimateShadowColor
+                    ? _shadowColor!.Evaluate(Animation)!
+                    : Widget.ShadowColor,
+                child: Widget.Child);
         }
     }
 }
 
-public sealed class AnimatedFractionallySizedBox : StatefulWidget
+/// <summary>
+/// Animated version of <see cref="FractionallySizedBox"/> which automatically transitions the child's
+/// size over a given duration whenever the given <see cref="WidthFactor"/> or
+/// <see cref="HeightFactor"/> changes, as well as the position whenever the given
+/// <see cref="Alignment"/> changes.
+/// </summary>
+public class AnimatedFractionallySizedBox : ImplicitlyAnimatedWidget
 {
+    /// <summary>
+    /// Creates a widget that sizes its child to a fraction of the total available space that animates
+    /// implicitly. <paramref name="alignment"/> defaults to <c>Alignment.center</c>.
+    /// </summary>
     public AnimatedFractionallySizedBox(
         TimeSpan duration,
         Widget? child = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         double? heightFactor = null,
         double? widthFactor = null,
         Curve? curve = null,
         Action? onEnd = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        if (duration < TimeSpan.Zero)
+        if (Constants.KDebugMode)
         {
-            throw new ArgumentOutOfRangeException(nameof(duration));
+            if (widthFactor is double width && !(width >= 0.0))
+            {
+                throw new AssertionError("widthFactor == null || widthFactor >= 0.0");
+            }
+
+            if (heightFactor is double height && !(height >= 0.0))
+            {
+                throw new AssertionError("heightFactor == null || heightFactor >= 0.0");
+            }
         }
 
-        Child = child;
         Alignment = alignment;
-        HeightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
-        WidthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
-        Duration = duration;
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
+        Child = child;
+        HeightFactor = heightFactor;
+        WidthFactor = widthFactor;
     }
 
+    /// <summary>The widget below this widget in the tree.</summary>
     public Widget? Child { get; }
 
-    public Alignment Alignment { get; }
-
+    /// <summary>
+    /// If non-null, the fraction of the incoming height given to the child; otherwise the child keeps
+    /// the incoming height constraints.
+    /// </summary>
     public double? HeightFactor { get; }
 
+    /// <summary>
+    /// If non-null, the fraction of the incoming width given to the child; otherwise the child keeps
+    /// the incoming width constraints.
+    /// </summary>
     public double? WidthFactor { get; }
 
-    public TimeSpan Duration { get; }
+    /// <summary>How to align the child.</summary>
+    public AlignmentGeometry Alignment { get; }
 
-    public Curve Curve { get; }
-
-    public Action? OnEnd { get; }
-
+    /// <inheritdoc />
     public override State CreateState() => new AnimatedFractionallySizedBoxState();
 
-    private sealed class AnimatedFractionallySizedBoxState : State<AnimatedFractionallySizedBox>
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        private AnimationController? _controller;
-        private Alignment _alignmentBegin;
-        private Alignment _alignmentEnd;
-        private bool _hasHeightFactorTween;
-        private double _heightFactorBegin;
-        private double _heightFactorEnd;
-        private bool _hasWidthFactorTween;
-        private double _widthFactorBegin;
-        private double _widthFactorEnd;
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<double?>("widthFactor", WidthFactor));
+        properties.Add(new DiagnosticsProperty<double?>("heightFactor", HeightFactor));
+    }
 
-        private AnimatedFractionallySizedBox CurrentWidget =>
-            (AnimatedFractionallySizedBox)StateWidget;
+    private sealed class AnimatedFractionallySizedBoxState : AnimatedWidgetBaseState<AnimatedFractionallySizedBox>
+    {
+        private AlignmentGeometryTween? _alignment;
+        private DoubleTween? _heightFactorTween;
+        private DoubleTween? _widthFactorTween;
 
-        public override void InitState()
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _alignmentBegin = _alignmentEnd = CurrentWidget.Alignment;
-            if (CurrentWidget.HeightFactor is double heightFactor)
+            _alignment = (AlignmentGeometryTween?)visitor.Visit(
+                _alignment,
+                (AlignmentGeometry?)Widget.Alignment,
+                value => new AlignmentGeometryTween(begin: value));
+            if (Widget.HeightFactor is not null)
             {
-                _hasHeightFactorTween = true;
-                _heightFactorBegin = _heightFactorEnd = heightFactor;
-            }
-            if (CurrentWidget.WidthFactor is double widthFactor)
-            {
-                _hasWidthFactorTween = true;
-                _widthFactorBegin = _widthFactorEnd = widthFactor;
-            }
-
-            _controller = new AnimationController(
-                duration: CurrentWidget.Duration,
-                vsync: this) { Curve = CurrentWidget.Curve };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-        }
-
-        public override void DidUpdateWidget(AnimatedFractionallySizedBox oldWidget)
-        {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-            double t = _controller.Evaluate();
-            Alignment currentAlignment = EvaluateAlignment(t);
-            double? currentHeightFactor = EvaluateHeightFactor(t);
-            double? currentWidthFactor = EvaluateWidthFactor(t);
-            bool shouldStart = CurrentWidget.Alignment != _alignmentEnd;
-
-            if (CurrentWidget.HeightFactor is double heightFactor)
-            {
-                if (_hasHeightFactorTween)
-                {
-                    shouldStart |= heightFactor != _heightFactorEnd;
-                }
-                else
-                {
-                    _hasHeightFactorTween = true;
-                    _heightFactorBegin = _heightFactorEnd = heightFactor;
-                    currentHeightFactor = heightFactor;
-                }
-            }
-            if (CurrentWidget.WidthFactor is double widthFactor)
-            {
-                if (_hasWidthFactorTween)
-                {
-                    shouldStart |= widthFactor != _widthFactorEnd;
-                }
-                else
-                {
-                    _hasWidthFactorTween = true;
-                    _widthFactorBegin = _widthFactorEnd = widthFactor;
-                    currentWidthFactor = widthFactor;
-                }
+                _heightFactorTween = (DoubleTween?)visitor.Visit(
+                    _heightFactorTween,
+                    Widget.HeightFactor,
+                    value => new DoubleTween(begin: value));
             }
 
-            if (shouldStart)
+            if (Widget.WidthFactor is not null)
             {
-                _alignmentBegin = currentAlignment;
-                _alignmentEnd = CurrentWidget.Alignment;
-                if (CurrentWidget.HeightFactor is double targetHeightFactor)
-                {
-                    _heightFactorBegin = currentHeightFactor ?? targetHeightFactor;
-                    _heightFactorEnd = targetHeightFactor;
-                }
-                if (CurrentWidget.WidthFactor is double targetWidthFactor)
-                {
-                    _widthFactorBegin = currentWidthFactor ?? targetWidthFactor;
-                    _widthFactorEnd = targetWidthFactor;
-                }
-
-                _controller.Forward(from: 0.0);
+                _widthFactorTween = (DoubleTween?)visitor.Visit(
+                    _widthFactorTween,
+                    Widget.WidthFactor,
+                    value => new DoubleTween(begin: value));
             }
         }
 
         public override Widget Build(BuildContext context)
         {
-            double t = _controller!.Evaluate();
             return new FractionallySizedBox(
-                alignment: EvaluateAlignment(t),
-                heightFactor: EvaluateHeightFactor(t),
-                widthFactor: EvaluateWidthFactor(t),
-                child: CurrentWidget.Child);
+                alignment: _alignment!.Evaluate(Animation)!.Value,
+                heightFactor: _heightFactorTween?.Evaluate(Animation),
+                widthFactor: _widthFactorTween?.Evaluate(Animation),
+                child: Widget.Child);
         }
 
-        public override void Dispose()
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
         {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-
-            base.Dispose();
+            base.DebugFillProperties(properties);
+            properties.Add(new DiagnosticsProperty<AlignmentGeometryTween>(
+                "alignment",
+                _alignment,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<Tween<double>>(
+                "widthFactor",
+                _widthFactorTween,
+                defaultValue: DiagnosticsDefaults.NullValue));
+            properties.Add(new DiagnosticsProperty<Tween<double>>(
+                "heightFactor",
+                _heightFactorTween,
+                defaultValue: DiagnosticsDefaults.NullValue));
         }
-
-        private Alignment EvaluateAlignment(double t)
-        {
-            return new Alignment(
-                LerpDouble(_alignmentBegin.X, _alignmentEnd.X, t),
-                LerpDouble(_alignmentBegin.Y, _alignmentEnd.Y, t));
-        }
-
-        private double? EvaluateHeightFactor(double t)
-        {
-            return _hasHeightFactorTween
-                ? LerpDouble(_heightFactorBegin, _heightFactorEnd, t)
-                : null;
-        }
-
-        private double? EvaluateWidthFactor(double t)
-        {
-            return _hasWidthFactorTween
-                ? LerpDouble(_widthFactorBegin, _widthFactorEnd, t)
-                : null;
-        }
-
-        private void HandleChanged() => SetState(() => { });
-
-        private void HandleCompleted()
-        {
-            SetState(() => { });
-            CurrentWidget.OnEnd?.Invoke();
-        }
-    }
-
-    private static double? ValidateFactor(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-        if (!double.IsFinite(value.Value) || value.Value < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
-        }
-
-        return value;
-    }
-
-    private static double LerpDouble(double from, double to, double t) => from + ((to - from) * t);
-}
-
-internal readonly record struct AnimatedPhysicalModelValues(
-    BorderRadius BorderRadius,
-    double Elevation,
-    Color Color,
-    Color ShadowColor);
-
-internal sealed record AnimatedPositionedValues(
-    double? Left,
-    double? Top,
-    double? Right,
-    double? Bottom,
-    double? Width,
-    double? Height)
-{
-    public static AnimatedPositionedValues From(AnimatedPositioned widget)
-    {
-        return new AnimatedPositionedValues(
-            widget.Left,
-            widget.Top,
-            widget.Right,
-            widget.Bottom,
-            widget.Width,
-            widget.Height);
-    }
-
-    public static AnimatedPositionedValues From(AnimatedPositionedDirectional widget)
-    {
-        return new AnimatedPositionedValues(
-            widget.Start,
-            widget.Top,
-            widget.End,
-            widget.Bottom,
-            widget.Width,
-            widget.Height);
-    }
-
-    public static bool HasAnimatedChange(AnimatedPositionedValues previous, AnimatedPositionedValues target)
-    {
-        return IsAnimatedChange(previous.Left, target.Left)
-               || IsAnimatedChange(previous.Top, target.Top)
-               || IsAnimatedChange(previous.Right, target.Right)
-               || IsAnimatedChange(previous.Bottom, target.Bottom)
-               || IsAnimatedChange(previous.Width, target.Width)
-               || IsAnimatedChange(previous.Height, target.Height);
-    }
-
-    public static AnimatedPositionedValues TweenBegins(
-        AnimatedPositionedValues current,
-        AnimatedPositionedValues previous,
-        AnimatedPositionedValues target)
-    {
-        return new AnimatedPositionedValues(
-            TweenBegin(current.Left, previous.Left, target.Left),
-            TweenBegin(current.Top, previous.Top, target.Top),
-            TweenBegin(current.Right, previous.Right, target.Right),
-            TweenBegin(current.Bottom, previous.Bottom, target.Bottom),
-            TweenBegin(current.Width, previous.Width, target.Width),
-            TweenBegin(current.Height, previous.Height, target.Height));
-    }
-
-    public static AnimatedPositionedValues ApplyNullTransitions(
-        AnimatedPositionedValues values,
-        AnimatedPositionedValues previous,
-        AnimatedPositionedValues target)
-    {
-        return new AnimatedPositionedValues(
-            ApplyNullTransition(values.Left, previous.Left, target.Left),
-            ApplyNullTransition(values.Top, previous.Top, target.Top),
-            ApplyNullTransition(values.Right, previous.Right, target.Right),
-            ApplyNullTransition(values.Bottom, previous.Bottom, target.Bottom),
-            ApplyNullTransition(values.Width, previous.Width, target.Width),
-            ApplyNullTransition(values.Height, previous.Height, target.Height));
-    }
-
-    public static AnimatedPositionedValues Lerp(
-        AnimatedPositionedValues begin,
-        AnimatedPositionedValues end,
-        double t)
-    {
-        return new AnimatedPositionedValues(
-            LerpNullable(begin.Left, end.Left, t),
-            LerpNullable(begin.Top, end.Top, t),
-            LerpNullable(begin.Right, end.Right, t),
-            LerpNullable(begin.Bottom, end.Bottom, t),
-            LerpNullable(begin.Width, end.Width, t),
-            LerpNullable(begin.Height, end.Height, t));
-    }
-
-    private static bool IsAnimatedChange(double? previous, double? target)
-    {
-        return previous.HasValue && target.HasValue && previous.Value != target.Value;
-    }
-
-    private static double? TweenBegin(double? current, double? previous, double? target)
-    {
-        if (!target.HasValue) return null;
-        return previous.HasValue ? current : target;
-    }
-
-    private static double? ApplyNullTransition(double? value, double? previous, double? target)
-    {
-        if (!target.HasValue) return null;
-        return previous.HasValue ? value : target;
-    }
-
-    private static double? LerpNullable(double? begin, double? end, double t)
-    {
-        if (!end.HasValue) return null;
-        if (!begin.HasValue) return end;
-        return begin.Value + ((end.Value - begin.Value) * t);
-    }
-}
-
-/// <summary>Interpolates between two <see cref="Matrix4"/> values.</summary>
-/// <remarks>
-/// Flutter's <c>Matrix4Tween</c>: each end is decomposed into translation, rotation and scale, the
-/// three parts are interpolated separately, and the result is recomposed. Rotation uses a normalized
-/// linear quaternion blend, so a constant-speed rotation is approximated rather than exact.
-/// </remarks>
-public sealed class Matrix4Tween : Tween<Matrix4>
-{
-    public Matrix4Tween(Matrix4? begin = null, Matrix4? end = null)
-    {
-        Begin = begin;
-        End = end;
-    }
-
-    public override Matrix4 Lerp(double t)
-    {
-        Matrix4 a = Begin!;
-        Matrix4 b = End!;
-        Vector3 beginTranslation = Vector3.Zero();
-        Vector3 endTranslation = Vector3.Zero();
-        Quaternion beginRotation = Quaternion.Identity();
-        Quaternion endRotation = Quaternion.Identity();
-        Vector3 beginScale = Vector3.Zero();
-        Vector3 endScale = Vector3.Zero();
-        a.Decompose(beginTranslation, beginRotation, beginScale);
-        b.Decompose(endTranslation, endRotation, endScale);
-        Vector3 lerpTranslation = (beginTranslation * (1.0 - t)) + (endTranslation * t);
-        Quaternion lerpRotation = (beginRotation.Scaled(1.0 - t) + endRotation.Scaled(t)).Normalized();
-        Vector3 lerpScale = (beginScale * (1.0 - t)) + (endScale * t);
-        return Matrix4.Compose(lerpTranslation, lerpRotation, lerpScale);
     }
 }

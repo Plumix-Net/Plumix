@@ -45,12 +45,17 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// <param name="devicePixelRatio">
     /// The view's ratio; the logical size stays 800x600. flutter_test's own view runs at 3.0.
     /// </param>
-    public FrameworkDartTester(bool fakeGestureTimers = false, double devicePixelRatio = 1.0)
+    /// <param name="logicalSize">
+    /// The view's logical size, 800x600 by default; Dart tests change it through
+    /// <c>tester.view.physicalSize</c>.
+    /// </param>
+    public FrameworkDartTester(bool fakeGestureTimers = false, double devicePixelRatio = 1.0, Size? logicalSize = null)
     {
         GestureBinding.Instance.ResetForTests();
         _timers = fakeGestureTimers ? new FakeGestureTimers() : null;
+        Size size = logicalSize ?? new Size(800, 600);
         View = new FlutterView(
-            new Size(800 * devicePixelRatio, 600 * devicePixelRatio),
+            new Size(size.Width * devicePixelRatio, size.Height * devicePixelRatio),
             devicePixelRatio,
             Interlocked.Increment(ref _nextViewId));
         _previousOnError = FlutterError.OnError;

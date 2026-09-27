@@ -50,6 +50,23 @@ public abstract class Animation<T> : IValueListenable<T>
     public abstract void AddStatusListener(Action<AnimationStatus> listener);
 
     public abstract void RemoveStatusListener(Action<AnimationStatus> listener);
+
+    public override string ToString() => $"{Diagnostics.DescribeIdentity(this)}({ToStringDetails()})";
+
+    /// <summary>
+    /// Provides a string describing the status of this object, but not including information about the
+    /// object itself: an icon for <see cref="Status"/> (forward, reverse, completed, dismissed).
+    /// </summary>
+    public virtual string ToStringDetails()
+    {
+        return Status switch
+        {
+            AnimationStatus.Forward => "\u25B6", // >
+            AnimationStatus.Reverse => "\u25C0", // <
+            AnimationStatus.Completed => "\u23ED", // >>|
+            _ => "\u23EE", // |<<
+        };
+    }
 }
 
 public static class AnimationDriveExtensions
@@ -122,7 +139,7 @@ public sealed class AlwaysStoppedAnimation<T> : Animation<T>
     {
     }
 
-    public override string ToString() => $"{GetType().Name}({Value}; paused)";
+    public override string ToStringDetails() => $"{base.ToStringDetails()} {Diagnostics.DescribeValue(Value)}; paused";
 }
 
 public sealed class ProxyAnimation : Animation<double>
@@ -227,6 +244,17 @@ public sealed class ProxyAnimation : Animation<double>
         _parent.AddStatusListener(NotifyStatusListeners);
     }
 
+    public override string ToString()
+    {
+        if (Parent is null)
+        {
+            string type = Diagnostics.ObjectRuntimeType(this, "ProxyAnimation");
+            return $"{type}(null; {base.ToStringDetails()} {Diagnostics.ToStringAsFixed(Value, 3)})";
+        }
+
+        return $"{Parent}\u27A9{Diagnostics.ObjectRuntimeType(this, "ProxyAnimation")}";
+    }
+
     private void StopListening()
     {
         if (_parent is null)
@@ -298,6 +326,8 @@ public sealed class ReverseAnimation : Animation<double>
             Parent.RemoveStatusListener(HandleStatusChanged);
         }
     }
+
+    public override string ToString() => $"{Parent}\u27AA{Diagnostics.ObjectRuntimeType(this, "ReverseAnimation")}";
 
     private static AnimationStatus ReverseStatus(AnimationStatus status)
     {

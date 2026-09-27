@@ -4,8 +4,18 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/tween_animation_builder.dart
 
-public sealed class TweenAnimationBuilder<T> : StatefulWidget
+/// <summary>
+/// Widget builder that animates a property of a <see cref="Widget"/> to a target value whenever the
+/// target value changes.
+/// </summary>
+/// <remarks>
+/// The <see cref="Tween"/> is mutated in place as the animation runs, as in Dart: its
+/// <see cref="Tween{T}.Begin"/> is set to its <see cref="Tween{T}.End"/> when it has none, and on every
+/// retarget it becomes the current value.
+/// </remarks>
+public class TweenAnimationBuilder<T> : ImplicitlyAnimatedWidget
 {
+    /// <summary>Creates a <see cref="TweenAnimationBuilder{T}"/>.</summary>
     public TweenAnimationBuilder(
         Tween<T> tween,
         TimeSpan duration,
@@ -13,117 +23,67 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
         Curve? curve = null,
         Action? onEnd = null,
         Widget? child = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(duration, curve, onEnd, key)
     {
-        if (duration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(duration));
-        }
-
-        Tween = tween ?? throw new ArgumentNullException(nameof(tween));
-        if (!Tween.HasEndValue)
-        {
-            throw new ArgumentException(
-                "Tween provided to TweenAnimationBuilder must have a non-null end value.",
-                nameof(tween));
-        }
-
-        Duration = duration;
-        Builder = builder ?? throw new ArgumentNullException(nameof(builder));
-        Curve = curve ?? Curves.Linear;
-        OnEnd = onEnd;
+        Tween = tween;
+        Builder = builder;
         Child = child;
     }
 
+    /// <summary>Defines the target value for the animation.</summary>
     public Tween<T> Tween { get; }
 
-    public TimeSpan Duration { get; }
-
-    public Curve Curve { get; }
-
+    /// <summary>Called every time the animation value changes.</summary>
     public ValueWidgetBuilder<T> Builder { get; }
 
-    public Action? OnEnd { get; }
-
+    /// <summary>The child widget to pass to the <see cref="Builder"/>.</summary>
     public Widget? Child { get; }
 
+    /// <inheritdoc />
     public override State CreateState() => new TweenAnimationBuilderState();
 
-    private sealed class TweenAnimationBuilderState : State<TweenAnimationBuilder<T>>
+    private sealed class TweenAnimationBuilderState : AnimatedWidgetBaseState<TweenAnimationBuilder<T>>
     {
-        private AnimationController? _controller;
         private Tween<T>? _currentTween;
-
-        private TweenAnimationBuilder<T> CurrentWidget => (TweenAnimationBuilder<T>)StateWidget;
 
         public override void InitState()
         {
-            _currentTween = CurrentWidget.Tween;
-            if (!_currentTween.HasBeginValue)
+            _currentTween = Widget.Tween;
+            if (!_currentTween.HasBeginValue && _currentTween.HasEndValue)
             {
+                // Dart's `_currentTween!.begin ??= _currentTween!.end`.
                 _currentTween.SetBeginValue(_currentTween.GetEndValue());
             }
 
-            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
+            base.InitState();
+            if (!Equals(_currentTween.Begin, _currentTween.End))
             {
-                Curve = CurrentWidget.Curve,
-            };
-            _controller.Changed += HandleChanged;
-            _controller.Completed += HandleCompleted;
-
-            if (!EqualityComparer<T>.Default.Equals(
-                    _currentTween.GetBeginValue(),
-                    _currentTween.GetEndValue()))
-            {
-                _controller.Forward();
+                Controller.Forward();
             }
         }
 
-        public override void DidUpdateWidget(TweenAnimationBuilder<T> oldWidget)
+        protected override void ForEachTween(TweenVisitor visitor)
         {
-            _controller!.Duration = CurrentWidget.Duration;
-            _controller.Curve = CurrentWidget.Curve;
-
-            T target = CurrentWidget.Tween.GetEndValue();
-            if (EqualityComparer<T>.Default.Equals(target, _currentTween!.GetEndValue()))
+            if (Constants.KDebugMode && !Widget.Tween.HasEndValue)
             {
-                return;
+                throw new AssertionError(
+                    "Tween provided to TweenAnimationBuilder must have non-null Tween.end value.");
             }
 
-            T current = _currentTween.Transform(_controller.Evaluate());
-            _currentTween.SetBeginValue(current);
-            _currentTween.SetEndValue(target);
-            _controller.Forward(from: 0.0);
+            _currentTween = visitor.Visit(
+                _currentTween,
+                Widget.Tween.End,
+                _ =>
+                {
+                    DebugAssertions.Assert(false);
+                    throw new InvalidOperationException(
+                        "Constructor will never be called because null is never provided as current tween.");
+                });
         }
 
         public override Widget Build(BuildContext context)
         {
-            T value = _currentTween!.Transform(_controller!.Evaluate());
-            return CurrentWidget.Builder(context, value, CurrentWidget.Child);
-        }
-
-        public override void Dispose()
-        {
-            _controller!.Changed -= HandleChanged;
-            _controller.Completed -= HandleCompleted;
-            _controller.Dispose();
-            _controller = null;
-            _currentTween = null;
-
-            base.Dispose();
-        }
-
-        private void HandleChanged()
-        {
-            if (Mounted)
-            {
-                SetState(() => { });
-            }
-        }
-
-        private void HandleCompleted()
-        {
-            CurrentWidget.OnEnd?.Invoke();
+            return Widget.Builder(context, _currentTween!.Evaluate(Animation), Widget.Child);
         }
     }
 }

@@ -1006,6 +1006,29 @@ public sealed record BoxDecoration(
         }
     }
 
+    /// <summary>Returns the path this decoration clips to: its circle, rounded rect or rect.</summary>
+    public override Plumix.UI.Path GetClipPath(Rect rect, TextDirection textDirection)
+    {
+        var path = new Plumix.UI.Path();
+        switch (Shape)
+        {
+            case BoxShape.Circle:
+                Point center = rect.Center;
+                double radius = Math.Min(rect.Width, rect.Height) / 2.0;
+                path.AddOval(new Rect(center.X - radius, center.Y - radius, radius * 2.0, radius * 2.0));
+                return path;
+            default:
+                if (BorderRadius is { } borderRadius)
+                {
+                    path.AddRRect(borderRadius.ToRRect(rect));
+                    return path;
+                }
+
+                path.AddRect(rect);
+                return path;
+        }
+    }
+
     public override BoxPainter CreateBoxPainter(Action? onChanged = null)
     {
         return new BoxDecorationPainter(this, onChanged);

@@ -236,15 +236,12 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), opacity.Curve.Transform(0.3));
         Assert.Null(opacity.OnEnd);
         Assert.False(opacity.AlwaysIncludeSemantics);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SliverAnimatedOpacity(
+        Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
             opacity: -0.1,
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SliverAnimatedOpacity(
+        Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
             opacity: 1.1,
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SliverAnimatedOpacity(
-            opacity: 0.5,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

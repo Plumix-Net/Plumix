@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -33,22 +34,19 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), opacity.Curve.Transform(0.3));
         Assert.Null(opacity.OnEnd);
         Assert.False(opacity.AlwaysIncludeSemantics);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
             opacity: -0.1,
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
             opacity: 1.1,
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
+        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
             opacity: double.NaN,
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedOpacity(
-            opacity: 0.5,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
-    public void AnimatedSlide_ExposesFlutterDefaultsAndValidatesDuration()
+    public void AnimatedSlide_ExposesFlutterDefaults()
     {
         var slide = new AnimatedSlide(
             offset: new Vector(0.25, -0.5),
@@ -59,9 +57,6 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(slide.Child);
         Assert.Equal(Curves.Linear.Transform(0.3), slide.Curve.Transform(0.3));
         Assert.Null(slide.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedSlide(
-            offset: default,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
@@ -146,10 +141,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
-        var halfway = RequireRenderObject<RenderOpacity>(root.ChildElement);
-        Assert.InRange(halfway.Opacity, 0.01, 0.99);
+        var halfway = RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement);
+        Assert.InRange(halfway.Opacity.Value, 0.01, 0.99);
         Assert.False(halfway.AlwaysIncludeSemantics);
-        double halfwayOpacity = halfway.Opacity;
+        double halfwayOpacity = halfway.Opacity.Value;
 
         root.Update(new AnimatedOpacity(
             opacity: 0.8,
@@ -159,14 +154,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         owner.FlushBuild();
-        var interrupted = RequireRenderObject<RenderOpacity>(root.ChildElement);
-        Assert.Equal(halfwayOpacity, interrupted.Opacity, precision: 6);
+        var interrupted = RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement);
+        Assert.Equal(halfwayOpacity, interrupted.Opacity.Value, precision: 6);
         Assert.True(interrupted.AlwaysIncludeSemantics);
 
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
-        Assert.Equal(0.8, RequireRenderObject<RenderOpacity>(root.ChildElement).Opacity, precision: 6);
+        Assert.Equal(0.8, RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement).Opacity.Value, precision: 6);
         Assert.Equal(1, completed);
 
         root.UnmountRoot();
@@ -225,7 +220,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
-    public void AnimatedScale_ExposesFlutterDefaultsAndValidatesDuration()
+    public void AnimatedScale_ExposesFlutterDefaults()
     {
         var scale = new AnimatedScale(
             scale: 1.5,
@@ -238,13 +233,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(scale.FilterQuality);
         Assert.Equal(Curves.Linear.Transform(0.3), scale.Curve.Transform(0.3));
         Assert.Null(scale.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedScale(
-            scale: 1,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
-    public void AnimatedRotation_ExposesFlutterDefaultsAndValidatesDuration()
+    public void AnimatedRotation_ExposesFlutterDefaults()
     {
         var rotation = new AnimatedRotation(
             turns: 0.25,
@@ -257,15 +249,6 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(rotation.FilterQuality);
         Assert.Equal(Curves.Linear.Transform(0.3), rotation.Curve.Transform(0.3));
         Assert.Null(rotation.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
-            turns: 0,
-            duration: TimeSpan.FromMilliseconds(-1)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
-            turns: double.NaN,
-            duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedRotation(
-            turns: double.PositiveInfinity,
-            duration: TimeSpan.Zero));
     }
 
     [Fact]
@@ -401,15 +384,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(padding.Child);
         Assert.Equal(Curves.Linear.Transform(0.3), padding.Curve.Transform(0.3));
         Assert.Null(padding.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPadding(
+        Assert.Throws<AssertionError>(() => new AnimatedPadding(
             padding: new Thickness(-1),
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPadding(
+        Assert.Throws<AssertionError>(() => new AnimatedPadding(
             padding: new Thickness(double.NaN),
             duration: TimeSpan.Zero));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPadding(
-            padding: new Thickness(),
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
@@ -426,21 +406,18 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(align.HeightFactor);
         Assert.Equal(Curves.Linear.Transform(0.3), align.Curve.Transform(0.3));
         Assert.Null(align.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedAlign(
+        Assert.Throws<AssertionError>(() => new AnimatedAlign(
             alignment: Alignment.Center,
             duration: TimeSpan.Zero,
             widthFactor: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedAlign(
+        Assert.Throws<AssertionError>(() => new AnimatedAlign(
             alignment: Alignment.Center,
             duration: TimeSpan.Zero,
             heightFactor: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedAlign(
+        Assert.Throws<AssertionError>(() => new AnimatedAlign(
             alignment: Alignment.Center,
             duration: TimeSpan.Zero,
             widthFactor: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedAlign(
-            alignment: Alignment.Center,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
@@ -539,7 +516,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     }
 
     [Fact]
-    public void AnimatedAlign_NullableFactorsSwitchImmediatelyWithoutStartingAnimation()
+    public void AnimatedAlign_NullableFactorsKeepTheirLastTweenWithoutStartingAnimation()
     {
         int completed = 0;
         var owner = TestBuildOwner.Create();
@@ -569,9 +546,10 @@ public sealed class ImplicitAnimationsTests : IDisposable
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         owner.FlushBuild();
+        // Dart only visits a factor tween while the factor is non-null, so the last tween stays.
         var withoutFactors = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
-        Assert.Null(withoutFactors.WidthFactor);
-        Assert.Null(withoutFactors.HeightFactor);
+        Assert.Equal(2, withoutFactors.WidthFactor);
+        Assert.Equal(3, withoutFactors.HeightFactor);
         Assert.Equal(0, completed);
 
         root.UnmountRoot();
@@ -608,21 +586,18 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(fromRect.Right);
         Assert.Null(fromRect.Bottom);
 
-        Assert.Throws<ArgumentException>(() => new AnimatedPositioned(
+        Assert.Throws<AssertionError>(() => new AnimatedPositioned(
             child: child,
             duration: TimeSpan.Zero,
             left: 0,
             right: 0,
             width: 10));
-        Assert.Throws<ArgumentException>(() => new AnimatedPositioned(
+        Assert.Throws<AssertionError>(() => new AnimatedPositioned(
             child: child,
             duration: TimeSpan.Zero,
             top: 0,
             bottom: 0,
             height: 10));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPositioned(
-            child: child,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
@@ -645,21 +620,18 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), positioned.Curve.Transform(0.3));
         Assert.Null(positioned.OnEnd);
 
-        Assert.Throws<ArgumentException>(() => new AnimatedPositionedDirectional(
+        Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
             child: child,
             duration: TimeSpan.Zero,
             start: 0,
             end: 0,
             width: 10));
-        Assert.Throws<ArgumentException>(() => new AnimatedPositionedDirectional(
+        Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
             child: child,
             duration: TimeSpan.Zero,
             top: 0,
             bottom: 0,
             height: 10));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedPositionedDirectional(
-            child: child,
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]
@@ -817,11 +789,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(animated.TextHeightBehavior);
         Assert.Equal(Curves.Linear.Transform(0.3), animated.Curve.Transform(0.3));
         Assert.Null(animated.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedDefaultTextStyle(
-            child,
-            style,
-            TimeSpan.FromMilliseconds(-1)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedDefaultTextStyle(
+        Assert.Throws<AssertionError>(() => new AnimatedDefaultTextStyle(
             child,
             style,
             TimeSpan.Zero,
@@ -1054,14 +1022,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(200), fraction.Duration);
         Assert.Equal(Curves.Linear.Transform(0.3), fraction.Curve.Transform(0.3));
         Assert.Null(fraction.OnEnd);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
+        Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
             duration: TimeSpan.Zero,
             widthFactor: -0.1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
+        Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
             duration: TimeSpan.Zero,
             heightFactor: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new AnimatedFractionallySizedBox(
-            duration: TimeSpan.FromMilliseconds(-1)));
     }
 
     [Fact]

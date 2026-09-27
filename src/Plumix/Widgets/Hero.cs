@@ -909,19 +909,25 @@ public sealed class HeroController : NavigatorObserver, IDisposable
             return toHero.Child;
         }
 
-        Thickness fromHeroPadding = fromMediaQueryData.Padding;
-        Thickness toHeroPadding = toMediaQueryData.Padding;
+        // MediaQueryData carries Avalonia's Thickness where Dart's padding is an EdgeInsets.
+        Thickness fromThickness = fromMediaQueryData.Padding;
+        Thickness toThickness = toMediaQueryData.Padding;
+        var fromHeroPadding = new EdgeInsets(
+            fromThickness.Left,
+            fromThickness.Top,
+            fromThickness.Right,
+            fromThickness.Bottom);
+        var toHeroPadding = new EdgeInsets(toThickness.Left, toThickness.Top, toThickness.Right, toThickness.Bottom);
 
         return new AnimatedBuilder(
             animation: animation,
             builder: (BuildContext _, Widget? _) => new MediaQuery(
                 data: toMediaQueryData with
                 {
-                    Padding = flightDirection == HeroFlightDirection.Push
-                        ? new EdgeInsetsTween(begin: fromHeroPadding, end: toHeroPadding)
-                            .Transform(animation.Value)
-                        : new EdgeInsetsTween(begin: toHeroPadding, end: fromHeroPadding)
-                            .Transform(animation.Value),
+                    Padding = (flightDirection == HeroFlightDirection.Push
+                            ? new EdgeInsetsTween(begin: fromHeroPadding, end: toHeroPadding).Evaluate(animation)
+                            : new EdgeInsetsTween(begin: toHeroPadding, end: fromHeroPadding).Evaluate(animation))
+                        .Resolve(Plumix.UI.TextDirection.Ltr),
                 },
                 child: toHero.Child));
     }

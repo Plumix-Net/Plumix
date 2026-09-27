@@ -613,14 +613,20 @@ public sealed class AnimationControllerTickerTests : IDisposable
     {
         var controller = new AnimationController(duration: TimeSpan.FromSeconds(1), debugLabel: "probe");
 
-        Assert.Equal("AnimationController(⏮ 0.000; paused; for probe)", controller.ToString());
+        Assert.Equal(
+            "AnimationController#00000(⏮ 0.000; paused; for probe)",
+            FrameworkDartTester.IgnoringHashCodes(controller.ToString()));
 
         controller.Forward();
         Tick(0.0);
-        Assert.Equal("AnimationController(▶ 0.000; for probe)", controller.ToString());
+        Assert.Equal(
+            "AnimationController#00000(▶ 0.000; for probe)",
+            FrameworkDartTester.IgnoringHashCodes(controller.ToString()));
 
         controller.Dispose();
-        Assert.Equal("AnimationController(▶ 0.000; paused; DISPOSED; for probe)", controller.ToString());
+        Assert.Equal(
+            "AnimationController#00000(▶ 0.000; paused; DISPOSED; for probe)",
+            FrameworkDartTester.IgnoringHashCodes(controller.ToString()));
     }
 
     [Fact]

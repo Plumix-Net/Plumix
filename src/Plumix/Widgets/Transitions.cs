@@ -541,18 +541,6 @@ public sealed class DefaultTextStyleTransition : AnimatedWidget
     }
 }
 
-/// <summary>An interpolation between two <see cref="TextStyle"/>s.</summary>
-public sealed class TextStyleTween : Plumix.Tween<TextStyle>
-{
-    public TextStyleTween(TextStyle? begin = null, TextStyle? end = null)
-    {
-        Begin = begin;
-        End = end;
-    }
-
-    public override TextStyle Lerp(double t) => TextStyle.Lerp(Begin, End, t)!;
-}
-
 public sealed class SliverFadeTransition : SingleChildRenderObjectWidget
 {
     public SliverFadeTransition(

@@ -125,6 +125,11 @@ public abstract class CompoundAnimation<T> : Animation<T>
             listener();
         }
     }
+
+    public override string ToString()
+    {
+        return $"{Plumix.Foundation.Diagnostics.ObjectRuntimeType(this, "CompoundAnimation")}({First}, {Next})";
+    }
 }
 
 /// <summary>An animation that tracks the maximum of two other animations.</summary>
@@ -233,6 +238,17 @@ public sealed class TrainHoppingAnimation : Animation<double>, IDisposable
 
     public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
         _statusListeners.Remove(listener);
+
+    public override string ToString()
+    {
+        string type = Plumix.Foundation.Diagnostics.ObjectRuntimeType(this, "TrainHoppingAnimation");
+        if (_nextTrain is not null)
+        {
+            return $"{_currentTrain}\u27A9{type}(next: {_nextTrain})";
+        }
+
+        return $"{_currentTrain}\u27A9{type}(no next)";
+    }
 
     public void Dispose()
     {

@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
@@ -132,6 +133,7 @@ public sealed class TweenDartParityTests : IDisposable
         controller.SetValue(0.50);
         Assert.Equal(0.40, animation.Value);
         AssertOneLineDescription(animation);
+        AssertOneLineDescription(animation.ToStringDetails());
     }
 
     [Fact]
@@ -143,6 +145,7 @@ public sealed class TweenDartParityTests : IDisposable
         controller.SetValue(0.50);
         Assert.Equal(0.40, animation.Value);
         AssertOneLineDescription(animation);
+        AssertOneLineDescription(animation.ToStringDetails());
     }
 
     [Fact]
@@ -181,6 +184,45 @@ public sealed class TweenDartParityTests : IDisposable
         var tween = new Matrix4Tween(begin: a, end: b);
         Assert.Equal(a, tween.Lerp(0.0));
         Assert.Equal(b, tween.Lerp(1.0));
+        Matrix4 half = Matrix4.Copy(a);
+        half.TranslateByDouble(3.0, -4.0, 0.0, 1);
+        half.ScaleByDouble(0.75, 1.0, 3.0, 1);
+        Assert.Equal(half, tween.Lerp(0.5));
+
+        Matrix4 c = Matrix4.Copy(a);
+        c.RotateZ(1.0);
+        var rotationTween = new Matrix4Tween(begin: a, end: c);
+        Assert.Equal(a, rotationTween.Lerp(0.0));
+        Assert.Equal(c, rotationTween.Lerp(1.0));
+        Matrix4 halfRotation = Matrix4.Copy(a);
+        halfRotation.RotateZ(0.5);
+        Matrix4 lerped = rotationTween.Lerp(0.5);
+        double absoluteError = Enumerable.Range(0, 16).Max(index => Math.Abs(lerped[index] - halfRotation[index]));
+        Assert.Equal(0.0, absoluteError, 1e-10);
+    }
+
+    // Flutter: "BorderTween nullable test"
+    [Fact]
+    public void BorderTweenNullableTest()
+    {
+        var tween = new BorderTween();
+        Assert.Null(tween.Lerp(0.0));
+        Assert.Null(tween.Lerp(1.0));
+        var side = new BorderSide(new Color(0xFF000000));
+        tween = new BorderTween(end: new Border(top: side));
+        Assert.Equal(new Border(), tween.Lerp(0.0));
+        Assert.Equal(new Border(top: new BorderSide(new Color(0xFF000000), width: 0.5)), tween.Lerp(0.5));
+        Assert.Equal(new Border(top: side), tween.Lerp(1.0));
+    }
+
+    // Flutter: "BorderRadiusTween nullable test"
+    [Fact]
+    public void BorderRadiusTweenNullableTest()
+    {
+        var tween = new BorderRadiusTween();
+        Assert.Null(tween.Transform(0.0));
+        Assert.Null(tween.Transform(1.0));
+        Assert.Null(tween.Lerp(0.0));
     }
 
     [Fact]
@@ -389,6 +431,83 @@ public sealed class TweenDartParityTests : IDisposable
     private sealed class BogusCurve : Curve
     {
         public override double Transform(double t) => 100.0;
+    }
+
+    // animations_test.dart: "toString control test"
+    [Fact]
+    public void AnimationsToStringControlTest()
+    {
+        AssertOneLineDescription(new AlwaysStoppedAnimation<double>(0.5));
+        using var dismissed = new AnimationController();
+        var curvedAnimation = new CurvedAnimation(parent: dismissed, curve: Curves.Ease);
+        AssertOneLineDescription(curvedAnimation);
+        curvedAnimation.ReverseCurve = Curves.ElasticOut;
+        AssertOneLineDescription(curvedAnimation);
+        using var controller = new AnimationController(duration: TimeSpan.FromMilliseconds(500));
+        controller.SetValue(0.5);
+        controller.Reverse();
+        var reversing = new CurvedAnimation(
+            parent: controller,
+            curve: Curves.Ease,
+            reverseCurve: Curves.ElasticOut);
+        AssertOneLineDescription(reversing);
+        controller.Stop();
+    }
+
+    // animations_test.dart: "ProxyAnimation.toString control test"
+    [Fact]
+    public void ProxyAnimationToStringControlTest()
+    {
+        var animation = new ProxyAnimation();
+        Assert.Equal(0.0, animation.Value);
+        Assert.Equal(AnimationStatus.Dismissed, animation.Status);
+        AssertOneLineDescription(animation);
+        using var parent = new AnimationController();
+        animation.Parent = parent;
+        AssertOneLineDescription(animation);
+        AssertOneLineDescription(new ReverseAnimation(parent));
+    }
+
+    // animations_test.dart: "TrainHoppingAnimation", "AnimationMean/Max/Min control test" (descriptions)
+    [Fact]
+    public void CompoundAndTrainHoppingAnimationsHaveOneLineDescriptions()
+    {
+        using var currentTrain = new AnimationController();
+        using var nextTrain = new AnimationController();
+        currentTrain.SetValue(0.5);
+        nextTrain.SetValue(0.75);
+        using var animation = new TrainHoppingAnimation(currentTrain, nextTrain);
+        AssertOneLineDescription(animation);
+        nextTrain.SetValue(0.25);
+        Assert.Equal(0.25, animation.Value);
+        AssertOneLineDescription(animation);
+        Assert.Contains("no next", animation.ToString(), StringComparison.Ordinal);
+
+        var left = new AlwaysStoppedAnimation<double>(0.5);
+        var right = new AlwaysStoppedAnimation<double>(0.0);
+        AssertOneLineDescription(new AnimationMean(left: left, right: right));
+        AssertOneLineDescription(new AnimationMax<double>(left, right));
+        AssertOneLineDescription(new AnimationMin<double>(left, right));
+    }
+
+    // animation_controller_test.dart: "toString control test", "Disposed AnimationController toString works"
+    [Fact]
+    public void AnimationControllerToStringControlTest()
+    {
+        var controller = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
+        AssertOneLineDescription(controller);
+        controller.Forward();
+        Tick(10);
+        Tick(20);
+        AssertOneLineDescription(controller);
+        Tick(30);
+        AssertOneLineDescription(controller);
+        controller.Reverse();
+        Tick(40);
+        Tick(50);
+        AssertOneLineDescription(controller);
+        controller.Dispose();
+        AssertOneLineDescription(controller);
     }
 
     [DebugOnlyFact]

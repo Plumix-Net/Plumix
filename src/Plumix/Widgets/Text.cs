@@ -277,7 +277,7 @@ public sealed class Text : StatelessWidget
             softWrap: SoftWrap ?? ambient?.SoftWrap ?? true,
             overflow: Overflow ?? ambient?.Overflow ?? TextOverflow.Clip,
             textScaler: effectiveTextScaler,
-            maxLines: ambient?.MaxLines ?? MaxLines,
+            maxLines: MaxLines ?? ambient?.MaxLines,
             locale: Locale,
             strutStyle: StrutStyle,
             textWidthBasis: TextWidthBasis ?? ambient?.TextWidthBasis ?? UI.TextWidthBasis.Parent,

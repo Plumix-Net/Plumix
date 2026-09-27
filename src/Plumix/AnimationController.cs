@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Physics;
 
 // Dart parity source: flutter/packages/flutter/lib/src/animation/animation_controller.dart
@@ -458,20 +459,18 @@ public sealed class AnimationController : Animation<double>, IDisposable
         Dismissed = null;
     }
 
-    public override string ToString()
+    public override string ToStringDetails()
     {
         string paused = IsAnimating ? string.Empty : "; paused";
         string ticker = _ticker is null ? "; DISPOSED" : _ticker.Muted ? "; silenced" : string.Empty;
-        string label = DebugLabel is null ? string.Empty : $"; for {DebugLabel}";
-        string glyph = _status switch
+        string label = string.Empty;
+        if (Constants.KDebugMode && DebugLabel is not null)
         {
-            AnimationStatus.Forward => "▶",
-            AnimationStatus.Reverse => "◀",
-            AnimationStatus.Completed => "⏭",
-            _ => "⏮",
-        };
-        string value = _value.ToString("F3", System.Globalization.CultureInfo.InvariantCulture);
-        return $"{nameof(AnimationController)}({glyph} {value}{paused}{ticker}{label})";
+            label = $"; for {DebugLabel}";
+        }
+
+        string more = $"{base.ToStringDetails()} {Diagnostics.ToStringAsFixed(_value, 3)}";
+        return $"{more}{paused}{ticker}{label}";
     }
 
     /// <summary>

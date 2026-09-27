@@ -8,6 +8,16 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: every `Animated*` widget and `TweenAnimationBuilder` is an `ImplicitlyAnimatedWidget` (implicit_animations).
+- Breaking: `AnimatedOpacity`/`Scale`/`Rotation`/`Slide` build Fade/Scale/Rotation/SlideTransition, as in Dart.
+- Breaking: implicit-animation geometry is `EdgeInsetsGeometry`/`AlignmentGeometry`; argument checks are debug asserts.
+- Breaking: `EdgeInsetsTween` is `Tween<EdgeInsets>`; `TextStyleTween` moves to implicit_animations.dart's file.
+- `BoxConstraintsTween`, `EdgeInsetsGeometryTween`, `BorderRadiusTween`, `BorderTween` (implicit_animations.dart).
+- `AlignmentTween`, `AlignmentGeometryTween` (rendering/tweens.dart); `EdgeInsets.Lerp`; `BoxDecoration.GetClipPath`.
+- `AnimatedContainer.TransformAlignment`/`ClipBehavior`; implicit animations' `DebugFillProperties` (Dart's).
+- Breaking: `Animation.ToString` is Dart's `Type#hash(details)`; `ToStringDetails`, Proxy/Reverse/Compound strings.
+- `Text` gives its own `maxLines` precedence over `DefaultTextStyle.maxLines`, as in Dart (text.dart).
+- Flutter's implicit_animations, animated_container/align/padding/positioned, tween_animation_builder tests ported.
 - Breaking: `Curve` is Dart's class hierarchy, not a delegate: call `curve.Transform(t)` (curves.dart).
 - Breaking: `Curves.X` are shared `Cubic`/`Curve` instances; `Curves.Cubic/Interval/Flipped/Split...(...)` are gone.
 - Breaking: `Curves.EaseOutCubic` is Dart's `Cubic(0.215, 0.61, 0.355, 1.0)`; `Transform` asserts [0, 1] (curves.dart).

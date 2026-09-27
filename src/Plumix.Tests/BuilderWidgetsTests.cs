@@ -231,22 +231,6 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(8.0, tween.End);
         Assert.Null(new DoubleTween().Begin);
         Assert.Null(new DoubleTween().End);
-        Assert.Throws<ArgumentNullException>(() => new TweenAnimationBuilder<double>(
-            tween: null!,
-            duration: TimeSpan.Zero,
-            builder: builder));
-        Assert.Throws<ArgumentNullException>(() => new TweenAnimationBuilder<double>(
-            tween: tween,
-            duration: TimeSpan.Zero,
-            builder: null!));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new TweenAnimationBuilder<double>(
-            tween: tween,
-            duration: TimeSpan.FromMilliseconds(-1),
-            builder: builder));
-        Assert.Throws<ArgumentException>(() => new TweenAnimationBuilder<double>(
-            tween: new DoubleTween(begin: 1.0),
-            duration: TimeSpan.Zero,
-            builder: builder));
     }
 
     [Fact]

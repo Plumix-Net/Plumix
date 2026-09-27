@@ -273,6 +273,37 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
     {
         return new Thickness(Left, Top, Right, Bottom);
     }
+
+    /// <summary>Linearly interpolate between two <see cref="EdgeInsets"/>. Dart's <c>EdgeInsets.lerp</c>.</summary>
+    /// <remarks>If either is null, this function interpolates from <see cref="Zero"/>.</remarks>
+    public static EdgeInsets? Lerp(EdgeInsets? a, EdgeInsets? b, double t)
+    {
+        if (a == b)
+        {
+            return a;
+        }
+
+        if (a is not { } from)
+        {
+            EdgeInsets to = b!.Value;
+            return new EdgeInsets(to.Left * t, to.Top * t, to.Right * t, to.Bottom * t);
+        }
+
+        if (b is not { } target)
+        {
+            double k = 1.0 - t;
+            return new EdgeInsets(from.Left * k, from.Top * k, from.Right * k, from.Bottom * k);
+        }
+
+        return new EdgeInsets(
+            LerpDouble(from.Left, target.Left, t),
+            LerpDouble(from.Top, target.Top, t),
+            LerpDouble(from.Right, target.Right, t),
+            LerpDouble(from.Bottom, target.Bottom, t));
+    }
+
+    // dart:ui `lerpDouble`.
+    private static double LerpDouble(double a, double b, double t) => (a * (1.0 - t)) + (b * t);
 }
 
 public readonly record struct EdgeInsetsDirectional(double Start, double Top, double End, double Bottom)
