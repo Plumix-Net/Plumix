@@ -552,10 +552,10 @@ public sealed class MaterialDropdownTests : IDisposable
                             // rejects the popup route, so the page keeps its dismissed secondary
                             // animation while the menu is open.
                             new OverlayEntry(_ => new Navigator(new MaterialPageRoute(_ =>
-                                new DropdownButton<string>(
+                                new Plumix.Material.Material(child: new DropdownButton<string>(
                                     items: [new DropdownMenuItem<string>(new Text("One"), value: "one")],
                                     onChanged: _ => { },
-                                    value: "one")))),
+                                    value: "one"))))),
                         ]))));
         });
         using var harness = new WidgetRenderHarness(root);
@@ -1763,7 +1763,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 new MediaQueryData(Size: new Size(500, 360)),
                 new Theme(
                     theme ?? ThemeData.Light,
-                    new Overlay(initialEntries: [new OverlayEntry(_ => child)])))));
+                    new Overlay(initialEntries: [new OverlayEntry(_ => MaterialHost.Transparent(child))])))));
 
     private static Color Opacity(Color color, double opacity) =>
         color.WithOpacity(opacity);

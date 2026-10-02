@@ -833,7 +833,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             TextDirection.Ltr,
             new MediaQuery(
                 new MediaQueryData(Size: new Size(500, 360)),
-                new Theme(theme, child)));
+                new Theme(theme, new Plumix.Material.Material(type: MaterialType.Transparency, child: child))));
 
     private static void PumpAnimation()
     {

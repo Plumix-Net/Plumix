@@ -148,7 +148,9 @@ public abstract class WidgetStateBorderSide
 ///
 /// Used as a plain cursor it resolves against the empty state set, the way Dart's
 /// `createSession` does.
-public abstract class WidgetStateMouseCursor : MouseCursor
+// Dart's `WidgetStateMouseCursor extends MouseCursor implements WidgetStateProperty<MouseCursor>`,
+// so `WidgetStateProperty.resolveAs` resolves it.
+public abstract class WidgetStateMouseCursor : MouseCursor, IWidgetStateProperty<MouseCursor?>
 {
     /// <summary>Creates a state-resolving cursor. Dart's `const WidgetStateMouseCursor()`.</summary>
     protected WidgetStateMouseCursor(string debugDescription)

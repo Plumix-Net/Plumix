@@ -1449,7 +1449,8 @@ public sealed class MaterialButtonsTests
         // the child's exact centre, so the ink response is still hit at y == 1.
         var hitResult = new BoxHitTestResult();
         Assert.True(harness.RenderView.HitTest(hitResult, new Point(60, 1)));
-        Assert.Contains(hitResult.Path, entry => entry.Target is RenderInkResponsePaint);
+        RenderBox inkBox = Assert.Single(InkFeatureProbe.Responses(harness.RenderView)).ReferenceBox;
+        Assert.Contains(hitResult.Path, entry => ReferenceEquals(entry.Target, inkBox));
 
         var missResult = new BoxHitTestResult();
         Assert.False(harness.RenderView.HitTest(missResult, new Point(60, 90)));
@@ -3768,7 +3769,7 @@ public sealed class MaterialButtonsTests
         PressButton(harness);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -3789,7 +3790,7 @@ public sealed class MaterialButtonsTests
 
         PressButton(harness);
         Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
@@ -3812,7 +3813,7 @@ public sealed class MaterialButtonsTests
         PressButton(harness);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -3867,13 +3868,13 @@ public sealed class MaterialButtonsTests
                 child: new Text("Splash tint")));
 
         PressButton(harness);
-        RenderInkResponsePaint? pressed = FindInkPaint(harness.RenderView);
+        InkPaintProbe? pressed = FindInkPaint(harness.RenderView);
         Assert.NotNull(pressed);
         Assert.Equal(overlayColor, pressed!.SplashColor);
 
         // The splash keeps its colour while it fades out after the pointer is released.
         ReleaseButton(harness);
-        RenderInkResponsePaint? released = FindInkPaint(harness.RenderView);
+        InkPaintProbe? released = FindInkPaint(harness.RenderView);
         Assert.NotNull(released);
         Assert.Equal(overlayColor, released!.SplashColor);
     }
@@ -4369,7 +4370,7 @@ public sealed class MaterialButtonsTests
 
         // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
         // states before falling back to `ThemeData.splashColor`.
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4388,7 +4389,7 @@ public sealed class MaterialButtonsTests
 
         // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
         // states before falling back to `ThemeData.splashColor`.
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4407,7 +4408,7 @@ public sealed class MaterialButtonsTests
 
         // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
         // states before falling back to `ThemeData.splashColor`.
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4626,11 +4627,12 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_KeyboardActivation_UsesPressedOverlay_AndInvokesOnPressedOnKeyDownOnly()
     {
-        var owner = TestBuildOwner.Create();
+        using var tester = new FrameworkDartTester();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
-        var root = new TestRootElement(
+        // Dart activates through the app's default shortcuts (space/enter -> ActivateIntent).
+        Widget rootWidget = (AppTraversalScope.Wrap(
             new Theme(
                 data: ThemeData.Light,
                 child: new TextButton(
@@ -4650,58 +4652,53 @@ public sealed class MaterialButtonsTests
 
                             return null;
                         })),
-                    child: new Text("Keyboard pressed overlay"))));
+                    child: new Text("Keyboard pressed overlay")))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
 
-        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
+        tester.Pump();
 
-        owner.FlushBuild();
-
-        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(tester.Root));
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
         bool handledDown = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
         Assert.True(handledDown);
-        owner.FlushBuild();
+        tester.Pump();
 
-        var pressedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        var pressedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(tester.Root));
         Assert.NotNull(pressedDecorated);
         Assert.Equal(pressedOverlay, pressedDecorated!.HighlightColor);
         Assert.Equal(1, pressedCount);
 
+        // The default shortcuts' SingleActivator only matches key-down/repeat events, as in Dart.
         bool handledUp = FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.Space));
-        Assert.True(handledUp);
-        owner.FlushBuild();
+        Assert.False(handledUp);
+        tester.Pump();
         Assert.Equal(1, pressedCount);
     }
 
     [Fact]
     public void TextButton_KeyboardActivation_NumPadEnter_InvokesOnPressed()
     {
-        var owner = TestBuildOwner.Create();
+        using var tester = new FrameworkDartTester();
         int pressedCount = 0;
-        var root = new TestRootElement(
+        Widget rootWidget = (AppTraversalScope.Wrap(
             new Theme(
                 data: ThemeData.Light,
                 child: new TextButton(
                     onPressed: () => pressedCount += 1,
-                    child: new Text("NumPad Enter"))));
+                    child: new Text("NumPad Enter")))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
 
-        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
-
-        owner.FlushBuild();
+        tester.Pump();
 
         bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.NumpadEnter));
         Assert.True(handled);
-        owner.FlushBuild();
+        tester.Pump();
 
         Assert.Equal(1, pressedCount);
     }
@@ -4709,11 +4706,12 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_KeyboardActivation_IgnoresModifiedSpaceChord()
     {
-        var owner = TestBuildOwner.Create();
+        using var tester = new FrameworkDartTester();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
-        var root = new TestRootElement(
+        // Dart activates through the app's default shortcuts (space/enter -> ActivateIntent).
+        Widget rootWidget = (AppTraversalScope.Wrap(
             new Theme(
                 data: ThemeData.Light,
                 child: new TextButton(
@@ -4733,25 +4731,22 @@ public sealed class MaterialButtonsTests
 
                             return null;
                         })),
-                    child: new Text("Ctrl+Space ignored"))));
+                    child: new Text("Ctrl+Space ignored")))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-        root.Attach(owner);
-        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
 
-        FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
+        tester.Pump();
 
-        owner.FlushBuild();
-
-        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(tester.Root));
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
         bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space, control: true));
         Assert.False(handled);
-        owner.FlushBuild();
+        tester.Pump();
 
-        var stillFocusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        var stillFocusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(tester.Root));
         Assert.NotNull(stillFocusedDecorated);
         Assert.Equal(focusedOverlay, stillFocusedDecorated!.HighlightColor);
         Assert.NotEqual(pressedOverlay, stillFocusedDecorated.HighlightColor);
@@ -4893,7 +4888,7 @@ public sealed class MaterialButtonsTests
         PressButton(harness);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -4916,7 +4911,7 @@ public sealed class MaterialButtonsTests
         PressButton(harness);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -4937,7 +4932,7 @@ public sealed class MaterialButtonsTests
 
         PressButton(harness);
         Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
@@ -4958,7 +4953,7 @@ public sealed class MaterialButtonsTests
 
         PressButton(harness);
         Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
-        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
@@ -4969,13 +4964,13 @@ public sealed class MaterialButtonsTests
         using WidgetRenderHarness harness = PumpButton(
             new TextButton(onPressed: () => { }, child: new Text("Splash")));
 
-        RenderInkResponsePaint? initialSplash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? initialSplash = FindInkPaint(harness.RenderView);
         Assert.NotNull(initialSplash);
-        Assert.Equal(0, initialSplash!.SplashProgress);
+        Assert.Null(initialSplash!.SplashColor);
 
         PressButton(harness);
 
-        RenderInkResponsePaint? activeSplash = FindInkPaint(harness.RenderView);
+        InkPaintProbe? activeSplash = FindInkPaint(harness.RenderView);
         Assert.NotNull(activeSplash);
         Assert.NotNull(activeSplash!.SplashColor);
     }
@@ -5380,9 +5375,12 @@ public sealed class MaterialButtonsTests
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light with { UseMaterial3 = false },
-                child: new IconButton(
-                    icon: new SizedBox(width: 20, height: 20),
-                    onPressed: () => { })));
+                // Dart's M2 IconButton is a bare InkResponse, which needs a Material ancestor.
+                child: new Plumix.Material.Material(
+                    type: MaterialType.Transparency,
+                    child: new IconButton(
+                        icon: new SizedBox(width: 20, height: 20),
+                        onPressed: () => { }))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -5646,12 +5644,14 @@ public sealed class MaterialButtonsTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new IconButton(
-                    icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
-                    selectedIcon: new Text("selected"),
-                    isSelected: true,
-                    visualDensity: VisualDensity.Compact,
-                    onPressed: null)));
+                child: new Plumix.Material.Material(
+                    type: MaterialType.Transparency,
+                    child: new IconButton(
+                        icon: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme),
+                        selectedIcon: new Text("selected"),
+                        isSelected: true,
+                        visualDensity: VisualDensity.Compact,
+                        onPressed: null))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -5841,9 +5841,24 @@ public sealed class MaterialButtonsTests
 
     private static Color? InkHighlight(WidgetRenderHarness harness)
     {
-        RenderInkResponsePaint? paint = FindInkPaint(harness.RenderView);
+        InkPaintProbe? paint = FindInkPaint(harness.RenderView);
         Assert.NotNull(paint);
         return paint!.HighlightColor;
+    }
+
+    // The ink of the first ink response below a root: its Material's highlight/splash features
+    // (ink_well.dart paints them as InkFeatures on the nearest Material).
+    private sealed record InkPaintProbe(RenderObject Root, InkResponseProbe Response)
+    {
+        public RenderBox ReferenceBox => Response.ReferenceBox;
+
+        public bool ContainedInkWell => Response.Widget.ContainedInkWell;
+
+        public Color? HighlightColor => InkFeatureProbe.HighlightColor(Root);
+
+        public Color? SplashColor => InkFeatureProbe.SplashColor(Root);
+
+        public Size Size => ReferenceBox.Size;
     }
 
     private static void HoverButton(WidgetRenderHarness harness, bool enter, int pointer = 91)
@@ -5892,9 +5907,10 @@ public sealed class MaterialButtonsTests
         harness.Pump(ButtonHarnessSize);
     }
 
-    private static RenderInkResponsePaint? FindInkPaint(RenderObject? root)
+    private static InkPaintProbe? FindInkPaint(RenderObject? root)
     {
-        return FindDescendant<RenderInkResponsePaint>(root);
+        InkResponseProbe? response = InkFeatureProbe.Responses(root).FirstOrDefault();
+        return root is null || response is null ? null : new InkPaintProbe(root, response);
     }
 
     private static RenderPointerListener? FindInteractivePointerListener(RenderObject? root)

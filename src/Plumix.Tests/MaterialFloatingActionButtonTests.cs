@@ -307,24 +307,21 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = TestBuildOwner.Create();
-            var root = new TestRootElement(
+            using var tester = new FrameworkDartTester();
+            Widget rootWidget = (AppTraversalScope.Wrap(
                 new Theme(
                     data: ThemeData.Light,
                     child: new FloatingActionButton(
                         child: new Icon(Icons.Add),
-                        onPressed: () => pressedCount += 1)));
+                        onPressed: () => pressedCount += 1))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-            root.Attach(owner);
-            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
-
-            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
-            owner.FlushBuild();
+            FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
+            tester.Pump();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            tester.Pump();
 
             Assert.Equal(1, pressedCount);
             Assert.Single(feedbackEvents);
@@ -348,25 +345,22 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = TestBuildOwner.Create();
-            var root = new TestRootElement(
+            using var tester = new FrameworkDartTester();
+            Widget rootWidget = (AppTraversalScope.Wrap(
                 new Theme(
                     data: ThemeData.Light,
                     child: new FloatingActionButton(
                         child: new Icon(Icons.Add),
                         onPressed: () => pressedCount += 1,
-                        enableFeedback: false)));
+                        enableFeedback: false))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-            root.Attach(owner);
-            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
-
-            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
-            owner.FlushBuild();
+            FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
+            tester.Pump();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            tester.Pump();
 
             Assert.Equal(1, pressedCount);
             Assert.Empty(feedbackEvents);
@@ -389,8 +383,8 @@ public sealed class MaterialFloatingActionButtonTests
             var feedbackEvents = new List<FeedbackType>();
             Feedback.FeedbackTriggered += feedbackEvents.Add;
 
-            var owner = TestBuildOwner.Create();
-            var root = new TestRootElement(
+            using var tester = new FrameworkDartTester();
+            Widget rootWidget = (AppTraversalScope.Wrap(
                 new Theme(
                     data: ThemeData.Light with
                     {
@@ -399,18 +393,15 @@ public sealed class MaterialFloatingActionButtonTests
                     },
                     child: new FloatingActionButton(
                         child: new Icon(Icons.Add),
-                        onPressed: () => pressedCount += 1)));
+                        onPressed: () => pressedCount += 1))));
+            tester.PumpWidget(new Directionality(TextDirection.Ltr, rootWidget));
 
-            root.Attach(owner);
-            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
-
-            FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
-            owner.FlushBuild();
+            FocusTestSupport.RequestFocusOnFirstFocusBelow<InkWell>(tester.Root);
+            tester.Pump();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            tester.Pump();
 
             Assert.Equal(1, pressedCount);
             Assert.Empty(feedbackEvents);

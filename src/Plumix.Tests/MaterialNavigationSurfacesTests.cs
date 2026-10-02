@@ -370,7 +370,7 @@ public sealed class MaterialNavigationSurfacesTests
                    && box.AsBoxDecoration.BorderRadius?.Radius == 9999);
         // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
         // material as an ink decoration rather than as a `DecoratedBox`.
-        Assert.Contains(FindDescendants<RenderInkDecoration>(harness.RenderView),
+        Assert.Contains(InkFeatureProbe.Decorations(harness.RenderView),
             ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
@@ -491,7 +491,7 @@ public sealed class MaterialNavigationSurfacesTests
             surface => surface.Color == Colors.DarkBlue);
         // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
         // material as an ink decoration rather than as a `DecoratedBox`.
-        Assert.Contains(FindDescendants<RenderInkDecoration>(harness.RenderView),
+        Assert.Contains(InkFeatureProbe.Decorations(harness.RenderView),
             ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
@@ -970,7 +970,7 @@ public sealed class MaterialNavigationSurfacesTests
                 selectedIndex: 0,
                 labelBehavior: labelBehavior))));
         harness.Pump(new Size(320, 160));
-        return FindDescendants<RenderInkResponsePaint>(harness.RenderView)
+        return InkFeatureProbe.Responses(harness.RenderView)
             .Select(paint => paint.ResolvedInkRect)
             .ToArray();
     }
@@ -984,7 +984,7 @@ public sealed class MaterialNavigationSurfacesTests
             new Theme(ThemeData.Light, RailHost(rail)));
         using var harness = new WidgetRenderHarness(new Directionality(textDirection, content));
         harness.Pump(new Size(420, 320));
-        return FindDescendants<RenderInkResponsePaint>(harness.RenderView)
+        return InkFeatureProbe.Responses(harness.RenderView)
             .Select(paint => paint.ResolvedInkRect)
             .ToArray();
     }

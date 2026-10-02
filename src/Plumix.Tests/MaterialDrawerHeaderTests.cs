@@ -412,7 +412,7 @@ public sealed class MaterialDrawerHeaderTests
     {
         return new MediaQuery(
             data: new MediaQueryData(Size: new Size(304, 260), Padding: padding, ViewPadding: padding),
-            child: new Directionality(direction, new Theme(theme, child)));
+            child: new Directionality(direction, new Theme(theme, MaterialHost.Transparent(child))));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

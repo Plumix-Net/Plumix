@@ -584,7 +584,7 @@ internal sealed class NavigationBarIndicatorInkWell : InkResponse
 
     public NavigationDestinationLabelBehavior LabelBehavior { get; }
 
-    public override Func<Rect> GetRectCallback(RenderBox referenceBox)
+    public override RectCallback GetRectCallback(RenderBox referenceBox)
     {
         ArgumentNullException.ThrowIfNull(referenceBox);
         return () =>

@@ -99,6 +99,14 @@ internal static class FocusTestSupport
 {
     public static FocusNode RequestFocusOnFirstFocus(Element root)
     {
+        FocusNode node = FindFirstFocus(root);
+        node.RequestFocus();
+        return node;
+    }
+
+    /// <summary>The node of the first <see cref="Focus"/> widget below <paramref name="root"/>.</summary>
+    public static FocusNode FindFirstFocus(Element root)
+    {
         FocusNode? node = null;
 
         void Visit(Element element)
@@ -119,7 +127,35 @@ internal static class FocusTestSupport
 
         Visit(root);
         Assert.NotNull(node);
-        node!.RequestFocus();
-        return node;
+        return node!;
+    }
+
+    /// <summary>
+    /// Like <see cref="RequestFocusOnFirstFocus"/>, below the first <typeparamref name="TWidget"/>: skips
+    /// focus nodes an app-level wrapper (the default <c>Shortcuts</c>) puts above the control.
+    /// </summary>
+    public static FocusNode RequestFocusOnFirstFocusBelow<TWidget>(Element root) where TWidget : Widget
+    {
+        Element? target = null;
+
+        void Find(Element element)
+        {
+            if (target is not null)
+            {
+                return;
+            }
+
+            if (element.Widget is TWidget)
+            {
+                target = element;
+                return;
+            }
+
+            element.VisitChildren(Find);
+        }
+
+        Find(root);
+        Assert.NotNull(target);
+        return RequestFocusOnFirstFocus(target!);
     }
 }

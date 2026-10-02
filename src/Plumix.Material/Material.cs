@@ -349,7 +349,6 @@ public sealed class Material : StatefulWidget
 internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
 {
     private List<InkFeature>? _inkFeatures;
-    private Dictionary<IMaterialInkFeature, LegacyInkFeature>? _legacyInkFeatures;
 
     public RenderInkFeatures(
         ITickerProvider vsync,
@@ -376,12 +375,6 @@ internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
 
     /// <summary>Dart's <c>@visibleForTesting debugInkFeatures</c>.</summary>
     public List<InkFeature>? DebugInkFeatures => Constants.KDebugMode ? _inkFeatures : null;
-
-    /// <summary>
-    /// C#-only: the painting context of the paint in progress, for the render-object ink effects that
-    /// have not been ported to <see cref="InkFeature"/> yet (<see cref="LegacyInkFeature"/>).
-    /// </summary>
-    internal PaintingContext? LegacyPaintingContext { get; private set; }
 
     public void AddInkFeature(InkFeature feature)
     {
@@ -419,44 +412,16 @@ internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
             canvas.Save();
             canvas.Translate(offset.X, offset.Y);
             canvas.ClipRect(new Rect(new Point(0, 0), Size));
-            LegacyPaintingContext = context;
             foreach (InkFeature inkFeature in inkFeatures)
             {
                 inkFeature.PaintInternal(canvas);
             }
 
-            LegacyPaintingContext = null;
             canvas.Restore();
         }
 
         DebugAssertions.Assert(ReferenceEquals(inkFeatures, _inkFeatures));
         base.Paint(context, offset);
-    }
-
-    // C#-only bridge for the render-object ink effects (ink_well.dart / ink_decoration.dart are not
-    // strict ports yet): each one is registered once, wrapped in a LegacyInkFeature, and removed by
-    // disposing that wrapper, so it paints through the same ordered list as a real InkFeature.
-    internal void AddLegacyInkFeature(IMaterialInkFeature feature)
-    {
-        _legacyInkFeatures ??= [];
-        if (_legacyInkFeatures.ContainsKey(feature))
-        {
-            return;
-        }
-
-        var inkFeature = new LegacyInkFeature(this, feature);
-        _legacyInkFeatures.Add(feature, inkFeature);
-        AddInkFeature(inkFeature);
-    }
-
-    internal void RemoveLegacyInkFeature(IMaterialInkFeature feature)
-    {
-        if (_legacyInkFeatures is null || !_legacyInkFeatures.Remove(feature, out LegacyInkFeature? inkFeature))
-        {
-            return;
-        }
-
-        inkFeature.Dispose();
     }
 }
 
@@ -829,46 +794,5 @@ internal sealed class ShapeBorderPainter(ShapeBorder border, TextDirection? text
     public override bool ShouldRepaint(CustomPainter oldDelegate)
     {
         return ((ShapeBorderPainter)oldDelegate).Border != Border;
-    }
-}
-
-// C#-only: the render-object ink effects of ink_well.dart / ink_decoration.dart, which are not strict
-// ports of InkFeature subclasses yet, register through this interface. See docs/ai/BACKLOG.md.
-internal interface IMaterialInkFeature
-{
-    RenderBox ReferenceBox { get; }
-
-    void PaintFeature(PaintingContext context);
-}
-
-// C#-only: the `AddInkFeature`/`RemoveInkFeature` spelling those render objects use.
-internal static class MaterialInkControllerLegacyExtensions
-{
-    public static void AddInkFeature(this MaterialInkController controller, IMaterialInkFeature feature)
-    {
-        ((RenderInkFeatures)controller).AddLegacyInkFeature(feature);
-    }
-
-    public static void RemoveInkFeature(this MaterialInkController controller, IMaterialInkFeature feature)
-    {
-        ((RenderInkFeatures)controller).RemoveLegacyInkFeature(feature);
-    }
-}
-
-// C#-only: wraps an IMaterialInkFeature as an InkFeature. Dart's InkSplash/InkHighlight apply the
-// transform themselves (`canvas.save(); canvas.transform(...)`); this does the same around the
-// wrapped render object's paint.
-internal sealed class LegacyInkFeature(RenderInkFeatures controller, IMaterialInkFeature feature)
-    : InkFeature(controller, feature.ReferenceBox)
-{
-    public IMaterialInkFeature Feature { get; } = feature;
-
-    protected override void PaintFeature(Canvas canvas, Matrix4 transform)
-    {
-        PaintingContext context = InternalController.LegacyPaintingContext!;
-        canvas.Save();
-        canvas.Transform(transform);
-        Feature.PaintFeature(context);
-        canvas.Restore();
     }
 }

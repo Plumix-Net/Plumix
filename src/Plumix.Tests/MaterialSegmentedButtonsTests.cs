@@ -450,9 +450,8 @@ public sealed class MaterialSegmentedButtonsTests
                 selected: new HashSet<int> { 0 },
                 onSelectionChanged: _ => { })));
         harness.Pump(new Size(360, 120));
-        IReadOnlyList<Focus> focusWidgets = harness.FindWidgets<Focus>();
-        FocusNode focusNode = Assert.IsType<FocusNode>(focusWidgets[1].FocusNode);
-        focusNode.RequestFocus();
+        // The second segment's node: its InkWell's Focus owns it.
+        FocusNode focusNode = FocusTestSupport.RequestFocusOnFirstFocus(harness.FindElements<InkWell>()[1]);
         harness.Pump(new Size(360, 120));
         Assert.True(focusNode.HasFocus);
 
@@ -465,7 +464,7 @@ public sealed class MaterialSegmentedButtonsTests
         harness.Pump(new Size(360, 120));
 
         Assert.True(focusNode.HasFocus);
-        Assert.Same(focusNode, harness.FindWidgets<Focus>()[1].FocusNode);
+        Assert.Same(focusNode, FocusTestSupport.FindFirstFocus(harness.FindElements<InkWell>()[1]));
     }
 
     [Fact]
@@ -816,6 +815,22 @@ public sealed class MaterialSegmentedButtonsTests
                 {
                     result = state;
                     return;
+                }
+                element.VisitChildren(Visit);
+            }
+        }
+
+        public IReadOnlyList<Element> FindElements<T>() where T : Widget
+        {
+            var result = new List<Element>();
+            Visit(_rootElement);
+            return result;
+
+            void Visit(Element element)
+            {
+                if (element.Widget is T)
+                {
+                    result.Add(element);
                 }
                 element.VisitChildren(Visit);
             }

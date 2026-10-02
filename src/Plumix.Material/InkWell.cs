@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -10,8 +9,178 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/ink_well.dart
 
-public class InkResponse : StatefulWidget
+/// <summary>
+/// An ink feature that is drawn as a reaction to user input: splashes (<see cref="InkSplash"/>,
+/// <see cref="InkRipple"/>, <see cref="InkSparkle"/>) and highlights (<see cref="InkHighlight"/>).
+/// </summary>
+public abstract class InteractiveInkFeature : InkFeature
 {
+    private Color _color;
+    private ShapeBorder? _customBorder;
+
+    /// <summary>Creates an InteractiveInkFeature.</summary>
+    protected InteractiveInkFeature(
+        MaterialInkController controller,
+        RenderBox referenceBox,
+        Color color,
+        ShapeBorder? customBorder = null,
+        Action? onRemoved = null)
+        : base(controller, referenceBox, onRemoved)
+    {
+        _color = color;
+        _customBorder = customBorder;
+    }
+
+    /// <summary>
+    /// Called when the user input that triggered this feature's appearance was confirmed. Typically
+    /// causes the ink to propagate faster across the material. By default this method does nothing.
+    /// </summary>
+    public virtual void Confirm()
+    {
+    }
+
+    /// <summary>
+    /// Called when the user input that triggered this feature's appearance was canceled. Typically
+    /// causes the ink to gradually disappear. By default this method does nothing.
+    /// </summary>
+    public virtual void Cancel()
+    {
+    }
+
+    /// <summary>The ink's color.</summary>
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (value == _color)
+            {
+                return;
+            }
+
+            _color = value;
+            Controller.MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>The ink's optional custom border.</summary>
+    public ShapeBorder? CustomBorder
+    {
+        get => _customBorder;
+        set
+        {
+            if (value == _customBorder)
+            {
+                return;
+            }
+
+            _customBorder = value;
+            Controller.MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>
+    /// Draws an ink splash or ink ripple on the passed in <paramref name="canvas"/>, clipped to
+    /// <paramref name="clipCallback"/>'s rect by <paramref name="customBorder"/>, a non-zero
+    /// <paramref name="borderRadius"/>, or the rect itself.
+    /// </summary>
+    protected void PaintInkCircle(
+        Canvas canvas,
+        Matrix4 transform,
+        Paint paint,
+        Point center,
+        double radius,
+        TextDirection? textDirection = null,
+        ShapeBorder? customBorder = null,
+        BorderRadius? borderRadius = null,
+        RectCallback? clipCallback = null)
+    {
+        BorderRadius resolvedBorderRadius = borderRadius ?? BorderRadius.Zero;
+        Point? originOffset = MatrixUtils.GetAsTranslation(transform);
+        canvas.Save();
+        if (originOffset is null)
+        {
+            canvas.Transform(transform);
+        }
+        else
+        {
+            canvas.Translate(originOffset.Value.X, originOffset.Value.Y);
+        }
+
+        if (clipCallback is not null)
+        {
+            Rect rect = clipCallback();
+            if (customBorder is not null)
+            {
+                canvas.ClipPath(customBorder.GetOuterPath(rect, textDirection: textDirection));
+            }
+            else if (resolvedBorderRadius != BorderRadius.Zero)
+            {
+                canvas.ClipRRect(RRect.FromRectAndCorners(rect, resolvedBorderRadius));
+            }
+            else
+            {
+                canvas.ClipRect(rect);
+            }
+        }
+
+        canvas.DrawCircle(center, radius, paint);
+        canvas.Restore();
+    }
+}
+
+/// <summary>An encapsulation of an <see cref="InteractiveInkFeature"/> constructor used by
+/// <see cref="InkWell"/>, <see cref="InkResponse"/>, and <see cref="ThemeData"/>.</summary>
+public abstract class InteractiveInkFeatureFactory
+{
+    /// <summary>The factory method. Subclasses should override this method to return a new instance of an
+    /// <see cref="InteractiveInkFeature"/>.</summary>
+    public abstract InteractiveInkFeature Create(
+        MaterialInkController controller,
+        RenderBox referenceBox,
+        Point position,
+        Color color,
+        TextDirection textDirection,
+        bool containedInkWell = false,
+        RectCallback? rectCallback = null,
+        BorderRadius? borderRadius = null,
+        ShapeBorder? customBorder = null,
+        double? radius = null,
+        Action? onRemoved = null);
+}
+
+// Dart's `_ParentInkResponseState`.
+internal interface IParentInkResponseState
+{
+    void MarkChildInkResponsePressed(IParentInkResponseState childState, bool value);
+}
+
+// Dart's `_ParentInkResponseProvider`.
+internal sealed class ParentInkResponseProvider : InheritedWidget
+{
+    public ParentInkResponseProvider(IParentInkResponseState state, Widget child) : base(child: child)
+    {
+        State = state;
+    }
+
+    public IParentInkResponseState State { get; }
+
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        !ReferenceEquals(State, ((ParentInkResponseProvider)oldWidget).State);
+
+    public static IParentInkResponseState? MaybeOf(BuildContext context) =>
+        context.DependOnInheritedWidgetOfExactType<ParentInkResponseProvider>()?.State;
+}
+
+/// <summary>An area of a <see cref="Material"/> that responds to touch, with configurable shape and
+/// clipping of its ink.</summary>
+/// <remarks>
+/// Requires a <see cref="Material"/> ancestor. Splashes and highlights are <see cref="InkFeature"/>s
+/// painted by that Material, below its children.
+/// </remarks>
+public class InkResponse : StatelessWidget
+{
+    /// <summary>Creates an area of a <see cref="Material"/> that responds to touch.</summary>
     public InkResponse(
         Widget? child = null,
         Action? onTap = null,
@@ -38,6 +207,7 @@ public class InkResponse : StatefulWidget
         Color? highlightColor = null,
         WidgetStateProperty<Color?>? overlayColor = null,
         Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         bool enableFeedback = true,
         bool excludeFromSemantics = false,
         FocusNode? focusNode = null,
@@ -46,19 +216,8 @@ public class InkResponse : StatefulWidget
         bool autofocus = false,
         WidgetStatesController? statesController = null,
         TimeSpan? hoverDuration = null,
-        Key? key = null,
-        InteractiveInkFeatureFactory? splashFactory = null) : base(key)
+        Key? key = null) : base(key)
     {
-        if (radius.HasValue && (!double.IsFinite(radius.Value) || radius.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(radius), "Ink radius must be finite and greater than zero.");
-        }
-
-        if (hoverDuration < TimeSpan.Zero)
-        {
-            throw new ArgumentOutOfRangeException(nameof(hoverDuration));
-        }
-
         Child = child;
         OnTap = onTap;
         OnTapDown = onTapDown;
@@ -84,6 +243,7 @@ public class InkResponse : StatefulWidget
         HighlightColor = highlightColor;
         OverlayColor = overlayColor;
         SplashColor = splashColor;
+        SplashFactory = splashFactory;
         EnableFeedback = enableFeedback;
         ExcludeFromSemantics = excludeFromSemantics;
         FocusNode = focusNode;
@@ -92,7 +252,252 @@ public class InkResponse : StatefulWidget
         Autofocus = autofocus;
         StatesController = statesController;
         HoverDuration = hoverDuration;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>Called when the user taps this part of the material.</summary>
+    public Action? OnTap { get; }
+
+    /// <summary>Called when the user taps down this part of the material.</summary>
+    public Action<TapDownDetails>? OnTapDown { get; }
+
+    /// <summary>Called when the user releases a tap that was started on this part of the material.</summary>
+    public Action<TapUpDetails>? OnTapUp { get; }
+
+    /// <summary>Called when the user cancels a tap that was started on this part of the material.</summary>
+    public Action? OnTapCancel { get; }
+
+    /// <summary>Called when the user double taps this part of the material.</summary>
+    public Action? OnDoubleTap { get; }
+
+    /// <summary>Called when the user long-presses on this part of the material.</summary>
+    public Action? OnLongPress { get; }
+
+    /// <summary>Called when the user lifts their finger after a long press on the button.</summary>
+    public Action? OnLongPressUp { get; }
+
+    /// <summary>Called when the user taps this part of the material with a secondary button.</summary>
+    public Action? OnSecondaryTap { get; }
+
+    /// <summary>Called when the user taps down on this part of the material with a secondary button.</summary>
+    public Action<TapDownDetails>? OnSecondaryTapDown { get; }
+
+    /// <summary>Called when the user releases a secondary button tap that was started on this part of the
+    /// material.</summary>
+    public Action<TapUpDetails>? OnSecondaryTapUp { get; }
+
+    /// <summary>Called when the user cancels a secondary button tap.</summary>
+    public Action? OnSecondaryTapCancel { get; }
+
+    /// <summary>Called when this part of the material either becomes highlighted or stops being
+    /// highlighted.</summary>
+    public Action<bool>? OnHighlightChanged { get; }
+
+    /// <summary>Called when a pointer enters or exits the ink response area.</summary>
+    public Action<bool>? OnHover { get; }
+
+    /// <summary>The cursor for a mouse pointer when it enters or is hovering over the widget.</summary>
+    public MouseCursor? MouseCursor { get; }
+
+    /// <summary>Whether this ink response should be clipped its bounds.</summary>
+    public bool ContainedInkWell { get; }
+
+    /// <summary>The shape (e.g., circle, rectangle) to use for the highlight drawn around this part of the
+    /// material when pressed, hovered over, or focused.</summary>
+    public BoxShape HighlightShape { get; }
+
+    /// <summary>The radius of the ink splash.</summary>
+    public double? Radius { get; }
+
+    /// <summary>The border radius of the containing rectangle.</summary>
+    public BorderRadius? BorderRadius { get; }
+
+    /// <summary>The custom clip border.</summary>
+    public ShapeBorder? CustomBorder { get; }
+
+    /// <summary>The color of the ink response when the parent widget is focused.</summary>
+    public Color? FocusColor { get; }
+
+    /// <summary>The color of the ink response when a pointer is hovering over it.</summary>
+    public Color? HoverColor { get; }
+
+    /// <summary>The highlight color of the ink response when pressed.</summary>
+    public Color? HighlightColor { get; }
+
+    /// <summary>Defines the ink response focus, hover, and splash colors.</summary>
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
+
+    /// <summary>The splash color of the ink response.</summary>
+    public Color? SplashColor { get; }
+
+    /// <summary>Defines the appearance of the splash.</summary>
+    public InteractiveInkFeatureFactory? SplashFactory { get; }
+
+    /// <summary>Whether detected gestures should provide acoustic and/or haptic feedback.</summary>
+    public bool EnableFeedback { get; }
+
+    /// <summary>Whether to exclude the gestures introduced by this widget from the semantics tree.</summary>
+    public bool ExcludeFromSemantics { get; }
+
+    /// <summary>Handler called when the focus changes.</summary>
+    public Action<bool>? OnFocusChange { get; }
+
+    /// <summary>True if this widget will be selected as the initial focus when no other node in its scope
+    /// is currently focused.</summary>
+    public bool Autofocus { get; }
+
+    /// <summary>An optional focus node to use as the focus node for this widget.</summary>
+    public FocusNode? FocusNode { get; }
+
+    /// <summary>If true, this widget may request the primary focus.</summary>
+    public bool CanRequestFocus { get; }
+
+    /// <summary>Represents the interactive "state" of this widget in terms of a set of
+    /// <see cref="WidgetState"/>s, like pressed and focused.</summary>
+    public WidgetStatesController? StatesController { get; }
+
+    /// <summary>The duration of the animation that animates the hover effect.</summary>
+    public TimeSpan? HoverDuration { get; }
+
+    /// <summary>
+    /// The rectangle to use for the highlight effect and for clipping the splash effects if
+    /// <see cref="ContainedInkWell"/> is true. Defaults to <see langword="null"/> (the reference box).
+    /// </summary>
+    public virtual RectCallback? GetRectCallback(RenderBox referenceBox) => null;
+
+    /// <summary>Asserts that the given context satisfies the prerequisites for this class.</summary>
+    public virtual bool DebugCheckContext(BuildContext context)
+    {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterial(context));
+        DebugAssertions.Assert(WidgetsDebug.DebugCheckHasDirectionality(context));
+        return true;
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        IParentInkResponseState? parentState = ParentInkResponseProvider.MaybeOf(context);
+        return new InkResponseStateWidget(
+            onTap: OnTap,
+            onTapDown: OnTapDown,
+            onTapUp: OnTapUp,
+            onTapCancel: OnTapCancel,
+            onDoubleTap: OnDoubleTap,
+            onLongPress: OnLongPress,
+            onLongPressUp: OnLongPressUp,
+            onSecondaryTap: OnSecondaryTap,
+            onSecondaryTapUp: OnSecondaryTapUp,
+            onSecondaryTapDown: OnSecondaryTapDown,
+            onSecondaryTapCancel: OnSecondaryTapCancel,
+            onHighlightChanged: OnHighlightChanged,
+            onHover: OnHover,
+            mouseCursor: MouseCursor,
+            containedInkWell: ContainedInkWell,
+            highlightShape: HighlightShape,
+            radius: Radius,
+            borderRadius: BorderRadius,
+            customBorder: CustomBorder,
+            focusColor: FocusColor,
+            hoverColor: HoverColor,
+            highlightColor: HighlightColor,
+            overlayColor: OverlayColor,
+            splashColor: SplashColor,
+            splashFactory: SplashFactory,
+            enableFeedback: EnableFeedback,
+            excludeFromSemantics: ExcludeFromSemantics,
+            focusNode: FocusNode,
+            canRequestFocus: CanRequestFocus,
+            onFocusChange: OnFocusChange,
+            autofocus: Autofocus,
+            parentState: parentState,
+            getRectCallback: GetRectCallback,
+            debugCheckContext: DebugCheckContext,
+            statesController: StatesController,
+            hoverDuration: HoverDuration,
+            child: Child);
+    }
+}
+
+// Dart's `_InkResponseStateWidget`.
+internal sealed class InkResponseStateWidget : StatefulWidget
+{
+    public InkResponseStateWidget(
+        Func<BuildContext, bool> debugCheckContext,
+        Widget? child = null,
+        Action? onTap = null,
+        Action<TapDownDetails>? onTapDown = null,
+        Action<TapUpDetails>? onTapUp = null,
+        Action? onTapCancel = null,
+        Action? onDoubleTap = null,
+        Action? onLongPress = null,
+        Action? onLongPressUp = null,
+        Action? onSecondaryTap = null,
+        Action<TapUpDetails>? onSecondaryTapUp = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
+        Action? onSecondaryTapCancel = null,
+        Action<bool>? onHighlightChanged = null,
+        Action<bool>? onHover = null,
+        MouseCursor? mouseCursor = null,
+        bool containedInkWell = false,
+        BoxShape highlightShape = BoxShape.Circle,
+        double? radius = null,
+        BorderRadius? borderRadius = null,
+        ShapeBorder? customBorder = null,
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        Color? highlightColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
+        Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
+        bool enableFeedback = true,
+        bool excludeFromSemantics = false,
+        Action<bool>? onFocusChange = null,
+        bool autofocus = false,
+        FocusNode? focusNode = null,
+        bool canRequestFocus = true,
+        IParentInkResponseState? parentState = null,
+        Func<RenderBox, RectCallback?>? getRectCallback = null,
+        WidgetStatesController? statesController = null,
+        TimeSpan? hoverDuration = null)
+    {
+        Child = child;
+        OnTap = onTap;
+        OnTapDown = onTapDown;
+        OnTapUp = onTapUp;
+        OnTapCancel = onTapCancel;
+        OnDoubleTap = onDoubleTap;
+        OnLongPress = onLongPress;
+        OnLongPressUp = onLongPressUp;
+        OnSecondaryTap = onSecondaryTap;
+        OnSecondaryTapUp = onSecondaryTapUp;
+        OnSecondaryTapDown = onSecondaryTapDown;
+        OnSecondaryTapCancel = onSecondaryTapCancel;
+        OnHighlightChanged = onHighlightChanged;
+        OnHover = onHover;
+        MouseCursor = mouseCursor;
+        ContainedInkWell = containedInkWell;
+        HighlightShape = highlightShape;
+        Radius = radius;
+        BorderRadius = borderRadius;
+        CustomBorder = customBorder;
+        FocusColor = focusColor;
+        HoverColor = hoverColor;
+        HighlightColor = highlightColor;
+        OverlayColor = overlayColor;
+        SplashColor = splashColor;
         SplashFactory = splashFactory;
+        EnableFeedback = enableFeedback;
+        ExcludeFromSemantics = excludeFromSemantics;
+        OnFocusChange = onFocusChange;
+        Autofocus = autofocus;
+        FocusNode = focusNode;
+        CanRequestFocus = canRequestFocus;
+        ParentState = parentState;
+        GetRectCallback = getRectCallback;
+        DebugCheckContext = debugCheckContext;
+        StatesController = statesController;
+        HoverDuration = hoverDuration;
     }
 
     public Widget? Child { get; }
@@ -120,910 +525,815 @@ public class InkResponse : StatefulWidget
     public Color? HighlightColor { get; }
     public WidgetStateProperty<Color?>? OverlayColor { get; }
     public Color? SplashColor { get; }
+    public InteractiveInkFeatureFactory? SplashFactory { get; }
     public bool EnableFeedback { get; }
     public bool ExcludeFromSemantics { get; }
-    public FocusNode? FocusNode { get; }
-    public bool CanRequestFocus { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool Autofocus { get; }
+    public FocusNode? FocusNode { get; }
+    public bool CanRequestFocus { get; }
+    public IParentInkResponseState? ParentState { get; }
+    public Func<RenderBox, RectCallback?>? GetRectCallback { get; }
+    public Func<BuildContext, bool> DebugCheckContext { get; }
     public WidgetStatesController? StatesController { get; }
     public TimeSpan? HoverDuration { get; }
-    public InteractiveInkFeatureFactory? SplashFactory { get; }
-
-    public virtual Func<Rect>? GetRectCallback(RenderBox referenceBox)
-    {
-        ArgumentNullException.ThrowIfNull(referenceBox);
-        return ContainedInkWell ? () => new Rect(referenceBox.Size) : null;
-    }
 
     public override State CreateState() => new InkResponseState();
 
-    private sealed class InkResponseState : State<InkResponse>, IParentInkResponseState
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        private static readonly Point CenterOrigin = new(double.NaN, double.NaN);
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
-        private WidgetStatesController? _statesController;
-        private bool _ownsStatesController;
-        private bool _pressed;
-        private bool _hovered;
-        private bool _focused;
-        private bool _hoverCallbackActive;
-        private Point _splashOrigin = CenterOrigin;
-        private double _splashProgress;
-        private InteractiveInkFeatureFactory? _resolvedSplashFactory;
-        private InteractiveInkFeature? _splashFeature;
-        private TextDirection _textDirection = TextDirection.Ltr;
-        private Color _resolvedSplashColor = null!;
-        private bool _splashConfirmed;
-        private bool _splashCanceled;
-        private readonly List<SplashEntry> _splashes = [];
-        private readonly List<HighlightEntry> _highlights = [];
-        private SplashEntry? _currentSplash;
-        private NavigationMode _navigationMode = NavigationMode.Traditional;
-        private Plumix.AnimationController? _activationController;
-        private readonly HashSet<object> _pressedChildren = [];
-        private IParentInkResponseState? _parentState;
+        base.DebugFillProperties(properties);
+        var gestures = new List<string>();
+        if (OnTap is not null) gestures.Add("tap");
+        if (OnDoubleTap is not null) gestures.Add("double tap");
+        if (OnLongPress is not null) gestures.Add("long press");
+        if (OnLongPressUp is not null) gestures.Add("long press up");
+        if (OnTapDown is not null) gestures.Add("tap down");
+        if (OnTapUp is not null) gestures.Add("tap up");
+        if (OnTapCancel is not null) gestures.Add("tap cancel");
+        if (OnSecondaryTap is not null) gestures.Add("secondary tap");
+        if (OnSecondaryTapUp is not null) gestures.Add("secondary tap up");
+        if (OnSecondaryTapDown is not null) gestures.Add("secondary tap down");
+        if (OnSecondaryTapCancel is not null) gestures.Add("secondary tap cancel");
+        properties.Add(new IterableProperty<string>("gestures", gestures, ifEmpty: "<none>"));
+        properties.Add(new DiagnosticsProperty<MouseCursor>("mouseCursor", MouseCursor));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "containedInkWell",
+            ContainedInkWell,
+            level: DiagnosticLevel.Fine));
+        properties.Add(new DiagnosticsProperty<BoxShape>(
+            "highlightShape",
+            HighlightShape,
+            description: $"{(ContainedInkWell ? "clipped to " : "")}{Diagnostics.DescribeEnum(HighlightShape)}",
+            showName: false));
+    }
+}
 
-        private InkResponse CurrentWidget => (InkResponse)StateWidget;
-        private bool PrimaryEnabled => CurrentWidget.OnTap is not null
-                                       || CurrentWidget.OnDoubleTap is not null
-                                       || CurrentWidget.OnLongPress is not null
-                                       || CurrentWidget.OnLongPressUp is not null
-                                       || CurrentWidget.OnTapDown is not null
-                                       || CurrentWidget.OnTapUp is not null;
-        private bool SecondaryEnabled => CurrentWidget.OnSecondaryTap is not null
-                                         || CurrentWidget.OnSecondaryTapDown is not null
-                                         || CurrentWidget.OnSecondaryTapUp is not null;
-        private bool Enabled => PrimaryEnabled || SecondaryEnabled;
+// Dart's `_HighlightType`.
+internal enum InkHighlightType
+{
+    Pressed,
+    Hover,
+    Focus,
+}
 
-        public override void InitState()
+// Dart's `_InkResponseState`.
+internal sealed class InkResponseState
+    : AutomaticKeepAliveClientMixin<InkResponseStateWidget>, IParentInkResponseState
+{
+    private static readonly TimeSpan ActivationDuration = TimeSpan.FromMilliseconds(100);
+
+    private HashSet<InteractiveInkFeature>? _splashes;
+    private InteractiveInkFeature? _currentSplash;
+    private bool _hovering;
+    private readonly Dictionary<InkHighlightType, InkHighlight?> _highlights = [];
+    private Dictionary<Type, FlutterAction>? _actionMap;
+    private readonly ObserverList<IParentInkResponseState> _activeChildren = new();
+    private GestureTimer? _activationTimer;
+    private bool _hasFocus;
+
+    // Dart's `MaterialStatesController? internalStatesController`.
+    internal WidgetStatesController? InternalStatesController { get; private set; }
+
+    private IReadOnlyDictionary<Type, FlutterAction> ActionMap => _actionMap ??= new Dictionary<Type, FlutterAction>
+    {
+        [typeof(ActivateIntent)] = new CallbackAction<ActivateIntent>(intent =>
         {
-            AttachFocusNode(CurrentWidget.FocusNode);
-            AttachStatesController(CurrentWidget.StatesController);
-            FocusManager.Instance.AddHighlightModeListener(HandleFocusHighlightModeChanged);
-            SyncDisabledState();
+            ActivateOnIntent(intent);
+            return null;
+        }),
+        [typeof(ButtonActivateIntent)] = new CallbackAction<ButtonActivateIntent>(intent =>
+        {
+            ActivateOnIntent(intent);
+            return null;
+        }),
+    };
+
+    private bool HighlightsExist => _highlights.Values.Any(highlight => highlight is not null);
+
+    public void MarkChildInkResponsePressed(IParentInkResponseState childState, bool value)
+    {
+        bool lastAnyPressed = AnyChildInkResponsePressed;
+        if (value)
+        {
+            _activeChildren.Add(childState);
+        }
+        else
+        {
+            _activeChildren.Remove(childState);
         }
 
-        public override void DidUpdateWidget(InkResponse oldWidget)
+        bool nowAnyPressed = AnyChildInkResponsePressed;
+        if (nowAnyPressed != lastAnyPressed)
         {
-            var oldResponse = (InkResponse)oldWidget;
-            if (!ReferenceEquals(oldResponse.FocusNode, CurrentWidget.FocusNode))
-            {
-                DetachFocusNode();
-                AttachFocusNode(CurrentWidget.FocusNode);
-            }
-
-            if (!ReferenceEquals(oldResponse.StatesController, CurrentWidget.StatesController))
-            {
-                DetachStatesController();
-                AttachStatesController(CurrentWidget.StatesController);
-            }
-
-            if (oldResponse.Radius != CurrentWidget.Radius
-                || oldResponse.HighlightShape != CurrentWidget.HighlightShape
-                || oldResponse.BorderRadius != CurrentWidget.BorderRadius)
-            {
-                ResetHighlight(InkHighlightKind.Hover);
-                ResetHighlight(InkHighlightKind.Focus);
-            }
-
-            if (oldResponse.CustomBorder != CurrentWidget.CustomBorder)
-            {
-                foreach (SplashEntry splash in _splashes)
-                {
-                    splash.Feature.UpdateConfiguration(
-                        splash.Feature.Configuration with { CustomBorder = CurrentWidget.CustomBorder });
-                }
-            }
-
-            SyncDisabledState();
-            if (!Enabled)
-            {
-                SetPressed(false, notifyCancel: true);
-                ResetHighlight(InkHighlightKind.Hover);
-            }
+            Widget.ParentState?.MarkChildInkResponsePressed(this, nowAnyPressed);
         }
+    }
 
-        public override void DidChangeDependencies()
+    private bool AnyChildInkResponsePressed => _activeChildren.IsNotEmpty;
+
+    internal void ActivateOnIntent(Intent? intent)
+    {
+        _activationTimer?.Cancel();
+        _activationTimer = null;
+        StartNewSplash(context: Context);
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        if (Widget.OnTap is not null)
         {
-            base.DidChangeDependencies();
-            IParentInkResponseState? nextParent =
-                Context.DependOnInheritedWidgetOfExactType<ParentInkResponseProvider>()?.State;
-            if (ReferenceEquals(_parentState, nextParent))
-            {
-                return;
-            }
-
-            _parentState?.ChildPressedChanged(this, false);
-            _parentState = nextParent;
-            if (_pressed || _pressedChildren.Count > 0)
-            {
-                _parentState?.ChildPressedChanged(this, true);
-            }
-        }
-
-        public override void Deactivate()
-        {
-            _parentState?.ChildPressedChanged(this, false);
-            base.Deactivate();
-        }
-
-        public override void Dispose()
-        {
-            FocusManager.Instance.RemoveHighlightModeListener(HandleFocusHighlightModeChanged);
-            DetachFocusNode();
-            DetachStatesController();
-            foreach (SplashEntry splash in _splashes.ToArray())
-            {
-                splash.Controller.Dispose();
-            }
-            _splashes.Clear();
-            foreach (HighlightEntry highlight in _highlights.ToArray())
-            {
-                highlight.Controller.Dispose();
-            }
-            _highlights.Clear();
-            _activationController?.Dispose();
-            _activationController = null;
-
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var widget = CurrentWidget;
-            var theme = Theme.Of(context);
-            _resolvedSplashFactory = widget.SplashFactory ?? theme.SplashFactory;
-            _textDirection = Directionality.Of(context);
-            _navigationMode = MediaQuery.MaybeNavigationModeOf(context) ?? NavigationMode.Traditional;
-            var states = _statesController?.Value ?? new HashSet<WidgetState>();
-            UpdateHighlights(theme, states);
-            var splashColor = widget.OverlayColor?.Resolve(
-                                  new HashSet<WidgetState>(states) { WidgetState.Pressed })
-                              ?? widget.SplashColor
-                              ?? theme.SplashColor;
-            _resolvedSplashColor = splashColor;
-            if (_currentSplash is not null)
-            {
-                _currentSplash.Feature.UpdateConfiguration(
-                    _currentSplash.Feature.Configuration with { Color = splashColor });
-            }
-            var borderRadius = ShapeBorderGeometry.ResolveRadiusOrNull(widget.CustomBorder)
-                               ?? widget.BorderRadius
-                               ?? Plumix.Rendering.BorderRadius.Zero;
-
-            Widget result = new InkResponsePaint(
-                highlightColor: null,
-                highlightShape: widget.HighlightShape,
-                borderRadius: borderRadius,
-                splashColor: splashColor,
-                splashOrigin: _splashOrigin,
-                splashProgress: _splashProgress,
-                splashRadius: widget.Radius,
-                containedInkWell: widget.ContainedInkWell,
-                splashFeature: _splashFeature,
-                splashConfirmed: _splashConfirmed,
-                splashCanceled: _splashCanceled,
-                rectCallbackFactory: widget.GetRectCallback,
-                controller: Material.MaybeOf(context),
-                splashes: _splashes
-                    .Select(splash => new InkSplashVisual(
-                        splash.Feature,
-                        splash.Controller.Evaluate(),
-                        splash.Confirmed,
-                        splash.Canceled))
-                    .ToArray(),
-                highlights: _highlights
-                    .Select(highlight => new InkHighlightVisual(
-                        highlight.Kind,
-                        highlight.Color,
-                        highlight.Controller.Evaluate()))
-                    .ToArray(),
-                child: widget.Child ?? new SizedBox());
-
-            if (Enabled)
-            {
-                result = new GestureDetector(
-                   excludeFromSemantics: true,
-                    behavior: HitTestBehavior.Opaque,
-                    onTapDown: PrimaryEnabled ? HandleTapDown : null,
-                    onTapUp: PrimaryEnabled ? HandleTapUp : null,
-                    onTap: PrimaryEnabled ? HandleTap : null,
-                    onTapCancel: PrimaryEnabled ? HandleTapCancel : null,
-                    onDoubleTap: widget.OnDoubleTap is null ? null : HandleDoubleTap,
-                    onLongPress: widget.OnLongPress is null ? null : HandleLongPress,
-                    onLongPressUp: widget.OnLongPressUp is null ? null : HandleLongPressUp,
-                    onSecondaryTapDown: SecondaryEnabled ? HandleSecondaryTapDown : null,
-                    onSecondaryTapUp: SecondaryEnabled ? HandleSecondaryTapUp : null,
-                    onSecondaryTap: SecondaryEnabled ? HandleSecondaryTap : null,
-                    onSecondaryTapCancel: SecondaryEnabled ? HandleSecondaryTapCancel : null,
-                    child: result);
-
-            }
-
-            if (!widget.ExcludeFromSemantics)
-            {
-                result = new Semantics(
-                    onTap: widget.OnTap is null ? null : HandleSemanticTap,
-                    onLongPress: widget.OnLongPress is null ? null : HandleSemanticLongPress,
-                    child: result);
-            }
-
-            // Dart's `_InkResponseState.build` wraps the response in a `MouseRegion` that both
-            // reports hover and supplies the cursor; the cursor is a property of the region, not a
-            // stack the state pushes onto.
-            result = new MouseRegion(
-                cursor: EffectiveMouseCursor,
-                onEnter: _ => SetHovered(true),
-                onExit: _ => SetHovered(false),
-                child: result);
-
-            result = new Focus(
-                focusNode: _focusNode,
-                autofocus: widget.Autofocus,
-                canRequestFocus: _navigationMode == NavigationMode.Directional
-                                 || (Enabled && widget.CanRequestFocus),
-                onKeyEvent: HandleKeyEvent,
-                child: result);
-
-            return new ParentInkResponseProvider(this, result);
-        }
-
-        private Color ResolveHighlightColor(
-            ThemeData theme,
-            IReadOnlySet<WidgetState> states,
-            InkHighlightKind kind)
-        {
-            var nonHighlightStates = new HashSet<WidgetState>(states);
-            nonHighlightStates.Remove(WidgetState.Pressed);
-            nonHighlightStates.Remove(WidgetState.Hovered);
-            nonHighlightStates.Remove(WidgetState.Focused);
-            return kind switch
-            {
-                InkHighlightKind.Pressed => CurrentWidget.OverlayColor?.Resolve(
-                                                new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Pressed })
-                                            ?? CurrentWidget.HighlightColor
-                                            ?? theme.HighlightColor,
-                InkHighlightKind.Hover => CurrentWidget.OverlayColor?.Resolve(
-                                              new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Hovered })
-                                          ?? CurrentWidget.HoverColor
-                                          ?? theme.HoverColor,
-                _ => CurrentWidget.OverlayColor?.Resolve(
-                         new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Focused })
-                     ?? CurrentWidget.FocusColor
-                     ?? theme.FocusColor,
-            };
-        }
-
-        private void HandleTapDown(TapDownDetails details)
-        {
-            StartSplash(details.LocalPosition);
-            CurrentWidget.OnTapDown?.Invoke(details);
-        }
-
-        private void HandleTapUp(TapUpDetails details) => CurrentWidget.OnTapUp?.Invoke(details);
-
-        private void HandleTap()
-        {
-            ConfirmSplash();
-            SetPressed(false);
-            if (CurrentWidget.OnTap is not null && CurrentWidget.EnableFeedback)
+            if (Widget.EnableFeedback)
             {
                 _ = Feedback.ForTap(Context);
             }
-            CurrentWidget.OnTap?.Invoke();
+
+            Widget.OnTap?.Invoke();
         }
 
-        private void HandleTapCancel()
+        // Delay the call to `updateHighlight` to simulate a pressed delay
+        // and give WidgetStatesController listeners a chance to react.
+        _activationTimer = GestureTimer.Start(ActivationDuration, () =>
         {
-            CancelSplash();
-            SetPressed(false);
-            CurrentWidget.OnTapCancel?.Invoke();
+            UpdateHighlight(InkHighlightType.Pressed, value: false);
+        });
+    }
+
+    internal void SimulateTap(Intent? intent = null)
+    {
+        StartNewSplash(context: Context);
+        HandleTap();
+    }
+
+    internal void SimulateLongPress()
+    {
+        StartNewSplash(context: Context);
+        HandleLongPress();
+    }
+
+    private void HandleStatesControllerChange()
+    {
+        // Force a rebuild to resolve widget.overlayColor, widget.mouseCursor
+        SetState(() => { });
+    }
+
+    internal WidgetStatesController StatesController => Widget.StatesController ?? InternalStatesController!;
+
+    private void InitStatesController()
+    {
+        if (Widget.StatesController is null)
+        {
+            InternalStatesController = new WidgetStatesController();
         }
 
-        private void HandleDoubleTap()
+        StatesController.Update(WidgetState.Disabled, !Enabled);
+        StatesController.AddListener(HandleStatesControllerChange);
+    }
+
+    public override void InitState()
+    {
+        base.InitState();
+        InitStatesController();
+        FocusManager.Instance.AddHighlightModeListener(HandleFocusHighlightModeChange);
+    }
+
+    public override void DidUpdateWidget(InkResponseStateWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        if (!ReferenceEquals(Widget.StatesController, oldWidget.StatesController))
         {
-            ConfirmSplash();
-            SetPressed(false);
-            CurrentWidget.OnDoubleTap?.Invoke();
+            oldWidget.StatesController?.RemoveListener(HandleStatesControllerChange);
+            if (Widget.StatesController is not null)
+            {
+                InternalStatesController?.Dispose();
+                InternalStatesController = null;
+            }
+
+            InitStatesController();
         }
 
-        private void HandleLongPress()
+        if (Widget.Radius != oldWidget.Radius
+            || Widget.HighlightShape != oldWidget.HighlightShape
+            || Widget.BorderRadius != oldWidget.BorderRadius)
         {
-            ConfirmSplash();
-            if (CurrentWidget.OnLongPress is not null && CurrentWidget.EnableFeedback)
+            InkHighlight? hoverHighlight = HighlightOf(InkHighlightType.Hover);
+            if (hoverHighlight is not null)
+            {
+                hoverHighlight.Dispose();
+                UpdateHighlight(InkHighlightType.Hover, value: _hovering, callOnHover: false);
+            }
+
+            InkHighlight? focusHighlight = HighlightOf(InkHighlightType.Focus);
+            // Do not call updateFocusHighlights() here because it is called below
+            focusHighlight?.Dispose();
+        }
+
+        if (Widget.CustomBorder != oldWidget.CustomBorder)
+        {
+            UpdateHighlightsAndSplashes();
+        }
+
+        if (Enabled != IsWidgetEnabled(oldWidget))
+        {
+            StatesController.Update(WidgetState.Disabled, !Enabled);
+            if (!Enabled)
+            {
+                StatesController.Update(WidgetState.Pressed, false);
+                // Remove the existing hover highlight immediately when enabled is false.
+                // Do not rely on updateHighlight or InkHighlight.deactivate to not break
+                // the expected lifecycle which is updating _hovering when the mouse exit.
+                // Manually updating _hovering here or calling InkHighlight.deactivate
+                // will lead to onHover not being called or call when it is not allowed.
+                HighlightOf(InkHighlightType.Hover)?.Dispose();
+            }
+
+            // Don't call widget.onHover because many widgets, including the button
+            // widgets, apply setState to an ancestor context from onHover.
+            UpdateHighlight(InkHighlightType.Hover, value: _hovering, callOnHover: false);
+        }
+
+        UpdateFocusHighlights();
+    }
+
+    public override void Dispose()
+    {
+        FocusManager.Instance.RemoveHighlightModeListener(HandleFocusHighlightModeChange);
+        StatesController.RemoveListener(HandleStatesControllerChange);
+        InternalStatesController?.Dispose();
+        _activationTimer?.Cancel();
+        _activationTimer = null;
+        base.Dispose();
+    }
+
+    protected override bool WantKeepAlive => HighlightsExist || (_splashes is { Count: > 0 });
+
+    private InkHighlight? HighlightOf(InkHighlightType type) => _highlights.GetValueOrDefault(type);
+
+    private Color GetHighlightColorForType(InkHighlightType type)
+    {
+        return type switch
+        {
+            // The pressed state triggers a ripple (ink splash), per the current
+            // Material Design spec. A separate highlight is no longer used.
+            // See https://material.io/design/interaction/states.html#pressed
+            InkHighlightType.Pressed => Widget.HighlightColor ?? Theme.Of(Context).HighlightColor,
+            InkHighlightType.Focus => Widget.FocusColor ?? Theme.Of(Context).FocusColor,
+            _ => Widget.HoverColor ?? Theme.Of(Context).HoverColor,
+        };
+    }
+
+    internal TimeSpan GetFadeDurationForType(InkHighlightType type)
+    {
+        return type switch
+        {
+            InkHighlightType.Pressed => TimeSpan.FromMilliseconds(200),
+            _ => Widget.HoverDuration ?? TimeSpan.FromMilliseconds(50),
+        };
+    }
+
+    internal void UpdateHighlight(InkHighlightType type, bool value, bool callOnHover = true)
+    {
+        InkHighlight? highlight = HighlightOf(type);
+        void HandleInkRemoval()
+        {
+            DebugAssertions.Assert(HighlightOf(type) is not null);
+            _highlights[type] = null;
+            UpdateKeepAlive();
+        }
+
+        switch (type)
+        {
+            case InkHighlightType.Pressed:
+                StatesController.Update(WidgetState.Pressed, value);
+                break;
+            case InkHighlightType.Hover:
+                if (callOnHover)
+                {
+                    StatesController.Update(WidgetState.Hovered, value);
+                }
+
+                break;
+            case InkHighlightType.Focus:
+                // see handleFocusUpdate()
+                break;
+        }
+
+        if (type == InkHighlightType.Pressed)
+        {
+            Widget.ParentState?.MarkChildInkResponsePressed(this, value);
+        }
+
+        if (value == (highlight is not null && highlight.Active))
+        {
+            return;
+        }
+
+        if (value)
+        {
+            if (highlight is null)
+            {
+                Color resolvedOverlayColor = Widget.OverlayColor?.Resolve(StatesController.Value)
+                                             ?? GetHighlightColorForType(type);
+                var referenceBox = (RenderBox)Context.FindRenderObject()!;
+                _highlights[type] = new InkHighlight(
+                    controller: Material.Of(Context),
+                    referenceBox: referenceBox,
+                    color: Enabled ? resolvedOverlayColor : resolvedOverlayColor.WithAlpha(0),
+                    shape: Widget.HighlightShape,
+                    radius: Widget.Radius,
+                    borderRadius: Widget.BorderRadius,
+                    customBorder: Widget.CustomBorder,
+                    rectCallback: Widget.GetRectCallback!(referenceBox),
+                    onRemoved: HandleInkRemoval,
+                    textDirection: Directionality.Of(Context),
+                    fadeDuration: GetFadeDurationForType(type));
+                UpdateKeepAlive();
+            }
+            else
+            {
+                highlight.Activate();
+            }
+        }
+        else
+        {
+            highlight!.Deactivate();
+        }
+
+        DebugAssertions.Assert(value == (HighlightOf(type) is { Active: true }));
+
+        switch (type)
+        {
+            case InkHighlightType.Pressed:
+                Widget.OnHighlightChanged?.Invoke(value);
+                break;
+            case InkHighlightType.Hover:
+                if (callOnHover)
+                {
+                    Widget.OnHover?.Invoke(value);
+                }
+
+                break;
+            case InkHighlightType.Focus:
+                break;
+        }
+    }
+
+    private void UpdateHighlightsAndSplashes()
+    {
+        foreach (InkHighlight? inkHighlight in _highlights.Values)
+        {
+            if (inkHighlight is not null)
+            {
+                inkHighlight.CustomBorder = Widget.CustomBorder;
+            }
+        }
+
+        if (_currentSplash is not null)
+        {
+            _currentSplash.CustomBorder = Widget.CustomBorder;
+        }
+
+        if (_splashes is { Count: > 0 })
+        {
+            foreach (InteractiveInkFeature inkFeature in _splashes)
+            {
+                inkFeature.CustomBorder = Widget.CustomBorder;
+            }
+        }
+    }
+
+    private InteractiveInkFeature CreateSplash(Point globalPosition)
+    {
+        MaterialInkController inkController = Material.Of(Context);
+        var referenceBox = (RenderBox)Context.FindRenderObject()!;
+        Point position = referenceBox.GlobalToLocal(globalPosition);
+        Color color = Widget.OverlayColor?.Resolve(StatesController.Value)
+                      ?? Widget.SplashColor
+                      ?? Theme.Of(Context).SplashColor;
+        RectCallback? rectCallback = Widget.ContainedInkWell ? Widget.GetRectCallback!(referenceBox) : null;
+        BorderRadius? borderRadius = Widget.BorderRadius;
+        ShapeBorder? customBorder = Widget.CustomBorder;
+
+        InteractiveInkFeature? splash = null;
+        void OnRemoved()
+        {
+            if (_splashes is not null)
+            {
+                DebugAssertions.Assert(_splashes.Contains(splash!));
+                _splashes.Remove(splash!);
+                if (ReferenceEquals(_currentSplash, splash))
+                {
+                    _currentSplash = null;
+                }
+
+                UpdateKeepAlive();
+            } // else we're probably in deactivate()
+        }
+
+        splash = (Widget.SplashFactory ?? Theme.Of(Context).SplashFactory).Create(
+            controller: inkController,
+            referenceBox: referenceBox,
+            position: position,
+            color: color,
+            containedInkWell: Widget.ContainedInkWell,
+            rectCallback: rectCallback,
+            radius: Widget.Radius,
+            borderRadius: borderRadius,
+            customBorder: customBorder,
+            onRemoved: OnRemoved,
+            textDirection: Directionality.Of(Context));
+
+        return splash;
+    }
+
+    private void HandleFocusHighlightModeChange(FocusHighlightMode mode)
+    {
+        if (!Mounted)
+        {
+            return;
+        }
+
+        SetState(UpdateFocusHighlights);
+    }
+
+    private bool ShouldShowFocus => MediaQuery.MaybeNavigationModeOf(Context) switch
+    {
+        NavigationMode.Directional => _hasFocus,
+        _ => Enabled && _hasFocus,
+    };
+
+    private void UpdateFocusHighlights()
+    {
+        bool showFocus = FocusManager.Instance.HighlightMode switch
+        {
+            FocusHighlightMode.Touch => false,
+            _ => ShouldShowFocus,
+        };
+        UpdateHighlight(InkHighlightType.Focus, value: showFocus);
+    }
+
+    private void HandleFocusUpdate(bool hasFocus)
+    {
+        _hasFocus = hasFocus;
+        // Set here rather than updateHighlight because this widget's
+        // (WidgetState) states include WidgetState.focused if
+        // the InkWell _has_ the focus, rather than if it's showing
+        // the focus per FocusManager.instance.highlightMode.
+        StatesController.Update(WidgetState.Focused, hasFocus);
+        UpdateFocusHighlights();
+        Widget.OnFocusChange?.Invoke(hasFocus);
+    }
+
+    internal void HandleAnyTapDown(TapDownDetails details)
+    {
+        if (AnyChildInkResponsePressed)
+        {
+            return;
+        }
+
+        StartNewSplash(details: details);
+    }
+
+    private void HandleTapDown(TapDownDetails details)
+    {
+        HandleAnyTapDown(details);
+        Widget.OnTapDown?.Invoke(details);
+    }
+
+    private void HandleTapUp(TapUpDetails details)
+    {
+        Widget.OnTapUp?.Invoke(details);
+    }
+
+    private void HandleSecondaryTapDown(TapDownDetails details)
+    {
+        HandleAnyTapDown(details);
+        Widget.OnSecondaryTapDown?.Invoke(details);
+    }
+
+    private void HandleSecondaryTapUp(TapUpDetails details)
+    {
+        Widget.OnSecondaryTapUp?.Invoke(details);
+    }
+
+    private void StartNewSplash(TapDownDetails? details = null, BuildContext? context = null)
+    {
+        DebugAssertions.Assert(details is not null || context is not null);
+
+        Point globalPosition;
+        if (context is not null)
+        {
+            var referenceBox = (RenderBox)context.FindRenderObject()!;
+            DebugAssertions.Assert(
+                referenceBox.HasSize,
+                "InkResponse must be done with layout before starting a splash.");
+            globalPosition = referenceBox.LocalToGlobal(referenceBox.PaintBounds.Center);
+        }
+        else
+        {
+            globalPosition = details!.GlobalPosition;
+        }
+
+        StatesController.Update(WidgetState.Pressed, true); // ... before creating the splash
+        InteractiveInkFeature splash = CreateSplash(globalPosition);
+        _splashes ??= [];
+        _splashes.Add(splash);
+        _currentSplash?.Cancel();
+        _currentSplash = splash;
+        UpdateKeepAlive();
+        UpdateHighlight(InkHighlightType.Pressed, value: true);
+    }
+
+    private void HandleTap()
+    {
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        UpdateHighlight(InkHighlightType.Pressed, value: false);
+        if (Widget.OnTap is not null)
+        {
+            if (Widget.EnableFeedback)
+            {
+                _ = Feedback.ForTap(Context);
+            }
+
+            Widget.OnTap?.Invoke();
+        }
+    }
+
+    private void HandleTapCancel()
+    {
+        _currentSplash?.Cancel();
+        _currentSplash = null;
+        Widget.OnTapCancel?.Invoke();
+        UpdateHighlight(InkHighlightType.Pressed, value: false);
+    }
+
+    private void HandleDoubleTap()
+    {
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        UpdateHighlight(InkHighlightType.Pressed, value: false);
+        Widget.OnDoubleTap?.Invoke();
+    }
+
+    private void HandleLongPress()
+    {
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        if (Widget.OnLongPress is not null)
+        {
+            if (Widget.EnableFeedback)
             {
                 _ = Feedback.ForLongPress(Context);
             }
-            CurrentWidget.OnLongPress?.Invoke();
-        }
 
-        private void HandleLongPressUp()
-        {
-            SetPressed(false);
-            CurrentWidget.OnLongPressUp?.Invoke();
-        }
-
-        private void HandleSecondaryTapDown(TapDownDetails details)
-        {
-            StartSplash(details.LocalPosition);
-            CurrentWidget.OnSecondaryTapDown?.Invoke(details);
-        }
-
-        private void HandleSecondaryTapUp(TapUpDetails details) => CurrentWidget.OnSecondaryTapUp?.Invoke(details);
-
-        private void HandleSecondaryTap()
-        {
-            ConfirmSplash();
-            SetPressed(false);
-            CurrentWidget.OnSecondaryTap?.Invoke();
-        }
-
-        private void HandleSecondaryTapCancel()
-        {
-            CancelSplash();
-            SetPressed(false);
-            CurrentWidget.OnSecondaryTapCancel?.Invoke();
-        }
-
-        private void HandleSemanticTap()
-        {
-            StartSplash(CenterOrigin);
-            HandleTap();
-        }
-
-        private void HandleSemanticLongPress()
-        {
-            StartSplash(CenterOrigin);
-            HandleLongPress();
-            SetPressed(false);
-        }
-
-        private void StartSplash(Point origin)
-        {
-            if (_pressedChildren.Count > 0)
-            {
-                return;
-            }
-
-            if (_currentSplash is not null)
-            {
-                CancelEntry(_currentSplash);
-            }
-
-            var widget = CurrentWidget;
-            var configuration = new InkFeatureConfiguration(
-                Position: origin,
-                Color: _resolvedSplashColor,
-                TextDirection: _textDirection,
-                ContainedInkWell: widget.ContainedInkWell,
-                BorderRadius: widget.BorderRadius,
-                CustomBorder: widget.CustomBorder,
-                Radius: widget.Radius);
-            InteractiveInkFeatureFactory factory = _resolvedSplashFactory ?? InkSplash.SplashFactory;
-            InteractiveInkFeature feature = factory.Create(configuration);
-            if (feature is NoSplash)
-            {
-                SetState(() =>
-                {
-                    _splashOrigin = origin;
-                    _splashProgress = 0.0;
-                    _splashFeature = feature;
-                    _splashConfirmed = false;
-                    _splashCanceled = false;
-                });
-                SetPressed(true);
-                return;
-            }
-
-            var controller = new Plumix.AnimationController(duration: feature.UnconfirmedDuration, vsync: this)
-            {
-                Curve = Curves.Linear,
-            };
-            var entry = new SplashEntry(feature, controller);
-            controller.Changed += () => HandleSplashChanged(entry);
-            controller.Completed += () => HandleSplashCompleted(entry);
-            _splashes.Add(entry);
-            _currentSplash = entry;
-            SyncLegacySplashFields(entry, origin);
-            SetPressed(true);
-            controller.Forward(0);
-        }
-
-        private void ConfirmSplash()
-        {
-            SplashEntry? entry = _currentSplash;
-            _currentSplash = null;
-            if (entry is null || entry.Canceled)
-            {
-                if (_splashFeature is NoSplash)
-                {
-                    SetState(ClearLegacySplashFieldsIfIdle);
-                }
-                return;
-            }
-
-            entry.Confirmed = true;
-            entry.Controller.Duration = entry.Feature.ConfirmDuration;
-            entry.Controller.Forward();
-            SyncLegacySplashFields(entry, entry.Feature.Configuration.Position);
-        }
-
-        private void CancelSplash()
-        {
-            SplashEntry? entry = _currentSplash;
-            _currentSplash = null;
-            if (entry is null)
-            {
-                if (_splashFeature is NoSplash)
-                {
-                    SetState(ClearLegacySplashFieldsIfIdle);
-                }
-                return;
-            }
-
-            CancelEntry(entry);
-        }
-
-        private void CancelEntry(SplashEntry entry)
-        {
-            if (entry.Canceled)
-            {
-                return;
-            }
-
-            entry.Canceled = true;
-            entry.Controller.Duration = entry.Feature.CancelDuration;
-            entry.Controller.Forward();
-            SyncLegacySplashFields(entry, entry.Feature.Configuration.Position);
-        }
-
-        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
-        {
-            if (!IsActivateKey(@event)) return KeyEventResult.Ignored;
-            if (@event is KeyDownEvent && CurrentWidget.OnTap is not null)
-            {
-                HandleActivation();
-            }
-            return KeyEventResult.Handled;
-        }
-
-        private void HandleActivation()
-        {
-            StartSplash(CenterOrigin);
-            ConfirmSplash();
-            if (CurrentWidget.EnableFeedback)
-            {
-                _ = Feedback.ForTap(Context);
-            }
-            CurrentWidget.OnTap?.Invoke();
-
-            if (_activationController is null)
-            {
-                _activationController = new Plumix.AnimationController(
-                    duration: TimeSpan.FromMilliseconds(100.0),
-                    vsync: this);
-                _activationController.Completed += () =>
-                {
-                    if (Mounted)
-                    {
-                        SetPressed(false);
-                    }
-                };
-            }
-            _activationController.Forward(0.0);
-        }
-
-        private void AttachFocusNode(FocusNode? externalNode)
-        {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
-            _focusNode.AddListener(HandleFocusChanged);
-            _focused = _focusNode.HasFocus;
-        }
-
-        private void DetachFocusNode()
-        {
-            if (_focusNode is null) return;
-            _focusNode.RemoveListener(HandleFocusChanged);
-            if (_ownsFocusNode) _focusNode.Dispose();
-            _focusNode = null;
-            _ownsFocusNode = false;
-        }
-
-        private void HandleFocusChanged()
-        {
-            bool focused = _focusNode?.HasFocus ?? false;
-            if (_focused == focused) return;
-            SetState(() => _focused = focused);
-            _statesController?.Update(WidgetState.Focused, focused);
-            CurrentWidget.OnFocusChange?.Invoke(focused);
-        }
-
-        private void HandleFocusHighlightModeChanged(FocusHighlightMode mode)
-        {
-            if (Mounted)
-            {
-                SetState(() => { });
-            }
-        }
-
-        private void AttachStatesController(WidgetStatesController? externalController)
-        {
-            _statesController = externalController ?? new WidgetStatesController();
-            _ownsStatesController = externalController is null;
-            _statesController.AddListener(HandleStatesChanged);
-        }
-
-        private void DetachStatesController()
-        {
-            if (_statesController is null) return;
-            _statesController.RemoveListener(HandleStatesChanged);
-            if (_ownsStatesController) _statesController.Dispose();
-            _statesController = null;
-            _ownsStatesController = false;
-        }
-
-        private void HandleStatesChanged() => SetState(() => { });
-
-        private void SyncDisabledState() => _statesController?.Update(WidgetState.Disabled, !Enabled);
-
-        private void UpdateHighlights(ThemeData theme, IReadOnlySet<WidgetState> states)
-        {
-            TimeSpan hoverDuration = CurrentWidget.HoverDuration ?? TimeSpan.FromMilliseconds(50.0);
-            EnsureHighlight(
-                InkHighlightKind.Pressed,
-                _pressed,
-                ResolveHighlightColor(theme, states, InkHighlightKind.Pressed),
-                TimeSpan.FromMilliseconds(200.0));
-
-            Color hoverColor = ResolveHighlightColor(theme, states, InkHighlightKind.Hover);
-            if (!Enabled)
-            {
-                hoverColor = Color.FromARGB(0, hoverColor.Red, hoverColor.Green, hoverColor.Blue);
-            }
-            EnsureHighlight(InkHighlightKind.Hover, _hovered, hoverColor, hoverDuration);
-
-            bool shouldShowFocus = FocusManager.Instance.HighlightMode == FocusHighlightMode.Traditional
-                                   && _focused
-                                   && (_navigationMode == NavigationMode.Directional || Enabled);
-            EnsureHighlight(
-                InkHighlightKind.Focus,
-                shouldShowFocus,
-                ResolveHighlightColor(theme, states, InkHighlightKind.Focus),
-                hoverDuration);
-        }
-
-        private void EnsureHighlight(
-            InkHighlightKind kind,
-            bool active,
-            Color color,
-            TimeSpan duration)
-        {
-            HighlightEntry? entry = _highlights.FirstOrDefault(candidate => candidate.Kind == kind);
-            if (entry is null)
-            {
-                if (!active)
-                {
-                    return;
-                }
-
-                var controller = new Plumix.AnimationController(duration: duration, vsync: this)
-                {
-                    Curve = Curves.Linear,
-                };
-                entry = new HighlightEntry(kind, color, controller);
-                HighlightEntry capturedEntry = entry;
-                controller.Changed += () => HandleHighlightChanged(capturedEntry);
-                controller.Dismissed += () => HandleHighlightDismissed(capturedEntry);
-                _highlights.Add(entry);
-                controller.Forward(0.0);
-                return;
-            }
-
-            entry.Color = color;
-            entry.Controller.Duration = duration;
-            if (active == entry.Active)
-            {
-                return;
-            }
-
-            entry.Active = active;
-            if (active)
-            {
-                entry.Controller.Forward();
-            }
-            else
-            {
-                entry.Controller.Reverse();
-            }
-        }
-
-        private void ResetHighlight(InkHighlightKind kind)
-        {
-            HighlightEntry? entry = _highlights.FirstOrDefault(candidate => candidate.Kind == kind);
-            if (entry is null)
-            {
-                return;
-            }
-
-            _highlights.Remove(entry);
-            entry.Controller.Dispose();
-        }
-
-        private void HandleHighlightChanged(HighlightEntry entry)
-        {
-            if (Mounted && _highlights.Contains(entry))
-            {
-                SetState(() => { });
-            }
-        }
-
-        private void HandleHighlightDismissed(HighlightEntry entry)
-        {
-            if (entry.Active || !_highlights.Remove(entry))
-            {
-                return;
-            }
-
-            entry.Controller.Dispose();
-            if (Mounted)
-            {
-                SetState(() => { });
-            }
-        }
-
-        private void SetPressed(bool value, bool notifyCancel = false)
-        {
-            if (_pressed == value) return;
-            SetState(() => _pressed = value);
-            _statesController?.Update(WidgetState.Pressed, value);
-            _parentState?.ChildPressedChanged(this, value || _pressedChildren.Count > 0);
-            CurrentWidget.OnHighlightChanged?.Invoke(value);
-            if (!value && notifyCancel) CurrentWidget.OnTapCancel?.Invoke();
-        }
-
-        void IParentInkResponseState.ChildPressedChanged(object child, bool pressed)
-        {
-            bool wasActive = _pressedChildren.Count > 0;
-            if (pressed)
-            {
-                _pressedChildren.Add(child);
-            }
-            else
-            {
-                _pressedChildren.Remove(child);
-            }
-
-            bool isActive = _pressedChildren.Count > 0;
-            if (wasActive != isActive)
-            {
-                _parentState?.ChildPressedChanged(this, _pressed || isActive);
-            }
-        }
-
-        /// <summary>
-        /// Dart's `_InkResponseState.build` resolves `widget.mouseCursor ??
-        /// WidgetStateMouseCursor.clickable` against the current states.
-        /// </summary>
-        private MouseCursor EffectiveMouseCursor
-        {
-            get
-            {
-                var states = new HashSet<WidgetState>(
-                    _statesController?.Value ?? new HashSet<WidgetState>());
-                if (!Enabled)
-                {
-                    states.Add(WidgetState.Disabled);
-                }
-
-                MouseCursor candidate = CurrentWidget.MouseCursor ?? WidgetStateMouseCursor.Clickable;
-                return (candidate is WidgetStateMouseCursor stateCursor
-                           ? stateCursor.Resolve(states)
-                           : candidate)
-                       ?? SystemMouseCursors.Basic;
-            }
-        }
-
-        private void SetHovered(bool value, bool notify = true)
-        {
-            if (_hovered == value) return;
-            SetState(() => _hovered = value);
-            _statesController?.Update(WidgetState.Hovered, value);
-            if (value)
-            {
-                if (notify && Enabled)
-                {
-                    _hoverCallbackActive = true;
-                    CurrentWidget.OnHover?.Invoke(true);
-                }
-            }
-            else if (notify && _hoverCallbackActive)
-            {
-                _hoverCallbackActive = false;
-                CurrentWidget.OnHover?.Invoke(false);
-            }
-        }
-
-        private void HandleSplashChanged(SplashEntry entry)
-        {
-            if (!Mounted || !_splashes.Contains(entry))
-            {
-                return;
-            }
-
-            SetState(() =>
-            {
-                if (ReferenceEquals(_currentSplash, entry) || _splashes.Count == 1)
-                {
-                    _splashProgress = entry.Controller.Evaluate();
-                }
-            });
-        }
-
-        private void HandleSplashCompleted(SplashEntry entry)
-        {
-            if (!_splashes.Remove(entry))
-            {
-                return;
-            }
-
-            if (ReferenceEquals(_currentSplash, entry))
-            {
-                _currentSplash = null;
-            }
-
-            entry.Controller.Dispose();
-            if (Mounted)
-            {
-                SetState(ClearLegacySplashFieldsIfIdle);
-            }
-        }
-
-        private void SyncLegacySplashFields(SplashEntry entry, Point origin)
-        {
-            SetState(() =>
-            {
-                _splashOrigin = origin;
-                _splashProgress = entry.Controller.Evaluate();
-                _splashFeature = entry.Feature;
-                _splashConfirmed = entry.Confirmed;
-                _splashCanceled = entry.Canceled;
-            });
-        }
-
-        private void ClearLegacySplashFieldsIfIdle()
-        {
-            SplashEntry? latest = _splashes.LastOrDefault();
-            _splashProgress = latest?.Controller.Evaluate() ?? 0.0;
-            _splashOrigin = latest?.Feature.Configuration.Position ?? CenterOrigin;
-            _splashFeature = latest?.Feature;
-            _splashConfirmed = latest?.Confirmed ?? false;
-            _splashCanceled = latest?.Canceled ?? false;
-        }
-
-        private static bool IsActivateKey(KeyEvent @event)
-        {
-            HardwareKeyboard state = HardwareKeyboard.Instance;
-            if (state.IsShiftPressed || state.IsControlPressed || state.IsAltPressed || state.IsMetaPressed)
-            {
-                return false;
-            }
-
-            return @event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Space)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Space);
-        }
-
-        private sealed class SplashEntry
-        {
-            public SplashEntry(InteractiveInkFeature feature, Plumix.AnimationController controller)
-            {
-                Feature = feature;
-                Controller = controller;
-            }
-
-            public InteractiveInkFeature Feature { get; }
-
-            public Plumix.AnimationController Controller { get; }
-
-            public bool Confirmed { get; set; }
-
-            public bool Canceled { get; set; }
-        }
-
-        private sealed class HighlightEntry
-        {
-            public HighlightEntry(
-                InkHighlightKind kind,
-                Color color,
-                Plumix.AnimationController controller)
-            {
-                Kind = kind;
-                Color = color;
-                Controller = controller;
-                Active = true;
-            }
-
-            public InkHighlightKind Kind { get; }
-
-            public Color Color { get; set; }
-
-            public Plumix.AnimationController Controller { get; }
-
-            public bool Active { get; set; }
+            Widget.OnLongPress!();
         }
     }
-}
 
-internal interface IParentInkResponseState
-{
-    void ChildPressedChanged(object child, bool pressed);
-}
-
-internal sealed class ParentInkResponseProvider : InheritedWidget
-{
-    public ParentInkResponseProvider(
-        IParentInkResponseState state,
-        Widget child) : base(child)
+    private void HandleLongPressUp()
     {
-        State = state;
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        Widget.OnLongPressUp?.Invoke();
     }
 
-    public IParentInkResponseState State { get; }
+    private void HandleSecondaryTap()
+    {
+        _currentSplash?.Confirm();
+        _currentSplash = null;
+        UpdateHighlight(InkHighlightType.Pressed, value: false);
+        Widget.OnSecondaryTap?.Invoke();
+    }
 
-    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    private void HandleSecondaryTapCancel()
+    {
+        _currentSplash?.Cancel();
+        _currentSplash = null;
+        Widget.OnSecondaryTapCancel?.Invoke();
+        UpdateHighlight(InkHighlightType.Pressed, value: false);
+    }
+
+    public override void Deactivate()
+    {
+        if (_splashes is not null)
+        {
+            HashSet<InteractiveInkFeature> splashes = _splashes;
+            _splashes = null;
+            foreach (InteractiveInkFeature splash in splashes)
+            {
+                splash.Dispose();
+            }
+
+            _currentSplash = null;
+        }
+
+        DebugAssertions.Assert(_currentSplash is null);
+        foreach (InkHighlightType highlight in _highlights.Keys.ToList())
+        {
+            HighlightOf(highlight)?.Dispose();
+            _highlights[highlight] = null;
+        }
+
+        Widget.ParentState?.MarkChildInkResponsePressed(this, false);
+        base.Deactivate();
+    }
+
+    private static bool IsWidgetEnabled(InkResponseStateWidget widget) =>
+        PrimaryButtonEnabled(widget) || SecondaryButtonEnabled(widget);
+
+    private static bool PrimaryButtonEnabled(InkResponseStateWidget widget) =>
+        widget.OnTap is not null
+        || widget.OnDoubleTap is not null
+        || widget.OnLongPress is not null
+        || widget.OnLongPressUp is not null
+        || widget.OnTapUp is not null
+        || widget.OnTapDown is not null;
+
+    private static bool SecondaryButtonEnabled(InkResponseStateWidget widget) =>
+        widget.OnSecondaryTap is not null
+        || widget.OnSecondaryTapUp is not null
+        || widget.OnSecondaryTapDown is not null;
+
+    internal bool Enabled => IsWidgetEnabled(Widget);
+
+    private bool PrimaryEnabled => PrimaryButtonEnabled(Widget);
+
+    private bool SecondaryEnabled => SecondaryButtonEnabled(Widget);
+
+    private void HandleMouseEnter(PointerEnterEvent @event)
+    {
+        _hovering = true;
+        if (Enabled)
+        {
+            HandleHoverChange();
+        }
+    }
+
+    private void HandleMouseExit(PointerExitEvent @event)
+    {
+        _hovering = false;
+        // If the exit occurs after we've been disabled, we still
+        // want to take down the highlights and run widget.onHover.
+        HandleHoverChange();
+    }
+
+    private void HandleHoverChange()
+    {
+        UpdateHighlight(InkHighlightType.Hover, value: _hovering);
+    }
+
+    private bool CanRequestFocus => MediaQuery.MaybeNavigationModeOf(Context) switch
+    {
+        NavigationMode.Directional => true,
+        _ => Enabled && Widget.CanRequestFocus,
+    };
+
+    public override Widget Build(BuildContext context)
+    {
+        DebugAssertions.Assert(Widget.DebugCheckContext(context));
+        // Dart's `super.build(context)` from AutomaticKeepAliveClientMixin.
+        if (WantKeepAlive)
+        {
+            EnsureKeepAlive();
+        }
+
+        IReadOnlySet<WidgetState> nonHighlightable = StatesController.Value
+            .Except([WidgetState.Focused, WidgetState.Hovered, WidgetState.Pressed])
+            .ToHashSet();
+        var pressed = new HashSet<WidgetState>(nonHighlightable) { WidgetState.Pressed };
+        var focused = new HashSet<WidgetState>(nonHighlightable) { WidgetState.Focused };
+        var hovered = new HashSet<WidgetState>(nonHighlightable) { WidgetState.Hovered };
+
+        Color GetHighlightColorForTypeInBuild(InkHighlightType type)
+        {
+            return type switch
+            {
+                // The pressed state triggers a ripple (ink splash), per the current
+                // Material Design spec. A separate highlight is no longer used.
+                // See https://material.io/design/interaction/states.html#pressed
+                InkHighlightType.Pressed => Widget.OverlayColor?.Resolve(pressed)
+                                            ?? Widget.HighlightColor
+                                            ?? Theme.Of(context).HighlightColor,
+                InkHighlightType.Focus => Widget.OverlayColor?.Resolve(focused)
+                                          ?? Widget.FocusColor
+                                          ?? Theme.Of(context).FocusColor,
+                _ => Widget.OverlayColor?.Resolve(hovered)
+                     ?? Widget.HoverColor
+                     ?? Theme.Of(context).HoverColor,
+            };
+        }
+
+        foreach (InkHighlightType type in _highlights.Keys)
+        {
+            InkHighlight? highlight = HighlightOf(type);
+            if (highlight is not null)
+            {
+                highlight.Color = GetHighlightColorForTypeInBuild(type);
+            }
+        }
+
+        if (_currentSplash is not null)
+        {
+            _currentSplash.Color = Widget.OverlayColor?.Resolve(StatesController.Value)
+                                   ?? Widget.SplashColor
+                                   ?? Theme.Of(context).SplashColor;
+        }
+
+        // Dart's resolve is non-nullable; a C# resolver returning null falls back to the basic cursor.
+        MouseCursor effectiveMouseCursor = WidgetStateProperty<MouseCursor?>.ResolveAs(
+            Widget.MouseCursor ?? WidgetStateMouseCursor.AdaptiveClickable,
+            StatesController.Value) ?? SystemMouseCursors.Basic;
+
+        return new ParentInkResponseProvider(
+            state: this,
+            child: new Actions(
+                actions: ActionMap,
+                child: new Focus(
+                    focusNode: Widget.FocusNode,
+                    canRequestFocus: CanRequestFocus,
+                    onFocusChange: HandleFocusUpdate,
+                    autofocus: Widget.Autofocus,
+                    child: new MouseRegion(
+                        cursor: effectiveMouseCursor,
+                        onEnter: HandleMouseEnter,
+                        onExit: HandleMouseExit,
+                        child: DefaultSelectionStyle.Merge(
+                            mouseCursor: effectiveMouseCursor,
+                            child: new Semantics(
+                                onTap: Widget.ExcludeFromSemantics || Widget.OnTap is null
+                                    ? null
+                                    : () => SimulateTap(),
+                                onLongPress: Widget.ExcludeFromSemantics || Widget.OnLongPress is null
+                                    ? null
+                                    : SimulateLongPress,
+                                child: new GestureDetector(
+                                    onTapDown: PrimaryEnabled ? HandleTapDown : null,
+                                    onTapUp: PrimaryEnabled ? HandleTapUp : null,
+                                    onTap: PrimaryEnabled ? HandleTap : null,
+                                    onTapCancel: PrimaryEnabled ? HandleTapCancel : null,
+                                    onDoubleTap: Widget.OnDoubleTap is not null ? HandleDoubleTap : null,
+                                    onLongPress: Widget.OnLongPress is not null ? HandleLongPress : null,
+                                    onLongPressUp: Widget.OnLongPressUp is not null ? HandleLongPressUp : null,
+                                    onSecondaryTapDown: SecondaryEnabled ? HandleSecondaryTapDown : null,
+                                    onSecondaryTapUp: SecondaryEnabled ? HandleSecondaryTapUp : null,
+                                    onSecondaryTap: SecondaryEnabled ? HandleSecondaryTap : null,
+                                    onSecondaryTapCancel: SecondaryEnabled ? HandleSecondaryTapCancel : null,
+                                    behavior: HitTestBehavior.Opaque,
+                                    excludeFromSemantics: true,
+                                    child: Widget.Child)))))));
+    }
 }
 
-public sealed class InkWell : InkResponse
+/// <summary>A rectangular area of a <see cref="Material"/> that responds to touch.</summary>
+/// <remarks>
+/// An <see cref="InkResponse"/> with <see cref="InkResponse.ContainedInkWell"/> true and a rectangular
+/// <see cref="InkResponse.HighlightShape"/>: its splashes are clipped to its bounds.
+/// </remarks>
+public class InkWell : InkResponse
 {
+    /// <summary>Creates an ink well.</summary>
     public InkWell(
         Widget? child = null,
         Action? onTap = null,
         Action? onDoubleTap = null,
-        Action<TapDownDetails>? onTapDown = null,
-        Action? onTapCancel = null,
         Action? onLongPress = null,
-        Action<bool>? onHover = null,
-        Action<bool>? onFocusChange = null,
-        Color? focusColor = null,
-        Color? hoverColor = null,
-        Color? highlightColor = null,
-        Color? splashColor = null,
-        BorderRadius? borderRadius = null,
-        FocusNode? focusNode = null,
-        MouseCursor? mouseCursor = null,
-        bool canRequestFocus = true,
-        bool autofocus = false,
-        bool enableFeedback = true,
-        bool excludeFromSemantics = false,
-        Key? key = null,
         Action? onLongPressUp = null,
+        Action<TapDownDetails>? onTapDown = null,
         Action<TapUpDetails>? onTapUp = null,
+        Action? onTapCancel = null,
         Action? onSecondaryTap = null,
         Action<TapUpDetails>? onSecondaryTapUp = null,
         Action<TapDownDetails>? onSecondaryTapDown = null,
         Action? onSecondaryTapCancel = null,
         Action<bool>? onHighlightChanged = null,
+        Action<bool>? onHover = null,
+        MouseCursor? mouseCursor = null,
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        Color? highlightColor = null,
         WidgetStateProperty<Color?>? overlayColor = null,
+        Color? splashColor = null,
+        InteractiveInkFeatureFactory? splashFactory = null,
         double? radius = null,
+        BorderRadius? borderRadius = null,
         ShapeBorder? customBorder = null,
+        bool enableFeedback = true,
+        bool excludeFromSemantics = false,
+        FocusNode? focusNode = null,
+        bool canRequestFocus = true,
+        Action<bool>? onFocusChange = null,
+        bool autofocus = false,
         WidgetStatesController? statesController = null,
         TimeSpan? hoverDuration = null,
-        InteractiveInkFeatureFactory? splashFactory = null)
+        Key? key = null)
         : base(
             child: child,
             onTap: onTap,
-            onTapDown: onTapDown,
-            onTapUp: onTapUp,
-            onTapCancel: onTapCancel,
             onDoubleTap: onDoubleTap,
             onLongPress: onLongPress,
             onLongPressUp: onLongPressUp,
+            onTapDown: onTapDown,
+            onTapUp: onTapUp,
+            onTapCancel: onTapCancel,
             onSecondaryTap: onSecondaryTap,
             onSecondaryTapUp: onSecondaryTapUp,
             onSecondaryTapDown: onSecondaryTapDown,
@@ -1033,14 +1343,15 @@ public sealed class InkWell : InkResponse
             mouseCursor: mouseCursor,
             containedInkWell: true,
             highlightShape: BoxShape.Rectangle,
-            radius: radius,
-            borderRadius: borderRadius,
-            customBorder: customBorder,
             focusColor: focusColor,
             hoverColor: hoverColor,
             highlightColor: highlightColor,
             overlayColor: overlayColor,
             splashColor: splashColor,
+            splashFactory: splashFactory,
+            radius: radius,
+            borderRadius: borderRadius,
+            customBorder: customBorder,
             enableFeedback: enableFeedback,
             excludeFromSemantics: excludeFromSemantics,
             focusNode: focusNode,
@@ -1049,562 +1360,7 @@ public sealed class InkWell : InkResponse
             autofocus: autofocus,
             statesController: statesController,
             hoverDuration: hoverDuration,
-            splashFactory: splashFactory,
             key: key)
     {
-    }
-}
-
-/// <summary>An ink response whose highlight and splash are clipped to its nearest table row.</summary>
-/// <remarks>Dart parity source: material_ui/lib/src/data_table.dart.</remarks>
-public sealed class TableRowInkWell : InkResponse
-{
-    public TableRowInkWell(
-        Widget? child = null,
-        Action? onTap = null,
-        Action? onDoubleTap = null,
-        Action? onLongPress = null,
-        Action<bool>? onHighlightChanged = null,
-        Action<bool>? onHover = null,
-        Action? onSecondaryTap = null,
-        Action<TapDownDetails>? onSecondaryTapDown = null,
-        WidgetStateProperty<Color?>? overlayColor = null,
-        MouseCursor? mouseCursor = null,
-        Key? key = null)
-        : base(
-            child: child,
-            onTap: onTap,
-            onDoubleTap: onDoubleTap,
-            onLongPress: onLongPress,
-            onHighlightChanged: onHighlightChanged,
-            onHover: onHover,
-            onSecondaryTap: onSecondaryTap,
-            onSecondaryTapDown: onSecondaryTapDown,
-            overlayColor: overlayColor,
-            mouseCursor: mouseCursor,
-            containedInkWell: true,
-            highlightShape: BoxShape.Rectangle,
-            key: key)
-    {
-    }
-
-    public override Func<Rect> GetRectCallback(RenderBox referenceBox)
-    {
-        ArgumentNullException.ThrowIfNull(referenceBox);
-        return () => ResolveTableRowRect(referenceBox);
-    }
-
-    private static Rect ResolveTableRowRect(RenderBox referenceBox)
-    {
-        Matrix4 transform = Matrix4.Identity();
-        RenderObject cell = referenceBox;
-        RenderObject? table = cell.Parent;
-        while (table is not null && table is not RenderTable)
-        {
-            MatrixUtils.MultiplyInPlace(ResolveChildTransform(cell, table), transform);
-            cell = table;
-            table = table.Parent;
-        }
-
-        if (table is not RenderTable renderTable
-            || cell.parentData is not TableCellParentData { Y: { } rowIndex })
-        {
-            return new Rect();
-        }
-
-        MatrixUtils.MultiplyInPlace(ResolveChildTransform(cell, renderTable), transform);
-        Point origin = MatrixUtils.TransformPoint(transform, default);
-        Point horizontal = MatrixUtils.TransformPoint(transform, new Point(1.0, 0.0));
-        Point vertical = MatrixUtils.TransformPoint(transform, new Point(0.0, 1.0));
-        const double epsilon = 0.000001;
-        bool isTranslation = Math.Abs(horizontal.X - origin.X - 1.0) < epsilon
-                             && Math.Abs(horizontal.Y - origin.Y) < epsilon
-                             && Math.Abs(vertical.X - origin.X) < epsilon
-                             && Math.Abs(vertical.Y - origin.Y - 1.0) < epsilon;
-        if (!isTranslation)
-        {
-            return new Rect();
-        }
-
-        Rect row = renderTable.GetRowBox(rowIndex);
-        return row.Translate(new Vector(-origin.X, -origin.Y));
-    }
-
-    private static Matrix4 ResolveChildTransform(RenderObject child, RenderObject parent)
-    {
-        Point childOffset = child.parentData is BoxParentData data ? data.offset : default;
-        Matrix4 transform = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
-        if (parent is RenderTransform renderTransform)
-        {
-            renderTransform.ApplyPaintTransform(child, transform);
-        }
-
-        return transform;
-    }
-}
-
-internal enum InkHighlightKind
-{
-    Pressed,
-    Hover,
-    Focus,
-}
-
-internal sealed record InkSplashVisual(
-    InteractiveInkFeature Feature,
-    double Progress,
-    bool Confirmed,
-    bool Canceled);
-
-internal sealed record InkHighlightVisual(
-    InkHighlightKind Kind,
-    Color Color,
-    double Opacity);
-
-internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
-{
-    public InkResponsePaint(
-        Color? highlightColor,
-        BoxShape highlightShape,
-        BorderRadius borderRadius,
-        Color? splashColor,
-        Point splashOrigin,
-        double splashProgress,
-        double? splashRadius,
-        bool containedInkWell,
-        InteractiveInkFeature? splashFeature,
-        bool splashConfirmed,
-        bool splashCanceled,
-        Func<RenderBox, Func<Rect>?> rectCallbackFactory,
-        Widget child,
-        MaterialInkController? controller = null,
-        IReadOnlyList<InkSplashVisual>? splashes = null,
-        IReadOnlyList<InkHighlightVisual>? highlights = null) : base(child)
-    {
-        HighlightColor = highlightColor;
-        HighlightShape = highlightShape;
-        BorderRadius = borderRadius;
-        SplashColor = splashColor;
-        SplashOrigin = splashOrigin;
-        SplashProgress = splashProgress;
-        SplashRadius = splashRadius;
-        ContainedInkWell = containedInkWell;
-        SplashFeature = splashFeature;
-        SplashConfirmed = splashConfirmed;
-        SplashCanceled = splashCanceled;
-        RectCallbackFactory = rectCallbackFactory
-                              ?? throw new ArgumentNullException(nameof(rectCallbackFactory));
-        Controller = controller;
-        Splashes = splashes;
-        Highlights = highlights;
-    }
-
-    public Color? HighlightColor { get; }
-    public BoxShape HighlightShape { get; }
-    public BorderRadius BorderRadius { get; }
-    public Color? SplashColor { get; }
-    public Point SplashOrigin { get; }
-    public double SplashProgress { get; }
-    public double? SplashRadius { get; }
-    public bool ContainedInkWell { get; }
-    public InteractiveInkFeature? SplashFeature { get; }
-    public bool SplashConfirmed { get; }
-    public bool SplashCanceled { get; }
-    public Func<RenderBox, Func<Rect>?> RectCallbackFactory { get; }
-    public MaterialInkController? Controller { get; }
-    public IReadOnlyList<InkSplashVisual>? Splashes { get; }
-    public IReadOnlyList<InkHighlightVisual>? Highlights { get; }
-
-    public override RenderObject CreateRenderObject(BuildContext context)
-    {
-        var paint = new RenderInkResponsePaint(
-            HighlightColor,
-            HighlightShape,
-            BorderRadius,
-            SplashColor,
-            SplashOrigin,
-            SplashProgress,
-            SplashRadius,
-            ContainedInkWell,
-            SplashFeature,
-            SplashConfirmed,
-            SplashCanceled,
-            Controller,
-            Splashes,
-            Highlights);
-        paint.RectCallback = RectCallbackFactory(paint);
-        return paint;
-    }
-
-    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var paint = (RenderInkResponsePaint)renderObject;
-        paint.HighlightColor = HighlightColor;
-        paint.HighlightShape = HighlightShape;
-        paint.BorderRadius = BorderRadius;
-        paint.SplashColor = SplashColor;
-        paint.SplashOrigin = SplashOrigin;
-        paint.SplashProgress = SplashProgress;
-        paint.SplashRadius = SplashRadius;
-        paint.ContainedInkWell = ContainedInkWell;
-        paint.SplashFeature = SplashFeature;
-        paint.SplashConfirmed = SplashConfirmed;
-        paint.SplashCanceled = SplashCanceled;
-        paint.Controller = Controller;
-        paint.Splashes = Splashes;
-        paint.Highlights = Highlights;
-        paint.RectCallback = RectCallbackFactory(paint);
-    }
-}
-
-internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeature
-{
-    private Color? _highlightColor;
-    private BoxShape _highlightShape;
-    private BorderRadius _borderRadius;
-    private Color? _splashColor;
-    private Point _splashOrigin;
-    private double _splashProgress;
-    private double? _splashRadius;
-    private bool _containedInkWell;
-    private InteractiveInkFeature? _splashFeature;
-    private bool _splashConfirmed;
-    private bool _splashCanceled;
-    private Func<Rect>? _rectCallback;
-    private MaterialInkController? _controller;
-    private IReadOnlyList<InkSplashVisual>? _splashes;
-    private IReadOnlyList<InkHighlightVisual>? _highlights;
-
-    public RenderInkResponsePaint(Color? highlightColor, BoxShape highlightShape, BorderRadius borderRadius,
-        Color? splashColor,
-        Point splashOrigin,
-        double splashProgress,
-        double? splashRadius,
-        bool containedInkWell,
-        InteractiveInkFeature? splashFeature,
-        bool splashConfirmed,
-        bool splashCanceled,
-        MaterialInkController? controller = null,
-        IReadOnlyList<InkSplashVisual>? splashes = null,
-        IReadOnlyList<InkHighlightVisual>? highlights = null)
-    {
-        _highlightColor = highlightColor;
-        _highlightShape = highlightShape;
-        _borderRadius = borderRadius;
-        _splashColor = splashColor;
-        _splashOrigin = splashOrigin;
-        _splashProgress = Math.Clamp(splashProgress, 0, 1);
-        _splashRadius = splashRadius;
-        _containedInkWell = containedInkWell;
-        _splashFeature = splashFeature;
-        _splashConfirmed = splashConfirmed;
-        _splashCanceled = splashCanceled;
-        _controller = controller;
-        _splashes = splashes;
-        _highlights = highlights;
-        _controller?.AddInkFeature(this);
-    }
-
-    public Color? HighlightColor
-    {
-        get => _highlights?.FirstOrDefault(highlight => highlight.Kind == InkHighlightKind.Pressed)?.Color
-               ?? _highlights?.FirstOrDefault(highlight => highlight.Kind == InkHighlightKind.Hover)?.Color
-               ?? _highlights?.FirstOrDefault(highlight => highlight.Kind == InkHighlightKind.Focus)?.Color
-               ?? _highlightColor;
-        set => SetPaintValue(ref _highlightColor, value);
-    }
-    public BoxShape HighlightShape { get => _highlightShape; set => SetPaintValue(ref _highlightShape, value); }
-    public BorderRadius BorderRadius { get => _borderRadius; set => SetPaintValue(ref _borderRadius, value); }
-    public Color? SplashColor { get => _splashColor; set => SetPaintValue(ref _splashColor, value); }
-    public Point SplashOrigin { get => _splashOrigin; set => SetPaintValue(ref _splashOrigin, value); }
-    public double SplashProgress { get => _splashProgress; set => SetPaintValue(ref _splashProgress, Math.Clamp(value, 0, 1)); }
-    public double? SplashRadius { get => _splashRadius; set => SetPaintValue(ref _splashRadius, value); }
-    public bool ContainedInkWell { get => _containedInkWell; set => SetPaintValue(ref _containedInkWell, value); }
-    public InteractiveInkFeature? SplashFeature
-    {
-        get => _splashes?.LastOrDefault()?.Feature ?? _splashFeature;
-        set => SetPaintValue(ref _splashFeature, value);
-    }
-    public bool SplashConfirmed { get => _splashConfirmed; set => SetPaintValue(ref _splashConfirmed, value); }
-    public bool SplashCanceled { get => _splashCanceled; set => SetPaintValue(ref _splashCanceled, value); }
-    public Func<Rect>? RectCallback
-    {
-        get => _rectCallback;
-        set => SetPaintValue(ref _rectCallback, value);
-    }
-    public MaterialInkController? Controller
-    {
-        get => _controller;
-        set
-        {
-            if (ReferenceEquals(_controller, value))
-            {
-                return;
-            }
-
-            _controller?.RemoveInkFeature(this);
-            _controller = value;
-            _controller?.AddInkFeature(this);
-            MarkNeedsPaint();
-        }
-    }
-    public IReadOnlyList<InkSplashVisual>? Splashes
-    {
-        get => _splashes;
-        set => SetPaintValue(ref _splashes, value);
-    }
-    public IReadOnlyList<InkHighlightVisual>? Highlights
-    {
-        get => _highlights;
-        set => SetPaintValue(ref _highlights, value);
-    }
-
-    RenderBox IMaterialInkFeature.ReferenceBox => this;
-
-    internal int SplashCount => _splashes?.Count ?? (_splashFeature is null ? 0 : 1);
-
-    internal Rect ResolvedInkRect => ResolveInkRect();
-
-    public override void Paint(PaintingContext context, Point offset)
-    {
-        if (_controller is not null)
-        {
-            base.Paint(context, offset);
-            return;
-        }
-
-        PaintInk(context, offset);
-        base.Paint(context, offset);
-    }
-
-    void IMaterialInkFeature.PaintFeature(PaintingContext context)
-    {
-        PaintInk(context, default);
-    }
-
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        _controller?.AddInkFeature(this);
-    }
-
-    protected override void OnDetach()
-    {
-        _controller?.RemoveInkFeature(this);
-        base.OnDetach();
-    }
-
-    private void PaintInk(PaintingContext context, Point offset)
-    {
-        Rect inkRect = ResolveInkRect();
-
-        void PaintInk(PaintingContext target)
-        {
-            if (_highlights is not null)
-            {
-                foreach (InkHighlightVisual highlight in _highlights.OrderBy(HighlightPaintOrder))
-                {
-                    PaintHighlight(
-                        target,
-                        offset,
-                        inkRect,
-                        ApplyOpacity(highlight.Color, highlight.Opacity));
-                }
-            }
-            else if (_highlightColor != null)
-            {
-                PaintHighlight(target, offset, inkRect, _highlightColor!);
-            }
-
-            if (_splashes is not null)
-            {
-                foreach (InkSplashVisual splash in _splashes)
-                {
-                    InkFeatureFrame frame = splash.Feature.ResolveFrame(
-                        inkRect,
-                        splash.Progress,
-                        splash.Confirmed,
-                        splash.Canceled);
-                    PaintFeature(target, offset, splash.Feature.Configuration.Color, frame);
-                }
-            }
-            else if (_splashFeature is not null && _splashProgress >= 0.0)
-            {
-                InkFeatureFrame frame = _splashFeature.ResolveFrame(
-                    inkRect,
-                    _splashProgress,
-                    confirmed: _splashConfirmed,
-                    canceled: _splashCanceled);
-                PaintFeature(target, offset, _splashFeature.Configuration.Color, frame);
-            }
-            else if (_splashColor != null && _splashProgress > 0)
-            {
-                var center = new Point(Size.Width / 2.0, Size.Height / 2.0);
-                var origin = double.IsNaN(_splashOrigin.X) || double.IsNaN(_splashOrigin.Y)
-                    ? center
-                    : _splashOrigin;
-                if (!_containedInkWell)
-                {
-                    origin = new Point(
-                        origin.X + ((center.X - origin.X) * _splashProgress),
-                        origin.Y + ((center.Y - origin.Y) * _splashProgress));
-                }
-                double maxRadius = _splashRadius ?? ResolveSplashRadius(origin);
-                target.Canvas.DrawCircle(
-                    new SolidColorBrush(_splashColor!),
-                    null,
-                    offset + origin,
-                    maxRadius * _splashProgress);
-            }
-        }
-
-        if (_containedInkWell)
-        {
-            context.Canvas.Save();
-            if (_highlightShape == BoxShape.Circle)
-            {
-                var ovalPath = new Plumix.UI.Path();
-                ovalPath.AddOval(new Rect(offset, Size));
-                context.Canvas.ClipPath(ovalPath);
-            }
-            else
-            {
-                context.Canvas.ClipRRect(
-                    RRect.FromRectAndCorners(inkRect.Translate((Vector)offset), _borderRadius));
-            }
-
-            PaintInk(context);
-            context.Canvas.Restore();
-        }
-        else
-        {
-            PaintInk(context);
-        }
-    }
-
-    private void PaintHighlight(PaintingContext context, Point offset, Rect inkRect, Color color)
-    {
-        var brush = new SolidColorBrush(color);
-        if (_highlightShape == BoxShape.Circle)
-        {
-            double radius = _splashRadius ?? 35.0;
-            context.Canvas.DrawCircle(
-                brush,
-                null,
-                offset + inkRect.Center,
-                radius);
-            return;
-        }
-
-        context.Canvas.DrawRectangle(
-            brush,
-            null,
-            inkRect.Translate((Vector)offset),
-            _borderRadius);
-    }
-
-    private static int HighlightPaintOrder(InkHighlightVisual highlight)
-    {
-        return highlight.Kind switch
-        {
-            InkHighlightKind.Focus => 0,
-            InkHighlightKind.Hover => 1,
-            _ => 2,
-        };
-    }
-
-    private Rect ResolveInkRect()
-    {
-        Rect rect = _rectCallback?.Invoke() ?? new Rect(Size);
-        return rect.Width < 0.0 || rect.Height < 0.0 ? new Rect() : rect;
-    }
-
-    private static void PaintFeature(
-        PaintingContext context,
-        Point offset,
-        Color color,
-        InkFeatureFrame frame)
-    {
-        if (frame.Kind == InkFeatureKind.None)
-        {
-            return;
-        }
-
-        Color featureColor = ApplyOpacity(color, frame.Opacity);
-        if (frame.Kind != InkFeatureKind.Sparkle)
-        {
-            context.Canvas.DrawCircle(
-                new SolidColorBrush(featureColor),
-                null,
-                offset + frame.Center,
-                frame.Radius);
-            return;
-        }
-
-        context.Canvas.DrawCircle(
-            new SolidColorBrush(featureColor),
-            null,
-            offset + frame.Center,
-            frame.Radius);
-        Color haloColor = ApplyOpacity(color, frame.Opacity * 0.32);
-        context.Canvas.DrawCircle(
-            new SolidColorBrush(haloColor),
-            null,
-            offset + frame.Center + new Vector(frame.Radius * 0.08, -frame.Radius * 0.04),
-            frame.Radius * 0.72);
-
-        Random random = new(unchecked((int)Math.Round(frame.TurbulenceSeed * 1000.0)));
-        Color sparkleColor = ApplyOpacity(Colors.White, frame.SparkleOpacity);
-        var sparkleBrush = new SolidColorBrush(sparkleColor);
-        for (int index = 0; index < 18; index++)
-        {
-            double angle = random.NextDouble() * Math.PI * 2.0;
-            double distance = random.NextDouble() * frame.Radius * 0.82;
-            double dotRadius = 0.75 + (random.NextDouble() * 1.5);
-            var dotCenter = new Point(
-                frame.Center.X + (Math.Cos(angle) * distance),
-                frame.Center.Y + (Math.Sin(angle) * distance));
-            context.Canvas.DrawCircle(sparkleBrush, null, offset + dotCenter, dotRadius);
-        }
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Clamp(
-            (int)Math.Round(color.Alpha * Math.Clamp(opacity, 0.0, 1.0)),
-            0,
-            255);
-        return Color.FromARGB(alpha, color.Red, color.Green, color.Blue);
-    }
-
-    private double ResolveSplashRadius(Point origin)
-    {
-        if (!_containedInkWell)
-        {
-            return Math.Sqrt((Size.Width * Size.Width) + (Size.Height * Size.Height)) / 2.0;
-        }
-
-        double[] distances = new[]
-        {
-            Distance(origin, new Point(0, 0)),
-            Distance(origin, new Point(Size.Width, 0)),
-            Distance(origin, new Point(0, Size.Height)),
-            Distance(origin, new Point(Size.Width, Size.Height)),
-        };
-        return distances.Max();
-    }
-
-    private static double Distance(Point a, Point b)
-    {
-        double dx = a.X - b.X;
-        double dy = a.Y - b.Y;
-        return Math.Sqrt((dx * dx) + (dy * dy));
-    }
-
-    private void SetPaintValue<T>(ref T field, T value)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return;
-        field = value;
-        MarkNeedsPaint();
     }
 }

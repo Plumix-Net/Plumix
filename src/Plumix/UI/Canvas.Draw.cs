@@ -116,6 +116,17 @@ public sealed partial class Canvas
     /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
     public void DrawPaint(IBrush brush)
     {
+        DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
+        AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
+    }
+
+    /// <summary>Fills the canvas's current clip with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawPaint(paint)</c>; the paint's colour or shader fills the clip.</remarks>
+    public void DrawPaint(Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
         AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
     }
 
@@ -279,6 +290,26 @@ public sealed partial class Canvas
         DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
         AddDrawCommand(context => context.DrawEllipse(brush, pen, center, clampedRadius, clampedRadius));
+    }
+
+    /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawCircle(c, radius, paint)</c>. The paint's colour (or shader), style and
+    /// stroke width are honoured.
+    /// </remarks>
+    public void DrawCircle(Point center, double radius, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        bool stroke = paint.Style == PaintingStyle.Stroke;
+        IPen? pen = stroke ? new Pen(brush, paint.StrokeWidth) : null;
+        IBrush? fill = stroke ? null : brush;
+        DebugRecordCall(new CanvasCall("drawCircle", Brush: fill, Pen: pen, Center: center, Radius: radius)
+        {
+            RecordedColor = paint.Color,
+        });
+        double clampedRadius = Math.Max(0, radius);
+        AddDrawCommand(context => context.DrawEllipse(fill, pen, center, clampedRadius, clampedRadius));
     }
 
     // Dart parity source: dart:ui Canvas.drawArc.

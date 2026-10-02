@@ -225,8 +225,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 180));
 
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive radio tile"));
-        RenderCustomPaint customPaint = Assert.IsType<RenderCustomPaint>(
-            FindDescendant<RenderCustomPaint>(harness.RenderView));
+        RenderCustomPaint customPaint = Assert.Single(
+            FindDescendants<RenderCustomPaint>(harness.RenderView),
+            paint => paint.Painter is CupertinoRadioPainter);
         var painter = Assert.IsType<CupertinoRadioPainter>(customPaint.Painter);
         Assert.True(painter.CheckmarkStyle);
     }
@@ -564,7 +565,8 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 clipBehavior: Clip.None)));
         customHarness.Pump(new Size(360, 160));
         Plumix.Material.Material material = Assert.Single(
-            customHarness.FindWidgets<Plumix.Material.Material>());
+            customHarness.FindWidgets<Plumix.Material.Material>(),
+            widget => widget.Type != MaterialType.Transparency);
         Assert.Equal(shape, material.Shape);
         Assert.Equal(Clip.None, material.ClipBehavior);
     }
@@ -760,7 +762,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             data: theme ?? ThemeData.Light,
             child: new MediaQuery(
                 data: new MediaQueryData(Size: new Size(320, 800)),
-                child: new SizedBox(width: 320, child: child)));
+                child: new SizedBox(width: 320, child: MaterialHost.Transparent(child))));
     }
 
     private static void Tap(RenderView renderView, Point position, int pointer)

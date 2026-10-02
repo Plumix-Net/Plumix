@@ -151,9 +151,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Material elevation color treatment enters through `ElevationOverlay.cs`; `Material.cs` consumes its M2/M3 policy,
   while component surface helpers share its tint interpolation. Focused coverage is in
   `MaterialElevationOverlayTests.cs`.
-- Material ink reactions enter through `src/Plumix.Material/InkWell.cs`; pluggable `InkSplash`/`InkRipple`/
-  `InkSparkle`/`NoSplash` features and factories live in `src/Plumix.Material/InkFeatures.cs`; source-required gesture
-  callbacks live in core `Widgets/Gestures.cs`, with focused coverage in `MaterialInkResponseTests.cs`.
+- Material ink reactions enter through `src/Plumix.Material/InkWell.cs` (`InkResponse`, `InteractiveInkFeature`);
+  every splash/highlight/decoration is an `InkFeature` painted by the nearest `Material` (`Material.cs`), one file per
+  Dart file (`InkSplash.cs`, `InkRipple.cs`, `InkSparkle.cs`, `InkHighlight.cs`, `NoSplash.cs`, `Ink.cs`). Coverage:
+  `InkWellDartParityTests.cs`, `InkPaintDartParityTests.cs`, `MaterialInkResponseTests.cs`.
 - Material date/time/range pickers enter through `src/Plumix.Material/CalendarDatePicker.cs` + `InputDatePickerFormField.cs` + `DatePickerDialog.cs` + `DateRangePickerDialog.cs` + `TimePickerDialog.cs` + `Date.cs`/`Time.cs` + their theme files; form lifecycle lives in core `Widgets/Form.cs`, dialog presentation uses `Dialog.cs`, localization hooks live in `MaterialLocalizations.cs`, and focused coverage lives in `MaterialDatePickerTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`

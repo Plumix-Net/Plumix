@@ -311,7 +311,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.NotNull(tappable);
         Assert.True(tappable!.PerformAction(SemanticsActions.Tap));
         Assert.Equal(1, taps);
-        Assert.Single(FindDescendants<RenderInkResponsePaint>(enabled.RenderView));
+        Assert.Single(InkFeatureProbe.Responses(enabled.RenderView));
 
         using var disabled = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -635,7 +635,7 @@ public sealed class MaterialDialogTests : IDisposable
                         DefaultMaterialLocalizations.Delegate,
                         DefaultCupertinoLocalizations.Delegate,
                     ],
-                    child: new Theme(theme, child))));
+                    child: new Theme(theme, MaterialHost.Transparent(child)))));
 
     private static void PumpAnimation()
     {

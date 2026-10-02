@@ -158,11 +158,12 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/icon_button.dart` | `src/Plumix.Material/IconButton.cs` | — | — |
 | `material_ui/icon_button_theme.dart` | `src/Plumix.Material/IconButton.cs`<br>`src/Plumix.Material/IconButtonTheme.cs` | — | — |
 | `material_ui/icons.dart` | `src/Plumix.Material/Icons.cs` | `src/Plumix.Tests/MaterialIconsTests.cs` | `dart_sample/lib/demos/material/material_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialIconsDemoPage.cs` |
-| `material_ui/ink_decoration.dart` | `src/Plumix.Material/Ink.cs` | `src/Plumix.Tests/MaterialInkResponseTests.cs` | `dart_sample/lib/demos/material/ink_response_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/InkResponseDemoPage.cs` |
-| `material_ui/ink_ripple.dart` | `src/Plumix.Material/InkFeatures.cs` | — | — |
-| `material_ui/ink_sparkle.dart` | `src/Plumix.Material/InkFeatures.cs` | — | — |
-| `material_ui/ink_splash.dart` | `src/Plumix.Material/InkFeatures.cs` | — | — |
-| `material_ui/ink_well.dart` | `src/Plumix.Material/InkFeatures.cs`<br>`src/Plumix.Material/InkWell.cs` | — | — |
+| `material_ui/ink_decoration.dart` | `src/Plumix.Material/Ink.cs` | `src/Plumix.Tests/InkPaintDartParityTests.cs`<br>`src/Plumix.Tests/InkSparkleDartParityTests.cs`<br>`src/Plumix.Tests/InkSplashDartParityTests.cs`<br>`src/Plumix.Tests/InkWellDartParityTests.cs`<br>`src/Plumix.Tests/MaterialInkResponseTests.cs` | `dart_sample/lib/demos/material/ink_response_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/InkResponseDemoPage.cs` |
+| `material_ui/ink_highlight.dart` | `src/Plumix.Material/InkHighlight.cs` | — | — |
+| `material_ui/ink_ripple.dart` | `src/Plumix.Material/InkRipple.cs` | — | — |
+| `material_ui/ink_sparkle.dart` | `src/Plumix.Material/InkSparkle.cs` | `src/Plumix.Tests/InkSparkleDartParityTests.cs` | — |
+| `material_ui/ink_splash.dart` | `src/Plumix.Material/InkSplash.cs` | `src/Plumix.Tests/InkSplashDartParityTests.cs` | — |
+| `material_ui/ink_well.dart` | `src/Plumix.Material/InkWell.cs` | `src/Plumix.Tests/InkWellDartParityTests.cs` | — |
 | `material_ui/input_border.dart` | `src/Plumix.Material/InputBorder.cs` | — | — |
 | `material_ui/input_chip.dart` | `src/Plumix.Material/FilterInputChips.cs` | — | — |
 | `material_ui/input_date_picker_form_field.dart` | `src/Plumix.Material/InputDatePickerFormField.cs` | — | — |
@@ -188,7 +189,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/navigation_drawer_theme.dart` | `src/Plumix.Material/NavigationDrawerTheme.cs` | — | — |
 | `material_ui/navigation_rail.dart` | `src/Plumix.Material/NavigationRail.cs` | — | — |
 | `material_ui/navigation_rail_theme.dart` | `src/Plumix.Material/NavigationRailTheme.cs` | — | — |
-| `material_ui/no_splash.dart` | `src/Plumix.Material/InkFeatures.cs` | — | — |
+| `material_ui/no_splash.dart` | `src/Plumix.Material/NoSplash.cs` | — | — |
 | `material_ui/outlined_button.dart` | `src/Plumix.Material/OutlinedButton.cs` | — | — |
 | `material_ui/outlined_button_theme.dart` | `src/Plumix.Material/OutlinedButtonTheme.cs` | — | — |
 | `material_ui/page.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
@@ -271,6 +272,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/memory_allocations.dart` | `src/Plumix/Foundation/MemoryAllocations.cs` | — | — |
+| `foundation/observer_list.dart` | `src/Plumix/Foundation/ObserverList.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
 | `foundation/print.dart` | `src/Plumix/Foundation/Print.cs` | `src/Plumix.Tests/PrintTests.cs` | — |
 | `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
@@ -603,9 +605,9 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/RenderAnimatedBox.cs`
 - `src/Plumix/RenderButton.cs`
+- `src/Plumix/Rendering/CanvasPaintingContext.cs`
 - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
 - `src/Plumix/Rendering/ImageFilter.cs`
-- `src/Plumix/Rendering/InkSplash.RenderBox.cs`
 - `src/Plumix/Rendering/ShapeBorderGeometry.cs`
 - `src/Plumix/TrackpadPanZoomSynthesizer.cs`
 - `src/Plumix/UI/AppLifecycle.cs`
@@ -635,7 +637,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/ViewConstraints.cs`
 - `src/Plumix/UI/ViewFocus.cs`
 - `src/Plumix/Widgets/FlutterView.cs`
-- `src/Plumix/Widgets/InkSplash.cs`
 - `src/Plumix/Widgets/TextClipboard.cs`
 - `src/Plumix.Cupertino/GlobalUsings.cs`
 - `src/Plumix.Material/GlobalUsings.cs`
@@ -659,9 +660,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 551
-- C# files carrying a marker: 733
-- C# files without a marker: 62
+- Flutter files mapped: 553
+- C# files carrying a marker: 734
+- C# files without a marker: 61
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 7
 

@@ -827,7 +827,9 @@ public sealed class MaterialDatePickerTests : IDisposable
         AppTraversalScope.Wrap(
             new MediaQuery(
                 new MediaQueryData(Size: mediaSize ?? new Size(420, 500)),
-                new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child)))));
+                new Directionality(
+                    TextDirection.Ltr,
+                    new Theme(theme ?? ThemeData.Light, MaterialHost.Transparent(child))))));
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 

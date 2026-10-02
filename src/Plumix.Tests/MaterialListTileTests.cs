@@ -137,7 +137,7 @@ public sealed class MaterialListTileTests
 
         harness.Pump(new Size(400, 200));
 
-        var ink = FindDescendant<RenderInkDecoration>(harness.RenderView);
+        var ink = InkFeatureProbe.Decorations(harness.RenderView).FirstOrDefault();
         var decoration = Assert.IsType<ShapeDecoration>(ink!.Decoration);
         Assert.Equal(selectedTileColor, decoration.Color);
     }
@@ -175,7 +175,7 @@ public sealed class MaterialListTileTests
         Assert.NotNull(iconParagraph);
         Assert.Equal(themedIcon, Assert.IsType<SolidColorBrush>(iconParagraph!.Foreground).Color);
 
-        var ink = FindDescendant<RenderInkDecoration>(renderRoot);
+        var ink = InkFeatureProbe.Decorations(renderRoot).FirstOrDefault();
         var decoration = Assert.IsType<ShapeDecoration>(ink!.Decoration);
         Assert.Equal(themedTile, decoration.Color);
     }

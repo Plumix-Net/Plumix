@@ -8,6 +8,17 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `InkSplash`/`InkRipple`/`InkSparkle`/`NoSplash`/`InkHighlight` are Dart's `InkFeature`s (ink_*.dart).
+- Breaking: `InteractiveInkFeatureFactory.Create(controller, referenceBox, position, ...)`; `Confirm`/`Cancel`.
+- Breaking: `InkResponse` is a `StatelessWidget` over Dart's `_InkResponseState`; it requires a `Material` ancestor.
+- Breaking: ink responses activate only through `ActivateIntent`/`ButtonActivateIntent` actions, as in ink_well.dart.
+- Breaking: `InkResponse.GetRectCallback` returns `RectCallback?`, null by default; `TableRowInkWell` is in data_table.
+- Breaking: `Ink` is a `StatefulWidget` painting an `InkDecoration` feature; `padding` is `EdgeInsetsGeometry?`.
+- Breaking: the C#-only `Plumix.Widgets.InkSplash`/`RenderInkSplash` and the `IMaterialInkFeature` bridge are gone.
+- `ObserverList`/`HashedObserverList` (observer_list.dart); `Canvas.DrawCircle(c, radius, Paint)`, `DrawPaint(Paint)`.
+- `WidgetStateMouseCursor` implements `IWidgetStateProperty<MouseCursor?>`, so `ResolveAs` resolves it (widget_state).
+- Ink demo gains a `StadiumBorder` `customBorder` well with double tap (both samples).
+- Flutter's ink_well, ink_paint, ink_splash and ink_sparkle tests ported (goldens skipped).
 - Breaking: every `Animated*` widget and `TweenAnimationBuilder` is an `ImplicitlyAnimatedWidget` (implicit_animations).
 - Breaking: `AnimatedOpacity`/`Scale`/`Rotation`/`Slide` build Fade/Scale/Rotation/SlideTransition, as in Dart.
 - Breaking: implicit-animation geometry is `EdgeInsetsGeometry`/`AlignmentGeometry`; argument checks are debug asserts.

@@ -735,3 +735,81 @@ public sealed class DataTable : StatelessWidget
         }
     }
 }
+
+/// <summary>
+/// A rectangular area of a <see cref="Material"/> that responds to touch but clips its ink splashes to
+/// the current table row of the nearest table.
+/// </summary>
+public class TableRowInkWell : InkResponse
+{
+    /// <summary>Creates an ink well for a table row.</summary>
+    public TableRowInkWell(
+        Widget? child = null,
+        Action? onTap = null,
+        Action? onDoubleTap = null,
+        Action? onLongPress = null,
+        Action<bool>? onHighlightChanged = null,
+        Action<bool>? onHover = null,
+        Action? onSecondaryTap = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
+        MouseCursor? mouseCursor = null,
+        Key? key = null)
+        : base(
+            child: child,
+            onTap: onTap,
+            onDoubleTap: onDoubleTap,
+            onLongPress: onLongPress,
+            onHighlightChanged: onHighlightChanged,
+            onHover: onHover,
+            onSecondaryTap: onSecondaryTap,
+            onSecondaryTapDown: onSecondaryTapDown,
+            overlayColor: overlayColor,
+            mouseCursor: mouseCursor,
+            containedInkWell: true,
+            highlightShape: BoxShape.Rectangle,
+            key: key)
+    {
+    }
+
+    public override RectCallback GetRectCallback(RenderBox referenceBox)
+    {
+        return () =>
+        {
+            RenderObject cell = referenceBox;
+            RenderObject? table = cell.Parent;
+            var transform = Matrix4.Identity();
+            while (table is not null && table is not RenderTable)
+            {
+                table.ApplyPaintTransform(cell, transform);
+                DebugAssertions.Assert(ReferenceEquals(table, cell.Parent));
+                cell = table;
+                table = table.Parent;
+            }
+
+            if (table is RenderTable renderTable)
+            {
+                var cellParentData = (TableCellParentData)cell.parentData!;
+                DebugAssertions.Assert(cellParentData.Y is not null);
+                Rect rect = renderTable.GetRowBox(cellParentData.Y!.Value);
+                // The rect is in the table's coordinate space. We need to change it to the
+                // TableRowInkWell's coordinate space.
+                renderTable.ApplyPaintTransform(cell, transform);
+                Point? offset = MatrixUtils.GetAsTranslation(transform);
+                if (offset is not null)
+                {
+                    return rect.Translate(new Vector(-offset.Value.X, -offset.Value.Y));
+                }
+            }
+
+            return default;
+        };
+    }
+
+    public override bool DebugCheckContext(BuildContext context)
+    {
+        // Dart also asserts `debugCheckHasTable(context)`, which core `widgets/debug.dart` does not
+        // port yet (docs/ai/BACKLOG.md).
+        return base.DebugCheckContext(context);
+    }
+}

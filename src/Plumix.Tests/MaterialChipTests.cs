@@ -958,7 +958,7 @@ public sealed class MaterialChipTests : IDisposable
     /// </summary>
     private static ShapeDecoration FindChipDecoration(RenderObject root)
     {
-        return FindDescendants<RenderInkDecoration>(root)
+        return InkFeatureProbe.Decorations(root)
             .Select(ink => ink.Decoration)
             .OfType<ShapeDecoration>()
             .First();

@@ -349,7 +349,7 @@ public sealed class MaterialDataTableTests : IDisposable
         Assert.True(rowInkWell.ContainedInkWell);
         Assert.Equal(BoxShape.Rectangle, rowInkWell.HighlightShape);
 
-        using var harness = new WidgetRenderHarness(Wrap(new Table(
+        using var harness = new WidgetRenderHarness(Wrap(new Plumix.Material.Material(child: new Table(
             columnWidths: new Dictionary<int, TableColumnWidth>
             {
                 [0] = new FixedColumnWidth(100.0),
@@ -362,24 +362,11 @@ public sealed class MaterialDataTableTests : IDisposable
                     new TableCell(new SizedBox(width: 100.0, height: 48.0)),
                     new TableCell(rowInkWell),
                 ]),
-            ])));
+            ]))));
         harness.Pump(new Size(240.0, 100.0));
 
-        RenderInkResponsePaint paint = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
+        InkResponseProbe paint = Assert.Single(InkFeatureProbe.Responses(harness.RenderView));
         Assert.Equal(new Rect(-100.0, 0.0, 200.0, 48.0), paint.ResolvedInkRect);
-
-        var feature = new Plumix.Material.InkSplash(new InkFeatureConfiguration(
-            Position: new Point(20.0, 24.0),
-            Color: Colors.Blue,
-            ContainedInkWell: true));
-        InkFeatureFrame frame = feature.ResolveFrame(
-            paint.ResolvedInkRect,
-            progress: 1.0,
-            confirmed: false,
-            canceled: false);
-        Assert.Equal(new Point(20.0, 24.0), frame.Center);
-        Assert.Equal(Math.Sqrt((120.0 * 120.0) + (24.0 * 24.0)), frame.Radius, 3);
     }
 
     [Fact]
@@ -405,10 +392,10 @@ public sealed class MaterialDataTableTests : IDisposable
         harness.Pump(new Size(320.0, 140.0));
 
         RenderTable table = Assert.Single(FindDescendants<RenderTable>(harness.RenderView));
-        RenderInkResponsePaint[] paints = FindDescendants<RenderInkResponsePaint>(harness.RenderView).ToArray();
+        InkResponseProbe[] paints = InkFeatureProbe.Responses(harness.RenderView).ToArray();
         Assert.Equal(4, paints.Length);
         Assert.Contains(paints, paint => Math.Abs(paint.ResolvedInkRect.Width - paint.Size.Width) < 0.001);
-        RenderInkResponsePaint rowPaint = Assert.Single(
+        InkResponseProbe rowPaint = Assert.Single(
             paints,
             paint => paint.ResolvedInkRect.Width > paint.Size.Width + 0.001);
         Assert.Equal(table.Size.Width, rowPaint.ResolvedInkRect.Width, 3);

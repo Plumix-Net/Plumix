@@ -21,6 +21,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
         private int _responseTaps;
         private int _wellTaps;
         private int _secondaryTaps;
+        private int _doubleTaps;
         private string _interaction = "Ready";
 
         private InteractiveInkFeatureFactory SplashFactory => _splashMode switch
@@ -70,8 +71,10 @@ public sealed class InkResponseDemoPage : StatefulWidget
                                 BuildInkResponse(overlay),
                                 BuildInkWell(overlay),
                             ]),
+                        BuildStadiumWell(overlay),
                         new Text(
-                            $"InkResponse taps: {_responseTaps}  |  InkWell taps: {_wellTaps}  |  secondary: {_secondaryTaps}",
+                            $"InkResponse taps: {_responseTaps}  |  InkWell taps: {_wellTaps}"
+                            + $"  |  secondary: {_secondaryTaps}  |  double: {_doubleTaps}",
                             fontSize: 14,
                             color: Colors.Black),
                         new Text($"Interaction: {_interaction}", fontSize: 13, color: Colors.DimGray),
@@ -144,6 +147,25 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             borderRadius: BorderRadius.Circular(18),
                             child: new Center(child: new Text("Tap / hold", fontSize: 15, color: Colors.Black)))),
                 ]);
+        }
+
+        // The ink of a custom-bordered well is clipped to the border's outer path (customBorder).
+        private Widget BuildStadiumWell(WidgetStateProperty<Color?>? overlay)
+        {
+            return new Center(
+                child: new Ink(
+                    width: 220,
+                    height: 52,
+                    decoration: new ShapeDecoration(
+                        Shape: new StadiumBorder(),
+                        Color: new Color(0xFFFFD8E4)),
+                    child: new InkWell(
+                        onDoubleTap: _enabled ? () => SetState(() => _doubleTaps++) : null,
+                        overlayColor: overlay,
+                        splashFactory: SplashFactory,
+                        customBorder: new StadiumBorder(),
+                        child: new Center(
+                            child: new Text("Stadium: double tap", fontSize: 15, color: Colors.Black)))));
         }
 
         private void HandleSecondaryTap()

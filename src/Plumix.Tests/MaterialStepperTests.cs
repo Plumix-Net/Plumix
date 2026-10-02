@@ -353,10 +353,12 @@ public sealed class MaterialStepperTests : IDisposable
                 DefaultMaterialLocalizations.Instance,
                 new Theme(
                     ThemeData.Light,
-                    new Stepper(
-                        headerPadding: EdgeInsetsGeometry.DirectionalOnly(start: 10, end: 20),
-                        stepIconMargin: new EdgeInsets(7, 8, 9, 10),
-                        steps: [new Step(new Text("One"), new Text("Body"), isActive: true)])))));
+                    new Plumix.Material.Material(
+                        type: MaterialType.Transparency,
+                        child: new Stepper(
+                            headerPadding: EdgeInsetsGeometry.DirectionalOnly(start: 10, end: 20),
+                            stepIconMargin: new EdgeInsets(7, 8, 9, 10),
+                            steps: [new Step(new Text("One"), new Text("Body"), isActive: true)]))))));
         harness.Pump(new Size(360, 300));
 
         Assert.Contains(
@@ -404,7 +406,7 @@ public sealed class MaterialStepperTests : IDisposable
         TextDirection.Ltr,
         new MaterialLocalizationsScope(
             DefaultMaterialLocalizations.Instance,
-            new Theme(theme ?? ThemeData.Light, child)));
+            new Theme(theme ?? ThemeData.Light, MaterialHost.Transparent(child))));
 
     private static BoxDecoration[] FindCircleDecorations(WidgetRenderHarness harness) => harness
         .FindWidgets<AnimatedContainer>()

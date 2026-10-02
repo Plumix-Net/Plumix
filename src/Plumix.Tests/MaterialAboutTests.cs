@@ -828,7 +828,9 @@ public sealed class MaterialAboutTests : IDisposable
                         DefaultMaterialLocalizations.Delegate,
                         DefaultCupertinoLocalizations.Delegate,
                     ],
-                    child: new Theme(theme ?? ThemeData.Light, child))));
+                    child: new Theme(
+                        theme ?? ThemeData.Light,
+                        MaterialHost.Transparent(child)))));
 
     private static void PumpUntilLoaded(WidgetRenderHarness harness, double width, Func<bool> condition)
     {

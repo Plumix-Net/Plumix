@@ -188,6 +188,87 @@ internal sealed class PaintPattern
 
     public PaintPattern ClipPath() => Add("clipPath", _ => null);
 
+    /// <summary>
+    /// <c>..clipPath(pathMatcher: coversSameAreaAs(expected, areaToCompare: ..., sampleSize: ...))</c>.
+    /// </summary>
+    public PaintPattern ClipPath(Plumix.UI.Path coversSameAreaAs, Rect areaToCompare, int sampleSize = 20) => Add(
+        "clipPath",
+        call => call.Path is null
+            ? "the call recorded no path"
+            : PathMatchers.CoversSameAreaAs(call.Path, coversSameAreaAs, areaToCompare, sampleSize));
+
+    /// <summary>
+    /// mock_canvas.dart's <c>..something(predicate)</c>: skips calls until <paramref name="predicate"/>
+    /// returns true for one; a predicate that throws fails the match with its message.
+    /// </summary>
+    public PaintPattern Something(Func<CanvasCall, bool> predicate)
+    {
+        _steps.Add(new Step("something", null, (calls, index) =>
+        {
+            while (index < calls.Count)
+            {
+                CanvasCall call = calls[index];
+                index++;
+                string? failure = RunPredicate(predicate, call, out bool matched);
+                if (failure is not null)
+                {
+                    return (index, $"a \"something\" step considered {call.Method} incorrect: {failure}");
+                }
+
+                if (matched)
+                {
+                    return (index, null);
+                }
+            }
+
+            return (index, "none of the painted methods satisfied the \"something\" step");
+        }));
+        return this;
+    }
+
+    /// <summary>
+    /// mock_canvas.dart's <c>..everything(predicate)</c>: every remaining call must satisfy
+    /// <paramref name="predicate"/>.
+    /// </summary>
+    public PaintPattern Everything(Func<CanvasCall, bool> predicate)
+    {
+        _steps.Add(new Step("everything", null, (calls, index) =>
+        {
+            if (index >= calls.Count)
+            {
+                return (index, "no calls were left for the \"everything\" step");
+            }
+
+            while (index < calls.Count)
+            {
+                CanvasCall call = calls[index];
+                index++;
+                string? failure = RunPredicate(predicate, call, out bool matched);
+                if (failure is not null || !matched)
+                {
+                    return (index, $"an \"everything\" step considered {call.Method} incorrect: {failure}");
+                }
+            }
+
+            return (index, null);
+        }));
+        return this;
+    }
+
+    private static string? RunPredicate(Func<CanvasCall, bool> predicate, CanvasCall call, out bool matched)
+    {
+        try
+        {
+            matched = predicate(call);
+            return null;
+        }
+        catch (Exception exception)
+        {
+            matched = false;
+            return exception.Message;
+        }
+    }
+
     /// <summary>Whether <paramref name="calls"/> match; <c>isNot(paints..)</c> is its negation.</summary>
     public bool Matches(IReadOnlyList<CanvasCall> calls) => Describe(calls) is null;
 
@@ -203,6 +284,17 @@ internal sealed class PaintPattern
         for (int stepIndex = 0; stepIndex < _steps.Count; stepIndex++)
         {
             Step step = _steps[stepIndex];
+            if (step.Match is not null)
+            {
+                (index, string? matchFailure) = step.Match(calls, index);
+                if (matchFailure is not null)
+                {
+                    return $"step {stepIndex} ({step.Method}): {matchFailure}";
+                }
+
+                continue;
+            }
+
             while (index < calls.Count && calls[index].Method != step.Method)
             {
                 index++;
@@ -214,7 +306,7 @@ internal sealed class PaintPattern
                        + string.Join(", ", calls.Select(call => call.Method));
             }
 
-            if (step.Check(calls[index]) is { } failure)
+            if (step.Check!(calls[index]) is { } failure)
             {
                 return $"step {stepIndex} ({step.Method}) at call {index}: {failure}";
             }
@@ -227,7 +319,7 @@ internal sealed class PaintPattern
 
     private PaintPattern Add(string method, Func<CanvasCall, string?> check)
     {
-        _steps.Add(new Step(method, check));
+        _steps.Add(new Step(method, check, null));
         return this;
     }
 
@@ -289,7 +381,10 @@ internal sealed class PaintPattern
         return null;
     }
 
-    private readonly record struct Step(string Method, Func<CanvasCall, string?> Check);
+    private readonly record struct Step(
+        string Method,
+        Func<CanvasCall, string?>? Check,
+        Func<IReadOnlyList<CanvasCall>, int, (int Index, string? Failure)>? Match);
 }
 
 /// <summary>xUnit assertions over <see cref="PaintPattern"/>.</summary>
@@ -307,7 +402,66 @@ internal static class PaintAssert
         }
     }
 
+    /// <summary>
+    /// <c>expect(renderObject, paintsNothing)</c>: nothing but <c>save</c>/<c>restore</c> was recorded.
+    /// </summary>
+    public static void PaintsNothing(RenderObject renderObject)
+    {
+        List<string> painting = PaintRecording.Record(renderObject)
+            .Where(call => call.Method is not ("save" or "restore"))
+            .Select(call => call.Method)
+            .ToList();
+        Assert.True(painting.Count == 0, "painted something: " + string.Join(", ", painting));
+    }
+
     /// <summary><c>expect(renderObject, isNot(paints..))</c>.</summary>
     public static void DoesNotPaint(RenderObject renderObject, PaintPattern pattern) =>
         Assert.False(pattern.Matches(PaintRecording.Record(renderObject)), "the paint pattern unexpectedly matched");
+}
+
+/// <summary>flutter_test's path matchers (matchers.dart).</summary>
+internal static class PathMatchers
+{
+    /// <summary>
+    /// matchers.dart's <c>coversSameAreaAs</c>: samples a <paramref name="sampleSize"/>-square grid (and
+    /// a jittered point next to each grid point) and requires both paths to agree on containment.
+    /// </summary>
+    /// <remarks>
+    /// As in Dart, the grid starts at the origin and spans <paramref name="areaToCompare"/>'s size; the
+    /// jitter comes from a seeded <see cref="Random"/>, not Dart's <c>Random(1)</c>.
+    /// </remarks>
+    public static string? CoversSameAreaAs(
+        Plumix.UI.Path actual,
+        Plumix.UI.Path expected,
+        Rect areaToCompare,
+        int sampleSize = 20)
+    {
+        double stepX = areaToCompare.Width / sampleSize;
+        double stepY = areaToCompare.Height / sampleSize;
+        var random = new Random(1);
+        for (int i = 0; i < sampleSize; i += 1)
+        {
+            for (int j = 0; j < sampleSize; j += 1)
+            {
+                var offset = new Point(i * stepX, j * stepY);
+                if (Sample(offset) is { } failure)
+                {
+                    return failure;
+                }
+
+                var noise = new Vector(stepX * random.NextDouble(), stepY * random.NextDouble());
+                if (Sample(offset + noise) is { } noisyFailure)
+                {
+                    return noisyFailure;
+                }
+            }
+        }
+
+        return null;
+
+        string? Sample(Point point) => expected.Contains(point) == actual.Contains(point)
+            ? null
+            : $"expected path {(expected.Contains(point) ? "contains" : "does not contain")} {point}, actual "
+              + $"{(actual.Contains(point) ? "does" : "does not")}";
+    }
 }

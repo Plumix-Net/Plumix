@@ -1,222 +1,28 @@
 using Avalonia;
-using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using MaterialWidget = Plumix.Material.Material;
 
 namespace Plumix.Tests;
 
+// Plumix-side contract checks for the ink family (ink_well.dart, ink_decoration.dart, ink_splash.dart,
+// ink_ripple.dart, ink_sparkle.dart, ink_highlight.dart, no_splash.dart) that Flutter's own test files
+// do not pin directly. Flutter's tests are ported in InkWellDartParityTests / InkPaintDartParityTests.
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialInkResponseTests : IDisposable
 {
     public MaterialInkResponseTests()
     {
-        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        GestureBinding.Instance.ResetForTests();
-    }
-
-    [Fact]
-    public void Ink_ValidatesShorthandAndDimensions()
-    {
-        Assert.Throws<ArgumentException>(() => new Ink(
-            color: Colors.Red,
-            decoration: new BoxDecoration(Color: Colors.Blue)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Ink(width: -1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Ink(padding: new Thickness(-1, 0, 0, 0)));
-
-        var provider = new MemoryImage([1, 2, 3]);
-        var image = Ink.Image(provider);
-        var decoration = Assert.IsType<BoxDecoration>(image.Decoration);
-        Assert.NotNull(decoration.Image);
-        Assert.Same(provider, decoration.Image!.Image);
-    }
-
-    [Fact]
-    public void Ink_PaintsDecorationBelowInkWellAndAppliesPaddingAndSize()
-    {
-        using var harness = CreateHarness(new Ink(
-            width: 100,
-            height: 56,
-            padding: new Thickness(8, 4),
-            color: new Color(0xFFEADDFF),
-            child: new InkWell(
-                onTap: () => { },
-                child: new Center(child: new Text("Ink")))));
-        harness.Pump(new Size(160, 100));
-
-        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(new Color(0xFFEADDFF), decoration.AsBoxDecoration.Color);
-        Assert.Equal(100, decoration.Size.Width, 3);
-        Assert.Equal(56, decoration.Size.Height, 3);
-        Assert.Contains(
-            FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(8, 4));
-        Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-    }
-
-    [Fact]
-    public void Ink_WithoutChild_ExpandsToTheParentConstraints()
-    {
-        using var harness = CreateHarness(new Ink(color: Colors.Blue));
-        harness.Pump(new Size(160, 100));
-
-        var decoration = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
-        Assert.Equal(new Size(160, 100), decoration.Size);
-    }
-
-    [Fact]
-    public void Material_OwnsInkDecorationAndResponseFeaturesBelowItsChild()
-    {
-        using var harness = CreateHarness(new Plumix.Material.Material(
-            color: Colors.White,
-            child: new Ink(
-                color: Colors.Blue,
-                child: new InkWell(
-                    onTap: () => { },
-                    child: new SizedBox(width: 80.0, height: 48.0)))));
-        harness.Pump(new Size(120.0, 80.0));
-
-        RenderInkFeatures controller = Assert.Single(
-            FindDescendants<RenderInkFeatures>(harness.RenderView));
-        RenderInkDecoration decoration = Assert.Single(
-            FindDescendants<RenderInkDecoration>(harness.RenderView));
-        RenderInkResponsePaint response = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-
-        Assert.Equal(2, controller.DebugInkFeatures!.Count);
-        Assert.Same(controller, decoration.Controller);
-        Assert.Same(controller, response.Controller);
-    }
-
-    [Fact]
-    public void InkWell_RapidTapsKeepOlderFadingSplashAlive()
-    {
-        using var harness = CreateHarness(new Plumix.Material.Material(
-            child: new InkWell(
-                splashFactory: InkRipple.SplashFactory,
-                onTap: () => { },
-                child: new SizedBox(width: 80.0, height: 48.0))));
-        harness.Pump(new Size(120.0, 80.0));
-
-        DateTime now = DateTime.UtcNow;
-        Tap(harness, pointer: 801, now: now);
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                802,
-                PointerDeviceKind.Mouse,
-                new Point(30.0, 20.0),
-                PointerButtons.Primary,
-                now.AddMilliseconds(30.0)));
-        harness.Pump(new Size(120.0, 80.0));
-
-        RenderInkResponsePaint response = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-        Assert.Equal(2, response.SplashCount);
-    }
-
-    [Fact]
-    public void InkWell_HoverHighlightUsesConfiguredFadeDuration()
-    {
-        Color hoverColor = new Color(0xFF00AA00);
-        using var harness = CreateHarness(new Plumix.Material.Material(
-            child: new InkWell(
-                hoverColor: hoverColor,
-                hoverDuration: TimeSpan.FromMilliseconds(100.0),
-                onTap: () => { },
-                child: new SizedBox(width: 80.0, height: 48.0))));
-        harness.Pump(new Size(120.0, 80.0));
-
-        RenderMouseRegion hoverListener = FindDescendants<RenderMouseRegion>(harness.RenderView)
-            .Single(listener => listener.OnEnter is not null && listener.OnExit is not null);
-        hoverListener.OnEnter?.Invoke(
-            new PointerEnterEvent(
-                803,
-                PointerDeviceKind.Mouse,
-                new Point(10.0, 10.0),
-                PointerButtons.None,
-                DateTime.UtcNow));
-        double hoverStartSeconds = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
-        harness.Pump(new Size(120.0, 80.0));
-
-        // That build is what creates the highlight controller, so it needs a frame of its own before
-        // any time can elapse for it.
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
-
-        PumpAnimation(
-            harness,
-            new Size(120.0, 80.0),
-            TimeSpan.FromSeconds(hoverStartSeconds) + TimeSpan.FromMilliseconds(50.0));
-        RenderInkResponsePaint response = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-        InkHighlightVisual hover = Assert.Single(
-            response.Highlights!,
-            highlight => highlight.Kind == InkHighlightKind.Hover);
-
-        Assert.Equal(hoverColor, hover.Color);
-        Assert.InRange(hover.Opacity, 0.47, 0.53);
-    }
-
-    [Fact]
-    public void NestedInkWells_CreateOnlyTheInnerSplash()
-    {
-        using var timers = new FakeGestureTimers();
-        using var harness = CreateHarness(new Plumix.Material.Material(
-            child: new InkWell(
-                onTap: () => { },
-                child: new InkWell(
-                    onTap: () => { },
-                    child: new SizedBox(width: 80.0, height: 48.0)))));
-        harness.Pump(new Size(120.0, 80.0));
-
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                804,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.Primary,
-                DateTime.UtcNow));
-        // With two competing recognizers the tap-down (and with it the splash) fires at the
-        // kPressTimeout deadline, exactly like Flutter.
-        timers.Elapse(GestureConstants.PressTimeout);
-        harness.Pump(new Size(120.0, 80.0));
-
-        List<RenderInkResponsePaint> responses = FindDescendants<RenderInkResponsePaint>(harness.RenderView);
-        Assert.Equal(2, responses.Count);
-        Assert.Equal(0, responses[0].SplashCount);
-        Assert.Equal(1, responses[1].SplashCount);
-    }
-
-    [Fact]
-    public void CircleMaterialUsesOvalClipForNonSquareChildren()
-    {
-        // Dart asserts a circle Material has a color (MaterialType.circle has no theme default).
-        using var harness = CreateHarness(new Plumix.Material.Material(
-            type: MaterialType.Circle,
-            color: Colors.White,
-            clipBehavior: Clip.AntiAlias,
-            child: new SizedBox(width: 80.0, height: 48.0)));
-        harness.Pump(new Size(120.0, 80.0));
-
-        // Dart's Material clips through its physical shape (RenderPhysicalShape with a ShapeBorderClipper).
-        RenderPhysicalShape clip = Assert.Single(FindDescendants<RenderPhysicalShape>(harness.RenderView));
-        Assert.Equal(Clip.AntiAlias, clip.ClipBehavior);
-        var clipper = Assert.IsType<ShapeBorderClipper>(clip.Clipper);
-        Assert.IsType<CircleBorder>(clipper.Shape);
-        Assert.Empty(FindDescendants<RenderClipRRect>(harness.RenderView));
     }
 
     [Fact]
@@ -233,185 +39,20 @@ public sealed class MaterialInkResponseTests : IDisposable
         Assert.True(response.CanRequestFocus);
         Assert.False(response.Autofocus);
         Assert.False(response.ExcludeFromSemantics);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new InkResponse(radius: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new InkWell(hoverDuration: TimeSpan.FromMilliseconds(-1)));
+        Assert.Null(response.GetRectCallback(new RenderConstrainedBox(BoxConstraints.Tight(new Size(1, 1)))));
     }
 
     [Fact]
     public void ThemeData_SplashFactoryDefaultsMatchMaterialModeAndPlatform()
     {
-        var material3Android = new ThemeData(
-            platform: TargetPlatform.Android,
-            useMaterial3: true);
-        var material3Windows = new ThemeData(
-            platform: TargetPlatform.Windows,
-            useMaterial3: true);
-        var material2Android = new ThemeData(
-            platform: TargetPlatform.Android,
-            useMaterial3: false);
+        var material3Android = new ThemeData(platform: TargetPlatform.Android, useMaterial3: true);
+        var material3Windows = new ThemeData(platform: TargetPlatform.Windows, useMaterial3: true);
+        var material2Android = new ThemeData(platform: TargetPlatform.Android, useMaterial3: false);
 
         Assert.Same(InkSparkle.SplashFactory, material3Android.SplashFactory);
         Assert.Same(InkRipple.SplashFactory, material3Windows.SplashFactory);
-        Assert.Same(Plumix.Material.InkSplash.SplashFactory, material2Android.SplashFactory);
-
-        var explicitTheme = new ThemeData(splashFactory: InkRipple.SplashFactory);
-        Assert.Same(InkRipple.SplashFactory, explicitTheme.SplashFactory);
-    }
-
-    [Fact]
-    public void InkRipple_MatchesFlutterRadiusCenterAndTimingContract()
-    {
-        var feature = Assert.IsType<InkRipple>(InkRipple.SplashFactory.Create(
-            new InkFeatureConfiguration(
-                Position: new Point(10.0, 20.0),
-                Color: Colors.Blue,
-                ContainedInkWell: true)));
-
-        Assert.Equal(TimeSpan.FromSeconds(1.0), feature.UnconfirmedDuration);
-        Assert.Equal(TimeSpan.FromMilliseconds(375.0), feature.ConfirmDuration);
-        Assert.Equal(TimeSpan.FromMilliseconds(75.0), feature.CancelDuration);
-
-        InkFeatureFrame initial = feature.ResolveFrame(
-            new Size(100.0, 60.0),
-            progress: 0.0,
-            confirmed: true,
-            canceled: false);
-        InkFeatureFrame completed = feature.ResolveFrame(
-            new Size(100.0, 60.0),
-            progress: 1.0,
-            confirmed: true,
-            canceled: false);
-        double targetRadius = Math.Sqrt((100.0 * 100.0) + (60.0 * 60.0)) / 2.0;
-
-        Assert.Equal(InkFeatureKind.Ripple, initial.Kind);
-        Assert.Equal(new Point(10.0, 20.0), initial.Center);
-        Assert.Equal(targetRadius * 0.30, initial.Radius, 3);
-        Assert.Equal(new Point(50.0, 30.0), completed.Center);
-        Assert.Equal(targetRadius + 5.0, completed.Radius, 3);
-        Assert.Equal(0.0, completed.Opacity, 3);
-    }
-
-    [Fact]
-    public void InkSparkle_UsesFlutterSequencesAndDeterministicTestSeed()
-    {
-        var feature = Assert.IsType<InkSparkle>(
-            InkSparkle.ConstantTurbulenceSeedSplashFactory.Create(
-                new InkFeatureConfiguration(
-                    Position: new Point(12.0, 18.0),
-                    Color: Colors.Purple,
-                    ContainedInkWell: true)));
-
-        Assert.Equal(TimeSpan.FromMilliseconds(617.0), feature.ConfirmDuration);
-        Assert.Equal(1337.0, feature.TurbulenceSeed);
-
-        InkFeatureFrame hold = feature.ResolveFrame(
-            new Size(100.0, 60.0),
-            progress: 0.30,
-            confirmed: true,
-            canceled: false);
-        InkFeatureFrame completed = feature.ResolveFrame(
-            new Size(100.0, 60.0),
-            progress: 1.0,
-            confirmed: true,
-            canceled: false);
-
-        Assert.Equal(InkFeatureKind.Sparkle, hold.Kind);
-        Assert.Equal(1.0, hold.Opacity, 3);
-        Assert.Equal(1.0, hold.SparkleOpacity, 3);
-        Assert.True(hold.Radius > 0.0);
-        Assert.Equal(0.0, completed.Opacity, 3);
-        Assert.Equal(0.0, completed.SparkleOpacity, 3);
-    }
-
-    [Fact]
-    public void NoSplash_FactoryCreatesNonPaintingImmediateFeature()
-    {
-        var configuration = new InkFeatureConfiguration(
-            Position: new Point(12.0, 18.0),
-            Color: Colors.Blue,
-            ContainedInkWell: true);
-        var feature = Assert.IsType<NoSplash>(NoSplash.SplashFactory.Create(configuration));
-
-        Assert.Equal(TimeSpan.Zero, feature.UnconfirmedDuration);
-        Assert.Equal(TimeSpan.Zero, feature.ConfirmDuration);
-        Assert.Equal(TimeSpan.Zero, feature.CancelDuration);
-
-        InkFeatureFrame frame = feature.ResolveFrame(
-            new Size(100.0, 60.0),
-            progress: 0.5,
-            confirmed: true,
-            canceled: false);
-        Assert.Equal(InkFeatureKind.None, frame.Kind);
-        Assert.Equal(new Point(12.0, 18.0), frame.Center);
-        Assert.Equal(0.0, frame.Radius);
-        Assert.Equal(0.0, frame.Opacity);
-    }
-
-    [Fact]
-    public void NoSplash_CanOverrideInkWellAndButtonStyleFactories()
-    {
-        using var harness = CreateHarness(new InkWell(
-            splashFactory: NoSplash.SplashFactory,
-            onTap: () => { },
-            child: new SizedBox(width: 80.0, height: 48.0)));
-        harness.Pump(new Size(120.0, 80.0));
-
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                707,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.Primary,
-                DateTime.UtcNow));
-        harness.Pump(new Size(120.0, 80.0));
-
-        RenderInkResponsePaint paint = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-        Assert.IsType<NoSplash>(paint.SplashFeature);
-        Assert.Same(
-            NoSplash.SplashFactory,
-            TextButton.StyleFrom(splashFactory: NoSplash.SplashFactory).SplashFactory);
-
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerUpEvent(
-                707,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.None,
-                DateTime.UtcNow.AddMilliseconds(20.0)));
-        harness.Pump(new Size(120.0, 80.0));
-        Assert.Null(Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).SplashFeature);
-    }
-
-    [Fact]
-    public void InkWell_WidgetSplashFactoryOverridesThemeFactory()
-    {
-        var theme = new ThemeData(
-            platform: TargetPlatform.Android,
-            splashFactory: InkSparkle.SplashFactory);
-        using var harness = CreateHarness(
-            new InkWell(
-                splashFactory: InkRipple.SplashFactory,
-                onTap: () => { },
-                child: new SizedBox(width: 80.0, height: 48.0)),
-            theme);
-        harness.Pump(new Size(120.0, 80.0));
-
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                705,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.Primary,
-                DateTime.UtcNow));
-        harness.Pump(new Size(120.0, 80.0));
-
-        RenderInkResponsePaint paint = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-        Assert.IsType<InkRipple>(paint.SplashFeature);
+        Assert.Same(InkSplash.SplashFactory, material2Android.SplashFactory);
+        Assert.Same(InkRipple.SplashFactory, new ThemeData(splashFactory: InkRipple.SplashFactory).SplashFactory);
     }
 
     [Fact]
@@ -430,56 +71,70 @@ public sealed class MaterialInkResponseTests : IDisposable
     }
 
     [Fact]
-    public void ButtonStyleButton_UsesButtonStyleSplashFactory()
+    public void Material_OwnsInkDecorationAndResponseFeaturesInPaintOrder()
     {
-        ButtonStyle style = TextButton.StyleFrom(
-            foregroundColor: Colors.Blue,
-            splashFactory: InkRipple.SplashFactory);
-        using var harness = CreateHarness(new TextButton(
-            onPressed: () => { },
-            style: style,
-            child: new Text("Ripple")));
-        harness.Pump(new Size(160.0, 80.0));
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(new Ink(
+            color: Colors.Blue,
+            child: new InkWell(
+                onTap: () => { },
+                splashFactory: InkRipple.SplashFactory,
+                child: new SizedBox(width: 80.0, height: 48.0)))));
 
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                706,
-                PointerDeviceKind.Mouse,
-                new Point(30.0, 20.0),
-                PointerButtons.Primary,
-                DateTime.UtcNow));
-        harness.Pump(new Size(160.0, 80.0));
+        Element well = Single<InkWell>(tester);
+        TestGesture gesture = tester.StartGesture(tester.GetCenter(well), PointerDeviceKind.Touch);
+        tester.Pump();
 
-        RenderInkResponsePaint paint = Assert.Single(
-            FindDescendants<RenderInkResponsePaint>(harness.RenderView));
-        Assert.IsType<InkRipple>(paint.SplashFeature);
+        RenderInkFeatures controller = Controller(well);
+        // The Ink decoration first, then the ripple, then the pressed highlight that follows it.
+        Assert.Collection(
+            controller.DebugInkFeatures!,
+            feature => Assert.IsType<InkDecoration>(feature),
+            feature => Assert.IsType<InkRipple>(feature),
+            feature => Assert.IsType<InkHighlight>(feature));
+        gesture.Up();
+        tester.PumpAndSettle();
+        Assert.IsType<InkDecoration>(Assert.Single(controller.DebugInkFeatures!));
     }
 
     [Fact]
-    public void InkResponse_UsesCircleAndUncontainedSplashWhileInkWellClipsRectangle()
+    public void InkWell_WidgetSplashFactoryOverridesThemeFactory()
     {
-        using var responseHarness = CreateHarness(new InkResponse(
-            radius: 30,
-            borderRadius: BorderRadius.Circular(12),
-            onTap: () => { },
-            child: new SizedBox(width: 80, height: 48)));
-        responseHarness.Pump(new Size(120, 80));
-        var responsePaint = Assert.Single(FindDescendants<RenderInkResponsePaint>(responseHarness.RenderView));
-        Assert.Equal(BoxShape.Circle, responsePaint.HighlightShape);
-        Assert.False(responsePaint.ContainedInkWell);
-        Assert.Equal(30, responsePaint.SplashRadius);
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(
+            new InkWell(
+                splashFactory: InkRipple.SplashFactory,
+                onTap: () => { },
+                child: new SizedBox(width: 80.0, height: 48.0)),
+            new ThemeData(platform: TargetPlatform.Android, splashFactory: InkSparkle.SplashFactory)));
 
-        using var wellHarness = CreateHarness(new InkWell(
-            radius: 24,
-            borderRadius: BorderRadius.Circular(12),
-            onTap: () => { },
-            child: new SizedBox(width: 80, height: 48)));
-        wellHarness.Pump(new Size(120, 80));
-        var wellPaint = Assert.Single(FindDescendants<RenderInkResponsePaint>(wellHarness.RenderView));
-        Assert.Equal(BoxShape.Rectangle, wellPaint.HighlightShape);
-        Assert.True(wellPaint.ContainedInkWell);
-        Assert.Equal(BorderRadius.Circular(12), wellPaint.BorderRadius);
+        Element well = Single<InkWell>(tester);
+        TestGesture gesture = tester.StartGesture(tester.GetCenter(well), PointerDeviceKind.Touch);
+        tester.Pump();
+        Assert.IsType<InkRipple>(Assert.Single(InkFeatureProbe.Splashes(Controller(well))));
+        gesture.Up();
+        tester.PumpAndSettle();
+    }
+
+    [Fact]
+    public void ButtonStyleButton_UsesButtonStyleSplashFactory()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(new TextButton(
+            onPressed: () => { },
+            style: TextButton.StyleFrom(splashFactory: NoSplash.SplashFactory),
+            child: new Text("No splash"))));
+
+        Element well = Single<InkWell>(tester);
+        TestGesture gesture = tester.StartGesture(tester.GetCenter(well), PointerDeviceKind.Touch);
+        tester.Pump();
+        // Dart's NoSplash never adds itself to the controller: only the pressed highlight is there.
+        Assert.Empty(InkFeatureProbe.Splashes(Controller(well)));
+        Assert.Single(InkFeatureProbe.Highlights(Controller(well)));
+        Assert.Equal(0, PaintRecording.Record(Controller(well)).CountCalls("drawCircle"));
+        gesture.Up();
+        tester.PumpAndSettle();
+        Assert.Empty(Controller(well).DebugInkFeatures!);
     }
 
     [Fact]
@@ -487,219 +142,148 @@ public sealed class MaterialInkResponseTests : IDisposable
     {
         var events = new List<string>();
         var states = new WidgetStatesController();
-        using var harness = CreateHarness(new InkWell(
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(new InkWell(
             statesController: states,
             onTapDown: _ => events.Add("down"),
             onTapUp: _ => events.Add("up"),
             onHighlightChanged: value => events.Add(value ? "highlight-on" : "highlight-off"),
             onTap: () => events.Add("tap"),
-            child: new SizedBox(width: 80, height: 48)));
-        harness.Pump(new Size(120, 80));
+            child: new SizedBox(width: 80, height: 48))));
 
-        var now = DateTime.UtcNow;
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            701, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.Primary, now));
-        Assert.True(states.Value.Contains(WidgetState.Pressed));
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            701, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.None, now.AddMilliseconds(20)));
+        Element well = Single<InkWell>(tester);
+        TestGesture gesture = tester.StartGesture(tester.GetCenter(well), PointerDeviceKind.Touch);
+        Assert.Contains(WidgetState.Pressed, states.Value);
+        gesture.Up();
 
-        Assert.False(states.Value.Contains(WidgetState.Pressed));
+        Assert.DoesNotContain(WidgetState.Pressed, states.Value);
         Assert.Equal(["highlight-on", "down", "up", "highlight-off", "tap"], events);
+        tester.PumpAndSettle();
     }
 
     [Fact]
-    public void InkResponse_SecondaryTapUsesDedicatedCallbacksWithoutPrimaryTap()
+    public void InkSparkle_ComputesDartUniformsFromItsAnimations()
     {
-        var events = new List<string>();
-        using var harness = CreateHarness(new InkResponse(
-            onTap: () => events.Add("primary"),
-            onSecondaryTapDown: _ => events.Add("secondary-down"),
-            onSecondaryTapUp: _ => events.Add("secondary-up"),
-            onSecondaryTap: () => events.Add("secondary"),
-            child: new SizedBox(width: 80, height: 48)));
-        harness.Pump(new Size(120, 80));
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(new SizedBox(
+            width: 100.0,
+            height: 50.0,
+            child: new InkWell(
+                splashFactory: InkSparkle.ConstantTurbulenceSeedSplashFactory,
+                splashColor: new Color(0x80FF0000),
+                onTap: () => { }))));
 
-        var now = DateTime.UtcNow;
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            702, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.Secondary, now));
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            702, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.None, now.AddMilliseconds(20)));
+        Element well = Single<InkWell>(tester);
+        Point topLeft = tester.GetTopLeft(well);
+        TestGesture gesture = tester.StartGesture(topLeft + new Vector(10.0, 10.0), PointerDeviceKind.Touch);
+        tester.Pump();
+        var sparkle = Assert.IsType<InkSparkle>(Assert.Single(InkFeatureProbe.Splashes(Controller(well))));
+        PaintRecording.Record(Controller(well));
 
-        Assert.Equal(["secondary-down", "secondary-up", "secondary"], events);
+        IReadOnlyList<double> u = sparkle.DebugUniforms;
+        Assert.Equal(1.0, u[0], 6);
+        Assert.Equal(128.0 / 255.0, u[3], 6);
+        // At t == 0 every sequence is at its start: no alpha, no radius, centre at the touch.
+        Assert.Equal(0.0, u[4], 6);
+        Assert.Equal(0.0, u[5], 6);
+        Assert.Equal(1.0, u[6], 6);
+        Assert.Equal(0.0, u[7], 6);
+        Assert.Equal(10.0, u[8], 6);
+        Assert.Equal(10.0, u[9], 6);
+        // _getTargetRadius is half the diagonal; the sparkle multiplies it by 2.3.
+        Assert.Equal(Math.Sqrt((100.0 * 100.0) + (50.0 * 50.0)) / 2.0 * 2.3, u[10], 6);
+        Assert.Equal(1.0 / 100.0, u[11], 9);
+        Assert.Equal(2.1 / 50.0, u[14], 9);
+        // The constant turbulence seed is 1337 in tests.
+        Assert.Equal(1337.0 / 1000.0, u[15], 9);
+
+        // 617ms total: radius reaches 1 at 75% of it, the centre at half of that.
+        tester.Pump(TimeSpan.FromMilliseconds(617.0 * 0.40));
+        PaintRecording.Record(Controller(well));
+        Assert.Equal(1.0, u[4], 6);
+        Assert.Equal(1.0, u[5], 6);
+        tester.Pump(TimeSpan.FromMilliseconds(617.0 * 0.40));
+        PaintRecording.Record(Controller(well));
+        Assert.Equal(1.0, u[7], 6);
+        Assert.Equal(50.0, u[8], 6);
+        Assert.Equal(25.0, u[9], 6);
+        gesture.Up();
+        tester.PumpAndSettle();
+        Assert.Empty(InkFeatureProbe.Splashes(Controller(well)));
     }
 
     [Fact]
-    public void InkResponse_OverlayColorResolvesHoveredAndPressedStates()
+    public void InkHighlight_FadesInAndDisposesAfterDeactivateFadesOut()
     {
-        var hovered = new Color(0x2200FF00);
-        var pressed = new Color(0x330000FF);
-        var controller = new WidgetStatesController();
-        using var harness = CreateHarness(new InkResponse(
-            statesController: controller,
-            overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
-                states.Contains(WidgetState.Pressed) ? pressed
-                : states.Contains(WidgetState.Hovered) ? hovered
-                : null),
-            onTap: () => { },
-            child: new SizedBox(width: 80, height: 48)));
-        harness.Pump(new Size(120, 80));
+        using var tester = new FrameworkDartTester();
+        GlobalKey boxKey = new LabeledGlobalKey<State>("box");
+        tester.PumpWidget(Host(new SizedBox(key: boxKey, width: 40.0, height: 20.0)));
+        var controller = (RenderInkFeatures)MaterialWidget.Of(boxKey.CurrentContext!);
+        bool removed = false;
+        var highlight = new InkHighlight(
+            controller: controller,
+            referenceBox: (RenderBox)boxKey.CurrentContext!.FindRenderObject()!,
+            color: new Color(0xFF00FF00),
+            textDirection: TextDirection.Ltr,
+            onRemoved: () => removed = true,
+            fadeDuration: TimeSpan.FromMilliseconds(100));
 
-        RenderMouseRegion hoverListener = FindDescendants<RenderMouseRegion>(harness.RenderView)
-            .Single(listener => listener.OnEnter is not null && listener.OnExit is not null);
-        hoverListener.OnEnter?.Invoke(new PointerEnterEvent(
-            703, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.None, DateTime.UtcNow));
-        harness.Pump(new Size(120, 80));
-        Assert.True(controller.Value.Contains(WidgetState.Hovered));
-        Assert.Equal(hovered, Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).HighlightColor);
+        // The fade's ticker starts on the next frame.
+        tester.Pump();
+        PaintAssert.Paints(controller, PaintPattern.Paints.Rect(color: new Color(0x0000FF00)));
+        tester.Pump(TimeSpan.FromMilliseconds(50));
+        PaintAssert.Paints(controller, PaintPattern.Paints.Rect(color: new Color(0x8000FF00)));
+        tester.Pump(TimeSpan.FromMilliseconds(50));
+        PaintAssert.Paints(controller, PaintPattern.Paints.Rect(color: new Color(0xFF00FF00)));
 
-        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            704, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.Primary, DateTime.UtcNow));
-        harness.Pump(new Size(120, 80));
-        Assert.Equal(pressed, Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).HighlightColor);
+        highlight.Deactivate();
+        Assert.False(highlight.Active);
+        tester.Pump();
+        Assert.False(removed);
+        tester.Pump(TimeSpan.FromMilliseconds(100));
+        // An interpolation is done only once its time is strictly past the duration.
+        tester.Pump(TimeSpan.FromMilliseconds(1));
+        Assert.True(removed);
+        Assert.Empty(controller.DebugInkFeatures!);
     }
 
     [Fact]
-    public void InkResponse_SemanticsExposeOnlyConfiguredPrimaryActions()
+    public void InkSplash_UncontainedSplashRecentersAndUsesDefaultRadius()
     {
-        int taps = 0;
-        int longPresses = 0;
-        using var harness = CreateHarness(new InkResponse(
-            onTap: () => taps++,
-            onLongPress: () => longPresses++,
-            child: new SizedBox(width: 80, height: 48)));
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(Host(new SizedBox(
+            width: 100.0,
+            height: 100.0,
+            child: new InkResponse(
+                splashFactory: InkSplash.SplashFactory,
+                splashColor: new Color(0xFF0000FF),
+                onTap: () => { }))));
 
-        var semantics = harness.PumpAndGetSemantics(new Size(120, 80));
-        var actionNode = FindSemantics(semantics, node =>
-            node.Actions.HasFlag(SemanticsActions.Tap)
-            && node.Actions.HasFlag(SemanticsActions.LongPress));
-        Assert.NotNull(actionNode);
-        Assert.True(actionNode!.PerformAction(SemanticsActions.Tap));
-        Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
-        Assert.Equal(1, taps);
-        Assert.Equal(1, longPresses);
-
-        using var excludedHarness = CreateHarness(new InkResponse(
-            excludeFromSemantics: true,
-            onTap: () => { },
-            child: new SizedBox(width: 80, height: 48)));
-        var excluded = excludedHarness.PumpAndGetSemantics(new Size(120, 80));
-        Assert.Null(FindSemantics(excluded, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        Element response = Single<InkResponse>(tester);
+        Point topLeft = tester.GetTopLeft(response);
+        TestGesture gesture = tester.StartGesture(topLeft, PointerDeviceKind.Touch);
+        tester.Pump();
+        tester.Pump(TimeSpan.FromMilliseconds(500));
+        // Uncontained: no clip of its own (only the Material's), Material.defaultSplashRadius (35)
+        // target, centre halfway to the box centre.
+        PaintAssert.Paints(
+            Controller(response),
+            PaintPattern.Paints.Translate(topLeft.X, topLeft.Y).Circle(x: 25.0, y: 25.0, radius: 17.5));
+        Assert.Equal(1, PaintRecording.Record(Controller(response)).CountCalls("clipRect"));
+        gesture.Up();
+        tester.PumpAndSettle();
     }
 
-    private static WidgetRenderHarness CreateHarness(Widget child, ThemeData? theme = null) => new(
-        new Theme(theme ?? ThemeData.Light, new Directionality(TextDirection.Ltr, child)));
+    private static Widget Host(Widget child, ThemeData? theme = null) =>
+        new Theme(
+            theme ?? new ThemeData(useMaterial3: false),
+            new Directionality(
+                TextDirection.Ltr,
+                new MaterialWidget(child: new Align(alignment: Alignment.TopLeft, child: child))));
 
-    private static void Tap(WidgetRenderHarness harness, int pointer, DateTime now)
-    {
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerDownEvent(
-                pointer,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.Primary,
-                now));
-        GestureBinding.Instance.HandlePointerEvent(
-            harness.RenderView,
-            new PointerUpEvent(
-                pointer,
-                PointerDeviceKind.Mouse,
-                new Point(20.0, 20.0),
-                PointerButtons.None,
-                now.AddMilliseconds(20.0)));
-        harness.Pump(new Size(120.0, 80.0));
-    }
+    private static Element Single<TWidget>(FrameworkDartTester tester) where TWidget : Widget =>
+        Assert.Single(tester.AllElements(), element => element.Widget is TWidget);
 
-    private static void PumpAnimation(WidgetRenderHarness harness, Size size, TimeSpan timestamp)
-    {
-        Scheduler.PumpFrameForTests(timestamp);
-        harness.Pump(size);
-    }
-
-    private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
-    {
-        var result = new List<T>();
-        if (root is null) return result;
-        if (root is T target) result.Add(target);
-        root.VisitChildren(child => result.AddRange(FindDescendants<T>(child)));
-        return result;
-    }
-
-    private static SemanticsNode? FindSemantics(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
-    {
-        if (node is null) return null;
-        if (predicate(node)) return node;
-        foreach (var child in node.Children)
-        {
-            var result = FindSemantics(child, predicate);
-            if (result is not null) return result;
-        }
-        return null;
-    }
-
-    private sealed class WidgetRenderHarness : IDisposable
-    {
-        private readonly BuildOwner _owner = TestBuildOwner.Create();
-        private readonly HarnessRootElement _rootElement;
-        private readonly PipelineOwner _pipeline;
-
-        public WidgetRenderHarness(Widget rootWidget)
-        {
-            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
-            _pipeline = new PipelineOwner(RenderView);
-            _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
-            _rootElement.Attach(_owner);
-            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
-        }
-
-        public RenderView RenderView { get; }
-
-        public void Pump(Size size)
-        {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
-        }
-
-        public SemanticsNode? PumpAndGetSemantics(Size size)
-        {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner!.RootNode;
-        }
-
-        public void Dispose() => _rootElement.UnmountRoot();
-
-        private sealed class HarnessRootElement : Element, IRenderObjectHost
-        {
-            private readonly RenderView _renderView;
-            private Element? _child;
-
-            public HarnessRootElement(RenderView renderView, Widget widget) : base(widget) => _renderView = renderView;
-            public override RenderObject? RenderObject => _child?.RenderObject;
-            public override Element? RenderObjectAttachingChild => _child;
-            protected override void OnMount() { base.OnMount(); Rebuild(); }
-            protected override void PerformRebuild()
-            {
-                base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
-            }
-            public override void Update(Widget newWidget)
-            {
-                base.Update(newWidget);
-                Owner!.BuildScope(this, () => Rebuild(force: true));
-            }
-            public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
-            public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
-            public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;
-            public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
-            public void RemoveRenderObjectChild(RenderObject child, object? slot) { if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null; }
-        }
-    }
+    private static RenderInkFeatures Controller(Element element) =>
+        (RenderInkFeatures)MaterialWidget.Of(element);
 }

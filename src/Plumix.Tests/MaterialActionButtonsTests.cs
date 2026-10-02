@@ -332,13 +332,15 @@ public sealed class MaterialActionButtonsTests
                 ThemeData.Light with { UseMaterial3 = false },
                 new Plumix.Widgets.IconTheme(
                     data: new IconThemeData(Color: expected),
-                    child: new Row(children:
-                    [
-                        new BackButton(onPressed: () => { }),
-                        new CloseButton(onPressed: () => { }),
-                        new DrawerButton(onPressed: () => { }),
-                        new EndDrawerButton(onPressed: () => { }),
-                    ]))));
+                    child: new Plumix.Material.Material(
+                        type: MaterialType.Transparency,
+                        child: new Row(children:
+                        [
+                            new BackButton(onPressed: () => { }),
+                            new CloseButton(onPressed: () => { }),
+                            new DrawerButton(onPressed: () => { }),
+                            new EndDrawerButton(onPressed: () => { }),
+                        ])))));
 
         harness.Pump(new Size(240, 80));
 

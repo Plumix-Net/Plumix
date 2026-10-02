@@ -717,7 +717,7 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
     public bool ApplyXOffset { get; }
     public TextDirection TextDirection { get; }
 
-    public override Func<Rect>? GetRectCallback(RenderBox referenceBox)
+    public override RectCallback? GetRectCallback(RenderBox referenceBox)
     {
         ArgumentNullException.ThrowIfNull(referenceBox);
         if (!UseMaterial3)
