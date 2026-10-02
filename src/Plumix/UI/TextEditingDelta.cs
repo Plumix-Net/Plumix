@@ -214,12 +214,11 @@ public abstract class TextEditingDelta : Diagnosticable
             composing: composing.IsValid ? composing : null);
     }
 
-    /// <summary>Verifies that the given range is within the text.</summary>
-    /// <remarks>Dart guards this with <c>assert</c>; C# has no assert elision, so the check throws in
-    /// every build (the `AutofillScope` precedent).</remarks>
+    /// <summary>Verifies that the given range is within the text: Dart's
+    /// <c>assert(_debugTextRangeIsValid(...))</c>, so the check only runs in debug builds.</summary>
     private protected static void RequireTextRangeIsValid(TextRange range, string text, string what)
     {
-        if (!range.IsValid)
+        if (!Constants.KDebugMode || !range.IsValid)
         {
             return;
         }

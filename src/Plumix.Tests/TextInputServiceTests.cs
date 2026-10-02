@@ -181,15 +181,17 @@ public sealed class TextInputServiceTests : IDisposable
     [Fact]
     public void TextEditingValue_IsComposingRangeValid()
     {
+        // The composing range is empty.
         Assert.False(new TextEditingValue().IsComposingRangeValid);
         Assert.False(new TextEditingValue("test", composing: new TextRange(1, 0)).IsComposingRangeValid);
-        Assert.True(new TextEditingValue("test", composing: new TextRange(1, 4)).IsComposingRangeValid);
 
-        // Plumix's constructor clamps the composing range into the text, where Dart asserts instead,
-        // so an out-of-bounds range never survives to be reported invalid (see DIVERGENCES.md).
-        Assert.Equal(
-            new TextRange(0, 4),
-            new TextEditingValue("test", composing: new TextRange(-1, 4)).Composing);
+        // The composing range is out of range for the text.
+        Assert.False(new TextEditingValue("test", composing: new TextRange(1, 5)).IsComposingRangeValid);
+
+        // The composing range is out of range for the text.
+        Assert.False(new TextEditingValue("test", composing: new TextRange(-1, 4)).IsComposingRangeValid);
+
+        Assert.True(new TextEditingValue("test", composing: new TextRange(1, 4)).IsComposingRangeValid);
     }
 
     [Fact]

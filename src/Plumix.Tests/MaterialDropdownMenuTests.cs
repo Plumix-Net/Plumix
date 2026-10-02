@@ -1106,9 +1106,12 @@ public sealed class MaterialDropdownMenuTests : IDisposable
 
     private static void PressKey(WidgetRenderHarness harness, LogicalKeyboardKey key)
     {
-        // A key the framework leaves unhandled (Enter in the text field) reaches the platform text
-        // input plugin, which submits the field.
-        _ = KeySim.SendKeyCombination(key);
+        // A key the framework leaves unhandled (Enter in the text field) reaches the host's platform
+        // text input plugin, which submits the field.
+        if (!KeySim.SendKeyCombination(key))
+        {
+            _ = HostTextInput.HandleKeyEvent(key);
+        }
         harness.Pump(new Size(500, 360));
     }
 

@@ -73,6 +73,11 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Modal barriers are owned by `ModalRoute` in `Widgets/Navigation.cs` (`BuildModalBarrier` plus the barrier/label/curve members) and rendered by `Widgets/ModalBarrier.cs`; routes must not compose their own barrier in `BuildPage`. Coverage lives in `ModalRouteBarrierTests.cs` and `ModalBarrierTests.cs`.
 - Sliver app bars enter through `SliverAppBar.cs` + `FlexibleSpaceBar.cs`; persistent-header layout lives in `Widgets/Scroll.cs` and `Rendering/Sliver.cs`, with focused coverage in `MaterialSliverAppBarTests.cs`.
 - Material text inputs enter through `TextField.cs` + `TextFormField.cs` + `InputDecorator.cs` + `InputDecoratorTheme.cs`; form lifecycle lives in core `Widgets/Form.cs`, editing/IME behavior stays in `Widgets/TextInput.cs` (its own `Scrollable`, caret-on-screen, IME geometry and floating cursor in `Widgets/EditableText.cs`, the keyboard `Actions` in `EditableText.Actions.cs`, `_formatAndSetValue`/clipboard in `EditableText.Editing.cs`, scribble in `EditableText.Scribble.cs`, undo in `Widgets/UndoHistory.cs`, pointer gestures in `Widgets/TextSelectionGestureDetector.cs`; the host's unhandled keys go to `UI/HostTextInputPlugin.cs`; covered by the `EditableText*DartParityTests.cs`, `UndoHistoryDartParityTests.cs` and `TextSelectionGestureDetectorDartParityTests.cs`), and focused coverage is split across `FormTests.cs` and `MaterialTextFieldTests.cs`.
+- Platform text input: the framework side of `flutter/textinput` is `UI/TextInput.cs` (`TextInputConnection`,
+  inbound dispatch); the host side is `UI/HostTextInputPlugin.cs` (the engine's macOS/Windows plugin over
+  `UI/TextInputModel.cs`), wired to Avalonia's IME and unhandled keys in `FlutterHost.cs`. Tests mock the platform
+  side with `TestTextInput.cs` (flutter_test's) or drive the real plugin with its `HostTextInput` helper. Coverage:
+  `HostTextInputPluginTests.cs`, `TextInputModelTests.cs`, `EditableTextInputConnectionDartParityTests.cs`.
 - Text layout enters through `Painting/TextPainter.cs`, which builds a dart:ui-shaped `UI/Paragraph.cs` with
   `UI/ParagraphBuilder.cs`; `UI/AvaloniaParagraph.cs` lays it out when a font manager exists and
   `UI/HeadlessParagraph.cs` (Flutter's FlutterTest metrics) everywhere else. `RenderParagraph.cs` delegates to the

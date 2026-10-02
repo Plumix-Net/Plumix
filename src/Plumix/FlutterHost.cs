@@ -7,12 +7,12 @@ using Avalonia.Input.TextInput;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using System.Collections;
 using System.Reflection;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
-using FrameworkFocusManager = Plumix.Widgets.FocusManager;
 using AvaloniaTextSelection = Avalonia.Input.TextInput.TextSelection;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/binding.dart; flutter/packages/flutter/lib/src/rendering/binding.dart (host integration, adapted)
@@ -25,7 +25,7 @@ public class PlumixHost : Control
     {
         TextInputMethodClientRequestedEvent.AddClassHandler<PlumixHost>((host, e) =>
         {
-            e.Client = host._textInputClient;
+            e.Client = host.HasTextInputClient ? host._textInputClient : null;
         });
     }
 
@@ -49,6 +49,7 @@ public class PlumixHost : Control
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
     private bool _isSubscribedToPlatformChannel;
+    private bool _isAttachedToTextInputPlugin;
     private bool _allowWindowClose;
     private bool _viewHasFocus;
     private ViewFocusDirection _requestedViewFocusDirection;
@@ -203,7 +204,7 @@ public class PlumixHost : Control
         }
 
         // The engine hands keys the framework left unhandled to the platform text input plugin.
-        if (HostTextInputPlugin.HandleKeyEvent(
+        if (HasTextInputClient && TextInputPlugin.HandleKeyEvent(
                 HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol),
                 control: e.KeyModifiers.HasFlag(KeyModifiers.Control),
                 shift: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
@@ -281,8 +282,11 @@ public class PlumixHost : Control
             return;
         }
 
-        if (FrameworkFocusManager.Instance.HandleTextInput(e.Text))
+        // The committed text goes to the platform text input plugin, which reports the new editing
+        // state to the framework, as the engine's `insertText:` does.
+        if (HasTextInputClient)
         {
+            TextInputPlugin.InsertText(e.Text);
             e.Handled = true;
         }
     }
@@ -430,7 +434,7 @@ public class PlumixHost : Control
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachPlatformChannelHandler();
-        AttachTextInputConfigurationListener();
+        AttachTextInputPlugin();
         AttachMetricSources();
         PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
         PlatformDispatcher.Instance.ViewFocusChangeRequested += HandleViewFocusChangeRequested;
@@ -448,7 +452,7 @@ public class PlumixHost : Control
         DetachMetricSources();
         DetachPlatformChannelHandler();
         DetachFeedbackListener();
-        DetachTextInputConfigurationListener();
+        DetachTextInputPlugin();
         DetachMouseCursorListener();
         RemoveSchedulerSubscription();
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
@@ -600,68 +604,113 @@ public class PlumixHost : Control
         WidgetsBinding.Instance.HandleViewFocusChanged(new ViewFocusEvent(_view.ViewId, state, direction));
     }
 
-    private void AttachTextInputConfigurationListener()
+    /// <summary>The platform text input plugin this host forwards its IME and unhandled keys to.
+    /// </summary>
+    protected virtual HostTextInputPlugin TextInputPlugin => HostTextInputPlugin.Instance;
+
+    /// <summary>Whether the plugin has a client attached that edits in this host's view.</summary>
+    private bool HasTextInputClient =>
+        TextInputPlugin.ActiveModel is not null && TextInputPlugin.ViewId == _view.ViewId;
+
+    private protected void AttachTextInputPlugin()
     {
-        FrameworkFocusManager.Instance.PrimaryFocusChanged -= HandleFrameworkPrimaryFocusChanged;
-        FrameworkFocusManager.Instance.PrimaryFocusChanged += HandleFrameworkPrimaryFocusChanged;
-        HandleFrameworkPrimaryFocusChanged();
+        if (_isAttachedToTextInputPlugin)
+        {
+            return;
+        }
+
+        _isAttachedToTextInputPlugin = true;
+        HostTextInputPlugin plugin = TextInputPlugin;
+        plugin.ClientChanged += HandleTextInputClientChanged;
+        plugin.EditingStateChanged += _textInputClient.NotifyEditingStateChanged;
+        plugin.CaretRectChanged += _textInputClient.NotifyCursorRectangleChanged;
+        plugin.ShowRequested += HandleTextInputShowRequested;
+        plugin.MarkedTextDiscarded += HandleTextInputMarkedTextDiscarded;
+        plugin.Attach();
+        HandleTextInputClientChanged();
     }
 
-    private void DetachTextInputConfigurationListener()
+    private protected void DetachTextInputPlugin()
     {
-        FrameworkFocusManager.Instance.PrimaryFocusChanged -= HandleFrameworkPrimaryFocusChanged;
+        if (!_isAttachedToTextInputPlugin)
+        {
+            return;
+        }
+
+        _isAttachedToTextInputPlugin = false;
+        HostTextInputPlugin plugin = TextInputPlugin;
+        plugin.ClientChanged -= HandleTextInputClientChanged;
+        plugin.EditingStateChanged -= _textInputClient.NotifyEditingStateChanged;
+        plugin.CaretRectChanged -= _textInputClient.NotifyCursorRectangleChanged;
+        plugin.ShowRequested -= HandleTextInputShowRequested;
+        plugin.MarkedTextDiscarded -= HandleTextInputMarkedTextDiscarded;
+        plugin.Detach();
     }
 
-    private void HandleFrameworkPrimaryFocusChanged()
+    /// <summary>
+    /// The attached client changed: the IME options follow its configuration, and Avalonia re-queries
+    /// this host's IME client, which exists only while a client edits in this view.
+    /// </summary>
+    private void HandleTextInputClientChanged()
     {
-        TextInputConfiguration? configuration =
-            FrameworkFocusManager.Instance.ResolveTextInputState()?.Configuration;
+        IDictionary? configuration = HasTextInputClient ? TextInputPlugin.Configuration : null;
+        string? inputType = TextInputPlugin.InputType;
         TextInputOptions.SetContentType(
             this,
-            configuration is not null
-                ? ResolveContentType(configuration.InputType)
-                : TextInputContentType.Normal);
+            configuration is not null ? ResolveContentType(inputType) : TextInputContentType.Normal);
         TextInputOptions.SetReturnKeyType(
             this,
             configuration is not null
-                ? ResolveReturnKeyType(configuration.InputAction)
+                ? ResolveReturnKeyType(TextInputPlugin.InputAction)
                 : TextInputReturnKeyType.Default);
-        TextInputOptions.SetMultiline(this, configuration?.IsMultiline ?? false);
-        TextInputOptions.SetIsSensitive(this, configuration?.ObscureText ?? false);
-        TextInputOptions.SetShowSuggestions(this, configuration?.EnableSuggestions);
+        TextInputOptions.SetMultiline(this, configuration is not null && inputType == "TextInputType.multiline");
+        TextInputOptions.SetIsSensitive(this, configuration?["obscureText"] is true);
+        TextInputOptions.SetShowSuggestions(this, configuration?["enableSuggestions"] as bool?);
+        RaiseEvent(new TextInputMethodClientRequeryRequestedEventArgs
+        {
+            RoutedEvent = InputMethod.TextInputMethodClientRequeryRequestedEvent,
+        });
         _textInputClient.RefreshOptions();
     }
 
-    private static TextInputContentType ResolveContentType(TextInputType keyboardType)
+    private void HandleTextInputShowRequested()
     {
-        if (keyboardType == TextInputType.Number)
+        if (HasTextInputClient)
         {
-            return TextInputContentType.Number;
+            _textInputClient.RequestInputPane();
         }
-
-        if (keyboardType == TextInputType.Phone)
-        {
-            return TextInputContentType.Digits;
-        }
-
-        if (keyboardType == TextInputType.EmailAddress)
-        {
-            return TextInputContentType.Email;
-        }
-
-        return keyboardType == TextInputType.Url ? TextInputContentType.Url : TextInputContentType.Normal;
     }
 
-    private static TextInputReturnKeyType ResolveReturnKeyType(TextInputActionType inputAction)
+    private void HandleTextInputMarkedTextDiscarded()
+    {
+        if (HasTextInputClient)
+        {
+            _textInputClient.RefreshOptions();
+        }
+    }
+
+    private static TextInputContentType ResolveContentType(string? inputType)
+    {
+        return inputType switch
+        {
+            "TextInputType.number" => TextInputContentType.Number,
+            "TextInputType.phone" => TextInputContentType.Digits,
+            "TextInputType.emailAddress" => TextInputContentType.Email,
+            "TextInputType.url" => TextInputContentType.Url,
+            _ => TextInputContentType.Normal,
+        };
+    }
+
+    private static TextInputReturnKeyType ResolveReturnKeyType(string? inputAction)
     {
         return inputAction switch
         {
-            TextInputActionType.None => TextInputReturnKeyType.Return,
-            TextInputActionType.Search => TextInputReturnKeyType.Search,
-            TextInputActionType.Done => TextInputReturnKeyType.Done,
-            TextInputActionType.Go => TextInputReturnKeyType.Go,
-            TextInputActionType.Next => TextInputReturnKeyType.Next,
-            TextInputActionType.Send => TextInputReturnKeyType.Send,
+            "TextInputAction.none" => TextInputReturnKeyType.Return,
+            "TextInputAction.search" => TextInputReturnKeyType.Search,
+            "TextInputAction.done" => TextInputReturnKeyType.Done,
+            "TextInputAction.go" => TextInputReturnKeyType.Go,
+            "TextInputAction.next" => TextInputReturnKeyType.Next,
+            "TextInputAction.send" => TextInputReturnKeyType.Send,
             _ => TextInputReturnKeyType.Default,
         };
     }
@@ -1548,10 +1597,13 @@ public class PlumixHost : Control
         };
     }
 
+    /// <summary>
+    /// The host's Avalonia IME client: the <c>NSTextInputClient</c> side of the engine's macOS text
+    /// input plugin, answered from <see cref="HostTextInputPlugin"/>'s editing model.
+    /// </summary>
     private sealed class PlumixTextInputMethodClient : TextInputMethodClient
     {
         private readonly PlumixHost _host;
-        private AvaloniaTextSelection _selection;
 
         public PlumixTextInputMethodClient(PlumixHost host)
         {
@@ -1562,50 +1614,91 @@ public class PlumixHost : Control
 
         public override bool SupportsPreedit => true;
 
-        public override bool SupportsSurroundingText => ResolveTextInputState().HasValue;
+        public override bool SupportsSurroundingText => Model is not null;
 
-        public override string SurroundingText => ResolveTextInputState()?.SurroundingText ?? string.Empty;
+        public override string SurroundingText => Model?.GetText() ?? string.Empty;
 
-        public override Rect CursorRectangle => ResolveTextInputState()?.CursorRectangle ?? default;
+        /// <summary>The caret rect in this host's coordinates: the plugin reports it in the view's
+        /// physical pixels, the space the framework's editable transform maps into.</summary>
+        public override Rect CursorRectangle
+        {
+            get
+            {
+                if (Model is null || Plugin.GetCaretRect() is not { } rect)
+                {
+                    return default;
+                }
+
+                double devicePixelRatio = _host._view.DevicePixelRatio;
+                return devicePixelRatio > 0
+                    ? new Rect(
+                        rect.X / devicePixelRatio,
+                        rect.Y / devicePixelRatio,
+                        rect.Width / devicePixelRatio,
+                        rect.Height / devicePixelRatio)
+                    : rect;
+            }
+        }
 
         public override AvaloniaTextSelection Selection
         {
             get
             {
-                var state = ResolveTextInputState();
-                if (!state.HasValue)
-                {
-                    return _selection;
-                }
-
-                _selection = new AvaloniaTextSelection(state.Value.SelectionStart, state.Value.SelectionEnd);
-                return _selection;
+                TextInputModel.Range selection = Model?.Selection ?? default;
+                return new AvaloniaTextSelection(selection.Start, selection.End);
             }
-            set
+            set => Plugin.SetSelection(value.Start, value.End);
+        }
+
+        private HostTextInputPlugin Plugin => _host.TextInputPlugin;
+
+        private TextInputModel? Model => _host.HasTextInputClient ? Plugin.ActiveModel : null;
+
+        /// <summary>Avalonia's preedit maps onto the macOS plugin's marked text: non-empty text is
+        /// <c>setMarkedText:</c> with the cursor inside it, and clearing it removes the marked text and
+        /// ends composing (<c>unmarkText</c>).</summary>
+        public override void SetPreeditText(string? preeditText, int? cursorPos)
+        {
+            if (Model is not { } model)
             {
-                _selection = value;
-                _ = FrameworkFocusManager.Instance.HandleTextSelectionChanged(value.Start, value.End);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(preeditText))
+            {
+                Plugin.SetMarkedText(preeditText, Math.Clamp(cursorPos ?? preeditText.Length, 0, preeditText.Length));
+            }
+            else if (model.Composing)
+            {
+                Plugin.SetMarkedText(string.Empty, 0);
+                Plugin.UnmarkText();
             }
         }
 
         public override void SetPreeditText(string? preeditText)
         {
-            _ = FrameworkFocusManager.Instance.HandleTextCompositionUpdate(preeditText ?? string.Empty);
+            SetPreeditText(preeditText, null);
         }
 
-        public override void SetPreeditText(string? preeditText, int? cursorPos)
+        public void NotifyEditingStateChanged()
         {
-            SetPreeditText(preeditText);
+            RaiseSurroundingTextChanged();
+            RaiseSelectionChanged();
+        }
+
+        public void NotifyCursorRectangleChanged()
+        {
+            RaiseCursorRectangleChanged();
+        }
+
+        public void RequestInputPane()
+        {
+            RaiseInputPaneActivationRequested();
         }
 
         public void RefreshOptions()
         {
             RequestReset();
-        }
-
-        private static FocusTextInputState? ResolveTextInputState()
-        {
-            return FrameworkFocusManager.Instance.ResolveTextInputState();
         }
     }
 }

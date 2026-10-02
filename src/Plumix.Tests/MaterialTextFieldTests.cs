@@ -34,14 +34,15 @@ public sealed class MaterialTextFieldTests : IDisposable
             onSubmitted: value => submitted = value)));
         harness.Pump(new Size(360, 120));
 
-        Assert.True(FocusManager.Instance.HandleTextInput("a😀cdef"));
+        Assert.True(HostTextInput.InsertText("a😀cdef"));
         harness.Pump(new Size(360, 120));
         Assert.Equal("a😀c", controller.Text);
         Assert.Equal("a😀c", changed);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "3/3");
 
         // Enter goes to the platform text input plugin, which reports the input action.
-        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
+        Assert.False(KeySim.SendKeyCombination(LogicalKeyboardKey.Enter));
+        Assert.True(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
         Assert.Equal("a😀c", submitted);
     }
 
@@ -62,7 +63,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.Contains(
             FindDescendants<RenderEditable>(harness.RenderView),
             value => value.PlainText == "••••••");
-        Assert.False(FocusManager.Instance.HandleTextInput("x"));
+        Assert.False(HostTextInput.InsertText("x"));
         Assert.Equal("secret", controller.Text);
         var semantics = Assert.Single(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), value =>
             value.Properties.TextField == true);
@@ -158,7 +159,7 @@ public sealed class MaterialTextFieldTests : IDisposable
 
         Assert.True(focusNode.HasFocus);
         Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
-        Assert.True(FocusManager.Instance.HandleTextInput("!"));
+        Assert.True(HostTextInput.InsertText("!"));
         Assert.Equal("!", controller.Text);
     }
 
@@ -192,7 +193,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         harness.Pump(new Size(360, 120));
 
         Assert.True(focusNode.HasFocus);
-        Assert.True(FocusManager.Instance.HandleTextInput("form"));
+        Assert.True(HostTextInput.InsertText("form"));
         Assert.Equal("form", controller.Text);
     }
 
@@ -315,7 +316,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         harness.Pump(new Size(360, 100));
 
         // Dart spell checks user edits (`_formatAndSetValue`), which typing produces.
-        Assert.True(FocusManager.Instance.HandleTextInput("wrold"));
+        Assert.True(HostTextInput.InsertText("wrold"));
         await Task.Yield();
         harness.Pump(new Size(360, 100));
 

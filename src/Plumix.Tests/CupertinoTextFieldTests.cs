@@ -195,11 +195,11 @@ public sealed class CupertinoTextFieldTests : IDisposable
     [Fact]
     public void MaxLengthEnforcement_AllowsDisabledAndActiveCompositionEdits()
     {
-        var oldValue = new TextEditingValue("ab", TextSelection.Collapsed(2));
+        var oldValue = new TextEditingValue("a", TextSelection.Collapsed(1));
         var newValue = new TextEditingValue(
             "abcd",
             TextSelection.Collapsed(4),
-            new TextRange(2, 4));
+            new TextRange(1, 4));
         var disabled = new LengthLimitingTextInputFormatter(2, MaxLengthEnforcement.None);
         var afterComposition = new LengthLimitingTextInputFormatter(
             2,
@@ -212,6 +212,10 @@ public sealed class CupertinoTextFieldTests : IDisposable
             oldValue,
             new TextEditingValue("abcd", TextSelection.Collapsed(4), TextRange.Empty));
         Assert.Equal("ab", committed.Text);
+
+        // Already at the maximum and not composing: Dart keeps the old value.
+        var atMaximum = new TextEditingValue("ab", TextSelection.Collapsed(2));
+        Assert.Equal(atMaximum, afterComposition.FormatEditUpdate(atMaximum, newValue));
     }
 
     [Fact]

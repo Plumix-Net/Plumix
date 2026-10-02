@@ -8,6 +8,17 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: hosts speak `flutter/textinput`: `HostTextInputPlugin` is the engine's text input plugin (macOS/Windows).
+- `TextInputModel`: the engine's `shell/platform/common/text_input_model.cc`, with its 154 unit tests ported.
+- Breaking: `FocusNode`/`Focus` lose `OnTextInput*`/`FocusTextInputState`; `FocusManager.HandleText*` are gone.
+- Breaking: `HostTextInputPlugin` is an instance (`Instance`, `Attach`, `InsertText`, `SetMarkedText`, `HandleKeyEvent`).
+- Breaking: `TextEditingValue` no longer clamps selection/composing; `FromJson`/`ToJson`/`Replaced` assert (debug).
+- Breaking: the `-1` any-client id and delta range checks apply in debug builds only (`kDebugMode`, text_input.dart).
+- `EditableText` sends `viewId`, `updateStyle` (open, restart, style/dependency changes) as `_openInputConnection` does.
+- `EditableText.onAppPrivateCommand`/`TextField.onAppPrivateCommand`; `AppPrivateCommandCallback` (editable_text.dart).
+- Breaking: `EditableText.maxLength` is gone; `TextField` limits through `LengthLimitingTextInputFormatter`, as in Dart.
+- `TextField.maxLengthEnforcement`; `LengthLimitingTextInputFormatter.Truncate`/`FormatEditUpdate` are strict ports.
+- flutter_test's `TestTextInput`/`MacOSTestTextInputKeyHandler` ported; maxLength, viewId, setStyle tests ported.
 - Breaking: `RenderView` is Dart's bare `RenderObject` with one `RenderBox` child, not a `RenderBox` (view.dart).
 - Breaking: `RenderView.HitTest(HitTestResult, Point)` always adds the view and returns true; no bounds check.
 - Breaking: `RenderView`'s root layer is a `TransformLayer` carrying the device pixel ratio; hosts undo it.

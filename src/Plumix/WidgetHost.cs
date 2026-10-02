@@ -56,6 +56,9 @@ public sealed class WidgetHost : PlumixHost
         // engine is before `runApp`: the first build already sends `SystemChrome` messages (the
         // `Title` description), usually before the control is attached to a window.
         AttachPlatformChannelHandler();
+        // Likewise the platform side of `flutter/textinput`: an autofocused field opens its
+        // connection during that first build.
+        AttachTextInputPlugin();
         WidgetsBinding.Instance.SetImplicitView(
             RootFlutterView,
             Pipeline,
@@ -69,6 +72,8 @@ public sealed class WidgetHost : PlumixHost
         {
             WidgetsBinding.Instance.AttachRootWidgetSynchronously(new ViewCollection([]));
             ScheduleVisualUpdate();
+            // No widget tree, no text input clients; setting a root widget attaches the plugin again.
+            DetachTextInputPlugin();
         }
     }
 

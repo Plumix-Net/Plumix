@@ -270,9 +270,8 @@ public readonly record struct TextEditingValue
         TextRange? composing = null)
     {
         Text = text ?? string.Empty;
-        Selection = (selection ?? TextSelection.Collapsed(Text.Length)).Clamp(Text.Length);
-        TextRange? normalizedComposing = composing?.Clamp(Text.Length);
-        Composing = normalizedComposing is { IsCollapsed: false } ? normalizedComposing : null;
+        Selection = selection ?? TextSelection.Collapsed(Text.Length);
+        Composing = composing is { IsCollapsed: false } ? composing : null;
     }
 
     public string Text { get; }
@@ -328,19 +327,22 @@ public readonly record struct TextEditingValue
             return originalIndex + replacedLength - removedLength;
         }
 
-        return new TextEditingValue(
-            text: newText,
-            selection: new TextSelection(
-                BaseOffset: AdjustIndex(Selection.BaseOffset),
-                ExtentOffset: AdjustIndex(Selection.ExtentOffset)),
-            composing: Composing is { } composing
-                ? new TextRange(AdjustIndex(composing.Start), AdjustIndex(composing.End))
-                : null);
+        var adjustedSelection = new TextSelection(
+            BaseOffset: AdjustIndex(Selection.BaseOffset),
+            ExtentOffset: AdjustIndex(Selection.ExtentOffset));
+        TextRange? adjustedComposing = Composing is { } composing
+            ? new TextRange(AdjustIndex(composing.Start), AdjustIndex(composing.End))
+            : null;
+        DebugAssertTextRangeIsValid(adjustedSelection.AsTextRange(), newText);
+        DebugAssertTextRangeIsValid(adjustedComposing, newText);
+        return new TextEditingValue(text: newText, selection: adjustedSelection, composing: adjustedComposing);
     }
 
     /// <summary>The JSON payload the host exchanges with the framework.</summary>
     public Dictionary<string, object?> ToJson()
     {
+        DebugAssertTextRangeIsValid(Selection.AsTextRange(), Text);
+        DebugAssertTextRangeIsValid(Composing, Text);
         string affinity = Selection.Affinity == TextAffinity.Upstream
             ? "TextAffinity.upstream"
             : "TextAffinity.downstream";
@@ -368,17 +370,32 @@ public readonly record struct TextEditingValue
         TextAffinity affinity = ReadAffinity(json) ?? TextAffinity.Downstream;
         bool isDirectional = json.Contains("selectionIsDirectional")
                              && json["selectionIsDirectional"] is true;
-        TextSelection? selection = selectionBase < 0 && selectionExtent < 0
-            ? null
-            : new TextSelection(
-                Math.Max(0, selectionBase),
-                Math.Max(0, selectionExtent),
-                affinity,
-                isDirectional);
-        TextRange? composing = composingBase < 0 || composingExtent < 0
-            ? null
-            : new TextRange(composingBase, composingExtent);
-        return new TextEditingValue(text, selection, composing);
+        var selection = new TextSelection(selectionBase, selectionExtent, affinity, isDirectional);
+        var composing = new TextRange(composingBase, composingExtent);
+        DebugAssertTextRangeIsValid(selection.AsTextRange(), text);
+        DebugAssertTextRangeIsValid(composing, text);
+        return new TextEditingValue(text, selection, composing.IsValid ? composing : null);
+    }
+
+    /// <summary>Dart's <c>assert(_textRangeIsValid(range, text))</c>: a range other than the
+    /// <c>-1</c>/<c>-1</c> "none" range must lie within the text, checked in debug builds only.
+    /// </summary>
+    private static void DebugAssertTextRangeIsValid(TextRange? range, string text)
+    {
+        if (!Constants.KDebugMode || range is not { } value || (value.Start == -1 && value.End == -1))
+        {
+            return;
+        }
+
+        if (value.Start < 0 || value.Start > text.Length)
+        {
+            throw new AssertionError($"Range start {value.Start} is out of text of length {text.Length}");
+        }
+
+        if (value.End < 0 || value.End > text.Length)
+        {
+            throw new AssertionError($"Range end {value.End} is out of text of length {text.Length}");
+        }
     }
 
     /// <inheritdoc/>
@@ -988,6 +1005,10 @@ public sealed record ContentInsertionConfiguration(
     IReadOnlyList<string>? AllowedMimeTypes = null,
     Action<string>? OnContentInserted = null);
 
+/// <summary>Signature for the callback that reports the app private command results. Dart parity
+/// source: <c>AppPrivateCommandCallback</c>.</summary>
+public delegate void AppPrivateCommandCallback(string action, IDictionary data);
+
 public sealed partial class EditableText : StatefulWidget
 {
     public EditableText(
@@ -1016,7 +1037,6 @@ public sealed partial class EditableText : StatefulWidget
         bool readOnly = false,
         bool obscureText = false,
         string obscuringCharacter = "•",
-        int? maxLength = null,
         Action? onEditingComplete = null,
         Action<string>? onSubmitted = null,
         string? semanticsLabel = null,
@@ -1073,12 +1093,11 @@ public sealed partial class EditableText : StatefulWidget
         Action<PointerDownEvent>? onTapOutside = null,
         Action<PointerUpEvent>? onTapUpOutside = null,
         object? groupId = null,
+        AppPrivateCommandCallback? onAppPrivateCommand = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
             throw new ArgumentException("obscuringCharacter must contain exactly one UTF-16 character.", nameof(obscuringCharacter));
-        if (maxLength.HasValue && maxLength.Value <= 0)
-            throw new ArgumentOutOfRangeException(nameof(maxLength));
         if (maxLines.HasValue && maxLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(maxLines));
         if (minLines.HasValue && minLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(minLines));
         if (maxLines.HasValue && minLines.HasValue && minLines.Value > maxLines.Value)
@@ -1110,7 +1129,6 @@ public sealed partial class EditableText : StatefulWidget
         ReadOnly = readOnly;
         ObscureText = obscureText;
         ObscuringCharacter = obscuringCharacter;
-        MaxLength = maxLength;
         OnEditingComplete = onEditingComplete;
         OnSubmitted = onSubmitted;
         SemanticsLabel = semanticsLabel;
@@ -1137,6 +1155,7 @@ public sealed partial class EditableText : StatefulWidget
         OnTapOutside = onTapOutside;
         OnTapUpOutside = onTapUpOutside;
         GroupId = groupId ?? typeof(EditableText);
+        OnAppPrivateCommand = onAppPrivateCommand;
         ShowCursor = showCursor;
         CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
@@ -1217,7 +1236,6 @@ public sealed partial class EditableText : StatefulWidget
     public bool ReadOnly { get; }
     public bool ObscureText { get; }
     public string ObscuringCharacter { get; }
-    public int? MaxLength { get; }
     public Action? OnEditingComplete { get; }
     public Action<string>? OnSubmitted { get; }
     public string? SemanticsLabel { get; }
@@ -1250,6 +1268,10 @@ public sealed partial class EditableText : StatefulWidget
 
     /// <summary>The group identifier for the <see cref="TextFieldTapRegion"/> of this field.</summary>
     public object GroupId { get; }
+
+    /// <summary>Called when the result of an app private command is received. Dart parity source:
+    /// <c>EditableText.onAppPrivateCommand</c>.</summary>
+    public AppPrivateCommandCallback? OnAppPrivateCommand { get; }
 
     public bool? ShowCursor { get; }
     public double CursorWidth { get; }
@@ -1565,6 +1587,7 @@ public sealed partial class EditableText : StatefulWidget
     {
         private AutofillGroupState? _currentAutofillScope;
         private TextInputConnection? _textInputConnection;
+        private int? _viewId;
 
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
@@ -1641,7 +1664,11 @@ public sealed partial class EditableText : StatefulWidget
                         currentEditingValue: CurrentTextEditingValue,
                         hintText: Widget.AutofillHintText)
                     : AutofillConfiguration.Disabled;
+                // Dart reads `View.of(context)`; a tree mounted outside a `View` (the hand-rolled test
+                // harnesses) sends no view id, and the host plugin falls back to view 0.
+                _viewId = View.MaybeOf(Context)?.ViewId;
                 return new TextInputConfiguration(
+                    viewId: _viewId,
                     inputType: Widget.KeyboardType,
                     readOnly: Widget.ReadOnly,
                     obscureText: Widget.ObscureText,
@@ -1792,7 +1819,18 @@ public sealed partial class EditableText : StatefulWidget
 
             _textInputConnection!.Close();
             _textInputConnection = null;
-            OpenInputConnection();
+            _lastKnownRemoteTextEditingValue = null;
+
+            IAutofillScope? currentAutofillScope = NeedsAutofill ? _currentAutofillScope : null;
+            TextInputConnection newConnection =
+                currentAutofillScope?.Attach(this, TextInputConfiguration)
+                ?? UI.TextInput.Attach(this, EffectiveAutofillClient.TextInputConfiguration);
+            _textInputConnection = newConnection;
+
+            newConnection.Show();
+            newConnection.UpdateStyle(GetTextInputStyle());
+            newConnection.SetEditingState(TextEditingValue);
+            _lastKnownRemoteTextEditingValue = TextEditingValue;
         }
 
 
@@ -1813,9 +1851,10 @@ public sealed partial class EditableText : StatefulWidget
             _controller is null ? null : _controller.Value;
 
         /// <inheritdoc/>
-        /// <remarks>A no-op, the way Flutter's own <c>EditableText</c> leaves it.</remarks>
+        /// <remarks>Dart's <c>EditableTextState.performPrivateCommand</c>.</remarks>
         public void PerformPrivateCommand(string action, IDictionary data)
         {
+            Widget.OnAppPrivateCommand?.Invoke(action, data);
         }
 
         /// <inheritdoc/>
@@ -1850,13 +1889,69 @@ public sealed partial class EditableText : StatefulWidget
 
             SchedulePeriodicPostFrameCallbacks();
             TextEditingValue localValue = CurrentTextEditingValue;
-            _lastKnownRemoteTextEditingValue = localValue;
+            _textInputConnection.UpdateStyle(GetTextInputStyle());
             _textInputConnection.SetEditingState(localValue);
             _textInputConnection.Show();
             if (NeedsAutofill)
             {
+                // Request autofill AFTER the size and the transform have been sent to the platform
+                // text input plugin.
                 _textInputConnection.RequestAutofill();
             }
+
+            _lastKnownRemoteTextEditingValue = localValue;
+        }
+
+        /// Dart's `_getTextInputStyle`. The style is the one the editable lays its text out with;
+        /// `MediaQuery` carries no letter/word spacing overrides yet (see docs/ai/BACKLOG.md).
+        private TextInputStyle GetTextInputStyle()
+        {
+            TextStyle style = EffectiveTextStyle(showPlaceholder: false);
+            return new TextInputStyle(
+                fontFamily: style.FontFamily?.Name,
+                fontSize: style.FontSize,
+                fontWeight: style.FontWeight,
+                textDirection: Widget.TextDirection ?? Directionality.Of(Context),
+                textAlign: Widget.TextAlign,
+                letterSpacing: style.LetterSpacing,
+                wordSpacing: style.WordSpacing,
+                lineHeight: RenderEditable?.PreferredLineHeight);
+        }
+
+        /// Dart's `didChangeDependencies` tail: a view change reconfigures the connection, and the
+        /// style is re-sent after layout.
+        private void DidChangeDependenciesForInputConnection()
+        {
+            if (!HasInputConnection)
+            {
+                return;
+            }
+
+            int? newViewId = View.MaybeOf(Context)?.ViewId;
+            if (newViewId != _viewId)
+            {
+                _textInputConnection!.UpdateConfig(EffectiveAutofillClient.TextInputConfiguration);
+            }
+
+            // The style may have changed due to dependency changes.
+            ScheduleStyleUpdate();
+        }
+
+        /// Schedules `_textInputConnection.updateStyle` after layout, so `preferredLineHeight` is
+        /// computed with the new style.
+        private void ScheduleStyleUpdate()
+        {
+            Scheduler.AddPostFrameCallback(
+                _ =>
+                {
+                    if (!Mounted || !HasInputConnection)
+                    {
+                        return;
+                    }
+
+                    _textInputConnection!.UpdateStyle(GetTextInputStyle());
+                },
+                "EditableText.updateStyle");
         }
 
         private void CloseInputConnection()
@@ -1896,6 +1991,7 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             DidChangeDependenciesForCursor();
+            DidChangeDependenciesForInputConnection();
             DidChangeDependenciesForContextMenu();
         }
 
@@ -1930,6 +2026,13 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             DidUpdateWidgetForSelectionOverlay(oldEditableText);
+            if (!Equals(Widget.Style, oldEditableText.Style) && HasInputConnection)
+            {
+                // Schedule the style update after layout to ensure preferredLineHeight is computed
+                // with the new style.
+                ScheduleStyleUpdate();
+            }
+
             if (oldEditableText.ShowCursor != Widget.ShowCursor)
             {
                 StartOrStopCursorTimerIfNeeded();
@@ -2188,10 +2291,6 @@ public sealed partial class EditableText : StatefulWidget
                                         autofocus: Widget.Autofocus,
                                         canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
                                         onKeyEvent: Widget.OnKeyEvent,
-                                        onTextInput: HandleTextInput,
-                                        onTextComposition: HandleTextComposition,
-                                        onTextInputState: HandleTextInputState,
-                                        onTextSelectionChanged: HandleTextSelectionChanged,
                                         debugLabel: Constants.KReleaseMode ? null : "EditableText",
                                         child: new Container(
                                             color: backgroundColor,
@@ -2291,10 +2390,6 @@ public sealed partial class EditableText : StatefulWidget
             if (_ownsFocusNode)
             {
                 _focusNode.OnKeyEvent = null;
-                _focusNode.OnTextInput = null;
-                _focusNode.OnTextComposition = null;
-                _focusNode.OnTextInputState = null;
-                _focusNode.OnTextSelectionChanged = null;
             }
 
             if (disposeOwned && _ownsFocusNode)
@@ -2304,120 +2399,6 @@ public sealed partial class EditableText : StatefulWidget
 
             _focusNode = null;
             _ownsFocusNode = false;
-        }
-
-        // The host adapter delivers typed text and IME composition through the focus node (see the
-        // `TextInputConnection` row in `docs/ai/DIVERGENCES.md`). Each handler plays the platform
-        // text input plugin: it computes the platform's next editing state and sends it through
-        // `UpdateEditingValue`, exactly like an inbound `TextInputClient.updateEditingState`.
-        private bool HandleTextInput(FocusNode node, string text)
-        {
-            if (!Widget.Enabled || Widget.ReadOnly || string.IsNullOrEmpty(text))
-            {
-                return false;
-            }
-
-            string normalizedInput = Widget.Multiline
-                ? text
-                : text.Replace("\r", string.Empty, StringComparison.Ordinal)
-                    .Replace("\n", string.Empty, StringComparison.Ordinal);
-            normalizedInput = LimitInsertion(normalizedInput);
-            if (string.IsNullOrEmpty(normalizedInput))
-            {
-                return false;
-            }
-
-            return SendPlatformEdit(controller => controller.Composing.HasValue
-                ? controller.CommitComposing(normalizedInput)
-                : controller.Insert(normalizedInput));
-        }
-
-        private bool HandleTextComposition(FocusNode node, string text, bool isCommit)
-        {
-            if (!Widget.Enabled || Widget.ReadOnly)
-            {
-                return false;
-            }
-
-            string limitedText = LimitInsertion(text);
-            return SendPlatformEdit(controller => isCommit
-                ? controller.CommitComposing(limitedText)
-                : controller.SetComposing(limitedText));
-        }
-
-        /// Applies <paramref name="edit"/> to a copy of the current value, as the platform's own
-        /// editing model would, and sends the result through <see cref="UpdateEditingValue"/>.
-        private bool SendPlatformEdit(Func<TextEditingController, bool> edit)
-        {
-            TextEditingValue before = EditingValue;
-            using var platformModel = TextEditingController.FromValue(before);
-            if (!edit(platformModel))
-            {
-                return false;
-            }
-
-            UpdateEditingValue(platformModel.Value);
-            return !EditingValue.Equals(before);
-        }
-
-        private FocusTextInputState? HandleTextInputState(FocusNode node)
-        {
-            var controller = _controller!;
-            string text = controller.Text;
-            var selection = controller.Selection.Clamp(text.Length);
-            var cursorRectangle = ResolveCursorRectangle(node, text.Length, selection.ExtentOffset);
-            return new FocusTextInputState(
-                SurroundingText: text,
-                SelectionBaseOffset: selection.BaseOffset,
-                SelectionExtentOffset: selection.ExtentOffset,
-                CursorRectangle: cursorRectangle,
-                Configuration: TextInputConfiguration);
-        }
-
-        private bool HandleTextSelectionChanged(FocusNode node, int baseOffset, int extentOffset)
-        {
-            if (!Widget.Enabled)
-            {
-                return false;
-            }
-
-            TextEditingValue value = EditingValue;
-            int textLength = value.Text.Length;
-            var nextSelection = new TextSelection(
-                BaseOffset: Math.Clamp(baseOffset, 0, textLength),
-                ExtentOffset: Math.Clamp(extentOffset, 0, textLength));
-            if (value.Selection.Equals(nextSelection))
-            {
-                return false;
-            }
-
-            // The platform IME moved the selection: Dart's `updateEditingValue`.
-            UpdateEditingValue(value.CopyWith(selection: nextSelection));
-            return !value.Selection.Equals(EditingValue.Selection);
-        }
-
-        /// The caret rect of <paramref name="caretOffset"/> in root coordinates, for the IME and the
-        /// context menu anchors. Dart reads it from `renderEditable.getLocalRectForCaret` and the
-        /// editable's transform (`_updateCaretRectIfNeeded`, `contextMenuAnchors`).
-        private Rect ResolveCursorRectangle(FocusNode node, int textLength, int caretOffset)
-        {
-            int clampedCaretOffset = Math.Clamp(caretOffset, 0, textLength);
-            if (RenderEditable is { HasSize: true } renderEditable)
-            {
-                Rect localRect = renderEditable.GetLocalRectForCaret(new TextPosition(clampedCaretOffset));
-                Matrix4 transform = renderEditable.TryGetTransformFromRoot(out Matrix4 value)
-                    ? value
-                    : Matrix4.Identity();
-                return RenderObject.TransformRect(transform, localRect);
-            }
-
-            // Not laid out yet: the field's own rect, inset by its padding, stands in for the caret.
-            Rect fieldRect = node.ResolveTraversalRect() ?? new Rect(0, 0, 1, 1);
-            return new Rect(
-                fieldRect.X + Widget.Padding.Left,
-                fieldRect.Y + Widget.Padding.Top,
-                1,
-                Math.Max(1, fieldRect.Height - Widget.Padding.Top - Widget.Padding.Bottom));
         }
 
         private void HandleFocusNodeChanged()
@@ -2493,22 +2474,6 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             return selection;
-        }
-
-        private string LimitInsertion(string insertion)
-        {
-            if (!Widget.MaxLength.HasValue || string.IsNullOrEmpty(insertion)) return insertion;
-            var controller = _controller!;
-            var selection = controller.Selection.Clamp(controller.Text.Length);
-            string retained = controller.Text.Remove(selection.Start, selection.End - selection.Start);
-            int remaining = Math.Max(0, Widget.MaxLength.Value - new StringInfo(retained).LengthInTextElements);
-            if (new StringInfo(insertion).LengthInTextElements <= remaining) return insertion;
-            if (remaining == 0) return string.Empty;
-            var enumerator = StringInfo.GetTextElementEnumerator(insertion);
-            int end = 0;
-            for (int index = 0; index < remaining && enumerator.MoveNext(); index++)
-                end = enumerator.ElementIndex + enumerator.GetTextElement().Length;
-            return insertion[..end];
         }
 
         private static string BuildDisplayText(

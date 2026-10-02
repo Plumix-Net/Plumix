@@ -201,8 +201,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         harness.Pump(new Size(420, 500));
         Assert.Equal(new DateTime(2026, 4, 1), displayed);
 
-        // Enter goes to the platform text input plugin, which reports the input action.
-        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
+        // Enter activates the focused day (`ActivateIntent`).
+        Assert.True(KeySim.SendKeyCombination(LogicalKeyboardKey.Enter));
         Assert.Equal(new DateTime(2026, 4, 1), selected);
     }
 
@@ -473,7 +473,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         formKey.CurrentState.Save();
         Assert.Equal(new DateTime(2026, 3, 16), saved);
         // Enter goes to the platform text input plugin, which reports the input action.
-        _ = KeySim.SendKeyCombination(LogicalKeyboardKey.Enter);
+        Assert.False(KeySim.SendKeyCombination(LogicalKeyboardKey.Enter));
+        Assert.True(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
         Assert.Equal(new DateTime(2026, 3, 16), submitted);
     }
 
@@ -645,7 +646,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         PumpAnimation();
         var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         Assert.False(result.IsCompleted);
-        Assert.True(FocusManager.Instance.HandleTextInput("bad"));
+        Assert.True(HostTextInput.InsertText("bad"));
 
         var ok = FindSemantics(semantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
@@ -658,7 +659,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             paragraph => paragraph.PlainText == "Bad date");
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
-        Assert.True(FocusManager.Instance.HandleTextInput("03/16/2026"));
+        Assert.True(HostTextInput.InsertText("03/16/2026"));
         semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         ok = FindSemantics(semantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));

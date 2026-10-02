@@ -25,124 +25,6 @@ public sealed class TextInputTests : IDisposable
     }
 
     [Fact]
-    public void FocusManager_HandleTextInput_InvokesPrimaryFocusCallback()
-    {
-        var manager = new FocusManager();
-        string? captured = null;
-        var node = new FocusNode
-        {
-            OnTextInput = (_, text) =>
-            {
-                captured = text;
-                return true;
-            }
-        };
-
-        manager.RegisterNode(node);
-        manager.RequestFocus(node);
-        Scheduler.FlushMicrotasks();
-
-        bool handled = manager.HandleTextInput("A");
-
-        Assert.True(handled);
-        Assert.Equal("A", captured);
-    }
-
-    [Fact]
-    public void FocusManager_HandleTextComposition_InvokesPrimaryFocusCallback()
-    {
-        var manager = new FocusManager();
-        var captured = new List<(string Text, bool IsCommit)>();
-        var node = new FocusNode
-        {
-            OnTextComposition = (_, text, isCommit) =>
-            {
-                captured.Add((text, isCommit));
-                return true;
-            }
-        };
-
-        manager.RegisterNode(node);
-        manager.RequestFocus(node);
-        Scheduler.FlushMicrotasks();
-
-        bool updateHandled = manager.HandleTextCompositionUpdate("pre");
-        bool commitHandled = manager.HandleTextCompositionCommit("final");
-
-        Assert.True(updateHandled);
-        Assert.True(commitHandled);
-        Assert.Equal(2, captured.Count);
-        Assert.Equal(("pre", false), captured[0]);
-        Assert.Equal(("final", true), captured[1]);
-    }
-
-    [Fact]
-    public void PlumixHost_TextInputMethodClientRequested_ProvidesPreeditBridge()
-    {
-        var controller = new TextEditingController();
-        using FrameworkDartTester tester = PumpField(
-            new EditableText(
-                controller: controller,
-                autofocus: true));
-
-        var host = new PlumixHost();
-        var requestArgs = new TextInputMethodClientRequestedEventArgs
-        {
-            RoutedEvent = AvaloniaInputElement.TextInputMethodClientRequestedEvent
-        };
-
-        host.RaiseEvent(requestArgs);
-
-        Assert.NotNull(requestArgs.Client);
-        Assert.True(requestArgs.Client!.SupportsPreedit);
-
-        requestArgs.Client.SetPreeditText("ni");
-        Assert.Equal("ni", controller.Text);
-        Assert.Equal(new TextRange(0, 2), controller.Composing);
-        Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
-
-        requestArgs.Client.SetPreeditText(null);
-        Assert.Equal(string.Empty, controller.Text);
-        Assert.Null(controller.Composing);
-        Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
-    }
-
-    [Fact]
-    public void PlumixHost_TextInputMethodClient_ReflectsSurroundingTextSelectionAndCursorGeometry()
-    {
-        var controller = new TextEditingController();
-        using FrameworkDartTester tester = PumpField(
-            new EditableText(
-                controller: controller,
-                autofocus: true));
-
-        Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
-
-        var host = new PlumixHost();
-        var requestArgs = new TextInputMethodClientRequestedEventArgs
-        {
-            RoutedEvent = AvaloniaInputElement.TextInputMethodClientRequestedEvent
-        };
-
-        host.RaiseEvent(requestArgs);
-        var client = requestArgs.Client;
-
-        Assert.NotNull(client);
-        Assert.True(client!.SupportsSurroundingText);
-        Assert.Equal("abcd", client.SurroundingText);
-        Assert.Equal(new AvaloniaTextSelection(3, 3), client.Selection);
-
-        var cursorRect = client.CursorRectangle;
-        Assert.True(cursorRect.Width > 0);
-        Assert.True(cursorRect.Height > 0);
-
-        client.Selection = new AvaloniaTextSelection(1, 3);
-        Assert.Equal(1, controller.Selection.Start);
-        Assert.Equal(3, controller.Selection.End);
-    }
-
-    [Fact]
     public void EditableText_Multiline_EnterAndVerticalCaretNavigation_Work()
     {
         // Vertical caret movement reads the laid-out RenderEditable (Dart's
@@ -157,11 +39,12 @@ public sealed class TextInputTests : IDisposable
                 multiline: true))));
         tester.Pump();
 
-        Assert.True(FocusManager.Instance.HandleTextInput("ab"));
+        Assert.True(HostTextInput.InsertText("ab"));
         // Enter is left to the platform text input plugin, which inserts the newline into a
         // multiline field and then reports the newline action.
         Assert.False(KeySim.SendKeyCombination(LogicalKeyboardKey.Enter));
-        Assert.True(FocusManager.Instance.HandleTextInput("cd"));
+        Assert.True(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
+        Assert.True(HostTextInput.InsertText("cd"));
         Assert.Equal("ab\ncd", controller.Text);
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
         tester.Pump();
@@ -198,7 +81,7 @@ public sealed class TextInputTests : IDisposable
         focusNode.RequestFocus();
         tester.Pump();
 
-        Assert.True(FocusManager.Instance.HandleTextInput("a"));
+        Assert.True(HostTextInput.InsertText("a"));
         var result = new BoxHitTestResult();
         tester.RenderView.HitTest(result, new Avalonia.Point(10, 10));
 
@@ -339,7 +222,7 @@ public sealed class TextInputTests : IDisposable
 
         Assert.Equal(string.Empty, controller.Text);
 
-        bool textHandled = FocusManager.Instance.HandleTextInput("Hi");
+        bool textHandled = HostTextInput.InsertText("Hi");
         Assert.True(textHandled);
         Assert.Equal("Hi", controller.Text);
 
@@ -357,17 +240,17 @@ public sealed class TextInputTests : IDisposable
                 controller: controller,
                 autofocus: true));
 
-        Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("ni"));
+        Assert.True(HostTextInput.SetMarkedText("ni"));
         Assert.Equal("ni", controller.Text);
         Assert.Equal(new TextRange(0, 2), controller.Composing);
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleTextCompositionCommit("N"));
+        Assert.True(HostTextInput.InsertText("N"));
         Assert.Equal("N", controller.Text);
         Assert.Null(controller.Composing);
         Assert.Equal(TextSelection.Collapsed(1), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("yz"));
+        Assert.True(HostTextInput.SetMarkedText("yz"));
         Assert.Equal("Nyz", controller.Text);
         Assert.Equal(new TextRange(1, 3), controller.Composing);
 
@@ -378,8 +261,8 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal(new TextRange(1, 3), controller.Composing);
 
         controller.Clear();
-        Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("x"));
-        Assert.True(FocusManager.Instance.HandleTextInput("X"));
+        Assert.True(HostTextInput.SetMarkedText("x"));
+        Assert.True(HostTextInput.InsertText("X"));
         Assert.Equal("X", controller.Text);
         Assert.Null(controller.Composing);
     }
@@ -393,7 +276,7 @@ public sealed class TextInputTests : IDisposable
                 controller: controller,
                 autofocus: true));
 
-        Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
+        Assert.True(HostTextInput.InsertText("abcd"));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
@@ -408,7 +291,7 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal(0, controller.Selection.Start);
         Assert.Equal(4, controller.Selection.End);
 
-        Assert.True(FocusManager.Instance.HandleTextInput("Z"));
+        Assert.True(HostTextInput.InsertText("Z"));
         Assert.Equal("Z", controller.Text);
         Assert.Equal(TextSelection.Collapsed(1), controller.Selection);
     }
@@ -423,7 +306,7 @@ public sealed class TextInputTests : IDisposable
                 controller: controller,
                 autofocus: true));
 
-        Assert.True(FocusManager.Instance.HandleTextInput("alpha"));
+        Assert.True(HostTextInput.InsertText("alpha"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
         Assert.True(EventLoopPump.SpinUntil(() => clipboard.Text == "alpha"));
@@ -553,7 +436,7 @@ public sealed class TextInputTests : IDisposable
                 controller: controller,
                 autofocus: true));
 
-        Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
+        Assert.True(HostTextInput.InsertText("abcd"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
@@ -581,9 +464,9 @@ public sealed class TextInputTests : IDisposable
                 enabled: false,
                 autofocus: true));
 
-        bool textHandled = FocusManager.Instance.HandleTextInput("x");
-        bool compositionUpdateHandled = FocusManager.Instance.HandleTextCompositionUpdate("y");
-        bool compositionCommitHandled = FocusManager.Instance.HandleTextCompositionCommit("z");
+        bool textHandled = HostTextInput.InsertText("x");
+        bool compositionUpdateHandled = HostTextInput.SetMarkedText("y");
+        bool compositionCommitHandled = HostTextInput.InsertText("z");
         bool keyHandled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace));
 
         Assert.False(textHandled);
@@ -605,8 +488,8 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true,
                 onChanged: value => changes.Add(value)));
 
-        Assert.True(FocusManager.Instance.HandleTextInput("a"));
-        Assert.True(FocusManager.Instance.HandleTextInput("b"));
+        Assert.True(HostTextInput.InsertText("a"));
+        Assert.True(HostTextInput.InsertText("b"));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace)));
 

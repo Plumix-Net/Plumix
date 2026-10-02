@@ -45,6 +45,8 @@ public sealed class TextField : StatefulWidget
         int? minLines = null,
         bool expands = false,
         int? maxLength = null,
+        MaxLengthEnforcement? maxLengthEnforcement = null,
+        AppPrivateCommandCallback? onAppPrivateCommand = null,
         Action<string>? onChanged = null,
         Action? onEditingComplete = null,
         Action<string>? onSubmitted = null,
@@ -107,6 +109,8 @@ public sealed class TextField : StatefulWidget
         MinLines = minLines;
         Expands = expands;
         MaxLength = maxLength;
+        MaxLengthEnforcement = maxLengthEnforcement;
+        OnAppPrivateCommand = onAppPrivateCommand;
         OnChanged = onChanged;
         OnEditingComplete = onEditingComplete;
         OnSubmitted = onSubmitted;
@@ -159,6 +163,13 @@ public sealed class TextField : StatefulWidget
     public int? MinLines { get; }
     public bool Expands { get; }
     public int? MaxLength { get; }
+
+    /// <summary>How <see cref="MaxLength"/> is enforced; null uses
+    /// <see cref="LengthLimitingTextInputFormatter.GetDefaultMaxLengthEnforcement"/>.</summary>
+    public MaxLengthEnforcement? MaxLengthEnforcement { get; }
+
+    /// <summary>Dart parity source: <c>TextField.onAppPrivateCommand</c>.</summary>
+    public AppPrivateCommandCallback? OnAppPrivateCommand { get; }
     public Action<string>? OnChanged { get; }
     public Action? OnEditingComplete { get; }
     public Action<string>? OnSubmitted { get; }
@@ -364,7 +375,14 @@ public sealed class TextField : StatefulWidget
             if (!enabled && Current.Style?.Color is null)
                 baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
             bool multiline = Current.MaxLines != 1;
-            int? positiveMaxLength = Current.MaxLength is > 0 ? Current.MaxLength : null;
+            // Dart's `formatters`: the length limit is one more input formatter.
+            List<TextInputFormatter> formatters = [.. Current.InputFormatters ?? []];
+            if (Current.MaxLength is { } maxLength)
+            {
+                formatters.Add(new LengthLimitingTextInputFormatter(
+                    maxLength,
+                    maxLengthEnforcement: EffectiveMaxLengthEnforcement));
+            }
             SpellCheckConfiguration spellCheckConfiguration = InferAndroidSpellCheckConfiguration(
                 Current.SpellCheckConfiguration);
             TextSelectionControls selectionControls = Current.SelectionControls
@@ -391,9 +409,9 @@ public sealed class TextField : StatefulWidget
                 readOnly: Current.ReadOnly,
                 obscureText: Current.ObscureText,
                 obscuringCharacter: Current.ObscuringCharacter,
-                maxLength: positiveMaxLength,
                 onEditingComplete: Current.OnEditingComplete,
                 onSubmitted: Current.OnSubmitted,
+                onAppPrivateCommand: Current.OnAppPrivateCommand,
                 semanticsLabel: Current.Decoration?.LabelText ?? Current.Decoration?.HintText,
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
@@ -407,7 +425,7 @@ public sealed class TextField : StatefulWidget
                 enableSuggestions: Current.EnableSuggestions,
                 canRequestFocus: Current.CanRequestFocus,
                 onKeyEvent: Current.OnKeyEvent,
-                inputFormatters: Current.InputFormatters,
+                inputFormatters: formatters,
                 autofillHints: Current.AutofillHints,
                 cursorHeight: Current.CursorHeight,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
@@ -559,6 +577,10 @@ public sealed class TextField : StatefulWidget
         }
 
         /// <summary>Dart's `_TextFieldState._hasError`.</summary>
+        /// Dart's `_effectiveMaxLengthEnforcement`.
+        private MaxLengthEnforcement EffectiveMaxLengthEnforcement =>
+            Current.MaxLengthEnforcement ?? LengthLimitingTextInputFormatter.GetDefaultMaxLengthEnforcement();
+
         private bool HasError => Current.Decoration?.ErrorText is not null
                                  || Current.Decoration?.Error is not null
                                  || HasIntrinsicError;

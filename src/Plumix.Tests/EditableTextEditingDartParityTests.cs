@@ -692,11 +692,14 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
     [Fact]
     public void HostPluginEnterInsertsANewlineIntoAMultilineFieldAndReportsTheAction()
     {
+        // With a custom input control current, the platform sees `TextInputType.none` (Dart's
+        // `_configurationToJson`) and inserts nothing; the host plugin needs the platform control.
+        UI.TextInput.RestorePlatformInputControl();
         _controller.Text = "ab";
         _controller.Selection = TextSelection.Collapsed(1);
         using FrameworkDartTester tester = Pump(Field());
 
-        Assert.True(HostTextInputPlugin.HandleKeyEvent(LogicalKeyboardKey.Enter));
+        Assert.True(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
 
         Assert.Equal("a\nb", _controller.Text);
         Assert.Equal(TextSelection.Collapsed(2), _controller.Selection);
@@ -710,7 +713,7 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
         _controller.Text = "ab";
         using FrameworkDartTester tester = Pump(Field(multiline: false, onSubmitted: value => submitted = value));
 
-        Assert.True(HostTextInputPlugin.HandleKeyEvent(LogicalKeyboardKey.Enter));
+        Assert.True(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
         tester.Pump();
 
         Assert.Equal("ab", _controller.Text);
@@ -722,8 +725,8 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
     {
         using FrameworkDartTester tester = Pump(Field(autofocus: false));
 
-        Assert.False(HostTextInputPlugin.HandleKeyEvent(LogicalKeyboardKey.Enter));
-        Assert.False(HostTextInputPlugin.HandleKeyEvent(LogicalKeyboardKey.ArrowLeft));
+        Assert.False(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.Enter));
+        Assert.False(HostTextInput.HandleKeyEvent(LogicalKeyboardKey.ArrowLeft));
     }
 
     private sealed class RecordingTextInputControl : TextInputControl

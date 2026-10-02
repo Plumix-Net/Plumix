@@ -172,34 +172,67 @@ public class LengthLimitingTextInputFormatter : TextInputFormatter
             : MaxLengthEnforcement.TruncateAfterCompositionEnds;
     }
 
-    public override TextEditingValue FormatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue)
+    /// <summary>Truncates <paramref name="value"/> to <paramref name="maxLength"/> user-perceived
+    /// characters. Dart parity source: <c>LengthLimitingTextInputFormatter.truncate</c>.</summary>
+    public static TextEditingValue Truncate(TextEditingValue value, int maxLength)
     {
-        if (MaxLength is not { } limit || limit == NoMaxLength || MaxLengthEnforcement == MaxLengthEnforcement.None)
-        {
-            return newValue;
-        }
-
-        int[] elements = StringInfo.ParseCombiningCharacters(newValue.Text);
-        if (elements.Length <= limit)
-        {
-            return newValue;
-        }
-
-        if (MaxLengthEnforcement == MaxLengthEnforcement.TruncateAfterCompositionEnds
-            && newValue.Composing is { IsValid: true, IsCollapsed: false })
-        {
-            return newValue;
-        }
-
-        int end = limit == elements.Length ? newValue.Text.Length : elements[limit];
-        string truncated = newValue.Text[..end];
+        int[] elements = StringInfo.ParseCombiningCharacters(value.Text);
+        string truncated = elements.Length > maxLength ? value.Text[..elements[maxLength]] : value.Text;
         return new TextEditingValue(
-            truncated,
-            new TextSelection(
-                BaseOffset: Math.Min(newValue.Selection.BaseOffset, end),
-                ExtentOffset: Math.Min(newValue.Selection.ExtentOffset, end)),
-            newValue.Composing is { } range && range.Start < end
-                ? new TextRange(range.Start, Math.Min(range.End, end))
+            text: truncated,
+            selection: value.Selection with
+            {
+                BaseOffset = Math.Min(value.Selection.Start, truncated.Length),
+                ExtentOffset = Math.Min(value.Selection.End, truncated.Length),
+            },
+            composing: value.Composing is { IsCollapsed: false } composing && truncated.Length > composing.Start
+                ? new TextRange(composing.Start, Math.Min(composing.End, truncated.Length))
                 : null);
     }
+
+    /// <summary>Dart parity source: <c>LengthLimitingTextInputFormatter.formatEditUpdate</c>.</summary>
+    public override TextEditingValue FormatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue)
+    {
+        if (MaxLength is not { } maxLength
+            || maxLength == NoMaxLength
+            || CharactersLength(newValue.Text) <= maxLength)
+        {
+            return newValue;
+        }
+
+        switch (MaxLengthEnforcement)
+        {
+            case MaxLengthEnforcement.None:
+                return newValue;
+            case MaxLengthEnforcement.Enforced:
+                // If already at the maximum and tried to enter even more, and has no selection, keep
+                // the old value.
+                if (CharactersLength(oldValue.Text) == maxLength && oldValue.Selection.IsCollapsed)
+                {
+                    return oldValue;
+                }
+
+                // Enforced to return a truncated value.
+                return Truncate(newValue, maxLength);
+            default:
+                // If already at the maximum and tried to enter even more, and the old value is not
+                // composing, keep the old value.
+                if (CharactersLength(oldValue.Text) == maxLength && oldValue.Composing is not { IsValid: true })
+                {
+                    return oldValue;
+                }
+
+                // Temporarily exempt `newValue` from the maxLength limit if it has a composing text
+                // going and no enforcement to the composing value, until the composing is finished.
+                if (newValue.Composing is { IsValid: true })
+                {
+                    return newValue;
+                }
+
+                return Truncate(newValue, maxLength);
+        }
+    }
+
+    /// Dart's `text.characters.length`: the number of user-perceived characters.
+    private static int CharactersLength(string text) => StringInfo.ParseCombiningCharacters(text).Length;
 }

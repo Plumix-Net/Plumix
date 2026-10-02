@@ -697,12 +697,13 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(TextInputActionType.Done, field.TextInputAction);
         Assert.False(field.Autocorrect);
         Assert.False(field.EnableSuggestions);
-        FocusTextInputState inputState = Assert.IsType<FocusTextInputState>(
-            FocusManager.Instance.ResolveTextInputState());
-        Assert.Equal(TextInputType.EmailAddress, inputState.Configuration?.InputType);
-        Assert.Equal(TextInputActionType.Done, inputState.Configuration?.InputAction);
-        Assert.False(inputState.Configuration?.Autocorrect);
-        Assert.False(inputState.Configuration?.EnableSuggestions);
+        // The configuration the field attached its text input connection with.
+        TextInputConfiguration configuration = Assert.IsType<TextInputConfiguration>(
+            Plumix.UI.TextInput.CurrentConfiguration);
+        Assert.Equal(TextInputType.EmailAddress, configuration.InputType);
+        Assert.Equal(TextInputActionType.Done, configuration.InputAction);
+        Assert.False(configuration.Autocorrect);
+        Assert.False(configuration.EnableSuggestions);
         Assert.Contains(
             harness.FindWidgets<AnimatedSwitcher>(),
             switcher => switcher.Duration == TimeSpan.FromMilliseconds(300));

@@ -561,7 +561,7 @@ public sealed partial class EditableText
                 selection: TextSelection.Collapsed(lastSelectionIndex));
 
             UserUpdateTextEditingValue(
-                collapsedTextEditingValue.Replaced(selection.AsTextRange(), LimitInsertion(text)),
+                collapsedTextEditingValue.Replaced(selection.AsTextRange(), text),
                 cause);
             if (cause == SelectionChangedCause.Toolbar)
             {

@@ -101,9 +101,10 @@ internal static class KeySim
 
     /// <summary>
     /// flutter_test's <c>sendKeyCombination</c>: presses the key with the given modifiers held and
-    /// releases everything again. A key down the framework leaves unhandled goes on to the platform
-    /// text input plugin, the way <c>simulateKeyDownEvent</c> hands it to
-    /// <c>TestTextInput.handleKeyDownEvent</c> (macOS selectors, and Enter).
+    /// releases everything again. A key down the framework leaves unhandled goes on to the test text
+    /// input, the way <c>simulateKeyDownEvent</c> hands it to <c>TestTextInput.handleKeyDownEvent</c>:
+    /// on macOS, while a client is attached, its AppKit selectors reach the framework as
+    /// <c>TextInputClient.performSelectors</c> (<c>MacOSTestTextInputKeyHandler</c>).
     /// </summary>
     public static bool SendKeyCombination(
         LogicalKeyboardKey key,
@@ -113,9 +114,13 @@ internal static class KeySim
         bool meta = false)
     {
         bool handled = FocusManager.Instance.HandleKeyEvent(Down(key, control, shift, alt, meta));
-        if (!handled)
+        if (!handled
+            && !PlatformDefaults.IsWeb
+            && PlatformDefaults.TargetPlatform == TargetPlatform.MacOS
+            && Plumix.UI.TextInput.CurrentConnection is { } connection
+            && MacOSStandardKeyBindings.SelectorsFor(key, control, shift, alt, meta) is { } selectors)
         {
-            HostTextInputPlugin.HandleKeyEvent(key, control, shift, alt, meta);
+            MacOSTestTextInputKeyHandler.SendSelectors(connection.Id, selectors);
         }
 
         _ = FocusManager.Instance.HandleKeyEvent(Up(key, control, shift, alt, meta));

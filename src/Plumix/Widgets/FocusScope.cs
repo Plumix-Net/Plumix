@@ -28,10 +28,6 @@ public class Focus : StatefulWidget
         bool? descendantsAreTraversable = null,
         Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
-        FocusOnTextInputCallback? onTextInput = null,
-        FocusOnTextCompositionCallback? onTextComposition = null,
-        FocusOnTextInputStateCallback? onTextInputState = null,
-        FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
         string? debugLabel = null,
         Key? key = null) : this(
             child: child,
@@ -45,10 +41,6 @@ public class Focus : StatefulWidget
             descendantsAreTraversable: descendantsAreTraversable,
             onFocusChange: onFocusChange,
             onKeyEvent: onKeyEvent,
-            onTextInput: onTextInput,
-            onTextComposition: onTextComposition,
-            onTextInputState: onTextInputState,
-            onTextSelectionChanged: onTextSelectionChanged,
             debugLabel: debugLabel,
             key: key)
     {
@@ -66,10 +58,6 @@ public class Focus : StatefulWidget
         bool? descendantsAreTraversable = null,
         Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
-        FocusOnTextInputCallback? onTextInput = null,
-        FocusOnTextCompositionCallback? onTextComposition = null,
-        FocusOnTextInputStateCallback? onTextInputState = null,
-        FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
         string? debugLabel = null,
         Key? key = null) : base(key)
     {
@@ -84,10 +72,6 @@ public class Focus : StatefulWidget
         OnFocusChange = onFocusChange;
         IncludeSemantics = includeSemantics;
         RawOnKeyEvent = onKeyEvent;
-        OnTextInput = onTextInput;
-        OnTextComposition = onTextComposition;
-        OnTextInputState = onTextInputState;
-        OnTextSelectionChanged = onTextSelectionChanged;
         RawDebugLabel = debugLabel;
     }
 
@@ -103,14 +87,6 @@ public class Focus : StatefulWidget
     public bool IncludeSemantics { get; }
 
     public Action<bool>? OnFocusChange { get; }
-
-    public FocusOnTextInputCallback? OnTextInput { get; }
-
-    public FocusOnTextCompositionCallback? OnTextComposition { get; }
-
-    public FocusOnTextInputStateCallback? OnTextInputState { get; }
-
-    public FocusOnTextSelectionChangedCallback? OnTextSelectionChanged { get; }
 
     /// <summary>Whether the node, rather than this widget, owns the focus configuration.</summary>
     internal virtual bool UsingExternalFocus => false;
@@ -270,7 +246,6 @@ internal class FocusState : State<Focus>
         _descendantsWereTraversable = FocusNode.DescendantsAreTraversable;
         _hadPrimaryFocus = FocusNode.HasPrimaryFocus;
         FocusAttachment = FocusNode.Attach(Context, onKeyEvent: Widget.OnKeyEvent);
-        ApplyTextInputCallbacks();
         FocusNode.AddListener(HandleFocusChanged);
     }
 
@@ -325,7 +300,6 @@ internal class FocusState : State<Focus>
                 FocusNode.CanRequestFocus = Widget.CanRequestFocus;
                 FocusNode.DescendantsAreFocusable = Widget.DescendantsAreFocusable;
                 FocusNode.DescendantsAreTraversable = Widget.DescendantsAreTraversable;
-                ApplyTextInputCallbacks();
             }
         }
         else
@@ -339,15 +313,6 @@ internal class FocusState : State<Focus>
         {
             HandleAutofocus();
         }
-    }
-
-    /// <summary>C#-only: the IME callbacks Plumix routes through the focus tree.</summary>
-    private void ApplyTextInputCallbacks()
-    {
-        FocusNode.OnTextInput = Widget.OnTextInput;
-        FocusNode.OnTextComposition = Widget.OnTextComposition;
-        FocusNode.OnTextInputState = Widget.OnTextInputState;
-        FocusNode.OnTextSelectionChanged = Widget.OnTextSelectionChanged;
     }
 
     private void HandleFocusChanged()

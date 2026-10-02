@@ -716,9 +716,16 @@ public static class TextInput
         }
 
         int clientId = ArgumentId(arguments);
-        if (clientId != connection.Id && clientId != DebugAnyClientId)
+        if (clientId != connection.Id)
         {
-            return Task.FromResult<object?>(null);
+            // If the client IDs don't match, the incoming message was for a different client. In
+            // debug builds "-1" is a magical client ID that skips this check, so that tests get
+            // through even when they do not mock the engine side of text input.
+            bool debugAllowAnyway = Constants.KDebugMode && clientId == DebugAnyClientId;
+            if (!debugAllowAnyway)
+            {
+                return Task.FromResult<object?>(null);
+            }
         }
 
         switch (call.Method)
@@ -809,7 +816,6 @@ public static class TextInput
     }
 
     /// <summary>The client id Dart accepts from any connection in debug builds.</summary>
-    /// <remarks>Plumix has no assert elision, so it is accepted in every build.</remarks>
     private const int DebugAnyClientId = -1;
 
     private static bool HasNaN(Rect rect) =>

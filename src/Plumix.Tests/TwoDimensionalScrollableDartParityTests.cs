@@ -1685,45 +1685,6 @@ public sealed class TwoDimensionalScrollableDartParityTests
     }
 
     /// <summary>
-    /// The part of flutter_test's <c>TestTextInput</c> the keyboard test reads: it answers the
-    /// <c>flutter/textinput</c> channel and tracks <c>isVisible</c>.
-    /// </summary>
-    private sealed class TestTextInput : IDisposable
-    {
-        public TestTextInput()
-        {
-            Plumix.UI.TextInput.DebugReset();
-            Plumix.UI.TextInput.EnsureInitialized();
-            SystemChannels.TextInput.SetPlatformMethodCallHandler(HandleTextInputCall);
-        }
-
-        public bool IsVisible { get; private set; }
-
-        public void Dispose()
-        {
-            SystemChannels.TextInput.SetPlatformMethodCallHandler(null);
-            Plumix.UI.TextInput.DebugReset();
-            Scheduler.FlushMicrotasks();
-        }
-
-        private Task<object?> HandleTextInputCall(MethodCall call)
-        {
-            switch (call.Method)
-            {
-                case "TextInput.clearClient":
-                case "TextInput.hide":
-                    IsVisible = false;
-                    break;
-                case "TextInput.show":
-                    IsVisible = true;
-                    break;
-            }
-
-            return Task.FromResult<object?>(null);
-        }
-    }
-
-    /// <summary>
     /// editable_text_tester.dart's <c>TestTextField</c>, reduced to what the keyboard test needs: an
     /// <see cref="EditableText"/> whose single tap requests focus (and so the keyboard).
     /// </summary>

@@ -38,41 +38,8 @@ public enum UnfocusDisposition
     PreviouslyFocusedChild,
 }
 
-/// <summary>
-/// The IME state a focused node exposes to the host. C#-only: Plumix routes platform text input
-/// through the focus tree instead of Flutter's <c>TextInputConnection</c> channel.
-/// </summary>
-public readonly record struct FocusTextInputState(
-    string SurroundingText,
-    int SelectionBaseOffset,
-    int SelectionExtentOffset,
-    Rect CursorRectangle,
-    TextInputConfiguration? Configuration = null)
-{
-    public int SelectionStart => Math.Min(SelectionBaseOffset, SelectionExtentOffset);
-
-    public int SelectionEnd => Math.Max(SelectionBaseOffset, SelectionExtentOffset);
-
-    internal FocusTextInputState Normalize()
-    {
-        string normalizedText = SurroundingText ?? string.Empty;
-        int clampedBaseOffset = Math.Clamp(SelectionBaseOffset, 0, normalizedText.Length);
-        int clampedExtentOffset = Math.Clamp(SelectionExtentOffset, 0, normalizedText.Length);
-        return new FocusTextInputState(
-            normalizedText,
-            clampedBaseOffset,
-            clampedExtentOffset,
-            CursorRectangle,
-            Configuration);
-    }
-}
-
 public delegate KeyEventResult FocusOnKeyEventCallback(FocusNode node, KeyEvent @event);
 public delegate KeyEventResult OnKeyEventCallback(KeyEvent @event);
-public delegate bool FocusOnTextInputCallback(FocusNode node, string text);
-public delegate bool FocusOnTextCompositionCallback(FocusNode node, string text, bool isCommit);
-public delegate FocusTextInputState? FocusOnTextInputStateCallback(FocusNode node);
-public delegate bool FocusOnTextSelectionChangedCallback(FocusNode node, int baseOffset, int extentOffset);
 
 /// <summary>Dart parity source: <c>combineKeyEventResults</c>.</summary>
 public static class KeyEventResults
@@ -198,15 +165,6 @@ public class FocusNode : ChangeNotifier
     public string? DebugLabel { get; set; }
 
     public FocusOnKeyEventCallback? OnKeyEvent { get; set; }
-
-    /// <summary>C#-only: the host's IME text reaches the focused node through these callbacks.</summary>
-    public FocusOnTextInputCallback? OnTextInput { get; set; }
-
-    public FocusOnTextCompositionCallback? OnTextComposition { get; set; }
-
-    public FocusOnTextInputStateCallback? OnTextInputState { get; set; }
-
-    public FocusOnTextSelectionChangedCallback? OnTextSelectionChanged { get; set; }
 
     /// <summary>C#-only override of <see cref="Rect"/> for nodes whose render object is not the focus box.</summary>
     public Rect? TraversalRect { get; set; }
@@ -526,16 +484,6 @@ public class FocusNode : ChangeNotifier
 
         return OnKeyEvent?.Invoke(this, @event) ?? KeyEventResult.Ignored;
     }
-
-    internal bool HandleTextInput(string text) => OnTextInput?.Invoke(this, text) ?? false;
-
-    internal bool HandleTextComposition(string text, bool isCommit) =>
-        OnTextComposition?.Invoke(this, text, isCommit) ?? false;
-
-    internal FocusTextInputState? ResolveTextInputState() => OnTextInputState?.Invoke(this);
-
-    internal bool HandleTextSelectionChanged(int baseOffset, int extentOffset) =>
-        OnTextSelectionChanged?.Invoke(this, baseOffset, extentOffset) ?? false;
 
     /// <summary>Dart parity source: <c>FocusNode.rect</c>, resolved through the attached render object.</summary>
     internal Rect? ResolveTraversalRect()
@@ -1320,36 +1268,6 @@ public sealed class FocusManager : ChangeNotifier
         }
 
         return handled;
-    }
-
-    public bool HandleTextInput(string text)
-    {
-        if (PrimaryFocus == null || string.IsNullOrEmpty(text))
-        {
-            return false;
-        }
-
-        return PrimaryFocus.HandleTextInput(text);
-    }
-
-    public bool HandleTextCompositionUpdate(string text)
-    {
-        return PrimaryFocus?.HandleTextComposition(text ?? string.Empty, isCommit: false) ?? false;
-    }
-
-    public bool HandleTextCompositionCommit(string text)
-    {
-        return PrimaryFocus?.HandleTextComposition(text ?? string.Empty, isCommit: true) ?? false;
-    }
-
-    public FocusTextInputState? ResolveTextInputState()
-    {
-        return PrimaryFocus?.ResolveTextInputState()?.Normalize();
-    }
-
-    public bool HandleTextSelectionChanged(int baseOffset, int extentOffset)
-    {
-        return PrimaryFocus?.HandleTextSelectionChanged(baseOffset, extentOffset) ?? false;
     }
 
     internal void ResetForTests()
