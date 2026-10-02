@@ -63,38 +63,18 @@ public sealed partial class Canvas
 
     /// <summary>Draws a rectangle with the given <see cref="Paint"/>.</summary>
     /// <remarks>
-    /// Dart's <c>Canvas.drawRect(rect, paint)</c>. The paint's colour (or shader), style, stroke width
-    /// and mask filter are honoured; a <see cref="MaskFilter"/> blur is drawn with the same Gaussian
-    /// ring technique as <see cref="DrawRSuperellipseBlur"/>, because Avalonia's drawing context has no
-    /// mask-filter paint (<c>BlurStyle.outer</c>/<c>inner</c> are drawn as <c>normal</c>).
+    /// Dart's <c>Canvas.drawRect(rect, paint)</c>. The paint's colour (or shader), style, stroke, anti-alias
+    /// flag, mask filter and blend mode are honoured; see <see cref="DrawShape"/>.
     /// </remarks>
     public void DrawRect(Rect rect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
-        bool stroke = paint.Style == PaintingStyle.Stroke;
-        IPen? pen = stroke
-            ? new Pen(
-                brush,
-                paint.StrokeWidth,
-                lineCap: ToPenLineCap(paint.StrokeCap),
-                lineJoin: ToPenLineJoin(paint.StrokeJoin))
-            : null;
-        DebugRecordCall(new CanvasCall(
+        DrawShape(
             "drawRect",
-            Rect: rect,
-            Brush: stroke ? null : brush,
-            Pen: pen,
-            MaskFilter: paint.MaskFilter));
-        if (paint.MaskFilter is { } maskFilter && !stroke)
-        {
-            var path = new Path();
-            path.AddRect(rect);
-            DrawBlurredGeometry(path.ToGeometry(), paint.Color, maskFilter.Sigma);
-            return;
-        }
-
-        AddDrawCommand(context => context.DrawRectangle(stroke ? null : brush, pen, rect));
+            paint,
+            call => call with { Rect = rect },
+            () => new RectangleGeometry(rect),
+            (context, fill, pen) => context.DrawRectangle(fill, pen, rect));
     }
 
     private static PenLineCap ToPenLineCap(StrokeCap cap) => cap switch
@@ -143,43 +123,162 @@ public sealed partial class Canvas
     }
 
     /// <summary>Draws a rounded rectangle with the given <see cref="Paint"/>.</summary>
-    /// <remarks>
-    /// Dart's <c>Canvas.drawRRect(rrect, paint)</c>. Like <see cref="DrawRect(Rect, Paint)"/>, the paint's
-    /// colour (or shader), style, stroke width and mask filter are honoured; a blur mask filter is drawn
-    /// with the Gaussian ring technique.
-    /// </remarks>
+    /// <remarks>Dart's <c>Canvas.drawRRect(rrect, paint)</c>; see <see cref="DrawShape"/>.</remarks>
     public void DrawRRect(RRect rrect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
+        Geometry? geometry = null;
+        Geometry Source() => geometry ??= rrect.ToPath().ToGeometry();
+        DrawShape(
+            "drawRRect",
+            paint,
+            call => call with { RRect = rrect },
+            Source,
+            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+    }
+
+    /// <summary>Draws the ring between two rounded rectangles with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawDRRect(outer, inner, paint)</c>; see <see cref="DrawShape"/>.</remarks>
+    public void DrawDRRect(RRect outer, RRect inner, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        Geometry? geometry = null;
+        Geometry Source() => geometry ??= new CombinedGeometry(
+            GeometryCombineMode.Exclude,
+            outer.ToPath().ToGeometry(),
+            inner.ToPath().ToGeometry());
+        DrawShape(
+            "drawDRRect",
+            paint,
+            call => call with { RRect = outer },
+            Source,
+            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+    }
+
+    /// <summary>Draws an axis-aligned oval with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawOval(rect, paint)</c>; see <see cref="DrawShape"/>.</remarks>
+    public void DrawOval(Rect oval, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        DrawShape(
+            "drawOval",
+            paint,
+            call => call with { Rect = oval },
+            () => new EllipseGeometry(oval),
+            (context, fill, pen) => context.DrawEllipse(fill, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
+    }
+
+    /// <summary>Draws a path with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawPath(path, paint)</c>; see <see cref="DrawShape"/>.</remarks>
+    public void DrawPath(Path path, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        ArgumentNullException.ThrowIfNull(paint);
+        Geometry? geometry = null;
+        Geometry Source() => geometry ??= path.ToGeometry();
+        DrawShape(
+            "drawPath",
+            paint,
+            call => call with { Path = path },
+            Source,
+            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+    }
+
+    /// <summary>Draws a rounded superellipse with the given <see cref="Paint"/>.</summary>
+    /// <remarks>Dart's <c>Canvas.drawRSuperellipse(rsuperellipse, paint)</c>; see <see cref="DrawShape"/>.</remarks>
+    public void DrawRSuperellipse(RSuperellipse rsuperellipse, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        Path path = rsuperellipse.ToPath();
+        Geometry? geometry = null;
+        Geometry Source() => geometry ??= path.ToGeometry();
+        DrawShape(
+            "drawRSuperellipse",
+            paint,
+            call => call with { Path = path },
+            Source,
+            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+    }
+
+    /// <summary>
+    /// Records and plays back one shape draw of a <see cref="Paint"/>-taking method: the shared tail of
+    /// <c>drawRect</c>, <c>drawRRect</c>, <c>drawDRRect</c>, <c>drawOval</c>, <c>drawCircle</c>,
+    /// <c>drawPath</c> and <c>drawRSuperellipse</c>.
+    /// </summary>
+    /// <remarks>
+    /// The paint is read when the call is made, as Dart's canvas does. A plain paint plays back through
+    /// <paramref name="draw"/>. A paint with a <see cref="MaskFilter"/> or a blend mode other than
+    /// <see cref="BlendMode.SourceOver"/> goes through <see cref="RasterizedShapeDraw"/>, the raster
+    /// backend for both (Avalonia's drawing context has neither); where no raster backend exists the
+    /// shape is drawn through <paramref name="draw"/> with a Gaussian-ring blur approximation.
+    /// </remarks>
+    private void DrawShape(
+        string method,
+        Paint paint,
+        Func<CanvasCall, CanvasCall> describe,
+        Func<Geometry> geometrySource,
+        Action<DrawingContext, IBrush?, IPen?> draw)
+    {
         IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
         bool stroke = paint.Style == PaintingStyle.Stroke;
-        IPen? pen = stroke
-            ? new Pen(
-                brush,
-                paint.StrokeWidth,
-                lineCap: ToPenLineCap(paint.StrokeCap),
-                lineJoin: ToPenLineJoin(paint.StrokeJoin))
-            : null;
-        DebugRecordCall(new CanvasCall(
-            "drawRRect",
-            RRect: rrect,
-            Brush: stroke ? null : brush,
+        IPen? pen = stroke ? CreatePen(paint, brush) : null;
+        IBrush? fill = stroke ? null : brush;
+        MaskFilter? maskFilter = paint.MaskFilter;
+        BlendMode blendMode = paint.BlendMode;
+        bool isAntiAlias = paint.IsAntiAlias;
+        Color color = paint.Color;
+        DebugRecordCall(describe(new CanvasCall(
+            method,
+            Brush: fill,
             Pen: pen,
-            MaskFilter: paint.MaskFilter));
-        var path = new Path();
-        path.AddRRect(rrect);
-        if (paint.MaskFilter is { } maskFilter && !stroke)
+            MaskFilter: maskFilter,
+            BlendMode: blendMode)
         {
-            DrawBlurredGeometry(path.ToGeometry(), paint.Color, maskFilter.Sigma);
+            RecordedColor = color,
+        }));
+
+        void DrawPlain(DrawingContext context)
+        {
+            using DrawingContext.PushedState edge = context.PushRenderOptions(new RenderOptions
+            {
+                EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
+            });
+            draw(context, fill, pen);
+        }
+
+        if (maskFilter is null && blendMode == BlendMode.SourceOver)
+        {
+            AddDrawCommand(DrawPlain);
             return;
         }
 
-        Geometry? geometry = null;
-        AddDrawCommand(context => context.DrawGeometry(
-            stroke ? null : brush,
+        var rasterized = new RasterizedShapeDraw(
+            geometrySource,
+            brush,
+            color,
             pen,
-            geometry ??= path.ToGeometry()));
+            maskFilter,
+            blendMode,
+            isAntiAlias,
+            context =>
+            {
+                if (maskFilter is null || stroke)
+                {
+                    DrawPlain(context);
+                    return;
+                }
+
+                DrawBlurApproximation(context, geometrySource(), color, maskFilter, DrawPlain);
+            });
+        AddDrawCommand(rasterized.Draw);
     }
+
+    private static Pen CreatePen(Paint paint, IBrush brush) => new(
+        brush,
+        paint.StrokeWidth,
+        lineCap: ToPenLineCap(paint.StrokeCap),
+        lineJoin: ToPenLineJoin(paint.StrokeJoin),
+        miterLimit: paint.StrokeMiterLimit);
 
     // Dart parity source: dart:ui Canvas.drawRSuperellipse.
     public void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
@@ -190,13 +289,17 @@ public sealed partial class Canvas
     }
 
     /// <summary>Draws a blurred box shadow using the exact rounded-superellipse contour.</summary>
+    /// <remarks>
+    /// Plumix-only shorthand for Dart's <c>drawRSuperellipse(shape.inflate(spread).shift(offset),
+    /// shadow.toPaint())</c>.
+    /// </remarks>
     public void DrawRSuperellipseShadow(RSuperellipse rsuperellipse, Plumix.Rendering.BoxShadow shadow)
     {
         ArgumentNullException.ThrowIfNull(shadow);
         RSuperellipse shadowShape = rsuperellipse
             .Inflate(shadow.SpreadRadius)
             .Shift(shadow.Offset);
-        DrawRSuperellipseBlur(shadowShape, shadow.Color, shadow.BlurSigma);
+        DrawRSuperellipse(shadowShape, shadow.ToPaint());
     }
 
     /// <summary>
@@ -204,48 +307,55 @@ public sealed partial class Canvas
     /// <paramref name="blurSigma"/>.
     /// </summary>
     /// <remarks>
-    /// Dart's <c>Canvas.drawRSuperellipse</c> with a <c>Paint.maskFilter</c> of
-    /// <c>MaskFilter.blur(BlurStyle.normal, sigma)</c>. Avalonia's path API has no mask-filter paint,
-    /// so concentric strokes sampled from the same Gaussian falloff keep the superellipse contour
-    /// exact while providing a backend-independent blur.
+    /// Plumix-only shorthand for Dart's <c>Canvas.drawRSuperellipse</c> with a <c>Paint.maskFilter</c> of
+    /// <c>MaskFilter.blur(BlurStyle.normal, sigma)</c>.
     /// </remarks>
     public void DrawRSuperellipseBlur(RSuperellipse rsuperellipse, Color color, double blurSigma)
     {
-        Geometry geometry = rsuperellipse.ToPath().ToGeometry();
-        DrawBlurredGeometry(geometry, color, blurSigma);
+        DrawRSuperellipse(rsuperellipse, new Paint
+        {
+            Color = color,
+            MaskFilter = blurSigma > 0.0 ? MaskFilter.Blur(BlurStyle.Normal, blurSigma) : null,
+        });
     }
 
-    // Concentric strokes sampled from one Gaussian falloff: the contour stays exact while the blur is
-    // backend-independent; the shape itself is filled last, under the innermost ring.
-    private void DrawBlurredGeometry(Geometry geometry, Color color, double blurSigma)
+    // The no-raster-backend stand-in for a blur mask filter: concentric strokes sampled from one Gaussian
+    // falloff keep the contour exact; the shape itself is filled last unless the style is outer.
+    private static void DrawBlurApproximation(
+        DrawingContext context,
+        Geometry geometry,
+        Color color,
+        MaskFilter maskFilter,
+        Action<DrawingContext> drawShape)
     {
-        if (blurSigma <= 0.0)
+        double blurSigma = maskFilter.Sigma;
+        if (blurSigma > 0.0 && maskFilter.Style != BlurStyle.Inner)
         {
-            DrawGeometry(new SolidColorBrush(color), null, geometry);
-            return;
-        }
-
-        double outerRadius = blurSigma * 3.0;
-        int steps = Math.Max(2, (int)Math.Ceiling(outerRadius));
-        double previousOpacity = 0.0;
-        for (int step = 0; step < steps; step++)
-        {
-            double radius = outerRadius * (steps - step) / steps;
-            double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * blurSigma * blurSigma));
-            double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
-            previousOpacity = targetOpacity;
-            byte layerAlpha = (byte)Math.Clamp(
-                (int)Math.Round(color.Alpha * layerOpacity),
-                0,
-                byte.MaxValue);
-            Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
-            if (layerColor.Alpha > 0)
+            double outerRadius = blurSigma * 3.0;
+            int steps = Math.Max(2, (int)Math.Ceiling(outerRadius));
+            double previousOpacity = 0.0;
+            for (int step = 0; step < steps; step++)
             {
-                DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
+                double radius = outerRadius * (steps - step) / steps;
+                double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * blurSigma * blurSigma));
+                double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
+                previousOpacity = targetOpacity;
+                byte layerAlpha = (byte)Math.Clamp(
+                    (int)Math.Round(color.Alpha * layerOpacity),
+                    0,
+                    byte.MaxValue);
+                if (layerAlpha > 0)
+                {
+                    Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
+                    context.DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
+                }
             }
         }
 
-        DrawGeometry(new SolidColorBrush(color), null, geometry);
+        if (maskFilter.Style != BlurStyle.Outer)
+        {
+            drawShape(context);
+        }
     }
 
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
@@ -293,23 +403,21 @@ public sealed partial class Canvas
     }
 
     /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
-    /// <remarks>
-    /// Dart's <c>Canvas.drawCircle(c, radius, paint)</c>. The paint's colour (or shader), style and
-    /// stroke width are honoured.
-    /// </remarks>
+    /// <remarks>Dart's <c>Canvas.drawCircle(c, radius, paint)</c>; see <see cref="DrawShape"/>.</remarks>
     public void DrawCircle(Point center, double radius, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
-        bool stroke = paint.Style == PaintingStyle.Stroke;
-        IPen? pen = stroke ? new Pen(brush, paint.StrokeWidth) : null;
-        IBrush? fill = stroke ? null : brush;
-        DebugRecordCall(new CanvasCall("drawCircle", Brush: fill, Pen: pen, Center: center, Radius: radius)
-        {
-            RecordedColor = paint.Color,
-        });
         double clampedRadius = Math.Max(0, radius);
-        AddDrawCommand(context => context.DrawEllipse(fill, pen, center, clampedRadius, clampedRadius));
+        DrawShape(
+            "drawCircle",
+            paint,
+            call => call with { Center = center, Radius = radius },
+            () => new EllipseGeometry(new Rect(
+                center.X - clampedRadius,
+                center.Y - clampedRadius,
+                clampedRadius * 2.0,
+                clampedRadius * 2.0)),
+            (context, fill, pen) => context.DrawEllipse(fill, pen, center, clampedRadius, clampedRadius));
     }
 
     // Dart parity source: dart:ui Canvas.drawArc.
@@ -354,6 +462,23 @@ public sealed partial class Canvas
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
         AddDrawCommand(context => context.DrawLine(pen, startPoint, endPoint));
+    }
+
+    /// <summary>Draws a line between the given points with the given <see cref="Paint"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawLine(p1, p2, paint)</c>: the paint's style is ignored and the line is
+    /// always stroked; see <see cref="DrawShape"/> for the mask filter and blend mode.
+    /// </remarks>
+    public void DrawLine(Point startPoint, Point endPoint, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(paint);
+        var stroke = new Paint(paint) { Style = PaintingStyle.Stroke };
+        DrawShape(
+            "drawLine",
+            stroke,
+            call => call with { Offset = startPoint, EndOffset = endPoint },
+            () => new LineGeometry(startPoint, endPoint),
+            (context, _, pen) => context.DrawLine(pen!, startPoint, endPoint));
     }
 
     // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
@@ -491,6 +616,7 @@ public sealed partial class Canvas
             return;
         }
 
+        DebugRecordCall(new CanvasCall("drawImageRect", Rect: destinationRect, SourceRect: sourceRect));
         double effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
         AddDrawCommand(context =>
         {

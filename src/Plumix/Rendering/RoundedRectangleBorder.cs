@@ -92,16 +92,16 @@ public sealed record RoundedRectangleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         if (BorderRadius.IsZero)
         {
-            context.Canvas.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRect(rect, paint);
             return;
         }
 
-        context.Canvas.DrawRRect(BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
+        context.Canvas.DrawRRect(BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -233,17 +233,17 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         BorderRadius adjustedRadius = AdjustBorderRadius(rect, textDirection);
         if (adjustedRadius == Rendering.BorderRadius.Zero)
         {
-            context.Canvas.DrawRectangle(brush, null, AdjustRect(rect));
+            context.Canvas.DrawRect(AdjustRect(rect), paint);
             return;
         }
 
-        DrawShape(context, AdjustRect(rect), adjustedRadius, brush, null, null);
+        context.Canvas.DrawRRect(adjustedRadius.ToRRect(AdjustRect(rect)), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)

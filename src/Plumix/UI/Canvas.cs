@@ -63,7 +63,9 @@ internal readonly record struct CanvasCall(
     double? Elevation = null,
     double? Dx = null,
     double? Dy = null,
-    MaskFilter? MaskFilter = null)
+    MaskFilter? MaskFilter = null,
+    BlendMode? BlendMode = null,
+    Rect? SourceRect = null)
 {
     /// <summary>
     /// The paint colour (Dart's <c>Paint.color</c>): the shadow colour, else the fill brush's, else the

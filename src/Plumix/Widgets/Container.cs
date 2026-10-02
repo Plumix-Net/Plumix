@@ -97,6 +97,8 @@ public sealed class Container : StatelessWidget
                 throw new AssertionError("padding must be non-negative.");
             }
 
+            decoration?.DebugAssertIsValid();
+
             if (decoration is null && clipBehavior != Clip.None)
             {
                 throw new AssertionError("Clipping a Container requires a decoration.");

@@ -314,6 +314,30 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     }
 
     [Fact]
+    public void ToolbarShape_PaintsItsShadowAsABlurredRRectBeneathTheShape()
+    {
+        // text_selection_toolbar.dart: `drawRRect(shadowRRect, BoxShadow(color, blurRadius: 15).toPaint())`
+        // over the body plus the arrow band, before the clipped child; the light toolbar has a shadow.
+        using var harness = CreateHarness(
+            new CupertinoTextSelectionToolbar(
+                anchorAbove: new Point(400.0, 100.0),
+                anchorBelow: new Point(400.0, 140.0),
+                children: [Child(), Child()]));
+        harness.Pump(new Size(800.0, 600.0));
+        var shape = Assert.Single(FindDescendants<RenderCupertinoTextSelectionToolbarShape>(harness.RenderView));
+
+        List<CanvasCall> calls = [.. PaintRecording.Record(shape)];
+        int shadowIndex = calls.FindIndex(call => call.Method == "drawRRect");
+        CanvasCall shadow = calls[shadowIndex];
+        var boxShadow = new Plumix.Rendering.BoxShadow(color: shape.ShadowColor, blurRadius: 15.0);
+        Assert.Equal(MaskFilter.Blur(BlurStyle.Normal, boxShadow.BlurSigma), shadow.MaskFilter);
+        Assert.Equal(shape.ShadowColor, shadow.Color);
+        Assert.Equal(shape.Size.Width, shadow.RRect!.Value.Width, 6);
+        Assert.Equal(8.0, shadow.RRect.Value.TopLeft.X);
+        Assert.Equal(0, shadowIndex);
+    }
+
+    [Fact]
     public void ToolbarShape_EnforcesAMinimumWidthThatFitsTheArrowAndCorners()
     {
         var shape = new RenderCupertinoTextSelectionToolbarShape(

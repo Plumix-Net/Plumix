@@ -8,6 +8,20 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `Paint.maskFilter` (every `BlurStyle`) and `Paint.blendMode` render through a raster backend (`PaintRasterizer`).
+- `Canvas` gains `DrawOval`/`DrawPath`/`DrawLine`/`DrawDRRect`/`DrawRSuperellipse` taking a `Paint` (dart:ui Canvas).
+- Breaking: `ShapeBorder.PaintInterior` takes a `Paint`, not an `IBrush`, as Dart's `paintInterior` does (borders).
+- Breaking: `BoxDecoration.BorderRadius` is `BorderRadiusGeometry?`; `EffectiveBorderRadius` is gone (box_decoration).
+- `BoxDecoration.BackgroundBlendMode`/`CopyWith`/`Scale`/`DebugAssertIsValid`; `Container` asserts it (box_decoration).
+- Breaking: `BoxDecoration` paints through Dart's `_BoxDecorationPainter`: mask-filter shadows, `drawCircle` circles.
+- Breaking: `BoxDecoration`/`ShapeDecoration.IsComplex` is true for any non-null shadow list, as in Dart.
+- Breaking: `ShapeDecoration` paints through Dart's `_ShapeDecorationPainter`; every shape casts its path shadows.
+- Breaking: `ShapeDecoration` asserts it has not both a color and a gradient (debug), as in shape_decoration.dart.
+- `DecorationImagePainter.Paint(context, rect, clipPath, configuration)`: Dart's clip-path overload (decoration_image).
+- Sliver debug arrows and the Cupertino toolbar shadow use Dart's mask filters (sliver, text_selection_toolbar).
+- `CupertinoMenuAnchor`: the divider's `overlay` pass and the item's `multiply`/`plus` background blend (menu_anchor).
+- DecoratedBox demo gains a shadow blur-style cycle and a `multiply` background blend toggle (both samples).
+- Flutter's box_decoration and shape_decoration tests and decoration_test's BoxDecoration cases ported.
 - Breaking: `RenderSliverPersistentHeader` and its four modes are abstract `RenderSliver`s (sliver_persistent_header).
 - Breaking: persistent headers read `MinExtent`/`MaxExtent` live (abstract); no constructor extents, no `ChildBuilder`.
 - Breaking: a persistent header's child gets plain `ParentData`; paint/hit test/transform use `RenderSliverHelpers`.

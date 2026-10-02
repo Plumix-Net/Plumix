@@ -87,10 +87,10 @@ public sealed record StadiumBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
-        context.Canvas.DrawRRect(RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0), brush, null);
+        context.Canvas.DrawRRect(RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -201,10 +201,10 @@ internal sealed record StadiumToCircleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
-        context.Canvas.DrawRRect(AdjustBorderRadius(rect).ToRRect(AdjustRect(rect)), brush, null);
+        context.Canvas.DrawRRect(AdjustBorderRadius(rect).ToRRect(AdjustRect(rect)), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -393,17 +393,17 @@ internal sealed record StadiumToRoundedRectangleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         BorderRadiusGeometry adjusted = AdjustBorderRadius(rect);
         if (adjusted.IsZero)
         {
-            context.Canvas.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRect(rect, paint);
             return;
         }
 
-        context.Canvas.DrawRRect(adjusted.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
+        context.Canvas.DrawRRect(adjusted.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)

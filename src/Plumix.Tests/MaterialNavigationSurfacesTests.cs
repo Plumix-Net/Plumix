@@ -55,7 +55,7 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.DarkGreen
-                   && box.AsBoxDecoration.BorderRadius?.Radius == 9999);
+                   && box.AsBoxDecoration.BorderRadius?.Resolve(null).Radius == 9999);
         Assert.Equal(colors.OnSurface,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Two")!.Foreground).Color);
         Assert.Equal(Colors.CadetBlue,
@@ -367,7 +367,7 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.DarkGreen
-                   && box.AsBoxDecoration.BorderRadius?.Radius == 9999);
+                   && box.AsBoxDecoration.BorderRadius?.Resolve(null).Radius == 9999);
         // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
         // material as an ink decoration rather than as a `DecoratedBox`.
         Assert.Contains(InkFeatureProbe.Decorations(harness.RenderView),
@@ -630,7 +630,7 @@ public sealed class MaterialNavigationSurfacesTests
             box => box.AsBoxDecoration.Color == Colors.DarkGreen);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.Color == Colors.DarkGreen
-                   && box.AsBoxDecoration.BorderRadius?.Radius == 9999);
+                   && box.AsBoxDecoration.BorderRadius?.Resolve(null).Radius == 9999);
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinWidth == 80);
         Assert.NotNull(FindParagraph(harness.RenderView, "rail-selected-one"));

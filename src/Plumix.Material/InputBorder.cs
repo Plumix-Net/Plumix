@@ -79,9 +79,9 @@ internal sealed record NoInputBorder : InputBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null) =>
-        context.Canvas.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRect(rect, paint);
 
     public override bool PreferPaintInterior => true;
 
@@ -140,9 +140,9 @@ public record UnderlineInputBorder : InputBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null) =>
-        context.Canvas.DrawRectangle(brush, null, rect, BorderRadius);
+        context.Canvas.DrawRRect(BorderRadius.ToRRect(rect), paint);
 
     public override bool PreferPaintInterior => true;
 
@@ -268,9 +268,9 @@ public record OutlineInputBorder : InputBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null) =>
-        context.Canvas.DrawRectangle(brush, null, rect, BorderRadius);
+        context.Canvas.DrawRRect(BorderRadius.ToRRect(rect), paint);
 
     public override bool PreferPaintInterior => true;
 
@@ -441,16 +441,16 @@ public record ShapedInputBorder : InputBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         if (Shape.PreferPaintInterior)
         {
-            Shape.PaintInterior(context, rect, brush, textDirection);
+            Shape.PaintInterior(context, rect, paint, textDirection);
             return;
         }
 
-        context.Canvas.DrawGeometry(brush, null, Shape.GetOuterPath(rect, textDirection).ToGeometry());
+        context.Canvas.DrawPath(Shape.GetOuterPath(rect, textDirection), paint);
     }
 
     public override void Paint(

@@ -36,6 +36,27 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     }
 
     [Fact]
+    public void DividerPainter_DrawsTheOverlayPassBeforeTheColorPass()
+    {
+        // _CupertinoDividerPainter: `overlayColor` with `BlendMode.overlay` (not on web), then `color`.
+        var painter = new CupertinoMenuDividerPainter(
+            new Color(0x14000000),
+            new Color(0x4DFFFFFF),
+            antiAlias: true);
+        var context = new TestRecordingPaintingContext();
+        painter.Paint(context, new Size(100.0, 1.0));
+
+        CanvasCall[] lines = [.. context.Calls.Where(call => call.Method == "drawLine")];
+        Assert.Equal(2, lines.Length);
+        Assert.Equal(BlendMode.Overlay, lines[0].BlendMode);
+        Assert.Equal(new Color(0x4DFFFFFF), lines[0].Color);
+        Assert.Equal(BlendMode.SourceOver, lines[1].BlendMode);
+        Assert.Equal(new Color(0x14000000), lines[1].Color);
+        Assert.Equal(new Point(0.0, 0.5), lines[1].Offset);
+        Assert.Equal(new Point(100.0, 0.5), lines[1].EndOffset);
+    }
+
+    [Fact]
     public void Constructors_ExposeSourceDefaultsAndValidateSwipeConfiguration()
     {
         var child = new Text("Anchor");
@@ -189,9 +210,11 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         // kPressTimeout deadline, exactly like Flutter.
         timers.Elapse(GestureConstants.PressTimeout);
         harness.Pump(ViewSize);
+        // _buildStatefulAppearance injects `BlendMode.multiply` under a light theme.
         Assert.Contains(
             harness.FindWidgets<DecoratedBox>(),
-            box => box.Decoration is BoxDecoration { Color: { } color } && color.Alpha == 26);
+            box => box.Decoration is BoxDecoration { Color: { } color, BackgroundBlendMode: BlendMode.Multiply }
+                   && color.Alpha == 26);
 
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,

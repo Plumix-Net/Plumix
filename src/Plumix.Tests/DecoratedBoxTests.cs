@@ -52,7 +52,7 @@ public sealed class DecoratedBoxTests
         Assert.Equal(Colors.CadetBlue, renderDecorated.AsBoxDecoration.Color);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
             new BorderSide(Colors.Black, 1)), renderDecorated.AsBoxDecoration.Border);
-        Assert.Equal(BorderRadius.Circular(6), renderDecorated.AsBoxDecoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(6), renderDecorated.AsBoxDecoration.BorderRadius!.Value.Resolve(null));
 
         root.Update(new DecoratedBox(
             decoration: new BoxDecoration(
@@ -67,7 +67,7 @@ public sealed class DecoratedBoxTests
         Assert.Equal(Colors.OrangeRed, updated.AsBoxDecoration.Color);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
             new BorderSide(Colors.White, 3)), updated.AsBoxDecoration.Border);
-        Assert.Equal(BorderRadius.Circular(12), updated.AsBoxDecoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(12), updated.AsBoxDecoration.BorderRadius!.Value.Resolve(null));
     }
 
     /// <summary>Dart asserts `color == null || decoration == null`: the color argument is only a

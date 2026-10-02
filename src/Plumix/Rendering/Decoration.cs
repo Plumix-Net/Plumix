@@ -48,6 +48,10 @@ public abstract record Decoration : IDiagnosticable
         ArgumentNullException.ThrowIfNull(properties);
     }
 
+    /// <summary>In debug mode, throws an <see cref="AssertionError"/> if the decoration is invalid.</summary>
+    /// <remarks>Dart's <c>debugAssertIsValid</c>; always returns true, as Dart's does.</remarks>
+    public virtual bool DebugAssertIsValid() => true;
+
     /// Returns the insets to apply when using this decoration on a box that has contents.
     public virtual EdgeInsetsGeometry Padding => EdgeInsetsGeometry.Zero;
 
@@ -711,13 +715,46 @@ public readonly record struct BorderSide
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/shape_decoration.dart
-public sealed record ShapeDecoration(
-    ShapeBorder Shape,
-    Color? Color = null,
-    Gradient? Gradient = null,
-    DecorationImage? Image = null,
-    IReadOnlyList<BoxShadow>? Shadows = null) : Decoration
+public sealed record ShapeDecoration : Decoration
 {
+    /// <summary>Creates a shape decoration.</summary>
+    /// <remarks>Dart's <c>ShapeDecoration</c> constructor, including its
+    /// <c>!(color != null &amp;&amp; gradient != null)</c> assert.</remarks>
+    public ShapeDecoration(
+        ShapeBorder Shape,
+        Color? Color = null,
+        Gradient? Gradient = null,
+        DecorationImage? Image = null,
+        IReadOnlyList<BoxShadow>? Shadows = null)
+    {
+        if (Constants.KDebugMode && Color is not null && Gradient is not null)
+        {
+            throw new AssertionError("A ShapeDecoration cannot have both a color and a gradient.");
+        }
+
+        this.Shape = Shape;
+        this.Color = Color;
+        this.Gradient = Gradient;
+        this.Image = Image;
+        this.Shadows = Shadows;
+    }
+
+    /// <summary>The shape to fill the <see cref="Color"/>, <see cref="Gradient"/>, and <see cref="Image"/>
+    /// into and to cast as the <see cref="Shadows"/>.</summary>
+    public ShapeBorder Shape { get; init; }
+
+    /// <summary>The color to fill in the background of the shape.</summary>
+    public Color? Color { get; init; }
+
+    /// <summary>A gradient to use when filling the shape.</summary>
+    public Gradient? Gradient { get; init; }
+
+    /// <summary>An image to paint inside the shape (clipped to its outline).</summary>
+    public DecorationImage? Image { get; init; }
+
+    /// <summary>A list of shadows cast by the <see cref="Shape"/>.</summary>
+    public IReadOnlyList<BoxShadow>? Shadows { get; init; }
+
     /// Creates a shape decoration configured to match a [BoxDecoration].
     public static ShapeDecoration FromBoxDecoration(BoxDecoration source)
     {
@@ -747,7 +784,7 @@ public sealed record ShapeDecoration(
 
     public override EdgeInsetsGeometry Padding => Shape.Dimensions;
 
-    public override bool IsComplex => Shadows is { Count: > 0 };
+    public override bool IsComplex => Shadows is not null;
 
     public override Plumix.UI.Path GetClipPath(Rect rect, TextDirection textDirection)
     {
@@ -865,9 +902,20 @@ public sealed record ShapeDecoration(
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/painting/shape_decoration.dart (_ShapeDecorationPainter)
 internal sealed class ShapeDecorationPainter : BoxPainter
 {
     private readonly ShapeDecoration _decoration;
+
+    private Rect? _lastRect;
+    private TextDirection? _lastTextDirection;
+    private Plumix.UI.Path _outerPath = null!;
+    private Plumix.UI.Path? _innerPath;
+    private Paint? _interiorPaint;
+    private int? _shadowCount;
+    private List<Rect> _shadowBounds = null!;
+    private List<Plumix.UI.Path> _shadowPaths = null!;
+    private List<Paint> _shadowPaints = null!;
     private DecorationImagePainter? _imagePainter;
 
     public ShapeDecorationPainter(ShapeDecoration decoration, Action? onChanged = null) : base(onChanged)
@@ -875,84 +923,174 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         _decoration = decoration;
     }
 
-    public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+    private void Precache(Rect rect, TextDirection? textDirection)
     {
-        Size size = configuration.Size ?? default;
-        var rect = new Rect(offset, size);
-        TextDirection? textDirection = configuration.TextDirection;
-
-        IBrush? fill = _decoration.Gradient?.CreateShader(rect, textDirection);
-        if (fill is null && _decoration.Color != null)
+        if (rect == _lastRect && textDirection == _lastTextDirection)
         {
-            fill = new SolidColorBrush(_decoration.Color!);
+            return;
         }
 
-        RRect? outerRRect = TryResolveRRect(_decoration.Shape, rect, textDirection);
-        if (_decoration.Shadows is { Count: > 0 } || fill is not null)
+        // We reach here in two cases:
+        //  - the very first time we paint, in which case everything except _decoration is null
+        //  - subsequent times, if the rect has changed, in which case we only need to update
+        //    the features that depend on the actual rect.
+        if (_interiorPaint is null && (_decoration.Color is not null || _decoration.Gradient is not null))
         {
-            PaintInterior(context, rect, fill ?? Brushes.Transparent, textDirection, outerRRect);
+            _interiorPaint = new Paint();
+            if (_decoration.Color is { } color)
+            {
+                _interiorPaint.Color = color;
+            }
+        }
+
+        if (_decoration.Gradient is not null)
+        {
+            _interiorPaint!.Shader = _decoration.Gradient.CreateShader(rect, textDirection);
+        }
+
+        if (_decoration.Shadows is { } shadows)
+        {
+            if (_shadowCount is null)
+            {
+                _shadowCount = shadows.Count;
+                _shadowPaints = [.. shadows.Select(static shadow => shadow.ToPaint())];
+            }
+
+            if (_decoration.Shape.PreferPaintInterior)
+            {
+                _shadowBounds = [.. shadows.Select(shadow => ShiftInflate(rect, shadow))];
+            }
+            else
+            {
+                _shadowPaths = [.. shadows.Select(shadow =>
+                    _decoration.Shape.GetOuterPath(ShiftInflate(rect, shadow), textDirection))];
+            }
+        }
+
+        if (!_decoration.Shape.PreferPaintInterior && (_interiorPaint is not null || _shadowCount is not null))
+        {
+            _outerPath = _decoration.Shape.GetOuterPath(rect, textDirection);
         }
 
         if (_decoration.Image is not null)
         {
-            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
-            RRect? innerRRect = outerRRect?.Deflate(
-                _decoration.Shape is OutlinedBorder outlined ? outlined.Side.StrokeInset : 0.0);
-            _imagePainter.Paint(context, rect, configuration, clipRadius: innerRRect?.Radii);
+            _innerPath = _decoration.Shape.GetInnerPath(rect, textDirection);
         }
 
-        _decoration.Shape.Paint(context, rect, textDirection);
+        _lastRect = rect;
+        _lastTextDirection = textDirection;
     }
 
-    private void PaintInterior(
-        PaintingContext context,
-        Rect rect,
-        IBrush brush,
-        TextDirection? textDirection,
-        RRect? outerRRect)
+    // Dart's `rect.shift(shadow.offset).inflate(shadow.spreadRadius)`.
+    internal static Rect ShiftInflate(Rect rect, BoxShadow shadow) => DartGeometry.RectFromLTRB(
+        rect.Left + shadow.Offset.X - shadow.SpreadRadius,
+        rect.Top + shadow.Offset.Y - shadow.SpreadRadius,
+        rect.Right + shadow.Offset.X + shadow.SpreadRadius,
+        rect.Bottom + shadow.Offset.Y + shadow.SpreadRadius);
+
+    private void PaintShadows(Canvas canvas, PaintingContext context, Rect rect, TextDirection? textDirection)
     {
-        if (_decoration.Shadows is { Count: > 0 } shadows && outerRRect is { } shadowRect)
+        // The DebugHandleDisabledShadowStart and DebugHandleDisabledShadowEnd methods are used in
+        // debug mode only to support BlurStyle.outer when RenderingDebug.DisableShadows is set.
+        // Without these clips, the shadows would extend to the inside of the shape, which would
+        // likely obscure important portions of the rendering and would cause unit tests of widgets
+        // that use BlurStyle.outer to significantly diverge from the original intent.
+        void DebugHandleDisabledShadowStart(BoxShadow boxShadow, Plumix.UI.Path path)
         {
-            context.Canvas.DrawRectangle(brush, null, shadowRect.Rect, shadowRect.Radii, shadows.ToAvalonia());
+            if (Constants.KDebugMode && RenderingDebug.DisableShadows && boxShadow.BlurStyle == BlurStyle.Outer)
+            {
+                canvas.Save();
+                var clipPath = new Plumix.UI.Path { FillType = PathFillType.EvenOdd };
+                clipPath.AddRect(LargestRect);
+                clipPath.AddPath(path);
+                canvas.ClipPath(clipPath);
+            }
+        }
+
+        void DebugHandleDisabledShadowEnd(BoxShadow boxShadow)
+        {
+            if (Constants.KDebugMode && RenderingDebug.DisableShadows && boxShadow.BlurStyle == BlurStyle.Outer)
+            {
+                canvas.Restore();
+            }
+        }
+
+        if (_shadowCount is not { } shadowCount)
+        {
+            return;
+        }
+
+        IReadOnlyList<BoxShadow> shadows = _decoration.Shadows!;
+        if (_decoration.Shape.PreferPaintInterior)
+        {
+            for (int index = 0; index < shadowCount; index += 1)
+            {
+                DebugHandleDisabledShadowStart(
+                    shadows[index],
+                    _decoration.Shape.GetOuterPath(_shadowBounds[index], textDirection));
+                _decoration.Shape.PaintInterior(context, _shadowBounds[index], _shadowPaints[index], textDirection);
+                DebugHandleDisabledShadowEnd(shadows[index]);
+            }
+        }
+        else
+        {
+            for (int index = 0; index < shadowCount; index += 1)
+            {
+                DebugHandleDisabledShadowStart(shadows[index], _shadowPaths[index]);
+                canvas.DrawPath(_shadowPaths[index], _shadowPaints[index]);
+                DebugHandleDisabledShadowEnd(shadows[index]);
+            }
+        }
+    }
+
+    private void PaintInterior(Canvas canvas, PaintingContext context, Rect rect, TextDirection? textDirection)
+    {
+        if (_interiorPaint is null)
+        {
             return;
         }
 
         if (_decoration.Shape.PreferPaintInterior)
         {
-            _decoration.Shape.PaintInterior(context, rect, brush, textDirection);
+            // When border is filled, the rect is reduced to avoid anti-aliasing
+            // rounding error leaking the background color around the clipped shape.
+            Rect adjustedRect = AdjustedRectOnOutlinedBorder(rect);
+            _decoration.Shape.PaintInterior(context, adjustedRect, _interiorPaint, textDirection);
+        }
+        else
+        {
+            canvas.DrawPath(_outerPath, _interiorPaint);
+        }
+    }
+
+    private Rect AdjustedRectOnOutlinedBorder(Rect rect)
+    {
+        if (_decoration.Shape is OutlinedBorder outlined && _decoration.Color is not null)
+        {
+            BorderSide side = outlined.Side;
+            if (side.Color.Alpha == 255 && side.Style == BorderStyle.Solid)
+            {
+                double inset = side.StrokeInset / 2.0;
+                return DartGeometry.RectFromLTRB(
+                    rect.Left + inset,
+                    rect.Top + inset,
+                    rect.Right - inset,
+                    rect.Bottom - inset);
+            }
+        }
+
+        return rect;
+    }
+
+    private void PaintImage(PaintingContext context, ImageConfiguration configuration)
+    {
+        if (_decoration.Image is null)
+        {
             return;
         }
 
-        context.Canvas.DrawPath(_decoration.Shape.GetOuterPath(rect, textDirection), brush, null);
-    }
-
-    /// Resolves the rounded rectangle that matches the shape's outer path, when there is one.
-    internal static RRect? TryResolveRRect(ShapeBorder shape, Rect rect, TextDirection? textDirection)
-    {
-        switch (shape)
-        {
-            case RoundedRectangleBorder rounded:
-                return rounded.BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
-            case RoundedSuperellipseBorder rounded:
-                return rounded.BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
-            case StadiumBorder:
-                return RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0);
-            case CircleBorder { Eccentricity: 0.0 }:
-            {
-                double radius = BoxBorder.ShortestSide(rect) / 2.0;
-                var circleRect = new Rect(
-                    rect.Center.X - radius,
-                    rect.Center.Y - radius,
-                    radius * 2.0,
-                    radius * 2.0);
-                return RRect.FromRectAndRadius(circleRect, radius);
-            }
-
-            case BoxBorder:
-                return RRect.FromRectAndCorners(rect, BorderRadius.Zero);
-            default:
-                return null;
-        }
+        _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
+        _imagePainter.Paint(context, _lastRect!.Value, _innerPath, configuration);
     }
 
     public override void Dispose()
@@ -961,52 +1099,137 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         _imagePainter = null;
     }
 
+    public override void Paint(PaintingContext context, Point offset, ImageConfiguration configuration)
+    {
+        if (Constants.KDebugMode && configuration.Size is null)
+        {
+            throw new AssertionError("A ShapeDecoration painter needs an ImageConfiguration with a size.");
+        }
+
+        var rect = new Rect(offset, configuration.Size ?? default);
+        TextDirection? textDirection = configuration.TextDirection;
+        Canvas canvas = context.Canvas;
+        Precache(rect, textDirection);
+        PaintShadows(canvas, context, rect, textDirection);
+        PaintInterior(canvas, context, rect, textDirection);
+        PaintImage(context, configuration);
+        _decoration.Shape.Paint(context, rect, textDirection);
+    }
+
+    // Dart's `Rect.largest`.
+    internal static readonly Rect LargestRect = DartGeometry.RectFromLTRB(-1.0e9, -1.0e9, 1.0e9, 1.0e9);
+
     private void HandleImageChanged()
     {
         OnChanged?.Invoke();
     }
 }
 
-public sealed record BoxDecoration(
-    Color? Color = null,
-    Gradient? Gradient = null,
-    BoxBorder? Border = null,
-    BorderRadius? BorderRadius = null,
-    IReadOnlyList<BoxShadow>? BoxShadows = null,
-    DecorationImage? Image = null,
-    BoxShape Shape = BoxShape.Rectangle) : Decoration
+// Dart parity source: flutter/packages/flutter/lib/src/painting/box_decoration.dart
+public sealed record BoxDecoration : Decoration
 {
-    public BorderRadius EffectiveBorderRadius => BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
+    /// <summary>Creates a box decoration.</summary>
+    /// <remarks>
+    /// Dart's <c>BoxDecoration</c> constructor; the parameter order keeps Plumix's historical positional
+    /// order, with <paramref name="BackgroundBlendMode"/> appended. The <c>backgroundBlendMode</c> assert
+    /// runs here, as Dart's constructor initializer does.
+    /// </remarks>
+    public BoxDecoration(
+        Color? Color = null,
+        Gradient? Gradient = null,
+        BoxBorder? Border = null,
+        BorderRadiusGeometry? BorderRadius = null,
+        IReadOnlyList<BoxShadow>? BoxShadows = null,
+        DecorationImage? Image = null,
+        BoxShape Shape = BoxShape.Rectangle,
+        BlendMode? BackgroundBlendMode = null)
+    {
+        if (Constants.KDebugMode && BackgroundBlendMode is not null && Color is null && Gradient is null)
+        {
+            throw new AssertionError(
+                "backgroundBlendMode applies to BoxDecoration's background color or "
+                + "gradient, but no color or gradient was provided.");
+        }
+
+        this.Color = Color;
+        this.Gradient = Gradient;
+        this.Border = Border;
+        this.BorderRadius = BorderRadius;
+        this.BoxShadows = BoxShadows;
+        this.Image = Image;
+        this.Shape = Shape;
+        this.BackgroundBlendMode = BackgroundBlendMode;
+    }
+
+    /// <summary>Creates a copy of this object but with the given fields replaced with the new values.</summary>
+    public BoxDecoration CopyWith(
+        Color? color = null,
+        DecorationImage? image = null,
+        BoxBorder? border = null,
+        BorderRadiusGeometry? borderRadius = null,
+        IReadOnlyList<BoxShadow>? boxShadow = null,
+        Gradient? gradient = null,
+        BlendMode? backgroundBlendMode = null,
+        BoxShape? shape = null)
+    {
+        return new BoxDecoration(
+            Color: color ?? Color,
+            Image: image ?? Image,
+            Border: border ?? Border,
+            BorderRadius: borderRadius ?? BorderRadius,
+            BoxShadows: boxShadow ?? BoxShadows,
+            Gradient: gradient ?? Gradient,
+            BackgroundBlendMode: backgroundBlendMode ?? BackgroundBlendMode,
+            Shape: shape ?? Shape);
+    }
+
+    public override bool DebugAssertIsValid()
+    {
+        if (Constants.KDebugMode && Shape == BoxShape.Circle && BorderRadius is not null)
+        {
+            // Can't have a border radius if you're a circle.
+            throw new AssertionError(CircleBorderRadiusMessage);
+        }
+
+        return base.DebugAssertIsValid();
+    }
+
+    internal const string CircleBorderRadiusMessage =
+        "A circle cannot have a border radius. Remove either the shape or the borderRadius argument.";
+
+    /// <summary>The color to fill in the background of the box.</summary>
+    public Color? Color { get; init; }
+
+    /// <summary>An image to paint above the background <see cref="Color"/> or <see cref="Gradient"/>.</summary>
+    public DecorationImage? Image { get; init; }
+
+    /// <summary>A border to draw above the background <see cref="Color"/>, <see cref="Gradient"/>, or
+    /// <see cref="Image"/>.</summary>
+    public BoxBorder? Border { get; init; }
+
+    /// <summary>If non-null, the corners of this box are rounded by this radius.</summary>
+    /// <remarks>Applies only to boxes with rectangular shapes; ignored if <see cref="Shape"/> is not
+    /// <see cref="BoxShape.Rectangle"/>.</remarks>
+    public BorderRadiusGeometry? BorderRadius { get; init; }
+
+    /// <summary>A list of shadows cast by this box behind the box (Dart's <c>boxShadow</c>).</summary>
+    public IReadOnlyList<BoxShadow>? BoxShadows { get; init; }
+
+    /// <summary>A gradient to use when filling the box.</summary>
+    public Gradient? Gradient { get; init; }
+
+    /// <summary>The blend mode applied to the <see cref="Color"/> or <see cref="Gradient"/> background of
+    /// the box.</summary>
+    /// <remarks>If no <see cref="BackgroundBlendMode"/> is provided then the default painting blend mode
+    /// is used.</remarks>
+    public BlendMode? BackgroundBlendMode { get; init; }
+
+    /// <summary>The shape to fill the background <see cref="Color"/>, <see cref="Gradient"/>, and
+    /// <see cref="Image"/> into and to cast as the <see cref="BoxShadows"/>.</summary>
+    public BoxShape Shape { get; init; }
 
     public override EdgeInsetsGeometry Padding => Border?.Dimensions ?? EdgeInsetsGeometry.Zero;
 
-    public override bool IsComplex => BoxShadows is { Count: > 0 };
-
-    public override bool HitTest(Size size, Point position, TextDirection? textDirection = null)
-    {
-        var rect = new Rect(new Point(0, 0), size);
-        switch (Shape)
-        {
-            case BoxShape.Rectangle:
-                if (BorderRadius is { } radius)
-                {
-                    var path = new Plumix.UI.Path();
-                    path.AddRRect(radius.ToRRect(rect));
-                    return path.Contains(position);
-                }
-
-                return true;
-            case BoxShape.Circle:
-                double deltaX = position.X - (size.Width / 2.0);
-                double deltaY = position.Y - (size.Height / 2.0);
-                double distance = Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
-                return distance <= Math.Min(size.Width, size.Height) / 2.0;
-            default:
-                return true;
-        }
-    }
-
-    /// <summary>Returns the path this decoration clips to: its circle, rounded rect or rect.</summary>
     public override Plumix.UI.Path GetClipPath(Rect rect, TextDirection textDirection)
     {
         var path = new Plumix.UI.Path();
@@ -1014,13 +1237,13 @@ public sealed record BoxDecoration(
         {
             case BoxShape.Circle:
                 Point center = rect.Center;
-                double radius = Math.Min(rect.Width, rect.Height) / 2.0;
-                path.AddOval(new Rect(center.X - radius, center.Y - radius, radius * 2.0, radius * 2.0));
+                double radius = DartGeometry.ShortestSide(rect) / 2.0;
+                path.AddOval(DartGeometry.RectFromCircle(center, radius));
                 return path;
             default:
                 if (BorderRadius is { } borderRadius)
                 {
-                    path.AddRRect(borderRadius.ToRRect(rect));
+                    path.AddRRect(borderRadius.Resolve(textDirection).ToRRect(rect));
                     return path;
                 }
 
@@ -1029,87 +1252,108 @@ public sealed record BoxDecoration(
         }
     }
 
-    public override BoxPainter CreateBoxPainter(Action? onChanged = null)
+    /// <summary>Returns a new box decoration that is scaled by the given factor.</summary>
+    /// <remarks>Dart's <c>scale</c>; like Dart's, the result has no <see cref="BackgroundBlendMode"/>.</remarks>
+    public BoxDecoration Scale(double factor)
     {
-        return new BoxDecorationPainter(this, onChanged);
+        return new BoxDecoration(
+            Color: LerpColor(null, Color, factor),
+            Image: DecorationImage.Lerp(null, Image, factor),
+            Border: BoxBorder.Lerp(null, Border, factor),
+            BorderRadius: BorderRadiusGeometry.Lerp(null, BorderRadius, factor),
+            BoxShadows: BoxShadow.LerpList(null, BoxShadows, factor),
+            Gradient: Gradient?.Scale(factor),
+            Shape: Shape);
     }
 
-    public override Decoration? LerpFrom(Decoration? a, double t)
-    {
-        return a is null or BoxDecoration
-            ? Lerp(a as BoxDecoration, this, t)
-            : base.LerpFrom(a, t);
-    }
+    public override bool IsComplex => BoxShadows is not null;
 
-    public override Decoration? LerpTo(Decoration? b, double t)
+    public override Decoration? LerpFrom(Decoration? a, double t) => a switch
     {
-        return b is null or BoxDecoration
-            ? Lerp(this, b as BoxDecoration, t)
-            : base.LerpTo(b, t);
-    }
+        null => Scale(t),
+        BoxDecoration box => Lerp(box, this, t),
+        _ => base.LerpFrom(a, t) as BoxDecoration,
+    };
 
+    public override Decoration? LerpTo(Decoration? b, double t) => b switch
+    {
+        null => Scale(1.0 - t),
+        BoxDecoration box => Lerp(this, box, t),
+        _ => base.LerpTo(b, t) as BoxDecoration,
+    };
+
+    /// <summary>Linearly interpolate between two box decorations.</summary>
+    /// <remarks>Dart's <c>BoxDecoration.lerp</c>; like Dart's, the result has no
+    /// <see cref="BackgroundBlendMode"/>.</remarks>
     public static BoxDecoration? Lerp(BoxDecoration? a, BoxDecoration? b, double t)
     {
-        if (ReferenceEquals(a, b) || Equals(a, b)) return a;
-        if (a is null) return b?.Scale(t);
-        if (b is null) return a.Scale(1 - t);
-        if (t == 0) return a;
-        if (t == 1) return b;
+        if (ReferenceEquals(a, b))
+        {
+            return a;
+        }
+
+        if (a is null)
+        {
+            return b!.Scale(t);
+        }
+
+        if (b is null)
+        {
+            return a.Scale(1.0 - t);
+        }
+
+        if (t == 0.0)
+        {
+            return a;
+        }
+
+        if (t == 1.0)
+        {
+            return b;
+        }
 
         return new BoxDecoration(
             Color: LerpColor(a.Color, b.Color, t),
-            Gradient: Plumix.Rendering.Gradient.Lerp(a.Gradient, b.Gradient, t),
-            Border: BoxBorder.Lerp(a.Border, b.Border, t),
-            BorderRadius: LerpBorderRadius(a.BorderRadius, b.BorderRadius, t),
-            BoxShadows: BoxShadow.LerpList(a.BoxShadows, b.BoxShadows, t),
             Image: DecorationImage.Lerp(a.Image, b.Image, t),
+            Border: BoxBorder.Lerp(a.Border, b.Border, t),
+            BorderRadius: BorderRadiusGeometry.Lerp(a.BorderRadius, b.BorderRadius, t),
+            BoxShadows: BoxShadow.LerpList(a.BoxShadows, b.BoxShadows, t),
+            Gradient: Plumix.Rendering.Gradient.Lerp(a.Gradient, b.Gradient, t),
             Shape: t < 0.5 ? a.Shape : b.Shape);
-    }
-
-    private BoxDecoration Scale(double factor)
-    {
-        return this with
-        {
-            Color = LerpColor(null, Color, factor),
-            Gradient = Gradient?.Scale(factor),
-            Border = (BoxBorder?)Border?.Scale(factor),
-            BorderRadius = Plumix.Rendering.BorderRadius.Lerp(null, BorderRadius, factor),
-            BoxShadows = BoxShadow.LerpList(null, BoxShadows, factor),
-            Image = DecorationImage.Lerp(null, Image, factor),
-        };
     }
 
     public bool Equals(BoxDecoration? other)
     {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return other is not null
-               && Nullable.Equals(Color, other.Color)
-               && Equals(Gradient, other.Gradient)
-               && Equals(Border, other.Border)
-               && Nullable.Equals(BorderRadius, other.BorderRadius)
-               && ShadowList.Equals(BoxShadows, other.BoxShadows)
-               && Equals(Image, other.Image)
-               && Shape == other.Shape;
+               && Nullable.Equals(other.Color, Color)
+               && Equals(other.Image, Image)
+               && Equals(other.Border, Border)
+               && Nullable.Equals(other.BorderRadius, BorderRadius)
+               && ShadowList.Equals(other.BoxShadows, BoxShadows)
+               && Equals(other.Gradient, Gradient)
+               && other.BackgroundBlendMode == BackgroundBlendMode
+               && other.Shape == Shape;
     }
 
     public override int GetHashCode()
     {
         return HashCode.Combine(
             Color,
-            Gradient,
+            Image,
             Border,
             BorderRadius,
-            ShadowList.GetHashCode(BoxShadows),
-            Image,
+            BoxShadows is null ? (int?)null : ShadowList.GetHashCode(BoxShadows),
+            Gradient,
+            BackgroundBlendMode,
             Shape);
     }
 
-    internal static Color? LerpColor(Color? a, Color? b, double t) => Color.Lerp(a, b, t);
-
-
-    private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
-    {
-        return Plumix.Rendering.BorderRadius.Lerp(a, b, t);
-    }
+    internal static Color? LerpColor(Color? a, Color? b, double t) => Plumix.UI.Color.Lerp(a, b, t);
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -1128,7 +1372,7 @@ public sealed record BoxDecoration(
             "border",
             Border,
             defaultValue: DiagnosticsDefaults.NullValue));
-        properties.Add(new DiagnosticsProperty<BorderRadius?>(
+        properties.Add(new DiagnosticsProperty<BorderRadiusGeometry?>(
             "borderRadius",
             BorderRadius,
             defaultValue: DiagnosticsDefaults.NullValue));
@@ -1143,11 +1387,54 @@ public sealed record BoxDecoration(
             defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new EnumProperty<BoxShape>("shape", Shape, defaultValue: BoxShape.Rectangle));
     }
+
+    public override bool HitTest(Size size, Point position, TextDirection? textDirection = null)
+    {
+        var bounds = new Rect(size);
+        if (Constants.KDebugMode && !bounds.Contains(position))
+        {
+            throw new AssertionError($"The hit-test position {position} is outside the box {size}.");
+        }
+
+        switch (Shape)
+        {
+            case BoxShape.Rectangle:
+                if (BorderRadius is { } borderRadius)
+                {
+                    return borderRadius.Resolve(textDirection).ToRRect(bounds).Contains(position);
+                }
+
+                return true;
+            case BoxShape.Circle:
+                // Circles are inscribed into our smallest dimension.
+                Point center = bounds.Center;
+                double deltaX = position.X - center.X;
+                double deltaY = position.Y - center.Y;
+                double distance = Math.Sqrt((deltaX * deltaX) + (deltaY * deltaY));
+                return distance <= Math.Min(size.Width, size.Height) / 2.0;
+            default:
+                return true;
+        }
+    }
+
+    public override BoxPainter CreateBoxPainter(Action? onChanged = null)
+    {
+        if (Constants.KDebugMode && onChanged is null && Image is not null)
+        {
+            throw new AssertionError("A BoxDecoration with an image needs an onChanged callback.");
+        }
+
+        return new BoxDecorationPainter(this, onChanged);
+    }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/painting/box_decoration.dart (_BoxDecorationPainter)
+/// <summary>An object that paints a <see cref="BoxDecoration"/> into a canvas.</summary>
 internal sealed class BoxDecorationPainter : BoxPainter
 {
     private readonly BoxDecoration _decoration;
+    private Paint? _cachedBackgroundPaint;
+    private Rect? _rectForCachedBackgroundPaint;
     private DecorationImagePainter? _imagePainter;
 
     public BoxDecorationPainter(BoxDecoration decoration, Action? onChanged = null) : base(onChanged)
@@ -1155,72 +1442,180 @@ internal sealed class BoxDecorationPainter : BoxPainter
         _decoration = decoration;
     }
 
-    public override void Paint(
-        PaintingContext context,
-        Point offset,
-        ImageConfiguration configuration)
+    private Paint GetBackgroundPaint(Rect rect, TextDirection? textDirection)
     {
-        Size size = configuration.Size ?? default;
-        var rect = new Rect(offset, size);
-        BorderRadius borderRadius = _decoration.EffectiveBorderRadius;
-        BoxShadows boxShadows = _decoration.BoxShadows.ToAvalonia();
-        IBrush? fill = _decoration.Gradient?.CreateShader(rect, configuration.TextDirection);
-        if (fill is null && _decoration.Color != null)
+        if (Constants.KDebugMode && _decoration.Gradient is null && _rectForCachedBackgroundPaint is not null)
         {
-            fill = new SolidColorBrush(_decoration.Color!);
+            throw new AssertionError();
         }
 
-        if (_decoration.Shape == BoxShape.Circle)
+        if (_cachedBackgroundPaint is null
+            || (_decoration.Gradient is not null && _rectForCachedBackgroundPaint != rect))
         {
-            if (fill != null || boxShadows.Count > 0)
+            var paint = new Paint();
+            if (_decoration.BackgroundBlendMode is { } blendMode)
             {
-                double side = Math.Min(rect.Width, rect.Height);
-                var circleRect = new Rect(
-                    rect.Center.X - (side / 2.0),
-                    rect.Center.Y - (side / 2.0),
-                    side,
-                    side);
-                context.Canvas.DrawRectangle(
-                    fill ?? Brushes.Transparent,
-                    null,
-                    circleRect,
-                    side / 2.0,
-                    side / 2.0,
-                    boxShadows);
+                paint.BlendMode = blendMode;
+            }
+
+            if (_decoration.Color is { } color)
+            {
+                paint.Color = color;
+            }
+
+            if (_decoration.Gradient is { } gradient)
+            {
+                paint.Shader = gradient.CreateShader(rect, textDirection);
+                _rectForCachedBackgroundPaint = rect;
+            }
+
+            _cachedBackgroundPaint = paint;
+        }
+
+        return _cachedBackgroundPaint;
+    }
+
+    private void PaintBox(Canvas canvas, Rect rect, Paint paint, TextDirection? textDirection)
+    {
+        switch (_decoration.Shape)
+        {
+            case BoxShape.Circle:
+                if (Constants.KDebugMode && _decoration.BorderRadius is not null)
+                {
+                    throw new AssertionError(BoxDecoration.CircleBorderRadiusMessage);
+                }
+
+                Point center = rect.Center;
+                double radius = DartGeometry.ShortestSide(rect) / 2.0;
+                canvas.DrawCircle(center, radius, paint);
+                break;
+            case BoxShape.Rectangle:
+                if (_decoration.BorderRadius is not { } borderRadius || borderRadius == BorderRadius.Zero)
+                {
+                    canvas.DrawRect(rect, paint);
+                }
+                else
+                {
+                    canvas.DrawRRect(borderRadius.Resolve(textDirection).ToRRect(rect), paint);
+                }
+
+                break;
+        }
+    }
+
+    private void PaintShadows(Canvas canvas, Rect rect, TextDirection? textDirection)
+    {
+        if (_decoration.BoxShadows is not { } boxShadows)
+        {
+            return;
+        }
+
+        foreach (BoxShadow boxShadow in boxShadows)
+        {
+            Paint paint = boxShadow.ToPaint();
+            Rect bounds = ShapeDecorationPainter.ShiftInflate(rect, boxShadow);
+            bool clipOuter = Constants.KDebugMode
+                             && RenderingDebug.DisableShadows
+                             && boxShadow.BlurStyle == BlurStyle.Outer;
+            if (clipOuter)
+            {
+                canvas.Save();
+                canvas.ClipRect(bounds);
+            }
+
+            PaintBox(canvas, bounds, paint, textDirection);
+            if (clipOuter)
+            {
+                canvas.Restore();
             }
         }
-        else if (borderRadius == BorderRadius.Zero && (fill != null || boxShadows.Count > 0))
+    }
+
+    private void PaintBackgroundColor(Canvas canvas, Rect rect, TextDirection? textDirection)
+    {
+        if (_decoration.Color is not null || _decoration.Gradient is not null)
         {
-            // Dart's `_paintBox`: a rectangle without a border radius is a `drawRect`.
-            context.Canvas.DrawRectangle(fill ?? Brushes.Transparent, null, rect, boxShadows: boxShadows);
+            // When border is filled, the rect is reduced to avoid anti-aliasing
+            // rounding error leaking the background color around the clipped shape.
+            Rect adjustedRect = AdjustedRectOnOutlinedBorder(rect, textDirection);
+            PaintBox(canvas, adjustedRect, GetBackgroundPaint(rect, textDirection), textDirection);
         }
-        else if (fill != null || boxShadows.Count > 0)
+    }
+
+    private static double CalculateAdjustedSide(BorderSide side)
+    {
+        if (side.Color.Alpha == 255 && side.Style == BorderStyle.Solid)
         {
-            context.Canvas.DrawRectangle(
-                fill ?? Brushes.Transparent,
-                null,
-                rect,
-                borderRadius,
-                boxShadows);
+            return side.StrokeInset;
         }
 
-        if (_decoration.Image is not null)
+        return 0;
+    }
+
+    private Rect AdjustedRectOnOutlinedBorder(Rect rect, TextDirection? textDirection)
+    {
+        switch (_decoration.Border)
         {
-            _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
-            _imagePainter.Paint(
-                context,
-                rect,
-                configuration,
-                clipRadius: _decoration.BorderRadius,
-                shape: _decoration.Shape);
+            case null:
+                return rect;
+            case Border border:
+                return Deflate(
+                    rect,
+                    CalculateAdjustedSide(border.Left) / 2.0,
+                    CalculateAdjustedSide(border.Top) / 2.0,
+                    CalculateAdjustedSide(border.Right) / 2.0,
+                    CalculateAdjustedSide(border.Bottom) / 2.0);
+            case BorderDirectional directional when textDirection is not null:
+                BorderSide leftSide = textDirection == TextDirection.Rtl ? directional.End : directional.Start;
+                BorderSide rightSide = textDirection == TextDirection.Rtl ? directional.Start : directional.End;
+                return Deflate(
+                    rect,
+                    CalculateAdjustedSide(leftSide) / 2.0,
+                    CalculateAdjustedSide(directional.Top) / 2.0,
+                    CalculateAdjustedSide(rightSide) / 2.0,
+                    CalculateAdjustedSide(directional.Bottom) / 2.0);
+            default:
+                return rect;
+        }
+    }
+
+    private static Rect Deflate(Rect rect, double left, double top, double right, double bottom) =>
+        DartGeometry.RectFromLTRB(rect.Left + left, rect.Top + top, rect.Right - right, rect.Bottom - bottom);
+
+    private void PaintBackgroundImage(PaintingContext context, Rect rect, ImageConfiguration configuration)
+    {
+        if (_decoration.Image is null)
+        {
+            return;
         }
 
-        _decoration.Border?.Paint(
-            context,
-            rect,
-            configuration.TextDirection,
-            _decoration.Shape,
-            _decoration.BorderRadius);
+        _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
+        Plumix.UI.Path? clipPath = null;
+        switch (_decoration.Shape)
+        {
+            case BoxShape.Circle:
+                if (Constants.KDebugMode && _decoration.BorderRadius is not null)
+                {
+                    throw new AssertionError(BoxDecoration.CircleBorderRadiusMessage);
+                }
+
+                Point center = rect.Center;
+                double radius = DartGeometry.ShortestSide(rect) / 2.0;
+                Rect square = DartGeometry.RectFromCircle(center, radius);
+                clipPath = new Plumix.UI.Path();
+                clipPath.AddOval(square);
+                break;
+            case BoxShape.Rectangle:
+                if (_decoration.BorderRadius is { } borderRadius)
+                {
+                    clipPath = new Plumix.UI.Path();
+                    clipPath.AddRRect(borderRadius.Resolve(configuration.TextDirection).ToRRect(rect));
+                }
+
+                break;
+        }
+
+        _imagePainter.Paint(context, rect, clipPath, configuration);
     }
 
     public override void Dispose()
@@ -1228,6 +1623,33 @@ internal sealed class BoxDecorationPainter : BoxPainter
         _imagePainter?.Dispose();
         _imagePainter = null;
     }
+
+    /// <summary>Paint the box decoration into the given location on the given canvas.</summary>
+    public override void Paint(
+        PaintingContext context,
+        Point offset,
+        ImageConfiguration configuration)
+    {
+        if (Constants.KDebugMode && configuration.Size is null)
+        {
+            throw new AssertionError("A BoxDecoration painter needs an ImageConfiguration with a size.");
+        }
+
+        var rect = new Rect(offset, configuration.Size ?? default);
+        TextDirection? textDirection = configuration.TextDirection;
+        Canvas canvas = context.Canvas;
+        PaintShadows(canvas, rect, textDirection);
+        PaintBackgroundColor(canvas, rect, textDirection);
+        PaintBackgroundImage(context, rect, configuration);
+        _decoration.Border?.Paint(
+            context,
+            rect,
+            configuration.TextDirection,
+            _decoration.Shape,
+            _decoration.BorderRadius?.Resolve(textDirection));
+    }
+
+    public override string ToString() => $"BoxPainter for {_decoration}";
 
     private void HandleImageChanged()
     {

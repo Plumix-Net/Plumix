@@ -96,16 +96,16 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         if (BorderRadius.IsZero)
         {
-            context.Canvas.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRect(rect, paint);
             return;
         }
 
-        context.Canvas.DrawRSuperellipse(ResolveRSuperellipse(rect, textDirection), brush, null);
+        context.Canvas.DrawRSuperellipse(ResolveRSuperellipse(rect, textDirection), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -235,10 +235,10 @@ internal sealed record RoundedSuperellipseToCircleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
-        Fallback.PaintInterior(context, rect, brush, textDirection);
+        Fallback.PaintInterior(context, rect, paint, textDirection);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)

@@ -144,10 +144,10 @@ public abstract record BoxBorder : ShapeBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
-        context.Canvas.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRect(rect, paint);
     }
 
     public override bool PreferPaintInterior => true;

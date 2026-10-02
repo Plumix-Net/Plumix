@@ -702,7 +702,7 @@ public sealed class TransitionsTests : IDisposable
         var midpoint = Assert.IsType<BoxDecoration>(tween.Transform(0.5));
         Assert.Equal(new Color(0xFF506070), midpoint.Color);
         Assert.Equal(4, ((Plumix.Rendering.Border)midpoint.Border!).Top.Width);
-        Assert.Equal(12, midpoint.BorderRadius!.Value.Radius);
+        Assert.Equal(12, midpoint.BorderRadius!.Value.Resolve(null).Radius);
 
         tween.Begin = null;
         var scaled = Assert.IsType<BoxDecoration>(tween.Transform(0.5));

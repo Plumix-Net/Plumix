@@ -484,27 +484,25 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBo
         Plumix.UI.RRect rrect = ShapeRRect(Child);
         Plumix.UI.Path clipPath = ClipPath(Child, rrect);
 
+        // If configured, paint the shadow beneath the shape.
         if (_shadowColor is { } shadowColor)
         {
             var boxShadow = new Plumix.Rendering.BoxShadow(color: shadowColor, blurRadius: 15.0);
-            Point shadowOrigin = offset + (Vector)childParentData.offset;
-            context.Canvas.DrawRectangle(
-                new SolidColorBrush(Colors.Transparent),
-                null,
-                new Rect(
-                    shadowOrigin.X + rrect.Left,
-                    shadowOrigin.Y + rrect.Top,
-                    rrect.Width,
-                    rrect.Height + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height),
-                BorderRadius.All(CupertinoTextSelectionToolbar.ToolbarBorderRadius),
-                new BoxShadows(boxShadow.ToAvalonia()));
+            Plumix.UI.RRect shadowRRect = Plumix.UI.RRect.FromLTRBR(
+                    rrect.Left,
+                    rrect.Top,
+                    rrect.Right,
+                    rrect.Bottom + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
+                    CupertinoTextSelectionToolbar.ToolbarBorderRadius)
+                .Shift(offset + (Vector)childParentData.offset + (Vector)boxShadow.Offset);
+            context.Canvas.DrawRRect(shadowRRect, boxShadow.ToPaint());
         }
 
         Point childOffset = offset + (Vector)childParentData.offset;
         _clipPathLayer.Layer = context.PushClipPath(
             NeedsCompositing,
             childOffset,
-            clipPath.GetBounds(),
+            new Rect(Child.Size),
             clipPath,
             (childContext, clippedOffset) => childContext.PaintChild(Child, clippedOffset),
             oldLayer: _clipPathLayer.Layer);

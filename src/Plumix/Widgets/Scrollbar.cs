@@ -335,7 +335,8 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
         (Point start, Point end) = TrackBorderLine(value);
         context.Canvas.DrawLine(pen, start, end);
 
-        var thumbBrush = new SolidColorBrush(ApplyOpacity(Color, opacity));
+        Color thumbColor = ApplyOpacity(Color, opacity);
+        var thumbBrush = new SolidColorBrush(thumbColor);
         if (Radius is { } radius)
         {
             context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect, radius.X, radius.Y);
@@ -348,7 +349,7 @@ public sealed class ScrollbarPainter : CustomPainter, IListenable
         {
             if (Shape.PreferPaintInterior)
             {
-                Shape.PaintInterior(context, value.ThumbRect, thumbBrush);
+                Shape.PaintInterior(context, value.ThumbRect, new Plumix.UI.Paint { Color = thumbColor });
             }
             else
             {

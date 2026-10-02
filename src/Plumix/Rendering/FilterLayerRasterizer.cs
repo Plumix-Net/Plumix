@@ -279,7 +279,7 @@ internal static class FilterLayerRasterizer
         return bitmap;
     }
 
-    private static BitmapBlendingMode ToBitmapBlendingMode(BlendMode blendMode)
+    internal static BitmapBlendingMode ToBitmapBlendingMode(BlendMode blendMode)
     {
         return blendMode switch
         {

@@ -72,7 +72,7 @@ public abstract record ShapeBorder
     public virtual void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         throw new InvalidOperationException(
@@ -221,10 +221,10 @@ public sealed record CompoundBorder : ShapeBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
-        Borders[0].PaintInterior(context, rect, brush, textDirection);
+        Borders[0].PaintInterior(context, rect, paint, textDirection);
     }
 
     public override bool PreferPaintInterior => Borders.All(static border => border.PreferPaintInterior);

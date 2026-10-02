@@ -21,6 +21,8 @@ internal sealed class DecoratedBoxDemoPageState : State
     private double _radius = 10;
     private double _borderWidth = 2;
     private bool _accentFill = true;
+    private BlurStyle _blurStyle = BlurStyle.Normal;
+    private bool _multiply;
 
     public override Widget Build(BuildContext context)
     {
@@ -34,7 +36,7 @@ internal sealed class DecoratedBoxDemoPageState : State
             [
                 new Text("DecoratedBox + Border + Radius", fontSize: 20, color: Colors.Black),
                 new Text(
-                    "Adjust border width and corner radius; toggle fill theme.",
+                    "Adjust border width and corner radius; toggle fill theme, shadow blur style and blend mode.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -51,10 +53,22 @@ internal sealed class DecoratedBoxDemoPageState : State
                     children:
                     [
                         BuildButton(_accentFill ? "Fill: accent" : "Fill: neutral", ToggleFill, width: 128, colorHex: "#FFF3E8D8"),
+                        BuildButton(
+                            $"Shadow: {BlurStyleName(_blurStyle)}",
+                            CycleBlurStyle,
+                            width: 128,
+                            colorHex: "#FFE6E0F5"),
+                        BuildButton(
+                            _multiply ? "Blend: multiply" : "Blend: none",
+                            ToggleBlend,
+                            width: 128,
+                            colorHex: "#FFF5E0E6"),
                         BuildButton("Reset", Reset, width: 88, colorHex: "#FFE8EDF9"),
                     ]),
                 new Text(
-                    $"radius={_radius:0}, border={_borderWidth:0}, fill={(_accentFill ? "accent" : "neutral")}",
+                    $"radius={_radius:0}, border={_borderWidth:0}, "
+                    + $"fill={(_accentFill ? "accent" : "neutral")}, shadow={BlurStyleName(_blurStyle)}, "
+                    + $"blend={(_multiply ? "multiply" : "none")}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
                 new Container(
@@ -71,7 +85,17 @@ internal sealed class DecoratedBoxDemoPageState : State
                                     Color: fillColor,
                                     Border: Plumix.Rendering.Border.FromBorderSide(
                                         new BorderSide(borderColor, _borderWidth)),
-                                    BorderRadius: BorderRadius.Circular(_radius)),
+                                    BorderRadius: BorderRadius.Circular(_radius),
+                                    BoxShadows:
+                                    [
+                                        new Plumix.Rendering.BoxShadow(
+                                            color: new Color(0x99000000),
+                                            offset: new Point(0, 4),
+                                            blurRadius: 12,
+                                            spreadRadius: 1,
+                                            blurStyle: _blurStyle),
+                                    ],
+                                    BackgroundBlendMode: _multiply ? BlendMode.Multiply : null),
                                 child: new Center(
                                     child: new Text("Decorated", fontSize: 14, color: new Color(0xFF14213D))))))),
             ]);
@@ -105,6 +129,24 @@ internal sealed class DecoratedBoxDemoPageState : State
         SetState(() => _accentFill = !_accentFill);
     }
 
+    private void CycleBlurStyle()
+    {
+        SetState(() => _blurStyle = (BlurStyle)(((int)_blurStyle + 1) % Enum.GetValues<BlurStyle>().Length));
+    }
+
+    private void ToggleBlend()
+    {
+        SetState(() => _multiply = !_multiply);
+    }
+
+    private static string BlurStyleName(BlurStyle style) => style switch
+    {
+        BlurStyle.Solid => "solid",
+        BlurStyle.Outer => "outer",
+        BlurStyle.Inner => "inner",
+        _ => "normal",
+    };
+
     private void Reset()
     {
         SetState(() =>
@@ -112,6 +154,8 @@ internal sealed class DecoratedBoxDemoPageState : State
             _radius = 10;
             _borderWidth = 2;
             _accentFill = true;
+            _blurStyle = BlurStyle.Normal;
+            _multiply = false;
         });
     }
 }

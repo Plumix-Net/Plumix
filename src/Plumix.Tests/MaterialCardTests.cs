@@ -479,7 +479,9 @@ public sealed class MaterialCardTests
                           && (color == Colors.LightBlue || color == Colors.LightGreen))
             .ToArray();
         Assert.Equal(2, surfaces.Length);
-        Assert.All(surfaces, surface => Assert.Equal(2, surface.AsBoxDecoration.EffectiveBorderRadius.Radius));
+        Assert.All(
+            surfaces,
+            surface => Assert.Equal(2, surface.AsBoxDecoration.BorderRadius!.Value.Resolve(null).Radius));
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.BoxShadows is not null);

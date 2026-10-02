@@ -78,6 +78,26 @@ class CustomSliversDemoPage extends StatelessWidget {
             ),
           ),
         ),
+        SliverMainAxisGroup(
+          slivers: <Widget>[
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _ShrinkReadoutHeaderDelegate(),
+            ),
+            SliverFixedExtentList.builder(
+              itemCount: 6,
+              itemExtent: 44,
+              itemBuilder: (BuildContext context, int index) {
+                return _extentCell(
+                  'persistent-header group row #$index',
+                  index.isEven
+                      ? const Color(0xFFF5F5F5)
+                      : const Color(0xFFFFFFFF),
+                );
+              },
+            ),
+          ],
+        ),
         SliverSafeArea(
           minimum: const EdgeInsets.fromLTRB(12, 8, 12, 0),
           sliver: SliverLayoutBuilder(
@@ -377,4 +397,50 @@ class CustomSliversDemoPage extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A pinned 120px → 56px header that rebuilds from the shrink offset its sliver
+/// lays it out with, which is what [SliverPersistentHeader] adds over the fixed
+/// headers above.
+class _ShrinkReadoutHeaderDelegate extends SliverPersistentHeaderDelegate {
+  @override
+  double get minExtent => 56;
+
+  @override
+  double get maxExtent => 120;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return SizedBox.expand(
+      child: ColoredBox(
+        color: const Color(0xFFE0F2F1),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 2,
+            children: <Widget>[
+              const Text(
+                'SliverPersistentHeader',
+                style: TextStyle(fontSize: 18, color: Colors.black),
+              ),
+              Text(
+                'shrinkOffset ${shrinkOffset.toStringAsFixed(0)} px · '
+                'overlapsContent $overlapsContent',
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
 }

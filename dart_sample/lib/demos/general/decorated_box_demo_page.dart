@@ -13,6 +13,8 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
   double _radius = 10;
   double _borderWidth = 2;
   bool _accentFill = true;
+  BlurStyle _blurStyle = BlurStyle.normal;
+  bool _multiply = false;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,7 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Adjust border width and corner radius; toggle fill theme.',
+          'Adjust border width and corner radius; toggle fill theme, shadow blur style and blend mode.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -74,6 +76,18 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
               background: const Color(0xFFF3E8D8),
             ),
             _buildButton(
+              label: 'Shadow: ${_blurStyle.name}',
+              onTap: _cycleBlurStyle,
+              width: 128,
+              background: const Color(0xFFE6E0F5),
+            ),
+            _buildButton(
+              label: _multiply ? 'Blend: multiply' : 'Blend: none',
+              onTap: _toggleBlend,
+              width: 128,
+              background: const Color(0xFFF5E0E6),
+            ),
+            _buildButton(
               label: 'Reset',
               onTap: _reset,
               width: 88,
@@ -82,7 +96,9 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
           ],
         ),
         Text(
-          'radius=${_radius.toStringAsFixed(0)}, border=${_borderWidth.toStringAsFixed(0)}, fill=${_accentFill ? 'accent' : 'neutral'}',
+          'radius=${_radius.toStringAsFixed(0)}, border=${_borderWidth.toStringAsFixed(0)}, '
+          'fill=${_accentFill ? 'accent' : 'neutral'}, shadow=${_blurStyle.name}, '
+          'blend=${_multiply ? 'multiply' : 'none'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
@@ -99,6 +115,16 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
                   color: fillColor,
                   border: Border.all(color: borderColor, width: _borderWidth),
                   borderRadius: BorderRadius.circular(_radius),
+                  boxShadow: <BoxShadow>[
+                    BoxShadow(
+                      color: const Color(0x99000000),
+                      offset: const Offset(0, 4),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                      blurStyle: _blurStyle,
+                    ),
+                  ],
+                  backgroundBlendMode: _multiply ? BlendMode.multiply : null,
                 ),
                 child: const Center(
                   child: Text(
@@ -151,11 +177,26 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
     });
   }
 
+  void _cycleBlurStyle() {
+    setState(() {
+      _blurStyle =
+          BlurStyle.values[(_blurStyle.index + 1) % BlurStyle.values.length];
+    });
+  }
+
+  void _toggleBlend() {
+    setState(() {
+      _multiply = !_multiply;
+    });
+  }
+
   void _reset() {
     setState(() {
       _radius = 10;
       _borderWidth = 2;
       _accentFill = true;
+      _blurStyle = BlurStyle.normal;
+      _multiply = false;
     });
   }
 }

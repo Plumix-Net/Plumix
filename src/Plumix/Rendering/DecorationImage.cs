@@ -289,6 +289,35 @@ public class DecorationImagePainter : IDisposable
         _listener = new ImageStreamListener(HandleImage, OnError: details.OnError);
     }
 
+    /// <summary>
+    /// Draw the image onto the given canvas, clipped to <paramref name="clipPath"/> when it is non-null.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>DecorationImagePainter.paint(canvas, rect, clipPath, configuration, blend:, blendMode:)</c>:
+    /// the clip is a canvas <c>save</c>/<c>clipPath</c>/<c>restore</c> around the image paint.
+    /// </remarks>
+    public void Paint(
+        PaintingContext context,
+        Rect rect,
+        Plumix.UI.Path? clipPath,
+        ImageConfiguration configuration,
+        double blend = 1.0,
+        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (clipPath is not null)
+        {
+            context.Canvas.Save();
+            context.Canvas.ClipPath(clipPath);
+        }
+
+        Paint(context, rect, configuration, clipRadius: null, blend: blend, blendMode: blendMode);
+        if (clipPath is not null)
+        {
+            context.Canvas.Restore();
+        }
+    }
+
     public virtual void Paint(
         PaintingContext context,
         Rect rect,

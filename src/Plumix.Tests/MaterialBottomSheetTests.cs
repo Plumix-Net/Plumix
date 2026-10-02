@@ -209,7 +209,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         // The drag handle keeps resolving through the theme.
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.AsBoxDecoration.Color == Colors.Green
-            && box.AsBoxDecoration.EffectiveBorderRadius == BorderRadius.Circular(3));
+            && box.AsBoxDecoration.BorderRadius!.Value.Resolve(null) == BorderRadius.Circular(3));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MaxWidth == 200);
         Assert.NotNull(FindSemantics(semantics, node =>
@@ -266,7 +266,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         var handle = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.AsBoxDecoration.Color == Colors.Green);
         Assert.Equal(new Size(32, 4), handle.Size);
-        Assert.Equal(BorderRadius.Circular(2), handle.AsBoxDecoration.EffectiveBorderRadius);
+        Assert.Equal(BorderRadius.Circular(2), handle.AsBoxDecoration.BorderRadius!.Value.Resolve(null));
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MaxWidth == 48 && box.AdditionalConstraints.MaxHeight == 48);
 

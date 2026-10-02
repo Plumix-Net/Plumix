@@ -1198,9 +1198,7 @@ public abstract class RenderSliver : RenderObject
     /// <inheritdoc />
     /// <remarks>
     /// Flutter's <c>RenderSliver.debugPaint</c>: a green arrow diagram showing this sliver's paint
-    /// extent and growth direction. Dart strokes it through a
-    /// <c>MaskFilter.blur(BlurStyle.solid, strokeWidth)</c>; Avalonia's drawing backend takes no
-    /// mask filter, so the same stroke is drawn unblurred (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// extent and growth direction, stroked through a <c>MaskFilter.blur(BlurStyle.solid, strokeWidth)</c>.
     /// </remarks>
     protected override void DebugPaint(PaintingContext context, Point offset)
     {
@@ -1211,19 +1209,21 @@ public abstract class RenderSliver : RenderObject
         }
 
         double strokeWidth = Math.Min(4.0, Geometry!.PaintExtent / 30.0);
-        var pen = new Pen(new SolidColorBrush(new Color(0xFF33CC33)), strokeWidth);
+        var pen = new Plumix.UI.Paint
+        {
+            Color = new Color(0xFF33CC33),
+            StrokeWidth = strokeWidth,
+            Style = PaintingStyle.Stroke,
+            MaskFilter = MaskFilter.Blur(BlurStyle.Solid, strokeWidth),
+        };
         double arrowExtent = Geometry!.PaintExtent;
         double padding = Math.Max(2.0, strokeWidth);
         SliverConstraints constraints = Constraints;
-        context.Canvas.DrawCircle(
-            Brushes.Transparent,
-            pen,
-            new Point(offset.X + padding, offset.Y + padding),
-            padding * 0.5);
+        context.Canvas.DrawCircle(new Point(offset.X + padding, offset.Y + padding), padding * 0.5, pen);
         double cross = constraints.CrossAxisExtent;
         if (constraints.Axis == Axis.Vertical)
         {
-            context.Canvas.DrawLine(pen, offset, new Point(offset.X + cross, offset.Y));
+            context.Canvas.DrawLine(offset, new Point(offset.X + cross, offset.Y), pen);
             DebugDrawArrow(
                 context,
                 pen,
@@ -1239,7 +1239,7 @@ public abstract class RenderSliver : RenderObject
         }
         else
         {
-            context.Canvas.DrawLine(pen, offset, new Point(offset.X, offset.Y + cross));
+            context.Canvas.DrawLine(offset, new Point(offset.X, offset.Y + cross), pen);
             DebugDrawArrow(
                 context,
                 pen,
@@ -1258,7 +1258,7 @@ public abstract class RenderSliver : RenderObject
     /// <remarks>Flutter's <c>RenderSliver._debugDrawArrow</c>.</remarks>
     private static void DebugDrawArrow(
         PaintingContext context,
-        IPen pen,
+        Plumix.UI.Paint pen,
         Point p0,
         Point p1,
         GrowthDirection direction)
@@ -1300,7 +1300,7 @@ public abstract class RenderSliver : RenderObject
         path.MoveTo(p1.X - dx1, p1.Y - dy1);
         path.LineTo(p1.X, p1.Y);
         path.LineTo(p1.X - dx2, p1.Y - dy2);
-        context.Canvas.DrawPath(path, brush: null, pen: pen);
+        context.Canvas.DrawPath(path, pen);
     }
 
     /// <summary>

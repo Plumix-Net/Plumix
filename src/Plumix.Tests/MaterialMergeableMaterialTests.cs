@@ -49,7 +49,9 @@ public sealed class MaterialMergeableMaterialTests
         Assert.Equal(new Size(240, 216), body.Size);
         Assert.Equal(3, body.ChildCount);
         Assert.Equal(2.5, body.Elevation);
-        Assert.All(SliceDecorations(harness), decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Radius));
+        Assert.All(
+            SliceDecorations(harness),
+            decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Resolve(null).Radius));
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.AsBoxDecoration.BoxShadows is not null);
@@ -288,10 +290,10 @@ public sealed class MaterialMergeableMaterialTests
     {
         BoxDecoration[] decorations = SliceDecorations(harness);
         Assert.Equal(expectedCount, decorations.Length);
-        Assert.Equal(2, decorations[0].BorderRadius!.Value.TopLeft);
-        Assert.Equal(0, decorations[0].BorderRadius!.Value.BottomLeft);
-        Assert.Equal(0, decorations[^1].BorderRadius!.Value.TopLeft);
-        Assert.Equal(2, decorations[^1].BorderRadius!.Value.BottomLeft);
+        Assert.Equal(2, decorations[0].BorderRadius!.Value.Resolve(null).TopLeft);
+        Assert.Equal(0, decorations[0].BorderRadius!.Value.Resolve(null).BottomLeft);
+        Assert.Equal(0, decorations[^1].BorderRadius!.Value.Resolve(null).TopLeft);
+        Assert.Equal(2, decorations[^1].BorderRadius!.Value.Resolve(null).BottomLeft);
         if (expectedCount == 3)
         {
             Assert.Equal(BorderRadius.Zero, decorations[1].BorderRadius);
@@ -302,19 +304,19 @@ public sealed class MaterialMergeableMaterialTests
     {
         BoxDecoration[] decorations = SliceDecorations(harness);
         Assert.Equal(expectedCount, decorations.Length);
-        Assert.All(decorations, decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Radius));
+        Assert.All(decorations, decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Resolve(null).Radius));
     }
 
     private static void AssertShiftingInnerCorners(WidgetRenderHarness harness, int expectedCount = 2)
     {
         BoxDecoration[] decorations = SliceDecorations(harness);
         Assert.Equal(expectedCount, decorations.Length);
-        Assert.InRange(decorations[0].BorderRadius!.Value.BottomLeft, 0.001, 1.999);
-        Assert.InRange(decorations[^1].BorderRadius!.Value.TopLeft, 0.001, 1.999);
+        Assert.InRange(decorations[0].BorderRadius!.Value.Resolve(null).BottomLeft, 0.001, 1.999);
+        Assert.InRange(decorations[^1].BorderRadius!.Value.Resolve(null).TopLeft, 0.001, 1.999);
         if (expectedCount == 3)
         {
-            Assert.InRange(decorations[1].BorderRadius!.Value.TopLeft, 0.001, 1.999);
-            Assert.InRange(decorations[1].BorderRadius!.Value.BottomLeft, 0.001, 1.999);
+            Assert.InRange(decorations[1].BorderRadius!.Value.Resolve(null).TopLeft, 0.001, 1.999);
+            Assert.InRange(decorations[1].BorderRadius!.Value.Resolve(null).BottomLeft, 0.001, 1.999);
         }
     }
 

@@ -91,16 +91,16 @@ public record CircleBorder : OutlinedBorder
     public override void PaintInterior(
         PaintingContext context,
         Rect rect,
-        IBrush brush,
+        Paint paint,
         TextDirection? textDirection = null)
     {
         if (Eccentricity == 0.0)
         {
-            context.Canvas.DrawCircle(brush, null, rect.Center, BoxBorder.ShortestSide(rect) / 2.0);
+            context.Canvas.DrawCircle(rect.Center, BoxBorder.ShortestSide(rect) / 2.0, paint);
             return;
         }
 
-        context.Canvas.DrawOval(AdjustRect(rect), brush, null);
+        context.Canvas.DrawOval(AdjustRect(rect), paint);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)

@@ -1382,14 +1382,14 @@ internal sealed class InputBorderPainter : CustomPainter
         Color blended = BlendedColor;
         if (blended.Alpha > 0)
         {
-            var brush = new SolidColorBrush(blended);
+            var paint = new Plumix.UI.Paint { Color = blended };
             if (Border.PreferPaintInterior)
             {
-                Border.PaintInterior(context, canvasRect, brush, TextDirection);
+                Border.PaintInterior(context, canvasRect, paint, TextDirection);
             }
             else
             {
-                context.Canvas.DrawGeometry(brush, null, Border.GetOuterPath(canvasRect, TextDirection).ToGeometry());
+                context.Canvas.DrawPath(Border.GetOuterPath(canvasRect, TextDirection), paint);
             }
         }
 

@@ -59,12 +59,26 @@ internal sealed class CupertinoMenuDividerPainter : CustomPainter
         var start = new Point(0.0, size.Height / 2.0);
         var end = new Point(size.Width, size.Height / 2.0);
 
-        // Dart draws `overlayColor` first with `BlendMode.overlay` (skipped on web, where the blend
-        // mode is unsupported) and `color` second with the default `srcOver`. Avalonia can blend only
-        // bitmap draws, never a stroked geometry, so only the `srcOver` pass is drawn here; see
-        // docs/ai/DIVERGENCES.md.
-        var colorPen = new Pen(new SolidColorBrush(Color), 0.0);
-        context.Canvas.DrawLine(colorPen, start, end);
+        // BlendMode.overlay is not supported on the web.
+        if (!Constants.KIsWeb)
+        {
+            var overlayPainter = new Plumix.UI.Paint
+            {
+                Style = PaintingStyle.Stroke,
+                Color = OverlayColor,
+                IsAntiAlias = AntiAlias,
+                BlendMode = BlendMode.Overlay,
+            };
+            context.Canvas.DrawLine(start, end, overlayPainter);
+        }
+
+        var colorPainter = new Plumix.UI.Paint
+        {
+            Style = PaintingStyle.Stroke,
+            Color = Color,
+            IsAntiAlias = AntiAlias,
+        };
+        context.Canvas.DrawLine(start, end, colorPainter);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate) =>
@@ -757,9 +771,7 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State<Cupertino
         MouseCursor cursor = Current.MouseCursor.Resolve(value);
         BoxDecoration decoration = Current.Decoration.Resolve(value);
 
-        // Dart injects a `BlendMode.multiply` (light) / `BlendMode.plus` (dark) background blend mode
-        // here; `BoxDecoration` carries no blend mode in Plumix because Avalonia cannot blend a
-        // geometry fill (docs/ai/DIVERGENCES.md).
+        bool hasBackground = decoration.Color is not null || decoration.Gradient is not null;
         return new MouseRegion(
             onHover: IsEnabled ? HandlePointerHover : null,
             onExit: IsEnabled ? HandlePointerExit : null,
@@ -767,7 +779,15 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State<Cupertino
             cursor: cursor,
             opaque: false,
             child: new DecoratedBox(
-                decoration with { Color = CupertinoDynamicColor.MaybeResolve(decoration.Color, context) },
+                decoration.CopyWith(
+                    color: CupertinoDynamicColor.MaybeResolve(decoration.Color, context),
+                    backgroundBlendMode: Constants.KIsWeb
+                                         || !hasBackground
+                                         || decoration.BackgroundBlendMode is not null
+                        ? decoration.BackgroundBlendMode
+                        : CupertinoTheme.MaybeBrightnessOf(context) == PlatformBrightness.Light
+                            ? BlendMode.Multiply
+                            : BlendMode.Plus),
                 child: child));
     }
 

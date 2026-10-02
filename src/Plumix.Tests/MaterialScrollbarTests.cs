@@ -1096,12 +1096,12 @@ public sealed class MaterialScrollbarTests
             return new CircleBorder().GetOuterPath(rect);
         }
         public override void PaintInterior(
-            PaintingContext context, Rect rect, IBrush brush, TextDirection? textDirection = null)
+            PaintingContext context, Rect rect, Plumix.UI.Paint paint, TextDirection? textDirection = null)
         {
             Calls.Add("interior");
             PaintedRect = rect;
-            InteriorColor = (Color)((SolidColorBrush)brush).Color;
-            new CircleBorder().PaintInterior(context, rect, brush);
+            InteriorColor = paint.Color;
+            new CircleBorder().PaintInterior(context, rect, paint);
         }
         public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
         {
