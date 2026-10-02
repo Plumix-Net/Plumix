@@ -244,6 +244,24 @@ public sealed class RendererBindingDartParityTests : IDisposable
     }
 
     [Fact]
+    public void GetRectOfSemanticsNodeInViewCoordinates_UndoesTheRootDevicePixelRatio()
+    {
+        // The semantics tree carries the RenderView's root transform, so the node's own ancestor walk
+        // ends in physical pixels; the binding answers in logical ones.
+        using var handle = new SemanticsScope();
+        (RenderView view, PipelineOwner owner) = AddView(8115, Labelled("scaled", () => { }), devicePixelRatio: 2.0);
+        PumpFrame();
+        int node = FindNode(owner, "scaled");
+
+        Assert.Equal(new Rect(0, 0, 200, 200), owner.SemanticsOwner!.GetSemanticsNode(node)!.GlobalRect);
+        Assert.Equal(new Rect(0, 0, 200, 200), owner.SemanticsOwner!.RootNode!.Rect);
+        Assert.Equal(
+            new Rect(0, 0, 100, 100),
+            SemanticsBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(8115, node));
+        Assert.Equal(new Size(100, 100), view.Size);
+    }
+
+    [Fact]
     public void DrawFrame_CompositesEveryRegisteredView()
     {
         // multi_view_binding_test.dart: "all registered renderviews are asked to composite frame".
@@ -266,25 +284,22 @@ public sealed class RendererBindingDartParityTests : IDisposable
     [Fact]
     public void HitTestInView_ReachesTheViewThenTheBinding()
     {
-        // multi_view_binding_test.dart: "hit-testing reaches the right view". Dart's views are empty
-        // and its RenderView always adds itself; Plumix's only adds itself when a child is hit (the
-        // RenderView.HitTest row of docs/ai/BACKLOG.md), so each view here carries an opaque child.
-        var firstChild = new RenderPointerListener(behavior: HitTestBehavior.Opaque);
-        var secondChild = new RenderPointerListener(behavior: HitTestBehavior.Opaque);
-        (RenderView first, _) = AddView(8131, firstChild);
-        (RenderView second, _) = AddView(8132, secondChild);
+        // multi_view_binding_test.dart: "hit-testing reaches the right view". The views are empty:
+        // a RenderView always adds itself, wherever the position is.
+        (RenderView first, _) = AddView(8131);
+        (RenderView second, _) = AddView(8132);
         PumpFrame();
 
         var firstResult = new HitTestResult();
         RendererBinding.Instance.HitTestInView(firstResult, new Point(0, 0), 8131);
         Assert.Equal<object>(
-            [firstChild, first, GestureBinding.Instance],
+            [first, GestureBinding.Instance],
             firstResult.Path.Select(static entry => entry.Target));
 
         var secondResult = new HitTestResult();
         RendererBinding.Instance.HitTestInView(secondResult, new Point(0, 0), 8132);
         Assert.Equal<object>(
-            [secondChild, second, GestureBinding.Instance],
+            [second, GestureBinding.Instance],
             secondResult.Path.Select(static entry => entry.Target));
 
         var unknownResult = new HitTestResult();
@@ -615,9 +630,16 @@ public sealed class RendererBindingDartParityTests : IDisposable
         return await BindingBase.RegisteredCallbacks[name](parameters);
     }
 
-    private (RenderView View, PipelineOwner Owner) AddView(int viewId, RenderBox? child = null)
+    private (RenderView View, PipelineOwner Owner) AddView(
+        int viewId,
+        RenderBox? child = null,
+        double devicePixelRatio = 1.0)
     {
-        var view = new RenderView(new FlutterView(new Size(100, 100), viewId: viewId), child: child);
+        var flutterView = new FlutterView(
+            new Size(100 * devicePixelRatio, 100 * devicePixelRatio),
+            devicePixelRatio: devicePixelRatio,
+            viewId: viewId);
+        var view = new RenderView(flutterView, child: child);
         var owner = new PipelineOwner(onSemanticsUpdate: static _ => { }) { RootNode = view };
         RendererBinding.Instance.RootPipelineOwner.AdoptChild(owner);
         RendererBinding.Instance.AddRenderView(view);

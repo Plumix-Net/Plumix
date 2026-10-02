@@ -30,8 +30,9 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
         Assert.Contains("RenderObjectSemantics", dump, StringComparison.Ordinal);
         Assert.Contains("owner: \"RenderView#", dump, StringComparison.Ordinal);
         Assert.Contains("owner: \"RenderSemanticsAnnotations#", dump, StringComparison.Ordinal);
-        // Both the root and the annotated box are semantic boundaries that formed a node.
-        Assert.Equal(2, CountOccurrences(dump, "semantic boundary"));
+        // Only the annotated box is a semantic boundary; the root forms its node because it is the
+        // root (Dart's RenderView does not mark itself a boundary).
+        Assert.Equal(1, CountOccurrences(dump, "semantic boundary"));
         Assert.Equal(2, CountOccurrences(dump, "formedSemanticsNode: formed "));
         // Nothing is dirty or blocking after a clean flush.
         Assert.DoesNotContain("NO PARENT DATA", dump, StringComparison.Ordinal);

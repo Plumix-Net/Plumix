@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderView` is Dart's bare `RenderObject` with one `RenderBox` child, not a `RenderBox` (view.dart).
+- Breaking: `RenderView.HitTest(HitTestResult, Point)` always adds the view and returns true; no bounds check.
+- Breaking: `RenderView`'s root layer is a `TransformLayer` carrying the device pixel ratio; hosts undo it.
+- Breaking: `RenderView.PaintBounds`/`SemanticBounds`/`ApplyPaintTransform` apply the root transform, as in Dart.
+- Breaking: `RenderView.Constraints` reads the configuration; its child gets plain `ParentData` (view.dart).
+- `RenderView.UpdateSemantics`; `GetRectOfSemanticsNodeInViewCoordinates` undoes the root transform (binding.dart).
+- Flutter's paintBounds and constraints-from-configuration `view_test.dart` cases ported; the translate hit test runs.
 - Breaking: `InkSplash`/`InkRipple`/`InkSparkle`/`NoSplash`/`InkHighlight` are Dart's `InkFeature`s (ink_*.dart).
 - Breaking: `InteractiveInkFeatureFactory.Create(controller, referenceBox, position, ...)`; `Confirm`/`Cancel`.
 - Breaking: `InkResponse` is a `StatelessWidget` over Dart's `_InkResponseState`; it requires a `Material` ancestor.

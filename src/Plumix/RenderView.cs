@@ -5,8 +5,7 @@ using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/view.dart (approximate)
-// RenderView is a RenderBox and the host composites the owner's root layer; see docs/ai/DIVERGENCES.md.
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/view.dart
 
 namespace Plumix;
 
@@ -115,22 +114,23 @@ public delegate void DebugPaintCallback(PaintingContext context, Point offset, R
 /// </summary>
 /// <remarks>
 /// <para>
-/// Flutter's <c>RenderView</c>. It is constructed for a <see cref="FlutterView"/>, laid out against
-/// its <see cref="Configuration"/> once <see cref="PrepareInitialFrame"/> bootstrapped layout and
-/// paint, and is always a repaint boundary.
+/// Flutter's <c>RenderView</c>, a bare <see cref="RenderObject"/> with one <see cref="RenderBox"/>
+/// child (Dart's <c>RenderObjectWithChildMixin&lt;RenderBox&gt;</c>, folded in here). It is
+/// constructed for a <see cref="FlutterView"/>, laid out against its <see cref="Configuration"/> once
+/// <see cref="PrepareInitialFrame"/> bootstrapped layout and paint, and is always a repaint
+/// boundary whose root layer is a <see cref="TransformLayer"/> carrying the device pixel ratio.
 /// </para>
 /// <para>
-/// Plumix's view is a <see cref="RenderBox"/> rather than a bare <c>RenderObject</c>, so the box
-/// hit-test protocol reaches it directly; its root layer is a plain <see cref="OffsetLayer"/>
-/// because the render tree is kept in logical pixels and the host applies the device pixel ratio
-/// when it composites the owner's layer — see <c>docs/ai/DIVERGENCES.md</c>.
+/// <see cref="CompositeFrame"/> hands that root layer to <see cref="Widgets.FlutterView.Render"/>
+/// instead of an engine scene; see <c>docs/ai/DIVERGENCES.md</c>.
 /// </para>
 /// </remarks>
-public class RenderView : RenderBox, IRenderObjectSingleChildContainer
+public class RenderView : RenderObject, IRenderObjectSingleChildContainer
 {
     private static readonly List<DebugPaintCallback> DebugPaintCallbacks = [];
 
     private RenderBox? _child;
+    private Size _size;
     private ViewConfiguration? _configuration;
     private Matrix4? _rootTransform;
 
@@ -148,7 +148,9 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
         Child = child;
     }
 
-    public override bool IsRepaintBoundary => true;
+    /// <summary>The current layout size of the view.</summary>
+    /// <remarks>Flutter's <c>RenderView.size</c>.</remarks>
+    public Size Size => _size;
 
     /// <summary>
     /// The constraints and pixel density used for the root layout.
@@ -156,10 +158,7 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// <remarks>
     /// Flutter's <c>RenderView.configuration</c>. Until <see cref="PrepareInitialFrame"/> has run the
     /// value is only stored; afterwards a change relays the view out and, when
-    /// <see cref="ViewConfiguration.ShouldUpdateMatrix"/> says so, replaces the root layer. Plumix's
-    /// hosts drive the frame themselves (see the <c>PipelineOwner.RequestLayout</c> row in
-    /// <c>docs/ai/DIVERGENCES.md</c>), so the owner keeps this in step with the size it is asked to
-    /// lay the view out under.
+    /// <see cref="ViewConfiguration.ShouldUpdateMatrix"/> says so, replaces the root layer.
     /// </remarks>
     public ViewConfiguration Configuration
     {
@@ -178,7 +177,7 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
             _configuration = value;
             if (_rootTransform is null)
             {
-                // [prepareInitialFrame] has not been called yet, nothing to do for now.
+                // [prepareInitialFrame] has not been called yet, nothing more to do for now.
                 return;
             }
 
@@ -196,6 +195,27 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// <remarks>Flutter's <c>RenderView.hasConfiguration</c>.</remarks>
     public bool HasConfiguration => _configuration is not null;
 
+    /// <summary>The constraints the view lays its child out under: the configuration's logical ones.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderView.constraints</c>. The view is never laid out by a parent, so its
+    /// constraints come from <see cref="Configuration"/>; reading them before a configuration is set
+    /// throws Dart's <c>StateError</c> (an <see cref="InvalidOperationException"/>).
+    /// </remarks>
+    public new BoxConstraints Constraints
+    {
+        get
+        {
+            if (!HasConfiguration)
+            {
+                // Dart's `StateError`.
+                throw new InvalidOperationException(
+                    "Constraints are not available because RenderView has not been given a configuration yet.");
+            }
+
+            return Configuration.LogicalConstraints;
+        }
+    }
+
     /// <summary>The platform view this render view renders into.</summary>
     /// <remarks>Flutter's <c>RenderView.flutterView</c>.</remarks>
     public FlutterView FlutterView { get; }
@@ -207,16 +227,16 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// <remarks>Flutter's <c>RenderView.automaticSystemUiAdjustment</c>.</remarks>
     public bool AutomaticSystemUiAdjustment { get; set; } = true;
 
+    /// <summary>The render object's only child.</summary>
+    /// <remarks>
+    /// Dart's <c>RenderObjectWithChildMixin.child</c>: drops the old child and adopts the new one;
+    /// adoption and dropping mark this object dirty.
+    /// </remarks>
     public RenderBox? Child
     {
         get => _child;
         set
         {
-            if (ReferenceEquals(_child, value))
-            {
-                return;
-            }
-
             if (_child != null)
             {
                 DropChild(_child);
@@ -228,8 +248,6 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
             {
                 AdoptChild(_child);
             }
-
-            MarkNeedsLayout();
         }
     }
 
@@ -270,12 +288,13 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     }
 
     /// <summary>Flutter's <c>RenderView._updateMatricesAndCreateNewRootLayer</c>.</summary>
-    private OffsetLayer UpdateMatricesAndCreateNewRootLayer()
+    private TransformLayer UpdateMatricesAndCreateNewRootLayer()
     {
         Debug.Assert(HasConfiguration);
         _rootTransform = Configuration.ToMatrix();
-        var rootLayer = new OffsetLayer();
+        var rootLayer = new TransformLayer(transform: _rootTransform);
         rootLayer.Attach(this);
+        Debug.Assert(_rootTransform is not null);
         return rootLayer;
     }
 
@@ -320,14 +339,6 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
         MarkNeedsPaint();
     }
 
-    public override void SetupParentData(RenderObject child)
-    {
-        if (child.parentData is not BoxParentData)
-        {
-            child.parentData = new BoxParentData();
-        }
-    }
-
     public override void VisitChildren(Action<RenderObject> visitor)
     {
         if (_child != null)
@@ -336,12 +347,22 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
         }
     }
 
-    public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderView.debugAssertDoesMeetConstraints</c>. The view is never laid out by
+    /// <see cref="RenderObject.Layout"/> (it is laid out through <see cref="RenderObject.ScheduleInitialLayout"/>),
+    /// so this is never checked.
+    /// </remarks>
+    protected override void DebugAssertDoesMeetConstraints()
     {
-        if (_child != null)
-        {
-            visitor(_child);
-        }
+        Debug.Assert(false);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderView.performResize</c>, which is never called.</remarks>
+    protected override void PerformResize()
+    {
+        Debug.Assert(false);
     }
 
     /// <inheritdoc />
@@ -353,31 +374,35 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     protected override void PerformLayout()
     {
         Debug.Assert(_rootTransform is not null);
-        bool sizedByChild = !Constraints.IsTight;
-        _child?.Layout(Constraints, parentUsesSize: sizedByChild);
-        Size = sizedByChild && _child is not null ? _child.Size : Constraints.Smallest;
-        if (_child is not null)
-        {
-            ((BoxParentData)_child.parentData!).offset = new Point(0, 0);
-        }
+        BoxConstraints constraints = Constraints;
+        bool sizedByChild = !constraints.IsTight;
+        _child?.Layout(constraints, parentUsesSize: sizedByChild);
+        _size = sizedByChild && _child is not null ? _child.Size : constraints.Smallest;
+        Debug.Assert(double.IsFinite(_size.Width) && double.IsFinite(_size.Height));
+        Debug.Assert(constraints.IsSatisfiedBy(_size));
+    }
 
-        Debug.Assert(double.IsFinite(Size.Width) && double.IsFinite(Size.Height));
-        Debug.Assert(Constraints.IsSatisfiedBy(Size));
+    /// <summary>
+    /// Determines the set of render objects located at the given position.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderView.hitTest</c>: the child is tested under a wrapping
+    /// <see cref="BoxHitTestResult"/> and the view always adds itself, so it returns <c>true</c>
+    /// even when the position lies outside the view. <paramref name="position"/> is in logical
+    /// pixels; the device pixel ratio is not applied.
+    /// </remarks>
+    public bool HitTest(HitTestResult result, Point position)
+    {
+        ArgumentNullException.ThrowIfNull(result);
+        _child?.HitTest(BoxHitTestResult.Wrap(result), position: position);
+        result.Add(new HitTestEntry(this));
+        return true;
     }
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Mirrors <see cref="PerformLayout"/> so that
-    /// <see cref="Rendering.RenderingDebug.CheckIntrinsicSizes"/> does not report the view itself.
-    /// </remarks>
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
-    {
-        bool sizedByChild = !constraints.IsTight;
-        return sizedByChild && _child is not null
-            ? _child.GetDryLayout(constraints)
-            : constraints.Smallest;
-    }
+    public override bool IsRepaintBoundary => true;
 
+    /// <inheritdoc />
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (_child != null)
@@ -385,16 +410,28 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
             ctx.PaintChild(_child, offset);
         }
 
-        if (Constants.KDebugMode && DebugPaintCallbacks.Count > 0)
+        if (Constants.KDebugMode)
         {
-            foreach (DebugPaintCallback callback in DebugPaintCallbacks.ToArray())
+            foreach (DebugPaintCallback paintCallback in DebugPaintCallbacks.ToArray())
             {
-                if (DebugPaintCallbacks.Contains(callback))
+                if (DebugPaintCallbacks.Contains(paintCallback))
                 {
-                    callback(ctx, offset, this);
+                    paintCallback(ctx, offset, this);
                 }
             }
         }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderView.applyPaintTransform</c>: the child is painted under the root
+    /// transform, which scales logical pixels to physical ones.
+    /// </remarks>
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        Debug.Assert(_rootTransform is not null);
+        transform.Multiply(_rootTransform!);
+        base.ApplyPaintTransform(child, transform);
     }
 
     /// <summary>
@@ -454,32 +491,36 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// <remarks>
     /// Flutter's private <c>RenderView._updateSystemChrome</c>. The horizontal center of the screen
     /// and the vertical centers of the status bar (top padding) and the navigation bar (bottom
-    /// padding) are sampled; only Android has a customizable navigation bar. Dart's root layer is a
-    /// <c>TransformLayer</c> carrying the device pixel ratio, so its <c>find</c> maps these physical
-    /// points through the inverse root transform; Plumix's root is an <see cref="OffsetLayer"/>
-    /// in logical pixels, so the mapping happens here. A host builds the scene in its own render
-    /// pass and calls this right after (<c>docs/ai/DIVERGENCES.md</c>, <c>FlutterHost</c> frame row).
+    /// padding) are sampled in physical pixels, which the root <see cref="TransformLayer"/>'s
+    /// <c>find</c> maps back to logical ones; only Android has a customizable navigation bar. A host
+    /// builds the scene in its own render pass and calls this right after (<c>docs/ai/DIVERGENCES.md</c>,
+    /// <c>FlutterHost</c> frame row).
     /// </remarks>
     internal void UpdateSystemChrome()
     {
-        if (_layer is not OffsetLayer rootLayer || _rootTransform is null)
+        if (_layer is not ContainerLayer rootLayer)
         {
             return;
         }
 
-        double devicePixelRatio = Configuration.DevicePixelRatio;
-        // Dart's `paintBounds`: `Offset.zero & (size * configuration.devicePixelRatio)`.
-        var bounds = new Rect(0.0, 0.0, Size.Width * devicePixelRatio, Size.Height * devicePixelRatio);
-        Matrix4 toLogical = Matrix4.TryInvert(_rootTransform) ?? Matrix4.Identity();
+        // Take overlay style from the place where a system status bar and system navigation bar are
+        // placed to update system style overlay.
+        Rect bounds = PaintBounds;
         // Center of the status bar.
-        Point top = MatrixUtils.TransformPoint(
-            toLogical,
-            new Point(bounds.Center.X, FlutterView.Padding.Top / 2.0));
-        // Center of the navigation bar. The "1" is subtracted from the bottom because available
-        // pixels are in the (0..bottom) range.
-        Point bottom = MatrixUtils.TransformPoint(
-            toLogical,
-            new Point(bounds.Center.X, bounds.Bottom - 1.0 - FlutterView.Padding.Bottom / 2.0));
+        var top = new Point(
+            // Horizontal center of the screen.
+            bounds.Center.X,
+            // The vertical center of the system status bar. The system status bar height is kept as
+            // top window padding.
+            FlutterView.Padding.Top / 2.0);
+        // Center of the navigation bar.
+        var bottom = new Point(
+            // Horizontal center of the screen.
+            bounds.Center.X,
+            // Vertical center of the system navigation bar. The system navigation bar height is kept
+            // as bottom window padding. The "1" needs to be subtracted from the bottom because
+            // available pixels are in (0..bottom) range.
+            bounds.Bottom - 1.0 - FlutterView.Padding.Bottom / 2.0);
         SystemUiOverlayStyle? upperOverlayStyle = rootLayer.Find<SystemUiOverlayStyle>(top);
         // Only android has a customizable system navigation bar.
         SystemUiOverlayStyle? lowerOverlayStyle = null;
@@ -535,6 +576,37 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
                 isAndroid ? definedOverlayStyle.SystemNavigationBarContrastEnforced : null));
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderView.paintBounds</c>: the view's size in physical pixels.</remarks>
+    public override Rect PaintBounds
+    {
+        get
+        {
+            double devicePixelRatio = Configuration.DevicePixelRatio;
+            return new Rect(0.0, 0.0, _size.Width * devicePixelRatio, _size.Height * devicePixelRatio);
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderView.semanticBounds</c>: the view's box under the root transform.</remarks>
+    protected override Rect SemanticBounds
+    {
+        get
+        {
+            Debug.Assert(_rootTransform is not null);
+            return MatrixUtils.TransformRect(_rootTransform!, new Rect(_size));
+        }
+    }
+
+    /// <summary>
+    /// Sends <paramref name="update"/> to the view.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderView.updateSemantics</c>.</remarks>
+    public void UpdateSemantics(SemanticsUpdate update)
+    {
+        FlutterView.UpdateSemantics(update);
+    }
+
     /// <summary>
     /// Registers a callback that paints on top of every <see cref="RenderView"/>, for debugging
     /// aids such as the widget inspector.
@@ -558,21 +630,6 @@ public class RenderView : RenderBox, IRenderObjectSingleChildContainer
         {
             DebugPaintCallbacks.Remove(callback);
         }
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        if (_child == null)
-        {
-            return false;
-        }
-
-        return _child.HitTest(result, position);
-    }
-
-    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
-    {
-        configuration.IsSemanticBoundary = true;
     }
 
     /// <inheritdoc />

@@ -333,7 +333,7 @@ public sealed class GestureBinding : IHitTestTarget
 
     private HitTestResult HitTestInView(RenderView root, Point position)
     {
-        var result = new BoxHitTestResult();
+        var result = new HitTestResult();
         root.HitTest(result, position);
         result.Add(new HitTestEntry(this));
         return result;

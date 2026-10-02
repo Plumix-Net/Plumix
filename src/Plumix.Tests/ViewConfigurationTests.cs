@@ -226,6 +226,119 @@ public sealed class ViewConfigurationTests
         Assert.Equal(new Size(0, 0), view.Size);
     }
 
+    [Fact]
+    public void RenderView_AccountsForDevicePixelRatioInPaintBounds()
+    {
+        // view_test.dart: "accounts for device pixel ratio in paintBounds".
+        var view = new RenderView(
+            new FlutterView(new Size(800, 600), devicePixelRatio: 2.0),
+            child: new RenderAspectRatio(aspectRatio: 1.0));
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout();
+
+        Size logicalSize = view.Size;
+        double devicePixelRatio = view.Configuration.DevicePixelRatio;
+        Assert.Equal(
+            new Rect(0, 0, logicalSize.Width * devicePixelRatio, logicalSize.Height * devicePixelRatio),
+            view.PaintBounds);
+    }
+
+    [Fact]
+    public void RenderView_ConstraintsAreDerivedFromConfiguration()
+    {
+        // view_test.dart: "Constraints are derived from configuration".
+        var constraints = new BoxConstraints(MinWidth: 1, MaxWidth: 2, MinHeight: 3, MaxHeight: 4);
+        const double devicePixelRatio = 3.0;
+        var config = new ViewConfiguration(
+            logicalConstraints: constraints,
+            physicalConstraints: constraints * devicePixelRatio,
+            devicePixelRatio: devicePixelRatio);
+
+        // Configuration set via setter.
+        var view = new RenderView(new FlutterView(new Size(800, 600)));
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => view.Constraints);
+        Assert.Contains("RenderView has not been given a configuration yet", error.Message);
+        view.Configuration = config;
+        Assert.Equal(constraints, view.Constraints);
+
+        // Configuration set in constructor.
+        var view2 = new RenderView(new FlutterView(new Size(800, 600)), configuration: config);
+        Assert.Equal(constraints, view2.Constraints);
+    }
+
+    [Fact]
+    public void RenderView_RootLayerIsATransformLayerCarryingTheDevicePixelRatio()
+    {
+        var view = new RenderView(new FlutterView(new Size(400, 200), devicePixelRatio: 2.0));
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+
+        TransformLayer rootLayer = Assert.IsType<TransformLayer>(view.DebugLayer);
+        Assert.Equal(Matrix4.Diagonal3Values(2.0, 2.0, 1.0), rootLayer.Transform);
+        Assert.Same(rootLayer, pipeline.RootLayer);
+
+        view.Configuration = new ViewConfiguration(
+            physicalConstraints: BoxConstraints.Tight(new Size(400, 200)),
+            logicalConstraints: BoxConstraints.Tight(new Size(100, 50)),
+            devicePixelRatio: 4.0);
+        TransformLayer replaced = Assert.IsType<TransformLayer>(view.DebugLayer);
+        Assert.NotSame(rootLayer, replaced);
+        Assert.Equal(Matrix4.Diagonal3Values(4.0, 4.0, 1.0), replaced.Transform);
+    }
+
+    [Fact]
+    public void RenderView_PaintsItsChildUnderTheRootTransformButKeepsGlobalCoordinatesLogical()
+    {
+        var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(30, 20)));
+        var center = new RenderPositionedBox(child: child);
+        var view = new RenderView(new FlutterView(new Size(200, 100), devicePixelRatio: 2.0), child: center);
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout();
+
+        // The view gives its child plain parent data: it is a bare RenderObject, not a RenderBox.
+        Assert.IsNotType<BoxParentData>(center.parentData);
+        // Dart's `semanticBounds`: the logical box under the root transform.
+        Assert.Equal(new Rect(0, 0, 200, 100), view.SemanticBoundsForSemantics);
+
+        Matrix4 toView = child.GetTransformTo(view);
+        Assert.Equal(new Point(70, 30), MatrixUtils.TransformPoint(toView, new Point(0, 0)));
+        // A null target stops below the root, so global coordinates stay in logical pixels.
+        Assert.Equal(new Point(35, 15), MatrixUtils.TransformPoint(child.GetTransformTo(null), new Point(0, 0)));
+        Assert.Equal(new Point(35, 15), child.LocalToGlobal(new Point(0, 0)));
+        Assert.Equal(new Point(0, 0), child.GlobalToLocal(new Point(35, 15)));
+    }
+
+    [Fact]
+    public void RenderView_HitTest_AlwaysAddsItselfAfterItsChild()
+    {
+        var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(30, 20)));
+        var view = new RenderView(
+            new FlutterView(new Size(200, 100), devicePixelRatio: 2.0),
+            child: new RenderPointerListener(behavior: HitTestBehavior.Opaque, child: child));
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout();
+
+        // Positions are logical: (60, 40) is inside the 100x50 logical view.
+        var inside = new HitTestResult();
+        Assert.True(view.HitTest(inside, new Point(60, 40)));
+        Assert.Equal(2, inside.Path.Count);
+        Assert.IsType<RenderPointerListener>(inside.Path[0].Target);
+        Assert.Same(view, inside.Path[1].Target);
+
+        // Dart's `hitTest` has no bounds check: a miss still reports the view and returns true.
+        var outside = new HitTestResult();
+        Assert.True(view.HitTest(outside, new Point(500, 500)));
+        Assert.Same(view, Assert.Single(outside.Path).Target);
+
+        var empty = new RenderView(new FlutterView(new Size(10, 10)));
+        var emptyResult = new HitTestResult();
+        Assert.True(empty.HitTest(emptyResult, new Point(-1, -1)));
+        Assert.Same(empty, Assert.Single(emptyResult.Path).Target);
+    }
+
     [DebugOnlyFact]
     public void RenderView_DebugFillProperties_ReportsTheViewMetricsAndConfiguration()
     {

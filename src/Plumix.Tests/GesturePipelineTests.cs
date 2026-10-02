@@ -20,11 +20,11 @@ public sealed class GesturePipelineTests
         var pipeline = BuildPipeline(transform);
 
         var insideResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(insideResult, new Point(5, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Point(5, 10)));
         Assert.Contains(insideResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         var outsideResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.HitTest(outsideResult, new Point(15, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Point(15, 10)));
     }
 
     [Fact]
@@ -36,10 +36,10 @@ public sealed class GesturePipelineTests
         var pipeline = BuildPipeline(clip);
 
         var insideResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(insideResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(insideResult, new Point(10, 10)));
 
         var outsideResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.HitTest(outsideResult, new Point(40, 40)));
+        Assert.False(pipeline.Root.Child!.HitTest(outsideResult, new Point(40, 40)));
     }
 
     [Fact]
@@ -54,12 +54,12 @@ public sealed class GesturePipelineTests
         // Dart's `RenderProxyBoxWithHitTestBehavior.hitTest` adds the translucent target to the
         // path but still reports `hitTarget` (false here), so ancestors keep testing behind it.
         var translucentResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.HitTest(translucentResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(translucentResult, new Point(10, 10)));
         Assert.Contains(translucentResult.Path, entry => ReferenceEquals(entry.Target, listener));
 
         listener.Behavior = HitTestBehavior.DeferToChild;
         var deferResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.HitTest(deferResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(deferResult, new Point(10, 10)));
     }
 
     [Fact]
@@ -70,12 +70,12 @@ public sealed class GesturePipelineTests
         var pipeline = BuildPipeline(ignorePointer);
 
         var ignoredResult = new BoxHitTestResult();
-        Assert.False(pipeline.Root.HitTest(ignoredResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.Child!.HitTest(ignoredResult, new Point(10, 10)));
         Assert.DoesNotContain(ignoredResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         ignorePointer.Ignoring = false;
         var activeResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(activeResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Point(10, 10)));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, ignorePointer));
     }
@@ -90,13 +90,13 @@ public sealed class GesturePipelineTests
         // Dart's `RenderAbsorbPointer.hitTest` returns `size.contains(position)` without adding
         // itself, so the absorber swallows the event instead of becoming its target.
         var absorbedResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(absorbedResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(absorbedResult, new Point(10, 10)));
         Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
         Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         absorbPointer.Absorbing = false;
         var activeResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(activeResult, new Point(10, 10)));
+        Assert.True(pipeline.Root.Child!.HitTest(activeResult, new Point(10, 10)));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, child));
         Assert.Contains(activeResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
     }

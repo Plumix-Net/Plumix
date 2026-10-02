@@ -348,9 +348,11 @@ public sealed class RendererBinding
     /// <paramref name="viewId"/>, in logical pixels, or <see langword="null"/> when either is unknown.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>. Dart asserts on each
-    /// of the three failed lookups and pre-multiplies the inverse of the root's device-pixel-ratio
-    /// transform; see <c>docs/ai/DIVERGENCES.md</c> for why Plumix does neither.
+    /// Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>: the walk up the
+    /// semantics ancestors accumulates the view's root transform, which scales logical to physical
+    /// pixels, so the inverse of <see cref="ViewConfiguration.ToMatrix"/> is pre-multiplied to
+    /// answer in logical pixels. Dart asserts on each of the three failed lookups; Plumix returns
+    /// <c>null</c>, see <c>docs/ai/DIVERGENCES.md</c>.
     /// </remarks>
     public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId)
     {
@@ -360,7 +362,30 @@ public sealed class RendererBinding
         }
 
         SemanticsOwner? semanticsOwner = renderView.Owner?.SemanticsOwner;
-        return semanticsOwner?.GetSemanticsNode(nodeId)?.GlobalRect;
+        if (semanticsOwner?.GetSemanticsNode(nodeId) is not { } node)
+        {
+            return null;
+        }
+
+        Matrix4 transform = Matrix4.Identity();
+        SemanticsNode? current = node;
+        while (current != null)
+        {
+            if (current.Transform is { } currentTransform)
+            {
+                transform = currentTransform.Multiplied(transform);
+            }
+
+            current = current.Parent;
+        }
+
+        // The walk above accumulates RenderView's root transform, which scales from logical to
+        // physical pixels. Undo it with the same matrix the framework applied, so the result is in
+        // logical pixels regardless of what that matrix encodes.
+        Matrix4 rootInverse = Matrix4.TryInvert(renderView.Configuration.ToMatrix()) ?? Matrix4.Zero();
+        transform = rootInverse.Multiplied(transform);
+
+        return MatrixUtils.TransformRect(transform, node.Rect);
     }
 
     /// <summary>
@@ -531,7 +556,7 @@ public sealed class RendererBinding
         ArgumentNullException.ThrowIfNull(result);
         if (_viewIdToRenderView.TryGetValue(viewId, out RenderView? renderView))
         {
-            renderView.HitTest(result as BoxHitTestResult ?? new BoxHitTestResult(result), position);
+            renderView.HitTest(result, position);
         }
 
         result.Add(new HitTestEntry(GestureBinding.Instance));

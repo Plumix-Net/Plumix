@@ -1452,7 +1452,13 @@ public sealed class ListWheelScrollViewTests
             }
         }
 
-        Visit(harness.RootLayer);
+        // Below the render view's own root transform layer: Dart matches these against the
+        // viewport's paint (`paints..transform`), which never includes the view's device pixel ratio.
+        foreach (Layer child in ((ContainerLayer)harness.RootLayer).Children)
+        {
+            Visit(child);
+        }
+
         return result;
     }
 

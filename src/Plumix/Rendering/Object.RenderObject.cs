@@ -1447,7 +1447,9 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     {
         Matrix4 transform = Matrix4.Identity();
         var renderers = new List<RenderObject>();
-        for (RenderObject node = this; node.Parent is not null; node = node.Parent)
+        // Like Dart's `getTransformTo(null)`, the root's own paint transform (a RenderView's device
+        // pixel ratio) is not applied: the result is in the root's logical coordinate system.
+        for (RenderObject node = this; node.Parent?.Parent is not null; node = node.Parent)
         {
             renderers.Add(node);
         }

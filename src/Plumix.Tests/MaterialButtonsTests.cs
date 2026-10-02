@@ -1448,12 +1448,12 @@ public sealed class MaterialButtonsTests
         // Dart's `_RenderInputPadding.hitTest` re-dispatches a miss inside the 48px tap target to
         // the child's exact centre, so the ink response is still hit at y == 1.
         var hitResult = new BoxHitTestResult();
-        Assert.True(harness.RenderView.HitTest(hitResult, new Point(60, 1)));
+        Assert.True(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 1)));
         RenderBox inkBox = Assert.Single(InkFeatureProbe.Responses(harness.RenderView)).ReferenceBox;
         Assert.Contains(hitResult.Path, entry => ReferenceEquals(entry.Target, inkBox));
 
         var missResult = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(missResult, new Point(60, 90)));
+        Assert.False(harness.RenderView.Child!.HitTest(missResult, new Point(60, 90)));
     }
 
     [Fact]
@@ -1471,7 +1471,7 @@ public sealed class MaterialButtonsTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.False(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]
@@ -1510,7 +1510,7 @@ public sealed class MaterialButtonsTests
         {
             paddedHarness.Pump(new Size(220, 120));
             var paddedHitResult = new BoxHitTestResult();
-            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+            Assert.True(paddedHarness.RenderView.Child!.HitTest(paddedHitResult, new Point(60, 46)));
         }
 
         using var overrideHarness = new WidgetRenderHarness(
@@ -1526,7 +1526,7 @@ public sealed class MaterialButtonsTests
         overrideHarness.Pump(new Size(220, 120));
 
         var overrideHitResult = new BoxHitTestResult();
-        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+        Assert.False(overrideHarness.RenderView.Child!.HitTest(overrideHitResult, new Point(60, 46)));
     }
 
     [Fact]
@@ -5547,7 +5547,7 @@ public sealed class MaterialButtonsTests
         {
             paddedHarness.Pump(new Size(220, 120));
             var paddedHitResult = new BoxHitTestResult();
-            Assert.True(paddedHarness.RenderView.HitTest(paddedHitResult, new Point(60, 46)));
+            Assert.True(paddedHarness.RenderView.Child!.HitTest(paddedHitResult, new Point(60, 46)));
         }
 
         using var overrideHarness = new WidgetRenderHarness(
@@ -5563,7 +5563,7 @@ public sealed class MaterialButtonsTests
         overrideHarness.Pump(new Size(220, 120));
 
         var overrideHitResult = new BoxHitTestResult();
-        Assert.False(overrideHarness.RenderView.HitTest(overrideHitResult, new Point(60, 46)));
+        Assert.False(overrideHarness.RenderView.Child!.HitTest(overrideHitResult, new Point(60, 46)));
     }
 
     [Fact]

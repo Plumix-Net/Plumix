@@ -131,7 +131,7 @@ public sealed class RendererBindingDebugTests : IDisposable
                     Capture(RenderingDebug.DebugDumpLayerTree));
                 if (Constants.KDebugMode)
                 {
-                    Assert.StartsWith("OffsetLayer#", preparedDump, StringComparison.Ordinal);
+                    Assert.StartsWith("TransformLayer#", preparedDump, StringComparison.Ordinal);
                     Assert.Contains("child 1: OpacityLayer#", preparedDump, StringComparison.Ordinal);
                     Assert.EndsWith("\n", preparedDump, StringComparison.Ordinal);
                 }

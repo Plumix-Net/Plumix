@@ -784,7 +784,15 @@ public class PlumixHost : Control
             return null;
         }
 
-        return _pipeline.SemanticsOwner?.GetRectOfSemanticsNode(nodeId);
+        // The node's ancestor walk ends in the root's device-pixel-ratio transform; undo it exactly
+        // as RendererBinding.GetRectOfSemanticsNodeInViewCoordinates does.
+        if (_pipeline.SemanticsOwner?.GetRectOfSemanticsNode(nodeId) is not { } rect)
+        {
+            return null;
+        }
+
+        Matrix4? rootInverse = _root.HasConfiguration ? Matrix4.TryInvert(_root.Configuration.ToMatrix()) : null;
+        return rootInverse is null ? rect : MatrixUtils.TransformRect(rootInverse, rect);
     }
 
     public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)

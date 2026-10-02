@@ -2807,14 +2807,13 @@ public sealed partial class SemanticsOwner : ChangeNotifier
     }
 
     /// <summary>
-    /// The box of the node with the given <paramref name="nodeId"/> in the view's coordinate space,
-    /// in logical pixels, or <c>null</c> when the node is unknown.
+    /// The box of the node with the given <paramref name="nodeId"/> in the root node's coordinate
+    /// space, or <c>null</c> when the node is unknown.
     /// </summary>
     /// <remarks>
-    /// The per-view half of Flutter's
-    /// <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>. Flutter undoes the device
-    /// pixel ratio its <c>RenderView</c> bakes into the root transform; Plumix's render tree is
-    /// already in logical pixels, so the ancestor walk alone is the answer.
+    /// The ancestor walk of Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>,
+    /// so under a <c>RenderView</c> the result still carries its root device-pixel-ratio transform;
+    /// the binding (and a host's own wrapper) undoes that.
     /// </remarks>
     public Rect? GetRectOfSemanticsNode(int nodeId) => GetSemanticsNode(nodeId)?.GlobalRect;
 

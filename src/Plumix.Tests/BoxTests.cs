@@ -510,14 +510,13 @@ public sealed class BoxTests
         var box = new FakeMissingSizeRenderBox();
         new RenderingHarness(box);
         box.FakeMissingSize = true;
-        // Dart's `RenderView` is a plain `RenderObject` that gives its child `ParentData` (`<none>`);
-        // Plumix's is an approximate `RenderBox` port and gives `BoxParentData` (see PORT_MAP.md).
+        // `RenderView` is a plain `RenderObject` that gives its child `ParentData` (`<none>`).
         FlutterError result = Assert.Throws<FlutterError>(() => box.HitTest(new BoxHitTestResult(), default));
         Assert.Equal(
             "FlutterError\n"
             + "   Cannot hit test a render box with no size.\n"
             + "   The hitTest() method was called on this RenderBox: FakeMissingSizeRenderBox#00000 NEEDS-PAINT:\n"
-            + "     parentData: offset=Offset(0.0, 0.0)\n"
+            + "     parentData: <none>\n"
             + "     constraints: BoxConstraints(w=800.0, h=600.0)\n"
             + "     size: Size(800.0, 600.0)\n"
             + "   Although this node is not marked as needing layout, its size is\n"

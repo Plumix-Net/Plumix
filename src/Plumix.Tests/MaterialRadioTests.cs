@@ -252,7 +252,7 @@ public sealed class MaterialRadioTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.True(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.True(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]
@@ -271,7 +271,7 @@ public sealed class MaterialRadioTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.False(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]

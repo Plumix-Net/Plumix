@@ -195,7 +195,7 @@ public sealed class MaterialCheckboxTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.True(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.True(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]
@@ -213,7 +213,7 @@ public sealed class MaterialCheckboxTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.False(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]
@@ -608,10 +608,10 @@ public sealed class MaterialCheckboxTests
             harness.Pump(new Size(220, 120));
 
             var hitInsideCupertinoTarget = new BoxHitTestResult();
-            Assert.True(harness.RenderView.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
+            Assert.True(harness.RenderView.Child!.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
 
             var hitOutsideCupertinoTarget = new BoxHitTestResult();
-            Assert.False(harness.RenderView.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
+            Assert.False(harness.RenderView.Child!.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
         }
         finally
         {
@@ -637,7 +637,7 @@ public sealed class MaterialCheckboxTests
         harness.Pump(new Size(220, 120));
 
         var hitResult = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(hitResult, new Point(60, 46)));
+        Assert.False(harness.RenderView.Child!.HitTest(hitResult, new Point(60, 46)));
     }
 
     [Fact]

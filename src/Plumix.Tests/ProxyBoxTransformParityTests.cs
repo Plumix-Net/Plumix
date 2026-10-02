@@ -435,9 +435,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                             Matrix4.Diagonal3Values(0.5, 0.5, 1.0),
                             child: new RepaintBoundary(child: new Container(color: new Color(0xFF00FF00))))))));
 
-        // Dart counts two transform layers because its render view's root layer is a TransformLayer;
-        // the root layer here is an OffsetLayer.
-        TransformLayer layer = Assert.Single(Layers(tester).OfType<TransformLayer>());
+        List<TransformLayer> layers = [.. Layers(tester).OfType<TransformLayer>()];
+        Assert.Equal(2, layers.Count);
+        // The first transform is from the render view.
+        TransformLayer layer = layers[1];
         Vector3 translation = layer.Transform.GetTranslation();
         Assert.Equal(100.0, translation.X);
         Assert.Equal(75.0, translation.Y);
@@ -450,7 +451,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Transform.Rotate(Math.PI / 2.0, child: new RepaintBoundary(child: new Container())));
 
-        TransformLayer layer = Assert.Single(Layers(tester).OfType<TransformLayer>());
+        List<TransformLayer> layers = [.. Layers(tester).OfType<TransformLayer>()];
+        Assert.Equal(2, layers.Count);
+        // The first transform is from the render view.
+        TransformLayer layer = layers[1];
         double[] expected = [0.0, 1.0, 0.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 700.0, -100.0, 0.0, 1.0];
         AssertStorage(expected, layer.Transform.Storage, precision: 10);
     }
@@ -475,7 +479,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
             Transform.Translate(new Point(100.0, 50.0), child: new RepaintBoundary(child: new Container())));
 
         // This should not cause a transform layer to be inserted.
-        Assert.Empty(Layers(tester).OfType<TransformLayer>());
+        Assert.Single(Layers(tester).OfType<TransformLayer>()); // only the render view
         Assert.Equal(new Point(100.0, 50.0), GetTopLeft(tester.ElementOfType<Container>()));
     }
 
@@ -485,7 +489,10 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(Transform.Scale(scale: 2.0, child: new RepaintBoundary(child: new Container())));
 
-        TransformLayer layer = Assert.Single(Layers(tester).OfType<TransformLayer>());
+        List<TransformLayer> layers = [.. Layers(tester).OfType<TransformLayer>()];
+        Assert.Equal(2, layers.Count);
+        // The first transform is from the render view.
+        TransformLayer layer = layers[1];
         double[] expected =
         [
             // These are column-major, not row-major.
@@ -554,8 +561,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(3, Layers(tester).Count);
     }
 
-    [Fact(Skip = "Parity gap: RenderView inherits RenderBox.HitTest's size check, but Dart's RenderView.hitTest "
-        + "has none, so a tap outside the 800x600 view never reaches the translated child.")]
+    [Fact]
     public void Transform_TranslatedChildIntoTranslatedBox_HitTest()
     {
         var key1 = new UniqueKey();
@@ -855,7 +861,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                             child: new RepaintBoundary(child: new Placeholder()))))));
 
         // Dart's first entry is the render view's TransformLayer; the root layer here is an OffsetLayer.
-        Assert.Equal([typeof(OffsetLayer), typeof(TransformLayer), typeof(OffsetLayer)], GetLayers(tester));
+        Assert.Equal([typeof(TransformLayer), typeof(TransformLayer), typeof(OffsetLayer)], GetLayers(tester));
     }
 
     [Fact]
@@ -876,7 +882,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                             child: new RepaintBoundary(child: new Placeholder()))))));
 
         Assert.Equal(
-            [typeof(OffsetLayer), typeof(ClipRectLayer), typeof(TransformLayer), typeof(OffsetLayer)],
+            [typeof(TransformLayer), typeof(ClipRectLayer), typeof(TransformLayer), typeof(OffsetLayer)],
             GetLayers(tester));
     }
 
@@ -898,7 +904,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                             child: new RepaintBoundary(child: new Placeholder()))))));
 
         Assert.Equal(
-            [typeof(OffsetLayer), typeof(ClipRectLayer), typeof(TransformLayer), typeof(OffsetLayer)],
+            [typeof(TransformLayer), typeof(ClipRectLayer), typeof(TransformLayer), typeof(OffsetLayer)],
             GetLayers(tester));
     }
 
@@ -930,12 +936,12 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                         if (a < c || b < d)
                         {
                             Assert.Equal(
-                                [typeof(OffsetLayer), typeof(ClipRectLayer), typeof(OffsetLayer)],
+                                [typeof(TransformLayer), typeof(ClipRectLayer), typeof(OffsetLayer)],
                                 GetLayers(tester));
                         }
                         else
                         {
-                            Assert.Equal([typeof(OffsetLayer), typeof(OffsetLayer)], GetLayers(tester));
+                            Assert.Equal([typeof(TransformLayer), typeof(OffsetLayer)], GetLayers(tester));
                         }
                     }
                 }

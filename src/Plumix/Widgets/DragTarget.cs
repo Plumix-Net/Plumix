@@ -613,15 +613,14 @@ internal sealed class DragAvatar<T> : IDragAvatar
         }
 
         RenderObject? overlayRenderObject = _overlayState.Context.FindRenderObject();
-        RenderObject? root = overlayRenderObject?.Owner?.Root;
-        if (root is not RenderBox rootBox)
+        if (overlayRenderObject?.Owner?.RootNode is not RenderView root)
         {
             return;
         }
 
-        var result = new BoxHitTestResult();
+        var result = new HitTestResult();
         Point targetPosition = globalPosition + new Vector(_feedbackOffset.X, _feedbackOffset.Y);
-        rootBox.HitTest(result, targetPosition);
+        root.HitTest(result, targetPosition);
         List<IDragTargetState> targets = GetDragTargets(result.Path);
 
         bool listsMatch = targets.Count >= _enteredTargets.Count && _enteredTargets.Count > 0;

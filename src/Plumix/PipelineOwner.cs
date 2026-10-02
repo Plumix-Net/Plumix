@@ -505,7 +505,7 @@ public class PipelineOwner : DiagnosticableTree
         {
             if (_needsLayout)
             {
-                FlushLayoutNodes(rootSize);
+                FlushLayoutNodes();
             }
 
             _debugDoingChildLayout = true;
@@ -539,15 +539,8 @@ public class PipelineOwner : DiagnosticableTree
     private static string DebugDescribeDirtyList(IEnumerable<RenderObject> nodes) =>
         "[" + string.Join(", ", nodes) + "]";
 
-    private void FlushLayoutNodes(Size? rootSize)
+    private void FlushLayoutNodes()
     {
-        // Dart's `RenderView.constraints` is its `configuration.logicalConstraints`, so a configured
-        // view lays out from its configuration whether or not the host handed the frame a size.
-        BoxConstraints? constraints = _rootNode is RenderView { HasConfiguration: true } configuredRootView
-            ? configuredRootView.Configuration.LogicalConstraints
-            : rootSize is { } size
-                ? new BoxConstraints(0, size.Width, 0, size.Height)
-                : null;
         _shouldMergeDirtyNodes = false;
 
         while (_nodesNeedingLayout.Count > 0)
@@ -577,14 +570,6 @@ public class PipelineOwner : DiagnosticableTree
                 RenderObject node = dirtyNodes[index];
                 if (!node.Attached || !ReferenceEquals(node.Owner, this))
                 {
-                    continue;
-                }
-
-                if (constraints is { } rootConstraints
-                    && ReferenceEquals(node, _rootNode)
-                    && node is RenderView rootView)
-                {
-                    rootView.Layout(rootConstraints);
                     continue;
                 }
 
@@ -833,6 +818,7 @@ public class PipelineOwner : DiagnosticableTree
     public void CompositeFrame(DrawingContext context)
     {
         bool hasBackdropFilters = _rootLayer.ContainsBackdropFilter;
+        using DrawingContext.PushedState rootTransform = PushInverseRootTransform(context);
         try
         {
             if (hasBackdropFilters)
@@ -867,6 +853,23 @@ public class PipelineOwner : DiagnosticableTree
 
             RenderingDebug.AdvanceRepaintColorForFrame();
         }
+    }
+
+    /// <summary>
+    /// Undoes the root layer's device-pixel-ratio scale on <paramref name="context"/>.
+    /// </summary>
+    /// <remarks>
+    /// A <see cref="RenderView"/>'s root <see cref="TransformLayer"/> scales logical pixels to the
+    /// physical pixels of Dart's engine surface, but an Avalonia drawing context is already in
+    /// logical pixels and applies the pixel density itself; pushing the inverse first makes the two
+    /// cancel, so the layer tree draws at the same logical geometry Dart rasterizes at.
+    /// </remarks>
+    private DrawingContext.PushedState PushInverseRootTransform(DrawingContext context)
+    {
+        Matrix4? inverse = _rootLayer is TransformLayer rootTransformLayer
+            ? Matrix4.TryInvert(rootTransformLayer.Transform)
+            : null;
+        return context.PushTransform((inverse ?? Matrix4.Identity()).ToAvaloniaMatrix());
     }
 
     private void CaptureBackdropInputs()
@@ -943,6 +946,7 @@ public class PipelineOwner : DiagnosticableTree
         try
         {
             using DrawingContext backdropContext = image.CreateDrawingContext();
+            using DrawingContext.PushedState rootTransform = PushInverseRootTransform(backdropContext);
             _rootLayer.AddToScene(backdropContext, new Point(0, 0));
             return new BackdropCapture(image, bounds, ownsImage: true);
         }
