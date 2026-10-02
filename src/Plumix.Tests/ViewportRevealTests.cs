@@ -698,20 +698,14 @@ public sealed class ViewportRevealTests
     }
 
     [Fact]
-    public void PersistentHeaderShowOnScreenConfiguration_ValidatesAndComparesByValue()
+    public void PersistentHeaderShowOnScreenConfiguration_AssertsItsRangeAndDefaultsToUnbounded()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.Throws<AssertionError>(
             () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
 
         var defaults = new PersistentHeaderShowOnScreenConfiguration();
         Assert.True(double.IsNegativeInfinity(defaults.MinShowOnScreenExtent));
         Assert.True(double.IsPositiveInfinity(defaults.MaxShowOnScreenExtent));
-        Assert.Equal(
-            new PersistentHeaderShowOnScreenConfiguration(10.0, 20.0),
-            new PersistentHeaderShowOnScreenConfiguration(10.0, 20.0));
-        Assert.NotEqual(
-            new PersistentHeaderShowOnScreenConfiguration(10.0, 20.0),
-            new PersistentHeaderShowOnScreenConfiguration(10.0, 30.0));
     }
 
     [Fact]

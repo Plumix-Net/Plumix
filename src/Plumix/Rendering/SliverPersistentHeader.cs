@@ -1,16 +1,20 @@
 using Avalonia;
-using Plumix.Widgets;
 using Plumix.Foundation;
+using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver_persistent_header.dart
 
 namespace Plumix.Rendering;
 
 /// <summary>
-/// Specifies how a stretched header is to trigger an <see cref="OnStretchTrigger"/>.
+/// Specifies how a stretched header is to trigger an <c>AsyncCallback</c>.
 /// </summary>
-public sealed class OverScrollHeaderStretchConfiguration
+public class OverScrollHeaderStretchConfiguration
 {
+    /// <summary>
+    /// Creates an object that specifies how a stretched header may activate an <c>AsyncCallback</c>.
+    /// </summary>
     public OverScrollHeaderStretchConfiguration(
         double stretchTriggerOffset = 100.0,
         Func<Task>? onStretchTrigger = null)
@@ -19,113 +23,166 @@ public sealed class OverScrollHeaderStretchConfiguration
         OnStretchTrigger = onStretchTrigger;
     }
 
-    /// <summary>The offset of overscroll required to trigger <see cref="OnStretchTrigger"/>.</summary>
+    /// <summary>The offset of overscroll required to trigger the <see cref="OnStretchTrigger"/>.</summary>
     public double StretchTriggerOffset { get; }
 
-    /// <summary>The callback invoked when the header reaches <see cref="StretchTriggerOffset"/>.</summary>
+    /// <summary>
+    /// The callback function to be executed when a user over-scrolls to the offset specified by
+    /// <see cref="StretchTriggerOffset"/>.
+    /// </summary>
     public Func<Task>? OnStretchTrigger { get; }
+}
+
+/// <summary>
+/// <see cref="RenderObject.ShowOnScreen"/> configuration for a floating or pinned persistent header.
+/// </summary>
+/// <remarks>
+/// When a <c>showOnScreen</c> request targets a floating header, the header expands (and the
+/// enclosing viewport scrolls) so its extent falls in
+/// [<see cref="MinShowOnScreenExtent"/>, <see cref="MaxShowOnScreenExtent"/>].
+/// </remarks>
+public sealed class PersistentHeaderShowOnScreenConfiguration
+{
+    /// <summary>
+    /// Creates an object that specifies how a pinned or floating persistent header should behave in response to
+    /// <c>showOnScreen</c> requests.
+    /// </summary>
+    public PersistentHeaderShowOnScreenConfiguration(
+        double minShowOnScreenExtent = double.NegativeInfinity,
+        double maxShowOnScreenExtent = double.PositiveInfinity)
+    {
+        DebugAssertions.Assert(minShowOnScreenExtent <= maxShowOnScreenExtent);
+        MinShowOnScreenExtent = minShowOnScreenExtent;
+        MaxShowOnScreenExtent = maxShowOnScreenExtent;
+    }
+
+    /// <summary>
+    /// The smallest the floating header can expand to in the main axis direction, in response to a
+    /// <c>showOnScreen</c> request, regardless of the persistent header's current extent.
+    /// </summary>
+    public double MinShowOnScreenExtent { get; }
+
+    /// <summary>
+    /// The maximum extent above which a floating persistent header will not expand to in response to
+    /// a <c>showOnScreen</c> request.
+    /// </summary>
+    public double MaxShowOnScreenExtent { get; }
 }
 
 /// <summary>
 /// Specifies how a floating header is to be "snapped" (animated) into or out of view.
 /// </summary>
-public sealed class FloatingHeaderSnapConfiguration
+public class FloatingHeaderSnapConfiguration
 {
+    /// <summary>
+    /// Creates an object that specifies how a floating header is to be "snapped" (animated) into or out of view.
+    /// </summary>
     public FloatingHeaderSnapConfiguration(Curve? curve = null, TimeSpan? duration = null)
     {
         Curve = curve ?? Curves.Ease;
         Duration = duration ?? TimeSpan.FromMilliseconds(300);
     }
 
-    /// <summary>The curve to use for the snap animation.</summary>
+    /// <summary>The snap animation curve.</summary>
     public Curve Curve { get; }
 
-    /// <summary>The duration of the snap animation.</summary>
+    /// <summary>The snap animation's duration.</summary>
     public TimeSpan Duration { get; }
 }
 
 /// <summary>
-/// A base class for slivers that have a <see cref="RenderBox"/> child which scrolls normally, but
-/// that stays pinned when the sliver would otherwise start to scroll off the leading edge.
+/// A base class for slivers that have a <see cref="RenderBox"/> child which scrolls normally, except
+/// that when it hits the leading edge (typically the top) of the viewport, it shrinks to a minimum
+/// size (<see cref="MinExtent"/>).
 /// </summary>
-public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
+/// <remarks>
+/// <para>This class primarily provides helpers for managing the child, in particular:</para>
+/// <list type="bullet">
+/// <item><see cref="LayoutChild"/>, which applies min and max extents and a scroll offset to lay out
+/// the child. This is normally called from <see cref="RenderObject.PerformLayout"/>.</item>
+/// <item><see cref="ChildExtent"/>, to convert the child's box layout dimensions to the sliver
+/// geometry model.</item>
+/// <item>Hit testing, painting, and other details of the sliver protocol.</item>
+/// </list>
+/// <para>
+/// Subclasses must implement <see cref="RenderObject.PerformLayout"/>, <see cref="MinExtent"/>, and
+/// <see cref="MaxExtent"/>, and typically also will implement <see cref="UpdateChild"/>.
+/// </para>
+/// <para>
+/// Dart mixes in <c>RenderObjectWithChildMixin&lt;RenderBox&gt;</c> and <c>RenderSliverHelpers</c>; C#
+/// has no mixins, so the child slot is spelled out here and the helpers are the static
+/// <see cref="RenderSliverHelpers"/>.
+/// </para>
+/// </remarks>
+public abstract class RenderSliverPersistentHeader : RenderSliver, IRenderObjectSingleChildContainer
 {
-    private double _minExtent;
-    private double _maxExtent;
+    private RenderBox? _child;
+    private double? _lastStretchOffset;
     private bool _needsUpdateChild = true;
     private double _lastShrinkOffset;
     private bool _lastOverlapsContent;
-    private double _lastStretchOffset;
 
+    /// <summary>Creates a sliver that changes its size when scrolled to the start of the viewport.</summary>
     protected RenderSliverPersistentHeader(
-        double minExtent,
-        double maxExtent,
         RenderBox? child = null,
         OverScrollHeaderStretchConfiguration? stretchConfiguration = null)
     {
-        ValidateExtents(minExtent, maxExtent);
-        _minExtent = minExtent;
-        _maxExtent = maxExtent;
         StretchConfiguration = stretchConfiguration;
         Child = child;
     }
 
-    /// <summary>The smallest size to allow the header to reach when it shrinks at the start of the viewport.</summary>
+    /// <summary>Dart's <c>RenderObjectWithChildMixin.child</c>.</summary>
+    public RenderBox? Child
+    {
+        get => _child;
+        set
+        {
+            if (_child != null)
+            {
+                DropChild(_child);
+            }
+
+            _child = value;
+            if (_child != null)
+            {
+                AdoptChild(_child);
+            }
+        }
+    }
+
+    RenderObject? IRenderObjectSingleChildContainer.Child
+    {
+        get => Child;
+        set
+        {
+            DebugAssertions.Assert(value is null || DebugValidateChildType<RenderBox>(this, value));
+            Child = (RenderBox?)value;
+        }
+    }
+
+    public override void VisitChildren(Action<RenderObject> visitor)
+    {
+        if (_child != null)
+        {
+            visitor(_child);
+        }
+    }
+
+    /// <summary>The biggest size that the child box is allowed to take.</summary>
     /// <remarks>
-    /// Flutter reads this from the header's delegate on every access; C# has no mixins, so the widget
-    /// layer pushes the delegate's value here instead. Both extents are contractually constant for
-    /// the lifetime of one delegate, so the observable behavior is the same.
+    /// The <see cref="LayoutChild"/> method uses this to determine the box constraints passed to the
+    /// child. It is the largest the child can be in the main axis, before any overscroll stretch.
     /// </remarks>
-    public double MinExtent
-    {
-        get => _minExtent;
-        set
-        {
-            ValidateExtents(value, _maxExtent);
-            if (Close(_minExtent, value))
-            {
-                return;
-            }
+    public abstract double MaxExtent { get; }
 
-            _minExtent = value;
-            MarkNeedsLayout();
-        }
-    }
+    /// <summary>The smallest size that the child box is allowed to take.</summary>
+    /// <remarks>
+    /// The <see cref="LayoutChild"/> method uses this to determine the box constraints passed to the
+    /// child.
+    /// </remarks>
+    public abstract double MinExtent { get; }
 
-    /// <summary>The biggest size the header can have.</summary>
-    public double MaxExtent
-    {
-        get => _maxExtent;
-        set
-        {
-            ValidateExtents(_minExtent, value);
-            if (Close(_maxExtent, value))
-            {
-                return;
-            }
-
-            _maxExtent = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    /// <summary>Configuration for the stretch behavior of the header, or null to disable stretching.</summary>
-    public OverScrollHeaderStretchConfiguration? StretchConfiguration { get; set; }
-
-    /// <summary>The shrink offset the child was last built with.</summary>
-    public double LastShrinkOffset => _lastShrinkOffset;
-
-    /// <summary>Whether the child was last built for a header that overlaps following content.</summary>
-    public bool LastOverlapsContent => _lastOverlapsContent;
-
-    /// <summary>
-    /// The element hook that rebuilds the child during layout. Flutter reaches its element through
-    /// <c>_RenderSliverPersistentHeaderForWidgetsMixin</c>; C# has no mixins, so the element installs
-    /// this callback instead.
-    /// </summary>
-    internal Action<double, bool>? ChildBuilder { get; set; }
-
-    /// <summary>The main-axis extent of the child, or zero when there is none.</summary>
+    /// <summary>The dimension of the child in the main axis.</summary>
     protected double ChildExtent
     {
         get
@@ -135,195 +192,293 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
                 return 0.0;
             }
 
-            return Constraints.Axis == Axis.Vertical ? Child.Size.Height : Child.Size.Width;
+            DebugAssertions.Assert(Child.HasSize);
+            return Constraints.Axis switch
+            {
+                Axis.Vertical => Child.Size.Height,
+                _ => Child.Size.Width,
+            };
         }
     }
 
+    /// <summary>The last value that <see cref="UpdateChild"/> was called with as its shrink offset.</summary>
+    public double LastShrinkOffset => _lastShrinkOffset;
+
+    /// <summary>The last value that <see cref="UpdateChild"/> was called with as its overlaps-content flag.</summary>
+    public bool LastOverlapsContent => _lastOverlapsContent;
+
     /// <summary>
-    /// A persistent header never scrolls with the viewport's content, so its semantics nodes are tagged
-    /// out of the scrolling pane and become siblings of the scrolling node.
+    /// Defines the parameters used to execute an <c>AsyncCallback</c> when a stretching header over-scrolls.
     /// </summary>
-    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    /// <remarks>If this is null then the stretch trigger is not invoked.</remarks>
+    public OverScrollHeaderStretchConfiguration? StretchConfiguration { get; set; }
+
+    /// <summary>Update the child render object if necessary.</summary>
+    /// <remarks>
+    /// Called before the first layout, any time <see cref="MarkNeedsLayout"/> is called, and any time
+    /// the scroll offset changes. The <paramref name="shrinkOffset"/> is the difference between the
+    /// <see cref="MaxExtent"/> and the current size. Zero means the header is fully expanded, any
+    /// greater number up to <see cref="MaxExtent"/> means that the header has been scrolled by that
+    /// much. The <paramref name="overlapsContent"/> argument is true if the sliver's leading edge is
+    /// beyond its normal place in the viewport contents, and false otherwise. It may still paint
+    /// beyond its normal place if the <see cref="MinExtent"/> after this call is greater than the
+    /// amount of space that would normally be left.
+    /// </remarks>
+    protected virtual void UpdateChild(double shrinkOffset, bool overlapsContent)
     {
-        base.DescribeSemanticsConfiguration(configuration);
-        configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
     }
 
     public override void MarkNeedsLayout()
     {
-        // This is automatically called whenever the child's intrinsic dimensions change, at which
-        // point we should remeasure the child.
+        // This is automatically called whenever the child's intrinsic dimensions
+        // change, at which point we should remeasure them during the next layout.
         _needsUpdateChild = true;
         base.MarkNeedsLayout();
     }
 
-    /// <summary>Rebuilds the child for the given shrink offset. The widget layer overrides this.</summary>
-    protected virtual void UpdateChild(double shrinkOffset, bool overlapsContent)
-    {
-        ChildBuilder?.Invoke(shrinkOffset, overlapsContent);
-    }
-
-    /// <summary>Lays the child out, applying any overscroll stretch and firing the stretch trigger.</summary>
+    /// <summary>Lays out the <see cref="Child"/>.</summary>
+    /// <remarks>
+    /// This is called by subclasses' <see cref="RenderObject.PerformLayout"/>. It should be passed
+    /// the scroll offset, which is the distance from where this sliver would be if it were laid out
+    /// normally to where it actually is (which is the leading edge of the viewport, when the header
+    /// is pinned). The <paramref name="maxExtent"/> argument is the maximum extent the header can
+    /// have before stretching; it is usually <see cref="MaxExtent"/>, but subclasses may pass a
+    /// different value.
+    /// </remarks>
     protected void LayoutChild(double scrollOffset, double maxExtent, bool overlapsContent = false)
     {
         double shrinkOffset = Math.Min(scrollOffset, maxExtent);
         if (_needsUpdateChild || _lastShrinkOffset != shrinkOffset || _lastOverlapsContent != overlapsContent)
         {
             InvokeLayoutCallback<SliverConstraints>(
-                _ => UpdateChild(shrinkOffset, overlapsContent),
+                constraints =>
+                {
+                    DebugAssertions.Assert(constraints == Constraints);
+                    UpdateChild(shrinkOffset, overlapsContent);
+                },
                 Constraints);
             _lastShrinkOffset = shrinkOffset;
             _lastOverlapsContent = overlapsContent;
             _needsUpdateChild = false;
         }
 
-        if (MinExtent > maxExtent)
+        if (Constants.KDebugMode && !(MinExtent <= maxExtent))
         {
-            throw new InvalidOperationException(
-                $"The maxExtent for this {GetType().Name} is less than its minExtent. "
-                + $"The specified maxExtent was {maxExtent}. The specified minExtent was {MinExtent}.");
+            throw new FlutterError([
+                new ErrorSummary($"The maxExtent for this {GetType().Name} is less than its minExtent."),
+                new DoubleProperty("The specified maxExtent was", maxExtent),
+                new DoubleProperty("The specified minExtent was", MinExtent),
+            ]);
         }
 
-        SliverConstraints constraints = Constraints;
         double stretchOffset = 0.0;
-        if (StretchConfiguration != null && constraints.ScrollOffset == 0.0)
+        if (StretchConfiguration != null && Constraints.ScrollOffset == 0.0)
         {
-            stretchOffset += Math.Abs(constraints.Overlap);
+            stretchOffset += Math.Abs(Constraints.Overlap);
         }
 
         Child?.Layout(
-            constraints.AsBoxConstraints(maxExtent: Math.Max(MinExtent, maxExtent - shrinkOffset) + stretchOffset),
+            Constraints.AsBoxConstraints(maxExtent: Math.Max(MinExtent, maxExtent - shrinkOffset) + stretchOffset),
             parentUsesSize: true);
 
-        if (StretchConfiguration is { OnStretchTrigger: not null } stretch
-            && stretchOffset >= stretch.StretchTriggerOffset
-            && _lastStretchOffset <= stretch.StretchTriggerOffset)
+        // Dart's `_lastStretchOffset` is `late`: reading it before the first layout wrote it throws.
+        if (StretchConfiguration != null
+            && StretchConfiguration.OnStretchTrigger != null
+            && stretchOffset >= StretchConfiguration.StretchTriggerOffset
+            && _lastStretchOffset!.Value <= StretchConfiguration.StretchTriggerOffset)
         {
-            _ = stretch.OnStretchTrigger!();
+            _ = StretchConfiguration.OnStretchTrigger!();
         }
 
         _lastStretchOffset = stretchOffset;
     }
 
     /// <summary>
-    /// The overscroll extent this header's geometry reports, which — unlike the extent
-    /// <see cref="LayoutChild"/> stretches into — is not gated on a zero scroll offset.
+    /// Returns the distance from the leading <i>visible</i> edge of the sliver to the side of the
+    /// child closest to that edge, in the scroll axis direction.
     /// </summary>
-    protected double GeometryStretchOffset =>
-        StretchConfiguration != null ? Math.Abs(Constraints.Overlap) : 0.0;
+    /// <remarks>
+    /// For example, if the <see cref="SliverConstraints.AxisDirection"/> is
+    /// <see cref="AxisDirection.Down"/>, then this is the distance from the top of the visible portion
+    /// of the sliver to the top of the child. If the child is scrolled partially off the top of the
+    /// viewport, then this will be negative. On the other hand, if the child is in the middle of the
+    /// viewport, then this will be zero; if it is aligned with the bottom edge it will be the extent
+    /// of the sliver minus the extent of the child, and so forth.
+    /// </remarks>
+    public override double ChildMainAxisPosition(RenderObject child) => base.ChildMainAxisPosition(child);
 
-    /// <summary>
-    /// Places the child at the offset implied by <see cref="RenderSliver.ChildMainAxisPosition"/>.
-    /// Flutter applies the same mapping inside <c>paint</c>; Plumix stores it in the child's parent
-    /// data so painting, hit testing and semantics all read one offset.
-    /// </summary>
-    protected void UpdateChildPaintOffset()
+    protected override bool HitTestChildren(
+        SliverHitTestResult result,
+        double mainAxisPosition,
+        double crossAxisPosition)
     {
-        if (Child == null)
+        DebugAssertions.Assert(Geometry!.HitTestExtent > 0.0);
+        if (Child != null)
         {
-            return;
+            return this.HitTestBoxChild(
+                BoxHitTestResult.Wrap(result),
+                Child,
+                mainAxisPosition: mainAxisPosition,
+                crossAxisPosition: crossAxisPosition);
         }
 
-        double position = ChildMainAxisPosition(Child);
-        double childExtent = ChildExtent;
-        double paintExtent = Geometry!.PaintExtent;
-        ((SliverPhysicalParentData)Child.parentData!).PaintOffset =
-            PersistentHeaderReveal.EffectiveAxisDirection(Constraints) switch
+        return false;
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        DebugAssertions.Assert(ReferenceEquals(child, Child));
+        this.ApplyPaintTransformForBoxChild((RenderBox)child, transform);
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (Child != null && Geometry!.Visible)
+        {
+            offset += ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+                Constraints.AxisDirection,
+                Constraints.GrowthDirection) switch
             {
-                AxisDirection.Up => new Point(0.0, paintExtent - position - childExtent),
-                AxisDirection.Left => new Point(paintExtent - position - childExtent, 0.0),
-                AxisDirection.Right => new Point(position, 0.0),
-                _ => new Point(0.0, position),
+                AxisDirection.Up => new Point(
+                    0.0,
+                    Geometry.PaintExtent - ChildMainAxisPosition(Child) - ChildExtent),
+                AxisDirection.Left => new Point(
+                    Geometry.PaintExtent - ChildMainAxisPosition(Child) - ChildExtent,
+                    0.0),
+                AxisDirection.Right => new Point(ChildMainAxisPosition(Child), 0.0),
+                _ => new Point(0.0, ChildMainAxisPosition(Child)),
             };
+            context.PaintChild(Child, offset);
+        }
     }
 
-    private static void ValidateExtents(double minExtent, double maxExtent)
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
-        if (!double.IsFinite(minExtent) || minExtent < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(minExtent));
-        }
-
-        if (!double.IsFinite(maxExtent) || maxExtent < minExtent)
-        {
-            throw new ArgumentOutOfRangeException(nameof(maxExtent));
-        }
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
     }
-
-    private static bool Close(double a, double b) => Math.Abs(a - b) <= 0.0001;
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
         properties.Add(DoubleProperty.Lazy("maxExtent", () => MaxExtent));
-        properties.Add(DoubleProperty.Lazy(
-            "child position",
-            () => Child is null ? null : ChildMainAxisPosition(Child)));
+        properties.Add(DoubleProperty.Lazy("child position", () => ChildMainAxisPosition(Child!)));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
+
+    /// <summary>
+    /// Dart's private <c>_trim</c>: <c>original?.intersect(Rect.fromLTRB(left, top, right, bottom))</c>.
+    /// </summary>
+    internal static Rect? Trim(
+        Rect? original,
+        double top = double.NegativeInfinity,
+        double right = double.PositiveInfinity,
+        double bottom = double.PositiveInfinity,
+        double left = double.NegativeInfinity)
+    {
+        if (original is not { } rect)
+        {
+            return null;
+        }
+
+        // Dart's `Rect.intersect` keeps a negative extent where Avalonia's returns an empty rect.
+        double newLeft = Math.Max(rect.Left, left);
+        double newTop = Math.Max(rect.Top, top);
+        double newRight = Math.Min(rect.Right, right);
+        double newBottom = Math.Min(rect.Bottom, bottom);
+        return new Rect(newLeft, newTop, newRight - newLeft, newBottom - newTop);
     }
 }
 
-/// <summary>A sliver with a <see cref="RenderBox"/> child which scrolls normally.</summary>
-public class RenderSliverScrollingPersistentHeader : RenderSliverPersistentHeader
+/// <summary>
+/// A sliver with a <see cref="RenderBox"/> child which scrolls normally, except that when it hits the leading edge
+/// (typically the top) of the viewport, it shrinks to a minimum size before continuing to scroll.
+/// </summary>
+/// <remarks>
+/// This sliver makes no effort to avoid overlapping other content.
+/// </remarks>
+public abstract class RenderSliverScrollingPersistentHeader : RenderSliverPersistentHeader
 {
     private double? _childPosition;
 
-    public RenderSliverScrollingPersistentHeader(
-        double minExtent,
-        double maxExtent,
+    /// <summary>Creates a sliver that shrinks when it hits the start of the viewport, then scrolls off.</summary>
+    protected RenderSliverScrollingPersistentHeader(
         RenderBox? child = null,
         OverScrollHeaderStretchConfiguration? stretchConfiguration = null)
-        : base(minExtent, maxExtent, child, stretchConfiguration)
+        : base(child, stretchConfiguration)
     {
+    }
+
+    /// <summary>
+    /// Updates <see cref="RenderSliver.Geometry"/>, and returns the new value for <see cref="ChildMainAxisPosition"/>.
+    /// </summary>
+    /// <remarks>This is used by <see cref="RenderObject.PerformLayout"/>.</remarks>
+    protected double UpdateGeometry()
+    {
+        double stretchOffset = 0.0;
+        if (StretchConfiguration != null)
+        {
+            stretchOffset += Math.Abs(Constraints.Overlap);
+        }
+
+        double maxExtent = MaxExtent;
+        double paintExtent = maxExtent - Constraints.ScrollOffset;
+        double cacheExtent = CalculateCacheOffset(Constraints, from: 0.0, to: maxExtent);
+
+        Geometry = new SliverGeometry(
+            CacheExtent: cacheExtent,
+            ScrollExtent: maxExtent,
+            PaintOrigin: Math.Min(Constraints.Overlap, 0.0),
+            PaintExtent: Math.Clamp(paintExtent, 0.0, Constraints.RemainingPaintExtent),
+            MaxPaintExtent: maxExtent + stretchOffset,
+            // Conservatively say we do have overflow to avoid complexity.
+            HasVisualOverflow: true);
+        return stretchOffset > 0 ? 0.0 : Math.Min(0.0, paintExtent - ChildExtent);
     }
 
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
-        LayoutChild(constraints.ScrollOffset, MaxExtent);
-        _childPosition = UpdateGeometry();
-        UpdateChildPaintOffset();
-    }
-
-    /// <summary>Updates <see cref="RenderSliver.Geometry"/> and returns the child's main axis position.</summary>
-    protected virtual double UpdateGeometry()
-    {
-        SliverConstraints constraints = Constraints;
-        double stretchOffset = GeometryStretchOffset;
         double maxExtent = MaxExtent;
-        double paintExtent = maxExtent - constraints.ScrollOffset;
-        double clampedPaintExtent = Math.Clamp(paintExtent, 0.0, constraints.RemainingPaintExtent);
-        Geometry = new SliverGeometry(
-            ScrollExtent: maxExtent,
-            PaintExtent: clampedPaintExtent,
-            LayoutExtent: clampedPaintExtent,
-            MaxPaintExtent: maxExtent + stretchOffset,
-            CacheExtent: CalculateCacheOffset(constraints, from: 0.0, to: maxExtent),
-            HasVisualOverflow: true,
-            PaintOrigin: Math.Min(constraints.Overlap, 0.0));
-        return stretchOffset > 0 ? 0.0 : Math.Min(0.0, paintExtent - ChildExtent);
+        LayoutChild(constraints.ScrollOffset, maxExtent);
+        _childPosition = UpdateGeometry();
     }
 
-    public override double ChildMainAxisPosition(RenderObject child) => _childPosition ?? 0.0;
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        DebugAssertions.Assert(ReferenceEquals(child, Child));
+        DebugAssertions.Assert(_childPosition != null);
+        return _childPosition!.Value;
+    }
 }
 
-/// <summary>A sliver with a <see cref="RenderBox"/> child which is pinned to the leading edge.</summary>
-public class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
+/// <summary>
+/// A sliver with a <see cref="RenderBox"/> child which never scrolls off the viewport in the positive scroll direction,
+/// and which first scrolls on at a full size but then shrinks as the viewport continues to scroll.
+/// </summary>
+/// <remarks>
+/// This sliver avoids overlapping other earlier slivers where possible.
+/// </remarks>
+public abstract class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
 {
-    public RenderSliverPinnedPersistentHeader(
-        double minExtent,
-        double maxExtent,
+    /// <summary>
+    /// Creates a sliver that shrinks when it hits the start of the viewport, then stays pinned there.
+    /// </summary>
+    protected RenderSliverPinnedPersistentHeader(
         RenderBox? child = null,
         OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
         PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
-        : base(minExtent, maxExtent, child, stretchConfiguration)
+        : base(child, stretchConfiguration)
     {
         ShowOnScreenConfiguration = showOnScreenConfiguration ?? new PersistentHeaderShowOnScreenConfiguration();
     }
 
-    /// <summary>
-    /// Specifies how a pinned header is to trim the rectangle a reveal request asks the viewport for.
-    /// </summary>
+    /// <summary>Specifies the persistent header's behavior when <c>showOnScreen</c> is called.</summary>
+    /// <remarks>If set to null, the persistent header will delegate the <c>showOnScreen</c> call to its
+    /// parent.</remarks>
     public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; set; }
 
     protected override void PerformLayout()
@@ -331,31 +486,27 @@ public class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
         SliverConstraints constraints = Constraints;
         double maxExtent = MaxExtent;
         bool overlapsContent = constraints.Overlap > 0.0;
-        LayoutChild(constraints.ScrollOffset, maxExtent, overlapsContent);
-        double effectiveRemainingPaintExtent = Math.Max(0.0, constraints.RemainingPaintExtent - constraints.Overlap);
+        LayoutChild(constraints.ScrollOffset, maxExtent, overlapsContent: overlapsContent);
+        double effectiveRemainingPaintExtent = Math.Max(0, constraints.RemainingPaintExtent - constraints.Overlap);
         double layoutExtent = Math.Clamp(
             maxExtent - constraints.ScrollOffset,
             0.0,
             effectiveRemainingPaintExtent);
-        double stretchOffset = GeometryStretchOffset;
+        double stretchOffset = StretchConfiguration != null ? Math.Abs(constraints.Overlap) : 0.0;
         Geometry = new SliverGeometry(
             ScrollExtent: maxExtent,
+            PaintOrigin: constraints.Overlap,
             PaintExtent: Math.Min(ChildExtent, effectiveRemainingPaintExtent),
             LayoutExtent: layoutExtent,
             MaxPaintExtent: maxExtent + stretchOffset,
+            MaxScrollObstructionExtent: MinExtent,
             CacheExtent: layoutExtent > 0.0 ? -constraints.CacheOrigin + layoutExtent : layoutExtent,
-            HasVisualOverflow: true,
-            PaintOrigin: constraints.Overlap,
-            MaxScrollObstructionExtent: MinExtent);
-        UpdateChildPaintOffset();
+            // Conservatively say we do have overflow to avoid complexity.
+            HasVisualOverflow: true);
     }
 
     public override double ChildMainAxisPosition(RenderObject child) => 0.0;
 
-    /// <summary>
-    /// A pinned header stays put, so a reveal request only has to ask the viewport for the part of
-    /// the rectangle that is not already held at the leading edge.
-    /// </summary>
     public override void ShowOnScreen(
         RenderObject? descendant = null,
         Rect? rect = null,
@@ -363,97 +514,190 @@ public class RenderSliverPinnedPersistentHeader : RenderSliverPersistentHeader
         Curve? curve = null)
     {
         Rect? localBounds = descendant != null
-            ? RenderObject.TransformRect(descendant.GetTransformTo(this), rect ?? descendant.PaintBounds)
+            ? MatrixUtils.TransformRect(descendant.GetTransformTo(this), rect ?? descendant.PaintBounds)
             : rect;
-        Rect? newRect = PersistentHeaderReveal.TrimForPinnedHeader(
-            localBounds,
-            PersistentHeaderReveal.EffectiveAxisDirection(Constraints),
-            ChildExtent);
-        base.ShowOnScreen(descendant: this, rect: newRect, duration: duration, curve: curve);
+
+        Rect? newRect = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            Constraints.AxisDirection,
+            Constraints.GrowthDirection) switch
+        {
+            AxisDirection.Up => Trim(localBounds, bottom: ChildExtent),
+            AxisDirection.Left => Trim(localBounds, right: ChildExtent),
+            AxisDirection.Right => Trim(localBounds, left: 0),
+            _ => Trim(localBounds, top: 0),
+        };
+
+        base.ShowOnScreen(descendant: this, rect: newRect, duration: duration, curve: curve ?? Curves.Ease);
     }
 }
 
 /// <summary>
-/// A sliver with a <see cref="RenderBox"/> child which shrinks and scrolls like a
-/// <see cref="RenderSliverScrollingPersistentHeader"/>, but immediately comes back when the user
-/// scrolls in the reverse direction.
+/// A sliver with a <see cref="RenderBox"/> child which shrinks and scrolls like a <see
+/// cref="RenderSliverScrollingPersistentHeader"/>, but immediately comes back when the user scrolls in the reverse
+/// direction.
 /// </summary>
-public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
+public abstract class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
 {
     private AnimationController? _controller;
     private Animation<double>? _animation;
     private double? _lastActualScrollOffset;
     private double? _effectiveScrollOffset;
+
+    // Important for pointer scrolling, which does not have the same concept of a hold and release
+    // scroll movement, like dragging. This keeps track of the last ScrollDirection when scrolling
+    // started.
     private ScrollDirection? _lastStartedScrollDirection;
+
+    // Distance from our leading edge to the child's leading edge, in the axis direction. Negative if
+    // we're scrolled off the top.
     private double? _childPosition;
+
     private ITickerProvider? _vsync;
 
-    public RenderSliverFloatingPersistentHeader(
-        double minExtent,
-        double maxExtent,
+    /// <summary>
+    /// Creates a sliver that shrinks when it hits the start of the viewport, then scrolls off, and comes back
+    /// immediately when the user reverses the scroll direction.
+    /// </summary>
+    protected RenderSliverFloatingPersistentHeader(
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration,
         RenderBox? child = null,
         ITickerProvider? vsync = null,
         FloatingHeaderSnapConfiguration? snapConfiguration = null,
-        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
-        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
-        : base(minExtent, maxExtent, child, stretchConfiguration)
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null)
+        : base(child, stretchConfiguration)
     {
         _vsync = vsync;
         SnapConfiguration = snapConfiguration;
         ShowOnScreenConfiguration = showOnScreenConfiguration;
     }
 
-    /// <summary>Specifies how the header animates itself into or out of view, or null to disable snapping.</summary>
-    public FloatingHeaderSnapConfiguration? SnapConfiguration { get; set; }
-
-    /// <summary>How far a reveal request may expand this header, or null to defer to the viewport.</summary>
-    public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; set; }
+    protected override void OnDetach()
+    {
+        _controller?.Dispose();
+        _controller = null; // lazily recreated if we're reattached.
+        base.OnDetach();
+    }
 
     /// <summary>
-    /// The ticker provider the snap animation runs on.
+    /// The shrink offset the header is laid out with, which floating decouples from the scroll
+    /// offset. Dart's library-private <c>_effectiveScrollOffset</c>, which the floating-pinned
+    /// subclass reads.
     /// </summary>
-    /// <remarks>
-    /// Plumix's <see cref="AnimationController"/> has no <c>resync</c>, so a new provider disposes the
-    /// controller instead of re-hosting it; the controller is recreated lazily on the next snap.
-    /// </remarks>
+    internal double? EffectiveScrollOffset => _effectiveScrollOffset;
+
+    /// <summary>
+    /// A <see cref="ITickerProvider"/> to use to vend <see cref="Ticker"/> objects, used for the snap
+    /// and show-on-screen animations.
+    /// </summary>
     public ITickerProvider? Vsync
     {
         get => _vsync;
         set
         {
-            if (ReferenceEquals(_vsync, value))
+            if (ReferenceEquals(value, _vsync))
             {
                 return;
             }
 
             _vsync = value;
-            DisposeController();
+            if (value == null)
+            {
+                _controller?.Dispose();
+                _controller = null;
+            }
+            else
+            {
+                _controller?.Resync(value);
+            }
         }
     }
 
-    /// <summary>The shrink offset the header is actually laid out with, which floating decouples from the scroll offset.</summary>
-    public double? EffectiveScrollOffset => _effectiveScrollOffset;
+    /// <summary>Defines the parameters used to snap (animate) the floating header in and out of view.</summary>
+    /// <remarks>If this is null, then the floating header does not snap.</remarks>
+    public FloatingHeaderSnapConfiguration? SnapConfiguration { get; set; }
 
-    /// <summary>Records the direction of a scroll gesture as it starts.</summary>
+    /// <summary>Specifies the persistent header's behavior when <c>showOnScreen</c> is called.</summary>
+    /// <remarks>If set to null, the persistent header will delegate the <c>showOnScreen</c> call to its
+    /// parent.</remarks>
+    public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; set; }
+
+    /// <summary>
+    /// Updates <see cref="RenderSliver.Geometry"/>, and returns the new value for <see cref="ChildMainAxisPosition"/>.
+    /// </summary>
+    /// <remarks>This is used by <see cref="RenderObject.PerformLayout"/>.</remarks>
+    protected virtual double UpdateGeometry()
+    {
+        double stretchOffset = 0.0;
+        if (StretchConfiguration != null)
+        {
+            stretchOffset += Math.Abs(Constraints.Overlap);
+        }
+
+        double maxExtent = MaxExtent;
+        double paintExtent = maxExtent - _effectiveScrollOffset!.Value;
+        double layoutExtent = maxExtent - Constraints.ScrollOffset;
+        Geometry = new SliverGeometry(
+            ScrollExtent: maxExtent,
+            PaintOrigin: Math.Min(Constraints.Overlap, 0.0),
+            PaintExtent: Math.Clamp(paintExtent, 0.0, Constraints.RemainingPaintExtent),
+            LayoutExtent: Math.Clamp(layoutExtent, 0.0, Constraints.RemainingPaintExtent),
+            MaxPaintExtent: maxExtent + stretchOffset,
+            // Conservatively say we do have overflow to avoid complexity.
+            HasVisualOverflow: true);
+        return stretchOffset > 0 ? 0.0 : Math.Min(0.0, paintExtent - ChildExtent);
+    }
+
+    private void UpdateAnimation(TimeSpan duration, double endValue, Curve curve)
+    {
+        DebugAssertions.Assert(
+            Vsync != null,
+            "vsync must not be null if the floating header changes size animatedly.");
+
+        if (_controller == null)
+        {
+            _controller = new AnimationController(vsync: Vsync!, duration: duration);
+            _controller.AddListener(() =>
+            {
+                if (_effectiveScrollOffset == _animation!.Value)
+                {
+                    return;
+                }
+
+                _effectiveScrollOffset = _animation.Value;
+                MarkNeedsLayout();
+            });
+        }
+
+        AnimationController effectiveController = _controller;
+        _animation = effectiveController.Drive(
+            new DoubleTween(begin: _effectiveScrollOffset, end: endValue).Chain(new CurveTween(curve: curve)));
+    }
+
+    /// <summary>
+    /// Update the last known <see cref="ScrollDirection"/> when scrolling began.
+    /// </summary>
     public void UpdateScrollStartDirection(ScrollDirection direction)
     {
         _lastStartedScrollDirection = direction;
     }
 
-    /// <summary>Animates the header fully into or out of view when a scroll gesture ends.</summary>
+    /// <summary>
+    /// If the header isn't already fully exposed, then scroll it into view.
+    /// </summary>
     public void MaybeStartSnapAnimation(ScrollDirection direction)
     {
-        if (SnapConfiguration is not { } snap)
+        FloatingHeaderSnapConfiguration? snap = SnapConfiguration;
+        if (snap == null)
         {
             return;
         }
 
-        if (direction == ScrollDirection.Forward && _effectiveScrollOffset <= 0.0)
+        if (direction == ScrollDirection.Forward && _effectiveScrollOffset!.Value <= 0.0)
         {
             return;
         }
 
-        if (direction == ScrollDirection.Reverse && _effectiveScrollOffset >= MaxExtent)
+        if (direction == ScrollDirection.Reverse && _effectiveScrollOffset!.Value >= MaxExtent)
         {
             return;
         }
@@ -465,44 +709,44 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
         _controller?.Forward(from: 0.0);
     }
 
-    /// <summary>Stops an in-flight snap animation when a new scroll gesture starts.</summary>
+    /// <summary>
+    /// If a header snap animation or a <see cref="ShowOnScreen"/> expand animation is underway then
+    /// stop it.
+    /// </summary>
     public void MaybeStopSnapAnimation(ScrollDirection direction)
     {
-        _ = direction;
         _controller?.Stop();
-    }
-
-    protected override void OnDetach()
-    {
-        // The controller is lazily recreated if this render object is reattached.
-        DisposeController();
-        base.OnDetach();
     }
 
     protected override void PerformLayout()
     {
         SliverConstraints constraints = Constraints;
         double maxExtent = MaxExtent;
-        if (_lastActualScrollOffset is { } lastActualScrollOffset
-            && (constraints.ScrollOffset < lastActualScrollOffset || _effectiveScrollOffset < maxExtent))
+        // We've laid out at least once to get an initial position, and either we are scrolling
+        // back, so should reveal, or some part of it is visible, so should shrink or reveal as
+        // appropriate.
+        if (_lastActualScrollOffset != null
+            && (constraints.ScrollOffset < _lastActualScrollOffset.Value
+                || _effectiveScrollOffset!.Value < maxExtent))
         {
-            double delta = lastActualScrollOffset - constraints.ScrollOffset;
+            double delta = _lastActualScrollOffset.Value - constraints.ScrollOffset;
+
             bool allowFloatingExpansion = constraints.UserScrollDirection == ScrollDirection.Forward
-                                          || _lastStartedScrollDirection == ScrollDirection.Forward;
+                                          || (_lastStartedScrollDirection != null
+                                              && _lastStartedScrollDirection == ScrollDirection.Forward);
             if (allowFloatingExpansion)
             {
-                if (_effectiveScrollOffset > maxExtent)
+                if (_effectiveScrollOffset!.Value > maxExtent)
                 {
-                    // We're scrolled off-screen, but should reveal, so pretend we're just at the
-                    // limit.
+                    // We're scrolled off-screen, but should reveal, so pretend we're just at the limit.
                     _effectiveScrollOffset = maxExtent;
                 }
             }
             else
             {
-                // We're not allowed to expand yet: pretend we did not scroll.
                 if (delta > 0.0)
                 {
+                    // Disallow the expansion. (But allow shrinking, i.e. delta < 0.0 is fine.)
                     delta = 0.0;
                 }
             }
@@ -517,91 +761,78 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
             _effectiveScrollOffset = constraints.ScrollOffset;
         }
 
-        bool overlapsContent = _effectiveScrollOffset < constraints.ScrollOffset;
-        LayoutChild(_effectiveScrollOffset!.Value, maxExtent, overlapsContent);
+        bool overlapsContent = _effectiveScrollOffset.Value < constraints.ScrollOffset;
+
+        LayoutChild(_effectiveScrollOffset.Value, maxExtent, overlapsContent: overlapsContent);
         _childPosition = UpdateGeometry();
-        UpdateChildPaintOffset();
         _lastActualScrollOffset = constraints.ScrollOffset;
     }
 
-    /// <summary>Updates <see cref="RenderSliver.Geometry"/> and returns the child's main axis position.</summary>
-    protected virtual double UpdateGeometry()
-    {
-        SliverConstraints constraints = Constraints;
-        double stretchOffset = GeometryStretchOffset;
-        double maxExtent = MaxExtent;
-        double paintExtent = maxExtent - _effectiveScrollOffset!.Value;
-        double layoutExtent = maxExtent - constraints.ScrollOffset;
-        Geometry = new SliverGeometry(
-            ScrollExtent: maxExtent,
-            PaintExtent: Math.Clamp(paintExtent, 0.0, constraints.RemainingPaintExtent),
-            LayoutExtent: Math.Clamp(layoutExtent, 0.0, constraints.RemainingPaintExtent),
-            MaxPaintExtent: maxExtent + stretchOffset,
-            CacheExtent: Math.Clamp(layoutExtent, 0.0, constraints.RemainingPaintExtent),
-            HasVisualOverflow: true,
-            PaintOrigin: Math.Min(constraints.Overlap, 0.0));
-        return stretchOffset > 0 ? 0.0 : Math.Min(0.0, paintExtent - ChildExtent);
-    }
-
-    public override double ChildMainAxisPosition(RenderObject child) => _childPosition ?? 0.0;
-
-    /// <summary>
-    /// A floating header expands itself to satisfy a reveal request rather than letting the viewport
-    /// scroll it into view, as long as it was given a
-    /// <see cref="PersistentHeaderShowOnScreenConfiguration"/>.
-    /// </summary>
     public override void ShowOnScreen(
         RenderObject? descendant = null,
         Rect? rect = null,
         TimeSpan duration = default,
         Curve? curve = null)
     {
-        if (ShowOnScreenConfiguration is not { } showOnScreen)
+        Curve effectiveCurve = curve ?? Curves.Ease;
+        PersistentHeaderShowOnScreenConfiguration? showOnScreen = ShowOnScreenConfiguration;
+        if (showOnScreen == null)
         {
-            base.ShowOnScreen(descendant, rect, duration, curve);
+            base.ShowOnScreen(descendant: descendant, rect: rect, duration: duration, curve: effectiveCurve);
             return;
         }
 
-        // The reveal is computed in the child's coordinate space: when the header is scrolled above
-        // the leading edge, the sliver's origin and the child's origin are not the same point.
+        DebugAssertions.Assert(Child != null || descendant == null);
+        // We prefer the child's coordinate space (instead of the sliver's) because it's easier for
+        // us to convert the target rect into target extents: when the sliver is sitting above the
+        // leading edge and not being scrolled into view, the child's position on the viewport
+        // overlaps with the sliver's, and the child's position doesn't change.
         Rect? childBounds = descendant != null
-            ? RenderObject.TransformRect(descendant.GetTransformTo(Child), rect ?? descendant.PaintBounds)
+            ? MatrixUtils.TransformRect(descendant.GetTransformTo(Child), rect ?? descendant.PaintBounds)
             : rect;
 
-        double childExtent = ChildExtent;
         double targetExtent;
         Rect? targetRect;
-        switch (PersistentHeaderReveal.EffectiveAxisDirection(Constraints))
+        switch (ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+                    Constraints.AxisDirection,
+                    Constraints.GrowthDirection))
         {
             case AxisDirection.Up:
-                targetExtent = childExtent - (childBounds?.Top ?? 0.0);
-                targetRect = PersistentHeaderReveal.Trim(childBounds, bottom: childExtent);
+                targetExtent = ChildExtent - (childBounds?.Top ?? 0);
+                targetRect = Trim(childBounds, bottom: ChildExtent);
                 break;
             case AxisDirection.Right:
-                targetExtent = childBounds?.Right ?? childExtent;
-                targetRect = PersistentHeaderReveal.Trim(childBounds, left: 0.0);
+                targetExtent = childBounds?.Right ?? ChildExtent;
+                targetRect = Trim(childBounds, left: 0);
                 break;
-            case AxisDirection.Left:
-                targetExtent = childExtent - (childBounds?.Left ?? 0.0);
-                targetRect = PersistentHeaderReveal.Trim(childBounds, right: childExtent);
+            case AxisDirection.Down:
+                targetExtent = childBounds?.Bottom ?? ChildExtent;
+                targetRect = Trim(childBounds, top: 0);
                 break;
             default:
-                targetExtent = childBounds?.Bottom ?? childExtent;
-                targetRect = PersistentHeaderReveal.Trim(childBounds, top: 0.0);
+                targetExtent = ChildExtent - (childBounds?.Left ?? 0);
+                targetRect = Trim(childBounds, right: ChildExtent);
                 break;
         }
 
         // A stretch header can have a bigger childExtent than maxExtent.
-        double effectiveMaxExtent = Math.Max(childExtent, MaxExtent);
+        double effectiveMaxExtent = Math.Max(ChildExtent, MaxExtent);
+
         targetExtent = Math.Clamp(
             Math.Clamp(targetExtent, showOnScreen.MinShowOnScreenExtent, showOnScreen.MaxShowOnScreenExtent),
-            childExtent,
+            // Clamp the value back to the valid range after applying additional constraints.
+            // Contracting is not allowed.
+            ChildExtent,
             effectiveMaxExtent);
 
-        // Expand the header, with animation. Contracting is not allowed.
-        if (targetExtent > childExtent && _controller?.Status != AnimationStatus.Forward)
+        // Expands the header if needed, with animation.
+        if (targetExtent > ChildExtent && _controller?.Status != AnimationStatus.Forward)
         {
-            UpdateAnimation(duration, MaxExtent - targetExtent, curve ?? Curves.Ease);
+            double targetScrollOffset = MaxExtent - targetExtent;
+            DebugAssertions.Assert(
+                Vsync != null,
+                "vsync must not be null if the floating header changes size animatedly.");
+            UpdateAnimation(duration, targetScrollOffset, effectiveCurve);
             _controller?.Forward(from: 0.0);
         }
 
@@ -609,49 +840,13 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
             descendant: descendant == null ? this : Child,
             rect: targetRect,
             duration: duration,
-            curve: curve);
+            curve: effectiveCurve);
     }
 
-    private void UpdateAnimation(TimeSpan duration, double endValue, Curve curve)
+    public override double ChildMainAxisPosition(RenderObject child)
     {
-        if (_vsync == null)
-        {
-            throw new InvalidOperationException(
-                "vsync must not be null if the floating header changes size animatedly.");
-        }
-
-        if (_controller == null)
-        {
-            _controller = new AnimationController(vsync: _vsync, duration: duration);
-            _controller.AddListener(HandleAnimationTick);
-        }
-
-        _animation = _controller.Drive(
-            new DoubleTween(begin: _effectiveScrollOffset ?? 0.0, end: endValue)
-                .Chain(new CurveTween(curve)));
-    }
-
-    private void HandleAnimationTick()
-    {
-        if (_animation is not { } animation || _effectiveScrollOffset == animation.Value)
-        {
-            return;
-        }
-
-        _effectiveScrollOffset = animation.Value;
-        MarkNeedsLayout();
-    }
-
-    private void DisposeController()
-    {
-        if (_controller == null)
-        {
-            return;
-        }
-
-        _controller.RemoveListener(HandleAnimationTick);
-        _controller.Dispose();
-        _controller = null;
+        DebugAssertions.Assert(ReferenceEquals(child, Child));
+        return _childPosition ?? 0.0;
     }
 
     /// <inheritdoc />
@@ -663,51 +858,54 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
 }
 
 /// <summary>
-/// A sliver with a <see cref="RenderBox"/> child which shrinks and then remains pinned to the
-/// leading edge, and which immediately grows back when the user scrolls in the reverse direction.
+/// A sliver with a <see cref="RenderBox"/> child which shrinks and then remains pinned to the start of the viewport
+/// like a <see cref="RenderSliverPinnedPersistentHeader"/>, but immediately grows when the user scrolls in the reverse
+/// direction.
 /// </summary>
-public class RenderSliverFloatingPinnedPersistentHeader : RenderSliverFloatingPersistentHeader
+public abstract class RenderSliverFloatingPinnedPersistentHeader : RenderSliverFloatingPersistentHeader
 {
-    public RenderSliverFloatingPinnedPersistentHeader(
-        double minExtent,
-        double maxExtent,
+    /// <summary>
+    /// Creates a sliver that shrinks when it hits the start of the viewport, then stays pinned there, and grows
+    /// immediately when the user reverses the scroll direction.
+    /// </summary>
+    protected RenderSliverFloatingPinnedPersistentHeader(
         RenderBox? child = null,
         ITickerProvider? vsync = null,
         FloatingHeaderSnapConfiguration? snapConfiguration = null,
         OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
         PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
         : base(
-            minExtent,
-            maxExtent,
-            child,
-            vsync,
-            snapConfiguration,
-            stretchConfiguration,
-            showOnScreenConfiguration)
+            showOnScreenConfiguration,
+            child: child,
+            vsync: vsync,
+            snapConfiguration: snapConfiguration,
+            stretchConfiguration: stretchConfiguration)
     {
     }
 
     protected override double UpdateGeometry()
     {
-        SliverConstraints constraints = Constraints;
         double minExtent = MinExtent;
-        double minAllowedExtent = constraints.RemainingPaintExtent > minExtent
+        double minAllowedExtent = Constraints.RemainingPaintExtent > minExtent
             ? minExtent
-            : constraints.RemainingPaintExtent;
+            : Constraints.RemainingPaintExtent;
         double maxExtent = MaxExtent;
         double paintExtent = maxExtent - EffectiveScrollOffset!.Value;
-        double clampedPaintExtent = Math.Clamp(paintExtent, minAllowedExtent, constraints.RemainingPaintExtent);
-        double layoutExtent = maxExtent - constraints.ScrollOffset;
-        double stretchOffset = GeometryStretchOffset;
+        double clampedPaintExtent = Math.Clamp(
+            paintExtent,
+            minAllowedExtent,
+            Constraints.RemainingPaintExtent);
+        double layoutExtent = maxExtent - Constraints.ScrollOffset;
+        double stretchOffset = StretchConfiguration != null ? Math.Abs(Constraints.Overlap) : 0.0;
         Geometry = new SliverGeometry(
             ScrollExtent: maxExtent,
+            PaintOrigin: Math.Min(Constraints.Overlap, 0.0),
             PaintExtent: clampedPaintExtent,
             LayoutExtent: Math.Clamp(layoutExtent, 0.0, clampedPaintExtent),
             MaxPaintExtent: maxExtent + stretchOffset,
-            CacheExtent: Math.Clamp(layoutExtent, 0.0, clampedPaintExtent),
-            HasVisualOverflow: true,
-            PaintOrigin: Math.Min(constraints.Overlap, 0.0),
-            MaxScrollObstructionExtent: minExtent);
+            MaxScrollObstructionExtent: minExtent,
+            // Conservatively say we do have overflow to avoid complexity.
+            HasVisualOverflow: true);
         return 0.0;
     }
 }

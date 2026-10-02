@@ -1437,16 +1437,13 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         Child = child;
     }
 
+    /// <summary>Dart's <c>RenderObjectWithChildMixin.child</c>: drops the old child and adopts the
+    /// new one without an equality check; adoption and dropping mark this object dirty.</summary>
     public RenderSliver? Child
     {
         get => _child;
         set
         {
-            if (ReferenceEquals(_child, value))
-            {
-                return;
-            }
-
             if (_child != null)
             {
                 DropChild(_child);
@@ -1457,8 +1454,6 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
             {
                 AdoptChild(_child);
             }
-
-            MarkNeedsLayout();
         }
     }
 
@@ -1862,53 +1857,88 @@ internal sealed class RenderSliverVisibility : RenderProxySliver
     }
 }
 
+/// <summary>Makes its sliver child partially transparent.</summary>
+/// <remarks>
+/// This class paints its sliver child into an intermediate buffer and then blends the sliver back
+/// into the scene, partially transparent. For values of opacity other than 0.0 and 1.0, this class
+/// is relatively expensive, because it requires painting the sliver child into an intermediate
+/// buffer. For the value 0.0, the sliver child is not painted at all. For the value 1.0, the sliver
+/// child is painted immediately without an intermediate buffer.
+/// </remarks>
 public sealed class RenderSliverOpacity : RenderProxySliver
 {
+    private int _alpha;
     private double _opacity;
     private bool _alwaysIncludeSemantics;
 
+    /// <summary>Creates a partially transparent render object.</summary>
+    /// <remarks>The <paramref name="opacity"/> argument must be between 0.0 and 1.0, inclusive.</remarks>
     public RenderSliverOpacity(
         double opacity = 1.0,
         bool alwaysIncludeSemantics = false,
-        RenderSliver? sliver = null) : base(sliver)
+        RenderSliver? sliver = null)
     {
-        _opacity = ValidateOpacity(opacity, nameof(opacity));
+        if (Constants.KDebugMode && !(opacity >= 0.0 && opacity <= 1.0))
+        {
+            throw new AssertionError("'opacity >= 0.0 && opacity <= 1.0': is not true.");
+        }
+
+        _opacity = opacity;
         _alwaysIncludeSemantics = alwaysIncludeSemantics;
+        _alpha = Color.GetAlphaFromOpacity(opacity);
+        Child = sliver;
     }
 
+    public override bool AlwaysNeedsCompositing => Child != null && _alpha > 0;
+
+    /// <summary>The fraction to scale the child's alpha value.</summary>
+    /// <remarks>
+    /// An opacity of 1.0 is fully opaque. An opacity of 0.0 is fully transparent (i.e. invisible).
+    /// Values 1.0 and 0.0 are painted with a fast path. Other values require painting the child
+    /// into an intermediate buffer, which is expensive.
+    /// </remarks>
     public double Opacity
     {
         get => _opacity;
         set
         {
-            double normalized = ValidateOpacity(value, nameof(value));
-            if (Math.Abs(_opacity - normalized) <= 0.000001)
+            if (Constants.KDebugMode && !(value >= 0.0 && value <= 1.0))
+            {
+                throw new AssertionError("'value >= 0.0 && value <= 1.0': is not true.");
+            }
+
+            if (_opacity == value)
             {
                 return;
             }
 
-            bool compositingChanged = (_opacity > 0.0) != (normalized > 0.0);
-            bool semanticsVisibilityChanged = (_opacity == 0.0) != (normalized == 0.0);
-            _opacity = normalized;
-            if (compositingChanged)
+            bool didNeedCompositing = AlwaysNeedsCompositing;
+            bool wasVisible = _alpha != 0;
+            _opacity = value;
+            _alpha = Color.GetAlphaFromOpacity(_opacity);
+            if (didNeedCompositing != AlwaysNeedsCompositing)
             {
                 MarkNeedsCompositingBitsUpdate();
             }
 
-            MarkNeedsCompositedLayerUpdate();
-            if (semanticsVisibilityChanged && !_alwaysIncludeSemantics)
+            MarkNeedsPaint();
+            if (wasVisible != (_alpha != 0) && !AlwaysIncludeSemantics)
             {
                 MarkNeedsSemanticsUpdate();
             }
         }
     }
 
+    /// <summary>Whether child semantics are included regardless of the opacity.</summary>
+    /// <remarks>
+    /// If false, semantics are excluded when <see cref="Opacity"/> is 0.0. Defaults to false.
+    /// </remarks>
     public bool AlwaysIncludeSemantics
     {
         get => _alwaysIncludeSemantics;
         set
         {
-            if (_alwaysIncludeSemantics == value)
+            if (value == _alwaysIncludeSemantics)
             {
                 return;
             }
@@ -1918,49 +1948,36 @@ public sealed class RenderSliverOpacity : RenderProxySliver
         }
     }
 
-    public override bool IsRepaintBoundary => Child != null && _opacity > 0.0;
-
-    public override bool AlwaysNeedsCompositing => Child != null && _opacity > 0.0;
-
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext context, Point offset)
     {
-        if (Child == null || !Child.Geometry!.Visible || _opacity == 0.0)
+        if (Child != null && Child.Geometry!.Visible)
         {
-            return;
-        }
+            if (_alpha == 0)
+            {
+                // No need to keep the layer. We'll create a new one if necessary.
+                Layer = null;
+                return;
+            }
 
-        base.Paint(ctx, offset);
-    }
-
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
-    {
-        return oldLayer as OpacityLayer ?? new OpacityLayer();
-    }
-
-    protected override void UpdateCompositedLayer(OffsetLayer layer)
-    {
-        if (layer is OpacityLayer opacityLayer)
-        {
-            opacityLayer.Opacity = _opacity;
+            Debug.Assert(NeedsCompositing);
+            Layer = context.PushOpacity(
+                offset,
+                _alpha,
+                base.Paint,
+                oldLayer: Layer as OpacityLayer);
+            if (Constants.KDebugMode)
+            {
+                Layer!.DebugCreator = DebugCreator;
+            }
         }
     }
 
     public override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (_opacity > 0.0 || _alwaysIncludeSemantics)
+        if (Child != null && (_alpha != 0 || AlwaysIncludeSemantics))
         {
-            base.VisitChildrenForSemantics(visitor);
+            visitor(Child);
         }
-    }
-
-    private static double ValidateOpacity(double value, string parameterName)
-    {
-        if (!double.IsFinite(value) || value < 0.0 || value > 1.0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Opacity must be between zero and one.");
-        }
-
-        return value;
     }
 
     /// <inheritdoc />
@@ -1970,7 +1987,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
         properties.Add(new DoubleProperty("opacity", Opacity));
         properties.Add(new FlagProperty(
             "alwaysIncludeSemantics",
-            AlwaysIncludeSemantics,
+            value: AlwaysIncludeSemantics,
             ifTrue: "alwaysIncludeSemantics"));
     }
 }

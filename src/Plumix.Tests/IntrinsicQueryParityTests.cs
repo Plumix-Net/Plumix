@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Widgets;
 using Xunit;
 
 namespace Plumix.Tests;
@@ -164,7 +165,8 @@ public sealed class IntrinsicQueryParityTests
         Assert.Equal(240.0, fill.Geometry!.ScrollExtent);
 
         var headerChild = new QueryRenderBox(new Size(100, 300), baseline: null);
-        var header = new RenderSliverResizingHeader { Child = headerChild };
+        var header = new RenderSliverResizingHeader();
+        ((ISlottedRenderObjectContainer)header).SetChild(headerChild, SliverResizingHeaderSlot.Child);
         header.Layout(CreateSliverConstraints(), parentUsesSize: true);
 
         Assert.Equal(1, headerChild.DryLayoutCount);

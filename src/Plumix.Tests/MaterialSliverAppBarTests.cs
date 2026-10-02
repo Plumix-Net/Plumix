@@ -16,64 +16,6 @@ namespace Plumix.Tests;
 public sealed class MaterialSliverAppBarTests
 {
     [Fact]
-    public void SliverPersistentHeader_ValidatesContractsAndComputesPinnedGeometry()
-    {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new SliverPersistentHeader(new TestHeaderDelegate(100, 40)));
-
-        var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 100)));
-        var header = new RenderSliverPinnedPersistentHeader(56, 180, child: child);
-        header.Layout(TestSliverConstraints.Create(
-            Axis.Vertical, 90, 300, 300, 300, RemainingCacheExtent: 300), parentUsesSize: true);
-
-        Assert.Equal(90, header.LastShrinkOffset, precision: 3);
-        Assert.Equal(90, child.Size.Height, precision: 3);
-        Assert.Equal(180, header.Geometry!.ScrollExtent, precision: 3);
-        Assert.Equal(90, header.Geometry!.PaintExtent, precision: 3);
-        Assert.Equal(56, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
-        Assert.False(header.LastOverlapsContent);
-
-        header.Layout(TestSliverConstraints.Create(
-            Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300), parentUsesSize: true);
-        Assert.Equal(56, child.Size.Height, precision: 3);
-        Assert.Equal(56, header.Geometry!.PaintExtent, precision: 3);
-        // Flutter's pinned header reads overlapsContent from the incoming overlap, not the shrink.
-        Assert.False(header.LastOverlapsContent);
-
-        header.Layout(TestSliverConstraints.Create(
-            Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300, Overlap: 24), parentUsesSize: true);
-        Assert.True(header.LastOverlapsContent);
-        Assert.Equal(24, header.Geometry!.PaintOrigin, precision: 3);
-        Assert.Equal(56, header.Geometry!.PaintExtent, precision: 3);
-    }
-
-    [Fact]
-    public void SliverPersistentHeader_FloatingRevealsImmediatelyOnReverseScroll()
-    {
-        var header = new RenderSliverFloatingPersistentHeader(
-            56, 180,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 180))));
-        var constraints = TestSliverConstraints.Create(Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300);
-        header.Layout(constraints, parentUsesSize: true);
-        Assert.Equal(160, header.LastShrinkOffset, precision: 3);
-        Assert.Equal(20, header.Geometry!.PaintExtent, precision: 3);
-        Assert.Equal(0, header.Geometry!.MaxScrollObstructionExtent, precision: 3);
-
-        // Without a forward user scroll the header may shrink back but never expand.
-        header.Layout(constraints with { ScrollOffset = 130 }, parentUsesSize: true);
-        Assert.Equal(130, header.EffectiveScrollOffset);
-        Assert.Equal(50, header.Geometry!.PaintExtent, precision: 3);
-
-        header.Layout(constraints with
-        {
-            ScrollOffset = 100,
-            UserScrollDirection = ScrollDirection.Forward,
-        }, parentUsesSize: true);
-        Assert.Equal(100, header.LastShrinkOffset, precision: 3);
-        Assert.Equal(80, header.Geometry!.PaintExtent, precision: 3);
-        Assert.True(header.Geometry!.LayoutExtent < header.Geometry!.PaintExtent + 0.001);
-    }
-
-    [Fact]
     public void FlexibleSpaceBar_ValidatesSettingsAndBuildsParallaxBackgroundAndScaledTitle()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new FlexibleSpaceBar(expandedTitleScale: 0.9));

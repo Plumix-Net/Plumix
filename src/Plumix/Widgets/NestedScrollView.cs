@@ -1031,18 +1031,21 @@ internal sealed class NestedScrollPosition(
     bool keepScrollOffset = true,
     ScrollPosition? oldPosition = null,
     string? debugLabel = null)
-    : ScrollPositionWithSingleContext(physics, context, initialPixels, keepScrollOffset, oldPosition, debugLabel)
+    : ScrollPosition(physics, context, keepScrollOffset, oldPosition, debugLabel), IScrollActivityDelegate
 {
+    private readonly double _initialPixels = initialPixels;
+
     private readonly NestedScrollCoordinator _coordinator = coordinator;
     private ScrollController? _parent;
 
     /// <summary>
-    /// Creates a position and runs the tail of Dart's constructor body.
+    /// Creates a position and runs Dart's constructor body.
     /// </summary>
     /// <remarks>
-    /// A C# primary constructor has no body, so the <c>saveScrollOffset()</c> Dart runs after the
-    /// base constructor — "in case we did not restore but could, so that we do not restore it
-    /// later" — happens here instead.
+    /// A C# primary constructor has no body, so what Dart runs after the base constructor — taking
+    /// the initial pixels unless <c>absorb</c> restored some, going idle unless it carried an
+    /// activity over, and the <c>saveScrollOffset()</c> "in case we did not restore but could, so
+    /// that we do not restore it later" — happens here instead.
     /// </remarks>
     public static NestedScrollPosition Create(
         NestedScrollCoordinator coordinator,
@@ -1061,15 +1064,37 @@ internal sealed class NestedScrollPosition(
             keepScrollOffset,
             oldPosition,
             debugLabel);
-        position.SaveScrollOffset();
+        if (!position.HasPixels)
+        {
+            position.CorrectPixels(position._initialPixels);
+        }
+
+        if (position.CurrentActivity == null)
+        {
+            position.GoIdle();
+        }
+
+        DebugAssertions.Assert(position.CurrentActivity != null);
+        position.SaveScrollOffset(); // in case we didn't restore but could, so that we don't restore it later
         return position;
     }
+
+    /// <summary>The ticker provider the position's activities animate on.</summary>
+    public ITickerProvider Vsync => Context.Vsync;
 
     public void SetParent(ScrollController? value)
     {
         _parent?.Detach(this);
         _parent = value;
         _parent?.Attach(this);
+    }
+
+    public override AxisDirection AxisDirection => Context.AxisDirection;
+
+    public override void Absorb(ScrollPosition other)
+    {
+        base.Absorb(other);
+        Activity.UpdateDelegate(this);
     }
 
     protected override void RestoreScrollOffset()
@@ -1082,10 +1107,13 @@ internal sealed class NestedScrollPosition(
 
     public override ScrollDirection UserScrollDirection => _coordinator.UserScrollDirection;
 
-    public override void ApplyUserOffset(double delta)
+    /// <summary>
+    /// A nested position never applies a user offset itself: the coordinator's drag distributes it
+    /// through <see cref="ApplyClampedDragUpdate"/> and <see cref="ApplyFullDragUpdate"/>.
+    /// </summary>
+    public void ApplyUserOffset(double delta)
     {
-        throw new InvalidOperationException(
-            "A NestedScrollView's positions are driven through its coordinator.");
+        DebugAssertions.Assert(false);
     }
 
     protected override void ApplyNewDimensions()
@@ -1120,6 +1148,14 @@ internal sealed class NestedScrollPosition(
     public override void PointerScroll(double delta)
     {
         _coordinator.PointerScroll(delta);
+    }
+
+    [Obsolete(
+        "This method bypasses scroll activity management and can cause inconsistent layouts or "
+        + "scrolling behavior. Use JumpTo or a custom ScrollPosition instead.")]
+    public override void JumpToWithoutSettling(double value)
+    {
+        DebugAssertions.Assert(false);
     }
 
     /// <summary>
@@ -1220,13 +1256,13 @@ internal sealed class NestedScrollPosition(
             vsync: Context.Vsync);
     }
 
-    public override void GoIdle()
+    public void GoIdle()
     {
         BeginActivity(new IdleScrollActivity(this));
         _coordinator.UpdateUserScrollDirection(ScrollDirection.Idle);
     }
 
-    public override void GoBallistic(double velocity)
+    public void GoBallistic(double velocity)
     {
         Simulation? simulation = null;
         if (velocity != 0.0 || OutOfRange)

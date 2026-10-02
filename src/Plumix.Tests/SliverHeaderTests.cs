@@ -43,7 +43,6 @@ public sealed class SliverHeaderTests
         Assert.Same(child, floating.Child);
         Assert.Null(floating.AnimationStyle);
         Assert.Null(floating.SnapMode);
-        Assert.Throws<ArgumentNullException>(() => new SliverFloatingHeader(null!));
     }
 
     [Fact]
@@ -52,12 +51,7 @@ public sealed class SliverHeaderTests
         var minPrototype = new NaturalSizeBox(new Size(100, 100));
         var maxPrototype = new NaturalSizeBox(new Size(100, 300));
         var child = new NaturalSizeBox(new Size(100, 350));
-        var header = new RenderSliverResizingHeader
-        {
-            MinExtentPrototype = minPrototype,
-            MaxExtentPrototype = maxPrototype,
-            Child = child
-        };
+        RenderSliverResizingHeader header = CreateResizingHeader(minPrototype, maxPrototype, child);
 
         header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
 
@@ -73,18 +67,22 @@ public sealed class SliverHeaderTests
         Assert.Equal(new Size(100, 100), child.Size);
         Assert.Equal(100.0, header.Geometry!.PaintExtent);
         Assert.Equal(100.0, header.Geometry!.LayoutExtent);
-        Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
+        // Dart never calls the resizing header's `setChildParentData`: the child paints at the
+        // sliver's own offset.
+        Assert.Equal(default, ((SliverPhysicalParentData)child.parentData!).PaintOffset);
 
+        // `SlottedContainerRenderObjectMixin.visitChildren` is also the semantics walk, so the
+        // (unpainted) prototypes are visited too.
         var semanticChildren = new List<RenderObject>();
         header.VisitChildrenForSemantics(renderObject => semanticChildren.Add(renderObject));
-        Assert.Equal([child], semanticChildren);
+        Assert.Equal([minPrototype, maxPrototype, child], semanticChildren);
     }
 
     [Fact]
     public void RenderSliverResizingHeader_UsesZeroMinimumAndChildMaximumByDefault()
     {
         var child = new NaturalSizeBox(new Size(100, 300));
-        var header = new RenderSliverResizingHeader { Child = child };
+        RenderSliverResizingHeader header = CreateResizingHeader(null, null, child);
 
         header.Layout(CreateConstraints(scrollOffset: 299.0), parentUsesSize: true);
 
@@ -165,7 +163,7 @@ public sealed class SliverHeaderTests
     public void RenderSliverFloatingHeader_RevealsAndHidesFromUserScrollDirection()
     {
         var child = new NaturalSizeBox(new Size(100, 200));
-        var header = new RenderSliverFloatingHeader(child: child);
+        var header = new RenderSliverFloatingHeader(vsync: new TestVSync()) { Child = child };
 
         header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
         Assert.Equal(200.0, header.Geometry!.PaintExtent);
@@ -181,7 +179,7 @@ public sealed class SliverHeaderTests
             userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(25.0, header.Geometry!.PaintExtent);
         Assert.Equal(25.0, header.Geometry!.LayoutExtent);
-        Assert.Equal(new Point(0, -175), ((SliverPhysicalParentData)child.parentData!).PaintOffset);
+        Assert.Equal(-175.0, header.ChildMainAxisPosition(child));
 
         header.Layout(CreateConstraints(
             scrollOffset: 150.0,
@@ -234,9 +232,12 @@ public sealed class SliverHeaderTests
     private static RenderSliverFloatingHeader CreatePartiallyVisibleFloatingHeader(FloatingHeaderSnapMode snapMode)
     {
         var header = new RenderSliverFloatingHeader(
+            vsync: new TestVSync(),
             animationStyle: AnimationStyle.NoAnimation,
-            snapMode: snapMode,
-            child: new NaturalSizeBox(new Size(100, 200)));
+            snapMode: snapMode)
+        {
+            Child = new NaturalSizeBox(new Size(100, 200)),
+        };
         header.Layout(CreateConstraints(scrollOffset: 0.0), parentUsesSize: true);
         header.Layout(CreateConstraints(
             scrollOffset: 200.0,
@@ -245,6 +246,31 @@ public sealed class SliverHeaderTests
             scrollOffset: 175.0,
             userScrollDirection: ScrollDirection.Forward), parentUsesSize: true);
         Assert.Equal(25.0, header.Geometry!.PaintExtent);
+        return header;
+    }
+
+    private static RenderSliverResizingHeader CreateResizingHeader(
+        RenderBox? minExtentPrototype,
+        RenderBox? maxExtentPrototype,
+        RenderBox? child)
+    {
+        var header = new RenderSliverResizingHeader();
+        ISlottedRenderObjectContainer container = header;
+        if (minExtentPrototype != null)
+        {
+            container.SetChild(minExtentPrototype, SliverResizingHeaderSlot.MinExtent);
+        }
+
+        if (maxExtentPrototype != null)
+        {
+            container.SetChild(maxExtentPrototype, SliverResizingHeaderSlot.MaxExtent);
+        }
+
+        if (child != null)
+        {
+            container.SetChild(child, SliverResizingHeaderSlot.Child);
+        }
+
         return header;
     }
 

@@ -8,6 +8,19 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderSliverPersistentHeader` and its four modes are abstract `RenderSliver`s (sliver_persistent_header).
+- Breaking: persistent headers read `MinExtent`/`MaxExtent` live (abstract); no constructor extents, no `ChildBuilder`.
+- Breaking: a persistent header's child gets plain `ParentData`; paint/hit test/transform use `RenderSliverHelpers`.
+- Breaking: `SliverPersistentHeader` no longer validates its delegate; `layoutChild` asserts `minExtent <= maxExtent`.
+- Breaking: `PersistentHeaderShowOnScreenConfiguration` has no value equality; its range check is a debug assert.
+- Breaking: `RenderSliverFloatingPersistentHeader` keeps its controller across vsync changes (`Resync`), as in Dart.
+- Breaking: `SliverFloatingHeader` loses the C#-only `ShowOnScreenConfiguration`; it snaps on its State's vsync.
+- Breaking: `SliverResizingHeader` is slotted over `SliverPhysicalParentData`; `PinnedHeaderSliver` lost `ShowOnScreen`.
+- Breaking: `RenderSliverOpacity` paints through `PushOpacity` with Dart's `_alpha`; no repaint boundary (proxy_sliver).
+- `NestedScrollPosition` extends `ScrollPosition`; inner scrollables no longer compete for drags (nested_scroll_view).
+- `Viewport`'s element reports only visible slivers as on stage (`debugVisitOnstageChildren`, viewport.dart).
+- Custom slivers demo gains a pinned `SliverPersistentHeader` that shows its live shrink offset (both samples).
+- Flutter's sliver_persistent_header, pinned/resizing/floating header and viewport showOnScreen header tests ported.
 - Breaking: hosts speak `flutter/textinput`: `HostTextInputPlugin` is the engine's text input plugin (macOS/Windows).
 - `TextInputModel`: the engine's `shell/platform/common/text_input_model.cc`, with its 154 unit tests ported.
 - Breaking: `FocusNode`/`Focus` lose `OnTextInput*`/`FocusTextInputState`; `FocusManager.HandleText*` are gone.

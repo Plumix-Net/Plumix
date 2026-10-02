@@ -66,6 +66,22 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                     fontSize: 12,
                                     color: Colors.DimGray),
                             ]))),
+                new SliverMainAxisGroup(
+                    slivers:
+                    [
+                        new SliverPersistentHeader(
+                            pinned: true,
+                            @delegate: new ShrinkReadoutHeaderDelegate()),
+                        SliverFixedExtentList.Builder(
+                            itemCount: 6,
+                            itemExtent: 44,
+                            itemBuilder: (_, index) => BuildExtentCell(
+                                $"persistent-header group row #{index}",
+                                index % 2 == 0
+                                    ? new Color(0xFFF5F5F5)
+                                    : new Color(0xFFFFFFFF)),
+                            addAutomaticKeepAlives: false),
+                    ]),
                 new SliverSafeArea(
                     minimum: new EdgeInsets(12, 8, 12, 0),
                     sliver: new SliverLayoutBuilder((_, constraints) =>
@@ -246,6 +262,40 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             height: 2),
                         addAutomaticKeepAlives: false)),
             ]);
+    }
+
+    /// <summary>
+    /// A pinned 120px → 56px header that rebuilds from the shrink offset its sliver lays it out
+    /// with, which is what <see cref="SliverPersistentHeader"/> adds over the fixed headers above.
+    /// </summary>
+    private sealed class ShrinkReadoutHeaderDelegate : SliverPersistentHeaderDelegate
+    {
+        public override double MinExtent => 56;
+
+        public override double MaxExtent => 120;
+
+        public override Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent)
+        {
+            return SizedBox.Expand(
+                child: new Container(
+                    color: new Color(0xFFE0F2F1),
+                    padding: new Thickness(16, 8),
+                    child: new Column(
+                        mainAxisAlignment: MainAxisAlignment.Center,
+                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                        spacing: 2,
+                        children:
+                        [
+                            new Text("SliverPersistentHeader", fontSize: 18, color: Colors.Black),
+                            new Text(
+                                $"shrinkOffset {shrinkOffset:0} px · "
+                                + $"overlapsContent {(overlapsContent ? "true" : "false")}",
+                                fontSize: 12,
+                                color: Colors.DimGray),
+                        ])));
+        }
+
+        public override bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
     }
 
     private static Widget BuildGroupCell(string label, Color color)

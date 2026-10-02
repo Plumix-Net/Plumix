@@ -269,4 +269,17 @@ public sealed class ViewportElement : MultiChildRenderObjectElement, ViewportEle
             RenderViewport.Center = null;
         }
     }
+
+    /// <summary>Only the children whose sliver geometry is visible are on stage.</summary>
+    public override void DebugVisitOnstageChildren(Action<Element> visitor)
+    {
+        foreach (Element element in Children.Where(static element =>
+                 {
+                     var renderSliver = (RenderSliver)element.RenderObject!;
+                     return renderSliver.Geometry!.Visible;
+                 }).ToList())
+        {
+            visitor(element);
+        }
+    }
 }

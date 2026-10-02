@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Xunit.Sdk;
 
 // C#-only test infrastructure: the gesture half of flutter_test's `WidgetController`
 // (`startGesture`, `drag`/`dragFrom`, `timedDrag`, `fling`/`flingFrom`, `sendEventToBinding`) and its
@@ -166,29 +167,79 @@ internal sealed partial class FrameworkDartTester
     }
 
     /// <summary>
-    /// Dart's <c>tester.timedDragFrom</c>: <c>duration * frequency</c> evenly timed moves, pumping
-    /// the elapsed time between them.
+    /// Dart's <c>tester.timedDragFrom</c>: a down, <c>duration * frequency + 1</c> evenly timed
+    /// moves and an up, replayed through <see cref="HandlePointerEventRecord"/>.
     /// </summary>
     public void TimedDragFrom(Point startLocation, Vector offset, TimeSpan duration, double frequency = 60.0)
     {
-        int intervals = (int)(duration.TotalSeconds * frequency) + 1;
-        var timeStamps = new List<TimeSpan>();
-        var offsets = new List<Vector>();
-        for (int i = 0; i < intervals; i += 1)
+        int intervals = (int)(duration.Ticks / TimeSpan.TicksPerMicrosecond * frequency / 1E6);
+        if (intervals <= 1)
         {
-            timeStamps.Add(duration * i / (intervals - 1));
-            offsets.Add(offset * i / (intervals - 1));
+            throw new XunitException("timedDragFrom needs more than one interval.");
+        }
+
+        var timeStamps = new List<TimeSpan>();
+        for (int t = 0; t <= intervals; t += 1)
+        {
+            timeStamps.Add(TimeSpan.FromTicks(duration.Ticks * t / intervals));
+        }
+
+        var offsets = new List<Point> { startLocation };
+        for (int t = 0; t <= intervals; t += 1)
+        {
+            offsets.Add(startLocation + offset * ((double)t / intervals));
         }
 
         TestGesture gesture = CreateGesture();
-        gesture.Down(startLocation, timeStamps[0]);
-        for (int i = 1; i < intervals; i += 1)
+        var records = new List<(TimeSpan TimeDelay, Action Dispatch)>
         {
-            gesture.MoveTo(startLocation + offsets[i], timeStamps[i]);
-            Pump(timeStamps[i] - timeStamps[i - 1]);
+            (TimeSpan.Zero, () => gesture.Down(startLocation)),
+        };
+        for (int t = 0; t <= intervals; t += 1)
+        {
+            int index = t;
+            records.Add((timeStamps[index], () => gesture.MoveTo(offsets[index + 1], timeStamps[index])));
         }
 
-        gesture.Up(timeStamps[^1]);
+        records.Add((duration, () => gesture.Up(duration)));
+        HandlePointerEventRecord(records);
+    }
+
+    /// <summary>
+    /// flutter_test's <c>WidgetTester.handlePointerEventRecord</c>: a record already due is
+    /// dispatched at once; otherwise a frame is pumped, the clock advances (without a frame) to the
+    /// record's delay, and the record is dispatched. A final frame completes the gesture.
+    /// </summary>
+    private void HandlePointerEventRecord(IReadOnlyList<(TimeSpan TimeDelay, Action Dispatch)> records)
+    {
+        TimeSpan? startTime = null;
+        foreach ((TimeSpan timeDelay, Action dispatch) in records)
+        {
+            TimeSpan now = _clock;
+            startTime ??= now;
+            // So that the first event is promised to receive a zero timeDiff.
+            TimeSpan timeDiff = timeDelay - (now - startTime.Value);
+            if (timeDiff < TimeSpan.Zero)
+            {
+                // Flush all past events.
+                dispatch();
+            }
+            else
+            {
+                Pump();
+                Delayed(timeDiff);
+                dispatch();
+            }
+        }
+
+        Pump();
+    }
+
+    /// <summary>flutter_test's <c>binding.delayed</c>: advances the clock without a frame.</summary>
+    private void Delayed(TimeSpan duration)
+    {
+        _clock += duration;
+        _timers?.Elapse(duration);
     }
 
     /// <summary>Dart's <c>tester.fling(finder, offset, speed)</c>.</summary>

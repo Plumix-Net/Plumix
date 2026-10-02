@@ -107,18 +107,24 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
     }
 
-    /// <summary>Dart's <c>WidgetTester.pumpAndSettle</c> with its default 100ms step.</summary>
-    public int PumpAndSettle()
+    /// <summary>
+    /// Dart's <c>WidgetTester.pumpAndSettle([duration, phase, timeout])</c>: pumps frames
+    /// <paramref name="duration"/> apart (100ms by default) until none is scheduled, failing once the
+    /// clock passes <paramref name="timeout"/> (10 minutes of test time by default).
+    /// </summary>
+    public int PumpAndSettle(TimeSpan? duration = null, TimeSpan? timeout = null)
     {
+        TimeSpan step = duration ?? TimeSpan.FromMilliseconds(100);
+        TimeSpan endTime = _clock + (timeout ?? TimeSpan.FromMinutes(10));
         int count = 0;
         do
         {
-            if (count > 1000)
+            if (_clock > endTime)
             {
                 throw new XunitException("pumpAndSettle timed out");
             }
 
-            Pump(TimeSpan.FromMilliseconds(100));
+            Pump(step);
             count += 1;
         }
         while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
@@ -166,6 +172,31 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// <summary>Dart's <c>find.text(text)</c> over <see cref="Text"/> widgets.</summary>
     public IReadOnlyList<Element> ElementsWithText(string text)
         => AllElements().Where(element => element.Widget is Text { Data: var data } && data == text).ToList();
+
+    /// <summary>
+    /// Every on-stage element below the root, the set flutter_test's finders search by default
+    /// (<c>skipOffstage: true</c>): the walk follows <see cref="Element.DebugVisitOnstageChildren"/>.
+    /// </summary>
+    public IReadOnlyList<Element> OnstageElements()
+    {
+        var elements = new List<Element>();
+        void Visit(Element element)
+        {
+            elements.Add(element);
+            element.DebugVisitOnstageChildren(Visit);
+        }
+
+        _root.DebugVisitOnstageChildren(Visit);
+        return elements;
+    }
+
+    /// <summary>Dart's default <c>find.text(text)</c>, which skips offstage elements.</summary>
+    public IReadOnlyList<Element> OnstageElementsWithText(string text)
+        => OnstageElements().Where(element => element.Widget is Text { Data: var data } && data == text).ToList();
+
+    /// <summary>Dart's default <c>find.byKey(key)</c>, which skips offstage elements.</summary>
+    public IReadOnlyList<Element> OnstageElementsWithKey(Key key)
+        => OnstageElements().Where(element => Equals(element.Widget.Key, key)).ToList();
 
     /// <summary>Dart's <c>tester.stateList</c>, by state type.</summary>
     public IReadOnlyList<TState> StateList<TState>() where TState : State

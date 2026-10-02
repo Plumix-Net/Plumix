@@ -10,92 +10,311 @@ namespace Plumix.Widgets;
 /// </summary>
 public abstract class SliverPersistentHeaderDelegate
 {
-    /// <summary>Builds the header, given the shrink offset and whether it overlaps following content.</summary>
+    /// <summary>The context in which the header is built.</summary>
+    /// <remarks>
+    /// <paramref name="shrinkOffset"/> is a distance from <see cref="MaxExtent"/> towards
+    /// <see cref="MinExtent"/> representing the current amount by which the sliver has been shrunk.
+    /// When the <paramref name="shrinkOffset"/> is zero, the contents will be rendered with a
+    /// dimension of <see cref="MaxExtent"/> in the main axis. When <paramref name="shrinkOffset"/>
+    /// equals the difference between <see cref="MaxExtent"/> and <see cref="MinExtent"/> (a positive
+    /// number), the contents will be rendered with a dimension of <see cref="MinExtent"/> in the main
+    /// axis. The <paramref name="shrinkOffset"/> will always be a positive number in that range.
+    /// <paramref name="overlapsContent"/> is true if subsequent slivers (if any) will be rendered
+    /// beneath this one, and false if the sliver will not have any contents below it.
+    /// </remarks>
     public abstract Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent);
 
-    /// <summary>The smallest size to allow the header to reach when it shrinks at the leading edge.</summary>
+    /// <summary>The smallest size to allow the header to reach, when it shrinks at the start of the viewport.</summary>
+    /// <remarks>This must return a value equal to or less than <see cref="MaxExtent"/>.</remarks>
     public abstract double MinExtent { get; }
 
-    /// <summary>The size of the header when it is not shrinking at the leading edge.</summary>
+    /// <summary>The size of the header when it is not shrinking at the top of the viewport.</summary>
+    /// <remarks>This must return a value equal to or greater than <see cref="MinExtent"/>.</remarks>
     public abstract double MaxExtent { get; }
 
-    /// <summary>The ticker provider the floating header's snap and reveal animations run on.</summary>
+    /// <summary>
+    /// A <see cref="ITickerProvider"/> to use to drive the snap and <c>showOnScreen</c> animations
+    /// of floating headers, or null if they should not animate.
+    /// </summary>
     public virtual ITickerProvider? Vsync => null;
 
-    /// <summary>Specifies how a floating header animates into view, or null to disable snapping.</summary>
+    /// <summary>Specifies how floating headers should animate in and out of view.</summary>
+    /// <remarks>If the value of this property is null, then floating headers will not animate.</remarks>
     public virtual FloatingHeaderSnapConfiguration? SnapConfiguration => null;
 
-    /// <summary>Specifies how the header stretches into an overscroll, or null to disable stretching.</summary>
+    /// <summary>Specifies an <c>AsyncCallback</c> and offset for execution.</summary>
+    /// <remarks>If the value of this property is null, then callback will not be triggered.</remarks>
     public virtual OverScrollHeaderStretchConfiguration? StretchConfiguration => null;
 
-    /// <summary>Specifies how far a reveal request may expand the header.</summary>
+    /// <summary>
+    /// Specifies how floating headers and pinned headers should behave in response to
+    /// <c>showOnScreen</c>.
+    /// </summary>
+    /// <remarks>
+    /// If set to null, the persistent header will delegate the <c>showOnScreen</c> call to its parent.
+    /// </remarks>
     public virtual PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration => null;
 
-    /// <summary>Whether this delegate is meaningfully different from the previous one.</summary>
+    /// <summary>
+    /// Whether this delegate is meaningfully different from the old delegate.
+    /// </summary>
+    /// <remarks>
+    /// If this returns false, then the header might not be rebuilt, even though the instance of the
+    /// delegate changed.
+    /// </remarks>
     public abstract bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate);
 }
 
 /// <summary>
-/// A sliver whose size varies when the sliver is scrolled to the leading edge of the viewport.
+/// A sliver whose size varies when the sliver is scrolled to the edge of the viewport opposite the
+/// sliver's <see cref="GrowthDirection"/>.
 /// </summary>
-public sealed class SliverPersistentHeader : StatelessWidget
+/// <remarks>
+/// In the normal case of a <see cref="CustomScrollView"/> with no centered sliver, this sliver will
+/// vary its size when scrolled to the leading edge of the viewport. This is the layout primitive
+/// that <c>SliverAppBar</c> uses for its shrinking/growing effect.
+/// </remarks>
+public class SliverPersistentHeader : StatelessWidget
 {
+    /// <summary>Creates a sliver that varies its size when it is scrolled to the start of a viewport.</summary>
     public SliverPersistentHeader(
         SliverPersistentHeaderDelegate @delegate,
         bool pinned = false,
         bool floating = false,
         Key? key = null) : base(key)
     {
-        Delegate = @delegate ?? throw new ArgumentNullException(nameof(@delegate));
-        ValidateDelegate(@delegate);
+        Delegate = @delegate;
         Pinned = pinned;
         Floating = floating;
     }
 
+    /// <summary>Configuration for the sliver's layout.</summary>
     public SliverPersistentHeaderDelegate Delegate { get; }
 
-    /// <summary>Whether to stick the header to the start of the viewport once it is scrolled.</summary>
+    /// <summary>
+    /// Whether to stick the header to the start of the viewport once it has reached its minimum size.
+    /// </summary>
     public bool Pinned { get; }
 
-    /// <summary>Whether the header should immediately grow again when the user reverses direction.</summary>
+    /// <summary>Whether the header should immediately grow again if the user reverses scroll direction.</summary>
     public bool Floating { get; }
 
     public override Widget Build(BuildContext context)
     {
-        ValidateDelegate(Delegate);
         if (Floating && Pinned)
         {
-            return new SliverFloatingPinnedPersistentHeader(Delegate);
+            return new SliverFloatingPinnedPersistentHeader(@delegate: Delegate);
         }
 
         if (Pinned)
         {
-            return new SliverPinnedPersistentHeader(Delegate);
+            return new SliverPinnedPersistentHeader(@delegate: Delegate);
         }
 
         if (Floating)
         {
-            return new SliverFloatingPersistentHeader(Delegate);
+            return new SliverFloatingPersistentHeader(@delegate: Delegate);
         }
 
-        return new SliverScrollingPersistentHeader(Delegate);
+        return new SliverScrollingPersistentHeader(@delegate: Delegate);
     }
 
-    internal static void ValidateDelegate(SliverPersistentHeaderDelegate value)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        if (!double.IsFinite(value.MinExtent) || value.MinExtent < 0)
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<SliverPersistentHeaderDelegate>("delegate", Delegate));
+        var flags = new List<string>();
+        if (Pinned)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), "minExtent must be finite and non-negative.");
+            flags.Add("pinned");
         }
 
-        if (!double.IsFinite(value.MaxExtent) || value.MaxExtent < value.MinExtent)
+        if (Floating)
         {
-            throw new ArgumentOutOfRangeException(nameof(value), "maxExtent must be finite and >= minExtent.");
+            flags.Add("floating");
+        }
+
+        if (flags.Count == 0)
+        {
+            flags.Add("normal");
+        }
+
+        properties.Add(new IterableProperty<string>("mode", flags));
+    }
+}
+
+/// <summary>Dart's private <c>_FloatingHeader</c>.</summary>
+internal sealed class FloatingHeader : StatefulWidget
+{
+    public FloatingHeader(Widget child)
+    {
+        Child = child;
+    }
+
+    public Widget Child { get; }
+
+    public override State CreateState() => new FloatingHeaderState();
+}
+
+/// <summary>Dart's private <c>_FloatingHeaderState</c>.</summary>
+/// <remarks>
+/// A <see cref="ScrollPosition.IsScrollingNotifier"/> listener that drives the floating header's
+/// snap animation: it starts when a scroll gesture ends and stops when one begins.
+/// </remarks>
+internal sealed class FloatingHeaderState : State<FloatingHeader>
+{
+    private ScrollPosition? _position;
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        _position?.IsScrollingNotifier.RemoveListener(IsScrollingListener);
+
+        _position = Scrollable.MaybeOf(Context)?.Position;
+        _position?.IsScrollingNotifier.AddListener(IsScrollingListener);
+    }
+
+    public override void Dispose()
+    {
+        _position?.IsScrollingNotifier.RemoveListener(IsScrollingListener);
+
+        base.Dispose();
+    }
+
+    private RenderSliverFloatingPersistentHeader? HeaderRenderer()
+    {
+        return Context.FindAncestorRenderObjectOfType<RenderSliverFloatingPersistentHeader>();
+    }
+
+    private void IsScrollingListener()
+    {
+        DebugAssertions.Assert(_position != null);
+
+        // When a scroll stops, then maybe snap the app bar into view.
+        // Similarly, when a scroll starts, then maybe stop the snap animation.
+        // Update the scrolling direction as well for pointer scrolling updates.
+        RenderSliverFloatingPersistentHeader? header = HeaderRenderer();
+        if (_position!.IsScrollingNotifier.Value)
+        {
+            header?.UpdateScrollStartDirection(_position.UserScrollDirection);
+            // Only SliverAppBars support snapping, headers will not snap.
+            header?.MaybeStopSnapAnimation(_position.UserScrollDirection);
+        }
+        else
+        {
+            // Only SliverAppBars support snapping, headers will not snap.
+            header?.MaybeStartSnapAnimation(_position.UserScrollDirection);
+        }
+    }
+
+    public override Widget Build(BuildContext context) => Widget.Child;
+}
+
+/// <summary>Dart's private <c>_SliverPersistentHeaderElement</c>.</summary>
+internal sealed class SliverPersistentHeaderElement : RenderObjectElement
+{
+    private Element? _child;
+
+    public SliverPersistentHeaderElement(
+        SliverPersistentHeaderRenderObjectWidget widget,
+        bool floating = false) : base(widget)
+    {
+        Floating = floating;
+    }
+
+    public bool Floating { get; }
+
+    /// <summary>Dart's covariant <c>renderObject</c> getter.</summary>
+    private IRenderSliverPersistentHeaderForWidgets HeaderRenderObject =>
+        (IRenderSliverPersistentHeaderForWidgets)RenderObject;
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        HeaderRenderObject.Element = this;
+    }
+
+    public override void Unmount()
+    {
+        HeaderRenderObject.Element = null;
+        base.Unmount();
+    }
+
+    public override void Update(Widget newWidget)
+    {
+        var oldWidget = (SliverPersistentHeaderRenderObjectWidget)Widget;
+        base.Update(newWidget);
+        var updatedWidget = (SliverPersistentHeaderRenderObjectWidget)newWidget;
+        SliverPersistentHeaderDelegate newDelegate = updatedWidget.Delegate;
+        SliverPersistentHeaderDelegate oldDelegate = oldWidget.Delegate;
+        if (!ReferenceEquals(newDelegate, oldDelegate)
+            && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
+        {
+            var header = (RenderSliverPersistentHeader)RenderObject;
+            UpdateChild(newDelegate, header.LastShrinkOffset, header.LastOverlapsContent);
+            HeaderRenderObject.TriggerRebuild();
+        }
+    }
+
+    protected override void PerformRebuild()
+    {
+        base.PerformRebuild();
+        HeaderRenderObject.TriggerRebuild();
+    }
+
+    private void UpdateChild(
+        SliverPersistentHeaderDelegate @delegate,
+        double shrinkOffset,
+        bool overlapsContent)
+    {
+        Widget newWidget = @delegate.Build(this, shrinkOffset, overlapsContent);
+        _child = UpdateChild(_child, Floating ? new FloatingHeader(child: newWidget) : newWidget, null);
+    }
+
+    /// <summary>Dart's <c>_build</c>: rebuilds the child from the render object's layout pass.</summary>
+    internal void Build(double shrinkOffset, bool overlapsContent)
+    {
+        Owner!.BuildScope(this, () =>
+        {
+            var widget = (SliverPersistentHeaderRenderObjectWidget)Widget;
+            UpdateChild(widget.Delegate, shrinkOffset, overlapsContent);
+        });
+    }
+
+    public override void ForgetChild(Element child)
+    {
+        DebugAssertions.Assert(ReferenceEquals(child, _child));
+        _child = null;
+        base.ForgetChild(child);
+    }
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    {
+        var header = (RenderSliverPersistentHeader)RenderObject;
+        DebugAssertions.Assert(Rendering.RenderObject.DebugValidateChildType<RenderBox>(header, child));
+        header.Child = (RenderBox)child;
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        DebugAssertions.Assert(false);
+    }
+
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    {
+        ((RenderSliverPersistentHeader)RenderObject).Child = null;
+    }
+
+    public override void VisitChildren(Action<Element> visitor)
+    {
+        if (_child != null)
+        {
+            visitor(_child);
         }
     }
 }
 
-/// <summary>Base class for the four persistent-header render object widgets.</summary>
+/// <summary>Dart's private <c>_SliverPersistentHeaderRenderObjectWidget</c>.</summary>
 internal abstract class SliverPersistentHeaderRenderObjectWidget : RenderObjectWidget
 {
     protected SliverPersistentHeaderRenderObjectWidget(
@@ -110,9 +329,55 @@ internal abstract class SliverPersistentHeaderRenderObjectWidget : RenderObjectW
 
     public bool Floating { get; }
 
-    public override Element CreateElement() => new SliverPersistentHeaderElement(this, Floating);
+    public override Element CreateElement() => new SliverPersistentHeaderElement(this, floating: Floating);
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<SliverPersistentHeaderDelegate>("delegate", Delegate));
+    }
 }
 
+/// <summary>
+/// The members Dart's private <c>_RenderSliverPersistentHeaderForWidgetsMixin</c> adds to a
+/// <see cref="RenderSliverPersistentHeader"/>.
+/// </summary>
+/// <remarks>
+/// C# has no mixins: each of the four <c>_RenderSliver*PersistentHeaderForWidgets</c> classes
+/// implements this interface by forwarding to <see cref="RenderSliverPersistentHeaderForWidgetsMixin"/>.
+/// </remarks>
+internal interface IRenderSliverPersistentHeaderForWidgets
+{
+    SliverPersistentHeaderElement? Element { get; set; }
+
+    void TriggerRebuild();
+}
+
+/// <summary>The bodies of Dart's private <c>_RenderSliverPersistentHeaderForWidgetsMixin</c>.</summary>
+internal sealed class RenderSliverPersistentHeaderForWidgetsMixin(RenderSliverPersistentHeader renderObject)
+{
+    public SliverPersistentHeaderElement? Element { get; set; }
+
+    private SliverPersistentHeaderDelegate Delegate =>
+        ((SliverPersistentHeaderRenderObjectWidget)Element!.Widget).Delegate;
+
+    public double MinExtent => Delegate.MinExtent;
+
+    public double MaxExtent => Delegate.MaxExtent;
+
+    public void UpdateChild(double shrinkOffset, bool overlapsContent)
+    {
+        DebugAssertions.Assert(Element != null);
+        Element!.Build(shrinkOffset, overlapsContent);
+    }
+
+    public void TriggerRebuild()
+    {
+        renderObject.MarkNeedsLayout();
+    }
+}
+
+/// <summary>Dart's private <c>_SliverScrollingPersistentHeader</c>.</summary>
 internal sealed class SliverScrollingPersistentHeader : SliverPersistentHeaderRenderObjectWidget
 {
     public SliverScrollingPersistentHeader(SliverPersistentHeaderDelegate @delegate) : base(@delegate)
@@ -121,21 +386,47 @@ internal sealed class SliverScrollingPersistentHeader : SliverPersistentHeaderRe
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverScrollingPersistentHeader(
-            minExtent: Delegate.MinExtent,
-            maxExtent: Delegate.MaxExtent,
+        return new RenderSliverScrollingPersistentHeaderForWidgets(
             stretchConfiguration: Delegate.StretchConfiguration);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var header = (RenderSliverScrollingPersistentHeader)renderObject;
-        header.MinExtent = Delegate.MinExtent;
-        header.MaxExtent = Delegate.MaxExtent;
-        header.StretchConfiguration = Delegate.StretchConfiguration;
+        ((RenderSliverScrollingPersistentHeaderForWidgets)renderObject).StretchConfiguration =
+            Delegate.StretchConfiguration;
     }
 }
 
+/// <summary>Dart's private <c>_RenderSliverScrollingPersistentHeaderForWidgets</c>.</summary>
+internal sealed class RenderSliverScrollingPersistentHeaderForWidgets
+    : RenderSliverScrollingPersistentHeader, IRenderSliverPersistentHeaderForWidgets
+{
+    private readonly RenderSliverPersistentHeaderForWidgetsMixin _mixin;
+
+    public RenderSliverScrollingPersistentHeaderForWidgets(
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null)
+        : base(stretchConfiguration: stretchConfiguration)
+    {
+        _mixin = new RenderSliverPersistentHeaderForWidgetsMixin(this);
+    }
+
+    SliverPersistentHeaderElement? IRenderSliverPersistentHeaderForWidgets.Element
+    {
+        get => _mixin.Element;
+        set => _mixin.Element = value;
+    }
+
+    public override double MinExtent => _mixin.MinExtent;
+
+    public override double MaxExtent => _mixin.MaxExtent;
+
+    protected override void UpdateChild(double shrinkOffset, bool overlapsContent) =>
+        _mixin.UpdateChild(shrinkOffset, overlapsContent);
+
+    public void TriggerRebuild() => _mixin.TriggerRebuild();
+}
+
+/// <summary>Dart's private <c>_SliverPinnedPersistentHeader</c>.</summary>
 internal sealed class SliverPinnedPersistentHeader : SliverPersistentHeaderRenderObjectWidget
 {
     public SliverPinnedPersistentHeader(SliverPersistentHeaderDelegate @delegate) : base(@delegate)
@@ -144,23 +435,54 @@ internal sealed class SliverPinnedPersistentHeader : SliverPersistentHeaderRende
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverPinnedPersistentHeader(
-            minExtent: Delegate.MinExtent,
-            maxExtent: Delegate.MaxExtent,
+        return new RenderSliverPinnedPersistentHeaderForWidgets(
             stretchConfiguration: Delegate.StretchConfiguration,
             showOnScreenConfiguration: Delegate.ShowOnScreenConfiguration);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var header = (RenderSliverPinnedPersistentHeader)renderObject;
-        header.MinExtent = Delegate.MinExtent;
-        header.MaxExtent = Delegate.MaxExtent;
+        var header = (RenderSliverPinnedPersistentHeaderForWidgets)renderObject;
         header.StretchConfiguration = Delegate.StretchConfiguration;
         header.ShowOnScreenConfiguration = Delegate.ShowOnScreenConfiguration;
     }
 }
 
+/// <summary>Dart's private <c>_RenderSliverPinnedPersistentHeaderForWidgets</c>.</summary>
+internal sealed class RenderSliverPinnedPersistentHeaderForWidgets
+    : RenderSliverPinnedPersistentHeader, IRenderSliverPersistentHeaderForWidgets
+{
+    private readonly RenderSliverPersistentHeaderForWidgetsMixin _mixin;
+
+    public RenderSliverPinnedPersistentHeaderForWidgets(
+        OverScrollHeaderStretchConfiguration? stretchConfiguration,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration)
+        : base(stretchConfiguration: stretchConfiguration)
+    {
+        _mixin = new RenderSliverPersistentHeaderForWidgetsMixin(this);
+
+        // Dart's super-parameter forwards the delegate's value, null included; the base
+        // constructor only substitutes its default for an omitted argument.
+        ShowOnScreenConfiguration = showOnScreenConfiguration;
+    }
+
+    SliverPersistentHeaderElement? IRenderSliverPersistentHeaderForWidgets.Element
+    {
+        get => _mixin.Element;
+        set => _mixin.Element = value;
+    }
+
+    public override double MinExtent => _mixin.MinExtent;
+
+    public override double MaxExtent => _mixin.MaxExtent;
+
+    protected override void UpdateChild(double shrinkOffset, bool overlapsContent) =>
+        _mixin.UpdateChild(shrinkOffset, overlapsContent);
+
+    public void TriggerRebuild() => _mixin.TriggerRebuild();
+}
+
+/// <summary>Dart's private <c>_SliverFloatingPersistentHeader</c>.</summary>
 internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRenderObjectWidget
 {
     public SliverFloatingPersistentHeader(SliverPersistentHeaderDelegate @delegate)
@@ -170,9 +492,7 @@ internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRen
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverFloatingPersistentHeader(
-            minExtent: Delegate.MinExtent,
-            maxExtent: Delegate.MaxExtent,
+        return new RenderSliverFloatingPersistentHeaderForWidgets(
             vsync: Delegate.Vsync,
             snapConfiguration: Delegate.SnapConfiguration,
             stretchConfiguration: Delegate.StretchConfiguration,
@@ -181,9 +501,7 @@ internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRen
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var header = (RenderSliverFloatingPersistentHeader)renderObject;
-        header.MinExtent = Delegate.MinExtent;
-        header.MaxExtent = Delegate.MaxExtent;
+        var header = (RenderSliverFloatingPersistentHeaderForWidgets)renderObject;
         header.Vsync = Delegate.Vsync;
         header.SnapConfiguration = Delegate.SnapConfiguration;
         header.StretchConfiguration = Delegate.StretchConfiguration;
@@ -191,6 +509,43 @@ internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRen
     }
 }
 
+/// <summary>Dart's private <c>_RenderSliverFloatingPersistentHeaderForWidgets</c>.</summary>
+internal sealed class RenderSliverFloatingPersistentHeaderForWidgets
+    : RenderSliverFloatingPersistentHeader, IRenderSliverPersistentHeaderForWidgets
+{
+    private readonly RenderSliverPersistentHeaderForWidgetsMixin _mixin;
+
+    public RenderSliverFloatingPersistentHeaderForWidgets(
+        ITickerProvider? vsync,
+        FloatingHeaderSnapConfiguration? snapConfiguration = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
+        : base(
+            showOnScreenConfiguration,
+            vsync: vsync,
+            snapConfiguration: snapConfiguration,
+            stretchConfiguration: stretchConfiguration)
+    {
+        _mixin = new RenderSliverPersistentHeaderForWidgetsMixin(this);
+    }
+
+    SliverPersistentHeaderElement? IRenderSliverPersistentHeaderForWidgets.Element
+    {
+        get => _mixin.Element;
+        set => _mixin.Element = value;
+    }
+
+    public override double MinExtent => _mixin.MinExtent;
+
+    public override double MaxExtent => _mixin.MaxExtent;
+
+    protected override void UpdateChild(double shrinkOffset, bool overlapsContent) =>
+        _mixin.UpdateChild(shrinkOffset, overlapsContent);
+
+    public void TriggerRebuild() => _mixin.TriggerRebuild();
+}
+
+/// <summary>Dart's private <c>_SliverFloatingPinnedPersistentHeader</c>.</summary>
 internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHeaderRenderObjectWidget
 {
     public SliverFloatingPinnedPersistentHeader(SliverPersistentHeaderDelegate @delegate)
@@ -200,9 +555,7 @@ internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHea
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderSliverFloatingPinnedPersistentHeader(
-            minExtent: Delegate.MinExtent,
-            maxExtent: Delegate.MaxExtent,
+        return new RenderSliverFloatingPinnedPersistentHeaderForWidgets(
             vsync: Delegate.Vsync,
             snapConfiguration: Delegate.SnapConfiguration,
             stretchConfiguration: Delegate.StretchConfiguration,
@@ -211,9 +564,7 @@ internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHea
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var header = (RenderSliverFloatingPinnedPersistentHeader)renderObject;
-        header.MinExtent = Delegate.MinExtent;
-        header.MaxExtent = Delegate.MaxExtent;
+        var header = (RenderSliverFloatingPinnedPersistentHeaderForWidgets)renderObject;
         header.Vsync = Delegate.Vsync;
         header.SnapConfiguration = Delegate.SnapConfiguration;
         header.StretchConfiguration = Delegate.StretchConfiguration;
@@ -221,197 +572,38 @@ internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHea
     }
 }
 
-/// <summary>
-/// The element that rebuilds a persistent header's child during layout, from the shrink offset the
-/// render object computed.
-/// </summary>
-internal sealed class SliverPersistentHeaderElement : RenderObjectElement
+/// <summary>Dart's private <c>_RenderSliverFloatingPinnedPersistentHeaderForWidgets</c>.</summary>
+internal sealed class RenderSliverFloatingPinnedPersistentHeaderForWidgets
+    : RenderSliverFloatingPinnedPersistentHeader, IRenderSliverPersistentHeaderForWidgets
 {
-    private Element? _child;
+    private readonly RenderSliverPersistentHeaderForWidgetsMixin _mixin;
 
-    public SliverPersistentHeaderElement(
-        SliverPersistentHeaderRenderObjectWidget widget,
-        bool floating = false) : base(widget)
+    public RenderSliverFloatingPinnedPersistentHeaderForWidgets(
+        ITickerProvider? vsync,
+        FloatingHeaderSnapConfiguration? snapConfiguration = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
+        : base(
+            vsync: vsync,
+            snapConfiguration: snapConfiguration,
+            stretchConfiguration: stretchConfiguration,
+            showOnScreenConfiguration: showOnScreenConfiguration)
     {
-        Floating = floating;
+        _mixin = new RenderSliverPersistentHeaderForWidgetsMixin(this);
     }
 
-    /// <summary>Whether the built child is wrapped in the snap-driving <see cref="FloatingHeader"/>.</summary>
-    public bool Floating { get; }
-
-    private SliverPersistentHeaderRenderObjectWidget HeaderWidget =>
-        (SliverPersistentHeaderRenderObjectWidget)Widget;
-
-    private RenderSliverPersistentHeader HeaderRenderObject =>
-        (RenderSliverPersistentHeader)RequireRenderObject();
-
-    protected override void OnMount()
+    SliverPersistentHeaderElement? IRenderSliverPersistentHeaderForWidgets.Element
     {
-        base.OnMount();
-        HeaderRenderObject.ChildBuilder = BuildChildDuringLayout;
+        get => _mixin.Element;
+        set => _mixin.Element = value;
     }
 
-    public override void Unmount()
-    {
-        HeaderRenderObject.ChildBuilder = null;
-        base.Unmount();
-    }
+    public override double MinExtent => _mixin.MinExtent;
 
-    public override void Update(Widget newWidget)
-    {
-        SliverPersistentHeaderDelegate oldDelegate = HeaderWidget.Delegate;
-        base.Update(newWidget);
-        HeaderRenderObject.ChildBuilder = BuildChildDuringLayout;
-        SliverPersistentHeaderDelegate newDelegate = HeaderWidget.Delegate;
-        if (!ReferenceEquals(newDelegate, oldDelegate)
-            && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
-        {
-            UpdateHeaderChild(
-                newDelegate,
-                HeaderRenderObject.LastShrinkOffset,
-                HeaderRenderObject.LastOverlapsContent);
-            HeaderRenderObject.MarkNeedsLayout();
-        }
-    }
+    public override double MaxExtent => _mixin.MaxExtent;
 
-    protected override void PerformRebuild()
-    {
-        base.PerformRebuild();
-        HeaderRenderObject.MarkNeedsLayout();
-    }
+    protected override void UpdateChild(double shrinkOffset, bool overlapsContent) =>
+        _mixin.UpdateChild(shrinkOffset, overlapsContent);
 
-    public override void VisitChildren(Action<Element> visitor)
-    {
-        if (_child != null)
-        {
-            visitor(_child);
-        }
-    }
-
-    public override void ForgetChild(Element child)
-    {
-        if (ReferenceEquals(child, _child))
-        {
-            _child = null;
-        }
-    }
-
-    public override void InsertRenderObjectChild(RenderObject child, object? slot)
-    {
-        HeaderRenderObject.Child = (RenderBox)child;
-    }
-
-    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
-    {
-        throw new InvalidOperationException("SliverPersistentHeader does not support moving its child.");
-    }
-
-    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
-    {
-        if (ReferenceEquals(HeaderRenderObject.Child, child))
-        {
-            HeaderRenderObject.Child = null;
-        }
-    }
-
-    private void BuildChildDuringLayout(double shrinkOffset, bool overlapsContent)
-    {
-        // Dart's `_SliverPersistentHeaderElement._build` runs inside `owner.buildScope`.
-        Owner!.BuildScope(
-            this,
-            () => UpdateHeaderChild(HeaderWidget.Delegate, shrinkOffset, overlapsContent));
-    }
-
-    private void UpdateHeaderChild(
-        SliverPersistentHeaderDelegate @delegate,
-        double shrinkOffset,
-        bool overlapsContent)
-    {
-        Widget built = @delegate.Build(this, shrinkOffset, overlapsContent);
-        _child = UpdateChild(_child, Floating ? new FloatingHeader(built) : built, null);
-    }
-}
-
-/// <summary>
-/// Wraps a floating header's child so the header learns when a scroll gesture starts and ends, which
-/// is what drives its snap animation.
-/// </summary>
-internal sealed class FloatingHeader : StatefulWidget
-{
-    public FloatingHeader(Widget child)
-    {
-        Child = child;
-    }
-
-    public Widget Child { get; }
-
-    public override State CreateState() => new FloatingHeaderState();
-}
-
-internal sealed class FloatingHeaderState : State<FloatingHeader>
-{
-    private ScrollPosition? _position;
-
-    private FloatingHeader CurrentWidget => (FloatingHeader)StateWidget;
-
-    public override void DidChangeDependencies()
-    {
-        base.DidChangeDependencies();
-        ReplacePosition(Scrollable.MaybeOf(Context)?.Position);
-    }
-
-    public override void Dispose()
-    {
-        ReplacePosition(null);
-        base.Dispose();
-    }
-
-    public override Widget Build(BuildContext context) => CurrentWidget.Child;
-
-    private void ReplacePosition(ScrollPosition? position)
-    {
-        if (ReferenceEquals(_position, position))
-        {
-            return;
-        }
-
-        _position?.IsScrollingNotifier.RemoveListener(HandleIsScrollingChanged);
-        _position = position;
-        _position?.IsScrollingNotifier.AddListener(HandleIsScrollingChanged);
-    }
-
-    private void HandleIsScrollingChanged()
-    {
-        if (_position == null)
-        {
-            return;
-        }
-
-        RenderSliverFloatingPersistentHeader? header = null;
-        Context.VisitAncestorElements(ancestor =>
-        {
-            if (ancestor.RenderObject is RenderSliverFloatingPersistentHeader floatingHeader)
-            {
-                header = floatingHeader;
-                return false;
-            }
-
-            return true;
-        });
-
-        if (header == null)
-        {
-            return;
-        }
-
-        if (_position.IsScrollingNotifier.Value)
-        {
-            header.UpdateScrollStartDirection(_position.UserScrollDirection);
-            header.MaybeStopSnapAnimation(_position.UserScrollDirection);
-        }
-        else
-        {
-            header.MaybeStartSnapAnimation(_position.UserScrollDirection);
-        }
-    }
+    public void TriggerRebuild() => _mixin.TriggerRebuild();
 }

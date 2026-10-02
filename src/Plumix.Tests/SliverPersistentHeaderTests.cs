@@ -38,7 +38,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         var showOnScreen = new PersistentHeaderShowOnScreenConfiguration();
         Assert.Equal(double.NegativeInfinity, showOnScreen.MinShowOnScreenExtent);
         Assert.Equal(double.PositiveInfinity, showOnScreen.MaxShowOnScreenExtent);
-        Assert.Throws<ArgumentOutOfRangeException>(
+        Assert.Throws<AssertionError>(
             () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
     }
 
@@ -46,7 +46,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void ScrollingHeader_ShrinksThenScrollsOffWithFlutterGeometry()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400)));
-        var header = new RenderSliverScrollingPersistentHeader(60, 200, child: child);
+        var header = new TestScrollingHeader(60, 200, child: child);
 
         header.Layout(Constraints(scrollOffset: 0), parentUsesSize: true);
         Assert.Equal(200, child.Size.Height, precision: 3);
@@ -72,7 +72,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void ScrollingHeader_PaintOriginFollowsNegativeOverlapOnly()
     {
-        var header = new RenderSliverScrollingPersistentHeader(
+        var header = new TestScrollingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
@@ -88,7 +88,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void PinnedHeader_HoldsMinExtentAndReportsObstruction()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400)));
-        var header = new RenderSliverPinnedPersistentHeader(60, 200, child: child);
+        var header = new TestPinnedHeader(60, 200, child: child);
 
         header.Layout(Constraints(scrollOffset: 400), parentUsesSize: true);
         Assert.Equal(60, child.Size.Height, precision: 3);
@@ -109,7 +109,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void FloatingHeader_OnlyExpandsWhenTheUserScrollsForward()
     {
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
@@ -140,7 +140,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void FloatingHeader_ExpandsAfterAForwardGestureStartedEvenWhenTheDirectionIsIdle()
     {
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
@@ -155,7 +155,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void FloatingPinnedHeader_KeepsMinExtentVisibleAndReportsObstruction()
     {
-        var header = new RenderSliverFloatingPinnedPersistentHeader(
+        var header = new TestFloatingPinnedHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))));
@@ -176,7 +176,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void Stretch_GrowsTheChildIntoTheLeadingOverscrollOnly()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400)));
-        var header = new RenderSliverScrollingPersistentHeader(
+        var header = new TestScrollingHeader(
             60,
             200,
             child: child,
@@ -197,7 +197,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void Stretch_WithoutOverscrollLeavesTheChildAtMaxExtent()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400)));
-        var header = new RenderSliverPinnedPersistentHeader(
+        var header = new TestPinnedHeader(
             60,
             200,
             child: child,
@@ -217,7 +217,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         double aboveOverscroll)
     {
         int calls = 0;
-        var header = new RenderSliverScrollingPersistentHeader(
+        var header = new TestScrollingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -249,7 +249,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void StretchTrigger_DoesNotFireWithoutOverscroll()
     {
         int calls = 0;
-        var header = new RenderSliverScrollingPersistentHeader(
+        var header = new TestScrollingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -269,7 +269,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void Snap_IsSkippedWhenTheHeaderIsAlreadyFullyShownOrHidden()
     {
         var vsync = new TestTickerProvider();
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -288,7 +288,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void Snap_WithoutAConfigurationDoesNothing()
     {
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -305,7 +305,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void ShowOnScreenConfiguration_ExpandsAFloatingHeaderToItsFullExtent()
     {
         var vsync = new TestTickerProvider();
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -328,7 +328,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     [Fact]
     public void ShowOnScreen_WithoutAConfigurationLeavesTheHeaderToTheViewport()
     {
-        var header = new RenderSliverFloatingPersistentHeader(
+        var header = new TestFloatingHeader(
             60,
             200,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 400))),
@@ -357,7 +357,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         harness.Pump();
 
         RenderSliverPersistentHeader header = harness.Header;
-        Assert.Equal(expected, header.GetType());
+        Assert.IsAssignableFrom(expected, header);
         Assert.Equal(60, header.MinExtent, precision: 3);
         Assert.Equal(200, header.MaxExtent, precision: 3);
     }
@@ -388,7 +388,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         };
         using var harness = new SliverHarness(new SliverPersistentHeader(first, pinned: true));
         harness.Pump();
-        var pinnedHeader = Assert.IsType<RenderSliverPinnedPersistentHeader>(harness.Header);
+        var pinnedHeader = Assert.IsAssignableFrom<RenderSliverPinnedPersistentHeader>(harness.Header);
         Assert.Equal(10, pinnedHeader.StretchConfiguration!.StretchTriggerOffset);
         Assert.Equal(1000, pinnedHeader.ShowOnScreenConfiguration!.MaxShowOnScreenExtent);
 
@@ -400,19 +400,36 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             },
             pinned: true));
         harness.Pump();
-        pinnedHeader = Assert.IsType<RenderSliverPinnedPersistentHeader>(harness.Header);
+        pinnedHeader = Assert.IsAssignableFrom<RenderSliverPinnedPersistentHeader>(harness.Header);
         Assert.Equal(20, pinnedHeader.StretchConfiguration!.StretchTriggerOffset);
         Assert.Equal(2000, pinnedHeader.ShowOnScreenConfiguration!.MaxShowOnScreenExtent);
     }
 
     [Fact]
-    public void SliverPersistentHeader_ValidatesTheDelegateExtents()
+    public void SliverPersistentHeader_LayoutAssertsMinExtentIsNotAboveMaxExtent()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () => new SliverPersistentHeader(new TestHeaderDelegate(200, 100)));
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () => new SliverPersistentHeader(new TestHeaderDelegate(-1, 100)));
-        Assert.Throws<ArgumentNullException>(() => new SliverPersistentHeader(null!));
+        // Dart validates the delegate only in `layoutChild`'s debug assert, never in a constructor.
+        var errors = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = errors.Add;
+        try
+        {
+            using var harness = new SliverHarness(new SliverPersistentHeader(new TestHeaderDelegate(200, 100)));
+            harness.Pump();
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+
+        // Layout reports the error instead of letting it escape the frame (the sliver then has no
+        // geometry, which the viewport reports too).
+        FlutterError error = Assert.IsType<FlutterError>(errors[0].Exception);
+        Assert.Equal(
+            "The maxExtent for this RenderSliverScrollingPersistentHeaderForWidgets is less than its minExtent.",
+            error.Message.Split('\n')[0]);
+        Assert.Contains("The specified maxExtent was: 100.0", error.Message);
+        Assert.Contains("The specified minExtent was: 200.0", error.Message);
     }
 
     [Theory]
@@ -482,6 +499,73 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         RemainingCacheExtent: ViewportExtent,
         Overlap: overlap,
         UserScrollDirection: userScrollDirection);
+
+    // rendering/sliver_persistent_header_test.dart's pattern: the render classes are abstract, so a
+    // test subclass supplies fixed extents.
+    private sealed class TestScrollingHeader(
+        double minExtent,
+        double maxExtent,
+        RenderBox? child = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null)
+        : RenderSliverScrollingPersistentHeader(child, stretchConfiguration)
+    {
+        public override double MinExtent => minExtent;
+
+        public override double MaxExtent => maxExtent;
+    }
+
+    private sealed class TestPinnedHeader(
+        double minExtent,
+        double maxExtent,
+        RenderBox? child = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
+        : RenderSliverPinnedPersistentHeader(child, stretchConfiguration, showOnScreenConfiguration)
+    {
+        public override double MinExtent => minExtent;
+
+        public override double MaxExtent => maxExtent;
+    }
+
+    private sealed class TestFloatingHeader(
+        double minExtent,
+        double maxExtent,
+        RenderBox? child = null,
+        ITickerProvider? vsync = null,
+        FloatingHeaderSnapConfiguration? snapConfiguration = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
+        : RenderSliverFloatingPersistentHeader(
+            showOnScreenConfiguration,
+            child,
+            vsync,
+            snapConfiguration,
+            stretchConfiguration)
+    {
+        public override double MinExtent => minExtent;
+
+        public override double MaxExtent => maxExtent;
+    }
+
+    private sealed class TestFloatingPinnedHeader(
+        double minExtent,
+        double maxExtent,
+        RenderBox? child = null,
+        ITickerProvider? vsync = null,
+        FloatingHeaderSnapConfiguration? snapConfiguration = null,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration = null,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration = null)
+        : RenderSliverFloatingPinnedPersistentHeader(
+            child,
+            vsync,
+            snapConfiguration,
+            stretchConfiguration,
+            showOnScreenConfiguration)
+    {
+        public override double MinExtent => minExtent;
+
+        public override double MaxExtent => maxExtent;
+    }
 
     private sealed class TestTickerProvider : ITickerProvider
     {

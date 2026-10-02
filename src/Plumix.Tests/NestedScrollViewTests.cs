@@ -593,11 +593,11 @@ public sealed class NestedScrollViewTests : IDisposable
         drag.Update(new DragUpdateDetails(new Point(0, 0), new Point(0, 0), new Point(0, -20), -20));
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
-        // Two idle reports, as in Flutter: ScrollPositionWithSingleContext.BeginActivity resets the
-        // position's own direction when the idle activity starts, and _NestedScrollPosition.GoIdle
-        // then resets the coordinator's, which reports to the outer position again.
+        // One idle report, as the pinned Flutter SDK produces for the same drag: Dart's
+        // _NestedScrollPosition extends ScrollPosition, whose beginActivity leaves the direction
+        // alone, so only the coordinator's reset in goIdle reports.
         Assert.Equal(
-            [ScrollDirection.Reverse, ScrollDirection.Idle, ScrollDirection.Idle],
+            [ScrollDirection.Reverse, ScrollDirection.Idle],
             directions);
 
         directions.Clear();
@@ -606,7 +606,7 @@ public sealed class NestedScrollViewTests : IDisposable
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
         Assert.Equal(
-            [ScrollDirection.Forward, ScrollDirection.Idle, ScrollDirection.Idle],
+            [ScrollDirection.Forward, ScrollDirection.Idle],
             directions);
     }
 
