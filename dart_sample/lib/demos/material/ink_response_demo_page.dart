@@ -14,6 +14,7 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   int _responseTaps = 0;
   int _wellTaps = 0;
   int _secondaryTaps = 0;
+  int _doubleTaps = 0;
   String _interaction = 'Ready';
 
   InteractiveInkFeatureFactory get _splashFactory => switch (_splashMode) {
@@ -70,8 +71,10 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
               _buildInkWell(overlay),
             ],
           ),
+          _buildStadiumWell(overlay),
           Text(
-            'InkResponse taps: $_responseTaps  |  InkWell taps: $_wellTaps  |  secondary: $_secondaryTaps',
+            'InkResponse taps: $_responseTaps  |  InkWell taps: $_wellTaps  |  secondary: $_secondaryTaps'
+            '  |  double: $_doubleTaps',
             style: const TextStyle(fontSize: 14, color: Colors.black),
           ),
           Text(
@@ -180,6 +183,32 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
           ),
         ),
       ],
+    );
+  }
+
+  // The ink of a custom-bordered well is clipped to the border's outer path (customBorder).
+  Widget _buildStadiumWell(WidgetStateProperty<Color?>? overlay) {
+    return Center(
+      child: Ink(
+        width: 220,
+        height: 52,
+        decoration: const ShapeDecoration(
+          color: Color(0xFFFFD8E4),
+          shape: StadiumBorder(),
+        ),
+        child: InkWell(
+          onDoubleTap: _enabled ? () => setState(() => _doubleTaps += 1) : null,
+          overlayColor: overlay,
+          splashFactory: _splashFactory,
+          customBorder: const StadiumBorder(),
+          child: const Center(
+            child: Text(
+              'Stadium: double tap',
+              style: TextStyle(fontSize: 15, color: Colors.black),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
