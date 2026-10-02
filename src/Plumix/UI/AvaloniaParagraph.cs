@@ -24,6 +24,12 @@ internal static class ParagraphBackend
 
     private static bool? s_hasFontManager;
 
+    /// <summary>
+    /// Runs the one-time font-manager probe now, so a process that installs a render backend later (the
+    /// test assembly's raster backend) keeps the engine the probe chose.
+    /// </summary>
+    internal static void EnsureProbed() => _ = HasFontManager();
+
     // The first probe decides for the process: a host registers its font manager before it builds any
     // text, and a headless process never registers one, so re-probing would only repeat the exception.
     private static bool HasFontManager()

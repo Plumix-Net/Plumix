@@ -108,7 +108,7 @@ public sealed class LayerTreeTests
         Assert.False(f.DebugSubtreeNeedsAddToScene);
         Assert.True(g.DebugSubtreeNeedsAddToScene);
 
-        a.BuildScene(null);
+        a.BuildScene(new SceneBuilder()).Dispose();
         Assert.All(allLayers, layer => Assert.False(layer.DebugSubtreeNeedsAddToScene));
     }
 
@@ -420,7 +420,7 @@ public sealed class LayerTreeTests
         var engineLayer = new TestEngineLayer();
         layer.EngineLayer = engineLayer;
 
-        layer.BuildScene(null);
+        layer.BuildScene(new SceneBuilder()).Dispose();
 
         Assert.Null(layer.EngineLayer);
         Assert.True(engineLayer.Disposed);
@@ -536,7 +536,7 @@ public sealed class LayerTreeTests
         (ContainerLayer root, _, ContainerLayer b1) = CreateCallbackTree();
         // Add and immediately remove the callback.
         b1.AddCompositionCallback(_ => Assert.Fail("Should not have called back"))();
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
     }
 
     [Fact]
@@ -550,7 +550,7 @@ public sealed class LayerTreeTests
             compositedB1 = true;
         });
         Assert.False(compositedB1);
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
         Assert.True(compositedB1);
     }
 
@@ -558,7 +558,9 @@ public sealed class LayerTreeTests
     public void CompositionCallback_ObservesTheCompositeOfACleanLayerWithAnEngineLayer()
     {
         (ContainerLayer root, _, ContainerLayer b1) = CreateCallbackTree();
-        b1.EngineLayer = new TestEngineLayer();
+        var builder = new SceneBuilder();
+        b1.EngineLayer = builder.PushOffset(0, 0);
+        builder.Build().Dispose();
         b1.DebugMarkClean();
         bool compositedB1 = false;
         b1.AddCompositionCallback(layer =>
@@ -567,7 +569,7 @@ public sealed class LayerTreeTests
             compositedB1 = true;
         });
         Assert.False(compositedB1);
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
         Assert.True(compositedB1);
     }
 
@@ -590,7 +592,7 @@ public sealed class LayerTreeTests
             compositedB1 = true;
         });
         Assert.False(compositedB1);
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
         Assert.True(compositedB1);
     }
 
@@ -658,7 +660,7 @@ public sealed class LayerTreeTests
         var context = new PaintingContext(root, new Rect(0, 0, 10, 10));
         Layer? observed = null;
         context.AddCompositionCallback(layer => observed = layer);
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
         Assert.Same(root, observed);
     }
 
@@ -674,6 +676,8 @@ public sealed class LayerTreeTests
         Assert.True(new BackdropFilterLayer().SupportsRasterization());
         Assert.True(new ColorFilterLayer().SupportsRasterization());
         Assert.True(new ShaderMaskLayer().SupportsRasterization());
+        Assert.True(new TextureLayer(rect: default, textureId: 1).SupportsRasterization());
+        Assert.False(new PlatformViewLayer(rect: default, viewId: 1).SupportsRasterization());
 
         var container = new ContainerLayer();
         container.Append(new OffsetLayer());
@@ -702,7 +706,7 @@ public sealed class LayerTreeTests
         transformLayer.ApplyTransform(child, beforeComposite);
         Assert.Equal(Matrix4.Diagonal3Values(2, 3, 1), beforeComposite);
 
-        transformLayer.BuildScene(null);
+        transformLayer.BuildScene(new SceneBuilder()).Dispose();
         Matrix4 afterComposite = Matrix4.Identity();
         transformLayer.ApplyTransform(child, afterComposite);
         Matrix4 expected = Matrix4.TranslationValues(5, 7, 0);
@@ -748,7 +752,7 @@ public sealed class LayerTreeTests
 
         Assert.Null(follower.GetLastTransform());
 
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
 
         // Forward chain: T(10, 20) * S(2) * T(3, 4) * T(1, 1); inverse chain: T(100, 200).
         Matrix4 forward = Matrix4.TranslationValues(10, 20, 0);
@@ -767,7 +771,7 @@ public sealed class LayerTreeTests
 
         // Unlinked: the follower composites at its unlinked offset and reports no transform.
         leader.Remove();
-        root.BuildScene(null);
+        root.BuildScene(new SceneBuilder()).Dispose();
         Assert.Null(follower.GetLastTransform());
         Matrix4 unlinked = Matrix4.Identity();
         follower.ApplyTransform(new ContainerLayer(), unlinked);
@@ -788,7 +792,7 @@ public sealed class LayerTreeTests
         var engineLayer = new TestEngineLayer();
         follower.EngineLayer = engineLayer;
 
-        root.AddToScene(null, default);
+        root.AddToScene(new SceneBuilder());
 
         Assert.False(childComposited);
         Assert.True(engineLayer.Disposed);
@@ -947,16 +951,21 @@ public sealed class LayerTreeTests
     {
         public override bool SupportsRasterization() => false;
 
-        internal override void AddToScene(Avalonia.Media.DrawingContext? context, Point offset)
+        protected internal override void AddToScene(SceneBuilder builder)
         {
         }
     }
 
-    private sealed class TestEngineLayer : IDisposable
+    // layers_test.dart's FakeEngineLayer: asserts it is disposed exactly once.
+    private sealed class TestEngineLayer : EngineLayer
     {
         public bool Disposed { get; private set; }
 
-        public void Dispose() => Disposed = true;
+        public override void Dispose()
+        {
+            Assert.False(Disposed);
+            Disposed = true;
+        }
     }
 
     private sealed class SizedRenderBox(Size preferredSize) : RenderBox
@@ -1021,11 +1030,11 @@ public sealed class LayerTreeTests
     {
         public Action ComputeSomething { get; set; } = computeSomething;
 
-        internal override void AddToScene(Avalonia.Media.DrawingContext? context, Point offset)
+        protected internal override void AddToScene(SceneBuilder builder)
         {
             // Indeed, need to use the result of this function.
             ComputeSomething();
-            base.AddToScene(context, offset);
+            base.AddToScene(builder);
         }
     }
 

@@ -41,6 +41,13 @@ public class PlumixHost : Control
     private readonly PlumixTextInputMethodClient _textInputClient;
     private readonly Thread _ownerThread;
     private readonly TrackpadPanZoomSynthesizer _panZoom;
+    private readonly CompositorContext _compositor = new();
+    private ContainerFlowLayer? _layerTree;
+    private Size _layerTreeTargetSize;
+    private Matrix _layerTreeTransform = Matrix.Identity;
+    private List<IDisposable> _rasterResources = [];
+    private long _renderPassStart;
+    private bool _inRenderPass;
     private bool _isSubscribedToScheduler;
     private Size _lastArrangedSize;
     private TopLevel? _attachedTopLevel;
@@ -410,20 +417,62 @@ public class PlumixHost : Control
 
     public override void Render(DrawingContext context)
     {
-        OnBuildBeforeLayout();
-        _pipeline.FlushLayout(Bounds.Size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        // Dart's `RendererBinding.drawFrame` sends nothing to the engine while the first frame is
-        // deferred; the host shows no frame instead of a half-initialized one.
-        if (!RendererBinding.Instance.SendFramesToEngine)
+        _renderPassStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        _inRenderPass = true;
+        try
+        {
+            OnBuildBeforeLayout();
+            _pipeline.FlushLayout(Bounds.Size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+            // Dart's `RendererBinding.drawFrame` sends nothing to the engine while the first frame is
+            // deferred; the host shows no frame instead of a half-initialized one.
+            if (!RendererBinding.Instance.SendFramesToEngine)
+            {
+                return;
+            }
+
+            // `RenderView.compositeFrame` builds the scene and hands it to `FlutterView.render`, which
+            // takes its layer tree (HandleViewRenderRequested); the rasterizer then draws that tree.
+            if (_pipeline.RootNode is RenderView renderView)
+            {
+                renderView.CompositeFrame();
+            }
+
+            RasterizeLayerTree(context);
+            FlushSemanticsAndNotify();
+        }
+        finally
+        {
+            _inRenderPass = false;
+        }
+    }
+
+    /// <summary>
+    /// Draws the last layer tree <see cref="FlutterView.Render"/> handed to this host: the engine's
+    /// rasterizer. The scene is in physical pixels and Avalonia's drawing context in logical ones, so
+    /// the tree is drawn under the inverse of the view's device-pixel-ratio transform.
+    /// </summary>
+    private void RasterizeLayerTree(DrawingContext context)
+    {
+        if (_layerTree is not { } layerTree)
         {
             return;
         }
 
-        _pipeline.CompositeFrame(context);
-        UpdateSystemChrome();
-        FlushSemanticsAndNotify();
+        List<IDisposable> previousResources = _rasterResources;
+        _rasterResources = SceneRasterizer.Draw(
+            context,
+            layerTree,
+            _layerTreeTargetSize,
+            _layerTreeTransform,
+            _compositor,
+            TextureRegistry.Instance);
+        // The previous frame's raster outputs stay alive until this frame no longer draws from them.
+        foreach (IDisposable resource in previousResources)
+        {
+            resource.Dispose();
+        }
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
@@ -438,6 +487,8 @@ public class PlumixHost : Control
         AttachMetricSources();
         PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
         PlatformDispatcher.Instance.ViewFocusChangeRequested += HandleViewFocusChangeRequested;
+        TextureRegistry.Instance.TextureFrameAvailable -= HandleTextureFrameAvailable;
+        TextureRegistry.Instance.TextureFrameAvailable += HandleTextureFrameAvailable;
         if (IsFocused && (_attachedTopLevel is not WindowBase window || window.IsActive))
         {
             ReportViewFocus(ViewFocusState.Focused, ViewFocusDirection.Undefined);
@@ -449,6 +500,7 @@ public class PlumixHost : Control
     {
         ReportViewFocus(ViewFocusState.Unfocused, ViewFocusDirection.Undefined);
         PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
+        TextureRegistry.Instance.TextureFrameAvailable -= HandleTextureFrameAvailable;
         DetachMetricSources();
         DetachPlatformChannelHandler();
         DetachFeedbackListener();
@@ -1522,10 +1574,45 @@ public class PlumixHost : Control
     }
 
     /// <summary>
-    /// <c>FlutterView.render</c> for this host: <c>RendererBinding.DrawFrame</c> composited the view,
-    /// so the next Avalonia render pass draws its layer tree.
+    /// <c>FlutterView.render</c> for this host: takes the scene's layer tree, which the host's render pass
+    /// rasterizes, and records the build time of the frame for the performance overlay.
     /// </summary>
-    private void HandleViewRenderRequested(OffsetLayer scene)
+    private void HandleViewRenderRequested(Scene scene, Size? physicalSize)
+    {
+        ContainerFlowLayer? layerTree = scene.TakeLayerTree();
+        if (layerTree == null)
+        {
+            return;
+        }
+
+        double devicePixelRatio = _pipeline.RootNode is RenderView { HasConfiguration: true } renderView
+            ? renderView.Configuration.DevicePixelRatio
+            : _view.DevicePixelRatio;
+        Size physical = physicalSize ?? new Size(Bounds.Width * devicePixelRatio, Bounds.Height * devicePixelRatio);
+        _layerTree = layerTree;
+        _layerTreeTransform = devicePixelRatio > 0.0
+            ? Matrix.CreateScale(1.0 / devicePixelRatio, 1.0 / devicePixelRatio)
+            : Matrix.Identity;
+        _layerTreeTargetSize = devicePixelRatio > 0.0
+            ? new Size(physical.Width / devicePixelRatio, physical.Height / devicePixelRatio)
+            : Bounds.Size;
+        if (_inRenderPass)
+        {
+            _compositor.UiTime.SetLapTime(System.Diagnostics.Stopwatch.GetElapsedTime(_renderPassStart));
+            return;
+        }
+
+        if (ReferenceEquals(Thread.CurrentThread, _ownerThread))
+        {
+            InvalidateVisual();
+        }
+        else
+        {
+            Dispatcher.UIThread.Post(InvalidateVisual);
+        }
+    }
+
+    private void HandleTextureFrameAvailable(long textureId)
     {
         if (ReferenceEquals(Thread.CurrentThread, _ownerThread))
         {

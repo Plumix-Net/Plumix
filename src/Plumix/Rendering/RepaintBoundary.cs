@@ -16,6 +16,36 @@ public class RenderRepaintBoundary : RenderProxyBox
 
     public override bool IsRepaintBoundary => true;
 
+    /// <summary>Capture an image of the current state of this render object and its children.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderRepaintBoundary.toImage</c>. The returned image is in the local coordinate
+    /// system of this object, with <paramref name="pixelRatio"/> image pixels per logical pixel; this
+    /// object must have painted (it may not need paint) and be composited into its own layer.
+    /// </remarks>
+    public Task<Avalonia.Media.Imaging.Bitmap> ToImage(double pixelRatio = 1.0)
+    {
+        if (Constants.KDebugMode && DebugNeedsPaint)
+        {
+            throw new AssertionError("!debugNeedsPaint");
+        }
+
+        var offsetLayer = (OffsetLayer)Layer!;
+        return offsetLayer.ToImage(new Avalonia.Rect(default, Size), pixelRatio: pixelRatio);
+    }
+
+    /// <summary>Capture an image of the current state of this render object and its children, synchronously.</summary>
+    /// <remarks>Flutter's <c>RenderRepaintBoundary.toImageSync</c>; see <see cref="ToImage"/>.</remarks>
+    public Avalonia.Media.Imaging.Bitmap ToImageSync(double pixelRatio = 1.0)
+    {
+        if (Constants.KDebugMode && DebugNeedsPaint)
+        {
+            throw new AssertionError("!debugNeedsPaint");
+        }
+
+        var offsetLayer = (OffsetLayer)Layer!;
+        return offsetLayer.ToImageSync(new Avalonia.Rect(default, Size), pixelRatio: pixelRatio);
+    }
+
     /// <summary>
     /// The number of times that this render object repainted at the same time as its parent.
     /// </summary>

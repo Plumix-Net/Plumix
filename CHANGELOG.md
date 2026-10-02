@@ -8,6 +8,22 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `SceneBuilder`/`Scene`/`EngineLayer` and the 11 typed engine layers: dart:ui's compositing.dart, with its asserts.
+- Breaking: `Layer.AddToScene(SceneBuilder)` pushes engine layers; clean subtrees go in via `AddRetained` (layer.dart).
+- Breaking: `ContainerLayer.BuildScene(SceneBuilder)` returns the `Scene`; `Layer.EngineLayer` is an `EngineLayer?`.
+- Breaking: `RenderView.CompositeFrame` builds the scene and calls `FlutterView.Render(scene, size)` (view.dart).
+- Breaking: `FlutterView.RenderRequested` carries the `Scene` and physical size; hosts rasterize its layer tree.
+- Breaking: `PipelineOwner.CompositeFrame(DrawingContext)` is gone; hosts draw through the scene rasterizer.
+- `OffsetLayer.ToImage`/`ToImageSync` and `RenderRepaintBoundary.ToImage`/`ToImageSync` (layer, proxy_box).
+- `TextureLayer`, `PlatformViewLayer`, `PerformanceOverlayLayer` (layer.dart); `RendererBinding.CreateSceneBuilder`.
+- `TextureBox`/`Texture` (texture.dart) over the engine's `TextureRegistry`; `ImageTexture` serves Avalonia images.
+- `RenderPerformanceOverlay`/`PerformanceOverlay`/`PerformanceOverlayOption` with the engine's stopwatch graphs.
+- `WidgetsApp.showPerformanceOverlay` and `ShowPerformanceOverlayOverride` stack the overlay over the app (app.dart).
+- Breaking: `ShaderMaskLayer.MaskRect`/`BlendMode` are nullable, as in Dart; clip/filter layers mark on every setter.
+- `Picture.Dispose`/`DebugDisposed`; `PictureLayer` disposes the picture it replaces or drops (painting, layer).
+- Tests rasterize scenes headlessly through Avalonia's Skia backend (`RasterBackend`, `Avalonia.Skia` test package).
+- Scene compositing demo: retained layers, `RepaintBoundary.toImage` capture and the performance overlay (both samples).
+- compositing_test.dart's SceneBuilder contract and layers_test/texture/performance_overlay tests ported.
 - `Paint.maskFilter` (every `BlurStyle`) and `Paint.blendMode` render through a raster backend (`PaintRasterizer`).
 - `Canvas` gains `DrawOval`/`DrawPath`/`DrawLine`/`DrawDRRect`/`DrawRSuperellipse` taking a `Paint` (dart:ui Canvas).
 - Breaking: `ShapeBorder.PaintInterior` takes a `Paint`, not an `IBrush`, as Dart's `paintInterior` does (borders).

@@ -77,6 +77,7 @@ import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
 import 'demos/general/rendering_debug_flags_demo_page.dart';
+import 'demos/general/scene_compositing_demo_page.dart';
 import 'demos/general/drag_target_demo_page.dart';
 import 'demos/general/gesture_recognizer_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
@@ -1046,6 +1047,14 @@ class SampleGalleryScreen extends StatelessWidget {
           'debugPaintSize/baselines/pointers/layer borders + clip, opacity, '
           'shadow kill switches',
       builder: () => const RenderingDebugFlagsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.sceneCompositing,
+      title: 'Scene compositing',
+      subtitle:
+          'SceneBuilder retained layers + RepaintBoundary.toImage + '
+          'PerformanceOverlay',
+      builder: () => const SceneCompositingDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.flow,

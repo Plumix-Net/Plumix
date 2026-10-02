@@ -1,8 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
 using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.Imaging;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Foundation;
@@ -774,15 +772,15 @@ public class PipelineOwner : DiagnosticableTree
     }
 
     /// <summary>
-    /// Composites the layer tree without drawing it: runs every layer's composition-time work
-    /// (<see cref="FollowerLayer"/> transforms, composition callbacks, dirty flags) the way the host's
-    /// <see cref="CompositeFrame(DrawingContext)"/> does.
+    /// Composites the layer tree into a scene that nothing renders: runs every layer's composition-time
+    /// work (<see cref="FollowerLayer"/> transforms, composition callbacks, dirty flags and retained
+    /// engine layers) the way <see cref="RenderView.CompositeFrame"/> does.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.drawFrame</c> composites every registered <c>RenderView</c> after
-    /// flushing paint, and its test binding does so with a scene builder that renders nowhere. This is
-    /// that composite for tests and host-less trees that pump the pipeline by hand: it builds this owner's
-    /// root layer, then those of its child owners (one per nested <c>View</c>).
+    /// Plumix-only. Flutter's <c>RendererBinding.drawFrame</c> composites every registered <c>RenderView</c>
+    /// after flushing paint; this is that composite for tests and host-less trees that pump the pipeline
+    /// by hand: it builds this owner's root layer into a scene and disposes it, then does the same for
+    /// its child owners (one per nested <c>View</c>).
     /// </remarks>
     public void CompositeFrame()
     {
@@ -803,157 +801,10 @@ public class PipelineOwner : DiagnosticableTree
 
     private void CompositeFrameHeadless()
     {
-        _rootLayer.BuildScene(null);
+        _rootLayer.BuildScene(new SceneBuilder()).Dispose();
         foreach (PipelineOwner child in _children.ToArray())
         {
             child.CompositeFrameHeadless();
-        }
-    }
-
-    /// <summary>Composites the layer tree into <paramref name="context"/>.</summary>
-    /// <remarks>
-    /// Flutter's <c>RenderView.compositeFrame</c> (see docs/ai/DIVERGENCES.md: the host draws into an
-    /// Avalonia drawing context instead of rendering an engine scene).
-    /// </remarks>
-    public void CompositeFrame(DrawingContext context)
-    {
-        bool hasBackdropFilters = _rootLayer.ContainsBackdropFilter;
-        using DrawingContext.PushedState rootTransform = PushInverseRootTransform(context);
-        try
-        {
-            if (hasBackdropFilters)
-            {
-                CaptureBackdropInputs();
-            }
-
-            if (!_rootLayer.ContainsMagnifier)
-            {
-                _rootLayer.BuildScene(context);
-                return;
-            }
-
-            Layer.BeginMagnifierBackdropCapture();
-            try
-            {
-                BackdropCapture backdrop = CaptureScene();
-                Layer.EndMagnifierBackdropCapture(backdrop);
-                _rootLayer.BuildScene(context);
-            }
-            finally
-            {
-                Layer.ClearMagnifierBackdrop();
-            }
-        }
-        finally
-        {
-            if (hasBackdropFilters)
-            {
-                ClearBackdropInputs();
-            }
-
-            RenderingDebug.AdvanceRepaintColorForFrame();
-        }
-    }
-
-    /// <summary>
-    /// Undoes the root layer's device-pixel-ratio scale on <paramref name="context"/>.
-    /// </summary>
-    /// <remarks>
-    /// A <see cref="RenderView"/>'s root <see cref="TransformLayer"/> scales logical pixels to the
-    /// physical pixels of Dart's engine surface, but an Avalonia drawing context is already in
-    /// logical pixels and applies the pixel density itself; pushing the inverse first makes the two
-    /// cancel, so the layer tree draws at the same logical geometry Dart rasterizes at.
-    /// </remarks>
-    private DrawingContext.PushedState PushInverseRootTransform(DrawingContext context)
-    {
-        Matrix4? inverse = _rootLayer is TransformLayer rootTransformLayer
-            ? Matrix4.TryInvert(rootTransformLayer.Transform)
-            : null;
-        return context.PushTransform((inverse ?? Matrix4.Identity()).ToAvaloniaMatrix());
-    }
-
-    private void CaptureBackdropInputs()
-    {
-        PrepareBackdropCaptures(CaptureBackdropInput);
-    }
-
-    internal void PrepareBackdropCaptures(Func<BackdropFilterLayer, BackdropCapture> capture)
-    {
-        ArgumentNullException.ThrowIfNull(capture);
-        var filters = new List<BackdropFilterLayer>();
-        _rootLayer.CollectBackdropFilters(filters);
-        var groupedBackdrops = new Dictionary<BackdropKey, BackdropCapture>();
-        foreach (BackdropFilterLayer filter in filters)
-        {
-            if (filter.BackdropKey != null
-                && groupedBackdrops.TryGetValue(filter.BackdropKey, out BackdropCapture? groupedBackdrop))
-            {
-                filter.Backdrop = groupedBackdrop;
-                continue;
-            }
-
-            BackdropCapture backdrop = capture(filter)
-                ?? throw new InvalidOperationException("Backdrop capture must return an image.");
-            filter.Backdrop = backdrop;
-            if (filter.BackdropKey != null)
-            {
-                groupedBackdrops[filter.BackdropKey] = backdrop;
-            }
-        }
-    }
-
-    internal void ClearBackdropInputs()
-    {
-        var filters = new List<BackdropFilterLayer>();
-        _rootLayer.CollectBackdropFilters(filters);
-        var captures = new HashSet<BackdropCapture>();
-        foreach (BackdropFilterLayer filter in filters)
-        {
-            if (filter.Backdrop != null)
-            {
-                captures.Add(filter.Backdrop);
-                filter.Backdrop = null;
-            }
-        }
-
-        foreach (BackdropCapture capture in captures)
-        {
-            capture.Dispose();
-        }
-    }
-
-    private BackdropCapture CaptureBackdropInput(BackdropFilterLayer filter)
-    {
-        Layer.BeginBackdropCapture(filter);
-        try
-        {
-            return CaptureScene();
-        }
-        finally
-        {
-            Layer.ClearBackdropCapture();
-        }
-    }
-
-    private BackdropCapture CaptureScene()
-    {
-        int width = Math.Max(1, (int)Math.Ceiling(Root.Size.Width));
-        int height = Math.Max(1, (int)Math.Ceiling(Root.Size.Height));
-        var bounds = new Rect(0.0, 0.0, width, height);
-        var image = new RenderTargetBitmap(
-            new PixelSize(width, height),
-            new Vector(96.0, 96.0));
-        try
-        {
-            using DrawingContext backdropContext = image.CreateDrawingContext();
-            using DrawingContext.PushedState rootTransform = PushInverseRootTransform(backdropContext);
-            _rootLayer.AddToScene(backdropContext, new Point(0, 0));
-            return new BackdropCapture(image, bounds, ownsImage: true);
-        }
-        catch
-        {
-            image.Dispose();
-            throw;
         }
     }
 

@@ -40,7 +40,8 @@ milestones:
 - [x] Stateful lifecycle and build scheduling include per-owner focus managers and per-root build scopes.
 - [x] Inherited dependency model is implemented (`InheritedWidget`, `InheritedModel`, `InheritedNotifier`).
 - [x] Render pipeline is implemented (`PipelineOwner`, layout/compositing/paint/semantics phases).
-- [x] Layer tree primitives are implemented (offset/opacity/transform/clip/picture layers).
+- [x] Layer tree primitives are implemented (offset/opacity/transform/clip/picture layers), built into retained
+  dart:ui scenes (`SceneBuilder`, `addRetained`) that hosts rasterize.
 - [x] Gesture system is implemented (pointer router, arena, tap/drag/long-press recognizers).
 - [x] Navigation stack is implemented (`Navigator`, routes, named routes, observers, back handling).
 - [x] Scroll/sliver stack is implemented (`Scrollable`, `Viewport`, sliver lists/grids, keep-alive, notifications).

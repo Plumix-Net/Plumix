@@ -102,6 +102,7 @@ internal readonly record struct CanvasCall(
 public sealed class Picture
 {
     private readonly IReadOnlyList<CanvasCommand> _commands;
+    private bool _disposed;
 
     internal Picture(IReadOnlyList<CanvasCommand> commands, IReadOnlyList<CanvasCall>? debugCalls = null)
     {
@@ -138,6 +139,30 @@ public sealed class Picture
 
     /// <summary>Whether nothing was recorded into this picture.</summary>
     public bool IsEmpty => _commands.Count == 0;
+
+    /// <summary>Whether <see cref="Dispose"/> has been called.</summary>
+    /// <remarks>Dart's <c>Picture.debugDisposed</c>; only available in debug builds.</remarks>
+    public bool DebugDisposed => Constants.KDebugMode
+        ? _disposed
+        : throw new InvalidOperationException("Picture.debugDisposed is only available when asserts are enabled.");
+
+    /// <summary>Releases this picture. It may no longer be added to a scene.</summary>
+    /// <remarks>
+    /// Dart's <c>Picture.dispose</c>. A scene that already holds the picture keeps drawing it, as the
+    /// engine's display-list layer keeps its own reference.
+    /// </remarks>
+    public void Dispose()
+    {
+        if (Constants.KDebugMode)
+        {
+            if (_disposed)
+            {
+                throw new AssertionError("A Picture cannot be disposed more than once.");
+            }
+
+            _disposed = true;
+        }
+    }
 
     /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
     public void Playback(DrawingContext context, Point offset)
@@ -367,7 +392,7 @@ public sealed partial class Canvas
     {
         DebugRecordCall(new CanvasCall("clipRRect", RRect: rrect));
         PushEdgeMode(doAntiAlias);
-        _commands.Add(CanvasCommand.ForPush(context => Layer.PushRoundedRectClip(context, rrect)));
+        _commands.Add(CanvasCommand.ForPush(context => SceneRasterizer.PushRoundedRectClip(context, rrect)));
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given shape.</summary>

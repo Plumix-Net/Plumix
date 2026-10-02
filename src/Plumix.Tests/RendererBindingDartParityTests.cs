@@ -269,8 +269,8 @@ public sealed class RendererBindingDartParityTests : IDisposable
         (RenderView second, _) = AddView(8122);
         int firstRenders = 0;
         int secondRenders = 0;
-        first.FlutterView.RenderRequested += _ => firstRenders += 1;
-        second.FlutterView.RenderRequested += _ => secondRenders += 1;
+        first.FlutterView.RenderRequested += (_, _) => firstRenders += 1;
+        second.FlutterView.RenderRequested += (_, _) => secondRenders += 1;
 
         PumpFrame();
         Assert.Equal((1, 1), (firstRenders, secondRenders));
@@ -315,7 +315,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         RendererBinding binding = RendererBinding.Instance;
         (RenderView view, _) = AddView(8141);
         int renders = 0;
-        view.FlutterView.RenderRequested += _ => renders += 1;
+        view.FlutterView.RenderRequested += (_, _) => renders += 1;
         Assert.True(binding.SendFramesToEngine);
 
         binding.DeferFirstFrame();

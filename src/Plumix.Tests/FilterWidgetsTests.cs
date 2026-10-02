@@ -442,12 +442,24 @@ public sealed class FilterWidgetsTests
         Assert.Equal(1, backgroundChild.PaintCount);
         Assert.Equal(1, filteredChild.PaintCount);
 
-        BackdropCapture captured = CreateTestBackdropCapture();
-        pipeline.PrepareBackdropCaptures(_ => captured);
+        // The engine side: the scene carries one backdrop filter, which the rasterizer feeds a capture of
+        // the scene prefix painted before it.
+        using (Scene scene = pipeline.RootLayer.BuildScene(new SceneBuilder()))
+        {
+            ContainerFlowLayer root = scene.RootLayer!;
+            var filters = new List<BackdropFilterFlowLayer>();
+            root.CollectBackdropFilters(filters);
+            BackdropFilterFlowLayer flowLayer = Assert.Single(filters);
+            Assert.IsType<ImageFilter.Blur>(flowLayer.Filter);
+            Assert.Equal(BlendMode.SourceOver, flowLayer.BlendMode);
+            Assert.Null(flowLayer.BackdropId);
+            BackdropCapture captured = CreateTestBackdropCapture();
+            var state = new FlowRasterState(new Size(800, 600), new CompositorContext(), null);
+            SceneRasterizer.PrepareBackdropCaptures(root, state, _ => captured);
+            Assert.Same(captured, state.Backdrops[flowLayer]);
+        }
 
-        Assert.Same(captured, layer.Backdrop);
-        pipeline.ClearBackdropInputs();
-        Assert.Null(layer.Backdrop);
+        Assert.IsType<BackdropFilterEngineLayer>(layer.EngineLayer);
 
         var updatedFilter = new ImageFilter.Dilate(1.0, 1.0);
 #pragma warning disable CS0618 // Dart's deprecated `filter` setter is still exercised here.
@@ -499,23 +511,27 @@ public sealed class FilterWidgetsTests
         pipeline.Attach(renderView);
 
         Pump(pipeline);
+        List<BackdropFilterLayer> layers = FindLayers<BackdropFilterLayer>(pipeline.RootLayer);
+        Assert.Equal(2, layers.Count);
+        Assert.Same(sharedKey, layers[0].BackdropKey);
+        Assert.Same(sharedKey, layers[1].BackdropKey);
+
+        using Scene scene = pipeline.RootLayer.BuildScene(new SceneBuilder());
+        ContainerFlowLayer root = scene.RootLayer!;
+        var filters = new List<BackdropFilterFlowLayer>();
+        root.CollectBackdropFilters(filters);
+        Assert.Equal(2, filters.Count);
+        Assert.Equal(sharedKey.Id, filters[0].BackdropId);
+        Assert.Equal(sharedKey.Id, filters[1].BackdropId);
         int captureCount = 0;
-        pipeline.PrepareBackdropCaptures(_ =>
+        var state = new FlowRasterState(new Size(800, 600), new CompositorContext(), null);
+        SceneRasterizer.PrepareBackdropCaptures(root, state, _ =>
         {
             captureCount++;
             return CreateTestBackdropCapture();
         });
-
-        List<BackdropFilterLayer> layers = FindLayers<BackdropFilterLayer>(pipeline.RootLayer);
-        Assert.Equal(2, layers.Count);
         Assert.Equal(1, captureCount);
-        Assert.Same(sharedKey, layers[0].BackdropKey);
-        Assert.Same(sharedKey, layers[1].BackdropKey);
-        Assert.NotNull(layers[0].Backdrop);
-        Assert.Same(layers[0].Backdrop, layers[1].Backdrop);
-        pipeline.ClearBackdropInputs();
-        Assert.Null(layers[0].Backdrop);
-        Assert.Null(layers[1].Backdrop);
+        Assert.Same(state.Backdrops[filters[0]], state.Backdrops[filters[1]]);
     }
 
     [Fact]

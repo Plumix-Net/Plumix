@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference):
 // flutter/bin/cache/pkg/sky_engine/lib/ui/window.dart (FlutterView; the host supplies the engine metrics)
@@ -148,30 +149,25 @@ public sealed class FlutterView
     }
 
     /// <summary>
-    /// Raised by <see cref="Render"/> with the root layer of the frame to show. A host that renders
-    /// the view subscribes and draws the layer from its next render pass.
+    /// Raised by <see cref="Render"/> with the scene to show and its physical size. A host that renders
+    /// the view subscribes, takes the scene's layer tree (<see cref="Scene.TakeLayerTree"/>) and draws it
+    /// from its next render pass.
     /// </summary>
-    public event Action<OffsetLayer>? RenderRequested;
+    public event Action<Scene, Size?>? RenderRequested;
 
     /// <summary>Whether a host renders this view, i.e. <see cref="RenderRequested"/> has a subscriber.</summary>
     internal bool HasRenderer => RenderRequested is not null;
 
-    /// <summary>Updates the view's rendering with the frame whose root layer is <paramref name="scene"/>.</summary>
+    /// <summary>Updates the view's rendering on the GPU with the newly provided <see cref="Scene"/>.</summary>
     /// <remarks>
-    /// dart:ui's <c>FlutterView.render</c>. Dart's scene is already built when it arrives; a Plumix
-    /// layer builds its scene straight into the host's drawing context, so a view that no host renders
-    /// runs the layer tree's composition work headlessly instead.
+    /// dart:ui's <c>FlutterView.render(Scene scene, {Size? size})</c>: <paramref name="size"/> is the
+    /// physical size the scene was laid out for. The caller may dispose the scene right after; a host
+    /// keeps the layer tree it took. A view that no host renders drops the scene.
     /// </remarks>
-    public void Render(OffsetLayer scene)
+    public void Render(Scene scene, Size? size = null)
     {
         ArgumentNullException.ThrowIfNull(scene);
-        if (RenderRequested is { } renderRequested)
-        {
-            renderRequested(scene);
-            return;
-        }
-
-        scene.BuildScene(null);
+        RenderRequested?.Invoke(scene, size);
     }
 
     /// <inheritdoc />

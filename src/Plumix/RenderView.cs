@@ -435,14 +435,14 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
     }
 
     /// <summary>
-    /// Uploads the composited layer tree to the view.
+    /// Uploads the composited layer tree to the engine.
     /// </summary>
     /// <remarks>
     /// Flutter's <c>RenderView.compositeFrame</c>, which <c>RendererBinding.DrawFrame</c> calls for every
-    /// registered view. The root layer goes to <see cref="Widgets.FlutterView.Render"/>; a host renders
-    /// it into its Avalonia drawing context, and the system chrome is updated from the painted
-    /// annotations once the scene is built. A view that has not painted its first frame yet has no
-    /// root layer and is skipped, where Dart's <c>layer!</c> would throw.
+    /// registered view: builds the root layer into a scene, updates the system chrome from the painted
+    /// annotations, hands the scene to <see cref="Widgets.FlutterView.Render"/> at the physical size and
+    /// disposes it. A view that has not painted its first frame yet has no root layer and is skipped,
+    /// where Dart's <c>layer!</c> would throw.
     /// </remarks>
     public void CompositeFrame()
     {
@@ -453,26 +453,31 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
 
         try
         {
-            if (_layer is not OffsetLayer rootLayer)
+            if (Constants.KDebugMode && !HasConfiguration)
+            {
+                throw new AssertionError("set the RenderView configuration before calling compositeFrame");
+            }
+
+            if (_layer is not ContainerLayer rootLayer)
             {
                 return;
             }
 
-            bool hostRendered = FlutterView.HasRenderer;
-            FlutterView.Render(rootLayer);
-            if (!hostRendered)
+            SceneBuilder builder = RendererBinding.Instance.CreateSceneBuilder();
+            Scene scene = rootLayer.BuildScene(builder);
+            if (AutomaticSystemUiAdjustment)
             {
-                // Dart runs this between `buildScene` and `render`: the scene has to be built first,
-                // because a follower layer's `find` reads the transform the build computed. Without a
-                // host, `Render` has just built the scene; a host builds it in its own render pass
-                // and updates the system chrome there (PlumixHost.Render).
-                if (AutomaticSystemUiAdjustment)
-                {
-                    UpdateSystemChrome();
-                }
+                UpdateSystemChrome();
+            }
 
-                // A host advances the repaint rainbow when it draws the layer (PipelineOwner.CompositeFrame).
-                RenderingDebug.AdvanceRepaintColorForFrame();
+            Debug.Assert(Configuration.LogicalConstraints.IsSatisfiedBy(Size));
+            FlutterView.Render(scene, size: Configuration.ToPhysicalSize(Size));
+            scene.Dispose();
+            if (Constants.KDebugMode
+                && (RenderingDebug.RepaintRainbowEnabled || RenderingDebug.RepaintTextRainbowEnabled))
+            {
+                RenderingDebug.CurrentRepaintColor = RenderingDebug.CurrentRepaintColor.WithHue(
+                    (RenderingDebug.CurrentRepaintColor.Hue + 2.0) % 360.0);
             }
         }
         finally
@@ -492,9 +497,9 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
     /// Flutter's private <c>RenderView._updateSystemChrome</c>. The horizontal center of the screen
     /// and the vertical centers of the status bar (top padding) and the navigation bar (bottom
     /// padding) are sampled in physical pixels, which the root <see cref="TransformLayer"/>'s
-    /// <c>find</c> maps back to logical ones; only Android has a customizable navigation bar. A host
-    /// builds the scene in its own render pass and calls this right after (<c>docs/ai/DIVERGENCES.md</c>,
-    /// <c>FlutterHost</c> frame row).
+    /// <c>find</c> maps back to logical ones; only Android has a customizable navigation bar.
+    /// <see cref="CompositeFrame"/> calls it once the scene is built, because a follower layer's
+    /// <c>find</c> reads the transform the build computed.
     /// </remarks>
     internal void UpdateSystemChrome()
     {

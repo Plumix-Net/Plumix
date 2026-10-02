@@ -484,7 +484,18 @@ public sealed class WidgetsApp : StatefulWidget
 
     public IReadOnlyList<Locale> SupportedLocales { get; }
 
+    /// <summary>Turns on a performance overlay.</summary>
+    /// <remarks>Flutter's <c>WidgetsApp.showPerformanceOverlay</c>.</remarks>
     public bool ShowPerformanceOverlay { get; }
+
+    /// <summary>
+    /// If true, forces the performance overlay to be visible in all instances.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsApp.showPerformanceOverlayOverride</c>, used by the
+    /// <c>showPerformanceOverlay</c> service extension.
+    /// </remarks>
+    public static bool ShowPerformanceOverlayOverride { get; set; }
 
     public bool ShowSemanticsDebugger { get; }
 
@@ -630,6 +641,16 @@ public sealed class WidgetsApp : StatefulWidget
             if (CurrentWidget.TextStyle != null)
             {
                 result = new DefaultTextStyle(CurrentWidget.TextStyle, result);
+            }
+
+            if (CurrentWidget.ShowPerformanceOverlay || ShowPerformanceOverlayOverride)
+            {
+                result = new Stack(
+                    children:
+                    [
+                        result,
+                        new Positioned(top: 0.0, left: 0.0, right: 0.0, child: PerformanceOverlay.AllEnabled()),
+                    ]);
             }
 
             if (CurrentWidget.DebugShowCheckedModeBanner)

@@ -162,6 +162,7 @@ internal static class SampleRoutes
     public const string MouseRegion = "/mouse-region";
     public const string DebugPainting = "/debug-painting";
     public const string RenderingDebugFlags = "/rendering-debug-flags";
+    public const string SceneCompositing = "/scene-compositing";
     public const string Flow = "/flow";
     public const string Transform = "/transform";
     public const string CompositedTransform = "/composited-transform";
@@ -644,6 +645,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Rendering debug flags",
             "debugPaintSize/baselines/pointers/layer borders + clip, opacity, shadow kill switches",
             () => new RenderingDebugFlagsDemoPage()),
+        new(
+            SampleRoutes.SceneCompositing,
+            "Scene compositing",
+            "SceneBuilder retained layers + RepaintBoundary.toImage + PerformanceOverlay",
+            () => new SceneCompositingDemoPage()),
         new(
             SampleRoutes.Flow,
             "Flow + RepaintBoundary",

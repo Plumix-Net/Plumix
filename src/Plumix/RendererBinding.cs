@@ -210,6 +210,13 @@ public sealed class RendererBinding
             });
     }
 
+    /// <summary>Creates a <see cref="SceneBuilder"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>RendererBinding.createSceneBuilder</c>, which <see cref="RenderView.CompositeFrame"/>
+    /// builds every frame's scene with.
+    /// </remarks>
+    public SceneBuilder CreateSceneBuilder() => new();
+
     /// <summary>The ambient renderer binding.</summary>
     /// <remarks>Flutter's <c>RendererBinding.instance</c>.</remarks>
     public static RendererBinding Instance => _instance!;

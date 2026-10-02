@@ -34,3 +34,17 @@ public sealed class DebugOnlyFactAttribute : FactAttribute
         }
     }
 }
+
+/// <summary>The <see cref="TheoryAttribute"/> counterpart of <see cref="DebugOnlyFactAttribute"/>.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class DebugOnlyTheoryAttribute : TheoryAttribute
+{
+    public DebugOnlyTheoryAttribute()
+    {
+        if (!Constants.KDebugMode)
+        {
+            Skip = "Debug-only: Dart guards this behavior with assert(), so it does not exist in a "
+                   + "profile or release build.";
+        }
+    }
+}

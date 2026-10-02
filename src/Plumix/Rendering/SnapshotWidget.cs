@@ -1,6 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Rendering;
@@ -158,13 +158,16 @@ public sealed class RenderSnapshotWidget : RenderProxyBox
     }
 }
 
+/// <summary>
+/// Plumix-only: the composited layer of <see cref="RenderSnapshotWidget"/>, whose children the
+/// rasterizer draws once into a cached snapshot image and from the image afterwards.
+/// </summary>
 public sealed class SnapshotOffsetLayer : OffsetLayer
 {
-    private RenderTargetBitmap? _snapshot;
+    private readonly SnapshotRasterCache _cache = new();
     private bool _allowSnapshotting;
     private int _clearVersion;
-    private Size _size;
-    private double _pixelRatio = 1.0;
+    private SnapshotMode _mode;
 
     public bool AllowSnapshotting
     {
@@ -196,110 +199,86 @@ public sealed class SnapshotOffsetLayer : OffsetLayer
         }
     }
 
-    public SnapshotMode Mode { get; set; }
-
-    public Size Size
+    public SnapshotMode Mode
     {
-        get => _size;
+        get => _mode;
         set
         {
-            if (_size == value)
+            if (_mode == value)
             {
                 return;
             }
 
-            _size = value;
+            _mode = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    public Size Size
+    {
+        get => _cache.Size;
+        set
+        {
+            if (_cache.Size == value)
+            {
+                return;
+            }
+
+            _cache.Size = value;
             ClearSnapshot();
         }
     }
 
     public double PixelRatio
     {
-        get => _pixelRatio;
+        get => _cache.PixelRatio;
         set
         {
-            if (Math.Abs(_pixelRatio - value) <= 0.000001)
+            if (Math.Abs(_cache.PixelRatio - value) <= 0.000001)
             {
                 return;
             }
 
-            _pixelRatio = value;
+            _cache.PixelRatio = value;
             ClearSnapshot();
         }
     }
+
+    /// <summary>Whether the rasterizer holds a snapshot of the children.</summary>
+    internal bool HasSnapshot => _cache.Image != null;
 
     public void ClearSnapshot()
     {
-        _snapshot?.Dispose();
-        _snapshot = null;
+        _cache.Clear();
+        if (!DebugDisposed)
+        {
+            MarkNeedsAddToScene();
+        }
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        Point sceneOffset = offset + Offset;
-        if (context == null)
-        {
-            AddChildrenToScene(null, sceneOffset);
-            return;
-        }
-
         if (!AllowSnapshotting || Size.Width <= 0.0 || Size.Height <= 0.0)
         {
-            AddChildrenToScene(context, sceneOffset);
+            base.AddToScene(builder);
             return;
         }
 
-        try
-        {
-            _snapshot ??= RasterizeChildren();
-        }
-        catch when (Mode == SnapshotMode.Permissive)
-        {
-            ClearSnapshot();
-            AddChildrenToScene(context, sceneOffset);
-            return;
-        }
-
-        var source = new Rect(0.0, 0.0, _snapshot.PixelSize.Width, _snapshot.PixelSize.Height);
-        var destination = new Rect(sceneOffset, Size);
-        using (context.PushRenderOptions(new RenderOptions
-               {
-                   BitmapInterpolationMode = BitmapInterpolationMode.MediumQuality,
-               }))
-        {
-            context.DrawImage(_snapshot, source, destination);
-        }
+        _cache.Permissive = Mode == SnapshotMode.Permissive;
+        EngineLayer = builder.PushSnapshot(_cache, Offset, EngineLayer as SnapshotEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     public override void Detach()
     {
-        ClearSnapshot();
+        _cache.Clear();
         base.Detach();
     }
 
     protected internal override void Dispose()
     {
-        ClearSnapshot();
+        _cache.Clear();
         base.Dispose();
-    }
-
-    private RenderTargetBitmap RasterizeChildren()
-    {
-        int width = Math.Max(1, (int)Math.Ceiling(Size.Width * PixelRatio));
-        int height = Math.Max(1, (int)Math.Ceiling(Size.Height * PixelRatio));
-        var bitmap = new RenderTargetBitmap(
-            new PixelSize(width, height),
-            new Vector(96.0 * PixelRatio, 96.0 * PixelRatio));
-        try
-        {
-            using DrawingContext drawingContext = bitmap.CreateDrawingContext();
-            AddChildrenToScene(drawingContext, new Point(0.0, 0.0));
-            return bitmap;
-        }
-        catch
-        {
-            bitmap.Dispose();
-            throw;
-        }
     }
 }

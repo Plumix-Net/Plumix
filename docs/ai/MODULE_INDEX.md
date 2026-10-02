@@ -88,7 +88,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   while glyph hit testing/highlight paint live in `RenderParagraph.cs`. Focused coverage is in
   `MaterialSelectionTests.cs`.
 - Magnifiers enter through core `Widgets/Magnifier.cs` + `Rendering/Magnifier.cs`, Material `Magnifier.cs`, and
-  Cupertino `CupertinoMagnifier.cs`; backdrop capture/composition lives in `Rendering/Layer.cs`, with focused
+  Cupertino `CupertinoMagnifier.cs`; the lens layer is in `Rendering/Layer.cs` and its backdrop capture in the scene
+  rasterizer (`UI/FlowLayers.cs`, `MagnifierFlowLayer`), with focused
   coverage in `MagnifierTests.cs`.
 - Tooltips enter through core `Widgets/RawTooltip.cs` and Material `Tooltip.cs` + `TooltipTheme.cs`; overlay geometry
   uses `Widgets/Overlay.cs` and `CustomSingleChildLayout.cs`, while hover/touch ownership uses `Widgets/Gestures.cs`,
@@ -372,6 +373,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Painting/ClipContext.cs`
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
+  - `src/Plumix/UI/Compositing.cs` (dart:ui `SceneBuilder`/`Scene`/`EngineLayer`)
+  - `src/Plumix/UI/FlowLayers.cs` (engine-side retained layers + `SceneRasterizer`, what hosts draw)
+  - `src/Plumix/UI/TextureRegistry.cs`, `src/Plumix/UI/FrameStopwatch.cs` (texture and performance-overlay engine)
+  - `src/Plumix/Rendering/Texture.cs`, `src/Plumix/Rendering/PerformanceOverlay.cs`
 - Primary Tests:
   - `src/Plumix.Tests/BasicWidgetProxyTests.cs`
   - `src/Plumix.Tests/IntrinsicQueryParityTests.cs`
@@ -392,6 +397,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/CompositingLayerTests.cs`
   - `src/Plumix.Tests/LayerV2Tests.cs`
   - `src/Plumix.Tests/LayerTreeTests.cs`
+  - `src/Plumix.Tests/SceneBuilderTests.cs`
+  - `src/Plumix.Tests/SceneRasterizerTests.cs` (pixel tests; `RasterBackend.cs` installs Skia for the test assembly)
+  - `src/Plumix.Tests/TexturePerformanceOverlayTests.cs`
 
 ### Core Animation and Transitions
 

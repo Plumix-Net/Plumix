@@ -356,9 +356,8 @@ public static partial class RenderingDebug
 
     /// <summary>Rotates <see cref="CurrentRepaintColor"/> by the per-frame two degrees.</summary>
     /// <remarks>
-    /// The assert block at the end of Flutter's <c>RenderView.compositeFrame</c>. Plumix's
-    /// <c>PipelineOwner</c> owns the view and composites the frame, so it calls this from
-    /// <c>PipelineOwner.CompositeFrame</c>.
+    /// The assert block at the end of Flutter's <c>RenderView.compositeFrame</c>, for the Plumix-only
+    /// headless composite <c>PipelineOwner.CompositeFrame</c> that stands in for it in hand-pumped trees.
     /// </remarks>
     internal static void AdvanceRepaintColorForFrame()
     {

@@ -88,22 +88,10 @@ public abstract class Layer : DiagnosticableTree
     internal ContainerLayer? _parent;
     internal bool _needsAddToScene = true;
     private object? _owner;
-    private IDisposable? _engineLayer;
+    private EngineLayer? _engineLayer;
     internal int _depth;
     internal Layer? _nextSibling;
     internal Layer? _previousSibling;
-
-    [ThreadStatic]
-    private static BackdropCapture? _magnifierBackdrop;
-
-    [ThreadStatic]
-    private static bool _capturingMagnifierBackdrop;
-
-    [ThreadStatic]
-    private static BackdropFilterLayer? _backdropCaptureTarget;
-
-    [ThreadStatic]
-    private static bool _backdropCaptureStopped;
 
     /// <summary>Whether this layer or any of its descendants have a composition callback.</summary>
     /// <remarks>Flutter's <c>Layer.subtreeHasCompositionCallbacks</c>.</remarks>
@@ -145,110 +133,6 @@ public abstract class Layer : DiagnosticableTree
     /// </summary>
     /// <remarks>Flutter's <c>Layer.debugSubtreeNeedsAddToScene</c>.</remarks>
     public bool? DebugSubtreeNeedsAddToScene => Constants.KDebugMode ? _needsAddToScene : null;
-
-    internal virtual bool ContainsMagnifier => false;
-
-    internal virtual bool ContainsBackdropFilter => false;
-
-    internal static BackdropCapture? MagnifierBackdrop => _magnifierBackdrop;
-
-    internal static bool CapturingMagnifierBackdrop => _capturingMagnifierBackdrop;
-
-    internal static bool CapturingBackdrop => _backdropCaptureTarget != null;
-
-    internal static bool BackdropCaptureStopped => _backdropCaptureStopped;
-
-    internal static void BeginMagnifierBackdropCapture()
-    {
-        _capturingMagnifierBackdrop = true;
-        _magnifierBackdrop = null;
-    }
-
-    internal static void EndMagnifierBackdropCapture(BackdropCapture backdrop)
-    {
-        _capturingMagnifierBackdrop = false;
-        _magnifierBackdrop = backdrop;
-    }
-
-    internal static void ClearMagnifierBackdrop()
-    {
-        _capturingMagnifierBackdrop = false;
-        _magnifierBackdrop?.Dispose();
-        _magnifierBackdrop = null;
-    }
-
-    internal static void BeginBackdropCapture(BackdropFilterLayer target)
-    {
-        _backdropCaptureTarget = target ?? throw new ArgumentNullException(nameof(target));
-        _backdropCaptureStopped = false;
-    }
-
-    internal static bool IsBackdropCaptureTarget(BackdropFilterLayer layer)
-    {
-        return ReferenceEquals(_backdropCaptureTarget, layer);
-    }
-
-    internal static void StopBackdropCapture()
-    {
-        _backdropCaptureStopped = true;
-    }
-
-    internal static void ClearBackdropCapture()
-    {
-        _backdropCaptureTarget = null;
-        _backdropCaptureStopped = false;
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(DrawingContext context, RRect rrect)
-    {
-        return PushRoundedRectClip(context, rrect.Rect, rrect.Radii);
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(
-        DrawingContext context,
-        Rect rect,
-        double radius)
-    {
-        double clampedRadius = Math.Min(Math.Max(0, radius), Math.Min(rect.Width, rect.Height) / 2.0);
-        if (CapturingMagnifierBackdrop || CapturingBackdrop)
-        {
-            // Avalonia's DrawingGroup recording context does not implement PushClip(RoundedRect), but its
-            // geometry-clip path records the equivalent rounded rectangle correctly.
-            return context.PushGeometryClip(new RectangleGeometry(rect, clampedRadius, clampedRadius));
-        }
-
-        return context.PushClip(new RoundedRect(rect, clampedRadius));
-    }
-
-    internal static DrawingContext.PushedState PushRoundedRectClip(
-        DrawingContext context,
-        Rect rect,
-        BorderRadius borderRadius)
-    {
-        double maxX = Math.Max(0.0, rect.Width / 2.0);
-        double maxY = Math.Max(0.0, rect.Height / 2.0);
-        var topLeft = ClampRadius(borderRadius.TopLeftRadius, maxX, maxY);
-        var topRight = ClampRadius(borderRadius.TopRightRadius, maxX, maxY);
-        var bottomRight = ClampRadius(borderRadius.BottomRightRadius, maxX, maxY);
-        var bottomLeft = ClampRadius(borderRadius.BottomLeftRadius, maxX, maxY);
-        if (CapturingMagnifierBackdrop || CapturingBackdrop)
-        {
-            double fallbackX = Math.Max(
-                Math.Max(topLeft.X, topRight.X),
-                Math.Max(bottomRight.X, bottomLeft.X));
-            double fallbackY = Math.Max(
-                Math.Max(topLeft.Y, topRight.Y),
-                Math.Max(bottomRight.Y, bottomLeft.Y));
-            return context.PushGeometryClip(new RectangleGeometry(rect, fallbackX, fallbackY));
-        }
-
-        return context.PushClip(new RoundedRect(
-            rect,
-            new Vector(topLeft.X, topLeft.Y),
-            new Vector(topRight.X, topRight.Y),
-            new Vector(bottomRight.X, bottomRight.Y),
-            new Vector(bottomLeft.X, bottomLeft.Y)));
-    }
 
     internal static bool ContainsRoundedRect(
         Rect rect,
@@ -504,7 +388,7 @@ public abstract class Layer : DiagnosticableTree
     /// Flutter's <c>Layer.engineLayer</c>. Setting it disposes the previous value and, unless this layer or
     /// its parent always needs to be added to the scene, marks the parent as needing to be added.
     /// </remarks>
-    protected internal IDisposable? EngineLayer
+    protected internal EngineLayer? EngineLayer
     {
         get => _engineLayer;
         set
@@ -547,33 +431,34 @@ public abstract class Layer : DiagnosticableTree
         }
     }
 
-    /// <summary>
-    /// Override this method to upload this layer to the scene: to <paramref name="context"/>, drawn at
-    /// the accumulated <paramref name="offset"/> of its ancestors.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>Layer.addToScene(SceneBuilder)</c>. Plumix draws into an Avalonia drawing context
-    /// instead of building an engine scene, and passes the ancestors' untransformed offsets down instead
-    /// of pushing them. A null <paramref name="context"/> is a headless composite: every layer still runs
-    /// its composition-time bookkeeping (<see cref="FollowerLayer"/>'s transform,
-    /// <see cref="TransformLayer"/>'s effective transform) but draws nothing. See docs/ai/DIVERGENCES.md.
-    /// </remarks>
-    internal abstract void AddToScene(DrawingContext? context, Point offset);
+    /// <summary>Override this method to upload this layer to the engine.</summary>
+    /// <remarks>Flutter's <c>Layer.addToScene</c>.</remarks>
+    protected internal abstract void AddToScene(SceneBuilder builder);
 
-    /// <remarks>
-    /// Flutter's <c>Layer._addToSceneWithRetainedRendering</c>. Plumix redraws the whole layer tree into
-    /// its drawing context every composite, so a clean layer is never added retained; the dirty flag is
-    /// still cleared the way Dart clears it.
-    /// </remarks>
-    internal void AddToSceneWithRetainedRendering(DrawingContext? context, Point offset)
+    /// <remarks>Flutter's <c>Layer._addToSceneWithRetainedRendering</c>.</remarks>
+    internal void AddToSceneWithRetainedRendering(SceneBuilder builder)
     {
         DebugAssertMutationsUnlocked();
-        AddToScene(context, offset);
-        _needsAddToScene = false;
-    }
+        // There can't be a loop by adding a retained layer subtree whose
+        // _needsAddToScene is false.
+        //
+        // Proof by contradiction:
+        //
+        // If we introduce a loop, this retained layer must be appended to one of
+        // its descendant layers, say A. That means the child structure of A has
+        // changed so A's _needsAddToScene is true. This contradicts
+        // _needsAddToScene being false.
+        if (!_needsAddToScene && _engineLayer != null)
+        {
+            builder.AddRetained(_engineLayer);
+            return;
+        }
 
-    internal virtual void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
-    {
+        AddToScene(builder);
+        // Clearing the flag _after_ calling `addToScene`, not _before_. This is
+        // because `addToScene` calls children's `addToScene` methods, which may
+        // mark this layer as dirty.
+        _needsAddToScene = false;
     }
 
     protected internal virtual bool FindAnnotations<T>(
@@ -662,10 +547,6 @@ public class ContainerLayer : Layer
     /// <remarks>Flutter's <c>ContainerLayer.hasChildren</c>.</remarks>
     public bool HasChildren => _firstChild != null;
 
-    internal override bool ContainsMagnifier => _children.Any(static child => child.ContainsMagnifier);
-
-    internal override bool ContainsBackdropFilter => _children.Any(static child => child.ContainsBackdropFilter);
-
     /// <remarks>Flutter's <c>ContainerLayer._fireCompositionCallbacks</c>.</remarks>
     internal override void FireCompositionCallbacks(bool includeChildren)
     {
@@ -697,24 +578,27 @@ public class ContainerLayer : Layer
         return true;
     }
 
-    /// <summary>Composites this layer tree.</summary>
+    /// <summary>Consider this layer as the root and build a scene (a tree of layers) in the engine.</summary>
     /// <remarks>
     /// Flutter's <c>ContainerLayer.buildScene</c>: updates the subtree's dirty flags, adds this layer to the
-    /// scene, fires the composition callbacks and marks this layer clean. Plumix has no engine scene to
-    /// return; a null <paramref name="context"/> composites headlessly (see <see cref="Layer.AddToScene"/>).
+    /// scene, fires the composition callbacks, marks this layer clean and returns the built scene.
     /// </remarks>
-    public void BuildScene(DrawingContext? context)
+    public Scene BuildScene(SceneBuilder builder)
     {
+        ArgumentNullException.ThrowIfNull(builder);
         UpdateSubtreeNeedsAddToScene();
-        AddToScene(context, default);
+        AddToScene(builder);
         if (SubtreeHasCompositionCallbacks)
         {
             FireCompositionCallbacks(includeChildren: true);
         }
 
-        // Clearing the flag _after_ calling addToScene, not _before_. This is because
-        // subclasses may call addChildrenToScene, which may mark this layer as dirty.
+        // Clearing the flag _after_ calling `addToScene`, not _before_. This is
+        // because `addToScene` calls children's `addToScene` methods, which may
+        // mark this layer as dirty.
         _needsAddToScene = false;
+        Scene scene = builder.Build();
+        return scene;
     }
 
     private bool DebugUltimatePreviousSiblingOf(Layer child, Layer? equals)
@@ -1013,24 +897,25 @@ public class ContainerLayer : Layer
         _children.Clear();
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        AddChildrenToScene(context, offset);
+        AddChildrenToScene(builder);
     }
 
-    /// <summary>Uploads all of this layer's children to the scene.</summary>
-    /// <remarks>Flutter's <c>ContainerLayer.addChildrenToScene</c>.</remarks>
-    protected void AddChildrenToScene(DrawingContext? context, Point offset)
+    /// <summary>Uploads all of this layer's children to the engine.</summary>
+    /// <remarks>
+    /// Flutter's <c>ContainerLayer.addChildrenToScene</c>. This method is typically used by
+    /// <see cref="Layer.AddToScene"/> to insert the children into the scene. Subclasses of
+    /// <see cref="ContainerLayer"/> typically override <see cref="Layer.AddToScene"/> to apply effects to
+    /// the scene using the <see cref="SceneBuilder"/> API, then insert their children using
+    /// <see cref="AddChildrenToScene"/>, then reverse the aforementioned effects before returning.
+    /// </remarks>
+    public void AddChildrenToScene(SceneBuilder builder)
     {
         Layer? child = FirstChild;
         while (child != null)
         {
-            if (BackdropCaptureStopped)
-            {
-                return;
-            }
-
-            child.AddToSceneWithRetainedRendering(context, offset);
+            child.AddToSceneWithRetainedRendering(builder);
             child = child.NextSibling;
         }
     }
@@ -1071,14 +956,6 @@ public class ContainerLayer : Layer
         }
 
         return children;
-    }
-
-    internal override void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
-    {
-        foreach (Layer child in _children)
-        {
-            child.CollectBackdropFilters(filters);
-        }
     }
 
     /// <inheritdoc />
@@ -1268,13 +1145,24 @@ public sealed class LeaderLayer : ContainerLayer
         return base.FindAnnotations(result, localPosition - Offset, onlyFirst);
     }
 
-    /// <remarks>
-    /// Dart pushes a translation transform when <see cref="Offset"/> is non-zero; Plumix passes the offset
-    /// down with the accumulated scene offset instead (see <see cref="Layer.AddToScene"/>).
-    /// </remarks>
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        AddChildrenToScene(context, offset + Offset);
+        if (Offset != default)
+        {
+            EngineLayer = builder.PushTransform(
+                Matrix4.TranslationValues(Offset.X, Offset.Y, 0.0).Storage,
+                oldLayer: EngineLayer as TransformEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
+        }
+
+        AddChildrenToScene(builder);
+        if (Offset != default)
+        {
+            builder.Pop();
+        }
     }
 
     /// <summary>
@@ -1572,12 +1460,7 @@ public sealed class FollowerLayer : ContainerLayer
     /// </remarks>
     protected internal override bool AlwaysNeedsAddToScene => true;
 
-    /// <remarks>
-    /// Dart pushes <c>_lastTransform</c>, or a translation by <see cref="UnlinkedOffset"/> when unlinked;
-    /// Plumix first pushes the ancestors' accumulated <paramref name="offset"/>, which Dart's ancestors
-    /// have already pushed.
-    /// </remarks>
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
         Debug.Assert(ShowWhenUnlinked != null);
         if (Link.Leader == null && !ShowWhenUnlinked!.Value)
@@ -1590,29 +1473,22 @@ public sealed class FollowerLayer : ContainerLayer
         }
 
         EstablishTransform();
-        Matrix4 transform;
         if (_lastTransform != null)
         {
             _lastOffset = UnlinkedOffset;
-            transform = _lastTransform;
+            EngineLayer = builder.PushTransform(
+                _lastTransform.Storage,
+                oldLayer: EngineLayer as TransformEngineLayer);
+            AddChildrenToScene(builder);
+            builder.Pop();
         }
         else
         {
             _lastOffset = null;
-            transform = Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, .0);
-        }
-
-        if (context == null)
-        {
-            AddChildrenToScene(null, default);
-        }
-        else
-        {
-            using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
-            using (context.PushTransform(transform.ToAvaloniaMatrix()))
-            {
-                AddChildrenToScene(context, default);
-            }
+            Matrix4 matrix = Matrix4.TranslationValues(UnlinkedOffset!.Value.X, UnlinkedOffset!.Value.Y, .0);
+            EngineLayer = builder.PushTransform(matrix.Storage, oldLayer: EngineLayer as TransformEngineLayer);
+            AddChildrenToScene(builder);
+            builder.Pop();
         }
 
         _inverseDirty = true;
@@ -1708,178 +1584,66 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
     }
 }
 
+/// <summary>
+/// Plumix-only: the lens of a magnifier, drawing a magnified copy of the scene behind it
+/// (docs/ai/DIVERGENCES.md, magnifier row).
+/// </summary>
 public sealed class MagnifierLayer : ContainerLayer
 {
-    public Rect LensRect { get; set; }
+    private Rect _lensRect;
+    private Point _focalPointOffset;
+    private double _magnificationScale = 1.0;
+    private MagnifierDecoration _decoration = new();
+    private Clip _clipBehavior = Clip.None;
 
-    public Point FocalPointOffset { get; set; }
-
-    public double MagnificationScale { get; set; } = 1.0;
-
-    public MagnifierDecoration Decoration { get; set; } = new();
-
-    public Clip ClipBehavior { get; set; } = Clip.None;
-
-    internal override bool ContainsMagnifier => true;
-
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    public Rect LensRect
     {
-        if (context == null)
-        {
-            AddChildrenToScene(null, offset);
-            return;
-        }
-
-        if (CapturingMagnifierBackdrop || CapturingBackdrop)
-        {
-            return;
-        }
-
-        Rect lensRect = new(LensRect.Position + offset, LensRect.Size);
-        if (lensRect.Width <= 0 || lensRect.Height <= 0)
-        {
-            return;
-        }
-
-        BorderRadius borderRadius = ResolveBorderRadius(lensRect);
-        using (context.PushOpacity(Math.Clamp(Decoration.Opacity, 0.0, 1.0)))
-        {
-            using (PushRoundedRectClip(context, lensRect, borderRadius))
-            {
-                DrawMagnifiedBackdrop(context, lensRect);
-                AddChildrenToScene(context, offset);
-            }
-
-            DrawDecoration(context, lensRect, borderRadius);
-        }
+        get => _lensRect;
+        set => SetField(ref _lensRect, value);
     }
 
-    /// <summary>
-    /// Resolves the decoration shape to the per-corner radii the lens is clipped and stroked with.
-    /// Each corner keeps its own (possibly elliptical) radius, clamped to half the lens so that
-    /// neighbouring corners cannot overlap.
-    /// </summary>
-    private BorderRadius ResolveBorderRadius(Rect lensRect)
+    public Point FocalPointOffset
     {
-        double maxX = lensRect.Width / 2.0;
-        double maxY = lensRect.Height / 2.0;
-        switch (Decoration.Shape)
-        {
-            case CircleBorder or StadiumBorder:
-                return BorderRadius.Circular(Math.Min(maxX, maxY));
-            case RoundedRectangleBorder rounded:
-                BorderRadius resolved = rounded.BorderRadius.Resolve(Plumix.UI.TextDirection.Ltr);
-                return new BorderRadius(
-                    ClampRadius(resolved.TopLeftRadius, maxX, maxY),
-                    ClampRadius(resolved.TopRightRadius, maxX, maxY),
-                    ClampRadius(resolved.BottomRightRadius, maxX, maxY),
-                    ClampRadius(resolved.BottomLeftRadius, maxX, maxY));
-            default:
-                return BorderRadius.Zero;
-        }
+        get => _focalPointOffset;
+        set => SetField(ref _focalPointOffset, value);
     }
 
-    private void DrawMagnifiedBackdrop(DrawingContext context, Rect lensRect)
+    public double MagnificationScale
     {
-        BackdropCapture? backdrop = MagnifierBackdrop;
-        if (backdrop == null)
+        get => _magnificationScale;
+        set => SetField(ref _magnificationScale, value);
+    }
+
+    public MagnifierDecoration Decoration
+    {
+        get => _decoration;
+        set => SetField(ref _decoration, value ?? throw new ArgumentNullException(nameof(value)));
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set => SetField(ref _clipBehavior, value);
+    }
+
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        EngineLayer = builder.PushMagnifier(
+            new MagnifierFlowLayer(LensRect, FocalPointOffset, MagnificationScale, Decoration, ClipBehavior),
+            EngineLayer as MagnifierEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
+    }
+
+    private void SetField<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
         {
             return;
         }
 
-        double scale = MagnificationScale;
-        double absoluteScale = Math.Abs(scale);
-        if (absoluteScale <= double.Epsilon)
-        {
-            return;
-        }
-
-        Point focalPoint = lensRect.Center + FocalPointOffset;
-        var sourceSize = new Size(lensRect.Width / absoluteScale, lensRect.Height / absoluteScale);
-        var sourceRect = new Rect(
-            focalPoint.X - (sourceSize.Width / 2.0),
-            focalPoint.Y - (sourceSize.Height / 2.0),
-            sourceSize.Width,
-            sourceSize.Height);
-        if (scale > 0)
-        {
-            context.DrawImage(backdrop.Image, sourceRect, lensRect);
-            return;
-        }
-
-        using (context.PushTransform(
-                   Matrix.CreateTranslation(lensRect.Center.X, lensRect.Center.Y)
-                   * Matrix.CreateScale(-1, -1)
-                   * Matrix.CreateTranslation(-lensRect.Center.X, -lensRect.Center.Y)))
-        {
-            context.DrawImage(backdrop.Image, sourceRect, lensRect);
-        }
-    }
-
-    private void DrawDecoration(DrawingContext context, Rect lensRect, BorderRadius borderRadius)
-    {
-        BoxShadows shadows = Decoration.Shadows.ToAvalonia();
-        BorderSide side = Decoration.Shape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
-        IPen? pen = side is { Style: BorderStyle.Solid, Width: > 0 }
-            ? new Pen(new SolidColorBrush(side.Color), side.Width)
-            : null;
-
-        if (shadows.Count == 0 && pen == null)
-        {
-            return;
-        }
-
-        DrawingContext.PushedState? clip = null;
-        try
-        {
-            if (ClipBehavior != Clip.None)
-            {
-                double inset = pen?.Thickness ?? 0.0;
-                var outer = lensRect.Inflate(Math.Max(lensRect.Width, lensRect.Height));
-                var geometry = new CombinedGeometry(
-                    GeometryCombineMode.Exclude,
-                    new RectangleGeometry(outer),
-                    new RectangleGeometry(
-                        new Rect(
-                            lensRect.X + inset,
-                            lensRect.Y + inset,
-                            Math.Max(0, lensRect.Width - (inset * 2)),
-                            Math.Max(0, lensRect.Height - (inset * 2))),
-                        Math.Max(0, LargestRadiusX(borderRadius) - inset),
-                        Math.Max(0, LargestRadiusY(borderRadius) - inset)));
-                clip = context.PushGeometryClip(geometry);
-            }
-
-            context.DrawRectangle(Brushes.Transparent, pen, ToRoundedRect(lensRect, borderRadius), shadows);
-        }
-        finally
-        {
-            clip?.Dispose();
-        }
-    }
-
-    private static RoundedRect ToRoundedRect(Rect rect, BorderRadius borderRadius)
-    {
-        return new RoundedRect(
-            rect,
-            new Vector(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
-            new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
-            new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
-            new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
-    }
-
-    private static double LargestRadiusX(BorderRadius borderRadius)
-    {
-        return Math.Max(
-            Math.Max(borderRadius.TopLeftRadius.X, borderRadius.TopRightRadius.X),
-            Math.Max(borderRadius.BottomRightRadius.X, borderRadius.BottomLeftRadius.X));
-    }
-
-    private static double LargestRadiusY(BorderRadius borderRadius)
-    {
-        return Math.Max(
-            Math.Max(borderRadius.TopLeftRadius.Y, borderRadius.TopRightRadius.Y),
-            Math.Max(borderRadius.BottomRightRadius.Y, borderRadius.BottomLeftRadius.Y));
+        field = value;
+        MarkNeedsAddToScene();
     }
 }
 
@@ -1933,9 +1697,68 @@ public class OffsetLayer : ContainerLayer
         transform.TranslateByDouble(Offset.X, Offset.Y, 0, 1);
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        AddChildrenToScene(context, offset + Offset);
+        // Skia has a fast path for concatenating scale/translation only matrices.
+        // Hence pushing a translation-only transform layer should be fast. For
+        // retained rendering, we don't want to push the offset down to each leaf
+        // node. Otherwise, changing an offset layer on the very high level could
+        // cascade the change to too many leaves.
+        EngineLayer = builder.PushOffset(Offset.X, Offset.Y, oldLayer: EngineLayer as OffsetEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
+    }
+
+    /// <remarks>Flutter's <c>OffsetLayer._createSceneForImage</c>.</remarks>
+    private Scene CreateSceneForImage(Rect bounds, double pixelRatio = 1.0)
+    {
+        var builder = new SceneBuilder();
+        Matrix4 transform = Matrix4.Diagonal3Values(pixelRatio, pixelRatio, 1);
+        transform.TranslateByDouble(-(bounds.Left + Offset.X), -(bounds.Top + Offset.Y), 0, 1);
+        builder.PushTransform(transform.Storage);
+        return BuildScene(builder);
+    }
+
+    /// <summary>Capture an image of the current state of this layer and its children.</summary>
+    /// <remarks>
+    /// Flutter's <c>OffsetLayer.toImage</c>. The returned image is cropped to <paramref name="bounds"/>,
+    /// in this layer's coordinate system, and holds <paramref name="pixelRatio"/> pixels per logical
+    /// pixel.
+    /// </remarks>
+    public async Task<Avalonia.Media.Imaging.Bitmap> ToImage(Rect bounds, double pixelRatio = 1.0)
+    {
+        Scene scene = CreateSceneForImage(bounds, pixelRatio);
+        try
+        {
+            // Size is rounded up to the next pixel to make sure we don't clip off
+            // anything.
+            return await scene.ToImage(
+                (int)Math.Ceiling(pixelRatio * bounds.Width),
+                (int)Math.Ceiling(pixelRatio * bounds.Height)).ConfigureAwait(true);
+        }
+        finally
+        {
+            scene.Dispose();
+        }
+    }
+
+    /// <summary>Capture an image of the current state of this layer and its children, synchronously.</summary>
+    /// <remarks>Flutter's <c>OffsetLayer.toImageSync</c>; see <see cref="ToImage"/>.</remarks>
+    public Avalonia.Media.Imaging.Bitmap ToImageSync(Rect bounds, double pixelRatio = 1.0)
+    {
+        Scene scene = CreateSceneForImage(bounds, pixelRatio);
+        try
+        {
+            // Size is rounded up to the next pixel to make sure we don't clip off
+            // anything.
+            return scene.ToImageSync(
+                (int)Math.Ceiling(pixelRatio * bounds.Width),
+                (int)Math.Ceiling(pixelRatio * bounds.Height));
+        }
+        finally
+        {
+            scene.Dispose();
+        }
     }
 
     /// <inheritdoc />
@@ -1990,15 +1813,16 @@ public sealed class OpacityLayer : OffsetLayer
         set => Alpha = (int)Math.Round(Math.Clamp(value, 0.0, 1.0) * 255.0);
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
         Debug.Assert(Alpha != null);
+
+        // Don't add this layer if there's no child.
         bool enabled = FirstChild != null;
         if (!enabled)
         {
             // Ensure the engine layer is disposed.
             EngineLayer = null;
-            // Don't add this layer if there's no child.
             return;
         }
 
@@ -2007,16 +1831,25 @@ public sealed class OpacityLayer : OffsetLayer
             enabled = enabled && !RenderingDebug.DisableOpacityLayers;
         }
 
-        if (context == null || !enabled || Alpha!.Value >= 255)
+        int realizedAlpha = Alpha!.Value;
+        // The type assertions work because the [alpha] setter nulls out the
+        // engineLayer if it would have changed type (i.e. changed to or from 255).
+        if (enabled && realizedAlpha < 255)
         {
-            base.AddToScene(context, offset);
-            return;
+            Debug.Assert(EngineLayer is null or OpacityEngineLayer);
+            EngineLayer = builder.PushOpacity(
+                realizedAlpha,
+                offset: Offset,
+                oldLayer: EngineLayer as OpacityEngineLayer);
+        }
+        else
+        {
+            Debug.Assert(EngineLayer is null or OffsetEngineLayer);
+            EngineLayer = builder.PushOffset(Offset.X, Offset.Y, oldLayer: EngineLayer as OffsetEngineLayer);
         }
 
-        using (context.PushOpacity(Opacity))
-        {
-            base.AddToScene(context, offset);
-        }
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     /// <inheritdoc />
@@ -2030,15 +1863,26 @@ public sealed class OpacityLayer : OffsetLayer
 
 public sealed class ColorFilterLayer : ContainerLayer
 {
-    private WriteableBitmap? _filteredBitmap;
-
     private ColorFilter? _colorFilter;
+    private Rect _filterBounds;
 
+    public ColorFilterLayer(ColorFilter? colorFilter = null)
+    {
+        _colorFilter = colorFilter;
+    }
+
+    /// <summary>The color filter to apply when compositing this layer's children.</summary>
+    /// <remarks>The scene must be explicitly recomposited after this property is changed.</remarks>
     public ColorFilter? ColorFilter
     {
         get => _colorFilter;
         set
         {
+            if (Constants.KDebugMode && value == null)
+            {
+                throw new AssertionError("A ColorFilterLayer needs a color filter.");
+            }
+
             if (EqualityComparer<ColorFilter?>.Default.Equals(value, _colorFilter))
             {
                 return;
@@ -2049,42 +1893,34 @@ public sealed class ColorFilterLayer : ContainerLayer
         }
     }
 
-    public Rect FilterBounds { get; set; }
-
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    /// <summary>
+    /// Plumix-only: the region, in this layer's coordinates, the CPU filter backend rasterizes the
+    /// children into before filtering them (docs/ai/DIVERGENCES.md, filter-layer row).
+    /// </summary>
+    public Rect FilterBounds
     {
-        if (context == null)
+        get => _filterBounds;
+        set
         {
-            AddChildrenToScene(null, offset);
-            return;
-        }
+            if (value == _filterBounds)
+            {
+                return;
+            }
 
-        if (ColorFilter is null)
-        {
-            AddChildrenToScene(context, offset);
-            return;
+            _filterBounds = value;
+            MarkNeedsAddToScene();
         }
-
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = FilterLayerRasterizer.DrawColorFiltered(
-            context,
-            drawingContext => AddChildrenToScene(drawingContext, offset),
-            ColorFilter,
-            new Rect(FilterBounds.Position + offset, FilterBounds.Size));
     }
 
-    public override void Detach()
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        base.Detach();
-    }
-
-    protected internal override void Dispose()
-    {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        base.Dispose();
+        Debug.Assert(ColorFilter != null);
+        EngineLayer = builder.PushColorFilter(
+            ColorFilter!,
+            FilterBounds,
+            EngineLayer as ColorFilterEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     /// <inheritdoc />
@@ -2095,17 +1931,30 @@ public sealed class ColorFilterLayer : ContainerLayer
     }
 }
 
+/// <summary>A composite layer that applies an <see cref="Rendering.ImageFilter"/> to its children.</summary>
+/// <remarks>Flutter's <c>ImageFilterLayer</c>.</remarks>
 public sealed class ImageFilterLayer : OffsetLayer
 {
-    private WriteableBitmap? _filteredBitmap;
-
     private ImageFilter? _imageFilter;
+    private Rect _filterBounds;
 
+    public ImageFilterLayer(ImageFilter? imageFilter = null, Point offset = default) : base(offset)
+    {
+        _imageFilter = imageFilter;
+    }
+
+    /// <summary>The image filter to apply when compositing this layer's children.</summary>
+    /// <remarks>The scene must be explicitly recomposited after this property is changed.</remarks>
     public ImageFilter? ImageFilter
     {
         get => _imageFilter;
         set
         {
+            if (Constants.KDebugMode && value == null)
+            {
+                throw new AssertionError("An ImageFilterLayer needs an image filter.");
+            }
+
             if (EqualityComparer<ImageFilter?>.Default.Equals(value, _imageFilter))
             {
                 return;
@@ -2116,44 +1965,35 @@ public sealed class ImageFilterLayer : OffsetLayer
         }
     }
 
-    public Rect FilterBounds { get; set; }
-
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    /// <summary>
+    /// Plumix-only: the region, in the children's coordinates, the CPU filter backend rasterizes the
+    /// children into before filtering them (docs/ai/DIVERGENCES.md, filter-layer row).
+    /// </summary>
+    public Rect FilterBounds
     {
-        if (context == null)
+        get => _filterBounds;
+        set
         {
-            base.AddToScene(null, offset);
-            return;
-        }
+            if (value == _filterBounds)
+            {
+                return;
+            }
 
-        if (ImageFilter is null)
-        {
-            base.AddToScene(context, offset);
-            return;
+            _filterBounds = value;
+            MarkNeedsAddToScene();
         }
-
-        Point sceneOffset = offset + Offset;
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = FilterLayerRasterizer.DrawImageFiltered(
-            context,
-            drawingContext => AddChildrenToScene(drawingContext, default),
-            ImageFilter,
-            sceneOffset,
-            FilterBounds);
     }
 
-    public override void Detach()
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        base.Detach();
-    }
-
-    protected internal override void Dispose()
-    {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        base.Dispose();
+        Debug.Assert(ImageFilter != null);
+        EngineLayer = builder.PushImageFilter(
+            ImageFilter!,
+            Offset,
+            FilterBounds,
+            EngineLayer as ImageFilterEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     /// <inheritdoc />
@@ -2165,6 +2005,10 @@ public sealed class ImageFilterLayer : OffsetLayer
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (BackdropFilterLayer)
+/// <summary>
+/// A key that identifies the backdrop filter layers that should share one backdrop input.
+/// </summary>
+/// <remarks>Flutter's <c>BackdropKey</c>.</remarks>
 public sealed class BackdropKey
 {
     private static int _nextKey;
@@ -2174,46 +2018,38 @@ public sealed class BackdropKey
         Id = Interlocked.Increment(ref _nextKey) - 1;
     }
 
+    /// <summary>Dart's <c>BackdropKey._key</c>.</summary>
     internal int Id { get; }
 }
 
-internal sealed class BackdropCapture : IDisposable
-{
-    private readonly bool _ownsImage;
-
-    public BackdropCapture(IImage image, Rect bounds, bool ownsImage = false)
-    {
-        Image = image ?? throw new ArgumentNullException(nameof(image));
-        Bounds = bounds;
-        _ownsImage = ownsImage;
-    }
-
-    public IImage Image { get; }
-
-    public Rect Bounds { get; }
-
-    public void Dispose()
-    {
-        if (_ownsImage && Image is IDisposable disposable)
-        {
-            disposable.Dispose();
-        }
-    }
-}
-
+/// <summary>
+/// A composited layer that applies a filter to the existing contents of the scene.
+/// </summary>
+/// <remarks>Flutter's <c>BackdropFilterLayer</c>.</remarks>
 public sealed class BackdropFilterLayer : ContainerLayer
 {
-    private WriteableBitmap? _filteredBitmap;
-
-    internal BackdropCapture? Backdrop { get; set; }
-
     private ImageFilter? _imageFilter;
+    private BlendMode _blendMode;
+    private BackdropKey? _backdropKey;
 
+    public BackdropFilterLayer(ImageFilter? filter = null, BlendMode blendMode = BlendMode.SourceOver)
+    {
+        _imageFilter = filter;
+        _blendMode = blendMode;
+    }
+
+    /// <summary>The filter to apply to the existing contents of the scene.</summary>
+    /// <remarks>Flutter's <c>BackdropFilterLayer.filter</c>.</remarks>
     public ImageFilter? ImageFilter
     {
         get => _imageFilter;
         set
         {
+            if (Constants.KDebugMode && value == null)
+            {
+                throw new AssertionError("A BackdropFilterLayer needs a filter.");
+            }
+
             if (EqualityComparer<ImageFilter?>.Default.Equals(value, _imageFilter))
             {
                 return;
@@ -2224,14 +2060,13 @@ public sealed class BackdropFilterLayer : ContainerLayer
         }
     }
 
-    private BlendMode _blendMode = BlendMode.SourceOver;
-
+    /// <summary>The blend mode to use to apply the filtered background content onto the background.</summary>
     public BlendMode BlendMode
     {
         get => _blendMode;
         set
         {
-            if (EqualityComparer<BlendMode>.Default.Equals(value, _blendMode))
+            if (value == _blendMode)
             {
                 return;
             }
@@ -2241,63 +2076,32 @@ public sealed class BackdropFilterLayer : ContainerLayer
         }
     }
 
-    public BackdropKey? BackdropKey { get; set; }
-
-    internal override bool ContainsBackdropFilter => true;
-
-    internal override void CollectBackdropFilters(ICollection<BackdropFilterLayer> filters)
+    /// <summary>The backdrop key that identifies the backdrop filters sharing one input.</summary>
+    public BackdropKey? BackdropKey
     {
-        filters.Add(this);
-        base.CollectBackdropFilters(filters);
+        get => _backdropKey;
+        set
+        {
+            if (ReferenceEquals(value, _backdropKey))
+            {
+                return;
+            }
+
+            _backdropKey = value;
+            MarkNeedsAddToScene();
+        }
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
-        {
-            AddChildrenToScene(null, offset);
-            return;
-        }
-
-        if (IsBackdropCaptureTarget(this))
-        {
-            StopBackdropCapture();
-            return;
-        }
-
-        if (BackdropCaptureStopped)
-        {
-            return;
-        }
-
-        if (ImageFilter != null && Backdrop != null)
-        {
-            _filteredBitmap?.Dispose();
-            _filteredBitmap = FilterLayerRasterizer.DrawBackdropFiltered(
-                context,
-                Backdrop.Image,
-                Backdrop.Bounds,
-                ImageFilter,
-                BlendMode);
-        }
-
-        AddChildrenToScene(context, offset);
-    }
-
-    public override void Detach()
-    {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        Backdrop = null;
-        base.Detach();
-    }
-
-    protected internal override void Dispose()
-    {
-        _filteredBitmap?.Dispose();
-        _filteredBitmap = null;
-        Backdrop = null;
-        base.Dispose();
+        Debug.Assert(ImageFilter != null);
+        EngineLayer = builder.PushBackdropFilter(
+            ImageFilter!,
+            blendMode: BlendMode,
+            oldLayer: EngineLayer as BackdropFilterEngineLayer,
+            backdropId: _backdropKey?.Id);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     /// <inheritdoc />
@@ -2310,12 +2114,25 @@ public sealed class BackdropFilterLayer : ContainerLayer
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (ShaderMaskLayer)
+/// <summary>
+/// A composited layer that applies a shader to its children; the shader is an Avalonia brush
+/// (docs/ai/DIVERGENCES.md).
+/// </summary>
+/// <remarks>Flutter's <c>ShaderMaskLayer</c>.</remarks>
 public sealed class ShaderMaskLayer : ContainerLayer
 {
-    private WriteableBitmap? _maskedBitmap;
-
     private IBrush? _shader;
+    private Rect? _maskRect;
+    private BlendMode? _blendMode;
 
+    public ShaderMaskLayer(IBrush? shader = null, Rect? maskRect = null, BlendMode? blendMode = null)
+    {
+        _shader = shader;
+        _maskRect = maskRect;
+        _blendMode = blendMode;
+    }
+
+    /// <summary>The shader to apply to the children.</summary>
     public IBrush? Shader
     {
         get => _shader;
@@ -2331,14 +2148,13 @@ public sealed class ShaderMaskLayer : ContainerLayer
         }
     }
 
-    private Rect _maskRect;
-
-    public Rect MaskRect
+    /// <summary>The position and size of the shader, in this layer's coordinates.</summary>
+    public Rect? MaskRect
     {
         get => _maskRect;
         set
         {
-            if (EqualityComparer<Rect>.Default.Equals(value, _maskRect))
+            if (EqualityComparer<Rect?>.Default.Equals(value, _maskRect))
             {
                 return;
             }
@@ -2348,14 +2164,13 @@ public sealed class ShaderMaskLayer : ContainerLayer
         }
     }
 
-    private BlendMode _blendMode = BlendMode.Modulate;
-
-    public BlendMode BlendMode
+    /// <summary>The blend mode to apply when blending the shader with the children.</summary>
+    public BlendMode? BlendMode
     {
         get => _blendMode;
         set
         {
-            if (EqualityComparer<BlendMode>.Default.Equals(value, _blendMode))
+            if (EqualityComparer<BlendMode?>.Default.Equals(value, _blendMode))
             {
                 return;
             }
@@ -2365,42 +2180,18 @@ public sealed class ShaderMaskLayer : ContainerLayer
         }
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
-        {
-            AddChildrenToScene(null, offset);
-            return;
-        }
-
-        if (Shader is null)
-        {
-            AddChildrenToScene(context, offset);
-            return;
-        }
-
-        Rect sceneMaskRect = new(MaskRect.Position + offset, MaskRect.Size);
-        _maskedBitmap?.Dispose();
-        _maskedBitmap = FilterLayerRasterizer.DrawShaderMasked(
-            context,
-            drawingContext => AddChildrenToScene(drawingContext, offset),
-            Shader,
-            BlendMode,
-            sceneMaskRect);
-    }
-
-    public override void Detach()
-    {
-        _maskedBitmap?.Dispose();
-        _maskedBitmap = null;
-        base.Detach();
-    }
-
-    protected internal override void Dispose()
-    {
-        _maskedBitmap?.Dispose();
-        _maskedBitmap = null;
-        base.Dispose();
+        Debug.Assert(Shader != null);
+        Debug.Assert(MaskRect != null);
+        Debug.Assert(BlendMode != null);
+        EngineLayer = builder.PushShaderMask(
+            Shader!,
+            MaskRect!.Value,
+            BlendMode!.Value,
+            oldLayer: EngineLayer as ShaderMaskEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     /// <inheritdoc />
@@ -2408,8 +2199,8 @@ public sealed class ShaderMaskLayer : ContainerLayer
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<IBrush>("shader", Shader));
-        properties.Add(new DiagnosticsProperty<Rect>("maskRect", MaskRect));
-        properties.Add(new EnumProperty<BlendMode>("blendMode", BlendMode));
+        properties.Add(new DiagnosticsProperty<Rect?>("maskRect", MaskRect));
+        properties.Add(new DiagnosticsProperty<BlendMode?>("blendMode", BlendMode));
     }
 }
 
@@ -2457,28 +2248,30 @@ public sealed class ClipRectLayer : ContainerLayer
     /// <inheritdoc />
     public override Rect? DescribeClipBounds() => ClipRect;
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
+        bool enabled = true;
+        if (Constants.KDebugMode)
         {
-            base.AddToScene(null, offset);
-            return;
+            enabled = !RenderingDebug.DisableClipLayers;
         }
 
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        if (enabled)
         {
-            base.AddToScene(context, offset);
-            return;
+            EngineLayer = builder.PushClipRect(
+                ClipRect,
+                clipBehavior: ClipBehavior,
+                oldLayer: EngineLayer as ClipRectEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
         }
 
-        var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
-        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        AddChildrenToScene(builder);
+        if (enabled)
         {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
-        using (context.PushClip(translatedRect))
-        {
-            base.AddToScene(context, offset);
+            builder.Pop();
         }
     }
 
@@ -2545,23 +2338,30 @@ public sealed class ClipRRectLayer : ContainerLayer
     /// <inheritdoc />
     public override Rect? DescribeClipBounds() => ClipRRect.Rect;
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
+        bool enabled = true;
+        if (Constants.KDebugMode)
         {
-            base.AddToScene(null, offset);
-            return;
+            enabled = !RenderingDebug.DisableClipLayers;
         }
 
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        if (enabled)
         {
-            base.AddToScene(context, offset);
-            return;
+            EngineLayer = builder.PushClipRRect(
+                ClipRRect,
+                clipBehavior: ClipBehavior,
+                oldLayer: EngineLayer as ClipRRectEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
         }
 
-        using (PushRoundedRectClip(context, ClipRRect.Shift(offset)))
+        AddChildrenToScene(builder);
+        if (enabled)
         {
-            base.AddToScene(context, offset);
+            builder.Pop();
         }
     }
 
@@ -2629,27 +2429,30 @@ public sealed class ClipRSuperellipseLayer : ContainerLayer
     /// <inheritdoc />
     public override Rect? DescribeClipBounds() => ClipRSuperellipse.Rect;
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
+        bool enabled = true;
+        if (Constants.KDebugMode)
         {
-            base.AddToScene(null, offset);
-            return;
+            enabled = !RenderingDebug.DisableClipLayers;
         }
 
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        if (enabled)
         {
-            base.AddToScene(context, offset);
-            return;
+            EngineLayer = builder.PushClipRSuperellipse(
+                ClipRSuperellipse,
+                clipBehavior: ClipBehavior,
+                oldLayer: EngineLayer as ClipRSuperellipseEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
         }
 
-        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        AddChildrenToScene(builder);
+        if (enabled)
         {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
-        using (context.PushGeometryClip(ClipRSuperellipse.Shift(offset).ToPath().ToGeometry()))
-        {
-            base.AddToScene(context, offset);
+            builder.Pop();
         }
     }
 
@@ -2676,7 +2479,6 @@ public sealed class ClipRSuperellipseLayer : ContainerLayer
 public sealed class ClipPathLayer : ContainerLayer
 {
     private Plumix.UI.Path _clipPath = new();
-    private Geometry? _geometry;
 
     public Plumix.UI.Path ClipPath
     {
@@ -2690,7 +2492,6 @@ public sealed class ClipPathLayer : ContainerLayer
             }
 
             _clipPath = value;
-            _geometry = null;
             MarkNeedsAddToScene();
         }
     }
@@ -2720,30 +2521,30 @@ public sealed class ClipPathLayer : ContainerLayer
     /// <inheritdoc />
     public override Rect? DescribeClipBounds() => _clipPath.GetBounds();
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
-        if (context == null)
+        bool enabled = true;
+        if (Constants.KDebugMode)
         {
-            base.AddToScene(null, offset);
-            return;
+            enabled = !RenderingDebug.DisableClipLayers;
         }
 
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        if (enabled)
         {
-            base.AddToScene(context, offset);
-            return;
+            EngineLayer = builder.PushClipPath(
+                ClipPath,
+                clipBehavior: ClipBehavior,
+                oldLayer: EngineLayer as ClipPathEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
         }
 
-        _geometry ??= _clipPath.ToGeometry();
-        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        AddChildrenToScene(builder);
+        if (enabled)
         {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
-        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
-        using (context.PushGeometryClip(_geometry))
-        using (context.PushTransform(Matrix.CreateTranslation(-offset.X, -offset.Y)))
-        {
-            base.AddToScene(context, offset);
+            builder.Pop();
         }
     }
 
@@ -2772,36 +2573,81 @@ public sealed class ClipPathLayer : ContainerLayer
 /// </remarks>
 public sealed class ClipGeometryLayer : ContainerLayer
 {
-    public Geometry Geometry { get; set; } = new RectangleGeometry();
+    private Geometry _geometry = new RectangleGeometry();
+    private Clip _clipBehavior = Clip.AntiAlias;
+    private Point _geometryOffset;
 
-    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
-
-    public Point GeometryOffset { get; set; }
-
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    public Geometry Geometry
     {
-        if (context == null)
+        get => _geometry;
+        set
         {
-            base.AddToScene(null, offset);
-            return;
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(value, _geometry))
+            {
+                return;
+            }
+
+            _geometry = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (value == _clipBehavior)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    public Point GeometryOffset
+    {
+        get => _geometryOffset;
+        set
+        {
+            if (value == _geometryOffset)
+            {
+                return;
+            }
+
+            _geometryOffset = value;
+            MarkNeedsAddToScene();
+        }
+    }
+
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        bool enabled = true;
+        if (Constants.KDebugMode)
+        {
+            enabled = !RenderingDebug.DisableClipLayers;
         }
 
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        if (enabled)
         {
-            base.AddToScene(context, offset);
-            return;
+            EngineLayer = builder.PushClipGeometry(
+                Geometry,
+                GeometryOffset,
+                ClipBehavior,
+                EngineLayer as ClipGeometryEngineLayer);
+        }
+        else
+        {
+            EngineLayer = null;
         }
 
-        Point clipOffset = offset + GeometryOffset;
-        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        AddChildrenToScene(builder);
+        if (enabled)
         {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
-        using (context.PushTransform(Matrix.CreateTranslation(clipOffset.X, clipOffset.Y)))
-        using (context.PushGeometryClip(Geometry))
-        using (context.PushTransform(Matrix.CreateTranslation(-clipOffset.X, -clipOffset.Y)))
-        {
-            base.AddToScene(context, offset);
+            builder.Pop();
         }
     }
 
@@ -2860,7 +2706,7 @@ public sealed class TransformLayer : OffsetLayer
         }
     }
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    protected internal override void AddToScene(SceneBuilder builder)
     {
         _lastEffectiveTransform = Transform;
         if (Offset != default)
@@ -2869,17 +2715,11 @@ public sealed class TransformLayer : OffsetLayer
             _lastEffectiveTransform.Multiply(Transform);
         }
 
-        if (context == null)
-        {
-            AddChildrenToScene(null, default);
-            return;
-        }
-
-        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
-        using (context.PushTransform(_lastEffectiveTransform.ToAvaloniaMatrix()))
-        {
-            AddChildrenToScene(context, default);
-        }
+        EngineLayer = builder.PushTransform(
+            _lastEffectiveTransform.Storage,
+            oldLayer: EngineLayer as TransformEngineLayer);
+        AddChildrenToScene(builder);
+        builder.Pop();
     }
 
     private Point? TransformOffset(Point localPosition)
@@ -2961,6 +2801,7 @@ public sealed class PictureLayer : Layer
             }
 
             MarkNeedsAddToScene();
+            _picture?.Dispose();
             _picture = value;
         }
     }
@@ -2995,14 +2836,21 @@ public sealed class PictureLayer : Layer
 
     public bool IsEmpty => Picture is null || Picture.IsEmpty;
 
-    internal override void AddToScene(DrawingContext? context, Point offset)
+    /// <inheritdoc />
+    protected internal override void Dispose()
     {
-        if (context == null)
-        {
-            return;
-        }
+        Picture = null;
+        base.Dispose();
+    }
 
-        Picture?.Playback(context, offset);
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        Debug.Assert(Picture != null);
+        builder.AddPicture(
+            default,
+            Picture!,
+            isComplexHint: IsComplexHint,
+            willChangeHint: WillChangeHint);
     }
 
     /// <inheritdoc />
@@ -3016,5 +2864,147 @@ public sealed class PictureLayer : Layer
         properties.Add(new DiagnosticsProperty<string>(
             "raster cache hints",
             $"isComplex = {isComplex}, willChange = {willChange}"));
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+/// <summary>A composited layer that maps a backend texture to a rectangle.</summary>
+/// <remarks>
+/// Flutter's <c>TextureLayer</c>. Backend textures are images that can be applied (mapped) to an area
+/// of the Flutter view. They are created, managed, and updated using a platform-specific texture
+/// registry (<see cref="TextureRegistry"/>). A texture layer can be assigned a frozen state, in which
+/// it keeps showing the frame it last painted.
+/// </remarks>
+public sealed class TextureLayer : Layer
+{
+    public TextureLayer(
+        Rect rect,
+        int textureId,
+        bool freeze = false,
+        FilterQuality filterQuality = FilterQuality.Low)
+    {
+        Rect = rect;
+        TextureId = textureId;
+        Freeze = freeze;
+        FilterQuality = filterQuality;
+    }
+
+    /// <summary>Bounding rectangle of this layer.</summary>
+    public Rect Rect { get; }
+
+    /// <summary>The identity of the backend texture.</summary>
+    public int TextureId { get; }
+
+    /// <summary>When true the texture will not be updated with new frames.</summary>
+    /// <remarks>
+    /// This is used for resizing embedded Android views: when resizing there is a short period during
+    /// which the framework cannot tell if the newest texture frame has the previous or new size; to
+    /// work around this, the framework "freezes" the texture just before resizing the Android view and
+    /// un-freezes it when it is certain that a frame with the new size is ready.
+    /// </remarks>
+    public bool Freeze { get; }
+
+    /// <summary>The quality of sampling the texture and rendering it on screen.</summary>
+    public FilterQuality FilterQuality { get; }
+
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        builder.AddTexture(
+            TextureId,
+            offset: Rect.TopLeft,
+            width: Rect.Width,
+            height: Rect.Height,
+            freeze: Freeze,
+            filterQuality: FilterQuality);
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return false;
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+/// <summary>A layer that shows an embedded UIView on iOS.</summary>
+/// <remarks>Flutter's <c>PlatformViewLayer</c>; no Plumix host embeds platform views yet.</remarks>
+public sealed class PlatformViewLayer : Layer
+{
+    public PlatformViewLayer(Rect rect, int viewId)
+    {
+        Rect = rect;
+        ViewId = viewId;
+    }
+
+    /// <summary>Bounding rectangle of this layer in the global coordinate space.</summary>
+    public Rect Rect { get; }
+
+    /// <summary>The unique identifier of the UIView displayed on this layer.</summary>
+    /// <remarks>
+    /// A UIView with this identifier must have been created by <c>PlatformViewsServices.initUiKitView</c>.
+    /// </remarks>
+    public int ViewId { get; }
+
+    /// <inheritdoc />
+    public override bool SupportsRasterization() => false;
+
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        builder.AddPlatformView(ViewId, offset: Rect.TopLeft, width: Rect.Width, height: Rect.Height);
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+/// <summary>
+/// A layer that indicates to the compositor that it should display certain performance statistics within it.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>PerformanceOverlayLayer</c>. Performance overlay layers are always leaves in the layer
+/// tree.
+/// </remarks>
+public sealed class PerformanceOverlayLayer : Layer
+{
+    private Rect _overlayRect;
+
+    public PerformanceOverlayLayer(Rect overlayRect, int optionsMask)
+    {
+        _overlayRect = overlayRect;
+        OptionsMask = optionsMask;
+    }
+
+    /// <summary>The rectangle in this layer's coordinate system that the overlay should occupy.</summary>
+    /// <remarks>The scene must be explicitly recomposited after this property is changed.</remarks>
+    public Rect OverlayRect
+    {
+        get => _overlayRect;
+        set
+        {
+            if (value != _overlayRect)
+            {
+                _overlayRect = value;
+                MarkNeedsAddToScene();
+            }
+        }
+    }
+
+    /// <summary>
+    /// The mask is created by shifting 1 by the index of the specific <see cref="PerformanceOverlayOption"/>
+    /// to enable.
+    /// </summary>
+    public int OptionsMask { get; }
+
+    protected internal override void AddToScene(SceneBuilder builder)
+    {
+        builder.AddPerformanceOverlay(OptionsMask, OverlayRect);
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return false;
     }
 }

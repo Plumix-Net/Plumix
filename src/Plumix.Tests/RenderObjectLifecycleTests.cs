@@ -258,11 +258,11 @@ public sealed class RenderObjectLifecycleTests
         public override bool IsRepaintBoundary => true;
     }
 
-    private sealed class TestEngineLayer : IDisposable
+    private sealed class TestEngineLayer : Plumix.UI.EngineLayer
     {
         public bool Disposed { get; private set; }
 
-        public void Dispose()
+        public override void Dispose()
         {
             Disposed = true;
         }

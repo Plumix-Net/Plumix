@@ -633,7 +633,7 @@ public sealed partial class Canvas
                 else if (clipRect.HasValue)
                 {
                     clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
-                        ? Layer.PushRoundedRectClip(context, clipRect.Value, clipRadius.Value.Radius)
+                        ? SceneRasterizer.PushRoundedRectClip(context, clipRect.Value, clipRadius.Value.Radius)
                         : context.PushClip(clipRect.Value);
                 }
 
