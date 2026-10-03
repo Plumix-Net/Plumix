@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `PlatformViewsService`/`PlatformViewsRegistry` and every Android/iOS/macOS view controller (platform_views.dart).
+- `AndroidMotionEvent` conversion with Dart's pointer-id reuse, batching flags and `touch` message layout.
+- `RenderAndroidView`, `RenderUiKitView`/`RenderAppKitView`, `PlatformViewRenderBox` (rendering/platform_view.dart).
+- `AndroidView`, `UiKitView`, `AppKitView`, `PlatformViewLink`/`PlatformViewSurface`, `AndroidViewSurface`.
+- `HtmlElementView` takes Dart's non-web branch: it builds to `NotImplementedException` (_html_element_view_io.dart).
+- `Factory<T>`/`IFactory<T>` (basic_types.dart) and `EagerGestureRecognizer` (eager.dart).
+- `IMessageCodec`: the untyped face of every `MessageCodec<T>`, standing in for Dart's `MessageCodec<dynamic>`.
+- PlatformViewLink demo: placeholder -> `create(size, position)` -> surface, with two-way focus (both samples).
+- platform_views_test, rendering/platform_view_test and widgets/platform_view_test ported with the Dart fakes.
 - `SceneBuilder`/`Scene`/`EngineLayer` and the 11 typed engine layers: dart:ui's compositing.dart, with its asserts.
 - Breaking: `Layer.AddToScene(SceneBuilder)` pushes engine layers; clean subtrees go in via `AddRetained` (layer.dart).
 - Breaking: `ContainerLayer.BuildScene(SceneBuilder)` returns the `Scene`; `Layer.EngineLayer` is an `EngineLayer?`.

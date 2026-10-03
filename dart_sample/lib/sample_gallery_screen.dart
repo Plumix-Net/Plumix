@@ -77,6 +77,7 @@ import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
 import 'demos/general/rendering_debug_flags_demo_page.dart';
+import 'demos/general/platform_view_link_demo_page.dart';
 import 'demos/general/scene_compositing_demo_page.dart';
 import 'demos/general/drag_target_demo_page.dart';
 import 'demos/general/gesture_recognizer_demo_page.dart';
@@ -1055,6 +1056,14 @@ class SampleGalleryScreen extends StatelessWidget {
           'SceneBuilder retained layers + RepaintBoundary.toImage + '
           'PerformanceOverlay',
       builder: () => const SceneCompositingDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.platformViewLink,
+      title: 'PlatformViewLink',
+      subtitle:
+          'placeholder layout -> controller.create(size, position) -> surface + '
+          'two-way focus',
+      builder: () => const PlatformViewLinkDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.flow,

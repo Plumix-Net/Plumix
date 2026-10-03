@@ -159,6 +159,7 @@ class SampleRoutes {
   static const String debugPainting = '/debug-painting';
   static const String renderingDebugFlags = '/rendering-debug-flags';
   static const String sceneCompositing = '/scene-compositing';
+  static const String platformViewLink = '/platform-view-link';
   static const String flow = '/flow';
   static const String transform = '/transform';
   static const String compositedTransform = '/composited-transform';

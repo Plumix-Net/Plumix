@@ -4,12 +4,27 @@ namespace Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/message_codec.dart
 
+/// <summary>A <see cref="MessageCodec{T}"/> whose message type is erased.</summary>
+/// <remarks>
+/// Dart's <c>MessageCodec&lt;dynamic&gt;</c>. Dart's generics are covariant, so a <c>StringCodec</c> can be
+/// passed where a <c>MessageCodec&lt;dynamic&gt;</c> is expected (platform view creation parameters);
+/// C# classes are invariant, so every codec also implements this untyped face.
+/// </remarks>
+public interface IMessageCodec
+{
+    /// <summary>Encodes the specified <paramref name="message"/> in binary.</summary>
+    ByteData? EncodeMessage(object? message);
+
+    /// <summary>Decodes the specified <paramref name="message"/> from binary.</summary>
+    object? DecodeMessage(ByteData? message);
+}
+
 /// <summary>A message encoding/decoding mechanism.</summary>
 /// <remarks>
 /// Both operations throw an exception if conversion fails. Such situations should be treated as
 /// programming errors.
 /// </remarks>
-public abstract class MessageCodec<T>
+public abstract class MessageCodec<T> : IMessageCodec
 {
     /// <summary>Encodes the specified <paramref name="message"/> in binary.</summary>
     /// <remarks>Returns <c>null</c> if <paramref name="message"/> is <c>null</c>.</remarks>
@@ -18,6 +33,10 @@ public abstract class MessageCodec<T>
     /// <summary>Decodes the specified <paramref name="message"/> from binary.</summary>
     /// <remarks>Returns <c>null</c> if <paramref name="message"/> is <c>null</c>.</remarks>
     public abstract T? DecodeMessage(ByteData? message);
+
+    ByteData? IMessageCodec.EncodeMessage(object? message) => EncodeMessage((T)message!);
+
+    object? IMessageCodec.DecodeMessage(ByteData? message) => DecodeMessage(message);
 }
 
 /// <summary>A command object representing the invocation of a named method.</summary>

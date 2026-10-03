@@ -163,6 +163,7 @@ internal static class SampleRoutes
     public const string DebugPainting = "/debug-painting";
     public const string RenderingDebugFlags = "/rendering-debug-flags";
     public const string SceneCompositing = "/scene-compositing";
+    public const string PlatformViewLink = "/platform-view-link";
     public const string Flow = "/flow";
     public const string Transform = "/transform";
     public const string CompositedTransform = "/composited-transform";
@@ -650,6 +651,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Scene compositing",
             "SceneBuilder retained layers + RepaintBoundary.toImage + PerformanceOverlay",
             () => new SceneCompositingDemoPage()),
+        new(
+            SampleRoutes.PlatformViewLink,
+            "PlatformViewLink",
+            "placeholder layout -> controller.create(size, position) -> surface + two-way focus",
+            () => new PlatformViewLinkDemoPage()),
         new(
             SampleRoutes.Flow,
             "Flow + RepaintBoundary",

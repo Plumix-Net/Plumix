@@ -377,6 +377,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/UI/FlowLayers.cs` (engine-side retained layers + `SceneRasterizer`, what hosts draw)
   - `src/Plumix/UI/TextureRegistry.cs`, `src/Plumix/UI/FrameStopwatch.cs` (texture and performance-overlay engine)
   - `src/Plumix/Rendering/Texture.cs`, `src/Plumix/Rendering/PerformanceOverlay.cs`
+  - `src/Plumix/UI/PlatformViews.cs`, `src/Plumix/Rendering/PlatformView.cs`, `src/Plumix/Widgets/PlatformView.cs`
+    (platform views: controllers/channel, render objects, `AndroidView`/`UiKitView`/`PlatformViewLink`)
 - Primary Tests:
   - `src/Plumix.Tests/BasicWidgetProxyTests.cs`
   - `src/Plumix.Tests/IntrinsicQueryParityTests.cs`
@@ -400,6 +402,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/SceneBuilderTests.cs`
   - `src/Plumix.Tests/SceneRasterizerTests.cs` (pixel tests; `RasterBackend.cs` installs Skia for the test assembly)
   - `src/Plumix.Tests/TexturePerformanceOverlayTests.cs`
+  - `src/Plumix.Tests/PlatformViews*Tests.cs`, `PlatformView*Tests.cs`, `RenderPlatformViewTests.cs`
+    (fakes in `FakePlatformViews.cs`)
 
 ### Core Animation and Transitions
 
