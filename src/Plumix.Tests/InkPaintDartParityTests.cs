@@ -411,7 +411,7 @@ public sealed class InkPaintDartParityTests : IDisposable
 
         BuildTest(new ActivateIntent());
         tester.PumpAndSettle();
-        SendKeyEvent(LogicalKeyboardKey.Space);
+        tester.SendKeyEvent(LogicalKeyboardKey.Space);
         tester.Pump();
 
         RenderObject box = MaterialOf(InkWellOf(tester));
@@ -710,14 +710,6 @@ public sealed class InkPaintDartParityTests : IDisposable
     // `tester.tapAt(location)`.
     private static void TapAt(FrameworkDartTester tester, Point location) => StartGesture(tester, location).Up();
 
-    // `tester.sendKeyEvent(key)`.
-    private static void SendKeyEvent(LogicalKeyboardKey key)
-    {
-        FocusManager.Instance.HandleKeyEvent(KeySim.Down(key));
-        Scheduler.FlushMicrotasks();
-        FocusManager.Instance.HandleKeyEvent(KeySim.Up(key));
-        Scheduler.FlushMicrotasks();
-    }
 
     // The test file's `_InkRippleFactory`: an InkRipple whose rect callback is a fixed 100x100 square.
     private sealed class TestInkRippleFactory : InteractiveInkFeatureFactory

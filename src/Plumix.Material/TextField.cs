@@ -72,6 +72,7 @@ public sealed class TextField : StatefulWidget
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        bool? ignorePointers = null,
         Key? key = null) : base(key)
     {
         DragStartBehavior = dragStartBehavior;
@@ -135,6 +136,7 @@ public sealed class TextField : StatefulWidget
         SpellCheckConfiguration = spellCheckConfiguration;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
         OnSelectionChanged = onSelectionChanged;
+        IgnorePointers = ignorePointers;
     }
 
     public TextEditingController? Controller { get; }
@@ -200,6 +202,10 @@ public sealed class TextField : StatefulWidget
     public SpellCheckConfiguration? SpellCheckConfiguration { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
+
+    /// <summary>Determines whether this widget ignores pointer events; null ignores them while the
+    /// field is disabled. Dart's <c>TextField.ignorePointers</c>.</summary>
+    public bool? IgnorePointers { get; }
 
     public override State CreateState() => new TextFieldState();
 
@@ -406,13 +412,12 @@ public sealed class TextField : StatefulWidget
                 mouseCursor: _resolvedMouseCursor,
                 padding: new Avalonia.Thickness(0),
                 style: baseStyle,
-                readOnly: Current.ReadOnly,
+                readOnly: Current.ReadOnly || !enabled,
                 obscureText: Current.ObscureText,
                 obscuringCharacter: Current.ObscuringCharacter,
                 onEditingComplete: Current.OnEditingComplete,
                 onSubmitted: Current.OnSubmitted,
                 onAppPrivateCommand: Current.OnAppPrivateCommand,
-                semanticsLabel: Current.Decoration?.LabelText ?? Current.Decoration?.HintText,
                 textAlign: Current.TextAlign,
                 textDirection: Current.TextDirection,
                 keyboardType: ResolveKeyboardType(Current.KeyboardType, multiline),
@@ -476,19 +481,104 @@ public sealed class TextField : StatefulWidget
                     child: editable);
             }
 
-            result = _selectionGestureDetectorBuilder!.BuildGestureDetector(
-                behavior: HitTestBehavior.Translucent,
-                child: result);
+            Action? handleDidGainAccessibilityFocus = null;
+            Action? handleDidLoseAccessibilityFocus = null;
+            if (theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS)
+            {
+                handleDidGainAccessibilityFocus = () =>
+                {
+                    // Automatically activate the TextField when it receives accessibility focus.
+                    if (!_focusNode!.HasFocus && _focusNode.CanRequestFocus)
+                    {
+                        _focusNode.RequestFocus();
+                    }
+                };
+                handleDidLoseAccessibilityFocus = () => _focusNode!.Unfocus();
+            }
+
+            int? semanticsMaxValueLength;
+            if (EffectiveMaxLengthEnforcement != UI.MaxLengthEnforcement.None
+                && Current.MaxLength is > 0)
+            {
+                semanticsMaxValueLength = Current.MaxLength;
+            }
+            else
+            {
+                semanticsMaxValueLength = null;
+            }
+
             // Dart's `_TextFieldState.build` wraps the field in a `MouseRegion` that carries the
             // resolved cursor and reports hover; the cursor belongs to the region.
-            result = new MouseRegion(
+            return new MouseRegion(
                 cursor: _resolvedMouseCursor ?? SystemMouseCursors.Text,
                 onEnter: _ => BeginHover(),
                 onExit: _ => EndHover(),
-                child: result);
-            result = new TextFieldTapRegion(child: result);
+                child: new TextFieldTapRegion(
+                    child: new IgnorePointer(
+                        ignoring: Current.IgnorePointers ?? !enabled,
+                        child: new AnimatedBuilder(
+                            animation: _controller!, // changes the _currentLength
+                            builder: (_, child) => new Semantics(
+                                enabled: enabled,
+                                maxValueLength: semanticsMaxValueLength,
+                                currentValueLength: CurrentLength,
+                                onTap: Current.ReadOnly ? null : HandleSemanticsTap,
+                                onDidGainAccessibilityFocus: handleDidGainAccessibilityFocus,
+                                onDidLoseAccessibilityFocus: handleDidLoseAccessibilityFocus,
+                                onFocus: enabled ? HandleSemanticsFocus : null,
+                                child: child),
+                            child: _selectionGestureDetectorBuilder!.BuildGestureDetector(
+                                behavior: HitTestBehavior.Translucent,
+                                child: result)))));
+        }
 
-            return result;
+        /// Dart's `_TextFieldState._currentLength`.
+        private int CurrentLength => TextLength(_controller!.Value.Text);
+
+        /// Dart's `_requestKeyboard`.
+        private void RequestKeyboard() => _editableTextKey.CurrentState?.RequestKeyboard();
+
+        /// The semantics `onTap` of Dart's `_TextFieldState.build`.
+        private void HandleSemanticsTap()
+        {
+            if (!_controller!.Selection.IsValid)
+            {
+                _controller.Selection = TextSelection.Collapsed(_controller.Text.Length);
+            }
+
+            RequestKeyboard();
+        }
+
+        /// The semantics `onFocus` of Dart's `_TextFieldState.build`.
+        private void HandleSemanticsFocus()
+        {
+            DebugAssertions.Assert(
+                _focusNode!.CanRequestFocus,
+                "Received SemanticsAction.focus from the engine. However, the FocusNode "
+                + "of this text field cannot gain focus. This likely indicates a bug. "
+                + "If this text field cannot be focused (e.g. because it is not "
+                + "enabled), then its corresponding semantics node must be configured "
+                + "such that the assistive technology cannot request focus on it.");
+
+            if (_focusNode.CanRequestFocus && !_focusNode.HasFocus)
+            {
+                _focusNode.RequestFocus();
+            }
+            else if (!Current.ReadOnly)
+            {
+                // If the platform requested focus, that means that previously the
+                // platform believed that the text field did not have focus (even
+                // though Flutter's widget system believed otherwise). This likely
+                // means that the on-screen keyboard is hidden, or more generally,
+                // there is no current editing session in this field. To correct
+                // that, keyboard must be requested.
+                //
+                // A concrete scenario where this can happen is when the user
+                // dismisses the keyboard on the web. The editing session is
+                // closed by the engine, but the text field widget stays focused
+                // in the framework.
+                RequestKeyboard();
+            }
         }
 
         public override void Dispose()

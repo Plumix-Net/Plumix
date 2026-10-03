@@ -305,10 +305,11 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
     /// <summary>Dart parity source: <c>_MenuOverlayState._resolveMotion</c>.</summary>
     private void ResolveMotion()
     {
-        // Plumix has no per-view `platformDispatcher`; the binding-level flags stand in
-        // (docs/ai/DIVERGENCES.md).
-        AccessibilityFeatures features = WidgetsBinding.Instance.AccessibilityFeatures;
-        if (features.DisableAnimations)
+        // Behavior of reduce motion is based on iOS 18.5 simulator. Because the
+        // disableAnimations accessibility feature is not present on iOS, all
+        // animations are disabled when disableAnimations is enabled.
+        AccessibilityFeatures accessibilityFeatures = View.Of(Context).PlatformDispatcher.AccessibilityFeatures;
+        if (accessibilityFeatures is { DisableAnimations: true })
         {
             _scaleAnimation.Parent = CupertinoMenuAnimations.AlwaysComplete;
             _fadeAnimation.Parent = CupertinoMenuAnimations.AlwaysComplete;
@@ -316,7 +317,7 @@ internal sealed class CupertinoMenuOverlayState : State<CupertinoMenuOverlay>, W
             return;
         }
 
-        if (features.ReduceMotion)
+        if (accessibilityFeatures is { ReduceMotion: true })
         {
             _scaleAnimation.Parent = _swipeAnimationController.View
                 .Drive(new DoubleTween(begin: 0.8, end: 1.0));

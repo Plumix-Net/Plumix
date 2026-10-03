@@ -181,13 +181,13 @@ internal sealed class CupertinoAlertDialogState : State<CupertinoAlertDialog>
     {
         return new CupertinoUserInterfaceLevel(
             CupertinoUserInterfaceLevelData.Elevated,
-            new Builder(elevatedContext => MediaQuery.WithClampedTextScaling(
-                elevatedContext,
-                maxScaleFactor: double.MaxValue,
+            MediaQuery.WithClampedTextScaling(
+                // iOS does not shrink dialog content below a 1.0 scale factor
                 minScaleFactor: 1.0,
                 child: new ScrollConfiguration(
-                    behavior: ScrollConfiguration.Of(elevatedContext).CopyWith(scrollbars: false),
-                    child: new LayoutBuilder((layoutContext, _) => BuildDialog(layoutContext))))));
+                    // A CupertinoScrollbar is built-in below.
+                    behavior: ScrollConfiguration.Of(context).CopyWith(scrollbars: false),
+                    child: new LayoutBuilder((layoutContext, _) => BuildDialog(layoutContext)))));
     }
 
     private Widget BuildDialog(BuildContext context)

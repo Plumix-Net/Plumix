@@ -669,7 +669,7 @@ public sealed class InputDecorator : StatefulWidget
 
             if (input is not null && needsSemanticsSortOrder)
             {
-                input = new Semantics(container: true, sortKey: _inputSemanticsSortOrder, child: input);
+                input = new Semantics(sortKey: _inputSemanticsSortOrder, child: input);
             }
 
             Widget? label = BuildLabel(decoration, labelStyle, floatingLabelStyle);
@@ -1090,23 +1090,30 @@ internal sealed class HelperError : StatefulWidget
 
     private sealed class HelperErrorState : State<HelperError>
     {
+        // If the height of this widget and the counter are zero ("empty") at
+        // layout time, no space is allocated for the subtext.
+        private static readonly Widget Empty = SizedBox.Shrink();
+
         private AnimationController _controller = null!;
         private Widget? _helper;
         private Widget? _error;
 
         private HelperError Current => (HelperError)StateWidget;
 
-        private static readonly Widget Empty = new SizedBox(width: 0.0, height: 0.0);
+        private bool HasHelper => Current.HelperText != null || Current.Helper != null;
+
+        private bool HasError => Current.ErrorText != null || Current.Error != null;
 
         public override void InitState()
         {
+            base.InitState();
             _controller = new AnimationController(duration: InputDecoration.TransitionDuration, vsync: this);
-            if (Current.Error is not null || Current.ErrorText is not null)
+            if (HasError)
             {
                 _error = BuildError();
                 _controller.SetValue(1.0);
             }
-            else if (Current.Helper is not null || Current.HelperText is not null)
+            else if (HasHelper)
             {
                 _helper = BuildHelper();
             }
@@ -1116,31 +1123,49 @@ internal sealed class HelperError : StatefulWidget
 
         public override void Dispose()
         {
-            _controller.RemoveListener(HandleChange);
             _controller.Dispose();
-
             base.Dispose();
         }
 
-        private void HandleChange() => SetState(() => { });
+        private void HandleChange()
+        {
+            SetState(() =>
+            {
+                // The _controller's value has changed.
+            });
+        }
 
         public override void DidUpdateWidget(HelperError oldWidget)
         {
-            var old = (HelperError)oldWidget;
-            bool errorStateChanged = (Current.Error is not null) != (old.Error is not null);
-            bool errorTextStateChanged = (Current.ErrorText is not null) != (old.ErrorText is not null);
-            bool helperStateChanged = (Current.Helper is not null) != (old.Helper is not null);
-            bool helperTextStateChanged = Current.ErrorText is null
-                                          && (Current.HelperText is not null) != (old.HelperText is not null);
+            base.DidUpdateWidget(oldWidget);
+            HelperError old = oldWidget;
 
-            if (errorStateChanged || errorTextStateChanged || helperStateChanged || helperTextStateChanged)
+            Widget? newError = Current.Error;
+            string? newErrorText = Current.ErrorText;
+            Widget? newHelper = Current.Helper;
+            string? newHelperText = Current.HelperText;
+            Widget? oldError = old.Error;
+            string? oldErrorText = old.ErrorText;
+            Widget? oldHelper = old.Helper;
+            string? oldHelperText = old.HelperText;
+
+            bool errorStateChanged = (newError != null) != (oldError != null);
+            bool errorTextStateChanged = (newErrorText != null) != (oldErrorText != null);
+            bool helperStateChanged = (newHelper != null) != (oldHelper != null);
+            bool helperTextStateChanged =
+                newErrorText == null && (newHelperText != null) != (oldHelperText != null);
+
+            if (errorStateChanged
+                || errorTextStateChanged
+                || helperStateChanged
+                || helperTextStateChanged)
             {
-                if (Current.Error is not null || Current.ErrorText is not null)
+                if (newError != null || newErrorText != null)
                 {
                     _error = BuildError();
                     _controller.Forward();
                 }
-                else if (Current.Helper is not null || Current.HelperText is not null)
+                else if (newHelper != null || newHelperText != null)
                 {
                     _helper = BuildHelper();
                     _controller.Reverse();
@@ -1152,32 +1177,58 @@ internal sealed class HelperError : StatefulWidget
             }
         }
 
-        private Widget BuildHelper() => new Opacity(
-            1.0,
-            Styled(
-                Current.Helper ?? new Text(
-                    Current.HelperText ?? string.Empty,
-                    textAlign: Current.TextAlign,
-                    overflow: TextOverflow.Ellipsis,
-                    maxLines: Current.HelperMaxLines),
-                Current.HelperStyle));
+        private Widget BuildHelper()
+        {
+            DebugAssertions.Assert(Current.Helper != null || Current.HelperText != null);
+            return new Semantics(
+                container: true,
+                child: new FadeTransition(
+                    opacity: new Tween<double>(1.0, 0.0).Animate(_controller),
+                    child:
+                        Current.Helper
+                        ?? new Text(
+                            Current.HelperText!,
+                            style: Current.HelperStyle,
+                            textAlign: Current.TextAlign,
+                            overflow: TextOverflow.Ellipsis,
+                            maxLines: Current.HelperMaxLines)));
+        }
 
-        private Widget BuildError() => new Opacity(
-            1.0,
-            Styled(
-                Current.Error ?? new Text(
-                    Current.ErrorText ?? string.Empty,
-                    textAlign: Current.TextAlign,
-                    overflow: TextOverflow.Ellipsis,
-                    maxLines: Current.ErrorMaxLines),
-                Current.ErrorStyle));
+        private Widget BuildError()
+        {
+            DebugAssertions.Assert(Current.Error != null || Current.ErrorText != null);
+            string? capturedErrorText = Current.ErrorText;
+            Widget? capturedError = Current.Error;
+            if (capturedError != null && Current.ErrorStyle != null)
+            {
+                capturedError = new DefaultTextStyle(Current.ErrorStyle, capturedError);
+            }
+
+            return new Builder(
+                builder: context => new Semantics(
+                    container: true,
+                    liveRegion: !MediaQuery.SupportsAnnounceOf(context),
+                    child: new FadeTransition(
+                        opacity: _controller,
+                        child: new FractionalTranslation(
+                            translation: new Tween<Point>(new Point(0.0, -0.25), new Point(0.0, 0.0))
+                                .Evaluate(_controller.View),
+                            child:
+                                capturedError
+                                ?? new Text(
+                                    capturedErrorText!,
+                                    style: Current.ErrorStyle,
+                                    textAlign: Current.TextAlign,
+                                    overflow: TextOverflow.Ellipsis,
+                                    maxLines: Current.ErrorMaxLines)))));
+        }
 
         public override Widget Build(BuildContext context)
         {
-            if (_controller.Status == AnimationStatus.Dismissed)
+            if (_controller.Status.IsDismissed())
             {
                 _error = null;
-                if (Current.Helper is not null || Current.HelperText is not null)
+                if (HasHelper)
                 {
                     return _helper = BuildHelper();
                 }
@@ -1186,10 +1237,10 @@ internal sealed class HelperError : StatefulWidget
                 return Empty;
             }
 
-            if (_controller.Status == AnimationStatus.Completed)
+            if (_controller.Status.IsCompleted())
             {
                 _helper = null;
-                if (Current.Error is not null || Current.ErrorText is not null)
+                if (HasError)
                 {
                     return _error = BuildError();
                 }
@@ -1198,31 +1249,40 @@ internal sealed class HelperError : StatefulWidget
                 return Empty;
             }
 
-            if (_helper is null && (Current.Error is not null || Current.ErrorText is not null))
+            if (_helper == null && HasError)
             {
-                return new Opacity(Math.Clamp(_controller.Value, 0.0, 1.0), BuildError());
+                return BuildError();
             }
 
-            if (_error is null && (Current.Helper is not null || Current.HelperText is not null))
+            if (_error == null && HasHelper)
             {
-                return new Opacity(Math.Clamp(1.0 - _controller.Value, 0.0, 1.0), BuildHelper());
+                return BuildHelper();
             }
 
-            if (Current.Error is not null || Current.ErrorText is not null)
+            if (HasError)
             {
                 return new Stack(
                     children:
                     [
-                        new Opacity(Math.Clamp(1.0 - _controller.Value, 0.0, 1.0), _helper ?? Empty),
-                        new Opacity(Math.Clamp(_controller.Value, 0.0, 1.0), BuildError()),
+                        new FadeTransition(
+                            opacity: new Tween<double>(1.0, 0.0).Animate(_controller),
+                            child: _helper),
+                        BuildError(),
                     ]);
             }
 
-            return _helper ?? Empty;
-        }
+            if (HasHelper)
+            {
+                return new Stack(
+                    children:
+                    [
+                        BuildHelper(),
+                        new FadeTransition(opacity: _controller, child: _error),
+                    ]);
+            }
 
-        private static Widget Styled(Widget child, TextStyle? style) =>
-            style is null ? child : new DefaultTextStyle(style, child);
+            return Empty;
+        }
     }
 }
 
@@ -1325,7 +1385,7 @@ internal sealed class BorderContainer : StatefulWidget
         private void HandleChange() => SetState(() => { });
 
         public override Widget Build(BuildContext context) => new CustomPaint(
-            painter: new InputBorderPainter(
+            foregroundPainter: new InputBorderPainter(
                 // Flutter's _InputBorderTween is `ShapeBorder.lerp(begin, end, t)! as InputBorder`.
                 border: (InputBorder)ShapeBorder.Lerp(_begin, _end, _borderAnimation.Value)!,
                 gap: Current.Gap,

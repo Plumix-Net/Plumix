@@ -373,7 +373,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         IReadOnlyList<T> options = result?.ToArray() ?? [];
         if (_options.Count == 0 != (options.Count == 0))
         {
-            Scheduler.RunAsync(() => AnnounceSemanticsAsync(options.Count > 0));
+            AnnounceSemantics(options.Count > 0);
         }
 
         _options = options;
@@ -617,7 +617,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         _ownsFocusNode = false;
     }
 
-    private async Task AnnounceSemanticsAsync(bool hasOptions)
+    private void AnnounceSemantics(bool resultsAvailable)
     {
         if (!MediaQuery.SupportsAnnounceOf(Context))
         {
@@ -625,13 +625,31 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         }
 
         WidgetsLocalizations localizations = WidgetsLocalizations.Of(Context);
-        string message = hasOptions
+        string optionsHint = resultsAvailable
             ? localizations.SearchResultsFound
             : localizations.NoResultsFound;
-        await SemanticsService.SendAnnouncement(
-            MediaQuery.ViewIdOf(Context),
-            message,
+        Task announcement = SemanticsService.SendAnnouncement(
+            View.Of(Context),
+            optionsHint,
             localizations.TextDirection);
+        Scheduler.RunAsync(() => ReportAnnouncementError(announcement));
+    }
+
+    // Dart's `.catchError` on the announcement future.
+    private static async Task ReportAnnouncementError(Task announcement)
+    {
+        try
+        {
+            await announcement;
+        }
+        catch (Exception exception)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                stack: exception.StackTrace,
+                library: "widgets library",
+                context: new ErrorDescription("while sending semantics announcement")));
+        }
     }
 
     private static Rect DeflateRect(Rect rect, Thickness insets)

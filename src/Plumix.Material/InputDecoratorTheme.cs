@@ -433,6 +433,15 @@ public class InputDecorationThemeData : IDiagnosticable
         return first.ToHashCode();
     }
 
+    /// <summary>Dart's <c>Diagnosticable.toString</c>.</summary>
+    public override string ToString()
+    {
+        IDiagnosticable self = this;
+        return Constants.KDebugMode
+            ? self.ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, DiagnosticLevel.Info)
+            : self.ToStringShort();
+    }
+
     public static bool operator ==(InputDecorationThemeData? left, InputDecorationThemeData? right) =>
         left is null ? right is null : left.Equals(right);
 

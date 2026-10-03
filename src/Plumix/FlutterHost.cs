@@ -559,6 +559,29 @@ public class PlumixHost : Control
             displayCornerRadii: data.DisplayCornerRadii);
         PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, data);
         WidgetsBinding.Instance.HandleMetricsChanged();
+        ReportAccessibilityFeatures();
+    }
+
+    /// <summary>
+    /// Reports the platform's accessibility features to the dispatcher, as the engine's
+    /// <c>_updateAccessibilityFeatures</c> does. Avalonia exposes only the high-contrast theme
+    /// variant, so that is the one bit this host owns; every other bit keeps the value last reported.
+    /// </summary>
+    private void ReportAccessibilityFeatures()
+    {
+        if (_attachedTopLevel is null)
+        {
+            return;
+        }
+
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        int values = dispatcher.ReportedAccessibilityFeatures & ~AccessibilityFeatures.KHighContrastIndex;
+        if (ResolveHighContrast())
+        {
+            values |= AccessibilityFeatures.KHighContrastIndex;
+        }
+
+        dispatcher.UpdateAccessibilityFeatures(values);
     }
 
     /// <summary>Logical insets to the physical pixels a <see cref="FlutterView"/> reports.</summary>
@@ -787,7 +810,6 @@ public class PlumixHost : Control
             ViewInsets: viewInsets,
             ViewPadding: viewPadding,
             PlatformBrightness: ResolvePlatformBrightness(),
-            HighContrast: ResolveHighContrast(),
             ViewId: _view.ViewId);
     }
 

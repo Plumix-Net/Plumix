@@ -522,7 +522,6 @@ public sealed class ScrollableMiscDartParityTests
     [Fact]
     public void CustomScrollViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new CustomScrollView(
@@ -536,14 +535,13 @@ public sealed class ScrollableMiscDartParityTests
                 ]));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListView restoration'
     [Fact]
     public void ListViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new ListView(
@@ -552,14 +550,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: FiftyTiles()));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListView.builder restoration'
     [Fact]
     public void ListViewBuilderRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: ListView.Builder(
@@ -568,14 +565,13 @@ public sealed class ScrollableMiscDartParityTests
                 itemBuilder: (_, index) => new SizedBox(height: 50, child: new Text($"Tile {index}"))));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListView.separated restoration'
     [Fact]
     public void ListViewSeparatedRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: ListView.Separated(
@@ -586,14 +582,13 @@ public sealed class ScrollableMiscDartParityTests
                 itemBuilder: (_, index) => new SizedBox(height: 50, child: new Text($"Tile {index}"))));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListView.custom restoration'
     [Fact]
     public void ListViewCustomRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: ListView.Custom(
@@ -602,14 +597,13 @@ public sealed class ScrollableMiscDartParityTests
                 childrenDelegate: new SliverChildListDelegate(FiftyTiles())));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: GridView restoration'
     [Fact]
     public void GridViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new GridView(
@@ -619,14 +613,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: FiftyTiles()));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: GridView.builder restoration'
     [Fact]
     public void GridViewBuilderRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: GridView.Builder(
@@ -636,14 +629,13 @@ public sealed class ScrollableMiscDartParityTests
                 itemBuilder: (_, index) => new SizedBox(height: 50, child: new Text($"Tile {index}"))));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: GridView.custom restoration'
     [Fact]
     public void GridViewCustomRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: GridView.Custom(
@@ -653,14 +645,13 @@ public sealed class ScrollableMiscDartParityTests
                 childrenDelegate: new SliverChildListDelegate(FiftyTiles())));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: GridView.count restoration'
     [Fact]
     public void GridViewCountRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: GridView.Count(
@@ -670,14 +661,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: FiftyTiles()));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: GridView.extent restoration'
     [Fact]
     public void GridViewExtentRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: GridView.Extent(
@@ -687,14 +677,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: FiftyTiles()));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget);
+        RestoreScrollAndVerify(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: SingleChildScrollView restoration'
     [Fact]
     public void SingleChildScrollViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new SingleChildScrollView(
@@ -711,20 +700,20 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
         Assert.Equal(new Point(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
-        restoration.RestartAndRestore(tester, widget);
+        tester.RestartAndRestore();
 
         Assert.Equal(525, tester.State<ScrollableState>().Position.Pixels);
         Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
         Assert.Equal(new Point(0, -475), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
-        TestRestorationData data = restoration.GetRestorationData();
+        TestRestorationData data = tester.GetRestorationData();
         tester.State<ScrollableState>().Position.JumpTo(0);
         tester.Pump();
 
         Assert.Equal(new Point(0, 0), tester.GetTopLeft(TextElement(tester, "Tile 0")));
         Assert.Equal(new Point(0, 50), tester.GetTopLeft(TextElement(tester, "Tile 1")));
 
-        restoration.RestoreFrom(tester, data);
+        tester.RestoreFrom(data);
 
         Assert.Equal(525, tester.State<ScrollableState>().Position.Pixels);
         Assert.Equal(new Point(0, -525), tester.GetTopLeft(TextElement(tester, "Tile 0")));
@@ -735,7 +724,6 @@ public sealed class ScrollableMiscDartParityTests
     [Fact]
     public void PageViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new PageView(
@@ -743,14 +731,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: Enumerable.Range(0, 50).Select(index => (Widget)new Text($"Tile {index}")).ToList()));
         tester.PumpWidget(widget);
 
-        PageViewScrollAndRestore(tester, restoration, widget);
+        PageViewScrollAndRestore(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: PageView.builder restoration'
     [Fact]
     public void PageViewBuilderRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: PageView.Builder(
@@ -758,14 +745,13 @@ public sealed class ScrollableMiscDartParityTests
                 itemBuilder: (_, index) => new SizedBox(height: 50, child: new Text($"Tile {index}"))));
         tester.PumpWidget(widget);
 
-        PageViewScrollAndRestore(tester, restoration, widget);
+        PageViewScrollAndRestore(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: PageView.custom restoration'
     [Fact]
     public void PageViewCustomRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new PageView(
@@ -773,14 +759,13 @@ public sealed class ScrollableMiscDartParityTests
                 childrenDelegate: new SliverChildListDelegate(FiftyTiles())));
         tester.PumpWidget(widget);
 
-        PageViewScrollAndRestore(tester, restoration, widget);
+        PageViewScrollAndRestore(tester);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListWheelScrollView restoration'
     [Fact]
     public void ListWheelScrollViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new ListWheelScrollView(
@@ -789,14 +774,13 @@ public sealed class ScrollableMiscDartParityTests
                 children: Enumerable.Range(0, 50).Select(index => (Widget)new Text($"Tile {index}")).ToList()));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget, secondOffset: 542);
+        RestoreScrollAndVerify(tester, secondOffset: 542);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: ListWheelScrollView.useDelegate restoration'
     [Fact]
     public void ListWheelScrollViewUseDelegateRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             child: new ListWheelScrollView(
@@ -805,14 +789,13 @@ public sealed class ScrollableMiscDartParityTests
                 childDelegate: new ListWheelChildListDelegate(children: FiftyTiles())));
         tester.PumpWidget(widget);
 
-        RestoreScrollAndVerify(tester, restoration, widget, secondOffset: 542);
+        RestoreScrollAndVerify(tester, secondOffset: 542);
     }
 
     // Flutter: 'scrollable_restoration_test.dart: NestedScrollView restoration'
     [Fact]
     public void NestedScrollViewRestoration()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         Widget widget = new TestHarness(
             height: 200,
@@ -847,13 +830,13 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Empty(FindText(tester, "Tile 0"));
         Assert.Single(FindText(tester, "Tile 10"));
 
-        restoration.RestartAndRestore(tester, widget);
+        tester.RestartAndRestore();
 
         Assert.Equal(56, HeaderPaintExtent());
         Assert.Empty(FindText(tester, "Tile 0"));
         Assert.Single(FindText(tester, "Tile 10"));
 
-        TestRestorationData data = restoration.GetRestorationData();
+        TestRestorationData data = tester.GetRestorationData();
         tester.Drag(tester.ElementOfType<NestedScrollView>(), new Vector(0, 600));
         tester.Pump();
 
@@ -861,7 +844,7 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Single(FindText(tester, "Tile 0"));
         Assert.Empty(FindText(tester, "Tile 10"));
 
-        restoration.RestoreFrom(tester, data);
+        tester.RestoreFrom(data);
 
         Assert.Equal(56, HeaderPaintExtent());
         Assert.Empty(FindText(tester, "Tile 0"));
@@ -872,7 +855,6 @@ public sealed class ScrollableMiscDartParityTests
     [Fact]
     public void RestorationDataIsFlushedEvenIfNoFrameIsScheduled()
     {
-        using var restoration = new TestRestorationBinding();
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         tester.PumpWidget(new TestHarness(
             child: new ListView(
@@ -886,7 +868,7 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Empty(FindText(tester, "Tile 11"));
         Assert.Empty(FindText(tester, "Tile 12"));
 
-        TestRestorationData initialData = restoration.GetRestorationData();
+        TestRestorationData initialData = tester.GetRestorationData();
         TestGesture gesture = tester.StartGesture(
             tester.GetCenter(tester.ElementOfType<ListView>()),
             PointerDeviceKind.Touch);
@@ -900,12 +882,12 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Single(FindText(tester, "Tile 12"));
 
         // Restoration data hasn't changed.
-        Assert.Same(initialData, restoration.GetRestorationData());
+        Assert.Same(initialData, tester.GetRestorationData());
 
         // Restoration data changes with up event.
         gesture.Up();
         tester.Pump();
-        Assert.NotSame(initialData, restoration.GetRestorationData());
+        Assert.NotSame(initialData, tester.GetRestorationData());
     }
 
     private static List<Widget> FiftyTiles() =>
@@ -917,10 +899,7 @@ public sealed class ScrollableMiscDartParityTests
         FindText(tester, text).Single();
 
     // scrollable_restoration_test.dart: pageViewScrollAndRestore.
-    private static void PageViewScrollAndRestore(
-        FrameworkDartTester tester,
-        TestRestorationBinding restoration,
-        Widget widget)
+    private static void PageViewScrollAndRestore(FrameworkDartTester tester)
     {
         Assert.Single(FindText(tester, "Tile 0"));
         Assert.Empty(FindText(tester, "Tile 10"));
@@ -931,20 +910,20 @@ public sealed class ScrollableMiscDartParityTests
         Assert.Empty(FindText(tester, "Tile 0"));
         Assert.Single(FindText(tester, "Tile 10"));
 
-        restoration.RestartAndRestore(tester, widget);
+        tester.RestartAndRestore();
 
         Assert.Equal(50.0 * 10, tester.State<ScrollableState>().Position.Pixels);
         Assert.Empty(FindText(tester, "Tile 0"));
         Assert.Single(FindText(tester, "Tile 10"));
 
-        TestRestorationData data = restoration.GetRestorationData();
+        TestRestorationData data = tester.GetRestorationData();
         tester.State<ScrollableState>().Position.JumpTo(0);
         tester.Pump();
 
         Assert.Single(FindText(tester, "Tile 0"));
         Assert.Empty(FindText(tester, "Tile 10"));
 
-        restoration.RestoreFrom(tester, data);
+        tester.RestoreFrom(data);
 
         Assert.Equal(50.0 * 10, tester.State<ScrollableState>().Position.Pixels);
         Assert.Empty(FindText(tester, "Tile 0"));
@@ -954,8 +933,6 @@ public sealed class ScrollableMiscDartParityTests
     // scrollable_restoration_test.dart: restoreScrollAndVerify.
     private static void RestoreScrollAndVerify(
         FrameworkDartTester tester,
-        TestRestorationBinding restoration,
-        Widget widget,
         double secondOffset = 525)
     {
         // Dart's `find.byElementPredicate((Element e) => e.widget is Scrollable)`.
@@ -981,18 +958,18 @@ public sealed class ScrollableMiscDartParityTests
 
         ExpectTiles(top: false);
 
-        restoration.RestartAndRestore(tester, widget);
+        tester.RestartAndRestore();
 
         Assert.Equal(secondOffset, FindScrollable().Position.Pixels);
         ExpectTiles(top: false);
 
-        TestRestorationData data = restoration.GetRestorationData();
+        TestRestorationData data = tester.GetRestorationData();
         FindScrollable().Position.JumpTo(0);
         tester.Pump();
 
         ExpectTiles(top: true);
 
-        restoration.RestoreFrom(tester, data);
+        tester.RestoreFrom(data);
 
         Assert.Equal(secondOffset, FindScrollable().Position.Pixels);
         ExpectTiles(top: false);
@@ -1608,110 +1585,6 @@ public sealed class ScrollableMiscDartParityTests
             SizedBox.Expand();
 
         public override bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
-    }
-
-    /// <summary>flutter_test's <c>TestRestorationData</c>: an opaque, identity-compared snapshot.</summary>
-    private sealed class TestRestorationData(byte[]? binary)
-    {
-        public static readonly TestRestorationData Empty = new(null);
-
-        public byte[]? Binary { get; } = binary;
-    }
-
-    /// <summary>
-    /// flutter_test's <c>TestRestorationManager</c>: starts from empty data, keeps what the framework
-    /// sends to the engine and restores from a snapshot on request.
-    /// </summary>
-    private sealed class FlutterTestRestorationManager : RestorationManager
-    {
-        public FlutterTestRestorationManager()
-        {
-            // Ensures that the root bucket is always available synchronously.
-            RestoreFrom(TestRestorationData.Empty);
-        }
-
-        public TestRestorationData RestorationData { get; private set; } = TestRestorationData.Empty;
-
-        public bool DebugRootBucketAccessed { get; private set; }
-
-        public override void GetRootBucket(Action<RestorationBucket?> callback)
-        {
-            DebugRootBucketAccessed = true;
-            base.GetRootBucket(callback);
-        }
-
-        public void RestoreFrom(TestRestorationData data)
-        {
-            RestorationData = data;
-            HandleRestorationUpdateFromEngine(enabled: true, data: data.Binary);
-        }
-
-        protected override void InitChannels()
-        {
-        }
-
-        protected override void GetRootBucketFromEngine()
-        {
-            HandleRestorationUpdateFromEngine(enabled: true, data: RestorationData.Binary);
-        }
-
-        protected override void SendToEngine(byte[] encodedData)
-        {
-            RestorationData = new TestRestorationData(encodedData);
-        }
-    }
-
-    /// <summary>
-    /// Installs a fresh <see cref="FlutterTestRestorationManager"/> as the ambient manager (Dart's
-    /// per-test <c>binding.restorationManager</c>) and hosts <c>WidgetTester</c>'s
-    /// <c>restartAndRestore</c>, <c>getRestorationData</c> and <c>restoreFrom</c>.
-    /// </summary>
-    private sealed class TestRestorationBinding : IDisposable
-    {
-        private readonly RestorationManager _previous = RestorationManager.Instance;
-        private readonly FlutterTestRestorationManager _manager = new();
-
-        public TestRestorationBinding()
-        {
-            RestorationManager.Instance = _manager;
-        }
-
-        /// <summary>
-        /// Dart's <c>tester.restartAndRestore</c>: tears the tree down, restores the last data the
-        /// framework sent to the engine and mounts the same widget again.
-        /// </summary>
-        public void RestartAndRestore(FrameworkDartTester tester, Widget widget)
-        {
-            Assert.True(
-                _manager.DebugRootBucketAccessed,
-                "Did you forget to wrap your widget tree in a RootRestorationScope?");
-            TestRestorationData restorationData = _manager.RestorationData;
-            tester.PumpWidget(new Container(key: new UniqueKey()));
-            _manager.RestoreFrom(restorationData);
-            tester.PumpWidget(widget);
-        }
-
-        /// <summary>Dart's <c>tester.getRestorationData</c>.</summary>
-        public TestRestorationData GetRestorationData()
-        {
-            Assert.True(
-                _manager.DebugRootBucketAccessed,
-                "Did you forget to wrap your widget tree in a RootRestorationScope?");
-            return _manager.RestorationData;
-        }
-
-        /// <summary>Dart's <c>tester.restoreFrom</c>.</summary>
-        public void RestoreFrom(FrameworkDartTester tester, TestRestorationData data)
-        {
-            _manager.RestoreFrom(data);
-            tester.Pump();
-        }
-
-        public void Dispose()
-        {
-            RestorationManager.Instance = _previous;
-            _manager.Dispose();
-        }
     }
 
     /// <summary>

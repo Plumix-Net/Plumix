@@ -65,9 +65,11 @@ public sealed class MaterialTextFieldTests : IDisposable
             value => value.PlainText == "••••••");
         Assert.False(HostTextInput.InsertText("x"));
         Assert.Equal("secret", controller.Text);
+        // Dart's `_TextFieldState.build` wraps the field in `Semantics(enabled: _isEnabled, currentValueLength:)`.
         var semantics = Assert.Single(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), value =>
-            value.Properties.TextField == true);
-        Assert.Null(semantics.Properties.Enabled);
+            value.Properties.CurrentValueLength == 6);
+        Assert.False(semantics.Properties.Enabled);
+        Assert.Null(semantics.Properties.OnFocus);
     }
 
     [Fact]
@@ -379,7 +381,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         {
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView); _pipeline.Attach(RenderView);
-            _root = new RootElement(RenderView, widget);
+            _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();

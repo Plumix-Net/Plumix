@@ -554,7 +554,7 @@ internal sealed class BottomNavigationTileLabel : StatelessWidget
         if (Item.Label is not null)
         {
             // Do not grow text in bottom navigation bar when we can add more anyway.
-            text = MediaQuery.WithClampedTextScaling(context, text, maxScaleFactor: 1.0);
+            text = MediaQuery.WithClampedTextScaling(maxScaleFactor: 1.0, child: text);
         }
 
         return text;

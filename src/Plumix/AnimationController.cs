@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Physics;
+using Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/animation/animation_controller.dart
 
@@ -108,14 +109,6 @@ public sealed class AnimationController : Animation<double>, IDisposable
 
     /// <summary>Fired when an animation tick drives the status to <see cref="AnimationStatus.Dismissed"/>.</summary>
     public event Action? Dismissed;
-
-    /// <summary>
-    /// Whether the platform asks for animations to be disabled. Dart parity source:
-    /// <c>SemanticsBinding.instance.disableAnimations</c>; Plumix has no bindings, so this is a static
-    /// hook that hosts set and tests override the way Flutter's
-    /// <c>debugSemanticsDisableAnimations</c> does.
-    /// </summary>
-    public static bool DisableAnimations { get; set; }
 
     /// <summary>The value at which this animation is deemed to be dismissed.</summary>
     public double LowerBound { get; }
@@ -492,7 +485,7 @@ public sealed class AnimationController : Animation<double>, IDisposable
     {
         return behavior switch
         {
-            AnimationBehavior.Normal => !DisableAnimations,
+            AnimationBehavior.Normal => !SemanticsBinding.Instance.DisableAnimations,
             _ => true,
         };
     }

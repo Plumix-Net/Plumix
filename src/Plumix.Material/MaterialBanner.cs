@@ -233,9 +233,8 @@ public sealed class MaterialBanner : StatefulWidget
             Widget content = new Expanded(
                 new DefaultTextStyle(textStyle, widget.Content));
             content = MediaQuery.WithClampedTextScaling(
-                context,
-                content,
-                maxScaleFactor: MaxContentTextScaleFactor);
+                maxScaleFactor: MaxContentTextScaleFactor,
+                child: content);
 
             var rowChildren = new List<Widget>();
             if (widget.Leading is not null)
@@ -246,9 +245,8 @@ public sealed class MaterialBanner : StatefulWidget
             if (isSingleRow)
             {
                 rowChildren.Add(MediaQuery.WithClampedTextScaling(
-                    context,
-                    actionsBar,
-                    maxScaleFactor: MaxContentTextScaleFactor));
+                    maxScaleFactor: MaxContentTextScaleFactor,
+                    child: actionsBar));
             }
 
             var columnChildren = new List<Widget>

@@ -1,10 +1,13 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -15,7 +18,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
 {
     public override State CreateState() => new DatePickerDemoPageState();
 
-    private sealed class DatePickerDemoPageState : State
+    private sealed class DatePickerDemoPageState : RestorationState<DatePickerDemoPage>
     {
         private DateTime _selectedDate = new(2026, 3, 12);
         private DateTime _displayedMonth = new(2026, 3, 1);
@@ -27,18 +30,70 @@ public sealed class DatePickerDemoPage : StatefulWidget
         private DateTimeRange<DateTime> _selectedRange = new(new DateTime(2026, 3, 10), new DateTime(2026, 3, 16));
         private readonly LabeledGlobalKey<FormState> _dateFormKey = new("date-input-form");
         private string _formStatus = "not validated";
+        private RestorableRouteFuture<DateTime?>? _restorableDatePickerRoute;
+
+        protected override string? RestorationId => "date_picker_demo";
+
+        private RestorableRouteFuture<DateTime?> RestorableDatePickerRoute =>
+            _restorableDatePickerRoute ??= new RestorableRouteFuture<DateTime?>(
+                onComplete: HandleRestorableDateSelected,
+                onPresent: (navigator, _) => navigator.RestorablePush(
+                    DatePickerRoute,
+                    arguments: new Dictionary<string, object?>
+                    {
+                        ["selectedDate"] = new DateTimeOffset(_selectedDate).ToUnixTimeMilliseconds(),
+                    }));
+
+        protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
+        {
+            RegisterForRestoration(RestorableDatePickerRoute, "date_picker_route_future");
+        }
+
+        public override void Dispose()
+        {
+            RestorableDatePickerRoute.Dispose();
+            base.Dispose();
+        }
+
+        // Anonymous restorable routes are built by a static method, Plumix's stand-in for Dart's
+        // `@pragma('vm:entry-point')` static function.
+        private static Route DatePickerRoute(BuildContext context, object? arguments)
+        {
+            var args = (IDictionary)arguments!;
+            return new DialogRoute<DateTime?>(
+                context,
+                _ => new DatePickerDialog(
+                    restorationId: "date_picker_dialog",
+                    initialEntryMode: DatePickerEntryMode.CalendarOnly,
+                    initialDate: DateTimeOffset
+                        .FromUnixTimeMilliseconds(Convert.ToInt64(args["selectedDate"]))
+                        .LocalDateTime
+                        .Date,
+                    firstDate: new DateTime(2022, 1, 1),
+                    lastDate: new DateTime(2032, 12, 31)));
+        }
+
+        private void HandleRestorableDateSelected(DateTime? newDate)
+        {
+            if (!Mounted) return;
+            SetState(() =>
+            {
+                if (newDate.HasValue) _selectedDate = newDate.Value;
+                _formStatus = newDate.HasValue ? $"restorable: {newDate:yyyy-MM-dd}" : "restorable canceled";
+            });
+        }
 
         public override Widget Build(BuildContext context)
         {
             var baseTheme = Theme.Of(context);
             var pickerTheme = _useThemeOverride
                 ? new DatePickerThemeData(
-                    DayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    dayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                         states.Contains(WidgetState.Selected) ? new Color(0xFF006C4C) : null),
-                    YearBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    yearBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                         states.Contains(WidgetState.Selected) ? new Color(0xFF6750A4) : null),
-                    TodayBorder: new BorderSide(new Color(0xFF006C4C), 2),
-                    RangeSelectionBackgroundColor: new Color(0xFFCDE8DE))
+                    todayBorder: new BorderSide(new Color(0xFF006C4C), 2),
+                    rangeSelectionBackgroundColor: new Color(0xFFCDE8DE))
                 : new DatePickerThemeData();
             var timePickerTheme = _useThemeOverride
                 ? new TimePickerThemeData(
@@ -131,6 +186,18 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                 [
                                     BuildToggle("Calendar dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Calendar)),
                                     BuildToggle("Input dialog", () => _ = OpenDatePicker(context, DatePickerEntryMode.Input)),
+                                ]),
+                            new Row(
+                                spacing: 8,
+                                children:
+                                [
+                                    BuildToggle(
+                                        "Calendar only",
+                                        () => _ = OpenDatePicker(context, DatePickerEntryMode.CalendarOnly)),
+                                    BuildToggle(
+                                        "Input only",
+                                        () => _ = OpenDatePicker(context, DatePickerEntryMode.InputOnly)),
+                                    BuildToggle("Restorable", () => RestorableDatePickerRoute.Present()),
                                 ]),
                             new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: new Color(0xFF455A64)),
                             new Divider(),

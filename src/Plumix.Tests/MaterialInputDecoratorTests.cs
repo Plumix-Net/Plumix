@@ -1381,6 +1381,6 @@ public sealed class MaterialInputDecoratorTests
     {
         RenderCustomPaint? paint = DecoratorHarness.Find<RenderCustomPaint>(harness.Decorator);
         Assert.NotNull(paint);
-        return Assert.IsType<InputBorderPainter>(paint!.Painter);
+        return Assert.IsType<InputBorderPainter>(paint!.ForegroundPainter);
     }
 }

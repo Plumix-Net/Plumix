@@ -113,14 +113,13 @@ public record CircleBorder : OutlinedBorder
         if (Eccentricity == 0.0)
         {
             context.Canvas.DrawCircle(
-                Brushes.Transparent,
-                Side.ToPen(),
                 rect.Center,
-                (BoxBorder.ShortestSide(rect) + Side.StrokeOffset) / 2.0);
+                (BoxBorder.ShortestSide(rect) + Side.StrokeOffset) / 2.0,
+                Side.ToPaint());
             return;
         }
 
-        context.Canvas.DrawOval(AdjustRect(rect).Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawOval(AdjustRect(rect).Inflate(Side.StrokeOffset / 2.0), Side.ToPaint());
     }
 
     public override string ToString()

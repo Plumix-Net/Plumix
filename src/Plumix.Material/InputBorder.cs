@@ -101,6 +101,11 @@ internal sealed record NoInputBorder : InputBorder
 /// shape.
 public record UnderlineInputBorder : InputBorder
 {
+    /// <summary>
+    /// Dart's inherited <c>ShapeBorder.toString</c>: <c>'${objectRuntimeType(this, 'ShapeBorder')}()'</c>.
+    /// </summary>
+    public override string ToString() => $"{GetType().Name}()";
+
     public UnderlineInputBorder(BorderSide? borderSide = null, BorderRadius? borderRadius = null)
         : base(borderSide ?? new BorderSide(Colors.Black))
     {
@@ -205,6 +210,11 @@ public record UnderlineInputBorder : InputBorder
 /// Draws a rounded rectangle around an [InputDecorator]'s container.
 public record OutlineInputBorder : InputBorder
 {
+    /// <summary>
+    /// Dart's inherited <c>ShapeBorder.toString</c>: <c>'${objectRuntimeType(this, 'ShapeBorder')}()'</c>.
+    /// </summary>
+    public override string ToString() => $"{GetType().Name}()";
+
     public OutlineInputBorder(
         BorderSide? borderSide = null,
         BorderRadius? borderRadius = null,

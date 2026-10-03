@@ -416,21 +416,27 @@ public sealed class ExpansionTile : StatefulWidget
                 : localizations.ExpandedHint;
             TextDirection direction = Localizations.MaybeOf<WidgetsLocalizations>(Context)?.TextDirection
                                       ?? Directionality.Of(Context);
-            int viewId = MediaQuery.MaybeOf(Context)?.ViewId ?? 0;
+            FlutterView view = View.Of(Context);
             if (platform == TargetPlatform.IOS)
             {
+                // This is a workaround for VoiceOver interrupting semantic announcements on iOS.
+                // https://github.com/flutter/flutter/issues/122101.
                 _announcementCancellation?.Cancel();
                 _announcementCancellation?.Dispose();
                 _announcementCancellation = new CancellationTokenSource();
-                _ = SendDelayedAnnouncement(viewId, stateHint, direction, _announcementCancellation.Token);
+                CancellationToken cancellationToken = _announcementCancellation.Token;
+                Scheduler.RunAsync(() => SendDelayedAnnouncement(view, stateHint, direction, cancellationToken));
                 return;
             }
 
-            _ = SemanticsService.SendAnnouncement(viewId, stateHint, direction);
+            // SemanticsService.SendAnnouncement is deprecated on android. We use live region to achieve the
+            // announcement effect instead.
+            Task announcement = SemanticsService.SendAnnouncement(view, stateHint, direction);
+            Scheduler.RunAsync(() => ReportAnnouncementError(announcement));
         }
 
         private static async Task SendDelayedAnnouncement(
-            int viewId,
+            FlutterView view,
             string stateHint,
             TextDirection direction,
             CancellationToken cancellationToken)
@@ -438,10 +444,29 @@ public sealed class ExpansionTile : StatefulWidget
             try
             {
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                await SemanticsService.SendAnnouncement(viewId, stateHint, direction);
             }
             catch (OperationCanceledException)
             {
+                return;
+            }
+
+            await ReportAnnouncementError(SemanticsService.SendAnnouncement(view, stateHint, direction));
+        }
+
+        // Dart's `.catchError` on the announcement future.
+        private static async Task ReportAnnouncementError(Task announcement)
+        {
+            try
+            {
+                await announcement;
+            }
+            catch (Exception exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    stack: exception.StackTrace,
+                    library: "material library",
+                    context: new ErrorDescription("while sending semantics announcement")));
             }
         }
 

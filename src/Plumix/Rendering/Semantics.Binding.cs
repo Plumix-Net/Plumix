@@ -59,9 +59,11 @@ public class SemanticsHandle
 /// forwards both to <see cref="RendererBinding.Instance"/> directly.
 /// </para>
 /// <para>
-/// <c>accessibilityFeatures</c>, <c>handleAccessibilityFeaturesChanged</c>, <c>disableAnimations</c> and
-/// <c>createSemanticsUpdateBuilder</c> are not ported here: the accessibility features live on
-/// <c>WidgetsBinding</c> (see <c>docs/ai/BACKLOG.md</c>).
+/// Dart's <c>handleAccessibilityFeaturesChanged</c> is a virtual the widgets binding overrides. The
+/// override chain runs this binding's part first (<see cref="HandleAccessibilityFeaturesChanged"/>),
+/// then the widgets binding's observers; the platform dispatcher's callback reaches the most-derived
+/// override through <see cref="AccessibilityFeaturesChangedOverride"/>, which
+/// <c>WidgetsBinding.InitInstances</c> installs.
 /// </para>
 /// </remarks>
 public sealed class SemanticsBinding
@@ -70,13 +72,33 @@ public sealed class SemanticsBinding
     private readonly List<Action<SemanticsActionEvent>> _semanticsActionListeners = [];
     private int _outstandingHandles;
     private SemanticsHandle? _semanticsHandle;
+    private AccessibilityFeatures _accessibilityFeatures;
 
     private SemanticsBinding()
     {
         PlatformDispatcher platformDispatcher = PlatformDispatcher.Instance;
         _semanticsEnabled = new ValueNotifier<bool>(platformDispatcher.SemanticsEnabled);
+        _accessibilityFeatures = platformDispatcher.AccessibilityFeatures;
         platformDispatcher.OnSemanticsEnabledChanged = HandleSemanticsEnabledChanged;
         platformDispatcher.OnSemanticsActionEvent = HandleSemanticsActionEvent;
+        platformDispatcher.OnAccessibilityFeaturesChanged = () =>
+        {
+            // TODO(chunhtai): Web should not notify accessibility feature changes during updateSemantics
+            // https://github.com/flutter/flutter/issues/158399
+            // Plumix's scheduler also reports `persistentCallbacks` for builds driven outside a frame,
+            // where no post-frame callback would run; the check is qualified the way
+            // `Scheduler.EnsureVisualUpdate` qualifies it.
+            if (Scheduler.Phase == SchedulerPhase.PersistentCallbacks && Scheduler.IsHandlingFrame)
+            {
+                Scheduler.AddPostFrameCallback(
+                    _ => InvokeHandleAccessibilityFeaturesChanged(),
+                    debugLabel: "SemanticsBinding.handleAccessibilityFeaturesChanged");
+            }
+            else
+            {
+                InvokeHandleAccessibilityFeaturesChanged();
+            }
+        };
         HandleSemanticsEnabledChanged();
         AddSemanticsEnabledListener(HandleFrameworkSemanticsEnabledChanged);
         // Ensure the initial value is set.
@@ -152,6 +174,65 @@ public sealed class SemanticsBinding
     public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId) =>
         RendererBinding.Instance.GetRectOfSemanticsNodeInViewCoordinates(viewId, nodeId);
 
+    /// <summary>The currently active set of <see cref="UI.AccessibilityFeatures"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsBinding.accessibilityFeatures</c>: set when the binding is first
+    /// initialized and updated whenever a flag is changed. To listen to changes, register a
+    /// <c>WidgetsBindingObserver</c> and implement <c>DidChangeAccessibilityFeatures</c>.
+    /// </remarks>
+    public AccessibilityFeatures AccessibilityFeatures => _accessibilityFeatures;
+
+    /// <summary>The most-derived <c>handleAccessibilityFeaturesChanged</c> override.</summary>
+    /// <remarks>
+    /// Dart's dispatcher callback calls the virtual <c>handleAccessibilityFeaturesChanged</c>, which
+    /// reaches <c>WidgetsBinding</c>'s override. Plumix's bindings are separate singletons, so the
+    /// widgets binding installs its override here; the override calls
+    /// <see cref="HandleAccessibilityFeaturesChanged"/> first, as Dart's <c>super</c> call does.
+    /// </remarks>
+    internal Action? AccessibilityFeaturesChangedOverride { get; set; }
+
+    /// <summary>Called when the platform accessibility features change.</summary>
+    /// <remarks>
+    /// Flutter's <c>@protected @mustCallSuper SemanticsBinding.handleAccessibilityFeaturesChanged</c>:
+    /// this binding's part of the override chain, which re-reads
+    /// <see cref="PlatformDispatcher.AccessibilityFeatures"/>. See
+    /// <see cref="PlatformDispatcher.OnAccessibilityFeaturesChanged"/>.
+    /// </remarks>
+    public void HandleAccessibilityFeaturesChanged()
+    {
+        _accessibilityFeatures = PlatformDispatcher.Instance.AccessibilityFeatures;
+    }
+
+    /// <summary>Creates an empty semantics update builder.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsBinding.createSemanticsUpdateBuilder</c>: the <see cref="SemanticsOwner"/>
+    /// fills it with the node updates of one flush.
+    /// </remarks>
+    public SemanticsUpdateBuilder CreateSemanticsUpdateBuilder()
+    {
+        return new SemanticsUpdateBuilder();
+    }
+
+    /// <summary>The platform is requesting that animations be disabled or simplified.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsBinding.disableAnimations</c>. In debug builds
+    /// <see cref="SemanticsDebug.DebugSemanticsDisableAnimations"/> overrides it for testing or
+    /// debugging.
+    /// </remarks>
+    public bool DisableAnimations
+    {
+        get
+        {
+            bool value = _accessibilityFeatures.DisableAnimations;
+            if (Constants.KDebugMode && SemanticsDebug.DebugSemanticsDisableAnimations is bool debugValue)
+            {
+                value = debugValue;
+            }
+
+            return value;
+        }
+    }
+
     /// <summary>Creates a new <see cref="SemanticsHandle"/> and requests that semantics be collected.</summary>
     /// <remarks>
     /// Flutter's <c>SemanticsBinding.ensureSemantics</c>. Semantics stay enabled until every handle
@@ -197,6 +278,18 @@ public sealed class SemanticsBinding
             {
                 listener(action);
             }
+        }
+    }
+
+    private void InvokeHandleAccessibilityFeaturesChanged()
+    {
+        if (AccessibilityFeaturesChangedOverride is { } handler)
+        {
+            handler();
+        }
+        else
+        {
+            HandleAccessibilityFeaturesChanged();
         }
     }
 

@@ -8,6 +8,38 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Material date pickers are strict ports of date_picker/calendar_date_picker/date_picker_theme/date.dart.
+- Breaking: `DatePickerDialog`/`DateRangePickerDialog` restore their state; `showDatePicker`/range take `anchorPoint`.
+- Breaking: picker dialogs take `keyboardType`, `TransitionBuilder`, `Icon?` switch icons; `Navigator.pop` closes them.
+- Breaking: date checks are debug-only asserts (faulted `Show*` tasks); picker constructors no longer normalize.
+- Breaking: `CalendarDatePicker` keys via Shortcuts/Actions, `HapticFeedback.vibrate`, `sendAnnouncement`, `Ink` days.
+- Breaking: C#-only `CalendarDay*`/`CalendarYear`/`DateRangeHighlightPainter` and `YearPicker.InitialDate` are gone.
+- Breaking: range picker is Dart's Scaffold/AppBar dialog over a centred `CustomScrollView`; input uses `TextField`s.
+- Breaking: `DatePickerThemeData` is a class (Dart `==`, diagnostics, lazy M2/M3 defaults, widget-or-data input theme).
+- Breaking: `DateTimeRange<T>` is a sealed class with Dart's `==`/`toString`; `CalendarDelegate` defaults are virtual.
+- Breaking: `SelectableDayPredicate` lives in `Plumix.Widgets` (widgets/date.dart); input field takes `keyboardType`.
+- Breaking: `TextField` no longer passes its label/hint as `EditableText.semanticsLabel` (text_field.dart).
+- `InputDecorator`'s border painter is the `foregroundPainter`; `_HelperError` adds Dart's semantics/live region.
+- Breaking: `EditableText` drops its C#-only `Semantics` wrapper and `semanticsLabel`; `RenderEditable` owns the node.
+- Breaking: `TextField` wraps Dart's `IgnorePointer`/`AnimatedBuilder`/`Semantics`; disabled fields are read-only.
+- Breaking: `AppBar` always clamps its title's text scale and adds the primary `SafeArea`, as app_bar.dart does.
+- `FrameworkDartTester` resets the scheduler's lifecycle state per test and evaluates `androidTapTargetGuideline`.
+- Breaking: `FormState.validate` announces the first error (iOS after 1 s) and needs a `View` ancestor (form.dart).
+- Breaking: dart:ui `AccessibilityFeatures` replaces the record struct; `SemanticsBinding` owns it (binding.dart).
+- Breaking: `MediaQueryData.fromView` reads accessibility flags from the dispatcher; `supportsAnnounce` defaults on.
+- Breaking: `AnimationController.DisableAnimations` is replaced by `SemanticsDebug.DebugSemanticsDisableAnimations`.
+- Breaking: `SemanticsService.SendAnnouncement(FlutterView, ..., Assertiveness)` sends `announce` and returns a Task.
+- Breaking: `MediaQuery.WithClampedTextScaling(child, minScaleFactor, maxScaleFactor)` builds a Builder, as in Dart.
+- `MediaQuery.MaybeSupportsAnnounceOf`; `supportsAnnounceOf` depends only on its own aspect (media_query.dart).
+- `RestorableRouteFuture<T>` (navigator.dart); `WidgetsApp` gives its `Navigator` Dart's `'nav'` restoration scope.
+- Breaking: `MediaQueryData.RemoveDisplayFeatures` keeps overlapping features and the full size (media_query.dart).
+- `NavigatorState` force-disposes pending entries and removes overlay entries first, as Dart does (navigator.dart).
+- Modal barrier colour drives `ColorTween.chain(CurveTween(barrierCurve))` as in routes.dart.
+- `WidgetStatesController.update` mutates the current value; `BorderSide.toPaint` strokes `CircleBorder` (borders).
+- Sliver adaptor drops children no longer kept alive inside layout callbacks, and checks `itemExtent` as Dart does.
+- `FrameworkDartTester` gains flutter_test's finders, semantics matchers, announcements, restoration, view, keys.
+- Date picker demo adds calendar-only/input-only dialogs and a restorable picker route (both samples).
+- date_picker, date_range_picker, calendar_date_picker, date_picker_theme and input_date_picker_form_field tests ported.
 - `PlatformViewsService`/`PlatformViewsRegistry` and every Android/iOS/macOS view controller (platform_views.dart).
 - `AndroidMotionEvent` conversion with Dart's pointer-id reuse, batching flags and `touch` message layout.
 - `RenderAndroidView`, `RenderUiKitView`/`RenderAppKitView`, `PlatformViewRenderBox` (rendering/platform_view.dart).

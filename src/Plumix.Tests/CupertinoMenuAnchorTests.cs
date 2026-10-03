@@ -25,12 +25,12 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         GestureBinding.Instance.ResetForTests();
         Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        WidgetsBinding.Instance.HandleAccessibilityFeaturesChanged(default);
+        TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
     }
 
     public void Dispose()
     {
-        WidgetsBinding.Instance.HandleAccessibilityFeaturesChanged(default);
+        TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
     }
@@ -325,8 +325,8 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         Assert.False(controller.IsOpen);
         Assert.Equal(AnimationStatus.Dismissed, statuses[^1]);
 
-        WidgetsBinding.Instance.HandleAccessibilityFeaturesChanged(
-            new AccessibilityFeatures(DisableAnimations: true));
+        TestPlatformDispatcher.Instance.AccessibilityFeaturesTestValue =
+            new FakeAccessibilityFeatures(disableAnimations: true);
         harness.Pump(ViewSize);
         controller.Open();
         harness.Pump(ViewSize);
@@ -605,8 +605,8 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     [Fact]
     public void ReduceMotion_PinsTheScaleAtOneWhileTheFadeStillRuns()
     {
-        WidgetsBinding.Instance.HandleAccessibilityFeaturesChanged(
-            new AccessibilityFeatures(ReduceMotion: true));
+        TestPlatformDispatcher.Instance.AccessibilityFeaturesTestValue =
+            new FakeAccessibilityFeatures(reduceMotion: true);
         var controller = new MenuController();
         using var harness = new CupertinoThemeTestHarness(
             BuildAnchor(controller, [new CupertinoMenuItem(child: new Text("Item"))]));

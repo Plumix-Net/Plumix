@@ -5,7 +5,8 @@ using Plumix.Widgets;
 namespace Plumix.UI;
 
 // Dart parity source (reference):
-// flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart (frame + view-focus + launch-route subset, adapted)
+// flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
+// (frame + view-focus + launch-route + semantics/accessibility subset, adapted)
 
 /// <summary>
 /// The framework's side of the platform: the engine-level requests the framework can make of a
@@ -155,6 +156,73 @@ public sealed class PlatformDispatcher
         SemanticsEnabled = enabled;
         OnSemanticsEnabledChanged?.Invoke();
     }
+
+    private AccessibilityFeatures _accessibilityFeatures = new(0);
+    private AccessibilityFeatures? _accessibilityFeaturesTestValue;
+
+    /// <summary>Additional accessibility features that may be enabled by the platform.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.accessibilityFeatures</c>. The engine owns the value; a Plumix
+    /// host reports it through <see cref="UpdateAccessibilityFeatures"/>. Before any report every
+    /// flag is clear, so the inverted ones (<see cref="AccessibilityFeatures.SupportsAnnounce"/>,
+    /// <see cref="AccessibilityFeatures.AutoPlayAnimatedImages"/>,
+    /// <see cref="AccessibilityFeatures.AutoPlayVideos"/>) read <see langword="true"/>.
+    /// </remarks>
+    public AccessibilityFeatures AccessibilityFeatures => _accessibilityFeaturesTestValue ?? _accessibilityFeatures;
+
+    /// <summary>A callback invoked when the value of <see cref="AccessibilityFeatures"/> changes.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onAccessibilityFeaturesChanged</c>; owned by
+    /// <c>SemanticsBinding</c>.
+    /// </remarks>
+    public Action? OnAccessibilityFeaturesChanged { get; set; }
+
+    /// <summary>
+    /// Records the platform's accessibility feature bitfield, as the engine does, and invokes
+    /// <see cref="OnAccessibilityFeaturesChanged"/> when it changed.
+    /// </summary>
+    /// <remarks>
+    /// The engine-side <c>_updateAccessibilityFeatures(int values)</c>; hosts call it. The bits follow
+    /// the embedder's <c>FlutterAccessibilityFeature</c> layout, by bit number: 0 accessible
+    /// navigation, 1 invert colors, 2 disable animations, 3 bold text, 4 reduce motion, 5 high
+    /// contrast, 6 on/off switch labels, 7 no announce, 8 no auto-play animated images, 9 no auto-play
+    /// videos, 10 deterministic cursor.
+    /// </remarks>
+    public void UpdateAccessibilityFeatures(int values)
+    {
+        var newFeatures = new AccessibilityFeatures(values);
+        if (newFeatures == _accessibilityFeatures)
+        {
+            return;
+        }
+
+        _accessibilityFeatures = newFeatures;
+        OnAccessibilityFeaturesChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// flutter_test's <c>TestPlatformDispatcher.accessibilityFeaturesTestValue</c> setter (a value) and
+    /// <c>clearAccessibilityFeaturesTestValue</c> (<see langword="null"/>): both invoke
+    /// <see cref="OnAccessibilityFeaturesChanged"/>.
+    /// </summary>
+    /// <remarks>
+    /// flutter_test wraps the dispatcher in a <c>TestPlatformDispatcher</c> that every view reports
+    /// as its <c>platformDispatcher</c>. Plumix's views all report <see cref="Instance"/>, so the
+    /// test value lives here, behind an internal entry point the test harness uses.
+    /// </remarks>
+    internal void SetAccessibilityFeaturesTestValue(AccessibilityFeatures? value)
+    {
+        _accessibilityFeaturesTestValue = value;
+        OnAccessibilityFeaturesChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// The bitfield last passed to <see cref="UpdateAccessibilityFeatures"/>, ignoring any test value.
+    /// </summary>
+    internal int ReportedAccessibilityFeatures => _accessibilityFeatures.Index;
+
+    /// <summary>Whether a test value currently replaces <see cref="AccessibilityFeatures"/>.</summary>
+    internal bool HasAccessibilityFeaturesTestValue => _accessibilityFeaturesTestValue is not null;
 
     /// <summary>Whether the user has requested that obscured text fields briefly show the most
     /// recently typed character.</summary>

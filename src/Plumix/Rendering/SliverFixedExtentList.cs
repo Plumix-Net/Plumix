@@ -194,7 +194,9 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         double scrollExtent = Geometry!.ScrollExtent;
         double count = scrollExtent / itemExtent;
         double diff = Math.Abs(Math.Round(count, MidpointRounding.AwayFromZero) - count);
-        if (diff * itemExtent <= Constants.PrecisionErrorTolerance || diff <= Constants.PrecisionErrorTolerance)
+        // Dart's `if (diff * itemExtent > tolerance && diff > tolerance) throw`: a NaN ratio (a zero
+        // itemExtent at zero area) compares false and does not throw.
+        if (!(diff * itemExtent > Constants.PrecisionErrorTolerance && diff > Constants.PrecisionErrorTolerance))
         {
             return;
         }

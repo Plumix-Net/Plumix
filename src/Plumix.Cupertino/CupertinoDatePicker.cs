@@ -15,8 +15,6 @@ public delegate Widget? SelectionOverlayBuilder(
     int columnCount,
     int selectedIndex);
 
-public delegate bool SelectableDayPredicate(DateTime day);
-
 public enum CupertinoDatePickerMode
 {
     Time,

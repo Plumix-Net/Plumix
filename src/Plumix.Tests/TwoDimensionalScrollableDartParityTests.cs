@@ -275,7 +275,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
             tester.PumpWidget(app);
             tester.PumpAndSettle();
 
-            RestoreScrollAndVerify(tester, app);
+            RestoreScrollAndVerify(tester);
         });
     }
 
@@ -1431,21 +1431,10 @@ public sealed class TwoDimensionalScrollableDartParityTests
     /// <summary>Runs <paramref name="body"/> as one <c>TargetPlatformVariant</c> case.</summary>
     private static void RunVariant(TargetPlatform platform, Action<FrameworkDartTester> body)
     {
-        RestorationManager previousManager = RestorationManager.Instance;
-        PlatformDefaults.DebugTargetPlatformOverride = platform;
-        try
-        {
-            // flutter_test's binding owns a TestRestorationManager for every test.
-            using var manager = new FlutterTestRestorationManager();
-            RestorationManager.Instance = manager;
-            using FrameworkDartTester tester = CreateTester();
-            body(tester);
-        }
-        finally
-        {
-            RestorationManager.Instance = previousManager;
-            PlatformDefaults.DebugTargetPlatformOverride = null;
-        }
+        // flutter_test's binding owns a TestRestorationManager for every test; so does the tester.
+        using IDisposable variant = TargetPlatformVariant.Override(platform);
+        using FrameworkDartTester tester = CreateTester();
+        body(tester);
     }
 
     /// <summary>Dart's <c>tester.tapAt</c>.</summary>
@@ -1502,64 +1491,26 @@ public sealed class TwoDimensionalScrollableDartParityTests
     }
 
     // two_dimensional_viewport_test.dart: restoreScrollAndVerify.
-    private static void RestoreScrollAndVerify(FrameworkDartTester tester, Widget app)
+    private static void RestoreScrollAndVerify(FrameworkDartTester tester)
     {
         TwoDimensionalScrollableState FindScrollable() => tester.State<TwoDimensionalScrollableState>();
-        var manager = (FlutterTestRestorationManager)RestorationManager.Instance;
 
         FindScrollable().HorizontalScrollable.Position.JumpTo(100);
         FindScrollable().VerticalScrollable.Position.JumpTo(100);
         tester.Pump();
-        RestartAndRestore(tester, manager, app);
+        tester.RestartAndRestore();
 
         Assert.Equal(100.0, FindScrollable().HorizontalScrollable.Position.Pixels);
         Assert.Equal(100.0, FindScrollable().VerticalScrollable.Position.Pixels);
 
-        TestRestorationData data = GetRestorationData(manager);
+        TestRestorationData data = tester.GetRestorationData();
         FindScrollable().HorizontalScrollable.Position.JumpTo(0);
         FindScrollable().VerticalScrollable.Position.JumpTo(0);
         tester.Pump();
-        RestoreFrom(tester, manager, data);
+        tester.RestoreFrom(data);
 
         Assert.Equal(100.0, FindScrollable().HorizontalScrollable.Position.Pixels);
         Assert.Equal(100.0, FindScrollable().VerticalScrollable.Position.Pixels);
-    }
-
-    /// <summary>
-    /// flutter_test's <c>WidgetTester.restartAndRestore</c>: tears the tree down, feeds the collected
-    /// data back to the manager and mounts the same root widget again.
-    /// </summary>
-    private static void RestartAndRestore(
-        FrameworkDartTester tester,
-        FlutterTestRestorationManager manager,
-        Widget rootWidget)
-    {
-        Assert.True(
-            manager.DebugRootBucketAccessed,
-            "The current widget tree did not inject the root bucket of the RestorationManager and "
-            + "therefore no restoration data has been collected to restore from. Did you forget to wrap "
-            + "your widget tree in a RootRestorationScope?");
-        TestRestorationData restorationData = manager.RestorationData;
-        tester.PumpWidget(new Container(key: new UniqueKey()));
-        manager.RestoreFrom(restorationData);
-        tester.PumpWidget(rootWidget);
-    }
-
-    /// <summary>flutter_test's <c>WidgetTester.getRestorationData</c>.</summary>
-    private static TestRestorationData GetRestorationData(FlutterTestRestorationManager manager)
-    {
-        Assert.True(manager.DebugRootBucketAccessed);
-        return manager.RestorationData;
-    }
-
-    /// <summary>flutter_test's <c>WidgetTester.restoreFrom</c>.</summary>
-    private static void RestoreFrom(
-        FrameworkDartTester tester,
-        FlutterTestRestorationManager manager,
-        TestRestorationData data)
-    {
-        manager.RestoreFrom(data);
-        tester.Pump();
     }
 
     private static void DragHorizontallyWithoutVerticalContent(DiagonalDragBehavior diagonalDragBehavior)
@@ -1630,58 +1581,6 @@ public sealed class TwoDimensionalScrollableDartParityTests
         tester.PumpAndSettle();
         Assert.True(verticalController.Position.Pixels > 840.0);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
-    }
-
-    /// <summary>flutter_test's <c>TestRestorationData</c>: an opaque snapshot of the encoded data.</summary>
-    private sealed class TestRestorationData
-    {
-        public static readonly TestRestorationData Empty = new(null);
-
-        public TestRestorationData(byte[]? binary)
-        {
-            Binary = binary;
-        }
-
-        public byte[]? Binary { get; }
-    }
-
-    /// <summary>
-    /// flutter_test's <c>TestRestorationManager</c>: restoration is enabled from the start (with empty
-    /// data) so the root bucket is always available synchronously, and whatever the framework sends to
-    /// the engine becomes the data the next <see cref="RestoreFrom"/> can hand back.
-    /// </summary>
-    private sealed class FlutterTestRestorationManager : RestorationManager
-    {
-        public FlutterTestRestorationManager()
-        {
-            RestorationData = TestRestorationData.Empty;
-            RestoreFrom(TestRestorationData.Empty);
-        }
-
-        public TestRestorationData RestorationData { get; private set; }
-
-        public bool DebugRootBucketAccessed { get; private set; }
-
-        public override void GetRootBucket(Action<RestorationBucket?> callback)
-        {
-            DebugRootBucketAccessed = true;
-            base.GetRootBucket(callback);
-        }
-
-        public void RestoreFrom(TestRestorationData data)
-        {
-            RestorationData = data;
-            HandleRestorationUpdateFromEngine(enabled: true, data: data.Binary);
-        }
-
-        protected override void InitChannels()
-        {
-        }
-
-        protected override void SendToEngine(byte[] encodedData)
-        {
-            RestorationData = new TestRestorationData(encodedData);
-        }
     }
 
     /// <summary>

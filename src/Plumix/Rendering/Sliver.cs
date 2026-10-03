@@ -3182,12 +3182,22 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
                 // Ask the child manager to remove the children that are no longer being kept alive.
                 // This mutates the bucket, so the list has to be prepared ahead of time.
-                foreach (RenderBox keepAliveChild in _keepAliveBucket.Values
-                             .Where(static child =>
-                                 !((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive)
-                             .ToArray())
+                RenderBox[] noLongerKeptAlive = _keepAliveBucket.Values
+                    .Where(static child => !((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive)
+                    .ToArray();
+                if (noLongerKeptAlive.Length > 0)
                 {
-                    _childManager?.RemoveChild(keepAliveChild);
+                    // Dart runs this inside collectGarbage's `invokeLayoutCallback`: removing the child
+                    // drops it from this sliver, which re-dirties it while it is being laid out.
+                    InvokeLayoutCallback<SliverConstraints>(
+                        _ =>
+                        {
+                            foreach (RenderBox keepAliveChild in noLongerKeptAlive)
+                            {
+                                _childManager?.RemoveChild(keepAliveChild);
+                            }
+                        },
+                        Constraints);
                 }
 
                 Debug.Assert(_keepAliveBucket.Values.All(static child =>

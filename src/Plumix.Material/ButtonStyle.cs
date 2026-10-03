@@ -187,6 +187,15 @@ public sealed record ButtonStyle(
             ForegroundBuilder: t < 0.5 ? a?.ForegroundBuilder : b?.ForegroundBuilder);
     }
 
+    /// <summary>Dart's <c>Diagnosticable.toString</c>.</summary>
+    public override string ToString()
+    {
+        IDiagnosticable self = this;
+        return Constants.KDebugMode
+            ? self.ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, DiagnosticLevel.Info)
+            : self.ToStringShort();
+    }
+
     public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         ArgumentNullException.ThrowIfNull(properties);

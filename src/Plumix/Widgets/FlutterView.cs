@@ -60,6 +60,13 @@ public sealed class FlutterView
     /// <summary>The platform identifier for this view.</summary>
     public int ViewId { get; private set; }
 
+    /// <summary>The platform dispatcher that this view is registered with.</summary>
+    /// <remarks>
+    /// dart:ui's <c>FlutterView.platformDispatcher</c>. The engine creates every view through the one
+    /// dispatcher, so this is always <see cref="UI.PlatformDispatcher.Instance"/>.
+    /// </remarks>
+    public PlatformDispatcher PlatformDispatcher => PlatformDispatcher.Instance;
+
     /// <summary>
     /// The parts of the view obscured by system UI that content should avoid, in physical pixels.
     /// </summary>

@@ -38,6 +38,29 @@ public sealed class WidgetStateTests
         Assert.Equal(2, controller.Value.Count);
     }
 
+    // Dart's `update` mutates `value`, so it acts on a set assigned through the setter (the date
+    // range picker's `_DayItem` assigns its states in build, then `InkResponse` adds `hovered`).
+    [Fact]
+    public void StatesController_UpdateActsOnTheAssignedValue()
+    {
+        var controller = new WidgetStatesController();
+        int notifications = 0;
+        controller.AddListener(() => notifications++);
+
+        var assigned = new HashSet<WidgetState> { WidgetState.Selected };
+        controller.Value = assigned;
+        Assert.Equal(1, notifications);
+
+        controller.Update(WidgetState.Hovered, add: true);
+        Assert.Equal(2, notifications);
+        Assert.Same(assigned, controller.Value);
+        Assert.Equal(new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered }, controller.Value);
+
+        controller.Update(WidgetState.Selected, add: false);
+        Assert.Equal(3, notifications);
+        Assert.Equal(new HashSet<WidgetState> { WidgetState.Hovered }, controller.Value);
+    }
+
     [Fact]
     public void FromMap_ReturnsTheFirstSatisfiedEntryInDeclarationOrder()
     {

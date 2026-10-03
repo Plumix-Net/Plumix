@@ -1,6 +1,7 @@
 using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -9,8 +10,112 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/calendar_date_picker.dart
 
-public sealed class CalendarDatePicker : StatefulWidget
+/// <summary>Dart's file-level constants of <c>calendar_date_picker.dart</c>.</summary>
+file static class Consts
 {
+    public static readonly TimeSpan MonthScrollDuration = TimeSpan.FromMilliseconds(200);
+
+    // Current M2 implementation is not compliant with the M2 specification.
+    // Instead of a 42 pixels row height it should be 40 with a 2 pixels inner padding.
+    // See: https://m2.material.io/components/date-pickers#specs.
+    public const double DayPickerRowHeightM2 = 42.0;
+
+    // For M3, row height is 48 pxiels with 4 pixels inner padding.
+    // See: https://m3.material.io/components/date-pickers/specs#2d53890e-a08f-4c63-a0d9-abd9e95b4245.
+    public const double DayPickerRowHeightM3 = 48.0;
+
+    public const int MaxDayPickerRowCount = 6; // A 31 day month that starts on Saturday.
+
+    // One extra row for the day-of-week header.
+    public const double MaxDayPickerHeightM2 = DayPickerRowHeightM2 * (MaxDayPickerRowCount + 1);
+    public const double MaxDayPickerHeightM3 = DayPickerRowHeightM3 * (MaxDayPickerRowCount + 1);
+
+    public const double MonthPickerHorizontalPaddingPortraitM3 = 12.0;
+    public const double MonthPickerHorizontalPaddingOther = 8.0;
+
+    public const int YearPickerColumnCount = 3;
+    public const double YearPickerPadding = 16.0;
+    public const double YearPickerRowHeight = 52.0;
+    public const double YearPickerRowSpacing = 8.0;
+
+    public const double SubHeaderHeight = 52.0;
+    public const double MonthNavButtonsWidth = 108.0;
+
+    // 3.0 is the maximum scale factor on mobile phones. As of 07/30/24, iOS goes up
+    // to a max of 3.0 text scale factor, and Android goes up to 2.0. This is the
+    // default used for non-range date pickers. This default is changed to a lower
+    // value at different parts of the date pickers depending on content, and device
+    // orientation.
+    public const double KMaxTextScaleFactor = 3.0;
+
+    public const double KModeToggleButtonMaxScaleFactor = 2.0;
+
+    // The max scale factor of the day picker grid. This affects the size of the
+    // individual days in calendar view. Due to them filling a majority of the modal,
+    // which covers most of the screen, there's a limit in how large they can grow.
+    // There is also less room vertically in landscape orientation.
+    public const double KDayPickerGridPortraitMaxScaleFactor = 2.0;
+    public const double KDayPickerGridLandscapeMaxScaleFactor = 1.5;
+
+    // 14 is a common font size used to compute the effective text scale.
+    public const double FontSizeToScale = 14.0;
+
+    // Dart's `DateTime.daysPerWeek` and `DateTime.january`.
+    public const int DaysPerWeek = 7;
+    public const int January = 1;
+
+    // Dart's top-level `_reportAnnouncementError`, attached to the announcement future as `.catchError`.
+    public static void ReportAnnouncementError(Task announcement) =>
+        Scheduler.RunAsync(() => ReportAnnouncementErrorAsync(announcement));
+
+    private static async Task ReportAnnouncementErrorAsync(Task announcement)
+    {
+        try
+        {
+            await announcement;
+        }
+        catch (Exception exception)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                stack: exception.StackTrace,
+                library: "material library",
+                context: new ErrorDescription("while sending semantics announcement")));
+        }
+    }
+}
+
+/// <summary>
+/// Displays a grid of days for a given month and allows the user to select a date.
+/// </summary>
+/// <remarks>
+/// Days are arranged in a rectangular grid with one column for each day of the week. Controls are
+/// provided to change the year and month that the grid is showing.
+/// <para>
+/// The calendar picker widget is rarely used directly. Instead, consider using
+/// <c>showDatePicker</c>, which will create a dialog that uses this as well as provides a text entry
+/// option.
+/// </para>
+/// </remarks>
+public class CalendarDatePicker : StatefulWidget
+{
+    /// <summary>Creates a calendar date picker.</summary>
+    /// <remarks>
+    /// It will display a grid of days for the <paramref name="initialDate"/>'s month, or, if that is
+    /// null, the <paramref name="currentDate"/>'s month. The day indicated by
+    /// <paramref name="initialDate"/> will be selected if it is not null.
+    /// <para>
+    /// The <paramref name="lastDate"/> must be after or equal to <paramref name="firstDate"/>. The
+    /// <paramref name="initialDate"/>, if provided, must be between <paramref name="firstDate"/> and
+    /// <paramref name="lastDate"/> or equal to one of them. If <paramref name="selectableDayPredicate"/>
+    /// and <paramref name="initialDate"/> are both non-null, <paramref name="selectableDayPredicate"/>
+    /// must return <c>true</c> for the <paramref name="initialDate"/>.
+    /// </para>
+    /// <para>
+    /// The <paramref name="calendarDelegate"/> controls date interpretation, formatting, and navigation
+    /// within the picker. Defaults to <see cref="GregorianCalendarDelegate"/>.
+    /// </para>
+    /// </remarks>
     public CalendarDatePicker(
         DateTime? initialDate,
         DateTime firstDate,
@@ -24,688 +129,1352 @@ public sealed class CalendarDatePicker : StatefulWidget
         Key? key = null) : base(key)
     {
         CalendarDelegate = calendarDelegate ?? GregorianCalendarDelegate.Instance;
-        InitialDate = initialDate.HasValue ? CalendarDelegate.DateOnly(initialDate.Value) : null;
+        InitialDate = initialDate == null ? null : CalendarDelegate.DateOnly(initialDate.Value);
         FirstDate = CalendarDelegate.DateOnly(firstDate);
         LastDate = CalendarDelegate.DateOnly(lastDate);
         CurrentDate = CalendarDelegate.DateOnly(currentDate ?? CalendarDelegate.Now());
-        OnDateChanged = onDateChanged ?? throw new ArgumentNullException(nameof(onDateChanged));
+        OnDateChanged = onDateChanged;
         OnDisplayedMonthChanged = onDisplayedMonthChanged;
         InitialCalendarMode = initialCalendarMode;
         SelectableDayPredicate = selectableDayPredicate;
-        ValidateDates(InitialDate, FirstDate, LastDate, selectableDayPredicate);
+
+        DebugAssertions.Assert(
+            !(LastDate < FirstDate),
+            $"lastDate {DateUtils.DartToString(LastDate)} must be on or after firstDate "
+            + $"{DateUtils.DartToString(FirstDate)}.");
+        DebugAssertions.Assert(
+            InitialDate == null || !(InitialDate.Value < FirstDate),
+            $"initialDate {Describe(InitialDate)} must be on or after firstDate "
+            + $"{DateUtils.DartToString(FirstDate)}.");
+        DebugAssertions.Assert(
+            InitialDate == null || !(InitialDate.Value > LastDate),
+            $"initialDate {Describe(InitialDate)} must be on or before lastDate "
+            + $"{DateUtils.DartToString(LastDate)}.");
+        DebugAssertions.Assert(
+            selectableDayPredicate == null
+            || InitialDate == null
+            || selectableDayPredicate(InitialDate.Value),
+            $"Provided initialDate {Describe(InitialDate)} must satisfy provided selectableDayPredicate.");
     }
 
+    /// <summary>The initially selected <see cref="DateTime"/> that the picker should display.</summary>
+    /// <remarks>
+    /// Subsequently changing this has no effect. To change the selected date, change the
+    /// <see cref="Widget.Key"/> to create a new instance of the <see cref="CalendarDatePicker"/>, and
+    /// provide that widget the new <see cref="InitialDate"/>. This will reset the widget's interactive
+    /// state.
+    /// </remarks>
     public DateTime? InitialDate { get; }
+
+    /// <summary>The earliest allowable <see cref="DateTime"/> that the user can select.</summary>
     public DateTime FirstDate { get; }
+
+    /// <summary>The latest allowable <see cref="DateTime"/> that the user can select.</summary>
     public DateTime LastDate { get; }
+
+    /// <summary>The <see cref="DateTime"/> representing today. It will be highlighted in the day grid.</summary>
     public DateTime CurrentDate { get; }
+
+    /// <summary>Called when the user selects a date in the picker.</summary>
     public Action<DateTime> OnDateChanged { get; }
+
+    /// <summary>Called when the user navigates to a new month/year in the picker.</summary>
     public Action<DateTime>? OnDisplayedMonthChanged { get; }
+
+    /// <summary>The initial display of the calendar picker.</summary>
+    /// <remarks>
+    /// Subsequently changing this has no effect. To change the calendar mode, change the
+    /// <see cref="Widget.Key"/> to create a new instance of the <see cref="CalendarDatePicker"/>, and
+    /// provide that widget a new <see cref="InitialCalendarMode"/>. This will reset the widget's
+    /// interactive state.
+    /// </remarks>
     public DatePickerMode InitialCalendarMode { get; }
+
+    /// <summary>Function to provide full control over which dates in the calendar can be selected.</summary>
     public SelectableDayPredicate? SelectableDayPredicate { get; }
+
+    /// <summary>
+    /// The calendar system the picker interprets, formats, and navigates dates with. Defaults to
+    /// <see cref="GregorianCalendarDelegate"/>.
+    /// </summary>
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
 
     public override State CreateState() => new CalendarDatePickerState();
 
-    internal static void ValidateDates(
-        DateTime? initialDate,
-        DateTime firstDate,
-        DateTime lastDate,
-        SelectableDayPredicate? predicate)
+    // Dart interpolates the nullable `this.initialDate`, i.e. `DateTime.toString` or `null`.
+    private static string Describe(DateTime? date) => date is { } value ? DateUtils.DartToString(value) : "null";
+}
+
+/// <summary>Dart's private <c>_CalendarDatePickerState</c>.</summary>
+internal sealed class CalendarDatePickerState : State<CalendarDatePicker>
+{
+    private bool _announcedInitialDate;
+    private string _announcementText = string.Empty;
+    private DatePickerMode _mode;
+    private DateTime _currentDisplayedMonthDate;
+    private DateTime? _selectedDate;
+    private readonly GlobalKey _monthPickerKey = new LabeledGlobalKey<State>(null);
+    private readonly GlobalKey _yearPickerKey = new LabeledGlobalKey<State>(null);
+    private MaterialLocalizations _localizations = null!;
+    private TextDirection _textDirection;
+
+    public override void InitState()
     {
-        if (lastDate < firstDate) throw new ArgumentException("lastDate must be on or after firstDate.", nameof(lastDate));
-        if (initialDate < firstDate) throw new ArgumentOutOfRangeException(nameof(initialDate), "initialDate must be on or after firstDate.");
-        if (initialDate > lastDate) throw new ArgumentOutOfRangeException(nameof(initialDate), "initialDate must be on or before lastDate.");
-        if (initialDate.HasValue && predicate is not null && !predicate(initialDate.Value))
+        base.InitState();
+        _mode = Widget.InitialCalendarMode;
+        DateTime currentDisplayedDate = Widget.InitialDate ?? Widget.CurrentDate;
+        _currentDisplayedMonthDate = Widget.CalendarDelegate.GetMonth(
+            currentDisplayedDate.Year,
+            currentDisplayedDate.Month);
+        if (Widget.InitialDate != null)
         {
-            throw new ArgumentException("initialDate must satisfy selectableDayPredicate.", nameof(initialDate));
+            _selectedDate = Widget.InitialDate;
         }
     }
 
-    private sealed class CalendarDatePickerState : State<CalendarDatePicker>
+    public override void DidChangeDependencies()
     {
-        private const double SubHeaderHeight = 52;
-        private DatePickerMode _mode;
-        private DateTime _displayedMonth;
-        private DateTime? _selectedDate;
-        private DateTime? _focusedDate;
-        private bool _announcedInitialDate;
-        private string _announcementText = string.Empty;
-        private AnimationController? _modeController;
-        private PageController? _pageController;
-        private FocusNode? _gridFocus;
-
-        private CalendarDatePicker CurrentWidget => (CalendarDatePicker)StateWidget;
-
-        public override void InitState()
+        base.DidChangeDependencies();
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterial(Context));
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(Context));
+        DebugAssertions.Assert(WidgetsDebug.DebugCheckHasDirectionality(Context));
+        _localizations = MaterialLocalizations.Of(Context);
+        _textDirection = Directionality.Of(Context);
+        if (!_announcedInitialDate && Widget.InitialDate != null)
         {
-            var widget = CurrentWidget;
-            _mode = widget.InitialCalendarMode;
-            _selectedDate = widget.InitialDate;
-            _focusedDate = widget.InitialDate ?? widget.CurrentDate;
-            var source = widget.InitialDate ?? widget.CurrentDate;
-            _displayedMonth = widget.CalendarDelegate.GetMonth(source.Year, source.Month);
-            _modeController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this)
-            {
-                Curve = Curves.EaseIn,
-            };
-            _modeController.SetValue(_mode == DatePickerMode.Year ? 1 : 0);
-            _modeController.Changed += HandleModeAnimationChanged;
-            _pageController = new PageController(
-                initialPage: widget.CalendarDelegate.MonthDelta(widget.FirstDate, _displayedMonth));
-            _gridFocus = new FocusNode();
-            _gridFocus.AddListener(HandleGridFocusChanged);
-        }
-
-        public override void DidChangeDependencies()
-        {
-            if (_announcedInitialDate || CurrentWidget.InitialDate is not { } initialDate) return;
+            DebugAssertions.Assert(_selectedDate != null);
             _announcedInitialDate = true;
-            var localizations = MaterialLocalizations.Of(Context);
-            string suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, initialDate)
-                ? $", {localizations.CurrentDateLabel}"
-                : string.Empty;
-            _announcementText = $"{CurrentWidget.CalendarDelegate.FormatFullDate(initialDate, localizations)}{suffix}";
+            bool isToday = Widget.CalendarDelegate.IsSameDay(Widget.CurrentDate, _selectedDate);
+            string semanticLabelSuffix = isToday ? $", {_localizations.CurrentDateLabel}" : string.Empty;
+            Announce($"{_localizations.FormatFullDate(_selectedDate!.Value)}{semanticLabelSuffix}");
         }
+    }
 
-        public override void Dispose()
+    // Auxiliary method for handling the difference between platforms
+    private void Announce(string message)
+    {
+        if (MediaQuery.MaybeSupportsAnnounceOf(Context) ?? false)
         {
-            if (_modeController is not null)
+            Consts.ReportAnnouncementError(SemanticsService.SendAnnouncement(
+                View.Of(Context),
+                message,
+                Directionality.Of(Context)));
+        }
+        else
+        {
+            // If SemanticsService.sendAnnouncement is not supported,
+            // we use live region to achieve the announcement effect instead.
+            _announcementText = message;
+        }
+    }
+
+    private void Vibrate()
+    {
+        switch (Theme.Of(Context).Platform)
+        {
+            case TargetPlatform.Android:
+            case TargetPlatform.Fuchsia:
+            case TargetPlatform.Linux:
+            case TargetPlatform.Windows:
+                _ = HapticFeedback.Vibrate();
+                break;
+            case TargetPlatform.IOS:
+            case TargetPlatform.MacOS:
+                break;
+        }
+    }
+
+    private void HandleModeChanged(DatePickerMode mode)
+    {
+        Vibrate();
+        SetState(() =>
+        {
+            _mode = mode;
+            if (_selectedDate is { } selected)
             {
-                _modeController.Changed -= HandleModeAnimationChanged;
-                _modeController.Dispose();
-                _modeController = null;
-            }
-            _pageController?.Dispose();
-            _gridFocus?.RemoveListener(HandleGridFocusChanged);
-            _gridFocus?.Dispose();
-            _pageController = null;
-            _gridFocus = null;
-
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var theme = DatePickerTheme.Of(context);
-            var defaults = DatePickerTheme.Defaults(context);
-            var titleStyle = theme.ToggleButtonTextStyle ?? defaults.ToggleButtonTextStyle!;
-            var subHeaderColor = theme.SubHeaderForegroundColor ?? defaults.SubHeaderForegroundColor;
-            var localizations = MaterialLocalizations.Of(context);
-            bool useMaterial3 = Theme.Of(context).UseMaterial3;
-            var media = MediaQuery.MaybeOf(context) ?? new MediaQueryData(Size: new Size(360, 640));
-            bool portrait = media.Size.Height >= media.Size.Width;
-            double rowHeight = useMaterial3 && portrait ? 48.0 : 42.0;
-            double textScale = Math.Clamp(media.TextScaleFactor, 0, 3);
-            double pickerHeight = SubHeaderHeight + (rowHeight * 7) + (textScale > 1.3 ? 7 * ((textScale - 1) * 8) : 0);
-
-            Widget picker = _mode == DatePickerMode.Day
-                ? BuildMonthPicker(context, rowHeight)
-                : new Padding(new Thickness(0, SubHeaderHeight, 0, 0), BuildYearPicker());
-
-            Widget title = new Semantics(
-                label: localizations.SelectYearSemanticsLabel,
-                button: true,
-                enabled: true,
-                onTap: ToggleMode,
-                container: true,
-                child: new InkWell(
-                    onTap: ToggleMode,
-                    child: new Padding(
-                        new Thickness(8, 0),
-                        new Row(
-                            mainAxisSize: MainAxisSize.Min,
-                            children:
-                            [
-                                new Flexible(
-                                    child: new DefaultTextStyle(
-                                        titleStyle.CopyWith(color: titleStyle.Color ?? subHeaderColor),
-                                        new Text(
-                                            CurrentWidget.CalendarDelegate.FormatMonthYear(_displayedMonth, localizations),
-                                            softWrap: false,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.Ellipsis))),
-                                BuildModeArrow(subHeaderColor),
-                            ]))));
-
-            var headerChildren = new List<Widget> { new Expanded(child: title) };
-            if (_mode == DatePickerMode.Day)
-            {
-                headerChildren.Add(BuildMonthNavigation(subHeaderColor));
-            }
-
-            Widget header = new SizedBox(
-                height: SubHeaderHeight,
-                child: new Padding(
-                    new Thickness(16, 0, 4, 0),
-                    new Row(children: headerChildren)));
-
-            return new SizedBox(
-                height: pickerHeight,
-                child: new Stack(
-                    children:
-                    [
-                        new Semantics(
-                            label: string.IsNullOrEmpty(_announcementText) ? null : _announcementText,
-                            container: true,
-                            explicitChildNodes: true,
-                            liveRegion: true,
-                            child: picker),
-                        header,
-                    ]));
-        }
-
-        private Widget BuildMonthPicker(BuildContext context, double rowHeight)
-        {
-            var widget = CurrentWidget;
-            Widget pages = PageView.Builder(
-                itemBuilder: (_, index) => BuildDayPicker(
-                    widget.CalendarDelegate.AddMonthsToMonthDate(widget.FirstDate, index),
-                    rowHeight),
-                itemCount: widget.CalendarDelegate.MonthDelta(widget.FirstDate, widget.LastDate) + 1,
-                controller: _pageController,
-                onPageChanged: HandleMonthPageChanged);
-            return new Padding(
-                new Thickness(0, SubHeaderHeight, 0, 0),
-                new Focus(
-                    focusNode: _gridFocus,
-                    onKeyEvent: HandleGridKey,
-                    child: pages));
-        }
-
-        private Widget BuildDayPicker(DateTime month, double rowHeight) => new CalendarDayPicker(
-            displayedMonth: month,
-            selectedDate: _selectedDate,
-            currentDate: CurrentWidget.CurrentDate,
-            firstDate: CurrentWidget.FirstDate,
-            lastDate: CurrentWidget.LastDate,
-            selectableDayPredicate: CurrentWidget.SelectableDayPredicate,
-            calendarDelegate: CurrentWidget.CalendarDelegate,
-            focusedDate: _gridFocus?.HasFocus == true ? _focusedDate : null,
-            rowHeight: rowHeight,
-            onChanged: HandleDayChanged,
-            key: new ValueKey<DateTime>(month));
-
-        private Widget BuildYearPicker() => new YearPicker(
-            currentDate: CurrentWidget.CurrentDate,
-            firstDate: CurrentWidget.FirstDate,
-            lastDate: CurrentWidget.LastDate,
-            selectedDate: _displayedMonth,
-            onChanged: HandleYearChanged,
-            calendarDelegate: CurrentWidget.CalendarDelegate);
-
-        private Widget BuildMonthNavigation(Color? color)
-        {
-            var localizations = MaterialLocalizations.Of(Context);
-            bool previousEnabled = !IsFirstMonth;
-            bool nextEnabled = !IsLastMonth;
-            return new SizedBox(
-                width: 108,
-                child: new Row(
-                    mainAxisSize: MainAxisSize.Min,
-                    children:
-                    [
-                        new Semantics(
-                            label: localizations.PreviousMonthTooltip,
-                            button: true,
-                            enabled: previousEnabled ? true : null,
-                            onTap: previousEnabled ? PreviousMonth : null,
-                            child: new Tooltip(
-                                message: previousEnabled ? localizations.PreviousMonthTooltip : string.Empty,
-                                child: new IconButton(
-                                    icon: new Icon(Icons.ChevronLeft),
-                                    color: color,
-                                    onPressed: previousEnabled ? PreviousMonth : null))),
-                        new Semantics(
-                            label: localizations.NextMonthTooltip,
-                            button: true,
-                            enabled: nextEnabled ? true : null,
-                            onTap: nextEnabled ? NextMonth : null,
-                            child: new Tooltip(
-                                message: nextEnabled ? localizations.NextMonthTooltip : string.Empty,
-                                child: new IconButton(
-                                    icon: new Icon(Icons.ChevronRight),
-                                    color: color,
-                                    onPressed: nextEnabled ? NextMonth : null))),
-                    ]));
-        }
-
-        private Widget BuildModeArrow(Color? color)
-        {
-            const double size = 24;
-            double center = size / 2;
-            double angle = Math.PI * (_modeController?.Value ?? 0);
-            Matrix4 rotation = Matrix4.TranslationValues(center, center, 0.0);
-            rotation.RotateZ(angle);
-            rotation.TranslateByDouble(-center, -center, 0, 1);
-            return new Plumix.Widgets.Transform(
-                transform: rotation,
-                child: new Icon(Icons.ArrowDropDown, size: size, color: color));
-        }
-
-        private bool IsFirstMonth => !(_displayedMonth > CurrentWidget.CalendarDelegate.GetMonth(
-            CurrentWidget.FirstDate.Year, CurrentWidget.FirstDate.Month));
-
-        private bool IsLastMonth => !(_displayedMonth < CurrentWidget.CalendarDelegate.GetMonth(
-            CurrentWidget.LastDate.Year, CurrentWidget.LastDate.Month));
-
-        private void ToggleMode()
-        {
-            _ = Feedback.ForTap(Context);
-            SetState(() =>
-            {
-                _mode = _mode == DatePickerMode.Day ? DatePickerMode.Year : DatePickerMode.Day;
-                if (_selectedDate is not { } selected) return;
-                var localizations = MaterialLocalizations.Of(Context);
-                _announcementText = _mode == DatePickerMode.Day
-                    ? CurrentWidget.CalendarDelegate.FormatMonthYear(selected, localizations)
-                    : CurrentWidget.CalendarDelegate.FormatYear(selected.Year, localizations);
-            });
-            if (_mode == DatePickerMode.Year) _modeController?.Forward();
-            else _modeController?.Reverse();
-        }
-
-        private static readonly TimeSpan MonthScrollDuration = TimeSpan.FromMilliseconds(200);
-
-        private void PreviousMonth()
-        {
-            if (!IsFirstMonth) _ = _pageController?.PreviousPage(MonthScrollDuration, Curves.Ease);
-        }
-
-        private void NextMonth()
-        {
-            if (!IsLastMonth) _ = _pageController?.NextPage(MonthScrollDuration, Curves.Ease);
-        }
-
-        /// <summary>Dart parity: <c>_MonthPickerState._showMonth</c>.</summary>
-        private void ShowMonth(DateTime month, bool jump = false)
-        {
-            int monthPage = CurrentWidget.CalendarDelegate.MonthDelta(CurrentWidget.FirstDate, month);
-            if (_pageController is not { HasClients: true } controller)
-            {
-                // The month picker is not mounted (year mode). Flutter rebuilds `_MonthPicker` with
-                // the new `initialMonth`, giving it a controller that starts on the requested page;
-                // this state owns one controller, so it is replaced instead.
-                _pageController?.Dispose();
-                _pageController = new PageController(initialPage: monthPage);
-                return;
-            }
-
-            if (jump) controller.JumpToPage(monthPage);
-            else _ = controller.AnimateToPage(monthPage, MonthScrollDuration, Curves.Ease);
-        }
-
-        private void HandleMonthPageChanged(int monthPage)
-        {
-            var monthDate = CurrentWidget.CalendarDelegate.AddMonthsToMonthDate(CurrentWidget.FirstDate, monthPage);
-            if (CurrentWidget.CalendarDelegate.IsSameMonth(_displayedMonth, monthDate)) return;
-            SetState(() =>
-            {
-                _displayedMonth = CurrentWidget.CalendarDelegate.GetMonth(monthDate.Year, monthDate.Month);
-                if (_focusedDate.HasValue
-                    && !CurrentWidget.CalendarDelegate.IsSameMonth(_focusedDate, _displayedMonth))
+                string message = mode switch
                 {
-                    _focusedDate = FocusableDayForMonth(_displayedMonth, _focusedDate.Value.Day);
-                }
-                _announcementText = CurrentWidget.CalendarDelegate.FormatMonthYear(
-                    _displayedMonth, MaterialLocalizations.Of(Context));
-            });
-            CurrentWidget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);
-        }
+                    DatePickerMode.Day => Widget.CalendarDelegate.FormatMonthYear(selected, _localizations),
+                    DatePickerMode.Year => Widget.CalendarDelegate.FormatYear(selected.Year, _localizations),
+                    _ => throw new ArgumentOutOfRangeException(nameof(mode)),
+                };
+                Announce(message);
+            }
+        });
+    }
 
-        private void HandleDayChanged(DateTime date)
+    private void HandleMonthChanged(DateTime date)
+    {
+        SetState(() =>
         {
-            _ = Feedback.ForTap(Context);
-            SetState(() =>
+            if (_currentDisplayedMonthDate.Year != date.Year
+                || _currentDisplayedMonthDate.Month != date.Month)
             {
-                _selectedDate = date;
-                _focusedDate = date;
-                var localizations = MaterialLocalizations.Of(Context);
-                string suffix = CurrentWidget.CalendarDelegate.IsSameDay(CurrentWidget.CurrentDate, date)
-                    ? $", {localizations.CurrentDateLabel}"
-                    : string.Empty;
-                _announcementText = $"{localizations.SelectedDateLabel} {CurrentWidget.CalendarDelegate.FormatFullDate(date, localizations)}{suffix}";
-            });
-            CurrentWidget.OnDateChanged(date);
-        }
+                _currentDisplayedMonthDate = Widget.CalendarDelegate.GetMonth(date.Year, date.Month);
+                Widget.OnDisplayedMonthChanged?.Invoke(_currentDisplayedMonthDate);
+            }
+        });
+    }
 
-        private void HandleYearChanged(DateTime date)
+    private void HandleYearChanged(DateTime value)
+    {
+        Vibrate();
+
+        int daysInMonth = Widget.CalendarDelegate.GetDaysInMonth(value.Year, value.Month);
+        int preferredDay = Math.Min(_selectedDate?.Day ?? 1, daysInMonth);
+        value = Widget.CalendarDelegate.GetDay(value.Year, value.Month, preferredDay);
+
+        if (value < Widget.FirstDate)
         {
-            var widget = CurrentWidget;
-            var previousMonth = _displayedMonth;
-            int days = widget.CalendarDelegate.GetDaysInMonth(date.Year, date.Month);
-            int preferredDay = Math.Min(_selectedDate?.Day ?? 1, days);
-            var value = widget.CalendarDelegate.GetDay(date.Year, date.Month, preferredDay);
-            if (value < widget.FirstDate) value = widget.FirstDate;
-            if (value > widget.LastDate) value = widget.LastDate;
-
-            SetState(() =>
-            {
-                _mode = DatePickerMode.Day;
-                _displayedMonth = widget.CalendarDelegate.GetMonth(value.Year, value.Month);
-                _focusedDate = value;
-                if (IsSelectable(value)) _selectedDate = value;
-                _announcementText = widget.CalendarDelegate.FormatMonthYear(
-                    value, MaterialLocalizations.Of(Context));
-            });
-            ShowMonth(_displayedMonth, jump: true);
-            if (!widget.CalendarDelegate.IsSameMonth(previousMonth, _displayedMonth))
-            {
-                widget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);
-            }
-            if (IsSelectable(value)) widget.OnDateChanged(value);
+            value = Widget.FirstDate;
         }
-
-        private KeyEventResult HandleGridKey(FocusNode node, KeyEvent @event)
+        else if (value > Widget.LastDate)
         {
-            if (@event is not KeyDownEvent) return KeyEventResult.Ignored;
-            var direction = Directionality.Of(Context);
-            LogicalKeyboardKey key = @event.LogicalKey;
-            int delta = 0;
-            if (key.Equals(LogicalKeyboardKey.ArrowLeft))
-            {
-                delta = direction == TextDirection.Ltr ? -1 : 1;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowRight))
-            {
-                delta = direction == TextDirection.Ltr ? 1 : -1;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowUp))
-            {
-                delta = -7;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowDown))
-            {
-                delta = 7;
-            }
-
-            if (delta != 0)
-            {
-                var start = _focusedDate ?? _selectedDate ?? CurrentWidget.CurrentDate;
-                var next = FindSelectableDate(start, delta);
-                if (next.HasValue)
-                {
-                    var previousMonth = _displayedMonth;
-                    SetState(() =>
-                    {
-                        _focusedDate = next;
-                        _displayedMonth = CurrentWidget.CalendarDelegate.GetMonth(next.Value.Year, next.Value.Month);
-                        _announcementText = CurrentWidget.CalendarDelegate.FormatFullDate(
-                            next.Value, MaterialLocalizations.Of(Context));
-                    });
-                    ShowMonth(_displayedMonth, jump: true);
-                    if (!CurrentWidget.CalendarDelegate.IsSameMonth(previousMonth, _displayedMonth))
-                    {
-                        CurrentWidget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);
-                    }
-                }
-                return KeyEventResult.Handled;
-            }
-
-            if ((@event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-    || @event.LogicalKey.Equals(LogicalKeyboardKey.Space)))
-            {
-                if (_focusedDate.HasValue && IsSelectable(_focusedDate.Value)) HandleDayChanged(_focusedDate.Value);
-                return KeyEventResult.Handled;
-            }
-            return KeyEventResult.Ignored;
+            value = Widget.LastDate;
         }
 
-        private DateTime? FindSelectableDate(DateTime start, int delta)
+        SetState(() =>
         {
-            var date = CurrentWidget.CalendarDelegate.AddDaysToDate(start, delta);
-            while (date >= CurrentWidget.FirstDate && date <= CurrentWidget.LastDate)
-            {
-                if (IsSelectable(date)) return date;
-                date = CurrentWidget.CalendarDelegate.AddDaysToDate(date, delta);
-            }
-            return null;
-        }
+            _mode = DatePickerMode.Day;
+            HandleMonthChanged(value);
 
-        private DateTime? FocusableDayForMonth(DateTime month, int preferredDay)
+            if (IsSelectable(value))
+            {
+                _selectedDate = value;
+                Widget.OnDateChanged(_selectedDate.Value);
+            }
+        });
+    }
+
+    private void HandleDayChanged(DateTime value)
+    {
+        Vibrate();
+        SetState(() =>
         {
-            int days = CurrentWidget.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
-            if (preferredDay <= days)
+            _selectedDate = value;
+            Widget.OnDateChanged(_selectedDate.Value);
+            switch (Theme.Of(Context).Platform)
             {
-                var preferred = CurrentWidget.CalendarDelegate.GetDay(month.Year, month.Month, preferredDay);
-                if (IsSelectable(preferred)) return preferred;
+                case TargetPlatform.Linux:
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Windows:
+                    bool isToday = Widget.CalendarDelegate.IsSameDay(Widget.CurrentDate, _selectedDate);
+                    string semanticLabelSuffix = isToday ? $", {_localizations.CurrentDateLabel}" : string.Empty;
+                    string fullDate = Widget.CalendarDelegate.FormatFullDate(_selectedDate.Value, _localizations);
+                    Consts.ReportAnnouncementError(SemanticsService.SendAnnouncement(
+                        View.Of(Context),
+                        $"{_localizations.SelectedDateLabel} {fullDate}{semanticLabelSuffix}",
+                        _textDirection));
+                    break;
+                case TargetPlatform.Android:
+                case TargetPlatform.IOS:
+                case TargetPlatform.Fuchsia:
+                    break;
             }
-            for (int day = 1; day <= days; day++)
-            {
-                var candidate = CurrentWidget.CalendarDelegate.GetDay(month.Year, month.Month, day);
-                if (IsSelectable(candidate)) return candidate;
-            }
-            return null;
+        });
+    }
+
+    private bool IsSelectable(DateTime date)
+    {
+        return Widget.SelectableDayPredicate?.Invoke(date) ?? true;
+    }
+
+    private Widget BuildPicker()
+    {
+        switch (_mode)
+        {
+            case DatePickerMode.Day:
+                return new MonthPicker(
+                    key: _monthPickerKey,
+                    calendarDelegate: Widget.CalendarDelegate,
+                    initialMonth: _currentDisplayedMonthDate,
+                    currentDate: Widget.CurrentDate,
+                    firstDate: Widget.FirstDate,
+                    lastDate: Widget.LastDate,
+                    selectedDate: _selectedDate,
+                    onChanged: HandleDayChanged,
+                    onDisplayedMonthChanged: HandleMonthChanged,
+                    selectableDayPredicate: Widget.SelectableDayPredicate);
+            case DatePickerMode.Year:
+                return new Padding(
+                    EdgeInsets.Only(top: Consts.SubHeaderHeight),
+                    new YearPicker(
+                        key: _yearPickerKey,
+                        calendarDelegate: Widget.CalendarDelegate,
+                        currentDate: Widget.CurrentDate,
+                        firstDate: Widget.FirstDate,
+                        lastDate: Widget.LastDate,
+                        selectedDate: _currentDisplayedMonthDate,
+                        onChanged: HandleYearChanged));
+            default:
+                throw new ArgumentOutOfRangeException(nameof(_mode));
         }
+    }
 
-        private void HandleGridFocusChanged() => SetState(() => { });
+    public override Widget Build(BuildContext context)
+    {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterial(context));
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
+        DebugAssertions.Assert(WidgetsDebug.DebugCheckHasDirectionality(context));
+        double textScaleFactor =
+            MediaQuery.TextScalerOf(context)
+                .Clamp(maxScaleFactor: Consts.KMaxTextScaleFactor)
+                .Scale(Consts.FontSizeToScale)
+            / Consts.FontSizeToScale;
 
-        private void HandleModeAnimationChanged() => SetState(() => { });
+        // Conform to M3 spec in portrait mode (landscape mode is not specified).
+        Orientation orientation = MediaQuery.OrientationOf(context);
+        double maxDayPickerHeight = Theme.Of(context).UseMaterial3 && orientation == Orientation.Portrait
+            ? Consts.MaxDayPickerHeightM3
+            : Consts.MaxDayPickerHeightM2;
 
-        private bool IsSelectable(DateTime date) =>
-            date >= CurrentWidget.FirstDate && date <= CurrentWidget.LastDate
-            && (CurrentWidget.SelectableDayPredicate?.Invoke(date) ?? true);
+        // Scale the height of the picker area up with larger text. The size of the
+        // picker has room for larger text, up until a scale factor of 1.3. After
+        // after which, we increase the height to add room for content to continue
+        // to scale the text size.
+        double scaledMaxDayPickerHeight = textScaleFactor > 1.3
+            ? maxDayPickerHeight + ((Consts.MaxDayPickerRowCount + 1) * ((textScaleFactor - 1) * 8))
+            : maxDayPickerHeight;
+        var picker = new SizedBox(
+            height: Consts.SubHeaderHeight + scaledMaxDayPickerHeight,
+            child: BuildPicker());
+        return new Stack(
+            children:
+            [
+                (MediaQuery.MaybeSupportsAnnounceOf(context) ?? false)
+                    ? picker
+                    : new Semantics(
+                        container: true,
+                        liveRegion: true,
+                        accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockNode,
+                        label: _announcementText,
+                        child: picker),
+
+                // Put the mode toggle button on top so that it won't be covered up by the _MonthPicker
+                MediaQuery.WithClampedTextScaling(
+                    maxScaleFactor: Consts.KModeToggleButtonMaxScaleFactor,
+                    child: new DatePickerModeToggleButton(
+                        mode: _mode,
+                        title: Widget.CalendarDelegate.FormatMonthYear(
+                            _currentDisplayedMonthDate,
+                            _localizations),
+                        onTitlePressed: () => HandleModeChanged(_mode switch
+                        {
+                            DatePickerMode.Day => DatePickerMode.Year,
+                            DatePickerMode.Year => DatePickerMode.Day,
+                            _ => throw new ArgumentOutOfRangeException(nameof(_mode)),
+                        }))),
+            ]);
     }
 }
 
-internal sealed class CalendarDayPicker : StatelessWidget
+/// <summary>
+/// A button that used to toggle the <see cref="DatePickerMode"/> for a date picker.
+/// </summary>
+/// <remarks>
+/// Dart's private <c>_DatePickerModeToggleButton</c>. This appears above the calendar grid and allows
+/// the user to toggle the <see cref="DatePickerMode"/> to display either the calendar view or the year
+/// list.
+/// </remarks>
+internal sealed class DatePickerModeToggleButton : StatefulWidget
 {
-    public CalendarDayPicker(
-        DateTime displayedMonth,
+    public DatePickerModeToggleButton(DatePickerMode mode, string title, Action onTitlePressed)
+    {
+        Mode = mode;
+        Title = title;
+        OnTitlePressed = onTitlePressed;
+    }
+
+    /// <summary>The current display of the calendar picker.</summary>
+    public DatePickerMode Mode { get; }
+
+    /// <summary>The text that displays the current month/year being viewed.</summary>
+    public string Title { get; }
+
+    /// <summary>The callback when the title is pressed.</summary>
+    public Action OnTitlePressed { get; }
+
+    public override State CreateState() => new DatePickerModeToggleButtonState();
+}
+
+/// <summary>Dart's private <c>_DatePickerModeToggleButtonState</c>.</summary>
+/// <remarks>Dart mixes in <c>SingleTickerProviderStateMixin</c>; every Plumix <see cref="State"/> is
+/// already a ticker provider.</remarks>
+internal sealed class DatePickerModeToggleButtonState : State<DatePickerModeToggleButton>
+{
+    private AnimationController _controller = null!;
+
+    public override void InitState()
+    {
+        base.InitState();
+        _controller = new AnimationController(
+            value: Widget.Mode == DatePickerMode.Year ? 0.5 : 0,
+            upperBound: 0.5,
+            duration: TimeSpan.FromMilliseconds(200),
+            vsync: this);
+    }
+
+    public override void DidUpdateWidget(DatePickerModeToggleButton oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        if (oldWidget.Mode == Widget.Mode)
+        {
+            return;
+        }
+
+        if (Widget.Mode == DatePickerMode.Year)
+        {
+            _ = _controller.Forward();
+        }
+        else
+        {
+            _ = _controller.Reverse();
+        }
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        DatePickerThemeData datePickerTheme = DatePickerTheme.Of(context);
+        DatePickerThemeData defaults = DatePickerTheme.Defaults(context);
+        TextStyle? buttonTextStyle = datePickerTheme.ToggleButtonTextStyle ?? defaults.ToggleButtonTextStyle;
+        Color? subHeaderForegroundColor =
+            datePickerTheme.SubHeaderForegroundColor ?? defaults.SubHeaderForegroundColor;
+        Color? buttonTextColor = datePickerTheme.ToggleButtonTextStyle?.Color
+            ?? datePickerTheme.SubHeaderForegroundColor
+            ?? defaults.ToggleButtonTextStyle?.Color;
+
+        return new SizedBox(
+            height: Consts.SubHeaderHeight,
+            child: new Padding(
+                EdgeInsetsDirectional.Only(start: 16, end: 4),
+                new Row(
+                    children:
+                    [
+                        new Flexible(
+                            child: new Semantics(
+                                label: MaterialLocalizations.Of(context).SelectYearSemanticsLabel,
+                                button: true,
+                                container: true,
+                                child: new SizedBox(
+                                    height: Consts.SubHeaderHeight,
+                                    child: new InkWell(
+                                        onTap: Widget.OnTitlePressed,
+                                        child: new Padding(
+                                            EdgeInsets.Symmetric(horizontal: 8),
+                                            new Row(
+                                                children:
+                                                [
+                                                    new Flexible(
+                                                        child: new Text(
+                                                            Widget.Title,
+                                                            overflow: TextOverflow.Ellipsis,
+                                                            style: buttonTextStyle?.Apply(color: buttonTextColor))),
+                                                    new RotationTransition(
+                                                        turns: _controller,
+                                                        child: new Icon(
+                                                            Icons.ArrowDropDown,
+                                                            color: subHeaderForegroundColor)),
+                                                ])))))),
+                        .. Widget.Mode == DatePickerMode.Day
+                            // Give space for the prev/next month buttons that are underneath this row
+                            ? new Widget[] { new SizedBox(width: Consts.MonthNavButtonsWidth) }
+                            : [],
+                    ])));
+    }
+
+    public override void Dispose()
+    {
+        _controller.Dispose();
+        base.Dispose();
+    }
+}
+
+/// <summary>Dart's private <c>_MonthPicker</c>.</summary>
+internal sealed class MonthPicker : StatefulWidget
+{
+    /// <summary>Creates a month picker.</summary>
+    public MonthPicker(
+        DateTime initialMonth,
         DateTime currentDate,
         DateTime firstDate,
         DateTime lastDate,
         DateTime? selectedDate,
         Action<DateTime> onChanged,
+        Action<DateTime> onDisplayedMonthChanged,
         CalendarDelegate<DateTime> calendarDelegate,
-        DateTime? focusedDate,
-        double rowHeight,
         SelectableDayPredicate? selectableDayPredicate = null,
         Key? key = null) : base(key)
     {
-        DisplayedMonth = displayedMonth;
+        DebugAssertions.Assert(!(firstDate > lastDate));
+        DebugAssertions.Assert(selectedDate == null || !(selectedDate.Value < firstDate));
+        DebugAssertions.Assert(selectedDate == null || !(selectedDate.Value > lastDate));
+        InitialMonth = initialMonth;
         CurrentDate = currentDate;
         FirstDate = firstDate;
         LastDate = lastDate;
         SelectedDate = selectedDate;
         OnChanged = onChanged;
+        OnDisplayedMonthChanged = onDisplayedMonthChanged;
         CalendarDelegate = calendarDelegate;
-        FocusedDate = focusedDate;
-        RowHeight = rowHeight;
         SelectableDayPredicate = selectableDayPredicate;
     }
 
-    public DateTime DisplayedMonth { get; }
+    /// <summary>The initial month to display.</summary>
+    /// <remarks>
+    /// Subsequently changing this has no effect. To change the selected month, change the
+    /// <see cref="Widget.Key"/> to create a new instance of the <see cref="MonthPicker"/>, and provide
+    /// that widget the new <see cref="InitialMonth"/>. This will reset the widget's interactive state.
+    /// </remarks>
+    public DateTime InitialMonth { get; }
+
+    /// <summary>The current date.</summary>
+    /// <remarks>This date is subtly highlighted in the picker.</remarks>
     public DateTime CurrentDate { get; }
+
+    /// <summary>The earliest date the user is permitted to pick.</summary>
+    /// <remarks>This date must be on or before the <see cref="LastDate"/>.</remarks>
     public DateTime FirstDate { get; }
+
+    /// <summary>The latest date the user is permitted to pick.</summary>
+    /// <remarks>This date must be on or after the <see cref="FirstDate"/>.</remarks>
     public DateTime LastDate { get; }
+
+    /// <summary>The currently selected date.</summary>
+    /// <remarks>This date is highlighted in the picker.</remarks>
     public DateTime? SelectedDate { get; }
+
+    /// <summary>Called when the user picks a day.</summary>
     public Action<DateTime> OnChanged { get; }
-    public CalendarDelegate<DateTime> CalendarDelegate { get; }
-    public DateTime? FocusedDate { get; }
-    public double RowHeight { get; }
+
+    /// <summary>Called when the user navigates to a new month.</summary>
+    public Action<DateTime> OnDisplayedMonthChanged { get; }
+
+    /// <summary>Optional user supplied predicate function to customize selectable days.</summary>
     public SelectableDayPredicate? SelectableDayPredicate { get; }
+
+    /// <summary>The calendar system the picker interprets, formats, and navigates dates with.</summary>
+    public CalendarDelegate<DateTime> CalendarDelegate { get; }
+
+    public override State CreateState() => new MonthPickerState();
+}
+
+/// <summary>Dart's private <c>_MonthPickerState</c>.</summary>
+internal sealed class MonthPickerState : State<MonthPicker>
+{
+    private static readonly IReadOnlyDictionary<TraversalDirection, int> DirectionOffset =
+        new Dictionary<TraversalDirection, int>
+        {
+            [TraversalDirection.Up] = -Consts.DaysPerWeek,
+            [TraversalDirection.Right] = 1,
+            [TraversalDirection.Down] = Consts.DaysPerWeek,
+            [TraversalDirection.Left] = -1,
+        };
+
+    private readonly GlobalKey _pageViewKey = new LabeledGlobalKey<State>(null);
+    private string _announcementText = string.Empty;
+    private DateTime _currentMonth;
+    private PageController _pageController = null!;
+    private MaterialLocalizations _localizations = null!;
+    private IReadOnlyDictionary<ShortcutActivator, Intent>? _shortcutMap;
+    private IReadOnlyDictionary<Type, FlutterAction>? _actionMap;
+    private FocusNode _dayGridFocus = null!;
+    private DateTime? _focusedDay;
+
+    public override void InitState()
+    {
+        base.InitState();
+        _currentMonth = Widget.InitialMonth;
+        _pageController = new PageController(
+            initialPage: Widget.CalendarDelegate.MonthDelta(Widget.FirstDate, _currentMonth));
+        _shortcutMap = new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] =
+                new DirectionalFocusIntent(TraversalDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] =
+                new DirectionalFocusIntent(TraversalDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] =
+                new DirectionalFocusIntent(TraversalDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DirectionalFocusIntent(TraversalDirection.Up),
+        };
+        _actionMap = new Dictionary<Type, FlutterAction>
+        {
+            [typeof(NextFocusIntent)] = new CallbackAction<NextFocusIntent>(onInvoke: HandleGridNextFocus),
+            [typeof(PreviousFocusIntent)] =
+                new CallbackAction<PreviousFocusIntent>(onInvoke: HandleGridPreviousFocus),
+            [typeof(DirectionalFocusIntent)] = new CallbackAction<DirectionalFocusIntent>(
+                onInvoke: HandleDirectionFocus),
+        };
+        _dayGridFocus = new FocusNode(debugLabel: "Day Grid");
+    }
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        _localizations = MaterialLocalizations.Of(Context);
+    }
+
+    public override void Dispose()
+    {
+        _pageController.Dispose();
+        _dayGridFocus.Dispose();
+        base.Dispose();
+    }
+
+    private void HandleDateSelected(DateTime selectedDate)
+    {
+        _focusedDay = selectedDate;
+        Widget.OnChanged(selectedDate);
+    }
+
+    // Auxiliary method for handling the difference between platforms
+    private void Announce(string message)
+    {
+        if (MediaQuery.MaybeSupportsAnnounceOf(Context) ?? false)
+        {
+            Consts.ReportAnnouncementError(SemanticsService.SendAnnouncement(
+                View.Of(Context),
+                message,
+                Directionality.Of(Context)));
+        }
+        else
+        {
+            // If SemanticsService.sendAnnouncement is not supported,
+            // we use live region to achieve the announcement effect instead.
+            _announcementText = message;
+        }
+    }
+
+    private void HandleMonthPageChanged(int monthPage)
+    {
+        SetState(() =>
+        {
+            DateTime monthDate = Widget.CalendarDelegate.AddMonthsToMonthDate(Widget.FirstDate, monthPage);
+            if (!Widget.CalendarDelegate.IsSameMonth(_currentMonth, monthDate))
+            {
+                _currentMonth = Widget.CalendarDelegate.GetMonth(monthDate.Year, monthDate.Month);
+                Widget.OnDisplayedMonthChanged(_currentMonth);
+                if (_focusedDay != null && !Widget.CalendarDelegate.IsSameMonth(_focusedDay, _currentMonth))
+                {
+                    // We have navigated to a new month with the grid focused, but the
+                    // focused day is not in this month. Choose a new one trying to keep
+                    // the same day of the month.
+                    _focusedDay = FocusableDayForMonth(_currentMonth, _focusedDay.Value.Day);
+                }
+
+                Announce(Widget.CalendarDelegate.FormatMonthYear(_currentMonth, _localizations));
+            }
+        });
+    }
+
+    /// <summary>Returns a focusable date for the given month.</summary>
+    /// <remarks>
+    /// If the preferredDay is available in the month it will be returned, otherwise the first
+    /// selectable day in the month will be returned. If no dates are selectable in the month, then it
+    /// will return null.
+    /// </remarks>
+    private DateTime? FocusableDayForMonth(DateTime month, int preferredDay)
+    {
+        int daysInMonth = Widget.CalendarDelegate.GetDaysInMonth(month.Year, month.Month);
+
+        // Can we use the preferred day in this month?
+        if (preferredDay <= daysInMonth)
+        {
+            DateTime newFocus = Widget.CalendarDelegate.GetDay(month.Year, month.Month, preferredDay);
+            if (IsSelectable(newFocus))
+            {
+                return newFocus;
+            }
+        }
+
+        // Start at the 1st and take the first selectable date.
+        for (int day = 1; day <= daysInMonth; day++)
+        {
+            DateTime newFocus = Widget.CalendarDelegate.GetDay(month.Year, month.Month, day);
+            if (IsSelectable(newFocus))
+            {
+                return newFocus;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Navigate to the next month.</summary>
+    private void HandleNextMonth()
+    {
+        if (!IsDisplayingLastMonth)
+        {
+            _ = _pageController.NextPage(duration: Consts.MonthScrollDuration, curve: Curves.Ease);
+        }
+    }
+
+    /// <summary>Navigate to the previous month.</summary>
+    private void HandlePreviousMonth()
+    {
+        if (!IsDisplayingFirstMonth)
+        {
+            _ = _pageController.PreviousPage(duration: Consts.MonthScrollDuration, curve: Curves.Ease);
+        }
+    }
+
+    /// <summary>Navigate to the given month.</summary>
+    private void ShowMonth(DateTime month, bool jump = false)
+    {
+        int monthPage = Widget.CalendarDelegate.MonthDelta(Widget.FirstDate, month);
+        if (jump)
+        {
+            _pageController.JumpToPage(monthPage);
+        }
+        else
+        {
+            _ = _pageController.AnimateToPage(
+                monthPage,
+                duration: Consts.MonthScrollDuration,
+                curve: Curves.Ease);
+        }
+    }
+
+    /// <summary>True if the earliest allowable month is displayed.</summary>
+    private bool IsDisplayingFirstMonth =>
+        !(_currentMonth > Widget.CalendarDelegate.GetMonth(Widget.FirstDate.Year, Widget.FirstDate.Month));
+
+    /// <summary>True if the latest allowable month is displayed.</summary>
+    private bool IsDisplayingLastMonth =>
+        !(_currentMonth < Widget.CalendarDelegate.GetMonth(Widget.LastDate.Year, Widget.LastDate.Month));
+
+    /// <summary>Handler for when the overall day grid obtains or loses focus.</summary>
+    private void HandleGridFocusChange(bool focused)
+    {
+        SetState(() =>
+        {
+            if (focused && _focusedDay == null)
+            {
+                if (Widget.CalendarDelegate.IsSameMonth(Widget.SelectedDate, _currentMonth))
+                {
+                    _focusedDay = Widget.SelectedDate;
+                }
+                else if (Widget.CalendarDelegate.IsSameMonth(Widget.CurrentDate, _currentMonth))
+                {
+                    _focusedDay = FocusableDayForMonth(_currentMonth, Widget.CurrentDate.Day);
+                }
+                else
+                {
+                    _focusedDay = FocusableDayForMonth(_currentMonth, 1);
+                }
+            }
+        });
+    }
+
+    /// <summary>Move focus to the next element after the day grid.</summary>
+    private object? HandleGridNextFocus(NextFocusIntent intent)
+    {
+        _dayGridFocus.RequestFocus();
+        _dayGridFocus.NextFocus();
+        return null;
+    }
+
+    /// <summary>Move focus to the previous element before the day grid.</summary>
+    private object? HandleGridPreviousFocus(PreviousFocusIntent intent)
+    {
+        _dayGridFocus.RequestFocus();
+        _dayGridFocus.PreviousFocus();
+        return null;
+    }
+
+    /// <summary>Move the internal focus date in the direction of the given intent.</summary>
+    /// <remarks>
+    /// This will attempt to move the focused day to the next selectable day in the given direction. If
+    /// the new date is not in the current month, then the page view will be scrolled to show the new
+    /// date's month.
+    /// <para>
+    /// For horizontal directions, it will move forward or backward a day (depending on the current
+    /// <see cref="TextDirection"/>). For vertical directions it will move up and down a week at a time.
+    /// </para>
+    /// </remarks>
+    private object? HandleDirectionFocus(DirectionalFocusIntent intent)
+    {
+        DebugAssertions.Assert(_focusedDay != null);
+        SetState(() =>
+        {
+            DateTime? nextDate = NextDateInDirection(_focusedDay!.Value, intent.Direction);
+            if (nextDate != null)
+            {
+                _focusedDay = nextDate;
+                if (!Widget.CalendarDelegate.IsSameMonth(_focusedDay, _currentMonth))
+                {
+                    ShowMonth(_focusedDay.Value);
+                }
+            }
+        });
+        return null;
+    }
+
+    private static int DayDirectionOffset(TraversalDirection traversalDirection, TextDirection textDirection)
+    {
+        // Swap left and right if the text direction if RTL
+        if (textDirection == TextDirection.Rtl)
+        {
+            if (traversalDirection == TraversalDirection.Left)
+            {
+                traversalDirection = TraversalDirection.Right;
+            }
+            else if (traversalDirection == TraversalDirection.Right)
+            {
+                traversalDirection = TraversalDirection.Left;
+            }
+        }
+
+        return DirectionOffset[traversalDirection];
+    }
+
+    private DateTime? NextDateInDirection(DateTime date, TraversalDirection direction)
+    {
+        TextDirection textDirection = Directionality.Of(Context);
+        DateTime nextDate = Widget.CalendarDelegate.AddDaysToDate(
+            date,
+            DayDirectionOffset(direction, textDirection));
+        while (!(nextDate < Widget.FirstDate) && !(nextDate > Widget.LastDate))
+        {
+            if (IsSelectable(nextDate))
+            {
+                return nextDate;
+            }
+
+            nextDate = Widget.CalendarDelegate.AddDaysToDate(
+                nextDate,
+                DayDirectionOffset(direction, textDirection));
+        }
+
+        return null;
+    }
+
+    private bool IsSelectable(DateTime date)
+    {
+        return Widget.SelectableDayPredicate?.Invoke(date) ?? true;
+    }
+
+    private Widget BuildItems(BuildContext context, int index)
+    {
+        DateTime month = Widget.CalendarDelegate.AddMonthsToMonthDate(Widget.FirstDate, index);
+        return new DayPicker(
+            key: new ValueKey<DateTime>(month),
+            calendarDelegate: Widget.CalendarDelegate,
+            selectedDate: Widget.SelectedDate,
+            currentDate: Widget.CurrentDate,
+            onChanged: HandleDateSelected,
+            firstDate: Widget.FirstDate,
+            lastDate: Widget.LastDate,
+            displayedMonth: month,
+            selectableDayPredicate: Widget.SelectableDayPredicate);
+    }
 
     public override Widget Build(BuildContext context)
     {
-        var localizations = MaterialLocalizations.Of(context);
-        var theme = DatePickerTheme.Of(context);
-        var defaults = DatePickerTheme.Defaults(context);
-        var weekdayStyle = theme.WeekdayStyle ?? defaults.WeekdayStyle!;
-        var items = new List<Widget>(49);
-        for (int index = localizations.FirstDayOfWeekIndex; items.Count < 7; index = (index + 1) % 7)
-        {
-            items.Add(new Center(
-                child: new DefaultTextStyle(weekdayStyle, new Text(localizations.NarrowWeekdays[index]))));
-        }
+        Color? subHeaderForegroundColor = DatePickerTheme.Of(context).SubHeaderForegroundColor
+            ?? DatePickerTheme.Defaults(context).SubHeaderForegroundColor;
 
-        int year = DisplayedMonth.Year;
-        int month = DisplayedMonth.Month;
-        int offset = CalendarDelegate.FirstDayOffset(year, month, localizations);
-        for (int blank = 0; blank < offset; blank++) items.Add(new SizedBox());
-        int days = CalendarDelegate.GetDaysInMonth(year, month);
-        for (int day = 1; day <= days; day++)
-        {
-            var date = CalendarDelegate.GetDay(year, month, day);
-            bool disabled = date < FirstDate || date > LastDate || !(SelectableDayPredicate?.Invoke(date) ?? true);
-            items.Add(new CalendarDay(
-                day: date,
-                isDisabled: disabled,
-                isSelected: CalendarDelegate.IsSameDay(SelectedDate, date),
-                isToday: CalendarDelegate.IsSameDay(CurrentDate, date),
-                isFocused: CalendarDelegate.IsSameDay(FocusedDate, date),
-                onChanged: OnChanged,
-                calendarDelegate: CalendarDelegate));
-        }
-        while (items.Count < 49) items.Add(new SizedBox());
-
-        return GridView.Count(
-            crossAxisCount: 7,
-            children: items,
-            mainAxisExtent: RowHeight,
-            padding: new Thickness(Theme.Of(context).UseMaterial3 ? 12 : 8, 0),
-            addAutomaticKeepAlives: false);
+        bool supportsAnnounce = MediaQuery.MaybeSupportsAnnounceOf(context) ?? false;
+        return new Semantics(
+            container: true,
+            explicitChildNodes: true,
+            liveRegion: !supportsAnnounce,
+            accessibilityFocusBlockType: !supportsAnnounce
+                ? AccessibilityFocusBlockType.BlockNode
+                : AccessibilityFocusBlockType.None,
+            label: !supportsAnnounce ? _announcementText : null,
+            child: new Column(
+                children:
+                [
+                    new SizedBox(
+                        height: Consts.SubHeaderHeight,
+                        child: new Padding(
+                            EdgeInsetsDirectional.Only(start: 16, end: 4),
+                            new Row(
+                                children:
+                                [
+                                    new Spacer(),
+                                    new IconButton(
+                                        icon: new Icon(
+                                            Icons.ChevronLeft,
+                                            semanticLabel: IsDisplayingFirstMonth
+                                                ? _localizations.PreviousMonthTooltip
+                                                : null),
+                                        color: subHeaderForegroundColor,
+                                        tooltip: IsDisplayingFirstMonth ? null : _localizations.PreviousMonthTooltip,
+                                        onPressed: IsDisplayingFirstMonth ? null : HandlePreviousMonth),
+                                    new IconButton(
+                                        icon: new Icon(
+                                            Icons.ChevronRight,
+                                            semanticLabel: IsDisplayingLastMonth
+                                                ? _localizations.NextMonthTooltip
+                                                : null),
+                                        color: subHeaderForegroundColor,
+                                        tooltip: IsDisplayingLastMonth ? null : _localizations.NextMonthTooltip,
+                                        onPressed: IsDisplayingLastMonth ? null : HandleNextMonth),
+                                ]))),
+                    new Expanded(
+                        child: new FocusableActionDetector(
+                            shortcuts: _shortcutMap,
+                            actions: _actionMap,
+                            focusNode: _dayGridFocus,
+                            onFocusChange: HandleGridFocusChange,
+                            child: new FocusedDate(
+                                calendarDelegate: Widget.CalendarDelegate,
+                                date: _dayGridFocus.HasFocus ? _focusedDay : null,
+                                // Wrap the PageView with `Material`, so when its child paints on materials
+                                // the content won't go out of boundary during page transition.
+                                child: new Material(
+                                    type: MaterialType.Transparency,
+                                    child: PageView.Builder(
+                                        key: _pageViewKey,
+                                        controller: _pageController,
+                                        itemBuilder: BuildItems,
+                                        itemCount: Widget.CalendarDelegate.MonthDelta(
+                                            Widget.FirstDate,
+                                            Widget.LastDate) + 1,
+                                        onPageChanged: HandleMonthPageChanged))))),
+                ]));
     }
 }
 
-internal sealed class CalendarDay : StatefulWidget
+/// <summary>
+/// InheritedWidget indicating what the current focused date is for its children.
+/// </summary>
+/// <remarks>
+/// Dart's private <c>_FocusedDate</c>. This is used by the <see cref="MonthPicker"/> to let its children
+/// <see cref="DayPicker"/>s know what the currently focused date (if any) should be. File-local because
+/// <c>date_picker.dart</c> declares a private <c>_FocusedDate</c> of its own.
+/// </remarks>
+file sealed class FocusedDate : InheritedWidget
 {
-    public CalendarDay(DateTime day, bool isDisabled, bool isSelected, bool isToday, bool isFocused,
-        Action<DateTime> onChanged, CalendarDelegate<DateTime> calendarDelegate,
-        WidgetStateProperty<Color?>? overlayColor = null) : base(new ValueKey<DateTime>(day))
+    public FocusedDate(Widget child, CalendarDelegate<DateTime> calendarDelegate, DateTime? date = null)
+        : base(child)
     {
-        Day = day;
-        IsDisabled = isDisabled;
-        IsSelected = isSelected;
-        IsToday = isToday;
-        IsFocused = isFocused;
+        CalendarDelegate = calendarDelegate;
+        Date = date;
+    }
+
+    public CalendarDelegate<DateTime> CalendarDelegate { get; }
+
+    public DateTime? Date { get; }
+
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !CalendarDelegate.IsSameDay(Date, ((FocusedDate)oldWidget).Date);
+    }
+
+    public static DateTime? MaybeOf(BuildContext context)
+    {
+        FocusedDate? focusedDate = context.DependOnInheritedWidgetOfExactType<FocusedDate>();
+        return focusedDate?.Date;
+    }
+}
+
+/// <summary>Displays the days of a given month and allows choosing a day.</summary>
+/// <remarks>
+/// Dart's private <c>_DayPicker</c>. The days are arranged in a rectangular grid with one column for
+/// each day of the week.
+/// </remarks>
+internal sealed class DayPicker : StatefulWidget
+{
+    /// <summary>Creates a day picker.</summary>
+    public DayPicker(
+        DateTime currentDate,
+        DateTime displayedMonth,
+        DateTime firstDate,
+        DateTime lastDate,
+        DateTime? selectedDate,
+        Action<DateTime> onChanged,
+        CalendarDelegate<DateTime> calendarDelegate,
+        SelectableDayPredicate? selectableDayPredicate = null,
+        Key? key = null) : base(key)
+    {
+        DebugAssertions.Assert(!(firstDate > lastDate));
+        DebugAssertions.Assert(selectedDate == null || !(selectedDate.Value < firstDate));
+        DebugAssertions.Assert(selectedDate == null || !(selectedDate.Value > lastDate));
+        CurrentDate = currentDate;
+        DisplayedMonth = displayedMonth;
+        FirstDate = firstDate;
+        LastDate = lastDate;
+        SelectedDate = selectedDate;
         OnChanged = onChanged;
         CalendarDelegate = calendarDelegate;
-        OverlayColor = overlayColor;
+        SelectableDayPredicate = selectableDayPredicate;
     }
 
-    public DateTime Day { get; }
-    public bool IsDisabled { get; }
-    public bool IsSelected { get; }
-    public bool IsToday { get; }
-    public bool IsFocused { get; }
+    /// <summary>The currently selected date.</summary>
+    /// <remarks>This date is highlighted in the picker.</remarks>
+    public DateTime? SelectedDate { get; }
+
+    /// <summary>The current date at the time the picker is displayed.</summary>
+    public DateTime CurrentDate { get; }
+
+    /// <summary>Called when the user picks a day.</summary>
     public Action<DateTime> OnChanged { get; }
+
+    /// <summary>The earliest date the user is permitted to pick.</summary>
+    /// <remarks>This date must be on or before the <see cref="LastDate"/>.</remarks>
+    public DateTime FirstDate { get; }
+
+    /// <summary>The latest date the user is permitted to pick.</summary>
+    /// <remarks>This date must be on or after the <see cref="FirstDate"/>.</remarks>
+    public DateTime LastDate { get; }
+
+    /// <summary>The month whose days are displayed by this picker.</summary>
+    public DateTime DisplayedMonth { get; }
+
+    /// <summary>Optional user supplied predicate function to customize selectable days.</summary>
+    public SelectableDayPredicate? SelectableDayPredicate { get; }
+
+    /// <summary>The calendar system the picker interprets, formats, and navigates dates with.</summary>
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
-    public WidgetStateProperty<Color?>? OverlayColor { get; }
-    public override State CreateState() => new CalendarDayState();
 
-    private sealed class CalendarDayState : State<CalendarDay>
+    public override State CreateState() => new DayPickerState();
+}
+
+/// <summary>Dart's private <c>_DayPickerState</c>.</summary>
+internal sealed class DayPickerState : State<DayPicker>
+{
+    /// <summary>List of <see cref="FocusNode"/>s, one for each day of the month.</summary>
+    private List<FocusNode> _dayFocusNodes = null!;
+
+    public override void InitState()
     {
-        private WidgetStatesController? _states;
-        private FocusNode? _focusNode;
-        private CalendarDay CurrentWidget => (CalendarDay)StateWidget;
+        base.InitState();
+        int daysInMonth = Widget.CalendarDelegate.GetDaysInMonth(
+            Widget.DisplayedMonth.Year,
+            Widget.DisplayedMonth.Month);
+        _dayFocusNodes = Enumerable.Range(0, daysInMonth)
+            .Select(index => new FocusNode(skipTraversal: true, debugLabel: $"Day {index + 1}"))
+            .ToList();
+    }
 
-        public override void InitState()
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        // Check to see if the focused date is in this month, if so focus it.
+        DateTime? focusedDate = FocusedDate.MaybeOf(Context);
+        if (focusedDate != null && Widget.CalendarDelegate.IsSameMonth(Widget.DisplayedMonth, focusedDate))
         {
-            _states = new WidgetStatesController();
-            _states.AddListener(HandleStatesChanged);
-            _focusNode = new FocusNode { SkipTraversal = true };
-            SyncStates();
+            _dayFocusNodes[focusedDate.Value.Day - 1].RequestFocus();
+        }
+    }
+
+    public override void Dispose()
+    {
+        foreach (FocusNode node in _dayFocusNodes)
+        {
+            node.Dispose();
         }
 
-        public override void DidUpdateWidget(CalendarDay oldWidget) => SyncStates();
+        base.Dispose();
+    }
 
-        public override void Dispose()
+    /// <summary>
+    /// Builds widgets showing abbreviated days of week. The first widget in the returned list
+    /// corresponds to the first day of week for the current locale.
+    /// </summary>
+    /// <remarks>
+    /// Examples:
+    /// <code>
+    ///     ┌ Sunday is the first day of week in the US (en_US)
+    ///     |
+    ///     S M T W T F S  ← the returned list contains these widgets
+    ///     _ _ _ _ _ 1 2
+    ///     3 4 5 6 7 8 9
+    ///
+    ///     ┌ But it's Monday in the UK (en_GB)
+    ///     |
+    ///     M T W T F S S  ← the returned list contains these widgets
+    ///     _ _ _ _ 1 2 3
+    ///     4 5 6 7 8 9 10
+    /// </code>
+    /// </remarks>
+    private static List<Widget> DayHeaders(TextStyle? headerStyle, MaterialLocalizations localizations)
+    {
+        var result = new List<Widget>();
+        for (int i = localizations.FirstDayOfWeekIndex;
+             result.Count < Consts.DaysPerWeek;
+             i = (i + 1) % Consts.DaysPerWeek)
         {
-            if (_states is not null)
+            string weekday = localizations.NarrowWeekdays[i];
+            result.Add(new ExcludeSemantics(
+                child: new Center(child: new Text(weekday, style: headerStyle))));
+        }
+
+        return result;
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+        DatePickerThemeData datePickerTheme = DatePickerTheme.Of(context);
+        DatePickerThemeData defaults = DatePickerTheme.Defaults(context);
+        TextStyle? weekdayStyle = datePickerTheme.WeekdayStyle ?? defaults.WeekdayStyle;
+
+        Orientation orientation = MediaQuery.OrientationOf(context);
+        bool isLandscapeOrientation = orientation == Orientation.Landscape;
+
+        int year = Widget.DisplayedMonth.Year;
+        int month = Widget.DisplayedMonth.Month;
+
+        int daysInMonth = Widget.CalendarDelegate.GetDaysInMonth(year, month);
+        int dayOffset = Widget.CalendarDelegate.FirstDayOffset(year, month, localizations);
+
+        List<Widget> dayItems = DayHeaders(weekdayStyle, localizations);
+        // 1-based day of month, e.g. 1-31 for January, and 1-29 for February on
+        // a leap year.
+        int day = -dayOffset;
+        while (day < daysInMonth)
+        {
+            day++;
+            if (day < 1)
             {
-                _states.RemoveListener(HandleStatesChanged);
-                _states.Dispose();
-                _states = null;
-                _focusNode?.Dispose();
-                _focusNode = null;
+                dayItems.Add(SizedBox.Shrink());
             }
-
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var widget = CurrentWidget;
-            var local = DatePickerTheme.Of(context);
-            var defaults = DatePickerTheme.Defaults(context);
-            var states = _states!.Value;
-            var foreground = widget.IsToday
-                ? local.TodayForegroundColor?.Resolve(states)
-                  ?? defaults.TodayForegroundColor?.Resolve(states)
-                : local.DayForegroundColor?.Resolve(states)
-                  ?? defaults.DayForegroundColor?.Resolve(states);
-            var background = widget.IsToday
-                ? local.TodayBackgroundColor?.Resolve(states)
-                  ?? defaults.TodayBackgroundColor?.Resolve(states)
-                : local.DayBackgroundColor?.Resolve(states)
-                  ?? defaults.DayBackgroundColor?.Resolve(states);
-            var overlay = widget.OverlayColor ?? WidgetStateProperty<Color?>.ResolveWith(
-                overlayStates => local.DayOverlayColor?.Resolve(overlayStates)
-                                 ?? defaults.DayOverlayColor?.Resolve(overlayStates));
-            OutlinedBorder shape = local.DayShape?.Resolve(states)
-                                   ?? defaults.DayShape?.Resolve(states)
-                                   ?? new CircleBorder();
-            BorderSide? localTodayBorder = local.TodayBorder;
-            var border = widget.IsToday
-                ? localTodayBorder ?? defaults.TodayBorder
-                : ShapeBorderGeometry.SideOrNull(shape);
-            if (widget.IsToday
-                && border.HasValue
-                && foreground != null
-                && (!localTodayBorder.HasValue || localTodayBorder.Value.Color.Alpha == 0))
+            else
             {
-                border = new BorderSide(foreground!, border.Value.Width);
-            }
-            var style = (local.DayStyle ?? defaults.DayStyle!).CopyWith(color: foreground);
-            var decoration = new BoxDecoration(
-                Color: background,
-                Border: border is { } cellBorder ? Plumix.Rendering.Border.FromBorderSide(cellBorder) : null,
-                BorderRadius: shape is CircleBorder ? null : ShapeBorderGeometry.ResolveRadius(shape),
-                Shape: ShapeBorderGeometry.BoxShapeOf(shape));
+                DateTime dayToBuild = Widget.CalendarDelegate.GetDay(year, month, day);
+                bool isDisabled = dayToBuild > Widget.LastDate
+                    || dayToBuild < Widget.FirstDate
+                    || (Widget.SelectableDayPredicate != null && !Widget.SelectableDayPredicate(dayToBuild));
+                bool isSelectedDay = Widget.CalendarDelegate.IsSameDay(Widget.SelectedDate, dayToBuild);
+                bool isToday = Widget.CalendarDelegate.IsSameDay(Widget.CurrentDate, dayToBuild);
 
-            Widget result = new Semantics(
-                label: $"{MaterialLocalizations.Of(context).FormatDecimal(widget.Day.Day)}, {widget.CalendarDelegate.FormatFullDate(widget.Day, MaterialLocalizations.Of(context))}{(widget.IsToday ? $", {MaterialLocalizations.Of(context).CurrentDateLabel}" : string.Empty)}",
-                button: true,
-                enabled: widget.IsDisabled ? null : true,
-                selected: widget.IsSelected ? true : null,
-                onTap: widget.IsDisabled ? null : () => widget.OnChanged(widget.Day),
-                child: new Center(
-                    child: new Container(
-                        width: 40,
-                        height: 40,
-                        alignment: Alignment.Center,
-                        decoration: decoration,
-                        child: new DefaultTextStyle(style, new Text(MaterialLocalizations.Of(context).FormatDecimal(widget.Day.Day))))));
-
-            if (!widget.IsDisabled)
-            {
-                result = new InkResponse(
-                    onTap: () => widget.OnChanged(widget.Day),
-                    focusNode: _focusNode,
-                    statesController: _states,
-                    overlayColor: overlay,
-                    customBorder: shape,
-                    containedInkWell: true,
-                    highlightShape: ShapeBorderGeometry.BoxShapeOf(shape),
-                    child: result);
+                dayItems.Add(new Day(
+                    dayToBuild,
+                    key: new ValueKey<DateTime>(dayToBuild),
+                    isDisabled: isDisabled,
+                    isSelectedDay: isSelectedDay,
+                    isToday: isToday,
+                    onChanged: Widget.OnChanged,
+                    focusNode: _dayFocusNodes[day - 1],
+                    calendarDelegate: Widget.CalendarDelegate));
             }
-            return result;
         }
 
-        private void SyncStates()
-        {
-            _states?.Update(WidgetState.Disabled, CurrentWidget.IsDisabled);
-            _states?.Update(WidgetState.Selected, CurrentWidget.IsSelected);
-            _states?.Update(WidgetState.Focused, CurrentWidget.IsFocused);
-        }
-
-        private void HandleStatesChanged() => SetState(() => { });
+        double monthPickerHorizontalPadding = Theme.Of(context).UseMaterial3 && !isLandscapeOrientation
+            ? Consts.MonthPickerHorizontalPaddingPortraitM3
+            : Consts.MonthPickerHorizontalPaddingOther;
+        return new Padding(
+            EdgeInsets.Symmetric(horizontal: monthPickerHorizontalPadding),
+            MediaQuery.WithClampedTextScaling(
+                maxScaleFactor: isLandscapeOrientation
+                    ? Consts.KDayPickerGridLandscapeMaxScaleFactor
+                    : Consts.KDayPickerGridPortraitMaxScaleFactor,
+                child: GridView.Custom(
+                    physics: new ClampingScrollPhysics(),
+                    gridDelegate: new DayPickerGridDelegate(context),
+                    childrenDelegate: new SliverChildListDelegate(dayItems, addRepaintBoundaries: false))));
     }
 }
 
-public sealed class YearPicker : StatefulWidget
+/// <summary>Dart's private <c>_Day</c>.</summary>
+internal sealed class Day : StatefulWidget
 {
+    public Day(
+        DateTime day,
+        bool isDisabled,
+        bool isSelectedDay,
+        bool isToday,
+        Action<DateTime> onChanged,
+        FocusNode focusNode,
+        CalendarDelegate<DateTime> calendarDelegate,
+        Key? key = null) : base(key)
+    {
+        DayValue = day;
+        IsDisabled = isDisabled;
+        IsSelectedDay = isSelectedDay;
+        IsToday = isToday;
+        OnChanged = onChanged;
+        FocusNode = focusNode;
+        CalendarDelegate = calendarDelegate;
+    }
+
+    /// <summary>Dart's <c>day</c>; C# members may not repeat their declaring type's name.</summary>
+    public DateTime DayValue { get; }
+
+    public bool IsDisabled { get; }
+
+    public bool IsSelectedDay { get; }
+
+    public bool IsToday { get; }
+
+    public Action<DateTime> OnChanged { get; }
+
+    public FocusNode FocusNode { get; }
+
+    public CalendarDelegate<DateTime> CalendarDelegate { get; }
+
+    public override State CreateState() => new DayState();
+}
+
+/// <summary>Dart's private <c>_DayState</c>.</summary>
+internal sealed class DayState : State<Day>
+{
+    private readonly WidgetStatesController _statesController = new();
+
+    public override Widget Build(BuildContext context)
+    {
+        DatePickerThemeData defaults = DatePickerTheme.Defaults(context);
+        DatePickerThemeData datePickerTheme = DatePickerTheme.Of(context);
+        TextStyle? dayStyle = datePickerTheme.DayStyle ?? defaults.DayStyle;
+        T? EffectiveValue<T>(Func<DatePickerThemeData?, T?> getProperty) where T : class
+        {
+            return getProperty(datePickerTheme) ?? getProperty(defaults);
+        }
+
+        T? Resolve<T>(
+            Func<DatePickerThemeData?, WidgetStateProperty<T?>?> getProperty,
+            IReadOnlySet<WidgetState> states) where T : class
+        {
+            return EffectiveValue(theme => getProperty(theme)?.Resolve(states));
+        }
+
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+        string semanticLabelSuffix = Widget.IsToday ? $", {localizations.CurrentDateLabel}" : string.Empty;
+
+        var states = new HashSet<WidgetState>();
+        if (Widget.IsDisabled)
+        {
+            states.Add(WidgetState.Disabled);
+        }
+
+        if (Widget.IsSelectedDay)
+        {
+            states.Add(WidgetState.Selected);
+        }
+
+        _statesController.Value = states;
+
+        Color? dayForegroundColor = Resolve(
+            theme => Widget.IsToday ? theme?.TodayForegroundColor : theme?.DayForegroundColor,
+            states);
+        Color? dayBackgroundColor = Resolve(
+            theme => Widget.IsToday ? theme?.TodayBackgroundColor : theme?.DayBackgroundColor,
+            states);
+        WidgetStateProperty<Color?> dayOverlayColor = WidgetStateProperty<Color?>.ResolveWith(
+            overlayStates => EffectiveValue(theme => theme?.DayOverlayColor?.Resolve(overlayStates)));
+        OutlinedBorder dayShape = Resolve(theme => theme?.DayShape, states)!;
+        bool hasCustomBorderColor = datePickerTheme.TodayBorder != null
+            && datePickerTheme.TodayBorder.Value.Color.Opacity != 0.0;
+        BorderSide todayBorderSide = hasCustomBorderColor
+            ? datePickerTheme.TodayBorder!.Value
+            : (datePickerTheme.TodayBorder ?? defaults.TodayBorder!.Value).CopyWith(color: dayForegroundColor);
+        ShapeDecoration decoration = Widget.IsToday
+            ? new ShapeDecoration(Color: dayBackgroundColor, Shape: dayShape.CopyWith(side: todayBorderSide))
+            : new ShapeDecoration(Color: dayBackgroundColor, Shape: dayShape);
+
+        Widget dayWidget = new Ink(
+            decoration: decoration,
+            child: new Center(
+                child: new Text(
+                    localizations.FormatDecimal(Widget.DayValue.Day),
+                    style: dayStyle?.Apply(color: dayForegroundColor))));
+
+        // Adds padding as per M3 guidelines for portrait mode. Not applied in landscape
+        // mode currently due to unclear specifications.
+        Orientation orientation = MediaQuery.OrientationOf(context);
+        if (Theme.Of(context).UseMaterial3 && orientation == Orientation.Portrait)
+        {
+            dayWidget = new Padding(EdgeInsets.All(4.0), dayWidget);
+        }
+
+        string fullDate = Widget.CalendarDelegate.FormatFullDate(Widget.DayValue, localizations);
+        dayWidget = new Semantics(
+            // We want the day of month to be spoken first irrespective of the
+            // locale-specific preferences or TextDirection. This is because
+            // an accessibility user is more likely to be interested in the
+            // day of month before the rest of the date, as they are looking
+            // for the day of month. To do that we prepend day of month to the
+            // formatted full date.
+            label: $"{localizations.FormatDecimal(Widget.DayValue.Day)}, {fullDate}{semanticLabelSuffix}",
+            // Set button to true to make the date selectable.
+            button: true,
+            selected: Widget.IsSelectedDay,
+            enabled: !Widget.IsDisabled,
+            excludeSemantics: true,
+            child: dayWidget);
+
+        if (!Widget.IsDisabled)
+        {
+            dayWidget = new InkResponse(
+                focusNode: Widget.FocusNode,
+                onTap: () => Widget.OnChanged(Widget.DayValue),
+                statesController: _statesController,
+                overlayColor: dayOverlayColor,
+                customBorder: dayShape,
+                containedInkWell: true,
+                child: dayWidget);
+        }
+
+        return dayWidget;
+    }
+
+    public override void Dispose()
+    {
+        _statesController.Dispose();
+        base.Dispose();
+    }
+}
+
+/// <summary>Dart's private <c>_DayPickerGridDelegate</c>.</summary>
+internal sealed class DayPickerGridDelegate : SliverGridDelegate
+{
+    public DayPickerGridDelegate(BuildContext context)
+    {
+        Context = context;
+    }
+
+    public BuildContext Context { get; }
+
+    public override SliverGridLayout GetLayout(SliverConstraints constraints)
+    {
+        double textScaleFactor =
+            MediaQuery.TextScalerOf(Context).Clamp(maxScaleFactor: 3.0).Scale(Consts.FontSizeToScale)
+            / Consts.FontSizeToScale;
+        // Conform to M3 spec in portrait mode (landscape mode is not specified).
+        Orientation orientation = MediaQuery.OrientationOf(Context);
+        double dayPickerRowHeight = Theme.Of(Context).UseMaterial3 && orientation == Orientation.Portrait
+            ? Consts.DayPickerRowHeightM3
+            : Consts.DayPickerRowHeightM2;
+        double scaledRowHeight = textScaleFactor > 1.3
+            ? ((textScaleFactor - 1) * 30) + dayPickerRowHeight
+            : dayPickerRowHeight;
+        const int columnCount = Consts.DaysPerWeek;
+        double tileWidth = constraints.CrossAxisExtent / columnCount;
+        double tileHeight = Math.Min(
+            scaledRowHeight,
+            constraints.ViewportMainAxisExtent / (Consts.MaxDayPickerRowCount + 1));
+        return new SliverGridRegularTileLayout(
+            childCrossAxisExtent: tileWidth,
+            childMainAxisExtent: tileHeight,
+            crossAxisCount: columnCount,
+            crossAxisStride: tileWidth,
+            mainAxisStride: tileHeight,
+            reverseCrossAxis: BasicTypes.AxisDirectionIsReversed(constraints.CrossAxisDirection));
+    }
+
+    public override bool ShouldRelayout(SliverGridDelegate oldDelegate) => false;
+}
+
+/// <summary>A scrollable grid of years to allow picking a year.</summary>
+/// <remarks>
+/// The year picker widget is rarely used directly. Instead, consider using
+/// <see cref="CalendarDatePicker"/>, or <c>showDatePicker</c> which create full date pickers.
+/// </remarks>
+public class YearPicker : StatefulWidget
+{
+    /// <summary>Creates a year picker.</summary>
+    /// <remarks>
+    /// The <paramref name="lastDate"/> must be after the <paramref name="firstDate"/>.
+    /// <para>
+    /// <paramref name="initialDate"/> is deprecated: this parameter has no effect and can be removed.
+    /// Previously it controlled the month that was used in <paramref name="onChanged"/> when a new year
+    /// was selected, but now that role is filled by <paramref name="selectedDate"/> instead. This
+    /// feature was deprecated after v3.13.0-0.3.pre.
+    /// </para>
+    /// </remarks>
     public YearPicker(
         DateTime firstDate,
         DateTime lastDate,
@@ -717,233 +1486,248 @@ public sealed class YearPicker : StatefulWidget
         CalendarDelegate<DateTime>? calendarDelegate = null,
         Key? key = null) : base(key)
     {
+        _ = initialDate;
+        DebugAssertions.Assert(!(firstDate > lastDate));
         CalendarDelegate = calendarDelegate ?? GregorianCalendarDelegate.Instance;
-        FirstDate = CalendarDelegate.DateOnly(firstDate);
-        LastDate = CalendarDelegate.DateOnly(lastDate);
-        if (LastDate < FirstDate) throw new ArgumentException("lastDate must be on or after firstDate.", nameof(lastDate));
-        CurrentDate = CalendarDelegate.DateOnly(currentDate ?? CalendarDelegate.Now());
-        SelectedDate = selectedDate.HasValue ? CalendarDelegate.DateOnly(selectedDate.Value) : null;
-        InitialDate = initialDate;
-        OnChanged = onChanged ?? throw new ArgumentNullException(nameof(onChanged));
+        CurrentDate = CalendarDelegate.DateOnly(currentDate ?? DateTime.Now);
+        FirstDate = firstDate;
+        LastDate = lastDate;
+        SelectedDate = selectedDate;
+        OnChanged = onChanged;
         DragStartBehavior = dragStartBehavior;
     }
 
+    /// <summary>The current date.</summary>
+    /// <remarks>This date is subtly highlighted in the picker.</remarks>
     public DateTime CurrentDate { get; }
+
+    /// <summary>The earliest date the user is permitted to pick.</summary>
     public DateTime FirstDate { get; }
+
+    /// <summary>The latest date the user is permitted to pick.</summary>
     public DateTime LastDate { get; }
-    public DateTime? InitialDate { get; }
+
+    /// <summary>The currently selected date.</summary>
+    /// <remarks>This date is highlighted in the picker.</remarks>
     public DateTime? SelectedDate { get; }
+
+    /// <summary>Called when the user picks a year.</summary>
     public Action<DateTime> OnChanged { get; }
+
+    /// <summary>Determines the way that drag start behavior is handled.</summary>
     public DragStartBehavior DragStartBehavior { get; }
+
+    /// <summary>The calendar system the picker interprets, formats, and navigates dates with.</summary>
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
+
     public override State CreateState() => new YearPickerState();
+}
 
-    private sealed class YearPickerState : State<YearPicker>
+/// <summary>Dart's private <c>_YearPickerState</c>.</summary>
+internal sealed class YearPickerState : State<YearPicker>
+{
+    private ScrollController? _scrollController;
+    private readonly WidgetStatesController _statesController = new();
+
+    // The approximate number of years necessary to fill the available space.
+    private const int MinYears = 18;
+
+    public override void InitState()
     {
-        private const int MinimumYears = 18;
-        private ScrollController? _scrollController;
-        private YearPicker CurrentWidget => (YearPicker)StateWidget;
+        base.InitState();
+        _scrollController = new ScrollController(
+            initialScrollOffset: ScrollOffsetForYear(Widget.SelectedDate ?? Widget.FirstDate));
+    }
 
-        public override void InitState() => _scrollController = new ScrollController(ScrollOffsetFor(CurrentWidget.SelectedDate ?? CurrentWidget.FirstDate));
+    public override void Dispose()
+    {
+        _scrollController?.Dispose();
+        _statesController.Dispose();
+        base.Dispose();
+    }
 
-        public override void DidUpdateWidget(YearPicker oldWidget)
+    public override void DidUpdateWidget(YearPicker oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        if (Widget.SelectedDate != oldWidget.SelectedDate && Widget.SelectedDate != null)
         {
-            var old = (YearPicker)oldWidget;
-            if (CurrentWidget.SelectedDate != old.SelectedDate && CurrentWidget.SelectedDate.HasValue)
+            _scrollController!.JumpTo(ScrollOffsetForYear(Widget.SelectedDate.Value));
+        }
+    }
+
+    private double ScrollOffsetForYear(DateTime date)
+    {
+        int initialYearIndex = date.Year - Widget.FirstDate.Year;
+        int initialYearRow = initialYearIndex / Consts.YearPickerColumnCount;
+        // Move the offset down by 2 rows to approximately center it.
+        int centeredYearRow = initialYearRow - 2;
+        return ItemCount < MinYears ? 0 : centeredYearRow * Consts.YearPickerRowHeight;
+    }
+
+    private Widget BuildYearItem(BuildContext context, int index)
+    {
+        DatePickerThemeData datePickerTheme = DatePickerTheme.Of(context);
+        DatePickerThemeData defaults = DatePickerTheme.Defaults(context);
+
+        T? EffectiveValue<T>(Func<DatePickerThemeData?, T?> getProperty) where T : class
+        {
+            return getProperty(datePickerTheme) ?? getProperty(defaults);
+        }
+
+        T? Resolve<T>(
+            Func<DatePickerThemeData?, WidgetStateProperty<T?>?> getProperty,
+            IReadOnlySet<WidgetState> states) where T : class
+        {
+            return EffectiveValue(theme => getProperty(theme)?.Resolve(states));
+        }
+
+        double textScaleFactor =
+            MediaQuery.TextScalerOf(context).Clamp(maxScaleFactor: 3.0).Scale(Consts.FontSizeToScale)
+            / Consts.FontSizeToScale;
+
+        // Backfill the _YearPicker with disabled years if necessary.
+        int offset = ItemCount < MinYears ? (MinYears - ItemCount) / 2 : 0;
+        int year = Widget.FirstDate.Year + index - offset;
+        bool isSelected = year == Widget.SelectedDate?.Year;
+        bool isCurrentYear = year == Widget.CurrentDate.Year;
+        bool isDisabled = year < Widget.FirstDate.Year || year > Widget.LastDate.Year;
+        double decorationHeight = 36.0 * textScaleFactor;
+        double decorationWidth = 72.0 * textScaleFactor;
+
+        var states = new HashSet<WidgetState>();
+        if (isDisabled)
+        {
+            states.Add(WidgetState.Disabled);
+        }
+
+        if (isSelected)
+        {
+            states.Add(WidgetState.Selected);
+        }
+
+        Color? textColor = Resolve(
+            theme => isCurrentYear ? theme?.TodayForegroundColor : theme?.YearForegroundColor,
+            states);
+        Color? background = Resolve(
+            theme => isCurrentYear ? theme?.TodayBackgroundColor : theme?.YearBackgroundColor,
+            states);
+        WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.ResolveWith(
+            overlayStates => EffectiveValue(theme => theme?.YearOverlayColor?.Resolve(overlayStates)));
+
+        OutlinedBorder yearShape = Resolve(theme => theme?.YearShape, states)!;
+
+        BorderSide? borderSide = null;
+        if (isCurrentYear)
+        {
+            borderSide = datePickerTheme.TodayBorder ?? defaults.TodayBorder;
+            if (borderSide != null)
             {
-                _scrollController?.JumpTo(ScrollOffsetFor(CurrentWidget.SelectedDate.Value));
+                borderSide = borderSide.Value.CopyWith(color: textColor);
             }
         }
 
-        public override void Dispose()
-        {
-            _scrollController?.Dispose();
-            _scrollController = null;
+        var decoration = new ShapeDecoration(Color: background, Shape: yearShape.CopyWith(side: borderSide));
 
-            base.Dispose();
+        TextStyle? itemStyle = (datePickerTheme.YearStyle ?? defaults.YearStyle)?.Apply(color: textColor);
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+        Widget yearItem = new Center(
+            child: new Container(
+                decoration: decoration,
+                height: decorationHeight,
+                width: decorationWidth,
+                alignment: Alignment.Center,
+                child: new Semantics(
+                    selected: isSelected,
+                    enabled: !isDisabled,
+                    button: true,
+                    child: new Text(Widget.CalendarDelegate.FormatYear(year, localizations), style: itemStyle))));
+
+        if (!isDisabled)
+        {
+            DateTime date = Widget.CalendarDelegate.GetMonth(
+                year,
+                Widget.SelectedDate?.Month ?? Consts.January);
+            if (date < Widget.CalendarDelegate.GetMonth(Widget.FirstDate.Year, Widget.FirstDate.Month))
+            {
+                // Ignore firstDate.day because we're just working in years and months here.
+                DebugAssertions.Assert(date.Year == Widget.FirstDate.Year);
+                date = Widget.CalendarDelegate.GetMonth(year, Widget.FirstDate.Month);
+            }
+            else if (date > Widget.LastDate)
+            {
+                // No need to ignore the day here because it can only be bigger than what we care about.
+                DebugAssertions.Assert(date.Year == Widget.LastDate.Year);
+                date = Widget.CalendarDelegate.GetMonth(year, Widget.LastDate.Month);
+            }
+
+            _statesController.Value = states;
+            yearItem = new InkWell(
+                key: new ValueKey<int>(year),
+                onTap: () => Widget.OnChanged(date),
+                statesController: _statesController,
+                overlayColor: overlayColor,
+                child: yearItem);
         }
 
-        public override Widget Build(BuildContext context)
-        {
-            int count = CurrentWidget.LastDate.Year - CurrentWidget.FirstDate.Year + 1;
-            int total = Math.Max(count, MinimumYears);
-            double scale = Math.Clamp(MediaQuery.MaybeTextScaleFactorOf(context) ?? 1, 0, 3);
-            int columns = scale > 1.65 ? 2 : 3;
-            double height = 52 + (scale > 1 ? (scale - 1) * 9 : 0);
-            return new Column(
-                children:
-                [
-                    new Divider(),
-                    new Expanded(
+        return yearItem;
+    }
+
+    private int ItemCount => Widget.LastDate.Year - Widget.FirstDate.Year + 1;
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Column(
+            children:
+            [
+                new Divider(),
+                new Expanded(
+                    child: new Material(
+                        type: MaterialType.Transparency,
                         child: GridView.Builder(
-                            itemCount: total,
                             controller: _scrollController,
-                            padding: new Thickness(16, 0),
-                            gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: columns,
-                                crossAxisSpacing: 8,
-                                mainAxisExtent: height),
-                            itemBuilder: (_, index) => BuildYearItem(index, count, total, scale),
-                            addAutomaticKeepAlives: false)),
-                    new Divider(),
-                ]);
-        }
-
-        private Widget BuildYearItem(int index, int count, int total, double textScale)
-        {
-            int offset = count < MinimumYears ? (MinimumYears - count) / 2 : 0;
-            int year = CurrentWidget.FirstDate.Year + index - offset;
-            bool disabled = year < CurrentWidget.FirstDate.Year || year > CurrentWidget.LastDate.Year;
-            return new CalendarYear(
-                year: year,
-                isDisabled: disabled,
-                isSelected: year == CurrentWidget.SelectedDate?.Year,
-                isCurrent: year == CurrentWidget.CurrentDate.Year,
-                textScale: textScale,
-                onChanged: disabled ? null : () => CurrentWidget.OnChanged(DateForYear(year)),
-                calendarDelegate: CurrentWidget.CalendarDelegate);
-        }
-
-        private DateTime DateForYear(int year)
-        {
-            var widget = CurrentWidget;
-            int month = widget.SelectedDate?.Month ?? 1;
-            var date = widget.CalendarDelegate.GetMonth(year, month);
-            var firstMonth = widget.CalendarDelegate.GetMonth(widget.FirstDate.Year, widget.FirstDate.Month);
-            var lastMonth = widget.CalendarDelegate.GetMonth(widget.LastDate.Year, widget.LastDate.Month);
-            if (date < firstMonth) date = widget.CalendarDelegate.GetMonth(year, widget.FirstDate.Month);
-            if (date > lastMonth) date = widget.CalendarDelegate.GetMonth(year, widget.LastDate.Month);
-            return date;
-        }
-
-        private int ItemCount => CurrentWidget.LastDate.Year - CurrentWidget.FirstDate.Year + 1;
-
-        private double ScrollOffsetFor(DateTime date)
-        {
-            int row = (date.Year - CurrentWidget.FirstDate.Year) / 3;
-            return ItemCount < MinimumYears ? 0 : Math.Max(0, row - 2) * 52;
-        }
+                            dragStartBehavior: Widget.DragStartBehavior,
+                            gridDelegate: new YearPickerGridDelegate(context),
+                            itemBuilder: BuildYearItem,
+                            itemCount: Math.Max(ItemCount, MinYears),
+                            padding: new Thickness(Consts.YearPickerPadding, 0)))),
+                new Divider(),
+            ]);
     }
 }
 
-internal sealed class CalendarYear : StatefulWidget
+/// <summary>Dart's private <c>_YearPickerGridDelegate</c>.</summary>
+internal sealed class YearPickerGridDelegate : SliverGridDelegate
 {
-    public CalendarYear(int year, bool isDisabled, bool isSelected, bool isCurrent, double textScale, Action? onChanged,
-        CalendarDelegate<DateTime> calendarDelegate) : base(new ValueKey<int>(year))
+    public YearPickerGridDelegate(BuildContext context)
     {
-        Year = year;
-        IsDisabled = isDisabled;
-        IsSelected = isSelected;
-        IsCurrent = isCurrent;
-        TextScale = textScale;
-        OnChanged = onChanged;
-        CalendarDelegate = calendarDelegate;
+        Context = context;
     }
 
-    public int Year { get; }
-    public bool IsDisabled { get; }
-    public bool IsSelected { get; }
-    public bool IsCurrent { get; }
-    public double TextScale { get; }
-    public Action? OnChanged { get; }
-    public CalendarDelegate<DateTime> CalendarDelegate { get; }
-    public override State CreateState() => new CalendarYearState();
+    public BuildContext Context { get; }
 
-    private sealed class CalendarYearState : State<CalendarYear>
+    public override SliverGridLayout GetLayout(SliverConstraints constraints)
     {
-        private WidgetStatesController? _states;
-        private CalendarYear CurrentWidget => (CalendarYear)StateWidget;
-
-        public override void InitState()
-        {
-            _states = new WidgetStatesController();
-            _states.AddListener(HandleStateChanged);
-            SyncStates();
-        }
-
-        public override void DidUpdateWidget(CalendarYear oldWidget) => SyncStates();
-
-        public override void Dispose()
-        {
-            if (_states is not null)
-            {
-                _states.RemoveListener(HandleStateChanged);
-                _states.Dispose();
-                _states = null;
-            }
-
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var widget = CurrentWidget;
-            var local = DatePickerTheme.Of(context);
-            var defaults = DatePickerTheme.Defaults(context);
-            var states = _states!.Value;
-            var foreground = widget.IsCurrent
-                ? local.TodayForegroundColor?.Resolve(states)
-                  ?? defaults.TodayForegroundColor?.Resolve(states)
-                : local.YearForegroundColor?.Resolve(states)
-                  ?? defaults.YearForegroundColor?.Resolve(states);
-            var background = widget.IsCurrent
-                ? local.TodayBackgroundColor?.Resolve(states)
-                  ?? defaults.TodayBackgroundColor?.Resolve(states)
-                : local.YearBackgroundColor?.Resolve(states)
-                  ?? defaults.YearBackgroundColor?.Resolve(states);
-            WidgetStateProperty<Color?>? overlay = local.YearOverlayColor is null
-                                                        && defaults.YearOverlayColor is null
-                ? null
-                : WidgetStateProperty<Color?>.ResolveWith(
-                    overlayStates => local.YearOverlayColor?.Resolve(overlayStates)
-                                     ?? defaults.YearOverlayColor?.Resolve(overlayStates));
-            OutlinedBorder shape = local.YearShape?.Resolve(states)
-                                   ?? defaults.YearShape?.Resolve(states)
-                                   ?? new StadiumBorder();
-            var border = widget.IsCurrent
-                ? local.TodayBorder ?? defaults.TodayBorder
-                : ShapeBorderGeometry.SideOrNull(shape);
-            if (widget.IsCurrent && border is not null && foreground != null)
-            {
-                border = new BorderSide(foreground!, border.Value.Width);
-            }
-            var style = (local.YearStyle ?? defaults.YearStyle!).CopyWith(color: foreground);
-            var localizations = MaterialLocalizations.Of(context);
-            Widget result = new Center(
-                child: new Container(
-                    width: 72 * widget.TextScale,
-                    height: 36 * widget.TextScale,
-                    alignment: Alignment.Center,
-                    decoration: new BoxDecoration(
-                        Color: background,
-                        Border: border is { } cellBorder ? Plumix.Rendering.Border.FromBorderSide(cellBorder) : null,
-                        BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                        Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
-                    child: new Semantics(
-                        label: widget.CalendarDelegate.FormatYear(widget.Year, localizations),
-                        button: true,
-                        enabled: widget.IsDisabled ? null : true,
-                        selected: widget.IsSelected ? true : null,
-                        onTap: widget.OnChanged,
-                        child: new DefaultTextStyle(style, new Text(widget.CalendarDelegate.FormatYear(widget.Year, localizations))))));
-            if (!widget.IsDisabled)
-            {
-                result = new InkWell(
-                    onTap: widget.OnChanged,
-                    statesController: _states,
-                    overlayColor: overlay,
-                    customBorder: shape,
-                    child: result);
-            }
-            return result;
-        }
-
-        private void SyncStates()
-        {
-            _states?.Update(WidgetState.Disabled, CurrentWidget.IsDisabled);
-            _states?.Update(WidgetState.Selected, CurrentWidget.IsSelected);
-        }
-
-        private void HandleStateChanged() => SetState(() => { });
+        double textScaleFactor =
+            MediaQuery.TextScalerOf(Context).Clamp(maxScaleFactor: 3.0).Scale(Consts.FontSizeToScale)
+            / Consts.FontSizeToScale;
+        int scaledYearPickerColumnCount = textScaleFactor > 1.65
+            ? Consts.YearPickerColumnCount - 1
+            : Consts.YearPickerColumnCount;
+        double tileWidth = Math.Max(
+            (constraints.CrossAxisExtent - (scaledYearPickerColumnCount - 1) * Consts.YearPickerRowSpacing)
+            / scaledYearPickerColumnCount,
+            0.0);
+        double scaledYearPickerRowHeight = textScaleFactor > 1
+            ? Consts.YearPickerRowHeight + ((textScaleFactor - 1) * 9)
+            : Consts.YearPickerRowHeight;
+        return new SliverGridRegularTileLayout(
+            childCrossAxisExtent: tileWidth,
+            childMainAxisExtent: scaledYearPickerRowHeight,
+            crossAxisCount: scaledYearPickerColumnCount,
+            crossAxisStride: tileWidth + Consts.YearPickerRowSpacing,
+            mainAxisStride: scaledYearPickerRowHeight,
+            reverseCrossAxis: BasicTypes.AxisDirectionIsReversed(constraints.CrossAxisDirection));
     }
+
+    public override bool ShouldRelayout(SliverGridDelegate oldDelegate) => false;
 }

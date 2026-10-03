@@ -1,10 +1,18 @@
 using Plumix.Rendering;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/form.dart
+
+// Duration for delay before announcement in IOS so that the announcement won't be interrupted.
+// Dart's file-level `_kIOSAnnouncementDelayDuration`.
+file static class FormConstants
+{
+    public static readonly TimeSpan IOSAnnouncementDelayDuration = TimeSpan.FromSeconds(1);
+}
 
 public enum AutovalidateMode
 {
@@ -88,7 +96,9 @@ public sealed class Form : StatefulWidget
 
 public sealed class FormState : State<Form>
 {
-    private readonly HashSet<FormFieldState> _fields = [];
+    // Dart's `Set` literal is a LinkedHashSet: iteration follows registration order, which decides
+    // whose error `_validate` announces. A list with an add-once guard keeps that order.
+    private readonly List<FormFieldState> _fields = [];
     private int _generation;
     private bool _hasInteractedByUser;
 
@@ -97,7 +107,13 @@ public sealed class FormState : State<Form>
     public IEnumerable<FormFieldState> Fields => _fields;
     internal AutovalidateMode CurrentAutovalidateMode => Current.AutovalidateMode;
 
-    internal void Register(FormFieldState field) => _fields.Add(field);
+    internal void Register(FormFieldState field)
+    {
+        if (!_fields.Contains(field))
+        {
+            _fields.Add(field);
+        }
+    }
 
     internal void Unregister(FormFieldState field) => _fields.Remove(field);
 
@@ -130,7 +146,7 @@ public sealed class FormState : State<Form>
     {
         _hasInteractedByUser = true;
         ForceRebuild();
-        return ValidateFields(invalidFields: null);
+        return ValidateFields(View.Of(Context));
     }
 
     public IReadOnlySet<FormFieldState> ValidateGranularly()
@@ -138,7 +154,7 @@ public sealed class FormState : State<Form>
         var invalidFields = new HashSet<FormFieldState>();
         _hasInteractedByUser = true;
         ForceRebuild();
-        ValidateFields(invalidFields);
+        ValidateFields(View.Of(Context), invalidFields);
         return invalidFields;
     }
 
@@ -148,13 +164,13 @@ public sealed class FormState : State<Form>
         switch (Current.AutovalidateMode)
         {
             case AutovalidateMode.Always:
-                ValidateFields(invalidFields: null);
+                ValidateFields(View.Of(context));
                 break;
             case AutovalidateMode.OnUserInteraction when _hasInteractedByUser:
-                ValidateFields(invalidFields: null);
+                ValidateFields(View.Of(context));
                 break;
             case AutovalidateMode.OnUserInteractionIfError when _hasInteractedByUser && hasError:
-                ValidateFields(invalidFields: null);
+                ValidateFields(View.Of(context));
                 break;
         }
 
@@ -197,17 +213,100 @@ public sealed class FormState : State<Form>
 
     private void ForceRebuild() => SetState(() => _generation++);
 
-    private bool ValidateFields(ISet<FormFieldState>? invalidFields)
+    // Dart's `_validate`.
+    private bool ValidateFields(FlutterView view, ISet<FormFieldState>? invalidFields = null)
     {
-        bool valid = true;
+        bool hasError = false;
+        string errorMessage = string.Empty;
+        bool validateOnFocusChange = Current.AutovalidateMode == AutovalidateMode.OnUnfocus;
+
         foreach (var field in _fields.ToArray())
         {
-            if (field.Validate()) continue;
-            valid = false;
-            invalidFields?.Add(field);
+            // Dart's `field._focusNode.hasFocus`.
+            bool hasFocus = field.HasFocusWithin();
+
+            if (!validateOnFocusChange || !hasFocus || (validateOnFocusChange && hasFocus))
+            {
+                bool isFieldValid = field.Validate();
+                hasError |= !isFieldValid;
+                // Ensure that only the first error message gets announced to the user.
+                if (errorMessage.Length == 0)
+                {
+                    errorMessage = field.ErrorText ?? string.Empty;
+                }
+
+                if (invalidFields != null && !isFieldValid)
+                {
+                    invalidFields.Add(field);
+                }
+            }
         }
 
-        return valid;
+        if (errorMessage.Length != 0 && MediaQuery.SupportsAnnounceOf(Context))
+        {
+            TextDirection directionality = Directionality.Of(Context);
+            if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS)
+            {
+                // Dart's `unawaited(Future<void>(() async { ... }))`.
+                Scheduler.RunAsync(async () =>
+                {
+                    await Delayed(FormConstants.IOSAnnouncementDelayDuration);
+                    try
+                    {
+                        await SemanticsService.SendAnnouncement(
+                            view,
+                            errorMessage,
+                            directionality,
+                            assertiveness: Assertiveness.Assertive);
+                    }
+                    catch (Exception exception)
+                    {
+                        ReportAnnouncementError(exception);
+                    }
+                });
+            }
+            else
+            {
+                Task announcement = SemanticsService.SendAnnouncement(
+                    view,
+                    errorMessage,
+                    directionality,
+                    assertiveness: Assertiveness.Assertive);
+                Scheduler.RunAsync(() => CatchAnnouncementError(announcement));
+            }
+        }
+
+        return !hasError;
+    }
+
+    // Dart's `.catchError` on the announcement future.
+    private static async Task CatchAnnouncementError(Task announcement)
+    {
+        try
+        {
+            await announcement;
+        }
+        catch (Exception exception)
+        {
+            ReportAnnouncementError(exception);
+        }
+    }
+
+    private static void ReportAnnouncementError(Exception exception)
+    {
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "widgets library",
+            context: new ErrorDescription("while sending semantics announcement")));
+    }
+
+    // Dart's `Future<void>.delayed(duration)`, on the timer seam the test clock drives.
+    private static Task Delayed(TimeSpan duration)
+    {
+        var completer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        GestureTimer.Start(duration, completer.SetResult);
+        return completer.Task;
     }
 }
 
@@ -288,7 +387,7 @@ public abstract class FormFieldState : RestorationState
         _hadFocusWithin = hasFocusWithin;
     }
 
-    private bool HasFocusWithin()
+    internal bool HasFocusWithin()
     {
         for (var element = FocusManager.Instance.PrimaryFocus?.AttachmentElement;
              element is not null;

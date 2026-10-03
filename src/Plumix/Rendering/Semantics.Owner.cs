@@ -159,7 +159,7 @@ public sealed partial class SemanticsOwner
         }
 
         visitedNodes.Sort(static (a, b) => a.Depth - b.Depth);
-        var builder = new SemanticsUpdateBuilder();
+        SemanticsUpdateBuilder builder = SemanticsBinding.Instance.CreateSemanticsUpdateBuilder();
         foreach (SemanticsNode node in visitedNodes)
         {
             Debug.Assert(node.Parent?.IsDirty != true);

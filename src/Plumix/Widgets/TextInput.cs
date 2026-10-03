@@ -1039,7 +1039,6 @@ public sealed partial class EditableText : StatefulWidget
         string obscuringCharacter = "•",
         Action? onEditingComplete = null,
         Action<string>? onSubmitted = null,
-        string? semanticsLabel = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
         TextInputType? keyboardType = null,
@@ -1131,7 +1130,6 @@ public sealed partial class EditableText : StatefulWidget
         ObscuringCharacter = obscuringCharacter;
         OnEditingComplete = onEditingComplete;
         OnSubmitted = onSubmitted;
-        SemanticsLabel = semanticsLabel;
         TextAlign = textAlign;
         TextDirection = textDirection;
         AutofillHints = ReferenceEquals(autofillHints, AutofillDisabled) ? null : autofillHints ?? [];
@@ -1238,7 +1236,6 @@ public sealed partial class EditableText : StatefulWidget
     public string ObscuringCharacter { get; }
     public Action? OnEditingComplete { get; }
     public Action<string>? OnSubmitted { get; }
-    public string? SemanticsLabel { get; }
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
     public TextInputType KeyboardType { get; }
@@ -2192,6 +2189,23 @@ public sealed partial class EditableText : StatefulWidget
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
             TextStyle style = EffectiveTextStyle(showPlaceholder);
             UpdateCursorVisibility();
+            SemanticsInputType inputType;
+            if (Widget.KeyboardType.Equals(TextInputType.Phone))
+            {
+                inputType = SemanticsInputType.Phone;
+            }
+            else if (Widget.KeyboardType.Equals(TextInputType.Url))
+            {
+                inputType = SemanticsInputType.Url;
+            }
+            else if (Widget.KeyboardType.Equals(TextInputType.EmailAddress))
+            {
+                inputType = SemanticsInputType.Email;
+            }
+            else
+            {
+                inputType = SemanticsInputType.Text;
+            }
 
             Widget BuildEditable(ViewportOffset offset) => new EditableRenderObjectWidget(
                 key: _editableRenderKey,
@@ -2237,6 +2251,7 @@ public sealed partial class EditableText : StatefulWidget
             Widget BuildViewport(ViewportOffset offset) => new CompositedTransformTarget(
                 link: _toolbarLayerLink,
                 child: new Semantics(
+                    inputType: inputType,
                     onCopy: SemanticsOnCopy(Widget.SelectionControls),
                     onCut: SemanticsOnCut(Widget.SelectionControls),
                     onPaste: SemanticsOnPaste(Widget.SelectionControls),
@@ -2279,23 +2294,17 @@ public sealed partial class EditableText : StatefulWidget
                                         : value,
                                 focusNode: _focusNode,
                                 controller: Widget.UndoController,
-                                child: new Semantics(
-                                    label: Widget.SemanticsLabel,
-                                    textField: true,
-                                    enabled: Widget.Enabled ? true : null,
-                                    focused: _focusNode.HasFocus ? true : null,
-                                    onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
-                                    child: new Focus(
-                                        focusNode: _focusNode,
-                                        includeSemantics: false,
-                                        autofocus: Widget.Autofocus,
-                                        canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
-                                        onKeyEvent: Widget.OnKeyEvent,
-                                        debugLabel: Constants.KReleaseMode ? null : "EditableText",
-                                        child: new Container(
-                                            color: backgroundColor,
-                                            padding: Widget.Padding,
-                                            child: BuildScrollable(context, BuildViewport))))))))));
+                                child: new Focus(
+                                    focusNode: _focusNode,
+                                    includeSemantics: false,
+                                    autofocus: Widget.Autofocus,
+                                    canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
+                                    onKeyEvent: Widget.OnKeyEvent,
+                                    debugLabel: Constants.KReleaseMode ? null : "EditableText",
+                                    child: new Container(
+                                        color: backgroundColor,
+                                        padding: Widget.Padding,
+                                        child: BuildScrollable(context, BuildViewport)))))))));
         }
 
         /// Dart's `shouldChangeUndoStack` for the text field's `UndoHistory`.

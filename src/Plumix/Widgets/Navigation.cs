@@ -1300,11 +1300,17 @@ public abstract class ModalRoute : TransitionRoute
     }
 
     /// <summary>
-    /// Drives <paramref name="barrierColor"/> from fully transparent to opaque through <see cref="BarrierCurve"/>,
-    /// mirroring Flutter's <c>animation.drive(ColorTween(...).chain(CurveTween(curve: barrierCurve)))</c>.
+    /// Drives <paramref name="barrierColor"/> from fully transparent to opaque through <see cref="BarrierCurve"/>:
+    /// Flutter's <c>animation.drive(ColorTween(...).chain(CurveTween(curve: barrierCurve)))</c>.
     /// </summary>
-    protected Animation<Color?> CreateBarrierColorAnimation(Color barrierColor) =>
-        new BarrierColorAnimation(Animation, barrierColor, BarrierCurve);
+    protected Animation<Color?> CreateBarrierColorAnimation(Color barrierColor)
+    {
+        DebugAssertions.Assert(barrierColor != barrierColor.WithOpacity(0.0));
+        return Animation.Drive(
+            new ColorTween(
+                begin: barrierColor.WithOpacity(0.0),
+                end: barrierColor).Chain(new CurveTween(curve: BarrierCurve)));
+    }
 
     /// <summary>The barrier overlay entry: the barrier plus the filter, pointer and semantics wrappers.</summary>
     internal Widget BuildModalBarrierEntry(BuildContext context)
@@ -1456,38 +1462,6 @@ public abstract class ModalRoute : TransitionRoute
     public static RoutePopDisposition? PopDispositionOf(BuildContext context)
     {
         return ResolveOf(context, ModalRouteAspect.PopDisposition)?.PopDisposition;
-    }
-
-    private sealed class BarrierColorAnimation : Animation<Color?>
-    {
-        private readonly Animation<double> _parent;
-        private readonly Color _color;
-        private readonly Curve _curve;
-
-        public BarrierColorAnimation(Animation<double> parent, Color color, Curve curve)
-        {
-            _parent = parent;
-            _color = color;
-            _curve = curve;
-        }
-
-        public override Color? Value => Color.FromARGB(
-            (byte)Math.Round(_color.Alpha * _curve.Transform(Math.Clamp(_parent.Value, 0.0, 1.0))),
-            _color.Red,
-            _color.Green,
-            _color.Blue);
-
-        public override AnimationStatus Status => _parent.Status;
-
-        public override void AddListener(Action listener) => _parent.AddListener(listener);
-
-        public override void RemoveListener(Action listener) => _parent.RemoveListener(listener);
-
-        public override void AddStatusListener(Action<AnimationStatus> listener) =>
-            _parent.AddStatusListener(listener);
-
-        public override void RemoveStatusListener(Action<AnimationStatus> listener) =>
-            _parent.RemoveStatusListener(listener);
     }
 }
 

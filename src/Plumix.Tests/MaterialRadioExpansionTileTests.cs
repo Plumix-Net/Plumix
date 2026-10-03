@@ -5,6 +5,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Gestures;
 using Plumix.Cupertino;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -740,20 +741,36 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             return;
         }
 
-        SemanticsService.ResetForTests();
         using var controller = new ExpansibleController();
-        SemanticsAnnouncement? announcement = null;
-        SemanticsService.AnnouncementRequested += value => announcement = value;
-        using var harness = new WidgetRenderHarness(BuildThemed(new ExpansionTile(
-            title: new Text("Announced tile"),
-            controller: controller)));
-        harness.Pump(new Size(360, 100));
+        System.Collections.IDictionary? announcement = null;
+        BinaryMessenger messenger = ServicesBinding.Instance.DefaultBinaryMessenger;
+        messenger.SetPlatformMessageHandler(SystemChannels.Accessibility.Name, message =>
+        {
+            announcement = Assert.IsAssignableFrom<System.Collections.IDictionary>(
+                SystemChannels.Accessibility.Codec.DecodeMessage(message));
+            return Task.FromResult<ByteData?>(null);
+        });
+        try
+        {
+            using var harness = new WidgetRenderHarness(new ViewScope(
+                new FlutterView(new Size(360, 100), viewId: 3),
+                BuildThemed(new ExpansionTile(
+                    title: new Text("Announced tile"),
+                    controller: controller))));
+            harness.Pump(new Size(360, 100));
 
-        controller.Expand();
+            controller.Expand();
 
-        Assert.NotNull(announcement);
-        Assert.Equal(DefaultMaterialLocalizations.Instance.CollapsedHint, announcement!.Message);
-        SemanticsService.ResetForTests();
+            Assert.NotNull(announcement);
+            Assert.Equal("announce", announcement!["type"]);
+            var data = (System.Collections.IDictionary)announcement["data"]!;
+            Assert.Equal(DefaultMaterialLocalizations.Instance.CollapsedHint, data["message"]);
+            Assert.Equal(3, data["viewId"]);
+        }
+        finally
+        {
+            messenger.SetPlatformMessageHandler(SystemChannels.Accessibility.Name, null);
+        }
     }
 
     private static Widget BuildThemed(Widget child, ThemeData? theme = null)

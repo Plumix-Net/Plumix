@@ -225,8 +225,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                 focusNode: focusNode,
                 optionsMaxHeight: 96)))));
         harness.Pump(new Size(480, 320));
-        Assert.Contains(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), semantics =>
-            semantics.Properties.TextField == true);
+        Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
 
         focusNode.RequestFocus();
         harness.Pump(new Size(480, 320));
@@ -431,50 +430,84 @@ public sealed class MaterialAutocompleteTests : IDisposable
     {
         var controller = new TextEditingController();
         var focusNode = new FocusNode();
-        var announcements = new List<SemanticsAnnouncement>();
-        SemanticsService.AnnouncementRequested += announcements.Add;
-        using var harness = new WidgetRenderHarness(Wrap(
-            new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
-                optionsBuilder: value => Options.Where(option => option.Contains(value.Text)),
-                textEditingController: controller,
-                focusNode: focusNode))),
-            new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true, ViewId: 7)));
-        harness.Pump(new Size(480, 320));
+        var announcements = new List<System.Collections.IDictionary>();
+        BinaryMessenger messenger = ServicesBinding.Instance.DefaultBinaryMessenger;
+        messenger.SetPlatformMessageHandler(SystemChannels.Accessibility.Name, message =>
+        {
+            announcements.Add(Assert.IsAssignableFrom<System.Collections.IDictionary>(
+                SystemChannels.Accessibility.Codec.DecodeMessage(message)));
+            return Task.FromResult<ByteData?>(null);
+        });
+        try
+        {
+            using var harness = new WidgetRenderHarness(new ViewScope(
+                new FlutterView(new Size(480, 320), viewId: 7),
+                Wrap(
+                    new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
+                        optionsBuilder: value => Options.Where(option => option.Contains(value.Text)),
+                        textEditingController: controller,
+                        focusNode: focusNode))),
+                    new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true))));
+            harness.Pump(new Size(480, 320));
 
-        focusNode.RequestFocus();
-        await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 1);
-        controller.Text = "e";
-        harness.Pump(new Size(480, 320));
-        controller.Text = "no matches";
-        await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 2);
+            focusNode.RequestFocus();
+            await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 1);
+            controller.Text = "e";
+            harness.Pump(new Size(480, 320));
+            controller.Text = "no matches";
+            await PumpUntilAsync(harness, new Size(480, 320), () => announcements.Count == 2);
 
-        Assert.Equal(
-            ["Search results found", "No results found"],
-            announcements.Select(announcement => announcement.Message));
-        Assert.All(announcements, announcement => Assert.Equal(7, announcement.ViewId));
-        Assert.All(announcements, announcement => Assert.Equal(TextDirection.Ltr, announcement.TextDirection));
+            Assert.All(announcements, announcement => Assert.Equal("announce", announcement["type"]));
+            List<System.Collections.IDictionary> data = announcements.ConvertAll(
+                announcement => (System.Collections.IDictionary)announcement["data"]!);
+            Assert.Equal(
+                ["Search results found", "No results found"],
+                data.Select(item => (string?)item["message"]));
+            Assert.All(data, item => Assert.Equal(7, item["viewId"]));
+            Assert.All(data, item => Assert.Equal((int)TextDirection.Ltr, item["textDirection"]));
+            Assert.All(data, item => Assert.False(item.Contains("assertiveness")));
+        }
+        finally
+        {
+            messenger.SetPlatformMessageHandler(SystemChannels.Accessibility.Name, null);
+        }
     }
 
     [Fact]
     public async Task RawAutocomplete_ReportsAnnouncementFailures()
     {
         var focusNode = new FocusNode();
-        Exception? reported = null;
-        SemanticsService.PlatformHandler = announcement =>
-            Task.FromException(new FormatException("invalid announcement response"));
-        SemanticsService.AnnouncementFailed += exception => reported = exception;
-        using var harness = new WidgetRenderHarness(Wrap(
-            new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
-                optionsBuilder: value => Options,
-                focusNode: focusNode,
-                textEditingController: new TextEditingController()))),
-            new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true)));
-        harness.Pump(new Size(480, 320));
+        FlutterErrorDetails? reported = null;
+        FlutterExceptionHandler? previousOnError = FlutterError.OnError;
+        FlutterError.OnError = details => reported = details;
+        BinaryMessenger messenger = ServicesBinding.Instance.DefaultBinaryMessenger;
+        messenger.SetPlatformMessageHandler(
+            SystemChannels.Accessibility.Name,
+            _ => Task.FromException<ByteData?>(new FormatException("invalid announcement response")));
+        try
+        {
+            using var harness = new WidgetRenderHarness(new ViewScope(
+                new FlutterView(new Size(480, 320)),
+                Wrap(
+                    new Navigator(new BuilderPageRoute(_ => new Autocomplete<string>(
+                        optionsBuilder: value => Options,
+                        focusNode: focusNode,
+                        textEditingController: new TextEditingController()))),
+                    new MediaQueryData(Size: new Size(480, 320), SupportsAnnounce: true))));
+            harness.Pump(new Size(480, 320));
 
-        focusNode.RequestFocus();
-        await PumpUntilAsync(harness, new Size(480, 320), () => reported is not null);
+            focusNode.RequestFocus();
+            await PumpUntilAsync(harness, new Size(480, 320), () => reported is not null);
 
-        Assert.IsType<FormatException>(reported);
+            Assert.IsType<FormatException>(reported!.Exception);
+            Assert.Equal("widgets library", reported.Library);
+            Assert.Equal("while sending semantics announcement", reported.Context!.ToString());
+        }
+        finally
+        {
+            messenger.SetPlatformMessageHandler(SystemChannels.Accessibility.Name, null);
+            FlutterError.OnError = previousOnError;
+        }
     }
 
     [Fact]

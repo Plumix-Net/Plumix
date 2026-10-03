@@ -7,7 +7,8 @@ class DatePickerDemoPage extends StatefulWidget {
   State<DatePickerDemoPage> createState() => _DatePickerDemoPageState();
 }
 
-class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
+class _DatePickerDemoPageState extends State<DatePickerDemoPage>
+    with RestorationMixin {
   DateTime _selectedDate = DateTime(2026, 3, 12);
   DateTime _displayedMonth = DateTime(2026, 3);
   bool _showYearPicker = false;
@@ -21,6 +22,65 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
   );
   final GlobalKey<FormState> _dateFormKey = GlobalKey<FormState>();
   String _formStatus = 'not validated';
+  late final RestorableRouteFuture<DateTime?> _restorableDatePickerRoute =
+      RestorableRouteFuture<DateTime?>(
+        onComplete: _handleRestorableDateSelected,
+        onPresent: (NavigatorState navigator, Object? arguments) {
+          return navigator.restorablePush(
+            _datePickerRoute,
+            arguments: <String, Object?>{
+              'selectedDate': _selectedDate.millisecondsSinceEpoch,
+            },
+          );
+        },
+      );
+
+  @override
+  String? get restorationId => 'date_picker_demo';
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    registerForRestoration(
+      _restorableDatePickerRoute,
+      'date_picker_route_future',
+    );
+  }
+
+  @override
+  void dispose() {
+    _restorableDatePickerRoute.dispose();
+    super.dispose();
+  }
+
+  @pragma('vm:entry-point')
+  static Route<DateTime> _datePickerRoute(
+    BuildContext context,
+    Object? arguments,
+  ) {
+    final Map<Object?, Object?> args = arguments! as Map<Object?, Object?>;
+    return DialogRoute<DateTime>(
+      context: context,
+      builder: (BuildContext context) => DatePickerDialog(
+        restorationId: 'date_picker_dialog',
+        initialEntryMode: DatePickerEntryMode.calendarOnly,
+        initialDate: DateUtils.dateOnly(
+          DateTime.fromMillisecondsSinceEpoch(args['selectedDate']! as int),
+        ),
+        firstDate: DateTime(2022),
+        lastDate: DateTime(2032, 12, 31),
+      ),
+    );
+  }
+
+  void _handleRestorableDateSelected(DateTime? newDate) {
+    if (!mounted) return;
+    setState(() {
+      if (newDate != null) _selectedDate = newDate;
+      _formStatus = newDate == null
+          ? 'restorable canceled'
+          : 'restorable: ${_formatDay(newDate)}';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,6 +227,26 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage> {
                 _buildToggle(
                   'Input dialog',
                   () => _openDatePicker(context, DatePickerEntryMode.input),
+                ),
+              ],
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildToggle(
+                  'Calendar only',
+                  () => _openDatePicker(
+                    context,
+                    DatePickerEntryMode.calendarOnly,
+                  ),
+                ),
+                _buildToggle(
+                  'Input only',
+                  () => _openDatePicker(context, DatePickerEntryMode.inputOnly),
+                ),
+                _buildToggle(
+                  'Restorable',
+                  () => _restorableDatePickerRoute.present(),
                 ),
               ],
             ),

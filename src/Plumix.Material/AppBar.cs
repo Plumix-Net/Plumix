@@ -560,13 +560,9 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                     softWrap: false,
                     overflow: TextOverflow.Ellipsis,
                     child: title);
-                if (MediaQuery.MaybeOf(context) is not null)
-                {
-                    title = MediaQuery.WithClampedTextScaling(
-                        context,
-                        title,
-                        maxScaleFactor: MaxTitleTextScaleFactor);
-                }
+                title = MediaQuery.WithClampedTextScaling(
+                    maxScaleFactor: MaxTitleTextScaleFactor,
+                    child: title);
             }
 
             Widget? actions = null;
@@ -635,7 +631,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                     ]);
             }
 
-            if (widget.Primary && MediaQuery.MaybeOf(context) is not null)
+            if (widget.Primary)
             {
                 appBar = new SafeArea(bottom: false, child: appBar);
             }

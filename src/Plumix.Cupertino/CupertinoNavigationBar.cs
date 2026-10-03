@@ -162,11 +162,10 @@ internal static class NavBarStatics
     /// <summary>`MediaQuery.withClampedTextScaling(minScaleFactor: 0.9, maxScaleFactor: 1.235)`.</summary>
     public static Widget WrapWithClampedTextScaling(Widget child)
     {
-        return new Builder(builder: context => MediaQuery.WithClampedTextScaling(
-            context,
-            child,
+        return MediaQuery.WithClampedTextScaling(
+            minScaleFactor: MinScaleFactor,
             maxScaleFactor: MaxScaleFactor,
-            minScaleFactor: MinScaleFactor));
+            child: child);
     }
 }
 

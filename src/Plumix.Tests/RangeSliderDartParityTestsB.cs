@@ -54,7 +54,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         PumpAndSettle(tester);
 
         ExpectSemantics(
-            GetSemantics(SliderElement(tester)),
+            tester.GetSemantics(SliderElement(tester)),
             RangeSliderSemantics(
                 ThumbSemantics(value: "10%", increasedValue: "10%", decreasedValue: "5%", label: string.Empty),
                 ThumbSemantics(value: "12%", increasedValue: "17%", decreasedValue: "12%", label: string.Empty)));
@@ -79,7 +79,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
 
         PumpAndSettle(tester);
 
-        SemanticsNode semanticsNode = GetSemantics(SliderElement(tester));
+        SemanticsNode semanticsNode = tester.GetSemantics(SliderElement(tester));
         ExpectSemantics(
             semanticsNode,
             RangeSliderSemantics(
@@ -119,7 +119,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
 
         PumpAndSettle(tester);
 
-        SemanticsNode semanticsNode = GetSemantics(SliderElement(tester));
+        SemanticsNode semanticsNode = tester.GetSemantics(SliderElement(tester));
         ExpectSemantics(
             semanticsNode,
             RangeSliderSemantics(
@@ -530,7 +530,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         PumpAndSettle(tester);
         Assert.Same(startFocusNode, FocusManager.Instance.PrimaryFocus);
 
-        SemanticsNode semanticsNode = GetSemantics(SliderElement(tester));
+        SemanticsNode semanticsNode = tester.GetSemantics(SliderElement(tester));
         ExpectSemantics(
             semanticsNode,
             RangeSliderSemantics(
@@ -1711,19 +1711,6 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
         tester.RenderView.Owner!.FlushSemantics();
     }
 
-    // `tester.getSemantics(finder)`.
-    private static SemanticsNode GetSemantics(Element element)
-    {
-        RenderObject? renderObject = element.FindRenderObject();
-        SemanticsNode? result = renderObject?.DebugSemantics;
-        while (renderObject != null && (result == null || result.IsMergedIntoParent))
-        {
-            renderObject = renderObject.Parent;
-            result = renderObject?.DebugSemantics;
-        }
-
-        return result ?? throw new InvalidOperationException("No semantics node found.");
-    }
 
     // The thumb rects of the three-level visitChildren walk in the ltr/rtl tests, rounded.
     private static List<Rect> RoundedThumbRects(SemanticsNode semanticsNode)

@@ -38,7 +38,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void OverlayRemainsWhenSliderThumbIsInteracted()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 0.5;
         var overlayColor = new Color(0xffff0000);
@@ -76,7 +76,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void OverlayAppearOnlyWhenHoveredOnTheThumbOnDesktop(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 0.5;
         var overlayColor = new Color(0xffff0000);
@@ -121,7 +121,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void OverlayRemainsWhenSliderIsInFocusOnDesktop(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 0.5;
         var overlayColor = new Color(0xffff0000);
@@ -172,7 +172,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void ValueIndicatorDisappearsAfterAdjustingTheSliderOnDesktop(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         var theme = new ThemeData();
         const double currentValue = 0.5;
@@ -218,7 +218,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void ValueIndicatorRemainsWhenSliderIsInFocusOnDesktop(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 0.5;
         using var focusNode = new FocusNode();
@@ -273,7 +273,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void ShowValueIndicatorTakesPriorityOverTheme()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
 
         Widget BuildApp(ShowValueIndicator? themeShowValueIndicator, ShowValueIndicator? sliderShowValueIndicator) =>
@@ -319,7 +319,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void EventOnSliderShouldPerformNoOpIfAlreadyUnmounted()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         // Test covering crashing found in Google internal issue b/192329942.
         double value = 0.0;
@@ -371,7 +371,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void Material2SliderCanBeHoveredAndHasCorrectHoverColor()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
         var theme = new ThemeData(useMaterial3: false);
@@ -413,7 +413,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void Material2SliderIsFocusableAndHasCorrectFocusColor()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         using var focusNode = new FocusNode(debugLabel: "Slider");
         FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
@@ -450,7 +450,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void Material2SliderIsDraggableAndHasCorrectDraggedColor()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
         double value = 0.5;
@@ -503,7 +503,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderInteractionTapOnly()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 1.0;
         Key sliderKey = new UniqueKey();
@@ -556,7 +556,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderInteractionTapAndSlideDefault()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 1.0;
         Key sliderKey = new UniqueKey();
@@ -613,7 +613,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderInteractionSlideOnly()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         const double overlayRadius = 23;
         Color overlayColor = Colors.Red;
@@ -719,7 +719,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderInteractionSlideThumb()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 1.0;
         Key sliderKey = new UniqueKey();
@@ -805,7 +805,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void DiscreteSliderOnChangedIsCalledOnlyOnce()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         int onChangeCallbackCount = 0;
         tester.PumpWidget(new MaterialApp(
@@ -831,7 +831,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SkipDrawingValueIndicatorShapeWhenLabelPainterTextIsNull()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double sliderValue = 10;
 
@@ -868,7 +868,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void SliderValueIndicatorIsShownWhenUsingArrowKeys(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
         var theme = new ThemeData();
@@ -898,7 +898,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         PaintAssert.Paints(valueIndicatorBox, Indicator());
 
         // Right arrow (increase)
-        SendKeyEvent(LogicalKeyboardKey.ArrowRight);
+        tester.SendKeyEvent(LogicalKeyboardKey.ArrowRight);
         tester.PumpAndSettle();
         Assert.Equal(0.6, startValue);
         Assert.Equal("0.8", currentValue.ToString("F1", CultureInfo.InvariantCulture));
@@ -909,7 +909,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         PaintAssert.Paints(valueIndicatorBox, Indicator());
 
         // Left arrow (decrease)
-        SendKeyEvent(LogicalKeyboardKey.ArrowLeft);
+        tester.SendKeyEvent(LogicalKeyboardKey.ArrowLeft);
         tester.PumpAndSettle();
         Assert.Equal(0.8, startValue);
         Assert.Equal("0.6", currentValue.ToString("F1", CultureInfo.InvariantCulture));
@@ -920,7 +920,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         PaintAssert.Paints(valueIndicatorBox, Indicator());
 
         // Up arrow (increase)
-        SendKeyEvent(LogicalKeyboardKey.ArrowUp);
+        tester.SendKeyEvent(LogicalKeyboardKey.ArrowUp);
         tester.PumpAndSettle();
         Assert.Equal(0.6, startValue);
         Assert.Equal("0.8", currentValue.ToString("F1", CultureInfo.InvariantCulture));
@@ -931,7 +931,7 @@ public sealed class SliderDartParityTestsC : IDisposable
         PaintAssert.Paints(valueIndicatorBox, Indicator());
 
         // Down arrow (decrease)
-        SendKeyEvent(LogicalKeyboardKey.ArrowDown);
+        tester.SendKeyEvent(LogicalKeyboardKey.ArrowDown);
         tester.PumpAndSettle();
         Assert.Equal(0.8, startValue);
         Assert.Equal("0.6", currentValue.ToString("F1", CultureInfo.InvariantCulture));
@@ -947,7 +947,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [MemberData(nameof(DesktopPlatforms))]
     public void ValueIndicatorLabelIsShownWhenFocused(TargetPlatform targetPlatform)
     {
-        using PlatformOverride platform = new(targetPlatform);
+        using IDisposable platform = TargetPlatformVariant.Override(targetPlatform);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         double value = 0.5;
         using var focusNode = new FocusNode();
@@ -986,7 +986,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderPaddingCanOverrideTheDefaultSliderPadding()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
 
         Widget BuildSlider(EdgeInsetsGeometry? padding = null) => new MaterialApp(
@@ -1052,7 +1052,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void DefaultSliderWhenYear2023IsFalse()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         RenderingDebug.DisableShadows = false;
         try
@@ -1207,7 +1207,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderValueIndicatorTextWhenYear2023IsFalse()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         const double value = 50;
         var log = new List<InlineSpan>();
@@ -1244,7 +1244,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void CanUpdateRenderObjectWhenSecondaryTrackValueIsUpdated()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         var log = new List<Point?>();
         var loggingTrackShape = new LoggingRoundedRectSliderTrackShape(secondaryOffsetLog: log);
@@ -1277,7 +1277,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void DiscreteSliderDoesNotApplyThumbPaddingInANonRoundedTrackShape()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         // The default track left and right padding.
         const double sliderPadding = 24.0;
@@ -1315,7 +1315,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     [Fact]
     public void SliderDoesNotCrashAtZeroArea()
     {
-        using PlatformOverride platform = new(TargetPlatform.Android);
+        using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
         tester.PumpWidget(new MaterialApp(
             home: new Scaffold(
@@ -1372,29 +1372,6 @@ public sealed class SliderDartParityTestsC : IDisposable
         while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
     }
 
-    // `tester.sendKeyEvent(key)`: a key down then a key up through the focus manager.
-    private static void SendKeyEvent(LogicalKeyboardKey key)
-    {
-        FocusManager.Instance.HandleKeyEvent(KeySim.Down(key));
-        Scheduler.FlushMicrotasks();
-        FocusManager.Instance.HandleKeyEvent(KeySim.Up(key));
-        Scheduler.FlushMicrotasks();
-    }
-
-    // flutter_test's `debugDefaultTargetPlatformOverride` for one test (android unless a variant says
-    // otherwise).
-    private sealed class PlatformOverride : IDisposable
-    {
-        private readonly TargetPlatform? _previous;
-
-        public PlatformOverride(TargetPlatform platform)
-        {
-            _previous = PlatformDefaults.DebugTargetPlatformOverride;
-            PlatformDefaults.DebugTargetPlatformOverride = platform;
-        }
-
-        public void Dispose() => PlatformDefaults.DebugTargetPlatformOverride = _previous;
-    }
 
     /// <summary>A <see cref="RoundedRectSliderTrackShape"/> that logs its paint.</summary>
     private sealed class LoggingRoundedRectSliderTrackShape(List<Point?>? secondaryOffsetLog = null)

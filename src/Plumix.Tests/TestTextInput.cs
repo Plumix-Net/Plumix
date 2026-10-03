@@ -75,6 +75,15 @@ internal sealed class TestTextInput : IDisposable
         Unregister();
     }
 
+    /// <summary>
+    /// Adopts a client the framework attached before this instance was registered (C#-only: a
+    /// <see cref="FrameworkDartTester"/> registers its instance on first use, not when the test starts).
+    /// </summary>
+    public void AdoptClient(int client)
+    {
+        _client ??= client;
+    }
+
     /// <summary>Resets any internal state of this object and calls <see cref="Log"/>.Clear().</summary>
     public void Reset()
     {

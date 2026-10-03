@@ -124,11 +124,11 @@ public sealed class InkWellDartParityTests : IDisposable
                     child: new MaterialWidget(
                         child: new Center(child: new InkWell(autofocus: true, onTap: () => log.Add("tap")))))));
 
-        SendKeyEvent(LogicalKeyboardKey.Space);
+        tester.SendKeyEvent(LogicalKeyboardKey.Space);
         tester.Pump();
         Assert.Equal(["tap"], log);
         log.Clear();
-        SendKeyEvent(LogicalKeyboardKey.Enter);
+        tester.SendKeyEvent(LogicalKeyboardKey.Enter);
         tester.Pump();
         Assert.Equal(["tap"], log);
     }
@@ -1106,7 +1106,7 @@ public sealed class InkWellDartParityTests : IDisposable
     public void ExcludeFromSemantics()
     {
         using FrameworkDartTester tester = CreateTester();
-        using var semantics = new InkSemanticsTester(tester);
+        using var semantics = new SemanticsTester(tester);
 
         tester.PumpWidget(
             new Directionality(
@@ -1767,7 +1767,7 @@ public sealed class InkWellDartParityTests : IDisposable
     public void InkWellDoesNotAttachSemanticsHandlerForOnTapIfItWasNotProvidedAnOnTapHandler()
     {
         using FrameworkDartTester tester = CreateTester();
-        using var semantics = new InkSemanticsTester(tester);
+        using var semantics = new SemanticsTester(tester);
         tester.PumpWidget(
             new Directionality(
                 textDirection: TextDirection.Ltr,
@@ -1778,11 +1778,14 @@ public sealed class InkWellDartParityTests : IDisposable
                             onLongPressUp: () => { },
                             child: new Text("Foo"))))));
 
-        semantics.ExpectMatchesSemantics(
-            "Foo",
-            flags: SemanticsFlags.IsFocusable,
-            actions: SemanticsActions.LongPress | SemanticsActions.Focus,
-            textDirection: TextDirection.Ltr);
+        SemanticsMatchers.ExpectSemantics(
+            tester.GetSemantics(Find.BySemanticsLabel("Foo")),
+            SemanticsMatchers.MatchesSemantics(
+                label: "Foo",
+                hasFocusAction: true,
+                hasLongPressAction: true,
+                isFocusable: true,
+                textDirection: TextDirection.Ltr));
 
         // Add tap handler and confirm addition to semantic actions.
         tester.PumpWidget(
@@ -1796,11 +1799,15 @@ public sealed class InkWellDartParityTests : IDisposable
                             onTap: () => { },
                             child: new Text("Foo"))))));
 
-        semantics.ExpectMatchesSemantics(
-            "Foo",
-            flags: SemanticsFlags.IsFocusable,
-            actions: SemanticsActions.Tap | SemanticsActions.Focus | SemanticsActions.LongPress,
-            textDirection: TextDirection.Ltr);
+        SemanticsMatchers.ExpectSemantics(
+            tester.GetSemantics(Find.BySemanticsLabel("Foo")),
+            SemanticsMatchers.MatchesSemantics(
+                label: "Foo",
+                hasTapAction: true,
+                hasFocusAction: true,
+                hasLongPressAction: true,
+                isFocusable: true,
+                textDirection: TextDirection.Ltr));
     }
 
     // Flutter: "InkWell highlight should not survive after [onTapDown, onDoubleTap] sequence"
@@ -2054,7 +2061,7 @@ public sealed class InkWellDartParityTests : IDisposable
                             child: new InkWell(autofocus: true, onTap: () => { }, statesController: controller))))));
 
         // Invoke the InkWell activation action.
-        SendKeyEvent(LogicalKeyboardKey.Enter);
+        tester.SendKeyEvent(LogicalKeyboardKey.Enter);
 
         // The InkWell is in pressed state.
         tester.Pump(TimeSpan.FromMilliseconds(99));
@@ -2229,115 +2236,5 @@ public sealed class InkWellDartParityTests : IDisposable
         TestGesture gesture = StartGesture(tester, tester.GetCenter(element));
         tester.Pump(LongPressDuration);
         gesture.Up();
-    }
-
-    // `tester.sendKeyEvent(key)`: a key down then a key up through the focus manager.
-    private static void SendKeyEvent(LogicalKeyboardKey key)
-    {
-        FocusManager.Instance.HandleKeyEvent(KeySim.Down(key));
-        Scheduler.FlushMicrotasks();
-        FocusManager.Instance.HandleKeyEvent(KeySim.Up(key));
-        Scheduler.FlushMicrotasks();
-    }
-}
-
-/// <summary>
-/// material-ui-src/test/feedback_tester.dart's <c>FeedbackTester</c>: counts the haptic and click-sound
-/// requests the framework sends on <see cref="SystemChannels.Platform"/>.
-/// </summary>
-internal sealed class FeedbackTester : IDisposable
-{
-    private readonly MockMethodCallHandler _handler = new(SystemChannels.Platform);
-
-    /// <summary>Number of times haptic feedback was requested (vibration).</summary>
-    public int HapticCount => _handler.Log.Count(call => call.Method == "HapticFeedback.vibrate");
-
-    /// <summary>Number of times the click sound was requested to play.</summary>
-    public int ClickSoundCount => _handler.Log.Count(
-        call => call.Method == "SystemSound.play" && Equals(call.Arguments, "SystemSoundType.click"));
-
-    public void Dispose() => _handler.Dispose();
-}
-
-/// <summary>
-/// semantics_tester.dart's <c>SemanticsTester</c>, with the two queries the ink tests make:
-/// <c>includesNodeWith</c> and <c>tester.getSemantics(find.bySemanticsLabel(..))</c> +
-/// <c>matchesSemantics</c>.
-/// </summary>
-internal sealed class InkSemanticsTester : IDisposable
-{
-    private readonly FrameworkDartTester _tester;
-    private SemanticsHandle? _handle;
-
-    public InkSemanticsTester(FrameworkDartTester tester)
-    {
-        _tester = tester;
-        PipelineOwner owner = tester.RenderView.Owner!;
-        bool createsOwner = owner.SemanticsOwner is null;
-        _handle = owner.EnsureSemantics();
-        if (createsOwner)
-        {
-            tester.RenderView.ClearSemantics();
-            tester.RenderView.ScheduleInitialSemantics();
-        }
-    }
-
-    /// <summary>
-    /// <c>includesNodeWith(label: .., actions: ..)</c>: some node has exactly this label and exactly these
-    /// actions.
-    /// </summary>
-    public bool IncludesNodeWith(string label, SemanticsActions actions) =>
-        AllNodes().Any(node =>
-        {
-            SemanticsData data = node.GetSemanticsData();
-            return data.Label == label && data.Actions == actions;
-        });
-
-    /// <summary>
-    /// <c>expect(tester.getSemantics(find.bySemanticsLabel(label)), matchesSemantics(..))</c>: the node with
-    /// the label has exactly these flags and actions (matchesSemantics defaults every other one to false).
-    /// </summary>
-    public void ExpectMatchesSemantics(
-        string label,
-        SemanticsFlags flags,
-        SemanticsActions actions,
-        TextDirection? textDirection = null)
-    {
-        SemanticsNode node = AllNodes().Single(candidate => candidate.GetSemanticsData().Label == label);
-        SemanticsData data = node.GetSemanticsData();
-        Assert.Equal(flags, data.Flags);
-        Assert.Equal(actions, data.Actions);
-        if (textDirection is not null)
-        {
-            Assert.Equal(textDirection, data.TextDirection);
-        }
-    }
-
-    public void Dispose()
-    {
-        _handle?.Dispose();
-        _handle = null;
-    }
-
-    private List<SemanticsNode> AllNodes()
-    {
-        PipelineOwner owner = _tester.RenderView.Owner!;
-        owner.FlushSemantics();
-        var nodes = new List<SemanticsNode>();
-        void Visit(SemanticsNode node)
-        {
-            nodes.Add(node);
-            foreach (SemanticsNode child in node.Children)
-            {
-                Visit(child);
-            }
-        }
-
-        if (owner.SemanticsOwner?.RootNode is { } root)
-        {
-            Visit(root);
-        }
-
-        return nodes;
     }
 }

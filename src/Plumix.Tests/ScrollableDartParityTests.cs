@@ -1326,7 +1326,7 @@ public sealed class ScrollableDartParityTests
         // Regression test for https://github.com/flutter/flutter/issues/40419.
         using var tester = NewTester();
         using DartSemantics dartSemantics = new(tester);
-        SemanticsHandle handle = EnsureSemantics(tester);
+        SemanticsHandle handle = tester.EnsureSemantics();
         var listView = new UniqueKey();
         Widget Build(bool enabled)
         {
@@ -1342,7 +1342,7 @@ public sealed class ScrollableDartParityTests
 
         tester.PumpWidget(Build(true));
 
-        SemanticsNode scrollableNode = GetSemantics(
+        SemanticsNode scrollableNode = tester.GetSemantics(
             Descendants<RawGestureDetector>(tester.ElementsWithKey(listView).Single()).Single());
         SemanticsNode? syntheticScrollableNode = null;
         foreach (SemanticsNode node in scrollableNode.Children)
@@ -1364,7 +1364,7 @@ public sealed class ScrollableDartParityTests
         //    _RenderScrollSemantics dirty.
         // 3. The _RenderScrollSemantics rebuilds its semantics node with implicit
         //    scroll.
-        scrollableNode = GetSemantics(
+        scrollableNode = tester.GetSemantics(
             Descendants<RawGestureDetector>(tester.ElementsWithKey(listView).Single()).Single());
         syntheticScrollableNode = null;
         foreach (SemanticsNode node in scrollableNode.Children)
@@ -1385,7 +1385,7 @@ public sealed class ScrollableDartParityTests
         using var tester = NewTester();
         using DartSemantics dartSemantics = new(tester);
 
-        SemanticsHandle handle = EnsureSemantics(tester);
+        SemanticsHandle handle = tester.EnsureSemantics();
         var key = new UniqueKey();
 
         // Use a WidgetsApp, since the text field requires an overlay.
@@ -1400,7 +1400,7 @@ public sealed class ScrollableDartParityTests
         // Wait for focus.
         tester.PumpAndSettle();
 
-        SemanticsNode scrollableNode = GetSemantics(tester.ElementsWithKey(key).Single());
+        SemanticsNode scrollableNode = tester.GetSemantics(tester.ElementsWithKey(key).Single());
         SemanticsNode? intermediateNode = null;
         foreach (SemanticsNode node in scrollableNode.Children)
         {
@@ -1460,7 +1460,7 @@ public sealed class ScrollableDartParityTests
     {
         using var tester = NewTester();
         using DartSemantics dartSemantics = new(tester);
-        SemanticsHandle semantics = EnsureSemantics(tester);
+        SemanticsHandle semantics = tester.EnsureSemantics();
         var key = new LabeledGlobalKey<State>(null);
         var key1 = new LabeledGlobalKey<State>(null);
         var offsets = new List<ViewportOffset>();
@@ -1874,25 +1874,6 @@ public sealed class ScrollableDartParityTests
     private static Element FirstOfType<TWidget>(FrameworkDartTester tester) where TWidget : Widget
         => OnstageElements(tester).First(element => element.Widget.GetType() == typeof(TWidget));
 
-    // flutter_test: tester.ensureSemantics(). DartSemantics already flushes every frame.
-    private static SemanticsHandle EnsureSemantics(FrameworkDartTester tester)
-    {
-        return tester.RenderView.Owner!.EnsureSemantics();
-    }
-
-    // flutter_test: WidgetController.getSemantics.
-    private static SemanticsNode GetSemantics(Element element)
-    {
-        RenderObject? renderObject = element.FindRenderObject();
-        SemanticsNode? result = renderObject?.SemanticsNode;
-        while (renderObject is not null && (result is null || result.IsMergedIntoParent))
-        {
-            renderObject = renderObject.Parent;
-            result = renderObject?.SemanticsNode;
-        }
-
-        return result ?? throw new InvalidOperationException("No semantics node found.");
-    }
 
     // semantics_tester.dart: includesNodeWith(tags: ...).
     private static bool IncludesNodeWithTags(FrameworkDartTester tester, IReadOnlySet<SemanticsTag> tags)

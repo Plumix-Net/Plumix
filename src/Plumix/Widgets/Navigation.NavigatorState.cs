@@ -1388,21 +1388,43 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
         return entries;
     }
 
+    // Flutter's `_forcedDisposeAllRouteEntries`.
     private void ForcedDisposeAllRouteEntries()
     {
-        _entriesWaitingForSubtreeDisposal.Clear();
-        foreach (RouteEntry entry in _history.ToArray())
+        foreach (RouteEntry entry in _entriesWaitingForSubtreeDisposal.ToArray())
         {
+            entry.ForcedDispose();
+        }
+
+        _entriesWaitingForSubtreeDisposal.Clear();
+        while (_history.Count > 0)
+        {
+            RouteEntry entry = _history[^1];
+            _history.RemoveAt(_history.Count - 1);
             if (entry.CurrentState < RouteLifecycle.Disposed)
             {
-                entry.ForcedDispose();
+                DisposeRouteEntry(entry);
             }
         }
 
-        _history.Clear();
         _observedRouteAdditions.Clear();
         _observedRouteDeletions.Clear();
         _lastTopmostRoute = null;
+    }
+
+    // Flutter's `_disposeRouteEntry(entry, graceful: false)`: the route's overlay entries leave the
+    // overlay before the route disposes them.
+    private static void DisposeRouteEntry(RouteEntry entry)
+    {
+        foreach (OverlayEntry overlayEntry in entry.Route.OverlayEntries.ToArray())
+        {
+            if (overlayEntry.Owner is not null)
+            {
+                overlayEntry.Remove();
+            }
+        }
+
+        entry.ForcedDispose();
     }
 
     // -------------------------------------------------------------------------------------------------

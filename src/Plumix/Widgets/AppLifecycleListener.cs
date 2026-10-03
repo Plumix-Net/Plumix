@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
@@ -11,11 +12,6 @@ namespace Plumix.Widgets;
 // flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
 
 public delegate Task<AppExitResponse> AppExitRequestCallback();
-
-/// <summary>Host-reported accessibility animation preferences.</summary>
-public readonly record struct AccessibilityFeatures(
-    bool ReduceMotion = false,
-    bool DisableAnimations = false);
 
 public interface WidgetsBindingObserver
 {
@@ -144,7 +140,12 @@ public partial class WidgetsBinding
 
     public AppLifecycleState? LifecycleState { get; private set; }
 
-    public AccessibilityFeatures AccessibilityFeatures { get; private set; }
+    /// <summary>The currently active set of accessibility features.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsBinding.accessibilityFeatures</c>, which Dart's widgets binding mixes in;
+    /// Plumix's bindings are separate singletons, so this reads <see cref="SemanticsBinding"/>'s.
+    /// </remarks>
+    public AccessibilityFeatures AccessibilityFeatures => SemanticsBinding.Instance.AccessibilityFeatures;
 
     public void AddObserver(WidgetsBindingObserver observer)
     {
@@ -158,16 +159,16 @@ public partial class WidgetsBinding
         return _observers.Remove(observer);
     }
 
-    /// <summary>Updates accessibility animation preferences and notifies registered widgets.</summary>
-    public void HandleAccessibilityFeaturesChanged(AccessibilityFeatures features)
+    /// <summary>Called when the platform accessibility features change.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleAccessibilityFeaturesChanged</c> override: the semantics
+    /// binding's part first (Dart's <c>super</c> call), then every observer hears
+    /// <c>DidChangeAccessibilityFeatures</c>. <see cref="PlatformDispatcher.OnAccessibilityFeaturesChanged"/>
+    /// reaches it through <see cref="SemanticsBinding"/>, which <see cref="InitInstances"/> wires.
+    /// </remarks>
+    public void HandleAccessibilityFeaturesChanged()
     {
-        if (AccessibilityFeatures == features)
-        {
-            return;
-        }
-
-        AccessibilityFeatures = features;
-        AnimationController.DisableAnimations = features.DisableAnimations;
+        SemanticsBinding.Instance.HandleAccessibilityFeaturesChanged();
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
             try
@@ -176,9 +177,12 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                Debug.WriteLine(
-                    $"Exception while dispatching {nameof(WidgetsBindingObserver.DidChangeAccessibilityFeatures)}: "
-                    + exception);
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    library: "widgets library",
+                    context: new ErrorDescription(
+                        "while dispatching notifications for "
+                        + "WidgetsBindingObserver.didChangeAccessibilityFeatures")));
             }
         }
     }
@@ -320,6 +324,9 @@ public partial class WidgetsBinding
     /// </summary>
     public void InitInstances()
     {
+        // Dart's `SemanticsBinding.initInstances` installs the dispatcher callback that calls the
+        // virtual `handleAccessibilityFeaturesChanged`; this binding's override is the most derived.
+        SemanticsBinding.Instance.AccessibilityFeaturesChangedOverride = HandleAccessibilityFeaturesChanged;
         EnsureFrameCallback();
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
     }

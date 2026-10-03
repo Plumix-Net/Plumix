@@ -788,14 +788,21 @@ public sealed class WidgetsApp : StatefulWidget
                     ? null
                     : (_, routeName) => CurrentWidget.OnGenerateInitialRoutes(routeName);
             return new FocusScope(
+                debugLabel: "Navigator Scope",
                 autofocus: true,
                 child: new Navigator(
-                    onGenerateRoute: GenerateRoute,
-                    initialRouteName: InitialRouteName,
-                    observers: CurrentWidget.NavigatorObservers,
+                    clipBehavior: Clip.None,
+                    restorationScopeId: "nav",
                     key: CurrentWidget.NavigatorKey ?? _navigatorKey,
+                    initialRouteName: InitialRouteName,
+                    onGenerateRoute: GenerateRoute,
                     onGenerateInitialRoutes: initialRouteFactory,
-                    onUnknownRoute: CurrentWidget.OnUnknownRoute));
+                    onUnknownRoute: CurrentWidget.OnUnknownRoute,
+                    observers: CurrentWidget.NavigatorObservers,
+                    routeTraversalEdgeBehavior: Constants.KIsWeb
+                        ? TraversalEdgeBehavior.LeaveFlutterView
+                        : TraversalEdgeBehavior.ParentScope,
+                    reportsRouteUpdateToEngine: true));
         }
 
         private bool UsesNavigator =>

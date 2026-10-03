@@ -30,6 +30,28 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         FocusManager.Instance.ResetForTests();
     }
 
+    [Fact]
+    public void TimeOfDayMatchesFlutterValueAndFormattingContract()
+    {
+        var midnight = new TimeOfDay(0, 5);
+        var afternoon = new TimeOfDay(15, 42);
+
+        Assert.Equal(DayPeriod.Am, midnight.Period);
+        Assert.Equal(12, midnight.HourOfPeriod);
+        Assert.Equal(DayPeriod.Pm, afternoon.Period);
+        Assert.Equal(3, afternoon.HourOfPeriod);
+        Assert.True(midnight.IsBefore(afternoon));
+        Assert.Equal(new TimeOfDay(15, 7), afternoon.Replacing(minute: 7));
+        Assert.Equal("TimeOfDay(15:42)", afternoon.ToString());
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TimeOfDay(24, 0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new TimeOfDay(0, 60));
+
+        Assert.Equal("3:42 PM", DefaultMaterialLocalizations.Instance.FormatTimeOfDay(afternoon));
+        Assert.Equal(
+            "15:42",
+            DefaultMaterialLocalizations.Instance.FormatTimeOfDay(afternoon, alwaysUse24HourFormat: true));
+    }
+
     // ---- TimePickerThemeData contract -------------------------------------------------
 
     [Fact]
@@ -1081,7 +1103,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();

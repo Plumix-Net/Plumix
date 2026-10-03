@@ -49,36 +49,68 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         Assert.Equal(new Rect(410, 0, 390, 600), rtl);
     }
 
+    // Flutter: 'media_query_test.dart: MediaQuery.removeDisplayFeatures removes specified display
+    // features and padding'
     [Fact]
-    public void RemoveDisplayFeatures_ShrinksInsetsAndDropsTheFeatures()
+    public void RemoveDisplayFeaturesRemovesSpecifiedDisplayFeaturesAndPadding()
     {
-        var data = new MediaQueryData(
-            Size: ScreenSize,
-            Padding: new Thickness(10, 20, 30, 40),
-            ViewInsets: new Thickness(10, 20, 30, 40),
-            ViewPadding: new Thickness(10, 20, 30, 40),
-            DisplayFeatures: [new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
+        MediaQueryData subScreenMediaQuery = SubScreenData(
+            viewPadding: new Thickness(10.0, 6.0, 8.0, 12.0),
+            subScreen: new Rect(new Point(20, 10), new Point(40, 20)));
 
-        MediaQueryData trailing = data.RemoveDisplayFeatures(new Rect(410, 0, 390, 600));
-
-        Assert.Equal(new Size(390, 600), trailing.Size);
-        Assert.Empty(trailing.DisplayFeatures!);
-        // The left inset is fully consumed by the sub-screen origin; the right one survives untouched.
-        Assert.Equal(0, trailing.Padding.Left);
-        Assert.Equal(20, trailing.Padding.Top);
-        Assert.Equal(30, trailing.Padding.Right);
-        Assert.Equal(40, trailing.Padding.Bottom);
-        Assert.Equal(0, trailing.ViewInsets.Left);
-        Assert.Equal(0, trailing.ViewPadding.Left);
+        Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
+        Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
+        Assert.Equal(new Thickness(0), subScreenMediaQuery.Padding);
+        Assert.Equal(new Thickness(0), subScreenMediaQuery.ViewPadding);
+        Assert.Equal(new Thickness(0), subScreenMediaQuery.ViewInsets);
+        Assert.True(subScreenMediaQuery.AlwaysUse24HourFormat);
+        Assert.True(subScreenMediaQuery.DisableAnimations);
+        Assert.Empty(subScreenMediaQuery.DisplayFeatures!);
     }
 
+    // Flutter: 'media_query_test.dart: MediaQuery.removePadding only removes specified display
+    // features and padding'
     [Fact]
-    public void RemoveDisplayFeatures_RejectsSubScreensOutsideTheScreen()
+    public void RemoveDisplayFeaturesOnlyRemovesSpecifiedDisplayFeaturesAndPadding()
     {
-        var data = new MediaQueryData(Size: ScreenSize);
+        MediaQueryData subScreenMediaQuery = SubScreenData(
+            viewPadding: new Thickness(46.0, 6.0, 8.0, 12.0),
+            subScreen: new Rect(new Point(42, 0), new Point(82, 40)));
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => data.RemoveDisplayFeatures(new Rect(0, 0, 900, 600)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => data.RemoveDisplayFeatures(new Rect(-10, 0, 100, 600)));
+        Assert.Equal(new Size(82.0, 40.0), subScreenMediaQuery.Size);
+        Assert.Equal(2.0, subScreenMediaQuery.DevicePixelRatio);
+        Assert.Equal(new Thickness(0, 1.0, 2.0, 4.0), subScreenMediaQuery.Padding);
+        Assert.Equal(new Thickness(4.0, 6.0, 8.0, 12.0), subScreenMediaQuery.ViewPadding);
+        Assert.Equal(new Thickness(0, 5.0, 6.0, 8.0), subScreenMediaQuery.ViewInsets);
+        Assert.True(subScreenMediaQuery.AlwaysUse24HourFormat);
+        Assert.True(subScreenMediaQuery.DisableAnimations);
+        Assert.Equal([CutoutDisplayFeature], subScreenMediaQuery.DisplayFeatures!);
+    }
+
+    private static readonly DisplayFeature CutoutDisplayFeature = new(
+        Bounds: new Rect(new Point(70, 10), new Point(74, 14)),
+        Type: DisplayFeatureType.Cutout,
+        State: DisplayFeatureState.Unknown);
+
+    private static MediaQueryData SubScreenData(Thickness viewPadding, Rect subScreen)
+    {
+        var data = new MediaQueryData(
+            Size: new Size(82.0, 40.0),
+            DevicePixelRatio: 2.0,
+            Padding: new Thickness(3.0, 1.0, 2.0, 4.0),
+            ViewPadding: viewPadding,
+            ViewInsets: new Thickness(7.0, 5.0, 6.0, 8.0),
+            AlwaysUse24HourFormat: true,
+            DisableAnimations: true,
+            DisplayFeatures:
+            [
+                new DisplayFeature(
+                    Bounds: new Rect(new Point(40, 0), new Point(42, 40)),
+                    Type: DisplayFeatureType.Hinge,
+                    State: DisplayFeatureState.PostureFlat),
+                CutoutDisplayFeature,
+            ]);
+        return data.RemoveDisplayFeatures(subScreen);
     }
 
     private static Rect MeasureChild(MediaQueryData media, Point? anchorPoint, TextDirection direction)
@@ -98,7 +130,8 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         harness.Pump(media.Size);
 
         var box = Assert.Single(FindDescendants<RenderConstrainedBox>(harness.RenderView));
-        Assert.Equal(childMedia!.Size, box.Size);
+        // Dart's removeDisplayFeatures keeps the full screen size; only the box shrinks.
+        Assert.Equal(media.Size, childMedia!.Size);
         return new Rect(box.LocalToGlobal(default), box.Size);
     }
 

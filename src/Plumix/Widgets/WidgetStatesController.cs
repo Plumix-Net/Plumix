@@ -113,22 +113,25 @@ internal sealed class WidgetStateOperator : WidgetStatesConstraint
 /// <remarks>Ports Dart's <c>WidgetStatesController</c>.</remarks>
 public class WidgetStatesController : ValueNotifier<IReadOnlySet<WidgetState>>
 {
-    private readonly HashSet<WidgetState> _states;
-
     public WidgetStatesController(IEnumerable<WidgetState>? value = null)
-        : this(value is null ? [] : [.. value])
+        : base(value is null ? new HashSet<WidgetState>() : new HashSet<WidgetState>(value))
     {
-    }
-
-    private WidgetStatesController(HashSet<WidgetState> states) : base(states)
-    {
-        _states = states;
     }
 
     /// <summary>Adds or removes <paramref name="state"/>, notifying listeners when it changed.</summary>
+    /// <remarks>
+    /// Dart's <c>value.add(state)</c> / <c>value.remove(state)</c>: the set currently held by
+    /// <see cref="ValueNotifier{T}.Value"/> is mutated in place, so a set assigned to it is the one
+    /// updated. Like Dart's unmodifiable sets, a set that cannot be mutated throws.
+    /// </remarks>
     public void Update(WidgetState state, bool add)
     {
-        bool valueChanged = add ? _states.Add(state) : _states.Remove(state);
+        if (Value is not ISet<WidgetState> states || states.IsReadOnly)
+        {
+            throw new NotSupportedException("Cannot change an unmodifiable set");
+        }
+
+        bool valueChanged = add ? states.Add(state) : states.Remove(state);
         if (valueChanged)
         {
             NotifyListeners();

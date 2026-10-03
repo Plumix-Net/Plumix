@@ -37,6 +37,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
     private readonly FakeGestureTimers? _timers;
     private RootElement _root;
     private bool _disposed;
+    private readonly FlutterView _flutterView;
+    private readonly FrameworkDartTester? _previousCurrent;
+    private Widget _lastWidget = new SizedBox();
 
     /// <param name="fakeGestureTimers">
     /// Runs the gesture recognizers' timers (long press, double tap, ...) on the pump clock, the way
@@ -47,17 +50,44 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// </param>
     /// <param name="logicalSize">
     /// The view's logical size, 800x600 by default; Dart tests change it through
-    /// <c>tester.view.physicalSize</c>.
+    /// <c>tester.view.physicalSize</c> (<see cref="TestFlutterView.PhysicalSize"/>).
     /// </param>
-    public FrameworkDartTester(bool fakeGestureTimers = false, double devicePixelRatio = 1.0, Size? logicalSize = null)
+    /// <param name="semanticsEnabled">
+    /// <c>testWidgets(semanticsEnabled: true)</c>, Dart's default: a semantics handle stays open for the
+    /// whole test (<see cref="EnsureSemantics"/>).
+    /// </param>
+    /// <param name="registerTestTextInput">
+    /// flutter_test's <c>registerTestTextInput</c>, Dart's default: <see cref="TestTextInput"/> is the
+    /// platform side of the text input channel from the start instead of from its first use.
+    /// </param>
+    public FrameworkDartTester(
+        bool fakeGestureTimers = false,
+        double devicePixelRatio = 1.0,
+        Size? logicalSize = null,
+        bool semanticsEnabled = false,
+        bool registerTestTextInput = false)
     {
         GestureBinding.Instance.ResetForTests();
+        // flutter_test's postTest ends every test with ServicesBinding.resetInternalState: no lifecycle
+        // state and frames enabled. A host detached by an earlier test must not disable this one's frames.
+        Scheduler.ResetInternalState();
         _timers = fakeGestureTimers ? new FakeGestureTimers() : null;
         Size size = logicalSize ?? new Size(800, 600);
-        View = new FlutterView(
+        _flutterView = new FlutterView(
             new Size(size.Width * devicePixelRatio, size.Height * devicePixelRatio),
             devicePixelRatio,
             Interlocked.Increment(ref _nextViewId));
+        View = new TestFlutterView(_flutterView);
+        Binding = new FrameworkDartTestBinding(this);
+        _previousCurrent = Current;
+        Current = this;
+        InstallRestorationManager();
+        InstallAnnouncementCapture();
+        if (registerTestTextInput)
+        {
+            _ = TestTextInput;
+        }
+
         _previousOnError = FlutterError.OnError;
         FlutterError.OnError = HandleError;
         _drawFrame = DrawFrame;
@@ -69,20 +99,36 @@ internal sealed partial class FrameworkDartTester : IDisposable
         // through the update path inside a frame. Bootstrap one here for the same reason.
         _root = new RootWidget(child: Wrap(new SizedBox()), debugShortDescription: "[root]").Attach(_owner);
         Pump();
+        if (semanticsEnabled)
+        {
+            _semanticsHandle = EnsureSemantics();
+        }
     }
 
-    public FlutterView View { get; }
+    /// <summary>
+    /// The tester that was created last and is not disposed yet: the one <see cref="Finder"/>s evaluate
+    /// against when no tester is passed (flutter_test's finders search the one global binding).
+    /// </summary>
+    public static FrameworkDartTester? Current { get; private set; }
+
+    /// <summary>Dart's <c>tester.view</c>: the test view, with settable metrics.</summary>
+    public TestFlutterView View { get; }
+
+    /// <summary>Dart's <c>tester.binding</c>, reduced to what the ported tests use.</summary>
+    public FrameworkDartTestBinding Binding { get; }
 
     public BuildOwner Owner => _owner;
 
     public RootElement Root => _root;
 
     /// <summary>The render view the <see cref="View"/> widget created for <see cref="View"/>.</summary>
-    public RenderView RenderView => RendererBinding.Instance.RenderViews.First(view => view.FlutterView == View);
+    public RenderView RenderView =>
+        RendererBinding.Instance.RenderViews.First(view => ReferenceEquals(view.FlutterView, _flutterView));
 
     /// <summary>Dart's <c>WidgetTester.pumpWidget</c>.</summary>
     public void PumpWidget(Widget widget, TimeSpan? duration = null)
     {
+        _lastWidget = widget;
         _root = new RootWidget(child: Wrap(widget), debugShortDescription: "[root]").Attach(_owner, _root);
         Pump(duration);
     }
@@ -127,7 +173,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             Pump(step);
             count += 1;
         }
-        while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
+        while (Scheduler.HasScheduledFrame);
 
         return count;
     }
@@ -237,12 +283,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     }
 
     /// <summary>Dart's <c>tester.tap</c>: a down and an up at the element's center, no pump.</summary>
-    public void Tap(Element element)
-    {
-        Point center = GetCenter(element);
-        int pointer = StartGesture(center);
-        Up(pointer, center);
-    }
+    public void Tap(Element element) => TapAt(GetCenter(element));
 
     /// <summary>Flutter's <c>equalsIgnoringHashCodes</c> normalization.</summary>
     public static string IgnoringHashCodes(string value) => Regex.Replace(value, "#[0-9a-fA-F]{5}", "#00000");
@@ -261,6 +302,8 @@ internal sealed partial class FrameworkDartTester : IDisposable
         _disposed = true;
         FlutterErrorDetails? leftover = _pending;
         var unexpected = new List<FlutterErrorDetails>(_unexpected);
+        _semanticsHandle?.Dispose();
+        _semanticsHandle = null;
         try
         {
             try
@@ -276,10 +319,21 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
         finally
         {
+            _testTextInput?.Dispose();
+            _testTextInput = null;
+            UninstallAnnouncementCapture();
+            UninstallRestorationManager();
+            ResetPlatformDispatcherTestValues();
+            if (ReferenceEquals(Current, this))
+            {
+                Current = _previousCurrent;
+            }
+
             FlutterError.OnError = _previousOnError;
             _timers?.Dispose();
             HardwareKeyboard.Instance.ClearState();
             GestureBinding.Instance.SamplingClock = new SamplingClock();
+            Scheduler.ResetInternalState();
         }
 
         if (leftover is not null || unexpected.Count > 0)
@@ -294,7 +348,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
     }
 
-    private Widget Wrap(Widget widget) => new View(View, widget);
+    private Widget Wrap(Widget widget) => new View(_flutterView, widget);
 
     /// <summary>
     /// flutter_test's <c>_TestSamplingClock</c>: sampling and velocity-tracking stopwatches follow the
@@ -312,7 +366,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
         // Dart's WidgetsBinding.drawFrame: build, the render pipeline, then finalizeTree. A throw
         // skips the rest of the frame and is reported by the scheduler's callback guard.
         _owner.BuildScope(_root);
+        ApplySurfaceSize();
         RendererBinding.Instance.DrawFrame();
+        FlushOwnSemantics();
         _owner.FinalizeTree();
     }
 

@@ -159,7 +159,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             switchTheme: new SwitchThemeData(
                 ThumbColor: WidgetStateProperty<Color?>.All(Colors.Black),
                 MouseCursor: WidgetStateProperty<MouseCursor?>.All(switchCursorBegin)),
-            datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
+            datePickerTheme: new DatePickerThemeData(rangePickerElevation: 4),
             snackBarTheme: new SnackBarThemeData(elevation: 2),
             menuBarTheme: new MenuBarThemeData(
                 new MenuStyle(elevation: WidgetStateProperty<double?>.All(2))));
@@ -170,7 +170,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             switchTheme: new SwitchThemeData(
                 ThumbColor: WidgetStateProperty<Color?>.All(Colors.White),
                 MouseCursor: WidgetStateProperty<MouseCursor?>.All(switchCursorEnd)),
-            datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
+            datePickerTheme: new DatePickerThemeData(rangePickerElevation: 12),
             snackBarTheme: new SnackBarThemeData(elevation: 10),
             menuBarTheme: new MenuBarThemeData(
                 new MenuStyle(elevation: WidgetStateProperty<double?>.All(10))));

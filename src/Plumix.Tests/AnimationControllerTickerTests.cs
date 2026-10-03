@@ -1,4 +1,5 @@
 using Plumix.Physics;
+using Plumix.Rendering;
 using Xunit;
 
 // Dart parity sources:
@@ -537,10 +538,12 @@ public sealed class AnimationControllerTickerTests : IDisposable
         Assert.Null(controller.LastElapsedDuration);
     }
 
-    [Fact]
+    // Flutter's 'animation_controller_test.dart' AnimationBehavior cases set the same
+    // `debugSemanticsDisableAnimations` override, which only a debug build honors.
+    [DebugOnlyFact]
     public void AnimationController_AnimationBehavior_ShortensNormalRunsWhenAnimationsAreDisabled()
     {
-        AnimationController.DisableAnimations = true;
+        SemanticsDebug.DebugSemanticsDisableAnimations = true;
         try
         {
             using var preserve = new AnimationController(
@@ -560,7 +563,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
         }
         finally
         {
-            AnimationController.DisableAnimations = false;
+            SemanticsDebug.DebugSemanticsDisableAnimations = null;
         }
     }
 

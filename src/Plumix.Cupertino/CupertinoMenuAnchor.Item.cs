@@ -294,8 +294,9 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
             softWrap: true);
 
         return MediaQuery.WithClampedTextScaling(
-            context,
-            new CupertinoMenuItemInteractionHandler(
+            minScaleFactor: CupertinoMenuMetrics.KMinimumTextScaleFactor,
+            maxScaleFactor: CupertinoMenuMetrics.KMaximumTextScaleFactor,
+            child: new CupertinoMenuItemInteractionHandler(
                 mouseCursor: MouseCursor ?? KDefaultCursor,
                 requestFocusOnHover: RequestFocusOnHover,
                 onPressed: OnPressed is null ? null : () => HandleSelect(context),
@@ -305,9 +306,7 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
                 focusNode: FocusNode,
                 decoration: Decoration ?? KDefaultDecoration,
                 behavior: Behavior,
-                child: label),
-            minScaleFactor: CupertinoMenuMetrics.KMinimumTextScaleFactor,
-            maxScaleFactor: CupertinoMenuMetrics.KMaximumTextScaleFactor);
+                child: label));
     }
 
     /// <summary>Dart parity source: <c>CupertinoMenuItem._resolveDefaultTextStyle</c>.</summary>

@@ -394,6 +394,16 @@ internal static class PaintAssert
     public static void Paints(RenderObject renderObject, PaintPattern pattern) =>
         Paints(PaintRecording.Record(renderObject), pattern);
 
+    /// <summary>
+    /// <c>expect(finder, paints..)</c>: what the single match's render object paints (live tester).
+    /// </summary>
+    public static void Paints(Finder finder, PaintPattern pattern) =>
+        Paints(FrameworkDartTester.RequireCurrent().RecordPaint(finder), pattern);
+
+    /// <summary><c>expect(finder, isNot(paints..))</c>.</summary>
+    public static void DoesNotPaint(Finder finder, PaintPattern pattern) =>
+        DoesNotPaint(FrameworkDartTester.RequireCurrent().RenderObject<RenderObject>(finder), pattern);
+
     public static void Paints(IReadOnlyList<CanvasCall> calls, PaintPattern pattern)
     {
         if (pattern.Describe(calls) is { } failure)

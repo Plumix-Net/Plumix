@@ -578,7 +578,7 @@ public readonly record struct BorderRadiusGeometry
     }
 }
 
-public readonly record struct BorderSide
+public readonly record struct BorderSide : IDiagnosticable
 {
     public const double StrokeAlignInside = -1.0;
     public const double StrokeAlignCenter = 0.0;
@@ -663,6 +663,32 @@ public readonly record struct BorderSide
             Math.Max(a.StrokeAlign, b.StrokeAlign));
     }
 
+    /// <summary>Create a <see cref="Paint"/> object that, if used to stroke a line, will draw the line
+    /// in this border's style.</summary>
+    /// <remarks>
+    /// Dart's <c>BorderSide.toPaint</c>. The <see cref="StrokeAlign"/> property is not reflected in the
+    /// paint. Not all borders use this method to paint their border sides; for example, non-uniform
+    /// rectangular borders are painted with filled shapes rather than strokes.
+    /// </remarks>
+    public Paint ToPaint()
+    {
+        return Style switch
+        {
+            BorderStyle.Solid => new Paint
+            {
+                Color = Color,
+                StrokeWidth = Width,
+                Style = PaintingStyle.Stroke,
+            },
+            _ => new Paint
+            {
+                Color = new Color(0x00000000),
+                StrokeWidth = 0.0,
+                Style = PaintingStyle.Stroke,
+            },
+        };
+    }
+
     /// Creates a stroke [IPen] that describes this border side, or null when nothing is painted.
     public IPen? ToPen()
     {
@@ -671,6 +697,28 @@ public readonly record struct BorderSide
             BorderStyle.Solid => new Pen(new SolidColorBrush(Color), Width),
             _ => null,
         };
+    }
+
+    /// <summary>Dart's <c>BorderSide.toStringShort</c>.</summary>
+    public string ToStringShort() => "BorderSide";
+
+    /// <summary>Dart's <c>BorderSide.debugFillProperties</c> (BorderSide is <c>Diagnosticable</c>).</summary>
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<Color>("color", Color, defaultValue: new Color(0xFF000000)));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: 1.0));
+        properties.Add(new DoubleProperty("strokeAlign", StrokeAlign, defaultValue: StrokeAlignInside));
+        properties.Add(new EnumProperty<BorderStyle>("style", Style, defaultValue: BorderStyle.Solid));
+    }
+
+    /// <summary>Dart's <c>Diagnosticable.toString</c>.</summary>
+    public override string ToString()
+    {
+        IDiagnosticable self = this;
+        return Constants.KDebugMode
+            ? self.ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, DiagnosticLevel.Info)
+            : ToStringShort();
     }
 
     // Flutter does not carry strokeAlign through scale, so the result is always stroke-aligned inside.

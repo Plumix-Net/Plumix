@@ -302,21 +302,23 @@ public sealed record MediaQueryData
     }
 
     /// <summary>
-    /// Returns the data for the sub-screen described by <paramref name="subScreen"/>, with the display features
-    /// removed and every inset shrunk by the amount the sub-screen already excludes.
+    /// Creates a copy of this media query data by removing <see cref="DisplayFeatures"/> that are
+    /// completely outside the given sub-screen and adjusting the <see cref="Padding"/>,
+    /// <see cref="ViewInsets"/> and <see cref="ViewPadding"/> to be zero on the sides that are not
+    /// included in the sub-screen.
     /// </summary>
+    /// <remarks>
+    /// Flutter's <c>MediaQueryData.removeDisplayFeatures</c>. The <see cref="Size"/> is unchanged:
+    /// the sub-screen only drops the features it does not overlap and the insets it excludes.
+    /// </remarks>
     public MediaQueryData RemoveDisplayFeatures(Rect subScreen)
     {
-        if (subScreen.Left < 0.0
-            || subScreen.Top < 0.0
-            || subScreen.Right > Size.Width
-            || subScreen.Bottom > Size.Height)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(subScreen),
-                "The sub-screen cannot be outside the bounds of the screen.");
-        }
-
+        DebugAssertions.Assert(
+            subScreen.Left >= 0.0
+            && subScreen.Top >= 0.0
+            && subScreen.Right <= Size.Width
+            && subScreen.Bottom <= Size.Height,
+            "'subScreen' argument cannot be outside the bounds of the screen");
         if (subScreen.Size == Size && subScreen.Position == default)
         {
             return this;
@@ -325,31 +327,51 @@ public sealed record MediaQueryData
         double rightInset = Size.Width - subScreen.Right;
         double bottomInset = Size.Height - subScreen.Bottom;
         return CopyWith(
-            size: subScreen.Size,
             padding: ShrinkToSubScreen(Padding, subScreen, rightInset, bottomInset),
             viewPadding: ShrinkToSubScreen(ViewPadding, subScreen, rightInset, bottomInset),
             viewInsets: ShrinkToSubScreen(ViewInsets, subScreen, rightInset, bottomInset),
-            displayFeatures: []);
+            displayFeatures: (DisplayFeatures ?? [])
+                .Where(displayFeature => RectOverlaps(subScreen, displayFeature.Bounds))
+                .ToList());
+    }
+
+    // dart:ui `Rect.overlaps`.
+    private static bool RectOverlaps(Rect a, Rect b)
+    {
+        if (a.Right <= b.Left || b.Right <= a.Left)
+        {
+            return false;
+        }
+
+        if (a.Bottom <= b.Top || b.Bottom <= a.Top)
+        {
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
     /// Creates data for a <see cref="MediaQuery"/> from <paramref name="view"/>: view-specific values
     /// (size, insets, features) come from the view, platform-specific values from
-    /// <paramref name="platformData"/> when given.
+    /// <paramref name="platformData"/> when given and from the view's platform dispatcher otherwise.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>MediaQueryData.fromView</c>. With no <paramref name="platformData"/>, Flutter
-    /// reads the platform values from <c>view.platformDispatcher</c>; Plumix has no platform
-    /// dispatcher, so they fall back to the defaults, except <see cref="DisableAnimations"/>, which
-    /// <see cref="WidgetsBinding.AccessibilityFeatures"/> carries.
+    /// Flutter's <c>MediaQueryData.fromView</c>. The accessibility flags come from
+    /// <c>view.platformDispatcher.accessibilityFeatures</c> exactly as in Dart. Plumix's dispatcher
+    /// does not carry the text scale factor, the platform brightness or the 24-hour setting itself:
+    /// for the implicit view they come from the platform data its host installed
+    /// (<see cref="PlatformDispatcher.ImplicitViewPlatformData"/>), and any other view falls back to
+    /// the defaults.
     /// </remarks>
     public static MediaQueryData FromView(FlutterView view, MediaQueryData? platformData = null)
     {
         ArgumentNullException.ThrowIfNull(view);
-        if (platformData is null && ReferenceEquals(PlatformDispatcher.Instance.ImplicitView, view))
-        {
-            platformData = PlatformDispatcher.Instance.ImplicitViewPlatformData;
-        }
+        PlatformDispatcher platformDispatcher = view.PlatformDispatcher;
+        MediaQueryData? dispatcherData = ReferenceEquals(platformDispatcher.ImplicitView, view)
+            ? platformDispatcher.ImplicitViewPlatformData
+            : null;
+        AccessibilityFeatures accessibilityFeatures = platformDispatcher.AccessibilityFeatures;
 
         double devicePixelRatio = view.DevicePixelRatio;
         return new MediaQueryData(
@@ -359,22 +381,25 @@ public sealed record MediaQueryData
             ViewInsets: FromViewPadding(view.ViewInsets, devicePixelRatio),
             SystemGestureInsets: FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
             ViewPadding: FromViewPadding(view.ViewPadding, devicePixelRatio),
-            TextScaler: platformData?.TextScaler,
-            AccessibleNavigation: platformData?.AccessibleNavigation ?? false,
-            AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat ?? false,
-            DisableAnimations: platformData?.DisableAnimations
-                               ?? WidgetsBinding.Instance.AccessibilityFeatures.DisableAnimations,
-            InvertColors: platformData?.InvertColors ?? false,
+            TextScaler: platformData?.TextScaler ?? dispatcherData?.TextScaler,
+            AccessibleNavigation: platformData?.AccessibleNavigation ?? accessibilityFeatures.AccessibleNavigation,
+            AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat
+                                   ?? dispatcherData?.AlwaysUse24HourFormat
+                                   ?? false,
+            DisableAnimations: platformData?.DisableAnimations ?? accessibilityFeatures.DisableAnimations,
+            InvertColors: platformData?.InvertColors ?? accessibilityFeatures.InvertColors,
             NavigationMode: platformData?.NavigationMode ?? NavigationMode.Traditional,
-            PlatformBrightness: platformData?.PlatformBrightness ?? PlatformBrightness.Light,
-            HighContrast: platformData?.HighContrast ?? false,
-            SupportsAnnounce: platformData?.SupportsAnnounce ?? false,
+            PlatformBrightness: platformData?.PlatformBrightness
+                                ?? dispatcherData?.PlatformBrightness
+                                ?? PlatformBrightness.Light,
+            HighContrast: platformData?.HighContrast ?? accessibilityFeatures.HighContrast,
+            SupportsAnnounce: platformData?.SupportsAnnounce ?? accessibilityFeatures.SupportsAnnounce,
             ViewId: view.ViewId,
             DisplayCornerRadii: view.DisplayCornerRadii,
             DisplayFeatures: view.DisplayFeatures,
-            OnOffSwitchLabels: platformData?.OnOffSwitchLabels ?? false,
+            OnOffSwitchLabels: platformData?.OnOffSwitchLabels ?? accessibilityFeatures.OnOffSwitchLabels,
             GestureSettings: view.GestureSettings,
-            BoldText: platformData?.BoldText ?? false);
+            BoldText: platformData?.BoldText ?? accessibilityFeatures.BoldText);
     }
 
     /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
@@ -430,6 +455,7 @@ public sealed class MediaQuery : InheritedModel<object>
     {
         TextScaleFactor,
         TextScaler,
+        SupportsAnnounce,
     }
 
     public MediaQuery(
@@ -468,6 +494,7 @@ public sealed class MediaQuery : InheritedModel<object>
         {
             Aspect.TextScaleFactor => oldData.TextScaleFactor != Data.TextScaleFactor,
             Aspect.TextScaler => oldData.TextScaler != Data.TextScaler,
+            Aspect.SupportsAnnounce => oldData.SupportsAnnounce != Data.SupportsAnnounce,
             _ => !Equals(oldData, Data),
         });
     }
@@ -563,7 +590,19 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static bool? MaybeOnOffSwitchLabelsOf(BuildContext context) => MaybeOf(context)?.OnOffSwitchLabels;
 
-    public static bool SupportsAnnounceOf(BuildContext context) => Of(context).SupportsAnnounce;
+    /// <summary>
+    /// Dart's <c>MediaQuery.supportsAnnounceOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.SupportsAnnounce"/>, or false when there is no ancestor.
+    /// </summary>
+    public static bool SupportsAnnounceOf(BuildContext context) => MaybeSupportsAnnounceOf(context) ?? false;
+
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeSupportsAnnounceOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.SupportsAnnounce"/>, or null when there is no ancestor. The calling context
+    /// rebuilds only when that property changes.
+    /// </summary>
+    public static bool? MaybeSupportsAnnounceOf(BuildContext context) =>
+        MaybeOf(context, Aspect.SupportsAnnounce)?.SupportsAnnounce;
 
     public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
 
@@ -606,25 +645,57 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static Orientation? MaybeOrientationOf(BuildContext context) => MaybeOf(context)?.Orientation;
 
+    /// <summary>
+    /// Dart's <c>MediaQuery.withClampedTextScaling</c>: wraps <paramref name="child"/> in a
+    /// <see cref="MediaQuery"/> whose <see cref="MediaQueryData.TextScaler"/> is the ambient one clamped
+    /// to [<paramref name="minScaleFactor"/>, <paramref name="maxScaleFactor"/>].
+    /// </summary>
+    /// <remarks>
+    /// The returned <see cref="Builder"/> reads the ambient <see cref="MediaQuery"/> from its own context,
+    /// so the call itself needs no <see cref="BuildContext"/>.
+    /// </remarks>
     public static Widget WithClampedTextScaling(
-        BuildContext context,
         Widget child,
-        double maxScaleFactor,
-        double minScaleFactor = 0)
+        Key? key = null,
+        double minScaleFactor = 0.0,
+        double maxScaleFactor = double.PositiveInfinity)
     {
-        if (double.IsNaN(maxScaleFactor) || maxScaleFactor < 0)
+        if (Constants.KDebugMode)
         {
-            throw new ArgumentOutOfRangeException(nameof(maxScaleFactor));
+            if (!(maxScaleFactor >= minScaleFactor))
+            {
+                throw new AssertionError("'maxScaleFactor >= minScaleFactor': is not true.");
+            }
+
+            if (double.IsNaN(maxScaleFactor))
+            {
+                throw new AssertionError("'!maxScaleFactor.isNaN': is not true.");
+            }
+
+            if (!double.IsFinite(minScaleFactor))
+            {
+                throw new AssertionError("'minScaleFactor.isFinite': is not true.");
+            }
+
+            if (!(minScaleFactor >= 0))
+            {
+                throw new AssertionError("'minScaleFactor >= 0': is not true.");
+            }
         }
 
-        if (!double.IsFinite(minScaleFactor) || minScaleFactor < 0 || minScaleFactor > maxScaleFactor)
-        {
-            throw new ArgumentOutOfRangeException(nameof(minScaleFactor));
-        }
-        MediaQueryData data = Of(context);
-        return new MediaQuery(
-            data.CopyWith(textScaler: data.TextScaler.Clamp(minScaleFactor, maxScaleFactor)),
-            child);
+        return new Builder(
+            key: key,
+            builder: context =>
+            {
+                // Dart's `assert(debugCheckHasMediaQuery(context))`: Of reports the same error.
+                MediaQueryData data = Of(context);
+                return new MediaQuery(
+                    data: data.CopyWith(
+                        textScaler: data.TextScaler.Clamp(
+                            minScaleFactor: minScaleFactor,
+                            maxScaleFactor: maxScaleFactor)),
+                    child: child);
+            });
     }
 
     public static Widget WithNoTextScaling(BuildContext context, Widget child)
