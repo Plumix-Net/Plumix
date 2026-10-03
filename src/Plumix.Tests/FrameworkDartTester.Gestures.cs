@@ -328,7 +328,185 @@ internal sealed partial class FrameworkDartTester
             viewId: View.ViewId));
     }
 
+    /// <summary>Dart's <c>tester.trackpadFling(finder, offset, speed)</c>.</summary>
+    public void TrackpadFling(
+        Element element,
+        Vector offset,
+        double speed,
+        TimeSpan? frameInterval = null,
+        Vector initialOffset = default,
+        TimeSpan? initialOffsetDelay = null)
+    {
+        TrackpadFlingFrom(GetCenter(element), offset, speed, frameInterval, initialOffset, initialOffsetDelay);
+    }
+
+    /// <summary>
+    /// Dart's <c>tester.trackpadFlingFrom</c>: a trackpad pan/zoom whose cumulative pan reaches
+    /// <paramref name="offset"/> over fifty updates spread over <c>|offset| / speed</c> seconds,
+    /// pumping whenever more than a frame interval elapsed, then a pan/zoom end.
+    /// </summary>
+    public void TrackpadFlingFrom(
+        Point startLocation,
+        Vector offset,
+        double speed,
+        TimeSpan? frameInterval = null,
+        Vector initialOffset = default,
+        TimeSpan? initialOffsetDelay = null)
+    {
+        const int moveCount = 50;
+        double frameMicroseconds = (frameInterval ?? TimeSpan.FromMilliseconds(16)).TotalMicroseconds;
+        TimeSpan delay = initialOffsetDelay ?? TimeSpan.FromSeconds(1);
+        var pointer = new TestPointer(this, Interlocked.Increment(ref _nextGesturePointer), PointerDeviceKind.Trackpad);
+        double timeStampDelta = 1000000.0 * offset.Length / (moveCount * speed);
+        double timeStamp = 0.0;
+        double lastTimeStamp = timeStamp;
+        SendEventToBinding(pointer.PanZoomStart(startLocation, Microseconds(timeStamp)));
+        if (initialOffset.Length > 0.0)
+        {
+            SendEventToBinding(pointer.PanZoomUpdate(
+                startLocation,
+                pan: (Point)initialOffset,
+                timeStamp: Microseconds(timeStamp)));
+            timeStamp += delay.TotalMicroseconds;
+            Pump(delay);
+        }
+
+        for (int i = 0; i <= moveCount; i += 1)
+        {
+            Vector pan = initialOffset + (offset * i / moveCount);
+            SendEventToBinding(
+                pointer.PanZoomUpdate(startLocation, pan: (Point)pan, timeStamp: Microseconds(timeStamp)));
+            timeStamp += timeStampDelta;
+            if (timeStamp - lastTimeStamp > frameMicroseconds)
+            {
+                Pump(TimeSpan.FromMicroseconds(Math.Truncate(timeStamp - lastTimeStamp)));
+                lastTimeStamp = timeStamp;
+            }
+        }
+
+        SendEventToBinding(pointer.PanZoomEnd(Microseconds(timeStamp)));
+    }
+
     private static TimeSpan Microseconds(double value) => TimeSpan.FromMicroseconds(Math.Round(value));
+}
+
+/// <summary>
+/// flutter_test's <c>TestPointer</c>: builds pointer events for one simulated pointer without
+/// dispatching them (pass them to <see cref="FrameworkDartTester.SendEventToBinding"/>). The device
+/// defaults to 1 for a mouse and 0 otherwise, as in Dart.
+/// </summary>
+internal sealed class TestPointer
+{
+    private readonly FrameworkDartTester _tester;
+    private Point? _pan;
+
+    public TestPointer(FrameworkDartTester tester, int pointer = 1, PointerDeviceKind kind = PointerDeviceKind.Touch)
+    {
+        _tester = tester;
+        Pointer = pointer;
+        Kind = kind;
+        Device = kind == PointerDeviceKind.Mouse ? 1 : 0;
+    }
+
+    public int Pointer { get; }
+
+    public PointerDeviceKind Kind { get; }
+
+    public int Device { get; }
+
+    /// <summary>The last location the pointer was given.</summary>
+    public Point? Location { get; private set; }
+
+    /// <summary>Dart's <c>TestPointer.hover</c>.</summary>
+    public PointerHoverEvent Hover(Point newLocation, TimeSpan timeStamp = default)
+    {
+        Point delta = Location is { } location ? (Point)(newLocation - location) : default;
+        Location = newLocation;
+        return new PointerHoverEvent(
+            pointer: Pointer,
+            kind: Kind,
+            position: newLocation,
+            delta: delta,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    /// <summary>Dart's <c>TestPointer.scroll</c>: a scroll signal at the current location.</summary>
+    public PointerScrollEvent Scroll(Vector scrollDelta, TimeSpan timeStamp = default)
+    {
+        Point location = Location ?? throw new InvalidOperationException("scroll needs a location (hover first).");
+        return new PointerScrollEvent(
+            kind: Kind,
+            position: location,
+            scrollDelta: new Point(scrollDelta.X, scrollDelta.Y),
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    /// <summary>Dart's <c>TestPointer.scale</c>: a scale signal at the current location.</summary>
+    public PointerScaleEvent Scale(double scale, TimeSpan timeStamp = default)
+    {
+        Point location = Location ?? throw new InvalidOperationException("scale needs a location (hover first).");
+        return new PointerScaleEvent(
+            kind: Kind,
+            position: location,
+            scale: scale,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    /// <summary>Dart's <c>TestPointer.panZoomStart</c>.</summary>
+    public PointerPanZoomStartEvent PanZoomStart(Point location, TimeSpan timeStamp = default)
+    {
+        Location = location;
+        _pan = default(Point);
+        return new PointerPanZoomStartEvent(
+            pointer: Pointer,
+            position: location,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    /// <summary>Dart's <c>TestPointer.panZoomUpdate</c>: <paramref name="pan"/> is cumulative.</summary>
+    public PointerPanZoomUpdateEvent PanZoomUpdate(
+        Point location,
+        Point pan = default,
+        double scale = 1.0,
+        double rotation = 0.0,
+        TimeSpan timeStamp = default)
+    {
+        Point previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
+        Location = location;
+        _pan = pan;
+        return new PointerPanZoomUpdateEvent(
+            pointer: Pointer,
+            position: location,
+            timestampUtc: Stamp(timeStamp),
+            pan: pan,
+            panDelta: new Point(pan.X - previousPan.X, pan.Y - previousPan.Y),
+            scale: scale,
+            rotation: rotation,
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    /// <summary>Dart's <c>TestPointer.panZoomEnd</c>.</summary>
+    public PointerPanZoomEndEvent PanZoomEnd(TimeSpan timeStamp = default)
+    {
+        _pan = null;
+        return new PointerPanZoomEndEvent(
+            pointer: Pointer,
+            position: Location ?? default,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Device);
+    }
+
+    private static DateTime Stamp(TimeSpan timeStamp) => FrameworkDartTester.EventTimeOrigin + timeStamp;
 }
 
 /// <summary>
@@ -342,6 +520,7 @@ internal sealed class TestGesture
     private readonly PointerButtons _buttons;
     private bool _isDown;
     private bool _isAdded;
+    private Point? _pan;
 
     public TestGesture(FrameworkDartTester tester, int pointer, PointerDeviceKind kind, PointerButtons buttons)
     {
@@ -454,6 +633,70 @@ internal sealed class TestGesture
         Send(new PointerCancelEvent(
             pointer: Pointer,
             kind: _kind,
+            position: Location,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Pointer));
+    }
+
+    /// <summary>Dart's <c>TestGesture.panZoomStart</c>: begins a trackpad pan/zoom at <paramref name="location"/>.
+    /// </summary>
+    public void PanZoomStart(Point location, TimeSpan timeStamp = default)
+    {
+        if (_kind != PointerDeviceKind.Trackpad || _pan is not null)
+        {
+            throw new InvalidOperationException("panZoomStart needs an idle trackpad gesture.");
+        }
+
+        if (!_isAdded)
+        {
+            AddPointer(location, timeStamp);
+        }
+
+        Location = location;
+        _pan = default(Point);
+        Send(new PointerPanZoomStartEvent(
+            pointer: Pointer,
+            position: location,
+            timestampUtc: Stamp(timeStamp),
+            viewId: _tester.View.ViewId,
+            device: Pointer));
+    }
+
+    /// <summary>Dart's <c>TestGesture.panZoomUpdate</c>.</summary>
+    public void PanZoomUpdate(
+        Point location,
+        Point pan = default,
+        double scale = 1.0,
+        double rotation = 0.0,
+        TimeSpan timeStamp = default)
+    {
+        Point previousPan = _pan ?? throw new InvalidOperationException("panZoomUpdate needs panZoomStart.");
+        Location = location;
+        _pan = pan;
+        Send(new PointerPanZoomUpdateEvent(
+            pointer: Pointer,
+            position: location,
+            timestampUtc: Stamp(timeStamp),
+            pan: pan,
+            panDelta: new Point(pan.X - previousPan.X, pan.Y - previousPan.Y),
+            scale: scale,
+            rotation: rotation,
+            viewId: _tester.View.ViewId,
+            device: Pointer));
+    }
+
+    /// <summary>Dart's <c>TestGesture.panZoomEnd</c>.</summary>
+    public void PanZoomEnd(TimeSpan timeStamp = default)
+    {
+        if (_pan is null)
+        {
+            throw new InvalidOperationException("panZoomEnd needs panZoomStart.");
+        }
+
+        _pan = null;
+        Send(new PointerPanZoomEndEvent(
+            pointer: Pointer,
             position: Location,
             timestampUtc: Stamp(timeStamp),
             viewId: _tester.View.ViewId,

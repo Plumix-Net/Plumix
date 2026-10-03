@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using System.Numerics;
 
 namespace Plumix;
@@ -184,6 +185,10 @@ public sealed class TrainHoppingAnimation : Animation<double>, IDisposable
         Action? onSwitchedTrain = null)
     {
         _currentTrain = currentTrain ?? throw new ArgumentNullException(nameof(currentTrain));
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("animation", "TrainHoppingAnimation", this);
+        }
         _nextTrain = nextTrain;
         OnSwitchedTrain = onSwitchedTrain;
         if (_nextTrain is not null)
@@ -255,6 +260,11 @@ public sealed class TrainHoppingAnimation : Animation<double>, IDisposable
         if (_disposed)
         {
             return;
+        }
+
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
 
         _disposed = true;

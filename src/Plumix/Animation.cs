@@ -359,6 +359,10 @@ public class CurvedAnimation : AnimationWithParentMixin<double>, IDisposable
     /// <summary>Creates a curved animation.</summary>
     public CurvedAnimation(Animation<double> parent, Curve curve, Curve? reverseCurve = null)
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("animation", "CurvedAnimation", this);
+        }
         Parent = parent;
         Curve = curve;
         ReverseCurve = reverseCurve;
@@ -389,6 +393,11 @@ public class CurvedAnimation : AnimationWithParentMixin<double>, IDisposable
     /// <summary>Cleans up any listeners added by this CurvedAnimation.</summary>
     public void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
+
         IsDisposed = true;
         Parent.RemoveStatusListener(UpdateCurveDirection);
     }

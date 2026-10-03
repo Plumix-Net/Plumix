@@ -90,6 +90,7 @@ import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/general/flow_demo_page.dart';
 import 'demos/general/transform_demo_page.dart';
+import 'demos/general/interactive_viewer_demo_page.dart';
 import 'demos/general/composited_transform_demo_page.dart';
 import 'demos/general/image_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
@@ -1076,6 +1077,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Transform + Matrix4',
       subtitle: 'rotate/scale/flip/translate + perspective 3D rotation',
       builder: () => const TransformDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.interactiveViewer,
+      title: 'InteractiveViewer',
+      subtitle:
+          'pan/zoom + inertia + boundary sliding + PanAxis + builder viewport',
+      builder: () => const InteractiveViewerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.compositedTransform,

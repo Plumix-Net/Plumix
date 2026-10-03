@@ -1,7 +1,7 @@
 using Avalonia;
 
 // Port of the `vector_math` pub package (version 2.4.2), the matrix library Flutter itself depends on:
-// vector_math/lib/src/vector_math_64/{vector3,vector4,matrix4}.dart. It is not part of the Flutter
+// vector_math/lib/src/vector_math_64/{vector3,vector4,matrix4,quad}.dart. It is not part of the Flutter
 // repository, so it carries no `Dart parity source:` marker; the members ported here are the subset
 // Flutter, `material_ui` and `cupertino_ui` actually call.
 //
@@ -103,6 +103,15 @@ public sealed class Vector3
 
     public Vector3 Clone() => Copy(this);
 
+    /// <summary>The inner product of this and <paramref name="other"/>.</summary>
+    /// <remarks>Dart accumulates `z`, then `y`, then `x`, in that order.</remarks>
+    public double Dot(Vector3 other) =>
+        (_storage[2] * other._storage[2]) + (_storage[1] * other._storage[1]) + (_storage[0] * other._storage[0]);
+
+    /// <summary>The cross product of this and <paramref name="other"/>.</summary>
+    public Vector3 Cross(Vector3 other) =>
+        new((Y * other.Z) - (Z * other.Y), (Z * other.X) - (X * other.Z), (X * other.Y) - (Y * other.X));
+
     public static Vector3 operator +(Vector3 left, Vector3 right) =>
         new(left.X + right.X, left.Y + right.Y, left.Z + right.Z);
 
@@ -120,6 +129,75 @@ public sealed class Vector3
         obj is Vector3 other && Z == other.Z && Y == other.Y && X == other.X;
 
     public override int GetHashCode() => HashCode.Combine(X, Y, Z);
+}
+
+/// <summary>Four points, in order, describing a quadrilateral.</summary>
+/// <remarks>vector_math's <c>Quad</c>; every constructor copies the points it is given.</remarks>
+public sealed class Quad
+{
+    public Quad() : this(Vector3.Zero(), Vector3.Zero(), Vector3.Zero(), Vector3.Zero(), copy: false)
+    {
+    }
+
+    private Quad(Vector3 point0, Vector3 point1, Vector3 point2, Vector3 point3, bool copy)
+    {
+        Point0 = copy ? Vector3.Copy(point0) : point0;
+        Point1 = copy ? Vector3.Copy(point1) : point1;
+        Point2 = copy ? Vector3.Copy(point2) : point2;
+        Point3 = copy ? Vector3.Copy(point3) : point3;
+    }
+
+    /// <summary>Dart's <c>Quad.copy</c>.</summary>
+    public static Quad Copy(Quad other) => new(other.Point0, other.Point1, other.Point2, other.Point3, copy: true);
+
+    /// <summary>Dart's <c>Quad.points</c>.</summary>
+    public static Quad Points(Vector3 point0, Vector3 point1, Vector3 point2, Vector3 point3) =>
+        new(point0, point1, point2, point3, copy: true);
+
+    public Vector3 Point0 { get; }
+
+    public Vector3 Point1 { get; }
+
+    public Vector3 Point2 { get; }
+
+    public Vector3 Point3 { get; }
+
+    public void CopyFrom(Quad other)
+    {
+        Point0.SetFrom(other.Point0);
+        Point1.SetFrom(other.Point1);
+        Point2.SetFrom(other.Point2);
+        Point3.SetFrom(other.Point3);
+    }
+
+    /// <summary>Transforms every point by <paramref name="t"/> in place.</summary>
+    public void Transform(Matrix4 t)
+    {
+        t.Transform3(Point0);
+        t.Transform3(Point1);
+        t.Transform3(Point2);
+        t.Transform3(Point3);
+    }
+
+    /// <summary>Translates every point by <paramref name="offset"/> in place.</summary>
+    public void Translate(Vector3 offset)
+    {
+        Point0.SetFrom(Point0 + offset);
+        Point1.SetFrom(Point1 + offset);
+        Point2.SetFrom(Point2 + offset);
+        Point3.SetFrom(Point3 + offset);
+    }
+
+    public override string ToString() => $"[0] {Point0}\n[1] {Point1}\n[2] {Point2}\n[3] {Point3}\n";
+
+    public override bool Equals(object? obj) =>
+        obj is Quad other
+        && Point3.Equals(other.Point3)
+        && Point2.Equals(other.Point2)
+        && Point1.Equals(other.Point1)
+        && Point0.Equals(other.Point0);
+
+    public override int GetHashCode() => HashCode.Combine(Point0, Point1, Point2, Point3);
 }
 
 /// <summary>A 4-component double vector.</summary>

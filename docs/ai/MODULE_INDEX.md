@@ -481,8 +481,11 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/TapRegion.cs`
   - `src/Plumix/Widgets/MetaData.cs`
   - `src/Plumix/Rendering/Object.HitTest.cs`
+  - `src/Plumix/Widgets/InteractiveViewer.cs` (pan/zoom over `GestureDetector`'s scale recognizer and
+    pointer signals; boundary math on vector_math's `Quad` in `UI/Matrix4.cs`)
 - Primary Tests:
   - `src/Plumix.Tests/GesturePipelineTests.cs`
+  - `src/Plumix.Tests/InteractiveViewerDartParityTests.cs`
   - `src/Plumix.Tests/MouseTrackerTests.cs`
   - `src/Plumix.Tests/MouseRegionTests.cs`
   - `src/Plumix.Tests/DragTargetTests.cs`

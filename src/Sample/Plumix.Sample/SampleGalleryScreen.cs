@@ -166,6 +166,7 @@ internal static class SampleRoutes
     public const string PlatformViewLink = "/platform-view-link";
     public const string Flow = "/flow";
     public const string Transform = "/transform";
+    public const string InteractiveViewer = "/interactive-viewer";
     public const string CompositedTransform = "/composited-transform";
     public const string SystemChrome = "/system-chrome";
     public const string Image = "/image";
@@ -666,6 +667,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Transform + Matrix4",
             "rotate/scale/flip/translate + perspective 3D rotation",
             () => new TransformDemoPage()),
+        new(
+            SampleRoutes.InteractiveViewer,
+            "InteractiveViewer",
+            "pan/zoom + inertia + boundary sliding + PanAxis + builder viewport",
+            () => new InteractiveViewerDemoPage()),
         new(
             SampleRoutes.CompositedTransform,
             "Composited transforms",

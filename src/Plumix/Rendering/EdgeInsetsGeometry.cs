@@ -250,6 +250,12 @@ public readonly record struct EdgeInsets(double Left, double Top, double Right, 
 {
     public static EdgeInsets Zero => default;
 
+    /// <summary>The total offset in the horizontal direction (Dart's <c>EdgeInsetsGeometry.horizontal</c>).</summary>
+    public double Horizontal => Left + Right;
+
+    /// <summary>The total offset in the vertical direction (Dart's <c>EdgeInsetsGeometry.vertical</c>).</summary>
+    public double Vertical => Top + Bottom;
+
     public static EdgeInsets All(double value)
     {
         return new EdgeInsets(value, value, value, value);

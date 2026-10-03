@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `InteractiveViewer` (+ `.Builder`), `TransformationController`, `PanAxis` (widgets/interactive_viewer.dart).
+- vector_math's `Quad` and `Vector3.Dot`/`Cross`; `EdgeInsets.Horizontal`/`Vertical` (edge_insets.dart).
+- `CurvedAnimation`, `TrainHoppingAnimation`, `AnimationController` dispatch memory events (animations.dart).
+- `FrameworkDartTester` gains `TestPointer`, `TrackpadFling`/`TrackpadFlingFrom` and `TestGesture.PanZoom*`.
+- InteractiveViewer demo: pan/zoom with inertia, `PanAxis` cycle, boundary toggle and builder mode (both samples).
+- interactive_viewer_test.dart ported.
 - Breaking: Material date pickers are strict ports of date_picker/calendar_date_picker/date_picker_theme/date.dart.
 - Breaking: `DatePickerDialog`/`DateRangePickerDialog` restore their state; `showDatePicker`/range take `anchorPoint`.
 - Breaking: picker dialogs take `keyboardType`, `TransitionBuilder`, `Icon?` switch icons; `Navigator.pop` closes them.

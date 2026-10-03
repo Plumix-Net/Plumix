@@ -64,6 +64,10 @@ public sealed class AnimationController : Animation<double>, IDisposable
             throw new ArgumentOutOfRangeException(nameof(upperBound), "upperBound must be >= lowerBound.");
         }
 
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("animation", "AnimationController", this);
+        }
         LowerBound = lowerBound;
         UpperBound = upperBound;
         Duration = duration;
@@ -442,6 +446,11 @@ public sealed class AnimationController : Animation<double>, IDisposable
                 nameof(AnimationController),
                 "AnimationController.Dispose() called more than once. A given AnimationController "
                 + "cannot be disposed more than once.");
+        }
+
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
 
         _ticker.Dispose();
