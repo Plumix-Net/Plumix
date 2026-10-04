@@ -170,6 +170,9 @@ public sealed class WidgetsApp : StatefulWidget
         bool showSemanticsDebugger = false,
         bool debugShowWidgetInspector = false,
         bool debugShowCheckedModeBanner = true,
+        ExitWidgetSelectionButtonBuilder? exitWidgetSelectionButtonBuilder = null,
+        MoveExitWidgetSelectionButtonBuilder? moveExitWidgetSelectionButtonBuilder = null,
+        TapBehaviorButtonBuilder? tapBehaviorButtonBuilder = null,
         IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts = null,
         IReadOnlyDictionary<Type, FlutterAction>? actions = null,
         string? restorationScopeId = null,
@@ -240,6 +243,9 @@ public sealed class WidgetsApp : StatefulWidget
         ShowSemanticsDebugger = showSemanticsDebugger;
         DebugShowWidgetInspector = debugShowWidgetInspector;
         DebugShowCheckedModeBanner = debugShowCheckedModeBanner;
+        ExitWidgetSelectionButtonBuilder = exitWidgetSelectionButtonBuilder;
+        MoveExitWidgetSelectionButtonBuilder = moveExitWidgetSelectionButtonBuilder;
+        TapBehaviorButtonBuilder = tapBehaviorButtonBuilder;
         Shortcuts = shortcuts;
         Actions = actions;
         RestorationScopeId = restorationScopeId;
@@ -272,6 +278,9 @@ public sealed class WidgetsApp : StatefulWidget
         bool showSemanticsDebugger = false,
         bool debugShowWidgetInspector = false,
         bool debugShowCheckedModeBanner = true,
+        ExitWidgetSelectionButtonBuilder? exitWidgetSelectionButtonBuilder = null,
+        MoveExitWidgetSelectionButtonBuilder? moveExitWidgetSelectionButtonBuilder = null,
+        TapBehaviorButtonBuilder? tapBehaviorButtonBuilder = null,
         IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts = null,
         IReadOnlyDictionary<Type, FlutterAction>? actions = null,
         string? restorationScopeId = null,
@@ -304,6 +313,9 @@ public sealed class WidgetsApp : StatefulWidget
             showSemanticsDebugger: showSemanticsDebugger,
             debugShowWidgetInspector: debugShowWidgetInspector,
             debugShowCheckedModeBanner: debugShowCheckedModeBanner,
+            exitWidgetSelectionButtonBuilder: exitWidgetSelectionButtonBuilder,
+            moveExitWidgetSelectionButtonBuilder: moveExitWidgetSelectionButtonBuilder,
+            tapBehaviorButtonBuilder: tapBehaviorButtonBuilder,
             shortcuts: shortcuts,
             actions: actions,
             restorationScopeId: restorationScopeId,
@@ -390,6 +402,9 @@ public sealed class WidgetsApp : StatefulWidget
         bool showSemanticsDebugger,
         bool debugShowWidgetInspector,
         bool debugShowCheckedModeBanner,
+        ExitWidgetSelectionButtonBuilder? exitWidgetSelectionButtonBuilder,
+        MoveExitWidgetSelectionButtonBuilder? moveExitWidgetSelectionButtonBuilder,
+        TapBehaviorButtonBuilder? tapBehaviorButtonBuilder,
         IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts,
         IReadOnlyDictionary<Type, FlutterAction>? actions,
         string? restorationScopeId,
@@ -421,6 +436,9 @@ public sealed class WidgetsApp : StatefulWidget
         ShowSemanticsDebugger = showSemanticsDebugger;
         DebugShowWidgetInspector = debugShowWidgetInspector;
         DebugShowCheckedModeBanner = debugShowCheckedModeBanner;
+        ExitWidgetSelectionButtonBuilder = exitWidgetSelectionButtonBuilder;
+        MoveExitWidgetSelectionButtonBuilder = moveExitWidgetSelectionButtonBuilder;
+        TapBehaviorButtonBuilder = tapBehaviorButtonBuilder;
         Shortcuts = shortcuts;
         Actions = actions;
         RestorationScopeId = restorationScopeId;
@@ -499,9 +517,46 @@ public sealed class WidgetsApp : StatefulWidget
 
     public bool ShowSemanticsDebugger { get; }
 
+    /// <summary>Turns on an overlay that enables inspecting the widget tree.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsApp.debugShowWidgetInspector</c>: the inspector is only available in debug
+    /// mode.
+    /// </remarks>
     public bool DebugShowWidgetInspector { get; }
 
+    /// <summary>Builds the widget the <see cref="WidgetInspector"/> uses to exit selection mode.</summary>
+    public ExitWidgetSelectionButtonBuilder? ExitWidgetSelectionButtonBuilder { get; }
+
+    /// <summary>Builds the widget the <see cref="WidgetInspector"/> uses to move the exit selection mode
+    /// button.</summary>
+    public MoveExitWidgetSelectionButtonBuilder? MoveExitWidgetSelectionButtonBuilder { get; }
+
+    /// <summary>Builds the widget the <see cref="WidgetInspector"/> uses to change the default
+    /// behavior when tapping on widgets in the app.</summary>
+    public TapBehaviorButtonBuilder? TapBehaviorButtonBuilder { get; }
+
+    /// <summary>Overrides the <see cref="DebugShowWidgetInspector"/> value set in
+    /// <see cref="WidgetsApp"/>.</summary>
+    /// <remarks>Used by the <c>debugShowWidgetInspector</c> debugging extension.</remarks>
+    [Obsolete(
+        "Use WidgetsBinding.Instance.DebugShowWidgetInspectorOverrideNotifier.Value instead. "
+        + "This feature was deprecated after v3.20.0-14.0.pre.")]
+    public static bool DebugShowWidgetInspectorOverride
+    {
+        get => WidgetsBinding.Instance.DebugShowWidgetInspectorOverrideNotifier.Value;
+        set => WidgetsBinding.Instance.DebugShowWidgetInspectorOverrideNotifier.Value = value;
+    }
+
     public bool DebugShowCheckedModeBanner { get; }
+
+    /// <summary>
+    /// False by default; setting it to true hides every <see cref="CheckedModeBanner"/> an app shows.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsApp.debugAllowBannerOverride</c>: how <c>flutter run</c> turns off the banner
+    /// when you take a screen shot with "s". The <c>debugAllowBanner</c> service extension sets it.
+    /// </remarks>
+    public static bool DebugAllowBannerOverride { get; set; } = true;
 
     public IReadOnlyDictionary<ShortcutActivator, Intent>? Shortcuts { get; }
 
@@ -653,7 +708,28 @@ public sealed class WidgetsApp : StatefulWidget
                     ]);
             }
 
-            if (CurrentWidget.DebugShowCheckedModeBanner)
+            if (Constants.KDebugMode && !WidgetsBinding.Instance.DebugExcludeRootWidgetInspector)
+            {
+                result = new ValueListenableBuilder<bool>(
+                    valueListenable: WidgetsBinding.Instance.DebugShowWidgetInspectorOverrideNotifier,
+                    builder: (_, debugShowWidgetInspectorOverride, child) =>
+                    {
+                        if (CurrentWidget.DebugShowWidgetInspector || debugShowWidgetInspectorOverride)
+                        {
+                            WidgetsApp app = CurrentWidget;
+                            return new WidgetInspector(
+                                exitWidgetSelectionButtonBuilder: app.ExitWidgetSelectionButtonBuilder,
+                                moveExitWidgetSelectionButtonBuilder: app.MoveExitWidgetSelectionButtonBuilder,
+                                tapBehaviorButtonBuilder: app.TapBehaviorButtonBuilder,
+                                child: child!);
+                        }
+
+                        return child!;
+                    },
+                    child: result);
+            }
+
+            if (CurrentWidget.DebugShowCheckedModeBanner && WidgetsApp.DebugAllowBannerOverride)
             {
                 result = new CheckedModeBanner(result);
             }

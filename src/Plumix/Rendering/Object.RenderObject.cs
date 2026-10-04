@@ -1699,6 +1699,10 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     {
     }
 
+    /// <summary>Calls <see cref="DebugPaint"/> from outside the render object.</summary>
+    /// <remarks>Dart's <c>debugPaint</c> is public; the widget inspector's screenshot calls it.</remarks>
+    internal void InvokeDebugPaint(PaintingContext context, Point offset) => DebugPaint(context, offset);
+
     /// <remarks>Flutter's <c>RenderObject._reportException</c>.</remarks>
     private void ReportException(string method, Exception exception)
     {

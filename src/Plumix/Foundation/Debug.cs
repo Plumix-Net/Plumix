@@ -16,6 +16,19 @@ public static class FoundationDebug
     /// <remarks>Dart's <c>debugInstrumentationEnabled</c>; only read in debug builds.</remarks>
     public static bool DebugInstrumentationEnabled { get; set; }
 
+    /// <summary>The address of the DevTools server the application is connected to, if any.</summary>
+    /// <remarks>
+    /// Dart's <c>activeDevToolsServerAddress</c>, which the <c>activeDevToolsServerAddress</c> service
+    /// extension sets; the widget inspector builds deep links from it.
+    /// </remarks>
+    public static string? ActiveDevToolsServerAddress { get; set; }
+
+    /// <summary>The URI of the connected VM service, if any.</summary>
+    /// <remarks>
+    /// Dart's <c>connectedVmServiceUri</c>, which the <c>connectedVmServiceUri</c> service extension sets.
+    /// </remarks>
+    public static string? ConnectedVmServiceUri { get; set; }
+
     /// <summary>
     /// Runs <paramref name="action"/>; while <see cref="DebugInstrumentationEnabled"/> is set, prints
     /// how long it took, labelled with <paramref name="description"/>.

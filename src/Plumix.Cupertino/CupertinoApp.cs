@@ -361,6 +361,46 @@ public sealed class CupertinoApp : StatefulWidget
                                     delegates)))))));
         }
 
+        private static Widget ExitWidgetSelectionButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            GlobalKey key)
+        {
+            return CupertinoInspectorButton.Filled(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                icon: CupertinoIcons.Xmark,
+                buttonKey: key);
+        }
+
+        private static Widget MoveExitWidgetSelectionButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            bool usesDefaultAlignment = true)
+        {
+            return CupertinoInspectorButton.IconOnly(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                icon: usesDefaultAlignment ? CupertinoIcons.ArrowRight : CupertinoIcons.ArrowLeft);
+        }
+
+        private static Widget TapBehaviorButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            bool selectionOnTapEnabled)
+        {
+            return CupertinoInspectorButton.Toggle(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                // This unicode icon is also used for the Material-styled button and for
+                // DevTools. It should be updated in all 3 places if changed.
+                icon: new IconData(0x1F74A),
+                toggledOn: selectionOnTapEnabled);
+        }
+
         private Widget BuildWidgetsApp(
             BuildContext context,
             CupertinoThemeData effectiveTheme,
@@ -389,6 +429,9 @@ public sealed class CupertinoApp : StatefulWidget
                     showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
                     debugShowWidgetInspector: false,
                     debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                    exitWidgetSelectionButtonBuilder: ExitWidgetSelectionButtonBuilder,
+                    moveExitWidgetSelectionButtonBuilder: MoveExitWidgetSelectionButtonBuilder,
+                    tapBehaviorButtonBuilder: TapBehaviorButtonBuilder,
                     shortcuts: CurrentWidget.Shortcuts,
                     actions: CurrentWidget.Actions,
                     restorationScopeId: CurrentWidget.RestorationScopeId,
@@ -422,6 +465,9 @@ public sealed class CupertinoApp : StatefulWidget
                 showPerformanceOverlay: CurrentWidget.ShowPerformanceOverlay,
                 showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
                 debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                exitWidgetSelectionButtonBuilder: ExitWidgetSelectionButtonBuilder,
+                moveExitWidgetSelectionButtonBuilder: MoveExitWidgetSelectionButtonBuilder,
+                tapBehaviorButtonBuilder: TapBehaviorButtonBuilder,
                 shortcuts: CurrentWidget.Shortcuts,
                 actions: CurrentWidget.Actions,
                 restorationScopeId: CurrentWidget.RestorationScopeId,
@@ -470,5 +516,89 @@ public sealed class CupertinoScrollBehavior : ScrollBehavior
     public override MultitouchDragStrategy GetMultitouchDragStrategy(BuildContext context)
     {
         return MultitouchDragStrategy.AverageBoundaryPointers;
+    }
+}
+
+/// <summary>The Cupertino-styled button of the widget inspector's on-device selection mode.</summary>
+/// <remarks>Flutter's private <c>_CupertinoInspectorButton</c> (cupertino_ui app.dart).</remarks>
+internal sealed class CupertinoInspectorButton : InspectorButton
+{
+    private CupertinoInspectorButton(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        InspectorButtonVariant variant,
+        GlobalKey? buttonKey = null,
+        bool? toggledOn = null)
+        : base(onPressed, semanticsLabel, icon, variant, buttonKey, toggledOn)
+    {
+    }
+
+    /// <summary>Flutter's <c>_CupertinoInspectorButton.filled</c>.</summary>
+    public static CupertinoInspectorButton Filled(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        GlobalKey? buttonKey = null) =>
+        new(onPressed, semanticsLabel, icon, InspectorButtonVariant.Filled, buttonKey: buttonKey);
+
+    /// <summary>Flutter's <c>_CupertinoInspectorButton.toggle</c>.</summary>
+    public static CupertinoInspectorButton Toggle(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        bool toggledOn = true) =>
+        new(onPressed, semanticsLabel, icon, InspectorButtonVariant.Toggle, toggledOn: toggledOn);
+
+    /// <summary>Flutter's <c>_CupertinoInspectorButton.iconOnly</c>.</summary>
+    public static CupertinoInspectorButton IconOnly(Action onPressed, string semanticsLabel, IconData icon) =>
+        new(onPressed, semanticsLabel, icon, InspectorButtonVariant.IconOnly);
+
+    public override Widget Build(BuildContext context)
+    {
+        var buttonIcon = new Icon(
+            Icon,
+            semanticLabel: SemanticsLabel,
+            size: IconSizeForVariant,
+            color: ForegroundColor(context));
+
+        return new Padding(
+            key: ButtonKey,
+            insets: EdgeInsets.All(
+                (CupertinoConstants.MinInteractiveDimensionCupertino - ButtonSize) / 2),
+            child: Variant == InspectorButtonVariant.Toggle && !ToggledOn!.Value
+                ? CupertinoButton.Tinted(
+                    minSize: ButtonSize,
+                    onPressed: OnPressed,
+                    padding: EdgeInsets.Zero,
+                    child: buttonIcon)
+                : new CupertinoButton(
+                    minSize: ButtonSize,
+                    onPressed: OnPressed,
+                    padding: EdgeInsets.Zero,
+                    color: BackgroundColor(context),
+                    child: buttonIcon));
+    }
+
+    protected override Color ForegroundColor(BuildContext context)
+    {
+        Color primaryColor = CupertinoTheme.Of(context).PrimaryColor;
+        Color secondaryColor = CupertinoTheme.Of(context).PrimaryContrastingColor;
+        return Variant switch
+        {
+            InspectorButtonVariant.Filled => secondaryColor,
+            InspectorButtonVariant.IconOnly => primaryColor,
+            _ => !ToggledOn!.Value ? primaryColor : secondaryColor,
+        };
+    }
+
+    protected override Color BackgroundColor(BuildContext context)
+    {
+        Color primaryColor = CupertinoTheme.Of(context).PrimaryColor;
+        return Variant switch
+        {
+            InspectorButtonVariant.Filled or InspectorButtonVariant.Toggle => primaryColor,
+            _ => new Color(0x00000000),
+        };
     }
 }

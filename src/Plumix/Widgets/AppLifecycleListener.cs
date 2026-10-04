@@ -329,6 +329,12 @@ public partial class WidgetsBinding
         SemanticsBinding.Instance.AccessibilityFeaturesChangedOverride = HandleAccessibilityFeaturesChanged;
         EnsureFrameCallback();
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
+        if (Constants.KDebugMode)
+        {
+            FlutterErrorDetails.PropertiesTransformers.Add(WidgetInspectorDebug.DebugTransformDebugCreator);
+        }
+
+        InitServiceExtensions();
     }
 
     private Task<object?> HandleNavigationInvocation(MethodCall call)

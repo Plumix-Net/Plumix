@@ -97,6 +97,13 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action<TimeSpan>? OnBeginFrame { get; set; }
 
+    /// <summary>Additional data available on each flutter frame.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.frameData</c>. The engine fills it before each frame; no Plumix
+    /// host reports a frame number yet, so it keeps the engine's initial value.
+    /// </remarks>
+    public FrameData FrameData { get; internal set; } = new(frameNumber: -1);
+
     /// <summary>A callback invoked for each frame after <see cref="OnBeginFrame"/> has completed.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.onDrawFrame</c>.</remarks>
     public Action? OnDrawFrame { get; set; }
@@ -324,4 +331,18 @@ public sealed class PlatformDispatcher
         ArgumentNullException.ThrowIfNull(timings);
         OnReportTimings?.Invoke(timings);
     }
+}
+
+/// <summary>Data for a frame provided by the engine.</summary>
+/// <remarks>dart:ui's <c>FrameData</c>.</remarks>
+public sealed class FrameData
+{
+    internal FrameData(int frameNumber)
+    {
+        FrameNumber = frameNumber;
+    }
+
+    /// <summary>The number of the current frame, or -1 when the engine does not report one.</summary>
+    /// <remarks>Incremented by the engine on each frame; it can be used to identify a frame.</remarks>
+    public int FrameNumber { get; }
 }

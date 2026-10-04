@@ -7,10 +7,10 @@ namespace Plumix.UI;
 
 // Dart parity source: dart:ui Canvas (the drawing half; Avalonia brushes/pens stand in for `Paint`)
 
-public sealed partial class Canvas
+public partial class Canvas
 {
     // Dart parity source: dart:ui Canvas.drawRect / Canvas.drawRRect.
-    public void DrawRectangle(
+    public virtual void DrawRectangle(
         IBrush? brush,
         IPen? pen,
         Rect rect,
@@ -37,7 +37,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawRRect (corner radii given as a BorderRadius).
-    public void DrawRectangle(
+    public virtual void DrawRectangle(
         IBrush? brush,
         IPen? pen,
         Rect rect,
@@ -66,7 +66,7 @@ public sealed partial class Canvas
     /// Dart's <c>Canvas.drawRect(rect, paint)</c>. The paint's colour (or shader), style, stroke, anti-alias
     /// flag, mask filter and blend mode are honoured; see <see cref="DrawShape"/>.
     /// </remarks>
-    public void DrawRect(Rect rect, Paint paint)
+    public virtual void DrawRect(Rect rect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         DrawShape(
@@ -94,7 +94,7 @@ public sealed partial class Canvas
     // Dart parity source: dart:ui Canvas.drawPaint.
     /// <summary>Fills the canvas's current clip with the given brush. Avalonia exposes no clip-bounds
     /// query, so the fill is a rectangle large enough to cover any practical clip.</summary>
-    public void DrawPaint(IBrush brush)
+    public virtual void DrawPaint(IBrush brush)
     {
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
         AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
@@ -102,7 +102,7 @@ public sealed partial class Canvas
 
     /// <summary>Fills the canvas's current clip with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawPaint(paint)</c>; the paint's colour or shader fills the clip.</remarks>
-    public void DrawPaint(Paint paint)
+    public virtual void DrawPaint(Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
@@ -113,7 +113,7 @@ public sealed partial class Canvas
     private static readonly Rect DrawPaintBounds = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
 
     // Dart parity source: dart:ui Canvas.drawRRect.
-    public void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
+    public virtual void DrawRRect(RRect rrect, IBrush? brush, IPen? pen)
     {
         DebugRecordCall(new CanvasCall("drawRRect", RRect: rrect, Brush: brush, Pen: pen));
         var path = new Path();
@@ -124,7 +124,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws a rounded rectangle with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawRRect(rrect, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawRRect(RRect rrect, Paint paint)
+    public virtual void DrawRRect(RRect rrect, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         Geometry? geometry = null;
@@ -139,7 +139,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws the ring between two rounded rectangles with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawDRRect(outer, inner, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawDRRect(RRect outer, RRect inner, Paint paint)
+    public virtual void DrawDRRect(RRect outer, RRect inner, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         Geometry? geometry = null;
@@ -157,7 +157,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws an axis-aligned oval with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawOval(rect, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawOval(Rect oval, Paint paint)
+    public virtual void DrawOval(Rect oval, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         DrawShape(
@@ -170,7 +170,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws a path with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawPath(path, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawPath(Path path, Paint paint)
+    public virtual void DrawPath(Path path, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(paint);
@@ -186,7 +186,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws a rounded superellipse with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawRSuperellipse(rsuperellipse, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawRSuperellipse(RSuperellipse rsuperellipse, Paint paint)
+    public virtual void DrawRSuperellipse(RSuperellipse rsuperellipse, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         Path path = rsuperellipse.ToPath();
@@ -281,7 +281,7 @@ public sealed partial class Canvas
         miterLimit: paint.StrokeMiterLimit);
 
     // Dart parity source: dart:ui Canvas.drawRSuperellipse.
-    public void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
+    public virtual void DrawRSuperellipse(RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
     {
         var path = new Path();
         path.AddRSuperellipse(rsuperellipse);
@@ -293,7 +293,7 @@ public sealed partial class Canvas
     /// Plumix-only shorthand for Dart's <c>drawRSuperellipse(shape.inflate(spread).shift(offset),
     /// shadow.toPaint())</c>.
     /// </remarks>
-    public void DrawRSuperellipseShadow(RSuperellipse rsuperellipse, Plumix.Rendering.BoxShadow shadow)
+    public virtual void DrawRSuperellipseShadow(RSuperellipse rsuperellipse, Plumix.Rendering.BoxShadow shadow)
     {
         ArgumentNullException.ThrowIfNull(shadow);
         RSuperellipse shadowShape = rsuperellipse
@@ -310,7 +310,7 @@ public sealed partial class Canvas
     /// Plumix-only shorthand for Dart's <c>Canvas.drawRSuperellipse</c> with a <c>Paint.maskFilter</c> of
     /// <c>MaskFilter.blur(BlurStyle.normal, sigma)</c>.
     /// </remarks>
-    public void DrawRSuperellipseBlur(RSuperellipse rsuperellipse, Color color, double blurSigma)
+    public virtual void DrawRSuperellipseBlur(RSuperellipse rsuperellipse, Color color, double blurSigma)
     {
         DrawRSuperellipse(rsuperellipse, new Paint
         {
@@ -359,7 +359,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
-    public void DrawDRRect(RRect outer, RRect inner, IBrush brush)
+    public virtual void DrawDRRect(RRect outer, RRect inner, IBrush brush)
     {
         var outerPath = new Path();
         outerPath.AddRRect(outer);
@@ -376,7 +376,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawOval.
-    public void DrawOval(Rect oval, IBrush? brush, IPen? pen)
+    public virtual void DrawOval(Rect oval, IBrush? brush, IPen? pen)
     {
         DebugRecordCall(new CanvasCall("drawOval", Rect: oval, Brush: brush, Pen: pen));
         AddDrawCommand(context =>
@@ -384,7 +384,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawPath.
-    public void DrawPath(Path path, IBrush? brush, IPen? pen)
+    public virtual void DrawPath(Path path, IBrush? brush, IPen? pen)
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen, Path: path));
@@ -395,7 +395,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawCircle.
-    public void DrawCircle(IBrush? brush, IPen? pen, Point center, double radius)
+    public virtual void DrawCircle(IBrush? brush, IPen? pen, Point center, double radius)
     {
         DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
@@ -404,7 +404,7 @@ public sealed partial class Canvas
 
     /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
     /// <remarks>Dart's <c>Canvas.drawCircle(c, radius, paint)</c>; see <see cref="DrawShape"/>.</remarks>
-    public void DrawCircle(Point center, double radius, Paint paint)
+    public virtual void DrawCircle(Point center, double radius, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         double clampedRadius = Math.Max(0, radius);
@@ -421,7 +421,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawArc.
-    public void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
+    public virtual void DrawArc(IPen pen, Rect rect, double startAngleRadians, double sweepAngleRadians)
     {
         DebugRecordCall(new CanvasCall("drawArc", Rect: rect, Pen: pen));
         if (rect.Width <= 0 || rect.Height <= 0)
@@ -458,7 +458,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawLine.
-    public void DrawLine(IPen pen, Point startPoint, Point endPoint)
+    public virtual void DrawLine(IPen pen, Point startPoint, Point endPoint)
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
         AddDrawCommand(context => context.DrawLine(pen, startPoint, endPoint));
@@ -469,7 +469,7 @@ public sealed partial class Canvas
     /// Dart's <c>Canvas.drawLine(p1, p2, paint)</c>: the paint's style is ignored and the line is
     /// always stroked; see <see cref="DrawShape"/> for the mask filter and blend mode.
     /// </remarks>
-    public void DrawLine(Point startPoint, Point endPoint, Paint paint)
+    public virtual void DrawLine(Point startPoint, Point endPoint, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
         var stroke = new Paint(paint) { Style = PaintingStyle.Stroke };
@@ -482,7 +482,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
-    public void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Point> points)
+    public virtual void DrawPolygon(IBrush? brush, IPen? pen, IReadOnlyList<Point> points)
     {
         ArgumentNullException.ThrowIfNull(points);
         if (points.Count < 3)
@@ -509,7 +509,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Plumix-only: draws an Avalonia geometry the caller already built.</summary>
-    public void DrawGeometry(
+    public virtual void DrawGeometry(
         IBrush? brush,
         IPen? pen,
         Geometry geometry,
@@ -531,7 +531,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawShadow.
-    public void DrawShadow(
+    public virtual void DrawShadow(
         Geometry geometry,
         Color color,
         double elevation,
@@ -547,7 +547,7 @@ public sealed partial class Canvas
     /// <see cref="DrawShadow(Geometry, Color, double, bool, Point)"/> over a <see cref="Path"/>, whose
     /// backend geometry is built on playback so recording needs no render backend.
     /// </summary>
-    public void DrawShadow(
+    public virtual void DrawShadow(
         Path path,
         Color color,
         double elevation,
@@ -595,7 +595,7 @@ public sealed partial class Canvas
     }
 
     // Dart parity source: dart:ui Canvas.drawImageRect.
-    public void DrawImage(
+    public virtual void DrawImage(
         IImage image,
         Rect sourceRect,
         Rect destinationRect,

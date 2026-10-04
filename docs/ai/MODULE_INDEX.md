@@ -256,6 +256,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/FrameworkSynchronizationContext.cs`
   - `src/Plumix/PipelineOwner.cs`
   - `src/Plumix/RenderView.cs`
+  - `src/Plumix/Widgets/WidgetsBinding.ServiceExtensions.cs` (widgets service extensions, inspector notifiers,
+    first-frame flag), `src/Plumix/Developer/DeveloperService.cs` (`dart:developer` `postEvent`/`inspect`)
+  - `src/Plumix/Widgets/WidgetInspector.cs` (widget, selection, overlay layer, on-device buttons),
+    `WidgetInspectorService.cs` (ids/groups, pub roots, tree JSON, layout explorer, `ext.flutter.inspector.*`),
+    `WidgetInspector.Screenshot.cs` (screenshot painting context, multicast canvas),
+    `WidgetInspector.Location.cs` (creation locations, `InspectorSerializationDelegate`, `WeakMap`)
 - Framework `async` work runs on the framework thread: start every fire-and-forget body with
   `Scheduler.RunAsync(Body)` (never a bare `_ = BodyAsync()`) and do not write `ConfigureAwait(false)`
   on an await whose continuation touches framework state.
@@ -267,6 +273,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/RendererBindingTests.cs`, `src/Plumix.Tests/RendererBindingDartParityTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/AppLifecycleListenerTests.cs`
+  - `src/Plumix.Tests/WidgetInspectorDartParityTests.cs`,
+    `src/Plumix.Tests/WidgetInspectorServiceExtensionsDartParityTests.cs` (harness: `WidgetInspectorTestUtils.cs`)
 
 ### Animation and Ticking
 

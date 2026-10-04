@@ -76,6 +76,7 @@ import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
+import 'demos/general/widget_inspector_demo_page.dart';
 import 'demos/general/rendering_debug_flags_demo_page.dart';
 import 'demos/general/platform_view_link_demo_page.dart';
 import 'demos/general/scene_compositing_demo_page.dart';
@@ -1041,6 +1042,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Placeholder + GridPaper + ErrorWidget',
       subtitle: 'fallback sizing + foreground grid + error paragraph padding',
       builder: () => const DebugPaintingDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.widgetInspector,
+      title: 'WidgetInspector',
+      subtitle:
+          'on-device select mode + overlay + selection readout + disabled scope',
+      builder: () => const WidgetInspectorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.renderingDebugFlags,

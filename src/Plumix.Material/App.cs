@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -462,6 +463,9 @@ public sealed class MaterialApp : StatefulWidget
                     showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
                     debugShowWidgetInspector: false,
                     debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                    exitWidgetSelectionButtonBuilder: ExitWidgetSelectionButtonBuilder,
+                    moveExitWidgetSelectionButtonBuilder: MoveExitWidgetSelectionButtonBuilder,
+                    tapBehaviorButtonBuilder: TapBehaviorButtonBuilder,
                     shortcuts: CurrentWidget.Shortcuts,
                     actions: CurrentWidget.Actions,
                     restorationScopeId: CurrentWidget.RestorationScopeId,
@@ -493,6 +497,9 @@ public sealed class MaterialApp : StatefulWidget
                     showPerformanceOverlay: CurrentWidget.ShowPerformanceOverlay,
                     showSemanticsDebugger: CurrentWidget.ShowSemanticsDebugger,
                     debugShowCheckedModeBanner: CurrentWidget.DebugShowCheckedModeBanner,
+                    exitWidgetSelectionButtonBuilder: ExitWidgetSelectionButtonBuilder,
+                    moveExitWidgetSelectionButtonBuilder: MoveExitWidgetSelectionButtonBuilder,
+                    tapBehaviorButtonBuilder: TapBehaviorButtonBuilder,
                     shortcuts: CurrentWidget.Shortcuts,
                     actions: CurrentWidget.Actions,
                     restorationScopeId: CurrentWidget.RestorationScopeId,
@@ -510,6 +517,56 @@ public sealed class MaterialApp : StatefulWidget
             return new ScrollConfiguration(
                 behavior: CurrentWidget.ScrollBehavior ?? new MaterialScrollBehavior(),
                 child: new HeroControllerScope(controller: _heroController, child: result));
+        }
+
+        private Widget ExitWidgetSelectionButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            GlobalKey key)
+        {
+            return MaterialInspectorButton.Filled(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                icon: Icons.Close,
+                isDarkTheme: IsDarkTheme(context),
+                buttonKey: key);
+        }
+
+        private Widget MoveExitWidgetSelectionButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            bool usesDefaultAlignment = true)
+        {
+            return MaterialInspectorButton.IconOnly(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                icon: usesDefaultAlignment ? Icons.ArrowRight : Icons.ArrowLeft,
+                isDarkTheme: IsDarkTheme(context));
+        }
+
+        private Widget TapBehaviorButtonBuilder(
+            BuildContext context,
+            Action onPressed,
+            string semanticsLabel,
+            bool selectionOnTapEnabled)
+        {
+            return MaterialInspectorButton.Toggle(
+                onPressed: onPressed,
+                semanticsLabel: semanticsLabel,
+                // This unicode icon is also used for the Cupertino-styled button and for
+                // DevTools. It should be updated in all 3 places if changed.
+                icon: new IconData(0x1F74A),
+                isDarkTheme: IsDarkTheme(context),
+                toggledOn: selectionOnTapEnabled);
+        }
+
+        private bool IsDarkTheme(BuildContext context)
+        {
+            return CurrentWidget.ThemeMode == ThemeMode.Dark
+                || (CurrentWidget.ThemeMode == ThemeMode.System
+                    && MediaQuery.PlatformBrightnessOf(context) == PlatformBrightness.Dark);
         }
 
         private Widget BuildMaterialShell(BuildContext context, Widget? child)
@@ -581,5 +638,125 @@ public sealed class MaterialApp : StatefulWidget
         }
 
 private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
+    }
+}
+
+/// <summary>The Material-styled button of the widget inspector's on-device selection mode.</summary>
+/// <remarks>Flutter's private <c>_MaterialInspectorButton</c> (material_ui app.dart).</remarks>
+internal sealed class MaterialInspectorButton : InspectorButton
+{
+    private static readonly EdgeInsets ButtonPadding = EdgeInsets.Zero;
+
+    private static readonly BoxConstraints ButtonConstraints = BoxConstraints.TightFor(
+        width: ButtonSize,
+        height: ButtonSize);
+
+    private MaterialInspectorButton(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        bool isDarkTheme,
+        InspectorButtonVariant variant,
+        GlobalKey? buttonKey = null,
+        bool? toggledOn = null)
+        : base(onPressed, semanticsLabel, icon, variant, buttonKey, toggledOn)
+    {
+        IsDarkTheme = isDarkTheme;
+    }
+
+    public bool IsDarkTheme { get; }
+
+    /// <summary>Flutter's <c>_MaterialInspectorButton.filled</c>.</summary>
+    public static MaterialInspectorButton Filled(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        bool isDarkTheme,
+        GlobalKey? buttonKey = null) =>
+        new(onPressed, semanticsLabel, icon, isDarkTheme, InspectorButtonVariant.Filled, buttonKey: buttonKey);
+
+    /// <summary>Flutter's <c>_MaterialInspectorButton.toggle</c>.</summary>
+    public static MaterialInspectorButton Toggle(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        bool isDarkTheme,
+        bool toggledOn = true) =>
+        new(onPressed, semanticsLabel, icon, isDarkTheme, InspectorButtonVariant.Toggle, toggledOn: toggledOn);
+
+    /// <summary>Flutter's <c>_MaterialInspectorButton.iconOnly</c>.</summary>
+    public static MaterialInspectorButton IconOnly(
+        Action onPressed,
+        string semanticsLabel,
+        IconData icon,
+        bool isDarkTheme) =>
+        new(onPressed, semanticsLabel, icon, isDarkTheme, InspectorButtonVariant.IconOnly);
+
+    public override Widget Build(BuildContext context)
+    {
+        return new IconButton(
+            key: ButtonKey,
+            onPressed: OnPressed,
+            iconSize: IconSizeForVariant,
+            padding: ButtonPadding,
+            constraints: ButtonConstraints,
+            style: SelectionButtonsIconStyle(context),
+            icon: new Icon(Icon, semanticLabel: SemanticsLabel));
+    }
+
+    private ButtonStyle SelectionButtonsIconStyle(BuildContext context)
+    {
+        Color foreground = ForegroundColor(context);
+        Color background = BackgroundColor(context);
+
+        return IconButton.StyleFrom(
+            foregroundColor: foreground,
+            backgroundColor: background,
+            side: BorderSideFor(foreground),
+            tapTargetSize: MaterialTapTargetSize.Padded);
+    }
+
+    private BorderSide? BorderSideFor(Color color)
+    {
+        return Variant switch
+        {
+            InspectorButtonVariant.Filled or InspectorButtonVariant.IconOnly => null,
+            _ => ToggledOn == false ? new BorderSide(color: color) : null,
+        };
+    }
+
+    protected override Color ForegroundColor(BuildContext context)
+    {
+        Color primaryColor = PrimaryColor(context);
+        Color secondaryColor = SecondaryColor(context);
+        return Variant switch
+        {
+            InspectorButtonVariant.Filled => primaryColor,
+            InspectorButtonVariant.IconOnly => secondaryColor,
+            _ => !ToggledOn!.Value ? secondaryColor : primaryColor,
+        };
+    }
+
+    protected override Color BackgroundColor(BuildContext context)
+    {
+        Color secondaryColor = SecondaryColor(context);
+        return Variant switch
+        {
+            InspectorButtonVariant.Filled => secondaryColor,
+            InspectorButtonVariant.IconOnly => Colors.Transparent,
+            _ => !ToggledOn!.Value ? Colors.Transparent : secondaryColor,
+        };
+    }
+
+    private Color PrimaryColor(BuildContext context)
+    {
+        ThemeData theme = Theme.Of(context);
+        return IsDarkTheme ? theme.ColorScheme.OnPrimaryContainer : theme.ColorScheme.PrimaryContainer;
+    }
+
+    private Color SecondaryColor(BuildContext context)
+    {
+        ThemeData theme = Theme.Of(context);
+        return IsDarkTheme ? theme.ColorScheme.PrimaryContainer : theme.ColorScheme.OnPrimaryContainer;
     }
 }

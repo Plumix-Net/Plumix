@@ -269,8 +269,12 @@ public static class BindingBase
     /// <remarks>Flutter's <c>BindingBase.postEvent</c> over <c>developer.postEvent</c>.</remarks>
     public static void PostEvent(string eventKind, IReadOnlyDictionary<string, object?> eventData)
     {
-        ArgumentNullException.ThrowIfNull(eventKind);
-        ArgumentNullException.ThrowIfNull(eventData);
+        Developer.DeveloperService.PostEvent(eventKind, eventData);
+    }
+
+    /// <summary>Raises <see cref="EventPosted"/> for an event posted to the <c>Extension</c> stream.</summary>
+    internal static void RaiseEventPosted(string eventKind, IReadOnlyDictionary<string, object?> eventData)
+    {
         EventPosted?.Invoke(eventKind, eventData);
     }
 

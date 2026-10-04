@@ -253,6 +253,56 @@ public sealed class Text : StatelessWidget
         return resolved;
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>Text.debugFillProperties</c>.</remarks>
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new StringProperty("data", Data, showName: false));
+        if (TextSpan is not null)
+        {
+            properties.Add(TextSpan.ToDiagnosticsNode(name: "textSpan", style: DiagnosticsTreeStyle.Transition));
+        }
+
+        Style?.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<TextAlign>(
+            "textAlign",
+            TextAlign,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<string>("locale", Locale, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new FlagProperty(
+            "softWrap",
+            value: SoftWrap,
+            ifTrue: "wrapping at box width",
+            ifFalse: "no wrapping except at line break characters",
+            showName: true));
+        properties.Add(new EnumProperty<TextOverflow>(
+            "overflow",
+            Overflow,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty(
+            "textScaleFactor",
+            TextScaleFactor,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new IntProperty("maxLines", MaxLines, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<TextWidthBasis>(
+            "textWidthBasis",
+            TextWidthBasis,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TextHeightBehavior?>(
+            "textHeightBehavior",
+            TextHeightBehavior,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        if (SemanticsLabel is not null)
+        {
+            properties.Add(new StringProperty("semanticsLabel", SemanticsLabel));
+        }
+    }
+
     public override Widget Build(BuildContext context)
     {
         DefaultTextStyle? ambient = DefaultTextStyle.MaybeOf(context);

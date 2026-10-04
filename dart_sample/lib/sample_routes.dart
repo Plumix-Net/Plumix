@@ -157,6 +157,7 @@ class SampleRoutes {
   static const String trackpadPanZoom = '/trackpad-pan-zoom';
   static const String mouseRegion = '/mouse-region';
   static const String debugPainting = '/debug-painting';
+  static const String widgetInspector = '/widget-inspector';
   static const String renderingDebugFlags = '/rendering-debug-flags';
   static const String sceneCompositing = '/scene-compositing';
   static const String platformViewLink = '/platform-view-link';

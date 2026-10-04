@@ -263,7 +263,7 @@ public sealed class PictureRecorder
 /// Dart's <c>ui.Canvas</c>. The clip/transform/save stack is ported 1:1; the drawing calls take
 /// Avalonia brushes and pens where Dart takes a <c>Paint</c>.
 /// </remarks>
-public sealed partial class Canvas
+public partial class Canvas
 {
     private readonly List<CanvasCommand> _commands;
     private readonly List<CanvasCall> _debugCalls;
@@ -275,6 +275,20 @@ public sealed partial class Canvas
         ArgumentNullException.ThrowIfNull(recorder);
         _commands = recorder.BeginRecording();
         _debugCalls = recorder.DebugCallsForRecording;
+    }
+
+    /// <summary>
+    /// Creates a canvas attached to no recorder, for an implementation that overrides every call (Dart's
+    /// <c>implements Canvas</c>, such as the widget inspector's multicast canvas).
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>Canvas</c> is an interface class; Plumix's records commands, so an implementation
+    /// that forwards elsewhere starts from an empty, unused command list.
+    /// </remarks>
+    protected Canvas()
+    {
+        _commands = [];
+        _debugCalls = [];
     }
 
     /// <summary>Plumix-only: the debug descriptions of the calls recorded so far, in order.</summary>
@@ -293,10 +307,10 @@ public sealed partial class Canvas
 
     /// <summary>Returns the number of items on the save stack.</summary>
     /// <remarks>Dart's <c>Canvas.getSaveCount</c>.</remarks>
-    public int GetSaveCount() => _saveCount;
+    public virtual int GetSaveCount() => _saveCount;
 
     /// <summary>Saves a copy of the current transform and clip on the save stack.</summary>
-    public void Save()
+    public virtual void Save()
     {
         DebugRecordCall(new CanvasCall("save"));
         _saveCount++;
@@ -312,7 +326,7 @@ public sealed partial class Canvas
     /// isolated offscreen surface, so the group is opened as a transparent-preserving opacity push:
     /// the save/restore nesting matches Dart exactly, but blending inside the group is not isolated.
     /// </remarks>
-    public void SaveLayer(Rect bounds)
+    public virtual void SaveLayer(Rect bounds)
     {
         DebugRecordCall(new CanvasCall("saveLayer", Rect: bounds));
         _saveCount++;
@@ -321,7 +335,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Pops the current save stack, if there is anything to pop.</summary>
-    public void Restore()
+    public virtual void Restore()
     {
         DebugRecordCall(new CanvasCall("restore"));
         if (_saveCount <= 1)
@@ -334,7 +348,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Restores the save stack to a previous level as returned by <see cref="GetSaveCount"/>.</summary>
-    public void RestoreToCount(int count)
+    public virtual void RestoreToCount(int count)
     {
         while (_saveCount > count && _saveCount > 1)
         {
@@ -343,7 +357,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Adds a translation to the current transform.</summary>
-    public void Translate(double dx, double dy)
+    public virtual void Translate(double dx, double dy)
     {
         DebugRecordCall(new CanvasCall("translate", Dx: dx, Dy: dy));
         if (dx == 0.0 && dy == 0.0)
@@ -356,7 +370,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Adds an axis-aligned scale to the current transform.</summary>
-    public void Scale(double sx, double? sy = null)
+    public virtual void Scale(double sx, double? sy = null)
     {
         double scaleY = sy ?? sx;
         DebugRecordCall(new CanvasCall("scale", Dx: sx, Dy: scaleY));
@@ -364,7 +378,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Adds a rotation, in radians, to the current transform.</summary>
-    public void Rotate(double radians)
+    public virtual void Rotate(double radians)
     {
         DebugRecordCall(new CanvasCall("rotate", Radius: radians));
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateRotation(radians))));
@@ -372,7 +386,7 @@ public sealed partial class Canvas
 
     /// <summary>Multiplies the current transform by the given matrix.</summary>
     /// <remarks>Dart's <c>Canvas.transform</c>, which takes the matrix's column-major storage.</remarks>
-    public void Transform(Matrix4 matrix)
+    public virtual void Transform(Matrix4 matrix)
     {
         ArgumentNullException.ThrowIfNull(matrix);
         Matrix avaloniaMatrix = matrix.ToAvaloniaMatrix();
@@ -380,7 +394,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rectangle.</summary>
-    public void ClipRect(Rect rect, bool doAntiAlias = true)
+    public virtual void ClipRect(Rect rect, bool doAntiAlias = true)
     {
         DebugRecordCall(new CanvasCall("clipRect", Rect: rect));
         PushEdgeMode(doAntiAlias);
@@ -388,7 +402,7 @@ public sealed partial class Canvas
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rounded rect.</summary>
-    public void ClipRRect(RRect rrect, bool doAntiAlias = true)
+    public virtual void ClipRRect(RRect rrect, bool doAntiAlias = true)
     {
         DebugRecordCall(new CanvasCall("clipRRect", RRect: rrect));
         PushEdgeMode(doAntiAlias);
@@ -396,13 +410,13 @@ public sealed partial class Canvas
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given shape.</summary>
-    public void ClipRSuperellipse(RSuperellipse rsuperellipse, bool doAntiAlias = true)
+    public virtual void ClipRSuperellipse(RSuperellipse rsuperellipse, bool doAntiAlias = true)
     {
         ClipPath(rsuperellipse.ToPath(), doAntiAlias);
     }
 
     /// <summary>Reduces the clip region to the intersection of the current clip and the given path.</summary>
-    public void ClipPath(Path path, bool doAntiAlias = true)
+    public virtual void ClipPath(Path path, bool doAntiAlias = true)
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("clipPath", Path: path));
@@ -418,7 +432,7 @@ public sealed partial class Canvas
     /// Dart clips through <c>Path</c> only; Plumix models a few shapes (notched app bars, decoration
     /// outlines) as backend geometry, which cannot be shifted, so the offset is applied around it.
     /// </remarks>
-    public void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
+    public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
         PushEdgeMode(doAntiAlias);
@@ -440,7 +454,7 @@ public sealed partial class Canvas
     /// Dart's <c>Canvas.drawParagraph</c>. The paragraph's current layout is captured when the call is
     /// recorded, so a later relayout of the same paragraph does not change the recorded picture.
     /// </remarks>
-    public void DrawParagraph(Paragraph paragraph, Point offset)
+    public virtual void DrawParagraph(Paragraph paragraph, Point offset)
     {
         ArgumentNullException.ThrowIfNull(paragraph);
         DebugRecordCall(new CanvasCall("drawParagraph", Offset: offset));
@@ -456,14 +470,14 @@ public sealed partial class Canvas
     /// Stands in for Dart's <c>saveLayer</c> + <c>drawRect(BlendMode.modulate, shader)</c> fade, which
     /// needs an isolated layer Avalonia's drawing context does not expose.
     /// </remarks>
-    internal void PushOpacityMask(IBrush mask, Rect bounds)
+    internal virtual void PushOpacityMask(IBrush mask, Rect bounds)
     {
         ArgumentNullException.ThrowIfNull(mask);
         _commands.Add(CanvasCommand.ForPush(context => context.PushOpacityMask(mask, bounds)));
     }
 
     /// <summary>Plumix-only: records a draw call that renders itself onto the backend context.</summary>
-    internal void AddDrawCommand(Action<DrawingContext> draw)
+    internal virtual void AddDrawCommand(Action<DrawingContext> draw)
     {
         ArgumentNullException.ThrowIfNull(draw);
         _commands.Add(CanvasCommand.ForDraw(draw));

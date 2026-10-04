@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -647,26 +648,15 @@ internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelega
                || PositionDelegate != oldTooltip.PositionDelegate;
     }
 
+    /// <summary>Dart's <c>positionDependentBox</c>; see <see cref="PaintingGeometry.PositionDependentBox"/>.</summary>
     public static Point PositionDependentBox(
         Size size,
         Size childSize,
         Point target,
         bool preferBelow,
         double verticalOffset = 0,
-        double margin = 10)
-    {
-        bool fitsBelow = target.Y + verticalOffset + childSize.Height <= size.Height - margin;
-        bool fitsAbove = target.Y - verticalOffset - childSize.Height >= margin;
-        bool tooltipBelow = fitsAbove == fitsBelow ? preferBelow : fitsBelow;
-        double y = tooltipBelow
-            ? Math.Min(target.Y + verticalOffset, size.Height - margin)
-            : Math.Max(target.Y - verticalOffset - childSize.Height, margin);
-        double flexibleSpace = size.Width - childSize.Width;
-        double x = flexibleSpace <= 2 * margin
-            ? flexibleSpace / 2.0
-            : Math.Clamp(target.X - childSize.Width / 2.0, margin, flexibleSpace - margin);
-        return new Point(x, y);
-    }
+        double margin = 10) =>
+        PaintingGeometry.PositionDependentBox(size, childSize, target, preferBelow, verticalOffset, margin);
 }
 
 /// <summary>

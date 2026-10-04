@@ -162,6 +162,7 @@ internal static class SampleRoutes
     public const string MouseRegion = "/mouse-region";
     public const string DebugPainting = "/debug-painting";
     public const string RenderingDebugFlags = "/rendering-debug-flags";
+    public const string WidgetInspector = "/widget-inspector";
     public const string SceneCompositing = "/scene-compositing";
     public const string PlatformViewLink = "/platform-view-link";
     public const string Flow = "/flow";
@@ -642,6 +643,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Placeholder + GridPaper + ErrorWidget",
             "fallback sizing + foreground grid + error paragraph padding",
             () => new DebugPaintingDemoPage()),
+        new(
+            SampleRoutes.WidgetInspector,
+            "WidgetInspector",
+            "on-device select mode + overlay + selection readout + disabled scope",
+            () => new WidgetInspectorDemoPage()),
         new(
             SampleRoutes.RenderingDebugFlags,
             "Rendering debug flags",

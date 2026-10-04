@@ -8,6 +8,20 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `WidgetInspector`, `InspectorSelection`, `InspectorButton`, `Enable`/`DisableWidgetInspectorScope` (widget_inspector).
+- `WidgetInspectorService`: object groups, pub roots, tree JSON, layout explorer, screenshots (widget_inspector.dart).
+- `InspectorSerializationDelegate`, `WeakMap`, `debugTransformDebugCreator`, `DevToolsDeepLinkProperty` (same file).
+- The 29 untracked `ext.flutter.inspector.*` extensions and their enums (widget_inspector, service_extensions.dart).
+- `WidgetsBinding` inspector notifiers, `debugExcludeRootWidgetInspector`, `DebugDidSendFirstFrameEvent` (binding.dart).
+- `WidgetsBinding` registers `debugDumpApp`, `showPerformanceOverlay`, `didSendFirstFrameEvent`, `profile*`, banner.
+- Breaking: `WidgetsApp` takes the inspector button builders and wraps debug apps in the root inspector (app.dart).
+- `WidgetsApp.DebugAllowBannerOverride`; `MaterialApp`/`CupertinoApp` pass their inspector buttons (app.dart).
+- Breaking: `Canvas` is unsealed with virtual members, so an implementation can forward calls (dart:ui `Canvas`).
+- dart:developer `postEvent(stream:)`/`inspect` (`DeveloperService`); `FrameData`; `positionDependentBox` (geometry).
+- `FoundationDebug.ActiveDevToolsServerAddress`/`ConnectedVmServiceUri` (foundation/debug.dart).
+- Breaking: `Text` reports Dart's diagnostics properties (`data`, `textAlign`, `softWrap`, ...) (text.dart).
+- WidgetInspector demo: select mode, selection readout, disabled scope (both samples).
+- widget_inspector_test.dart and widget_inspector_structure_error_test.dart ported (untracked-creation tests).
 - `InteractiveViewer` (+ `.Builder`), `TransformationController`, `PanAxis` (widgets/interactive_viewer.dart).
 - vector_math's `Quad` and `Vector3.Dot`/`Cross`; `EdgeInsets.Horizontal`/`Vertical` (edge_insets.dart).
 - `CurvedAnimation`, `TrainHoppingAnimation`, `AnimationController` dispatch memory events (animations.dart).

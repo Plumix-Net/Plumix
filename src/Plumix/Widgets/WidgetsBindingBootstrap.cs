@@ -25,7 +25,7 @@ public partial class WidgetsBinding
 
     /// <summary>The owner of the binding's widget tree.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.buildOwner</c>.</remarks>
-    public BuildOwner BuildOwner => _buildOwner;
+    public BuildOwner BuildOwner => _debugBuildOwnerOverrideForTests ?? _buildOwner;
 
     /// <summary>The focus manager owned by the binding's current <see cref="BuildOwner"/>.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.focusManager</c>.</remarks>
@@ -33,7 +33,7 @@ public partial class WidgetsBinding
 
     /// <summary>The root of the binding's widget tree, or <see langword="null"/> before attachment.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.rootElement</c>.</remarks>
-    public Element? RootElement => _rootElement;
+    public Element? RootElement => _debugRootElementOverrideForTests ?? _rootElement;
 
     /// <summary>The legacy spelling of <see cref="RootElement"/>.</summary>
     [Obsolete("Use RootElement instead.")]
@@ -129,6 +129,8 @@ public partial class WidgetsBinding
                 DebugBuildingDirtyElements = false;
             }
         }
+
+        ReportFirstFrameBuilt();
     }
 
     /// <summary>
@@ -161,8 +163,17 @@ public partial class WidgetsBinding
     }
 
     /// <summary>Reassembles the binding-owned widget tree after a hot reload.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.performReassemble</c>: the widget inspector drops its statistics
+    /// and error count first.
+    /// </remarks>
     internal void ReassembleApplication()
     {
+        if (Constants.KDebugMode)
+        {
+            WidgetInspectorService.Instance.PerformReassemble();
+        }
+
         if (_rootElement is not null)
         {
             _buildOwner.Reassemble(_rootElement);
