@@ -91,6 +91,7 @@ import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/general/flow_demo_page.dart';
 import 'demos/general/transform_demo_page.dart';
+import 'demos/general/tree_sliver_demo_page.dart';
 import 'demos/general/interactive_viewer_demo_page.dart';
 import 'demos/general/composited_transform_demo_page.dart';
 import 'demos/general/image_demo_page.dart';
@@ -1092,6 +1093,13 @@ class SampleGalleryScreen extends StatelessWidget {
       subtitle:
           'pan/zoom + inertia + boundary sliding + PanAxis + builder viewport',
       builder: () => const InteractiveViewerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.treeSliver,
+      title: 'TreeSliver',
+      subtitle:
+          'expand/collapse animation + controller + indentation + row toggles',
+      builder: () => const TreeSliverDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.compositedTransform,

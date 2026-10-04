@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `TreeSliver<T>`, `TreeSliverNode<T>`, `TreeSliverController`, default builders/animation (widgets/sliver_tree.dart).
+- `RenderTreeSliver`, `TreeSliverNodeParentData`, `TreeSliverIndentationType`, `TreeSliverNodesAnimation` (sliver_tree).
+- `SliverVariedExtentList` is no longer sealed, as Dart's `_SliverTree` subclasses it (widgets/sliver.dart).
+- TreeSliver demo: expand/collapse animation, controller expand/collapse all, indentation, row toggles (both samples).
+- widgets/sliver_tree_test.dart and rendering/sliver_tree_test.dart ported (goldens kept as geometry checks).
 - `WidgetInspector`, `InspectorSelection`, `InspectorButton`, `Enable`/`DisableWidgetInspectorScope` (widget_inspector).
 - `WidgetInspectorService`: object groups, pub roots, tree JSON, layout explorer, screenshots (widget_inspector.dart).
 - `InspectorSerializationDelegate`, `WeakMap`, `debugTransformDebugCreator`, `DevToolsDeepLinkProperty` (same file).

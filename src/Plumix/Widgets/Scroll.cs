@@ -1745,7 +1745,7 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
 /// Places box children in a linear array and forces each child to the main-axis
 /// extent returned by <see cref="ItemExtentBuilder"/>.
 /// </summary>
-public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
+public class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
 {
     public SliverVariedExtentList(
         SliverChildDelegate @delegate,

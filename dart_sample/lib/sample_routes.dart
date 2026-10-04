@@ -164,6 +164,7 @@ class SampleRoutes {
   static const String flow = '/flow';
   static const String transform = '/transform';
   static const String interactiveViewer = '/interactive-viewer';
+  static const String treeSliver = '/tree-sliver';
   static const String compositedTransform = '/composited-transform';
   static const String systemChrome = '/system-chrome';
   static const String image = '/image';

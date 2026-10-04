@@ -168,6 +168,7 @@ internal static class SampleRoutes
     public const string Flow = "/flow";
     public const string Transform = "/transform";
     public const string InteractiveViewer = "/interactive-viewer";
+    public const string TreeSliver = "/tree-sliver";
     public const string CompositedTransform = "/composited-transform";
     public const string SystemChrome = "/system-chrome";
     public const string Image = "/image";
@@ -678,6 +679,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "InteractiveViewer",
             "pan/zoom + inertia + boundary sliding + PanAxis + builder viewport",
             () => new InteractiveViewerDemoPage()),
+        new(
+            SampleRoutes.TreeSliver,
+            "TreeSliver",
+            "expand/collapse animation + controller + indentation + row toggles",
+            () => new TreeSliverDemoPage()),
         new(
             SampleRoutes.CompositedTransform,
             "Composited transforms",
