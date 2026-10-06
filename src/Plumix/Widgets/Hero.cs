@@ -81,6 +81,12 @@ public sealed class Hero : StatefulWidget
 
     public override State CreateState() => new HeroState();
 
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<object>("tag", Tag));
+    }
+
     /// <summary>Dart's `Hero._allHeroesFor`.</summary>
     internal static Dictionary<object, HeroState> AllHeroesFor(
         BuildContext context,
@@ -91,13 +97,21 @@ public sealed class Hero : StatefulWidget
 
         void InviteHero(StatefulElement hero, object tag)
         {
-            if (result.ContainsKey(tag))
+            if (Constants.KDebugMode && result.ContainsKey(tag))
             {
-                throw new InvalidOperationException(
-                    "There are multiple heroes that share the same tag within a subtree.\n"
-                    + "Within each subtree for which heroes are to be animated (i.e. a PageRoute subtree), "
-                    + "each Hero must have a unique non-null tag.\n"
-                    + $"In this case, multiple heroes had the following tag: {tag}");
+                throw new FlutterError(
+                [
+                    new ErrorSummary("There are multiple heroes that share the same tag within a subtree."),
+                    new ErrorDescription(
+                        "Within each subtree for which heroes are to be animated (i.e. a PageRoute subtree), "
+                        + "each Hero must have a unique non-null tag.\n"
+                        + $"In this case, multiple heroes had the following tag: {tag}"),
+                    new DiagnosticsProperty<StatefulElement>(
+                        "Here is the subtree for one of the offending heroes",
+                        hero,
+                        linePrefix: "# ",
+                        style: DiagnosticsTreeStyle.Dense),
+                ]);
             }
 
             var heroWidget = (Hero)hero.Widget;
@@ -157,8 +171,7 @@ internal sealed class HeroState : State<Hero>
 
     public HeroState()
     {
-        // Identity-based key: a label-based GlobalKey is a record and would compare equal across heroes.
-        _key = new GlobalObjectKey<State>(this);
+        _key = new LabeledGlobalKey<State>(debugLabel: null);
     }
 
     internal Hero CurrentWidget => (Hero)StateWidget;
@@ -173,11 +186,9 @@ internal sealed class HeroState : State<Hero>
     internal void StartFlight(bool shouldIncludedChildInPlaceholder = false)
     {
         _shouldIncludeChild = shouldIncludedChildInPlaceholder;
-        if (!Mounted || Context.FindRenderObject() is not RenderBox { HasSize: true } box)
-        {
-            return;
-        }
-
+        DebugAssertions.Assert(Mounted);
+        var box = (RenderBox)Context.FindRenderObject()!;
+        DebugAssertions.Assert(box.HasSize);
         SetState(() => _placeholderSize = box.Size);
     }
 
@@ -199,7 +210,12 @@ internal sealed class HeroState : State<Hero>
 
     public override Widget Build(BuildContext context)
     {
-        EnsureNoHeroAncestor();
+        if (Constants.KDebugMode)
+        {
+            DebugAssertions.Assert(
+                context.FindAncestorWidgetOfExactType<Hero>() is null,
+                "A Hero widget cannot be the descendant of another Hero widget.");
+        }
 
         bool showPlaceholder = _placeholderSize is not null;
 
@@ -223,17 +239,6 @@ internal sealed class HeroState : State<Hero>
                     child: new KeyedSubtree(key: _key, child: CurrentWidget.Child))));
     }
 
-    private void EnsureNoHeroAncestor()
-    {
-        for (Element? ancestor = Element.Parent; ancestor is not null; ancestor = ancestor.Parent)
-        {
-            if (ancestor.Widget is Hero)
-            {
-                throw new InvalidOperationException(
-                    "A Hero widget cannot be the descendant of another Hero widget.");
-            }
-        }
-    }
 }
 
 /// <summary>Dart's `_HeroFlightManifest`: everything needed to run one flight.</summary>
@@ -242,6 +247,7 @@ internal sealed class HeroFlightManifest : IDisposable
     private CurvedAnimation? _animation;
     private Rect? _fromHeroLocation;
     private Rect? _toHeroLocation;
+    private bool? _isValid;
 
     public HeroFlightManifest(
         HeroFlightDirection type,
@@ -256,10 +262,7 @@ internal sealed class HeroFlightManifest : IDisposable
         bool isUserGestureTransition,
         bool isDiverted)
     {
-        if (!Equals(fromHero.CurrentWidget.Tag, toHero.CurrentWidget.Tag))
-        {
-            throw new ArgumentException("Hero flight endpoints must share the same tag.", nameof(toHero));
-        }
+        DebugAssertions.Assert(Equals(fromHero.CurrentWidget.Tag, toHero.CurrentWidget.Tag));
 
         Type = type;
         Overlay = overlay;
@@ -344,7 +347,7 @@ internal sealed class HeroFlightManifest : IDisposable
     /// Whether both endpoints are measurable. A diverted flight only needs the destination, because it
     /// continues from wherever the previous flight had reached.
     /// </summary>
-    public bool IsValid => IsFinite(ToHeroLocation) && (IsDiverted || IsFinite(FromHeroLocation));
+    public bool IsValid => _isValid ??= IsFinite(ToHeroLocation) && (IsDiverted || IsFinite(FromHeroLocation));
 
     public void Dispose() => _animation?.Dispose();
 
@@ -370,15 +373,17 @@ internal sealed class HeroFlightManifest : IDisposable
     }
 
     /// <summary>
-    /// Dart's `_HeroFlightManifest._boundingBoxFor`. Dart asserts the box exists and has a finite size;
-    /// Plumix has no assert-stripped build, so an unmeasurable hero yields a non-finite rect and
-    /// <see cref="IsValid"/> rejects the flight instead of throwing.
+    /// Dart's `_HeroFlightManifest._boundingBoxFor`: validate the local size in debug, then measure
+    /// its transformed bounds. Non-finite transformed bounds are rejected by <see cref="IsValid"/>.
     /// </summary>
     private static Rect BoundingBoxFor(BuildContext context, BuildContext? ancestorContext)
     {
-        if (context.FindRenderObject() is not RenderBox { HasSize: true } box)
+        DebugAssertions.Assert(ancestorContext is not null);
+        var box = (RenderBox)context.FindRenderObject()!;
+        if (Constants.KDebugMode)
         {
-            return new Rect(double.NaN, double.NaN, double.NaN, double.NaN);
+            DebugAssertions.Assert(
+                box.HasSize && double.IsFinite(box.Size.Width) && double.IsFinite(box.Size.Height));
         }
 
         return MatrixUtils.TransformRect(
@@ -401,6 +406,11 @@ internal sealed class HeroFlight : IDisposable
 
     public HeroFlight(OnFlightEnded onFlightEnded)
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "_HeroFlight", this);
+        }
+
         _onFlightEnded = onFlightEnded;
         _proxyAnimation = new ProxyAnimation();
         _proxyAnimation.AddStatusListener(HandleAnimationUpdate);
@@ -428,6 +438,15 @@ internal sealed class HeroFlight : IDisposable
     /// <summary>Dart's `_HeroFlight.start`.</summary>
     public void Start(HeroFlightManifest initialManifest)
     {
+        if (Constants.KDebugMode)
+        {
+            DebugAssertions.Assert(!_aborted);
+            Animation<double> initial = initialManifest.Animation;
+            DebugAssertions.Assert(initialManifest.Type == HeroFlightDirection.Pop
+                ? initialManifest.IsUserGestureTransition || initial.Status == AnimationStatus.Reverse
+                : initial.Value == 0.0 && initial.Status == AnimationStatus.Forward);
+        }
+
         SetManifest = initialManifest;
 
         bool shouldIncludeChildInPlaceholder;
@@ -454,8 +473,18 @@ internal sealed class HeroFlight : IDisposable
     /// <summary>Dart's `_HeroFlight.divert`: retarget a flight that is already in the air.</summary>
     public void Divert(HeroFlightManifest newManifest)
     {
+        DebugAssertions.Assert(Equals(Manifest.Tag, newManifest.Tag));
         if (Manifest.Type == HeroFlightDirection.Push && newManifest.Type == HeroFlightDirection.Pop)
         {
+            if (Constants.KDebugMode)
+            {
+                DebugAssertions.Assert(newManifest.Animation.Status == AnimationStatus.Reverse);
+                DebugAssertions.Assert(ReferenceEquals(Manifest.FromHero, newManifest.ToHero));
+                DebugAssertions.Assert(ReferenceEquals(Manifest.ToHero, newManifest.FromHero));
+                DebugAssertions.Assert(ReferenceEquals(Manifest.FromRoute, newManifest.ToRoute));
+                DebugAssertions.Assert(ReferenceEquals(Manifest.ToRoute, newManifest.FromRoute));
+            }
+
             // A push flight was interrupted by a pop. The same heroRect tween is used in reverse, so the
             // pop flight path is the same (in reverse) as the push flight path.
             _proxyAnimation.Parent = new ReverseAnimation(newManifest.Animation);
@@ -463,6 +492,13 @@ internal sealed class HeroFlight : IDisposable
         }
         else if (Manifest.Type == HeroFlightDirection.Pop && newManifest.Type == HeroFlightDirection.Push)
         {
+            if (Constants.KDebugMode)
+            {
+                DebugAssertions.Assert(newManifest.Animation.Status == AnimationStatus.Forward);
+                DebugAssertions.Assert(ReferenceEquals(Manifest.ToHero, newManifest.FromHero));
+                DebugAssertions.Assert(ReferenceEquals(Manifest.ToRoute, newManifest.FromRoute));
+            }
+
             // A pop flight was interrupted by a push.
             _proxyAnimation.Parent = newManifest.Animation.Drive(
                 new DoubleTween(begin: Manifest.Animation.Value, end: 1.0));
@@ -483,6 +519,8 @@ internal sealed class HeroFlight : IDisposable
         }
         else
         {
+            DebugAssertions.Assert(!ReferenceEquals(Manifest.FromHero, newManifest.FromHero));
+            DebugAssertions.Assert(!ReferenceEquals(Manifest.ToHero, newManifest.ToHero));
             // A push or pop flight is heading to a new route, i.e. the same type of flight.
             HeroRectTween = Manifest.CreateHeroRectTween(
                 HeroRectTween.Transform(_proxyAnimation.Value),
@@ -513,6 +551,11 @@ internal sealed class HeroFlight : IDisposable
 
     public void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
+
         if (OverlayEntry is not null)
         {
             RemoveOverlayEntry();
@@ -547,11 +590,8 @@ internal sealed class HeroFlight : IDisposable
 
         void DelayedPerformAnimationUpdate()
         {
-            if (navigator.UserGestureInProgress)
-            {
-                return;
-            }
-
+            DebugAssertions.Assert(!navigator.UserGestureInProgress);
+            DebugAssertions.Assert(_scheduledPerformAnimationUpdate);
             _scheduledPerformAnimationUpdate = false;
             navigator.UserGestureInProgressNotifier.RemoveListener(DelayedPerformAnimationUpdate);
             PerformAnimationUpdate(_proxyAnimation.Status);
@@ -570,6 +610,7 @@ internal sealed class HeroFlight : IDisposable
 
         _proxyAnimation.Parent = null;
 
+        DebugAssertions.Assert(OverlayEntry is not null);
         RemoveOverlayEntry();
         Manifest.FromHero.EndFlight(keepPlaceholder: status == AnimationStatus.Completed);
         Manifest.ToHero.EndFlight(keepPlaceholder: status == AnimationStatus.Dismissed);
@@ -603,6 +644,7 @@ internal sealed class HeroFlight : IDisposable
             Manifest.Type,
             Manifest.FromHero.Context,
             Manifest.ToHero.Context);
+        DebugAssertions.Assert(Shuttle is not null);
 
         return new AnimatedBuilder(
             animation: _proxyAnimation,
@@ -632,7 +674,7 @@ internal sealed class HeroFlight : IDisposable
         Point? toHeroOrigin = toHeroBox is { Attached: true, HasSize: true }
             ? toHeroBox.LocalToGlobal(
                 new Point(0, 0),
-                Manifest.ToRoute.SubtreeContext?.FindRenderObject() as RenderBox)
+                Manifest.ToRoute.SubtreeContext?.FindRenderObject())
             : null;
 
         if (toHeroOrigin is { } origin && double.IsFinite(origin.X) && double.IsFinite(origin.Y))
@@ -669,6 +711,10 @@ public sealed class HeroController : NavigatorObserver, IDisposable
     public HeroController(CreateRectTween? createRectTween = null)
     {
         CreateRectTween = createRectTween;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "HeroController", this);
+        }
     }
 
     /// <summary>Used to create <see cref="Rect"/> tweens for heroes that do not supply their own.</summary>
@@ -679,6 +725,8 @@ public sealed class HeroController : NavigatorObserver, IDisposable
 
     public override void DidChangeTop(Route topRoute, Route? previousTopRoute)
     {
+        DebugAssertions.Assert(topRoute.IsCurrent);
+        DebugAssertions.Assert(Navigator is not null);
         if (previousTopRoute is null || Navigator is null)
         {
             return;
@@ -704,6 +752,7 @@ public sealed class HeroController : NavigatorObserver, IDisposable
 
     public override void DidStopUserGesture()
     {
+        DebugAssertions.Assert(Navigator is not null);
         if (Navigator?.UserGestureInProgress != false)
         {
             return;
@@ -727,6 +776,11 @@ public sealed class HeroController : NavigatorObserver, IDisposable
 
     public void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
+
         foreach (HeroFlight flight in _flights.Values)
         {
             flight.Dispose();
@@ -798,7 +852,7 @@ public sealed class HeroController : NavigatorObserver, IDisposable
                 }
 
                 StartHeroTransition(from, to, flightType, isUserGestureTransition);
-            });
+            }, debugLabel: "HeroController.startTransition");
         }
     }
 
@@ -818,10 +872,15 @@ public sealed class HeroController : NavigatorObserver, IDisposable
             return;
         }
 
-        if (navigator.Context.FindRenderObject() is not RenderBox { HasSize: true } navigatorRenderObject)
+        RenderObject? renderObject = navigator.Context.FindRenderObject();
+        if (renderObject is not RenderBox navigatorRenderObject)
         {
+            DebugAssertions.Assert(false,
+                $"Navigator {navigator} has an invalid RenderObject type {renderObject?.GetType().Name}.");
             return;
         }
+
+        DebugAssertions.Assert(navigatorRenderObject.HasSize);
 
         BuildContext? fromSubtreeContext = from.SubtreeContext;
         Dictionary<object, HeroState> fromHeroes = fromSubtreeContext is { } fromContext
@@ -964,10 +1023,20 @@ public sealed class HeroControllerScope : InheritedWidget
 
     public static HeroController Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException(
-                   "HeroControllerScope.Of() was called with a context that does not contain a "
-                   + "HeroControllerScope widget.");
+        HeroController? controller = MaybeOf(context);
+        if (Constants.KDebugMode && controller is null)
+        {
+            throw new FlutterError(
+                "HeroControllerScope.of() was called with a context that does not contain a "
+                + "HeroControllerScope widget.\n"
+                + "No HeroControllerScope widget ancestor could be found starting from the "
+                + "context that was passed to HeroControllerScope.of(). This can happen "
+                + "because you are using a widget that looks for a HeroControllerScope "
+                + "ancestor, but no such ancestor exists.\n"
+                + $"The context used was:\n  {context}");
+        }
+
+        return controller ?? throw new NullReferenceException();
     }
 
     public override bool UpdateShouldNotify(InheritedWidget oldWidget)
@@ -993,4 +1062,10 @@ public sealed class HeroMode : StatelessWidget
     public bool Enabled { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new FlagProperty("mode", Enabled, ifTrue: "enabled", ifFalse: "disabled", showName: true));
+    }
 }

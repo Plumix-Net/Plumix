@@ -9,7 +9,7 @@ using Xunit;
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
-public sealed class HeroNavigatorTests
+public sealed partial class HeroNavigatorTests
 {
     private const string SharedHeroTag = "shared-hero";
 
@@ -787,8 +787,8 @@ public sealed class HeroNavigatorTests
         }
     }
 
-    [Fact]
-    public void Navigator_Push_WithDuplicateHeroTagsInRouteSubtree_ThrowsInvalidOperationException()
+    [DebugOnlyFact]
+    public void Navigator_Push_WithDuplicateHeroTagsInRouteSubtree_ReportsFlutterError()
     {
         Scheduler.ResetForTests();
 
@@ -827,8 +827,10 @@ public sealed class HeroNavigatorTests
                 FlutterError.OnError = previousOnError;
             }
 
-            var exception = Assert.IsType<InvalidOperationException>(Assert.Single(reported).Exception);
+            var exception = Assert.IsType<FlutterError>(Assert.Single(reported).Exception);
             Assert.Contains("multiple heroes", exception.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(3, exception.Diagnostics.Count);
+            Assert.Equal("# ", exception.Diagnostics[2].LinePrefix);
         }
         finally
         {
@@ -836,8 +838,8 @@ public sealed class HeroNavigatorTests
         }
     }
 
-    [Fact]
-    public void Navigator_InitialRoute_WithNestedHero_ThrowsInvalidOperationException()
+    [DebugOnlyFact]
+    public void Navigator_InitialRoute_WithNestedHero_Asserts()
     {
         Scheduler.ResetForTests();
 
@@ -845,7 +847,7 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
 
-            var exception = BuildErrors.Throws<InvalidOperationException>(() =>
+            var exception = BuildErrors.Throws<AssertionError>(() =>
             {
                 using var harness = new WidgetRenderHarness(
                     new Navigator(
@@ -1452,6 +1454,26 @@ public sealed class HeroNavigatorTests
         public RenderView RenderView { get; }
 
         public HeroController HeroController { get; }
+
+        public IReadOnlyList<HeroState> HeroStates
+        {
+            get
+            {
+                List<HeroState> states = [];
+                void Visit(Element element)
+                {
+                    if (element is StatefulElement { State: HeroState hero })
+                    {
+                        states.Add(hero);
+                    }
+
+                    element.VisitChildren(Visit);
+                }
+
+                Visit(_rootElement);
+                return states;
+            }
+        }
 
         public void Pump(Size size)
         {

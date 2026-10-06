@@ -68,6 +68,15 @@ class _HeroDemoPageState extends State<HeroDemoPage> {
             color: const Color(0xFFE07A5F),
             useShuttleBuilder: true,
           ),
+          _buildTile(
+            context,
+            tag: 'hero-demo-linear',
+            label: 'Linear flight (push + pop)',
+            color: const Color(0xFF2A9D8F),
+            useShuttleBuilder: false,
+            curve: Curves.linear,
+            reverseCurve: Curves.linear,
+          ),
           const Text(
             'The second tile supplies a flightShuttleBuilder (what the overlay paints while the hero '
             'is in the air) and a placeholderBuilder (what each route shows in its place).',
@@ -84,9 +93,13 @@ class _HeroDemoPageState extends State<HeroDemoPage> {
     required String label,
     required Color color,
     required bool useShuttleBuilder,
+    Curve curve = Curves.fastOutSlowIn,
+    Curve? reverseCurve,
   }) {
     Widget hero = Hero(
       tag: tag,
+      curve: curve,
+      reverseCurve: reverseCurve,
       flightShuttleBuilder: useShuttleBuilder ? _buildShuttle : null,
       placeholderBuilder: useShuttleBuilder ? _buildPlaceholder : null,
       child: buildHeroCard(
@@ -112,6 +125,8 @@ class _HeroDemoPageState extends State<HeroDemoPage> {
                 label: label,
                 color: color,
                 useShuttleBuilder: useShuttleBuilder,
+                curve: curve,
+                reverseCurve: reverseCurve,
               ),
               settings: RouteSettings(name: '/hero/$tag'),
             ),
@@ -225,12 +240,16 @@ class HeroDetailPage extends StatelessWidget {
     required this.label,
     required this.color,
     required this.useShuttleBuilder,
+    this.curve = Curves.fastOutSlowIn,
+    this.reverseCurve,
   });
 
   final String tag;
   final String label;
   final Color color;
   final bool useShuttleBuilder;
+  final Curve curve;
+  final Curve? reverseCurve;
 
   @override
   Widget build(BuildContext context) {
@@ -247,6 +266,8 @@ class HeroDetailPage extends StatelessWidget {
           ),
           Hero(
             tag: tag,
+            curve: curve,
+            reverseCurve: reverseCurve,
             child: buildHeroCard(
               label: label,
               color: color,

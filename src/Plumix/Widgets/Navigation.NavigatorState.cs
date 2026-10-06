@@ -1602,6 +1602,38 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
 
         if (newHeroController is not null)
         {
+            if (Constants.KDebugMode && newHeroController.Navigator is { } previousOwner)
+            {
+                // A controller may move between navigators during this build. Check after both
+                // owners have had the opportunity to update their inherited scope.
+                Scheduler.AddPostFrameCallback(_ =>
+                {
+                    if (!ReferenceEquals(_heroControllerFromScope, newHeroController))
+                    {
+                        return;
+                    }
+
+                    bool hasHeroControllerOwnership = ReferenceEquals(newHeroController.Navigator, this);
+                    if (!hasHeroControllerOwnership
+                        || ReferenceEquals(previousOwner._heroControllerFromScope, newHeroController))
+                    {
+                        NavigatorState? otherOwner = hasHeroControllerOwnership
+                            ? previousOwner
+                            : newHeroController.Navigator;
+                        FlutterError.ReportError(new FlutterErrorDetails(
+                            exception: new FlutterError(
+                                "A HeroController can not be shared by multiple Navigators. "
+                                + "The Navigators that share the same HeroController are:\n"
+                                + $"- {this}\n- {otherOwner}\n"
+                                + "Please create a HeroControllerScope for each Navigator or "
+                                + "use a HeroControllerScope.none to prevent subtree from "
+                                + "receiving a HeroController."),
+                            library: "widget library",
+                            stack: Environment.StackTrace));
+                    }
+                }, debugLabel: "Navigator.checkHeroControllerOwnership");
+            }
+
             newHeroController.Navigator = this;
         }
 

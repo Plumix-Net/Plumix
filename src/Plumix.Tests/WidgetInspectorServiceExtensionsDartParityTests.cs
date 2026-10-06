@@ -113,17 +113,21 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task DebugAllowBannerExtension_TogglesTheBannerOverride()
     {
+        FrameworkDartTester tester = CreateTester();
         Assert.True(WidgetsApp.DebugAllowBannerOverride);
         Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
         PlatformDispatcher.Instance.TimerRun = static callback => callback();
         try
         {
-            ServiceExtensionResponse response = await BindingBase.InvokeServiceExtensionAsync(
+            Task<ServiceExtensionResponse> pendingResponse = BindingBase.InvokeServiceExtensionAsync(
                 "ext.flutter.debugAllowBanner",
                 new Dictionary<string, string> { ["enabled"] = "false" });
+            // Changing the banner reassembles the root and waits for Scheduler.EndOfFrame.
+            tester.Pump();
+            ServiceExtensionResponse response = await pendingResponse;
             Assert.Contains("\"enabled\":\"false\"", response.Result);
             Assert.False(WidgetsApp.DebugAllowBannerOverride);
         }

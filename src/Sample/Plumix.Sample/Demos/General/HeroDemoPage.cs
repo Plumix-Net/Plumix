@@ -69,6 +69,14 @@ internal sealed class HeroDemoPageState : State
                         label: "Custom shuttle + placeholder",
                         colorHex: "#FFE07A5F",
                         useShuttleBuilder: true),
+                    BuildTile(
+                        context,
+                        tag: "hero-demo-linear",
+                        label: "Linear flight (push + pop)",
+                        colorHex: "#FF2A9D8F",
+                        useShuttleBuilder: false,
+                        curve: Curves.Linear,
+                        reverseCurve: Curves.Linear),
                     new Text(
                         "The second tile supplies a flightShuttleBuilder (what the overlay paints while the "
                         + "hero is in the air) and a placeholderBuilder (what each route shows in its place).",
@@ -77,10 +85,19 @@ internal sealed class HeroDemoPageState : State
                 ]));
     }
 
-    private Widget BuildTile(BuildContext context, string tag, string label, string colorHex, bool useShuttleBuilder)
+    private Widget BuildTile(
+        BuildContext context,
+        string tag,
+        string label,
+        string colorHex,
+        bool useShuttleBuilder,
+        Curve? curve = null,
+        Curve? reverseCurve = null)
     {
         Widget hero = new Hero(
             tag: tag,
+            curve: curve,
+            reverseCurve: reverseCurve,
             flightShuttleBuilder: useShuttleBuilder ? BuildShuttle : null,
             placeholderBuilder: useShuttleBuilder ? BuildPlaceholder : null,
             child: BuildCard(label, colorHex, width: 150, height: 84, fontSize: 12));
@@ -100,7 +117,9 @@ internal sealed class HeroDemoPageState : State
                                 tag: tag,
                                 label: label,
                                 colorHex: colorHex,
-                                useShuttleBuilder: useShuttleBuilder),
+                                useShuttleBuilder: useShuttleBuilder,
+                                curve: curve,
+                                reverseCurve: reverseCurve),
                             settings: new RouteSettings(Name: $"/hero/{tag}"))),
                     child: hero),
             ]);
@@ -177,12 +196,16 @@ internal sealed class HeroDetailPage : StatelessWidget
         string label,
         string colorHex,
         bool useShuttleBuilder,
-        Key? key = null) : base(key)
+        Key? key = null,
+        Curve? curve = null,
+        Curve? reverseCurve = null) : base(key)
     {
         Tag = tag;
         Label = label;
         ColorHex = colorHex;
         UseShuttleBuilder = useShuttleBuilder;
+        Curve = curve;
+        ReverseCurve = reverseCurve;
     }
 
     public string Tag { get; }
@@ -192,6 +215,10 @@ internal sealed class HeroDetailPage : StatelessWidget
     public string ColorHex { get; }
 
     public bool UseShuttleBuilder { get; }
+
+    public Curve? Curve { get; }
+
+    public Curve? ReverseCurve { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -206,6 +233,8 @@ internal sealed class HeroDetailPage : StatelessWidget
                     new Text("Hero detail", fontSize: 20, color: Colors.Black),
                     new Hero(
                         tag: Tag,
+                        curve: Curve,
+                        reverseCurve: ReverseCurve,
                         flightShuttleBuilder: null,
                         child: HeroDemoPageState.BuildCard(Label, ColorHex, width: 288, height: 176, fontSize: 16)),
                     new Text(

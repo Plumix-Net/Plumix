@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- WidgetInspector's debug-banner test drives the frame awaited by the extension (widgets/binding.dart).
+- Breaking: Hero uses Flutter's debug-only assertions, measured bounds and diagnostics (widgets/heroes.dart).
+- HeroController checks scope ownership after a frame and dispatches memory events (heroes.dart, navigator.dart).
+- Hero demo adds a linear push/pop flight in both samples (heroes.dart).
 - `TreeSliver<T>`, `TreeSliverNode<T>`, `TreeSliverController`, default builders/animation (widgets/sliver_tree.dart).
 - `RenderTreeSliver`, `TreeSliverNodeParentData`, `TreeSliverIndentationType`, `TreeSliverNodesAnimation` (sliver_tree).
 - `SliverVariedExtentList` is no longer sealed, as Dart's `_SliverTree` subclasses it (widgets/sliver.dart).
