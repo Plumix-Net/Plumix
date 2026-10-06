@@ -30,6 +30,8 @@ class _AlignDemoPageState extends State<AlignDemoPage>
   bool _explicitTransitionsForward = false;
   bool _repeatingPaused = false;
   bool _repeatingReverse = false;
+  int _animationStyleIndex = 0;
+  bool _alternateStyledChild = false;
   int _completedAnimations = 0;
   final ValueNotifier<int> _builderCounter = ValueNotifier<int>(0);
   late final ScrollController _scrollController;
@@ -104,6 +106,7 @@ class _AlignDemoPageState extends State<AlignDemoPage>
 
   @override
   Widget build(BuildContext context) {
+    final AnimationStyle animationStyle = _currentAnimationStyle;
     return Scrollbar(
       controller: _scrollController,
       thumbVisibility: true,
@@ -114,6 +117,72 @@ class _AlignDemoPageState extends State<AlignDemoPage>
           crossAxisAlignment: CrossAxisAlignment.stretch,
           spacing: 10,
           children: <Widget>[
+            const Text(
+              'AnimationStyle',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            const Text(
+              'Switch styles, then swap the card to compare forward and reverse timing and curves.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+            Row(
+              spacing: 8,
+              children: <Widget>[
+                _buildButton(
+                  label: switch (_animationStyleIndex) {
+                    0 => 'Style: original',
+                    1 => 'Style: blend 50%',
+                    _ => 'Style: disabled',
+                  },
+                  onTap: () => setState(() {
+                    _animationStyleIndex = (_animationStyleIndex + 1) % 3;
+                  }),
+                  width: 140,
+                  background: const Color(0xFFDCEAF4),
+                ),
+                _buildButton(
+                  label: 'Swap card',
+                  onTap: () => setState(() {
+                    _alternateStyledChild = !_alternateStyledChild;
+                  }),
+                  width: 112,
+                  background: const Color(0xFFF0E1EA),
+                ),
+              ],
+            ),
+            Text(
+              'enter=${animationStyle.duration!.inMilliseconds} ms, '
+              'exit=${animationStyle.reverseDuration!.inMilliseconds} ms',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF2F4F4F)),
+            ),
+            SizedBox(
+              height: 72,
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: animationStyle.duration!,
+                  reverseDuration: animationStyle.reverseDuration,
+                  switchInCurve: animationStyle.curve ?? Curves.linear,
+                  switchOutCurve: animationStyle.reverseCurve ?? Curves.linear,
+                  child: Container(
+                    key: ValueKey<bool>(_alternateStyledChild),
+                    width: 112,
+                    height: 56,
+                    color: Color(
+                      _alternateStyledChild ? 0xFF9C4F63 : 0xFF315A7D,
+                    ),
+                    child: Center(
+                      child: Text(
+                        _alternateStyledChild ? 'B' : 'A',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
             const Text(
               'AnimatedAlign + AnimatedPadding',
               style: TextStyle(fontSize: 20, color: Colors.black),
@@ -1140,6 +1209,29 @@ class _AlignDemoPageState extends State<AlignDemoPage>
         ),
       ),
     );
+  }
+
+  AnimationStyle get _currentAnimationStyle {
+    const original = AnimationStyle(
+      duration: Duration(milliseconds: 800),
+      reverseDuration: Duration(milliseconds: 400),
+      curve: Curves.easeIn,
+      reverseCurve: Curves.easeOut,
+    );
+    return switch (_animationStyleIndex) {
+      0 => original,
+      1 => AnimationStyle.lerp(
+        original,
+        original.copyWith(
+          duration: const Duration(milliseconds: 1600),
+          reverseDuration: const Duration(milliseconds: 800),
+          curve: Curves.linear,
+          reverseCurve: Curves.linear,
+        ),
+        0.5,
+      )!,
+      _ => AnimationStyle.noAnimation,
+    };
   }
 
   Widget _buildButton({

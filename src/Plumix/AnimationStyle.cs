@@ -90,7 +90,7 @@ public sealed record AnimationStyle(
         double t,
         Func<Curve?, Curve?, double, Curve> lerp)
     {
-        if (a == b || t == 0.0)
+        if (Equals(a, b) || t == 0.0)
         {
             return a;
         }
@@ -100,8 +100,9 @@ public sealed record AnimationStyle(
 
     private static TimeSpan LerpDuration(TimeSpan? a, TimeSpan? b, double t)
     {
-        double microseconds = ((a?.Ticks ?? 0) / (double)TimeSpan.TicksPerMicrosecond * (1.0 - t))
-                              + ((b?.Ticks ?? 0) / (double)TimeSpan.TicksPerMicrosecond * t);
+        long aMicroseconds = (a?.Ticks ?? 0) / TimeSpan.TicksPerMicrosecond;
+        long bMicroseconds = (b?.Ticks ?? 0) / TimeSpan.TicksPerMicrosecond;
+        double microseconds = (aMicroseconds * (1.0 - t)) + (bMicroseconds * t);
         return TimeSpan.FromTicks((long)Math.Round(microseconds, MidpointRounding.AwayFromZero)
                                   * TimeSpan.TicksPerMicrosecond);
     }
@@ -136,7 +137,7 @@ public sealed record AnimationStyle(
 
         public override int GetHashCode() => HashCode.Combine(First, Second, _t);
 
-        public override string ToString() => $"_LerpedCurve({First}, {Second}, t: {_t})";
+        public override string ToString() => $"_LerpedCurve({First}, {Second}, t: {CurveFormat.D(_t)})";
     }
 
     /// <inheritdoc />
@@ -144,10 +145,13 @@ public sealed record AnimationStyle(
     {
         ArgumentNullException.ThrowIfNull(properties);
 
-        properties.Add(new DiagnosticsProperty<Curve>("curve", Curve, defaultValue: null));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("duration", Duration, defaultValue: null));
-        properties.Add(new DiagnosticsProperty<Curve>("reverseCurve", ReverseCurve, defaultValue: null));
+        properties.Add(new DiagnosticsProperty<Curve>("curve", Curve, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(
-            new DiagnosticsProperty<TimeSpan?>("reverseDuration", ReverseDuration, defaultValue: null));
+            new DiagnosticsProperty<TimeSpan?>("duration", Duration, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(
+            new DiagnosticsProperty<Curve>("reverseCurve", ReverseCurve, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(
+            new DiagnosticsProperty<TimeSpan?>(
+                "reverseDuration", ReverseDuration, defaultValue: DiagnosticsDefaults.NullValue));
     }
 }

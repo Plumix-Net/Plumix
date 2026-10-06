@@ -64,6 +64,8 @@ public abstract class Curve : ParametricCurve<double>
 internal sealed class LinearCurve : Curve
 {
     public override double TransformInternal(double t) => t;
+
+    public override string ToString() => Constants.KDebugMode ? "_Linear" : base.ToString();
 }
 
 /// <summary>A sawtooth curve that repeats a given number of times over the unit interval.</summary>
@@ -938,6 +940,8 @@ public class FlippedCurve : Curve
 /// </summary>
 internal sealed class DecelerateCurve : Curve
 {
+    public override string ToString() => Constants.KDebugMode ? "_DecelerateCurve" : base.ToString();
+
     public override double TransformInternal(double t)
     {
         // Intended to match the behavior of:
@@ -953,17 +957,23 @@ internal sealed class DecelerateCurve : Curve
 internal sealed class BounceInCurve : Curve
 {
     public override double TransformInternal(double t) => 1.0 - BounceMath.Bounce(1.0 - t);
+
+    public override string ToString() => Constants.KDebugMode ? "_BounceInCurve" : base.ToString();
 }
 
 /// <summary>Dart's private <c>_BounceOutCurve</c>.</summary>
 internal sealed class BounceOutCurve : Curve
 {
     public override double TransformInternal(double t) => BounceMath.Bounce(t);
+
+    public override string ToString() => Constants.KDebugMode ? "_BounceOutCurve" : base.ToString();
 }
 
 /// <summary>Dart's private <c>_BounceInOutCurve</c>.</summary>
 internal sealed class BounceInOutCurve : Curve
 {
+    public override string ToString() => Constants.KDebugMode ? "_BounceInOutCurve" : base.ToString();
+
     public override double TransformInternal(double t)
     {
         if (t < 0.5)

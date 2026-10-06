@@ -162,6 +162,7 @@ public static class Diagnostics
             null => "null",
             bool flag => flag ? "true" : "false",
             string text => text,
+            TimeSpan duration => DescribeDuration(duration),
             // dart:ui's `Size.toString` and `Offset.toString`; Avalonia's own spell them `w, h`.
             Avalonia.Size size => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})",
             Avalonia.Point offset => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})",
@@ -174,6 +175,20 @@ public static class Diagnostics
                 formattable.ToString(null, CultureInfo.InvariantCulture),
             _ => value.ToString() ?? string.Empty,
         };
+    }
+
+    // Dart's Duration.toString uses total hours and six microsecond digits, even at zero.
+    private static string DescribeDuration(TimeSpan duration)
+    {
+        long microseconds = duration.Ticks / TimeSpan.TicksPerMicrosecond;
+        string sign = microseconds < 0 ? "-" : string.Empty;
+        microseconds = Math.Abs(microseconds);
+        long hours = microseconds / 3_600_000_000;
+        long minutes = microseconds / 60_000_000 % 60;
+        long seconds = microseconds / 1_000_000 % 60;
+        long fraction = microseconds % 1_000_000;
+        return string.Create(
+            CultureInfo.InvariantCulture, $"{sign}{hours}:{minutes:00}:{seconds:00}.{fraction:000000}");
     }
 
     /// <summary>Dart's <c>toStringAsFixed(1)</c>.</summary>

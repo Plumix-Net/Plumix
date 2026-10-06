@@ -40,6 +40,8 @@ internal sealed class AlignDemoPageState : State
     private bool _explicitTransitionsForward;
     private bool _repeatingPaused;
     private bool _repeatingReverse;
+    private int _animationStyleIndex;
+    private bool _alternateStyledChild;
     private int _completedAnimations;
     private ValueNotifier<int> _builderCounter = null!;
     private ScrollController _scrollController = null!;
@@ -121,11 +123,58 @@ internal sealed class AlignDemoPageState : State
 
     private Widget BuildContent()
     {
+        AnimationStyle animationStyle = CurrentAnimationStyle;
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
             [
+                new Text("AnimationStyle", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Switch styles, then swap the card to compare forward and reverse timing and curves.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _animationStyleIndex switch
+                            {
+                                0 => "Style: original",
+                                1 => "Style: blend 50%",
+                                _ => "Style: disabled",
+                            },
+                            () => SetState(() => _animationStyleIndex = (_animationStyleIndex + 1) % 3),
+                            width: 140,
+                            colorHex: "#FFDCEAF4"),
+                        BuildButton(
+                            "Swap card",
+                            () => SetState(() => _alternateStyledChild = !_alternateStyledChild),
+                            width: 112,
+                            colorHex: "#FFF0E1EA"),
+                    ]),
+                new Text(
+                    $"enter={animationStyle.Duration!.Value.TotalMilliseconds:0} ms, "
+                    + $"exit={animationStyle.ReverseDuration!.Value.TotalMilliseconds:0} ms",
+                    fontSize: 12,
+                    color: Colors.DarkSlateGray),
+                new SizedBox(
+                    height: 72,
+                    child: new Center(
+                        child: new AnimatedSwitcher(
+                            duration: animationStyle.Duration!.Value,
+                            reverseDuration: animationStyle.ReverseDuration,
+                            switchInCurve: animationStyle.Curve ?? Curves.Linear,
+                            switchOutCurve: animationStyle.ReverseCurve ?? Curves.Linear,
+                            child: new Container(
+                                key: new ValueKey<bool>(_alternateStyledChild),
+                                width: 112,
+                                height: 56,
+                                color: new Color(_alternateStyledChild ? 0xFF9C4F63u : 0xFF315A7Du),
+                                child: new Center(
+                                    child: new Text(
+                                        _alternateStyledChild ? "B" : "A", fontSize: 16, color: Colors.White)))))),
                 new Text("AnimatedAlign + AnimatedPadding", fontSize: 20, color: Colors.Black),
                 new Text(
                     "Move the card and change its inset; both values transition implicitly with easeInOut.",
@@ -853,6 +902,31 @@ internal sealed class AlignDemoPageState : State
                                 color: new Color(0xFF6D7F47),
                                 child: child)))),
             ]);
+    }
+
+    private AnimationStyle CurrentAnimationStyle
+    {
+        get
+        {
+            var original = new AnimationStyle(
+                Duration: TimeSpan.FromMilliseconds(800),
+                ReverseDuration: TimeSpan.FromMilliseconds(400),
+                Curve: Curves.EaseIn,
+                ReverseCurve: Curves.EaseOut);
+            return _animationStyleIndex switch
+            {
+                0 => original,
+                1 => AnimationStyle.Lerp(
+                    original,
+                    original.CopyWith(
+                        duration: TimeSpan.FromMilliseconds(1600),
+                        reverseDuration: TimeSpan.FromMilliseconds(800),
+                        curve: Curves.Linear,
+                        reverseCurve: Curves.Linear),
+                    0.5)!,
+                _ => AnimationStyle.NoAnimation,
+            };
+        }
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

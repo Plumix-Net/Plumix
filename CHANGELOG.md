@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: AnimationStyle lerp preserves equal curves and whole microseconds (animation/animation_style.dart).
+- Breaking: AnimationStyle filters unset diagnostics; durations print as in Dart (animation/animation_style.dart).
+- Breaking: Built-in linear/decelerate/bounce curve diagnostics retain Dart's private names (animation/curves.dart).
+- AnimationStyle original/blended/disabled switcher demo in both samples (animation/animation_style.dart).
 - WidgetInspector's debug-banner test drives the frame awaited by the extension (widgets/binding.dart).
 - Breaking: Hero uses Flutter's debug-only assertions, measured bounds and diagnostics (widgets/heroes.dart).
 - HeroController checks scope ownership after a frame and dispatches memory events (heroes.dart, navigator.dart).
