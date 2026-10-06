@@ -1,19 +1,13 @@
 using System.Collections.Concurrent;
-using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/icon_data.dart; flutter/packages/flutter/lib/src/widgets/icon.dart (approximate)
-
-public sealed record IconData(
-    int CodePoint,
-    string? FontFamily = null,
-    string? FontPackage = null,
-    bool MatchTextDirection = false);
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/icon.dart
 
 internal static class IconFontRegistry
 {
@@ -43,14 +37,14 @@ internal static class IconFontRegistry
             return fontFamily;
         }
 
-        return new FontFamily(iconData.FontFamily);
+        return new FontFamily(iconData.FontPackage is null
+            ? iconData.FontFamily
+            : $"packages/{iconData.FontPackage}/{iconData.FontFamily}");
     }
 }
 
 public sealed class Icon : StatelessWidget
 {
-    private const double DefaultIconSize = 24;
-
     public Icon(
         IconData? icon,
         double? size = null,
@@ -64,7 +58,8 @@ public sealed class Icon : StatelessWidget
         double? weight = null,
         double? grade = null,
         double? opticalSize = null,
-        IReadOnlyList<Shadow>? shadows = null) : base(key)
+        IReadOnlyList<Shadow>? shadows = null,
+        BlendMode? blendMode = null) : base(key)
     {
         IconData = icon;
         Size = size;
@@ -78,38 +73,18 @@ public sealed class Icon : StatelessWidget
         Grade = grade;
         OpticalSize = opticalSize;
         Shadows = shadows;
+        BlendMode = blendMode;
 
-        if (size.HasValue && (!double.IsFinite(size.Value) || size.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(size), "Icon size must be finite and non-negative.");
-        }
-        if (fill.HasValue && !(fill.Value >= 0.0 && fill.Value <= 1.0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(fill), "Icon fill must be between zero and one.");
-        }
-        if (weight.HasValue && !(weight.Value > 0.0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(weight), "Icon weight must be positive.");
-        }
-        if (opticalSize.HasValue && !(opticalSize.Value > 0.0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(opticalSize), "Icon optical size must be positive.");
-        }
+        DebugAssertions.Assert(fill is null || (0.0 <= fill && fill <= 1.0),
+            "fill == null || (0.0 <= fill && fill <= 1.0)");
+        DebugAssertions.Assert(weight is null || 0.0 < weight, "weight == null || (0.0 < weight)");
+        DebugAssertions.Assert(opticalSize is null || 0.0 < opticalSize,
+            "opticalSize == null || (0.0 < opticalSize)");
     }
 
     public IconData? IconData { get; }
 
     public double? Size { get; }
-
-    public Color? Color { get; }
-
-    public string? SemanticLabel { get; }
-
-    public TextDirection? TextDirection { get; }
-
-    public bool? ApplyTextScaling { get; }
-
-    public FontWeight? FontWeight { get; }
 
     public double? Fill { get; }
 
@@ -119,12 +94,35 @@ public sealed class Icon : StatelessWidget
 
     public double? OpticalSize { get; }
 
+    public Color? Color { get; }
+
     public IReadOnlyList<Shadow>? Shadows { get; }
+
+    public string? SemanticLabel { get; }
+
+    public TextDirection? TextDirection { get; }
+
+    public bool? ApplyTextScaling { get; }
+
+    public BlendMode? BlendMode { get; }
+
+    public FontWeight? FontWeight { get; }
 
     public override Widget Build(BuildContext context)
     {
+        DebugAssertions.Assert(TextDirection is not null || WidgetsDebug.DebugCheckHasDirectionality(context));
+        var textDirection = TextDirection ?? Directionality.Of(context);
         var iconTheme = IconTheme.Of(context);
-        double iconSize = ResolveIconSize(context, iconTheme);
+        bool applyTextScaling = ApplyTextScaling ?? iconTheme.ApplyTextScaling ?? false;
+        double tentativeIconSize = Size ?? iconTheme.Size ?? TextDefaults.DefaultFontSize;
+        double iconSize = applyTextScaling
+            ? MediaQuery.TextScalerOf(context).Scale(tentativeIconSize)
+            : tentativeIconSize;
+        double? iconFill = Fill ?? iconTheme.Fill;
+        double? iconWeight = Weight ?? iconTheme.Weight;
+        double? iconGrade = Grade ?? iconTheme.Grade;
+        double? iconOpticalSize = OpticalSize ?? iconTheme.OpticalSize;
+        IReadOnlyList<Shadow>? iconShadows = Shadows ?? iconTheme.Shadows;
 
         if (IconData is null)
         {
@@ -133,32 +131,68 @@ public sealed class Icon : StatelessWidget
                 child: new SizedBox(width: iconSize, height: iconSize));
         }
 
-        var textDirection = TextDirection ?? Directionality.Of(context);
-        var iconColor = Color ?? iconTheme.Color ?? new Color(0xFF000000);
+        Color? iconColor = Color ?? iconTheme.Color!;
         double iconOpacity = iconTheme.Opacity ?? 1.0;
         if (iconOpacity != 1.0)
         {
-            iconColor = iconColor.WithOpacity(iconColor.Opacity * iconOpacity);
+            iconColor = iconColor!.WithOpacity(iconColor.Opacity * iconOpacity);
         }
 
-        Widget iconWidget = new Text(
-            char.ConvertFromUtf32(IconData.CodePoint),
-            fontSize: iconSize,
-            color: iconColor,
-            fontFamily: ResolveFontFamily(IconData),
-            fontWeight: FontWeight ?? Avalonia.Media.FontWeight.Normal,
-            fontStyle: FontStyle.Normal,
-            height: 1.0,
-            letterSpacing: 0,
-            softWrap: false,
-            maxLines: 1,
-            textDirection: textDirection);
+        Paint? foreground = null;
+        if (BlendMode is { } blendMode)
+        {
+            foreground = new Paint { BlendMode = blendMode, Color = iconColor! };
+            iconColor = null;
+        }
+
+        var fontVariations = new List<FontVariation>();
+        if (iconFill is { } fill)
+        {
+            fontVariations.Add(new FontVariation("FILL", fill));
+        }
+        if (iconWeight is { } weight)
+        {
+            fontVariations.Add(new FontVariation("wght", weight));
+        }
+        if (iconGrade is { } grade)
+        {
+            fontVariations.Add(new FontVariation("GRAD", grade));
+        }
+        if (iconOpticalSize is { } opticalSize)
+        {
+            fontVariations.Add(new FontVariation("opsz", opticalSize));
+        }
+
+        // The registry resolves Dart asset families to Avalonia resource URIs before shaping.
+        var fontStyle = new TextStyle(
+            FontVariations: fontVariations,
+            Inherit: false,
+            Color: iconColor,
+            FontSize: iconSize,
+            FontFamily: IconData.FontFamily is null ? null : ResolveFontFamily(IconData),
+            FontWeight: FontWeight,
+            FontFamilyFallback: IconData.FontPackage is null
+                ? IconData.FontFamilyFallback
+                : IconData.FontFamilyFallback?.Select(family => $"packages/{IconData.FontPackage}/{family}").ToList(),
+            Shadows: iconShadows,
+            Height: 1.0,
+            LeadingDistribution: TextLeadingDistribution.Even,
+            Foreground: foreground);
+
+        Widget iconWidget = new RichText(
+            overflow: TextOverflow.Visible,
+            textDirection: textDirection,
+            text: new TextSpan(text: char.ConvertFromUtf32(IconData.CodePoint), style: fontStyle));
 
         if (IconData.MatchTextDirection && textDirection == Plumix.UI.TextDirection.Rtl)
         {
-            Matrix4 mirror = Matrix4.TranslationValues(iconSize, 0.0, 0.0);
+            var mirror = Matrix4.Identity();
             mirror.ScaleByDouble(-1.0, 1.0, 1.0, 1);
-            iconWidget = new Transform(transform: mirror, child: iconWidget);
+            iconWidget = new Transform(
+                transform: mirror,
+                alignment: Alignment.Center,
+                transformHitTests: false,
+                child: iconWidget);
         }
 
         return new Semantics(
@@ -170,21 +204,21 @@ public sealed class Icon : StatelessWidget
                     child: new Center(child: iconWidget))));
     }
 
-    private double ResolveIconSize(BuildContext context, IconThemeData iconTheme)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        double iconSize = Size ?? iconTheme.Size ?? DefaultIconSize;
-
-        if (ApplyTextScaling ?? iconTheme.ApplyTextScaling ?? false)
-        {
-            iconSize *= MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
-        }
-
-        if (!double.IsFinite(iconSize) || iconSize < 0)
-        {
-            return DefaultIconSize;
-        }
-
-        return iconSize;
+        base.DebugFillProperties(properties);
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new IconDataProperty("icon", IconData, ifNull: "<empty>", showName: false));
+        properties.Add(new DoubleProperty("size", Size, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("fill", Fill, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("weight", Weight, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("grade", Grade, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("opticalSize", OpticalSize, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("color", Color, defaultValue: nullDefault));
+        properties.Add(new IterableProperty<Shadow>("shadows", Shadows, defaultValue: nullDefault));
+        properties.Add(new StringProperty("semanticLabel", SemanticLabel, defaultValue: nullDefault));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>("applyTextScaling", ApplyTextScaling, defaultValue: nullDefault));
     }
 
     public static FontFamily ResolveFontFamily(IconData iconData)

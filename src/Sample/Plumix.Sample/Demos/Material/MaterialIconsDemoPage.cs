@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -42,7 +43,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 12.0,
             children:
@@ -59,9 +60,27 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                 BuildRow(Samples),
                 new Text($"Icons.adaptive on {PlatformDefaults.TargetPlatform}", fontSize: 14.0, color: Colors.Black),
                 BuildRow(Adaptive),
+                new Text("Icon theme and text scaling", fontSize: 14.0, color: Colors.Black),
+                new MediaQuery(
+                    MediaQuery.Of(context).CopyWith(textScaler: TextScaler.Linear(1.5)),
+                    new IconTheme(
+                        new IconThemeData(Size: 32.0, Color: new Color(0xFF6200EE), Opacity: 0.5,
+                            ApplyTextScaling: true),
+                        new Row(
+                            spacing: 20.0,
+                            children:
+                            [
+                                new Icon(Icons.Favorite, semanticLabel: "Scaled favorite"),
+                                new Icon(Icons.Favorite, color: Colors.Teal, applyTextScaling: false,
+                                    semanticLabel: "Unscaled favorite"),
+                                new Icon(null, semanticLabel: "Empty icon slot"),
+                                new Icon(Icons.Favorite, blendMode: BlendMode.SourceOver,
+                                    semanticLabel: "Blended favorite"),
+                            ]))),
                 new Text("arrow_back mirrors with text direction", fontSize: 14.0, color: Colors.Black),
-                new Row(
+                new Wrap(
                     spacing: 12.0,
+                    runSpacing: 12.0,
                     children:
                     [
                         new Directionality(
@@ -71,7 +90,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                             textDirection: TextDirection.Rtl,
                             child: BuildTile("rtl", Icons.ArrowBack)),
                     ]),
-            ]);
+            ]));
     }
 
     private static Widget BuildRow((string Name, IconData Icon)[] icons)

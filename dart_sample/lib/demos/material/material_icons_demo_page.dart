@@ -31,52 +31,90 @@ class MaterialIconsDemoPage extends StatelessWidget {
       ('adaptive.share', Icons.adaptive.share),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12,
-      children: <Widget>[
-        const Text(
-          'Material icons',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'The full material_ui catalog: base, outlined, rounded, and sharp '
-          'variants, aliases, high-range glyphs, and directional mirroring.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        const Text(
-          'Style variants of one icon',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        _buildRow(_variants),
-        const Text(
-          'Catalog samples',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        _buildRow(_samples),
-        Text(
-          'Icons.adaptive on $defaultTargetPlatform',
-          style: const TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        _buildRow(adaptive),
-        const Text(
-          'arrow_back mirrors with text direction',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        Row(
-          spacing: 12,
-          children: <Widget>[
-            const Directionality(
-              textDirection: TextDirection.ltr,
-              child: _IconTile(name: 'ltr', icon: Icons.arrow_back),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: <Widget>[
+          const Text(
+            'Material icons',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'The full material_ui catalog: base, outlined, rounded, and sharp '
+            'variants, aliases, high-range glyphs, and directional mirroring.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          const Text(
+            'Style variants of one icon',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          _buildRow(_variants),
+          const Text(
+            'Catalog samples',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          _buildRow(_samples),
+          Text(
+            'Icons.adaptive on $defaultTargetPlatform',
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          _buildRow(adaptive),
+          const Text(
+            'Icon theme and text scaling',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(1.5)),
+            child: const IconTheme(
+              data: IconThemeData(
+                size: 32,
+                color: Color(0xFF6200EE),
+                opacity: 0.5,
+                applyTextScaling: true,
+              ),
+              child: Row(
+                spacing: 20,
+                children: <Widget>[
+                  Icon(Icons.favorite, semanticLabel: 'Scaled favorite'),
+                  Icon(
+                    Icons.favorite,
+                    color: Colors.teal,
+                    applyTextScaling: false,
+                    semanticLabel: 'Unscaled favorite',
+                  ),
+                  Icon(null, semanticLabel: 'Empty icon slot'),
+                  Icon(
+                    Icons.favorite,
+                    blendMode: BlendMode.srcOver,
+                    semanticLabel: 'Blended favorite',
+                  ),
+                ],
+              ),
             ),
-            const Directionality(
-              textDirection: TextDirection.rtl,
-              child: _IconTile(name: 'rtl', icon: Icons.arrow_back),
-            ),
-          ],
-        ),
-      ],
+          ),
+          const Text(
+            'arrow_back mirrors with text direction',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: <Widget>[
+              const Directionality(
+                textDirection: TextDirection.ltr,
+                child: _IconTile(name: 'ltr', icon: Icons.arrow_back),
+              ),
+              const Directionality(
+                textDirection: TextDirection.rtl,
+                child: _IconTile(name: 'rtl', icon: Icons.arrow_back),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

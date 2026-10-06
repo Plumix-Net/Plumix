@@ -481,8 +481,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureDetector.cs`<br>`src/Plumix/Widgets/GestureRecognizerFactory.cs` | `src/Plumix.Tests/GestureDetectorTests.cs`<br>`src/Plumix.Tests/TextSelectionGestureDetectorDartParityTests.cs` | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` | `src/Plumix.Tests/HeroDartParityTests.cs`<br>`src/Plumix.Tests/HeroNavigatorTests.cs` | `dart_sample/lib/demos/general/hero_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/HeroDemoPage.cs` |
-| `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/CupertinoIconsTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs`<br>`src/Plumix.Tests/MaterialIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`dart_sample/lib/demos/material/material_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialIconsDemoPage.cs` |
-| `widgets/icon_data.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/CupertinoIconsTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs`<br>`src/Plumix.Tests/MaterialIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`dart_sample/lib/demos/material/material_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialIconsDemoPage.cs` |
+| `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/CupertinoIconsTests.cs`<br>`src/Plumix.Tests/IconDataTests.cs`<br>`src/Plumix.Tests/IconTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs`<br>`src/Plumix.Tests/MaterialIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`dart_sample/lib/demos/material/material_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialIconsDemoPage.cs` |
+| `widgets/icon_data.dart` | `src/Plumix/Widgets/IconData.cs` | `src/Plumix.Tests/IconDataTests.cs` | — |
 | `widgets/icon_theme.dart` | `src/Plumix/Widgets/IconTheme.cs` | — | — |
 | `widgets/icon_theme_data.dart` | `src/Plumix/Widgets/IconTheme.cs` | — | — |
 | `widgets/image.dart` | `src/Plumix/Widgets/Image.cs`<br>`src/Plumix/Widgets/ImageConfiguration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs` | `dart_sample/lib/demos/general/image_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` |
@@ -680,7 +680,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/PipelineOwner.cs` — (host integration extras)
 - `src/Plumix/Scheduler.cs` — (adapted)
 - `src/Plumix/WidgetHost.cs` — (reference) (host integration, adapted)
-- `src/Plumix/Widgets/Icon.cs` — (reference) (approximate)
 
 ## Summary
 
@@ -688,5 +687,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 753
 - C# files without a marker: 69
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 6
+- C# files with a qualified (non-strict) marker: 5
 

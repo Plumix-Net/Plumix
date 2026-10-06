@@ -453,7 +453,7 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(
             new IconTheme(
                 data: new IconThemeData(Color: Colors.DarkOrange, Size: 28),
-                child: new Icon(icon: Plumix.Material.Icons.Add)));
+                child: new Icon(icon: Plumix.Material.Icons.Add, textDirection: TextDirection.Ltr)));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -479,6 +479,7 @@ public sealed class TextWidgetTests
                 data: new IconThemeData(Color: Colors.DarkOrange, Size: 28),
                 child: new Icon(
                     icon: Plumix.Material.Icons.Add,
+                    textDirection: TextDirection.Ltr,
                     size: 32,
                     color: Colors.MediumPurple)));
 
@@ -502,6 +503,7 @@ public sealed class TextWidgetTests
                 data: new IconThemeData(Color: Colors.DarkOrange, Size: 28, Opacity: 0.5),
                 child: new Icon(
                     icon: Plumix.Material.Icons.Add,
+                    textDirection: TextDirection.Ltr,
                     color: explicitColor)));
 
         root.Attach(owner);
@@ -523,7 +525,7 @@ public sealed class TextWidgetTests
             new MediaQueryData(TextScaleFactor: 1.5),
             new IconTheme(
                 data: new IconThemeData(Size: 20, ApplyTextScaling: true),
-                child: new Icon(icon: Plumix.Material.Icons.Add))));
+                child: new Icon(icon: Plumix.Material.Icons.Add, textDirection: TextDirection.Ltr))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -539,7 +541,7 @@ public sealed class TextWidgetTests
     {
         var owner = TestBuildOwner.Create();
 
-        var root = new TestRootElement(new Icon(icon: null, size: 18));
+        var root = new TestRootElement(new Icon(icon: null, size: 18, textDirection: TextDirection.Ltr));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -571,9 +573,11 @@ public sealed class TextWidgetTests
 
         var transform = FindDescendant<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.NotNull(transform);
-        Matrix4 expected = Matrix4.TranslationValues(24, 0, 0.0);
+        Matrix4 expected = Matrix4.Identity();
         expected.ScaleByDouble(-1.0, 1.0, 1.0, 1);
         Assert.Equal(expected, transform!.DebugTransformMatrix());
+        Assert.Equal((AlignmentGeometry)Alignment.Center, transform.Alignment);
+        Assert.False(transform.TransformHitTests);
     }
 
     [Fact]
