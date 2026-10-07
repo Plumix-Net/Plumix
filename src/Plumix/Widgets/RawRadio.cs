@@ -254,7 +254,12 @@ internal sealed class WidgetStatePropertyResolver<T> : WidgetStateProperty<T>
     }
 }
 
-internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>
+internal interface IWidgetStateMapper<T>
+{
+    WidgetStateMapper<T> StateMapper { get; }
+}
+
+internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>, IWidgetStateMapper<T>
 {
     private readonly IReadOnlyList<KeyValuePair<WidgetStatesConstraint, T>> _map;
 
@@ -262,6 +267,8 @@ internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>
     {
         _map = map ?? throw new ArgumentNullException(nameof(map));
     }
+
+    public WidgetStateMapper<T> StateMapper => this;
 
     public override T Resolve(IReadOnlySet<WidgetState> states)
     {
@@ -285,11 +292,12 @@ internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>
     // Dart's `==`: another mapper with an equal map (`mapEquals`, order-insensitive).
     public override bool Equals(object? obj)
     {
-        if (obj is not WidgetStateMapper<T> other || other._map.Count != _map.Count)
+        if (obj is not IWidgetStateMapper<T> mapped || mapped.StateMapper._map.Count != _map.Count)
         {
             return false;
         }
 
+        WidgetStateMapper<T> other = mapped.StateMapper;
         foreach (KeyValuePair<WidgetStatesConstraint, T> entry in _map)
         {
             bool matched = false;

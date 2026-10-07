@@ -26,15 +26,15 @@ public sealed record InputDecoration
         Color? iconColor = null,
         Widget? label = null,
         string? labelText = null,
-        WidgetStateTextStyle? labelStyle = null,
-        WidgetStateTextStyle? floatingLabelStyle = null,
+        TextStyle? labelStyle = null,
+        TextStyle? floatingLabelStyle = null,
         Widget? helper = null,
         string? helperText = null,
-        WidgetStateTextStyle? helperStyle = null,
+        TextStyle? helperStyle = null,
         int? helperMaxLines = null,
         string? hintText = null,
         Widget? hint = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         TextDirection? hintTextDirection = null,
         int? hintMaxLines = null,
         TimeSpan? hintFadeDuration = null,
@@ -42,7 +42,7 @@ public sealed record InputDecoration
         bool maintainLabelSize = false,
         Widget? error = null,
         string? errorText = null,
-        WidgetStateTextStyle? errorStyle = null,
+        TextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior? floatingLabelBehavior = null,
         FloatingLabelAlignment? floatingLabelAlignment = null,
@@ -53,17 +53,17 @@ public sealed record InputDecoration
         BoxConstraints? prefixIconConstraints = null,
         Widget? prefix = null,
         string? prefixText = null,
-        WidgetStateTextStyle? prefixStyle = null,
+        TextStyle? prefixStyle = null,
         Color? prefixIconColor = null,
         Widget? suffixIcon = null,
         Widget? suffix = null,
         string? suffixText = null,
-        WidgetStateTextStyle? suffixStyle = null,
+        TextStyle? suffixStyle = null,
         Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         Widget? counter = null,
         string? counterText = null,
-        WidgetStateTextStyle? counterStyle = null,
+        TextStyle? counterStyle = null,
         bool? filled = null,
         Color? fillColor = null,
         Color? focusColor = null,
@@ -177,15 +177,15 @@ public sealed record InputDecoration
     public Color? IconColor { get; init; }
     public Widget? Label { get; init; }
     public string? LabelText { get; init; }
-    public WidgetStateTextStyle? LabelStyle { get; init; }
-    public WidgetStateTextStyle? FloatingLabelStyle { get; init; }
+    public TextStyle? LabelStyle { get; init; }
+    public TextStyle? FloatingLabelStyle { get; init; }
     public Widget? Helper { get; init; }
     public string? HelperText { get; init; }
-    public WidgetStateTextStyle? HelperStyle { get; init; }
+    public TextStyle? HelperStyle { get; init; }
     public int? HelperMaxLines { get; init; }
     public string? HintText { get; init; }
     public Widget? Hint { get; init; }
-    public WidgetStateTextStyle? HintStyle { get; init; }
+    public TextStyle? HintStyle { get; init; }
     public TextDirection? HintTextDirection { get; init; }
     public int? HintMaxLines { get; init; }
     public TimeSpan? HintFadeDuration { get; init; }
@@ -193,7 +193,7 @@ public sealed record InputDecoration
     public bool MaintainLabelSize { get; init; }
     public Widget? Error { get; init; }
     public string? ErrorText { get; init; }
-    public WidgetStateTextStyle? ErrorStyle { get; init; }
+    public TextStyle? ErrorStyle { get; init; }
     public int? ErrorMaxLines { get; init; }
     public FloatingLabelBehavior? FloatingLabelBehavior { get; init; }
     public FloatingLabelAlignment? FloatingLabelAlignment { get; init; }
@@ -204,17 +204,17 @@ public sealed record InputDecoration
     public BoxConstraints? PrefixIconConstraints { get; init; }
     public Widget? Prefix { get; init; }
     public string? PrefixText { get; init; }
-    public WidgetStateTextStyle? PrefixStyle { get; init; }
+    public TextStyle? PrefixStyle { get; init; }
     public Color? PrefixIconColor { get; init; }
     public Widget? SuffixIcon { get; init; }
     public Widget? Suffix { get; init; }
     public string? SuffixText { get; init; }
-    public WidgetStateTextStyle? SuffixStyle { get; init; }
+    public TextStyle? SuffixStyle { get; init; }
     public Color? SuffixIconColor { get; init; }
     public BoxConstraints? SuffixIconConstraints { get; init; }
     public Widget? Counter { get; init; }
     public string? CounterText { get; init; }
-    public WidgetStateTextStyle? CounterStyle { get; init; }
+    public TextStyle? CounterStyle { get; init; }
     public bool? Filled { get; init; }
     public Color? FillColor { get; init; }
     public Color? FocusColor { get; init; }
@@ -233,7 +233,7 @@ public sealed record InputDecoration
 
     public static InputDecoration Collapsed(
         string? hintText = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         Widget? hint = null,
         TextDirection? hintTextDirection = null,
         int? hintMaxLines = null,
@@ -550,22 +550,25 @@ public sealed class InputDecorator : StatefulWidget
 
             TextStyle labelStyle = themeData.TextTheme.TitleMedium
                 .Merge(Current.BaseStyle)
-                .Merge(defaults.LabelStyle?.Resolve(stateSet))
-                .Merge(decoration.LabelStyle?.Resolve(stateSet))
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(defaults.LabelStyle, stateSet))
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(decoration.LabelStyle, stateSet))
                 .CopyWith(height: 1.0);
             TextStyle hintStyle = (themeData.UseMaterial3
                     ? themeData.TextTheme.BodyLarge
                     : themeData.TextTheme.TitleMedium)
                 .Merge(Current.BaseStyle)
-                .Merge(defaults.HintStyle?.Resolve(stateSet))
-                .Merge(decoration.HintStyle?.Resolve(stateSet));
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(defaults.HintStyle, stateSet))
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(decoration.HintStyle, stateSet));
             TextStyle floatingLabelStyle = BuildFloatingLabelStyle(themeData, defaults, decoration, stateSet);
-            TextStyle helperStyle = (defaults.HelperStyle?.Resolve(stateSet) ?? new TextStyle())
-                .Merge(decoration.HelperStyle?.Resolve(stateSet));
+            TextStyle helperStyle = (WidgetStateProperty<TextStyle?>.ResolveAs(defaults.HelperStyle, stateSet)
+                                     ?? new TextStyle())
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(decoration.HelperStyle, stateSet));
             // Flutter merges the decoration's error style unresolved here, unlike the helper style.
-            TextStyle errorStyle = (defaults.ErrorStyle?.Resolve(stateSet) ?? new TextStyle())
+            TextStyle errorStyle = (WidgetStateProperty<TextStyle?>.ResolveAs(defaults.ErrorStyle, stateSet)
+                                     ?? new TextStyle())
                 .Merge(decoration.ErrorStyle);
-            TextStyle counterStyle = helperStyle.Merge(decoration.CounterStyle?.Resolve(stateSet));
+            TextStyle counterStyle = helperStyle
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(decoration.CounterStyle, stateSet));
 
             double inputGap = 0.0;
             if (themeData.UseMaterial3)
@@ -657,13 +660,13 @@ public sealed class InputDecorator : StatefulWidget
             Widget? prefix = BuildAffix(
                 decoration.Prefix,
                 decoration.PrefixText,
-                decoration.PrefixStyle?.Resolve(stateSet) ?? hintStyle,
+                WidgetStateProperty<TextStyle?>.ResolveAs(decoration.PrefixStyle, stateSet) ?? hintStyle,
                 needsSemanticsSortOrder ? _prefixSemanticsSortOrder : null,
                 InputDecorator.PrefixSemanticsTag);
             Widget? suffix = BuildAffix(
                 decoration.Suffix,
                 decoration.SuffixText,
-                decoration.SuffixStyle?.Resolve(stateSet) ?? hintStyle,
+                WidgetStateProperty<TextStyle?>.ResolveAs(decoration.SuffixStyle, stateSet) ?? hintStyle,
                 needsSemanticsSortOrder ? _suffixSemanticsSortOrder : null,
                 InputDecorator.SuffixSemanticsTag);
 
@@ -749,9 +752,10 @@ public sealed class InputDecorator : StatefulWidget
             InputDecoration decoration,
             IReadOnlySet<Plumix.Widgets.WidgetState> stateSet)
         {
-            TextStyle defaultTextStyle = defaults.FloatingLabelStyle?.Resolve(stateSet) ?? new TextStyle();
+            TextStyle defaultTextStyle = WidgetStateProperty<TextStyle?>
+                .ResolveAs(defaults.FloatingLabelStyle, stateSet) ?? new TextStyle();
             if ((decoration.ErrorText is not null || decoration.Error is not null)
-                && decoration.ErrorStyle?.DefaultValue.Color is { } errorColor)
+                && decoration.ErrorStyle?.Color is { } errorColor)
             {
                 defaultTextStyle = defaultTextStyle.CopyWith(color: errorColor);
             }
@@ -761,7 +765,7 @@ public sealed class InputDecorator : StatefulWidget
             return themeData.TextTheme.TitleMedium
                 .Merge(Current.BaseStyle)
                 .Merge(defaultTextStyle)
-                .Merge(decoration.FloatingLabelStyle?.Resolve(stateSet))
+                .Merge(WidgetStateProperty<TextStyle?>.ResolveAs(decoration.FloatingLabelStyle, stateSet))
                 .CopyWith(height: 1.0);
         }
 
@@ -1485,12 +1489,12 @@ internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
         ? Color.FromARGB(0xB3, 0xFF, 0xFF, 0xFF)
         : Color.FromARGB(0x73, 0x00, 0x00, 0x00);
 
-    public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
         new TextStyle(Color: states.Contains(WidgetState.Disabled) ? _theme.DisabledColor : _theme.HintColor));
 
-    public override WidgetStateTextStyle LabelStyle => HintStyle;
+    public override TextStyle LabelStyle => HintStyle;
 
-    public override WidgetStateTextStyle FloatingLabelStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle FloatingLabelStyle => WidgetStateTextStyle.ResolveWith(states =>
     {
         if (states.Contains(WidgetState.Disabled)) return new TextStyle(Color: _theme.DisabledColor);
         if (states.Contains(WidgetState.Error)) return new TextStyle(Color: _theme.ColorScheme.Error);
@@ -1498,11 +1502,11 @@ internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
         return new TextStyle(Color: _theme.HintColor);
     });
 
-    public override WidgetStateTextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
         _theme.TextTheme.BodySmall.CopyWith(
             color: states.Contains(WidgetState.Disabled) ? Colors.Transparent : _theme.HintColor));
 
-    public override WidgetStateTextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(states =>
         _theme.TextTheme.BodySmall.CopyWith(
             color: states.Contains(WidgetState.Disabled) ? Colors.Transparent : _theme.ColorScheme.Error));
 
@@ -1579,7 +1583,7 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         return Colors_.OnSurfaceVariant;
     }
 
-    public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
         new TextStyle(Color: states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant));
 
     public override Color FillColor => WidgetStateColor.ResolveWith(states =>
@@ -1608,16 +1612,16 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         return Colors_.OnSurfaceVariant;
     });
 
-    public override WidgetStateTextStyle LabelStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle LabelStyle => WidgetStateTextStyle.ResolveWith(states =>
         _theme.TextTheme.BodyLarge.CopyWith(color: ResolveLabelColor(states)));
 
-    public override WidgetStateTextStyle FloatingLabelStyle => LabelStyle;
+    public override TextStyle FloatingLabelStyle => LabelStyle;
 
-    public override WidgetStateTextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
+    public override TextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
         _theme.TextTheme.BodySmall.CopyWith(
             color: states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant));
 
-    public override WidgetStateTextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(
+    public override TextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(
         _ => _theme.TextTheme.BodySmall.CopyWith(color: Colors_.Error));
 }
 

@@ -589,7 +589,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/viewport.dart` | `src/Plumix/Widgets/Viewport.cs` | `src/Plumix.Tests/TwoDimensionalViewportTests.cs`<br>`src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs` |
 | `widgets/widget_inspector.dart` | `src/Plumix/Widgets/WidgetInspector.Location.cs`<br>`src/Plumix/Widgets/WidgetInspector.Screenshot.cs`<br>`src/Plumix/Widgets/WidgetInspector.cs`<br>`src/Plumix/Widgets/WidgetInspectorService.cs` | `src/Plumix.Tests/WidgetInspectorDartParityTests.cs`<br>`src/Plumix.Tests/WidgetInspectorServiceExtensionsDartParityTests.cs` | `dart_sample/lib/demos/general/widget_inspector_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/WidgetInspectorDemoPage.cs` |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
-| `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs`<br>`src/Plumix/Widgets/WidgetState.cs`<br>`src/Plumix/Widgets/WidgetStatesController.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs`<br>`src/Plumix.Tests/WidgetStateTests.cs` | — |
+| `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs`<br>`src/Plumix/Widgets/WidgetState.cs`<br>`src/Plumix/Widgets/WidgetStateTextStyle.cs`<br>`src/Plumix/Widgets/WidgetStatesController.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs`<br>`src/Plumix.Tests/WidgetStateTests.cs` | — |
 | `widgets/will_pop_scope.dart` | `src/Plumix/Widgets/WillPopScope.cs` | `src/Plumix.Tests/WillPopScopeTests.cs` | — |
 | `packages/flutter_localizations/widgets_localizations.dart` | `src/Plumix/Widgets/GlobalWidgetsLocalizations.cs` | `src/Plumix.Tests/GlobalWidgetsLocalizationsTests.cs` | — |
 
@@ -684,7 +684,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 570
-- C# files carrying a marker: 753
+- C# files carrying a marker: 754
 - C# files without a marker: 69
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 5

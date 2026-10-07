@@ -152,6 +152,20 @@ public sealed class TextFieldDemoPage : StatefulWidget
                                     prefixIcon: new Icon(Icons.Lock),
                                     suffixIcon: new Icon(Icons.Visibility),
                                     helperText: "fillColor/floatingLabelStyle/activeIndicatorBorder")))),
+                    new TextField(
+                        enabled: _enabled,
+                        style: new DemoInputTextStyle(),
+                        decoration: new InputDecoration(
+                            labelText: "Stateful input style",
+                            hintText: "Focus to change weight and color",
+                            errorText: _error ? "Error state" : null,
+                            helperText: "Subclass input style + mapped helper style",
+                            helperStyle: WidgetStateTextStyle.FromMap(
+                            [
+                                new(WidgetState.Disabled, new TextStyle(Color: Colors.Gray)),
+                                new(WidgetState.Focused, new TextStyle(Color: Colors.DodgerBlue)),
+                                new(WidgetStatesConstraint.Any, new TextStyle(Color: Colors.SlateGray)),
+                            ]))),
                     new Text($"Last submitted email: {_submitted}", fontSize: 13),
                     new Divider(),
                     new Text("TextFormField + Form", fontSize: 18),
@@ -255,5 +269,14 @@ public sealed class TextFieldDemoPage : StatefulWidget
             states.Contains(WidgetState.Error) ? Colors.Crimson : Colors.Indigo;
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);
+    }
+    private sealed class DemoInputTextStyle : WidgetStateTextStyle
+    {
+        public override TextStyle Resolve(IReadOnlySet<WidgetState> states) => new(
+            Color: states.Contains(WidgetState.Disabled) ? Colors.Gray
+                : states.Contains(WidgetState.Error) ? Colors.Crimson
+                : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue : Colors.SlateGray,
+            FontWeight: states.Contains(WidgetState.Focused)
+                ? Avalonia.Media.FontWeight.Bold : Avalonia.Media.FontWeight.Normal);
     }
 }

@@ -113,22 +113,22 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     /// Whether null values in this style are replaced with the values from the ancestor style
     /// (for example, in a <see cref="TextSpan"/> tree). When false, null values fall back to the
     /// paragraph defaults.
-    public bool Inherit { get; }
+    public virtual bool Inherit { get; }
 
     /// The color to use when painting the text. Mutually exclusive with <see cref="Foreground"/>.
-    public Color? Color { get; }
+    public virtual Color? Color { get; }
 
     /// The color to use as the background for the text. Mutually exclusive with
     /// <see cref="Background"/>.
-    public Color? BackgroundColor { get; }
+    public virtual Color? BackgroundColor { get; }
 
     /// The name of the font to use when painting the text, already prefixed with
     /// `packages/&lt;package&gt;/` when a package was given.
-    public FontFamily? FontFamily { get; }
+    public virtual FontFamily? FontFamily { get; }
 
     /// The ordered list of font families to fall back on when a glyph cannot be found in a higher
     /// priority family. Prefixed with `packages/&lt;package&gt;/` when a package was given.
-    public IReadOnlyList<string>? FontFamilyFallback =>
+    public virtual IReadOnlyList<string>? FontFamilyFallback =>
         _package is null
             ? _fontFamilyFallback
             : _fontFamilyFallback?.Select(family => $"packages/{_package}/{family}").ToList();
@@ -137,66 +137,66 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     internal string? Package => _package;
 
     /// The size of fonts (in logical pixels) to use when painting the text.
-    public double? FontSize { get; }
+    public virtual double? FontSize { get; }
 
     /// The typeface thickness to use when painting the text.
-    public FontWeight? FontWeight { get; }
+    public virtual FontWeight? FontWeight { get; }
 
     /// The typeface variant to use when drawing the letters (for example, italics).
-    public FontStyle? FontStyle { get; }
+    public virtual FontStyle? FontStyle { get; }
 
     /// The amount of space (in logical pixels) to add between each letter.
-    public double? LetterSpacing { get; }
+    public virtual double? LetterSpacing { get; }
 
     /// The amount of space (in logical pixels) to add at each sequence of white-space.
-    public double? WordSpacing { get; }
+    public virtual double? WordSpacing { get; }
 
     /// The common baseline that should be aligned between this text span and its parent.
-    public TextBaseline? TextBaseline { get; }
+    public virtual TextBaseline? TextBaseline { get; }
 
     /// The height of this text span, as a multiple of the font size.
-    public double? Height { get; }
+    public virtual double? Height { get; }
 
     /// How the vertical space added by <see cref="Height"/> is distributed above and below the text.
-    public TextLeadingDistribution? LeadingDistribution { get; }
+    public virtual TextLeadingDistribution? LeadingDistribution { get; }
 
     /// The locale used to select region-specific glyphs.
-    public Locale? Locale { get; }
+    public virtual Locale? Locale { get; }
 
     /// The paint drawn as a foreground for the text. Mutually exclusive with <see cref="Color"/>.
-    public Paint? Foreground { get; }
+    public virtual Paint? Foreground { get; }
 
     /// The paint drawn as a background for the text. Mutually exclusive with
     /// <see cref="BackgroundColor"/>.
-    public Paint? Background { get; }
+    public virtual Paint? Background { get; }
 
     /// The decorations to paint near the text (for example, an underline).
-    public TextDecoration? Decoration { get; }
+    public virtual TextDecoration? Decoration { get; }
 
     /// The color in which to paint the text decorations.
-    public Color? DecorationColor { get; }
+    public virtual Color? DecorationColor { get; }
 
     /// The style in which to paint the text decorations (for example, dashed).
-    public TextDecorationStyle? DecorationStyle { get; }
+    public virtual TextDecorationStyle? DecorationStyle { get; }
 
     /// The thickness of the decoration stroke as a multiplier of the thickness defined by the font.
-    public double? DecorationThickness { get; }
+    public virtual double? DecorationThickness { get; }
 
     /// A human-readable description of this text style. Only maintained in debug builds; ignored
     /// by equality.
-    public string? DebugLabel { get; }
+    public virtual string? DebugLabel { get; }
 
     /// A list of shadows that will be painted underneath the text.
-    public IReadOnlyList<Shadow>? Shadows { get; }
+    public virtual IReadOnlyList<Shadow>? Shadows { get; }
 
     /// A list of font features that affect the selection of glyphs in the font.
-    public IReadOnlyList<FontFeature>? FontFeatures { get; }
+    public virtual IReadOnlyList<FontFeature>? FontFeatures { get; }
 
     /// A list of font variations to apply to the font.
-    public IReadOnlyList<FontVariation>? FontVariations { get; }
+    public virtual IReadOnlyList<FontVariation>? FontVariations { get; }
 
     /// How visual text overflow should be handled.
-    public TextOverflow? Overflow { get; }
+    public virtual TextOverflow? Overflow { get; }
 
     // Dart's `_fontFamily`: the family without the package prefix.
     private FontFamily? UnprefixedFontFamily
@@ -224,7 +224,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     /// One of `color` or `foreground` must be null, and if this has <see cref="Foreground"/>
     /// specified it will be given preference over any `color` parameter; the same holds for
     /// `backgroundColor` and `background`.
-    public TextStyle CopyWith(
+    public virtual TextStyle CopyWith(
         bool? inherit = null,
         Color? color = null,
         Color? backgroundColor = null,
@@ -310,7 +310,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     /// properties are multiplied by the given factors and then incremented by the given deltas;
     /// a numeric property that is null must be left with its default factor and delta.
     /// `fontWeightDelta` moves the weight by that many steps of 100, clamped to w100–w900.
-    public TextStyle Apply(
+    public virtual TextStyle Apply(
         Color? color = null,
         Color? backgroundColor = null,
         TextDecoration? decoration = null,
@@ -406,7 +406,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     /// If the given `other` text style has its <see cref="Inherit"/> set to true, its null
     /// properties are replaced with the non-null properties of this text style. If `other` has
     /// <see cref="Inherit"/> set to false, it is returned unmodified.
-    public TextStyle Merge(TextStyle? other)
+    public virtual TextStyle Merge(TextStyle? other)
     {
         if (other is null)
         {
@@ -685,7 +685,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     ///
     /// Only the font size is scaled; `textScaleFactor` is Dart's deprecated linear factor and
     /// cannot be combined with a `textScaler`.
-    public ParagraphTextStyle GetTextStyle(double textScaleFactor = 1.0, TextScaler? textScaler = null)
+    public virtual ParagraphTextStyle GetTextStyle(double textScaleFactor = 1.0, TextScaler? textScaler = null)
     {
         TextScaler scaler = textScaler ?? TextScaler.NoScaling;
         if (Constants.KDebugMode && !(scaler == TextScaler.NoScaling || textScaleFactor == 1.0))
@@ -732,7 +732,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     /// the arguments (this style's <see cref="Locale"/> is not used); font family, size, weight,
     /// style and height fall back to this style. The font size defaults to 14 before `textScaler` is
     /// applied. An explicit `textHeightBehavior` wins over this style's leading distribution.
-    public ParagraphStyle GetParagraphStyle(
+    public virtual ParagraphStyle GetParagraphStyle(
         TextAlign? textAlign = null,
         TextDirection? textDirection = null,
         TextScaler? textScaler = null,
@@ -787,7 +787,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
 
     /// Describe the difference between this style and another, in terms of how much damage it will
     /// make to the rendering.
-    public RenderComparison CompareTo(TextStyle other)
+    public virtual RenderComparison CompareTo(TextStyle other)
     {
         ArgumentNullException.ThrowIfNull(other);
         if (ReferenceEquals(this, other))
@@ -915,7 +915,7 @@ public class TextStyle : Diagnosticable, IEquatable<TextStyle>
     }
 
     /// Adds all properties prefixing property names with the optional `prefix`.
-    public void DebugFillProperties(DiagnosticPropertiesBuilder properties, string prefix)
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties, string prefix)
     {
         base.DebugFillProperties(properties);
         if (DebugLabel is not null)

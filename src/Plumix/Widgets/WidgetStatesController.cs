@@ -48,6 +48,8 @@ internal enum WidgetStateOperation
 internal sealed class AnyWidgetStatesConstraint : WidgetStatesConstraint
 {
     public override bool IsSatisfiedBy(IReadOnlySet<WidgetState> states) => true;
+
+    public override string ToString() => "WidgetState.any";
 }
 
 internal sealed class SingleWidgetStateConstraint : WidgetStatesConstraint
@@ -69,6 +71,9 @@ internal sealed class SingleWidgetStateConstraint : WidgetStatesConstraint
     public override bool Equals(object? obj) => obj is SingleWidgetStateConstraint other && other._state == _state;
 
     public override int GetHashCode() => _state.GetHashCode();
+
+    public override string ToString() => $"WidgetState.{char.ToLowerInvariant(_state.ToString()[0])}"
+        + _state.ToString()[1..];
 }
 
 internal sealed class WidgetStateOperator : WidgetStatesConstraint
@@ -104,6 +109,13 @@ internal sealed class WidgetStateOperator : WidgetStatesConstraint
     // Dart's `_WidgetStateCombo.hashCode` and `_WidgetStateNot.hashCode`.
     public override int GetHashCode() =>
         _second is null ? _first.GetHashCode() : HashCode.Combine(_first, _second);
+
+    public override string ToString() => _operation switch
+    {
+        WidgetStateOperation.And => $"({_first} & {_second})",
+        WidgetStateOperation.Or => $"({_first} | {_second})",
+        _ => $"~{_first}",
+    };
 }
 
 /// <summary>

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -16,6 +17,27 @@ public sealed class MaterialTextFieldTests : IDisposable
     public MaterialTextFieldTests() => FocusManager.Instance.ResetForTests();
     public void Dispose() => FocusManager.Instance.ResetForTests();
 
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void TextField_ResolvesAStateTextStyleAndMergesTheDefaultMetrics(bool enabled)
+    {
+        TextStyle style = WidgetStateTextStyle.ResolveWith(states => new TextStyle(
+            Color: states.Contains(WidgetState.Disabled) ? Colors.Red : Colors.Blue));
+        var theme = ThemeData.Light with
+        {
+            TextTheme = new TextTheme(bodyLarge: new TextStyle(FontSize: 23.0)),
+        };
+        using var controller = new TextEditingController("stateful");
+        using var harness = new WidgetRenderHarness(Wrap(new TextField(
+            controller: controller, enabled: enabled, style: style), theme));
+        harness.Pump(new Size(360, 100));
+        RenderEditable editable = Assert.Single(FindDescendants<RenderEditable>(harness.RenderView));
+        TextStyle resolved = Assert.IsType<TextSpan>(editable.Text).Style!;
+        Assert.Equal(enabled ? Colors.Blue : Colors.Red, resolved.Color);
+        Assert.Equal(23.0, resolved.FontSize);
+    }
 
     [Fact]
     public void TextField_EnforcesMaxLengthUpdatesCounterAndSubmits()

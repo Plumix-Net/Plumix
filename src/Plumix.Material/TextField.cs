@@ -377,9 +377,19 @@ public sealed class TextField : StatefulWidget
                 ? ErrorColor(theme)
                 : Current.CursorColor ?? selectionStyle.CursorColor ?? primaryColor;
             Color selectionColor = selectionStyle.SelectionColor ?? ApplyOpacity(primaryColor, 0.40);
-            var baseStyle = Current.Style ?? (theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium);
-            if (!enabled && Current.Style?.Color is null)
-                baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
+            // Dart resolves the input style with the field's interaction states.
+            var states = new HashSet<WidgetState>();
+            if (!enabled) states.Add(WidgetState.Disabled);
+            if (_hovering) states.Add(WidgetState.Hovered);
+            if (_focusNode!.HasFocus) states.Add(WidgetState.Focused);
+            if (HasError) states.Add(WidgetState.Error);
+            TextStyle defaultStyle = theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium;
+            Color? stateColor = enabled ? defaultStyle.Color
+                : theme.UseMaterial3
+                    ? defaultStyle.Color is { } color ? ApplyOpacity(color, 0.38) : null
+                    : theme.DisabledColor;
+            TextStyle? providedStyle = WidgetStateProperty<TextStyle?>.ResolveAs(Current.Style, states);
+            TextStyle baseStyle = defaultStyle.CopyWith(color: stateColor).Merge(providedStyle);
             bool multiline = Current.MaxLines != 1;
             // Dart's `formatters`: the length limit is one more input formatter.
             List<TextInputFormatter> formatters = [.. Current.InputFormatters ?? []];
@@ -679,7 +689,7 @@ public sealed class TextField : StatefulWidget
         private Color ErrorColor(ThemeData theme)
         {
             return Current.CursorErrorColor
-                   ?? Current.Decoration?.ErrorStyle?.DefaultValue.Color
+                   ?? Current.Decoration?.ErrorStyle?.Color
                    ?? theme.ColorScheme.Error;
         }
 

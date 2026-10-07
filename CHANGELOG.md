@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: WidgetStateTextStyle subclasses TextStyle with lazy resolvers and state maps (widgets/widget_state.dart).
+- Breaking: Input decoration uses plain TextStyle slots and TextField resolves state styles (input_decorator.dart).
+- TextField demo adds subclass input and mapped helper styles in both samples (widgets/widget_state.dart).
 - Breaking: Icon matches Flutter composition, theme styles, scaling, RTL and diagnostics (widgets/icon.dart).
 - IconData adds fallback families and value diagnostics; mirrored demo gains scaling probes (widgets/icon_data.dart).
 - Breaking: AnimationStyle lerp preserves equal curves and whole microseconds (animation/animation_style.dart).

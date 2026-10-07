@@ -114,7 +114,10 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             readOnly: true,
             decoration: const InputDecoration.collapsed(hintText: 'Read only'),
           ),
-          const Text('Decorator geometry probes', style: TextStyle(fontSize: 18)),
+          const Text(
+            'Decorator geometry probes',
+            style: TextStyle(fontSize: 18),
+          ),
           TextField(
             enabled: _enabled,
             decoration: const InputDecoration(
@@ -130,7 +133,8 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             decoration: const InputDecoration(
               labelText: 'Shaped border',
               hintText: 'Any ShapeBorder as the input outline',
-              helperText: 'ShapedInputBorder cuts the label gap out of the shape',
+              helperText:
+                  'ShapedInputBorder cuts the label gap out of the shape',
               border: ShapedInputBorder(
                 shape: StadiumBorder(),
                 borderSide: BorderSide(color: Colors.indigo, width: 2.0),
@@ -173,7 +177,9 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             data: InputDecorationThemeData(
               filled: true,
               fillColor: WidgetStateColor.resolveWith(_resolveStateFill),
-              floatingLabelStyle: WidgetStateTextStyle.resolveWith(_resolveStateLabel),
+              floatingLabelStyle: WidgetStateTextStyle.resolveWith(
+                _resolveStateLabel,
+              ),
               activeIndicatorBorder: WidgetStateBorderSide.resolveWith(
                 _resolveStateIndicator,
               ),
@@ -197,6 +203,23 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
                   helperText:
                       'fillColor/floatingLabelStyle/activeIndicatorBorder',
                 ),
+              ),
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            style: const _DemoInputTextStyle(),
+            decoration: InputDecoration(
+              labelText: 'Stateful input style',
+              hintText: 'Focus to change weight and color',
+              errorText: _error ? 'Error state' : null,
+              helperText: 'Subclass input style + mapped helper style',
+              helperStyle: WidgetStateTextStyle.fromMap(
+                const <WidgetStatesConstraint, TextStyle>{
+                  WidgetState.disabled: TextStyle(color: Colors.grey),
+                  WidgetState.focused: TextStyle(color: Colors.blue),
+                  WidgetState.any: TextStyle(color: Colors.blueGrey),
+                },
               ),
             ),
           ),
@@ -341,5 +364,23 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
   Widget _control(String label, VoidCallback onPressed) => TextButton(
     onPressed: onPressed,
     child: Text(label, style: const TextStyle(fontSize: 12)),
+  );
+}
+
+class _DemoInputTextStyle extends WidgetStateTextStyle {
+  const _DemoInputTextStyle();
+
+  @override
+  TextStyle resolve(Set<WidgetState> states) => TextStyle(
+    color: states.contains(WidgetState.disabled)
+        ? Colors.grey
+        : states.contains(WidgetState.error)
+        ? Colors.red
+        : states.contains(WidgetState.focused)
+        ? Colors.blue
+        : Colors.blueGrey,
+    fontWeight: states.contains(WidgetState.focused)
+        ? FontWeight.bold
+        : FontWeight.normal,
   );
 }

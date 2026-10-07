@@ -1355,6 +1355,114 @@ public sealed class MaterialInputDecoratorTests
         Assert.Equal(1.0, style.Height);
     }
 
+    [Fact]
+    public void InputDecoration_StyleSlotsPreservePlainAndStatefulObjectsAndPrecedence()
+    {
+        TextStyle themeStyle = WidgetStateTextStyle.ResolveWith(_ => new TextStyle(Color: Colors.Green));
+        var theme = new InputDecorationThemeData(
+            labelStyle: themeStyle, floatingLabelStyle: themeStyle, helperStyle: themeStyle,
+            hintStyle: themeStyle, errorStyle: themeStyle, prefixStyle: themeStyle,
+            suffixStyle: themeStyle, counterStyle: themeStyle, helperMaxLines: 2, errorMaxLines: 3);
+        string[] names = ["LabelStyle", "FloatingLabelStyle", "HelperStyle", "HintStyle", "ErrorStyle",
+            "PrefixStyle", "SuffixStyle", "CounterStyle"];
+        InputDecoration inherited = new InputDecoration().ApplyDefaults(theme);
+        foreach (string name in names)
+            Assert.Same(themeStyle, typeof(InputDecoration).GetProperty(name)!.GetValue(inherited));
+
+        foreach (TextStyle style in new TextStyle[]
+                 { new(Color: Colors.Blue), WidgetStateTextStyle.ResolveWith(_ => new TextStyle(Color: Colors.Blue)) })
+        {
+            InputDecoration overridden = new InputDecoration(
+                labelStyle: style, floatingLabelStyle: style, helperStyle: style, hintStyle: style,
+                errorStyle: style, prefixStyle: style, suffixStyle: style, counterStyle: style).ApplyDefaults(theme);
+            foreach (string name in names)
+                Assert.Same(style, typeof(InputDecoration).GetProperty(name)!.GetValue(overridden));
+            Assert.Equal(2, overridden.HelperMaxLines);
+            Assert.Equal(3, overridden.ErrorMaxLines);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void InputDecorator_ResolvesTextStyleInterfacesInAllDocumentedResolvedSlots(bool focused)
+    {
+        TextStyle style = new StateTextStyle();
+        using var harness = new DecoratorHarness(new InputDecorator(
+            decoration: new InputDecoration(
+                labelText: "Label", labelStyle: style, floatingLabelStyle: style,
+                hintText: "Hint", hintStyle: style, helperText: "Helper", helperStyle: style,
+                prefixText: "Prefix", prefixStyle: style, suffixText: "Suffix", suffixStyle: style,
+                counterText: "Counter", counterStyle: style),
+            isFocused: focused,
+            isEmpty: true,
+            child: new Text("value")));
+        harness.Pump();
+        Color expected = focused ? Colors.Crimson : Colors.SeaGreen;
+        foreach (string text in new[] { "Label", "Hint", "Helper", "Prefix", "Suffix", "Counter" })
+        {
+            Assert.Equal(expected, StyleOf(harness, text).Color);
+            Assert.Equal(22.0, StyleOf(harness, text).FontSize);
+        }
+    }
+
+    [Fact]
+    public void InputDecorator_FloatingFallbackAndErrorMergeUseRawTextStyles()
+    {
+        TextStyle stateStyle = WidgetStateTextStyle.ResolveWith(_ => new TextStyle(Color: Colors.Magenta));
+        var theme = ThemeData.Light with { UseMaterial3 = false };
+        using var stateful = new DecoratorHarness(new InputDecorator(
+            decoration: new InputDecoration(labelText: "Label", labelStyle: stateStyle,
+                errorText: "Error", errorStyle: stateStyle, floatingLabelBehavior: FloatingLabelBehavior.Always),
+            isFocused: true,
+            child: new Text("value")), theme);
+        stateful.Pump();
+        Assert.Equal(theme.ColorScheme.Error, StyleOf(stateful, "Label").Color);
+        Assert.Equal(theme.ColorScheme.Error, StyleOf(stateful, "Error").Color);
+
+        var plain = new TextStyle(Color: Colors.Magenta, FontSize: 29.0);
+        using var fallback = new DecoratorHarness(new InputDecorator(
+            decoration: new InputDecoration(labelText: "Label", labelStyle: plain,
+                floatingLabelBehavior: FloatingLabelBehavior.Always),
+            child: new Text("value")), theme);
+        fallback.Pump();
+        Assert.Equal(Colors.Magenta, StyleOf(fallback, "Label").Color);
+        Assert.Equal(29.0, StyleOf(fallback, "Label").FontSize);
+
+        using var overrideStyle = new DecoratorHarness(new InputDecorator(
+            decoration: new InputDecoration(labelText: "Label", labelStyle: plain,
+                floatingLabelStyle: new TextStyle(Color: Colors.Blue, FontSize: 24.0),
+                floatingLabelBehavior: FloatingLabelBehavior.Always),
+            child: new Text("value")), theme);
+        overrideStyle.Pump();
+        Assert.Equal(Colors.Blue, StyleOf(overrideStyle, "Label").Color);
+        Assert.Equal(24.0, StyleOf(overrideStyle, "Label").FontSize);
+    }
+
+    [Fact]
+    public void InputDecorator_StateMapStylesResolveForHintHelperAndAffixes()
+    {
+        TextStyle style = WidgetStateTextStyle.FromMap(
+        [
+            new(WidgetState.Focused, new TextStyle(Color: Colors.Magenta)),
+            new(WidgetStatesConstraint.Any, new TextStyle(Color: Colors.Blue)),
+        ]);
+        using var harness = new DecoratorHarness(new InputDecorator(
+            decoration: new InputDecoration(hintText: "Hint", hintStyle: style,
+                helperText: "Helper", helperStyle: style, prefixText: "Prefix", prefixStyle: style),
+            isFocused: true, isEmpty: true, child: new Text("value")));
+        harness.Pump();
+        foreach (string text in new[] { "Hint", "Helper", "Prefix" })
+            Assert.Equal(Colors.Magenta, StyleOf(harness, text).Color);
+    }
+
+    // ResolveAs also accepts a TextStyle implementing the interface without the convenience base.
+    private sealed class StateTextStyle : TextStyle, IWidgetStateProperty<TextStyle>
+    {
+        public TextStyle Resolve(IReadOnlySet<WidgetState> states) => new(
+            Color: states.Contains(WidgetState.Focused) ? Colors.Crimson : Colors.SeaGreen, FontSize: 22.0);
+    }
+
     private static Color IconColor(List<RenderParagraph> paragraphs, IconData icon)
     {
         RenderParagraph paragraph = paragraphs.Single(

@@ -18,14 +18,14 @@ namespace Plumix.Material;
 public class InputDecorationThemeData : IDiagnosticable
 {
     public InputDecorationThemeData(
-        WidgetStateTextStyle? labelStyle = null,
-        WidgetStateTextStyle? floatingLabelStyle = null,
-        WidgetStateTextStyle? helperStyle = null,
+        TextStyle? labelStyle = null,
+        TextStyle? floatingLabelStyle = null,
+        TextStyle? helperStyle = null,
         int? helperMaxLines = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         TimeSpan? hintFadeDuration = null,
         int? hintMaxLines = null,
-        WidgetStateTextStyle? errorStyle = null,
+        TextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior floatingLabelBehavior = FloatingLabelBehavior.Auto,
         FloatingLabelAlignment floatingLabelAlignment = FloatingLabelAlignment.Start,
@@ -33,13 +33,13 @@ public class InputDecorationThemeData : IDiagnosticable
         EdgeInsetsGeometry? contentPadding = null,
         bool isCollapsed = false,
         Color? iconColor = null,
-        WidgetStateTextStyle? prefixStyle = null,
+        TextStyle? prefixStyle = null,
         Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
-        WidgetStateTextStyle? suffixStyle = null,
+        TextStyle? suffixStyle = null,
         Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
-        WidgetStateTextStyle? counterStyle = null,
+        TextStyle? counterStyle = null,
         bool filled = false,
         Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
@@ -95,14 +95,14 @@ public class InputDecorationThemeData : IDiagnosticable
         VisualDensity = visualDensity;
     }
 
-    public virtual WidgetStateTextStyle? LabelStyle { get; }
-    public virtual WidgetStateTextStyle? FloatingLabelStyle { get; }
-    public virtual WidgetStateTextStyle? HelperStyle { get; }
+    public virtual TextStyle? LabelStyle { get; }
+    public virtual TextStyle? FloatingLabelStyle { get; }
+    public virtual TextStyle? HelperStyle { get; }
     public virtual int? HelperMaxLines { get; }
-    public virtual WidgetStateTextStyle? HintStyle { get; }
+    public virtual TextStyle? HintStyle { get; }
     public virtual TimeSpan? HintFadeDuration { get; }
     public virtual int? HintMaxLines { get; }
-    public virtual WidgetStateTextStyle? ErrorStyle { get; }
+    public virtual TextStyle? ErrorStyle { get; }
     public virtual int? ErrorMaxLines { get; }
     public virtual FloatingLabelBehavior FloatingLabelBehavior { get; }
     public virtual FloatingLabelAlignment FloatingLabelAlignment { get; }
@@ -110,13 +110,13 @@ public class InputDecorationThemeData : IDiagnosticable
     public virtual EdgeInsetsGeometry? ContentPadding { get; }
     public virtual bool IsCollapsed { get; }
     public virtual Color? IconColor { get; }
-    public virtual WidgetStateTextStyle? PrefixStyle { get; }
+    public virtual TextStyle? PrefixStyle { get; }
     public virtual Color? PrefixIconColor { get; }
     public virtual BoxConstraints? PrefixIconConstraints { get; }
-    public virtual WidgetStateTextStyle? SuffixStyle { get; }
+    public virtual TextStyle? SuffixStyle { get; }
     public virtual Color? SuffixIconColor { get; }
     public virtual BoxConstraints? SuffixIconConstraints { get; }
-    public virtual WidgetStateTextStyle? CounterStyle { get; }
+    public virtual TextStyle? CounterStyle { get; }
     public virtual bool Filled { get; }
     public virtual Color? FillColor { get; }
     public virtual WidgetStateBorderSide? ActiveIndicatorBorder { get; }
@@ -134,14 +134,14 @@ public class InputDecorationThemeData : IDiagnosticable
     public virtual VisualDensity? VisualDensity { get; }
 
     public InputDecorationThemeData CopyWith(
-        WidgetStateTextStyle? labelStyle = null,
-        WidgetStateTextStyle? floatingLabelStyle = null,
-        WidgetStateTextStyle? helperStyle = null,
+        TextStyle? labelStyle = null,
+        TextStyle? floatingLabelStyle = null,
+        TextStyle? helperStyle = null,
         int? helperMaxLines = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         TimeSpan? hintFadeDuration = null,
         int? hintMaxLines = null,
-        WidgetStateTextStyle? errorStyle = null,
+        TextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior? floatingLabelBehavior = null,
         FloatingLabelAlignment? floatingLabelAlignment = null,
@@ -149,13 +149,13 @@ public class InputDecorationThemeData : IDiagnosticable
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
         Color? iconColor = null,
-        WidgetStateTextStyle? prefixStyle = null,
+        TextStyle? prefixStyle = null,
         Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
-        WidgetStateTextStyle? suffixStyle = null,
+        TextStyle? suffixStyle = null,
         Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
-        WidgetStateTextStyle? counterStyle = null,
+        TextStyle? counterStyle = null,
         bool? filled = null,
         Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
@@ -308,29 +308,27 @@ public class InputDecorationThemeData : IDiagnosticable
 
     /// <summary>Dart's `InputDecorationThemeData.debugFillProperties`.</summary>
     /// <remarks>
-    /// The state-resolving members are typed `WidgetState*` here rather than the plain `TextStyle`,
-    /// `Color` and `BorderSide` Dart declares (see the `WidgetState` row in
-    /// `docs/ai/DIVERGENCES.md`), so they are dumped through `DiagnosticsProperty` of that type;
-    /// name, order, level and default-value elision match Dart.
+    /// Text styles and colors retain state properties through their ordinary value types.
+    /// Border-side state properties use the wrapper documented in `docs/ai/DIVERGENCES.md`.
     /// </remarks>
     public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
         var defaultTheme = new InputDecorationThemeData();
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "labelStyle", LabelStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "floatingLabelStyle", FloatingLabelStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "helperStyle", HelperStyle, defaultValue: nullDefault));
         properties.Add(new IntProperty("helperMaxLines", HelperMaxLines, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "hintStyle", HintStyle, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<TimeSpan?>(
             "hintFadeDuration", HintFadeDuration, defaultValue: nullDefault));
         properties.Add(new IntProperty("hintMaxLines", HintMaxLines, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "errorStyle", ErrorStyle, defaultValue: nullDefault));
         properties.Add(new IntProperty("errorMaxLines", ErrorMaxLines, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<FloatingLabelBehavior>(
@@ -348,15 +346,15 @@ public class InputDecorationThemeData : IDiagnosticable
             "prefixIconColor", PrefixIconColor, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>(
             "prefixIconConstraints", PrefixIconConstraints, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "prefixStyle", PrefixStyle, defaultValue: nullDefault));
         properties.Add(new ColorProperty(
             "suffixIconColor", SuffixIconColor, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>(
             "suffixIconConstraints", SuffixIconConstraints, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "suffixStyle", SuffixStyle, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
             "counterStyle", CounterStyle, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool>("filled", Filled, defaultValue: defaultTheme.Filled));
         properties.Add(new ColorProperty(
@@ -456,14 +454,14 @@ public class InputDecorationThemeData : IDiagnosticable
 public sealed class InputDecorationTheme : InheritedTheme
 {
     private readonly InputDecorationThemeData? _data;
-    private readonly WidgetStateTextStyle? _labelStyle;
-    private readonly WidgetStateTextStyle? _floatingLabelStyle;
-    private readonly WidgetStateTextStyle? _helperStyle;
+    private readonly TextStyle? _labelStyle;
+    private readonly TextStyle? _floatingLabelStyle;
+    private readonly TextStyle? _helperStyle;
     private readonly int? _helperMaxLines;
-    private readonly WidgetStateTextStyle? _hintStyle;
+    private readonly TextStyle? _hintStyle;
     private readonly TimeSpan? _hintFadeDuration;
     private readonly int? _hintMaxLines;
-    private readonly WidgetStateTextStyle? _errorStyle;
+    private readonly TextStyle? _errorStyle;
     private readonly int? _errorMaxLines;
     private readonly FloatingLabelBehavior _floatingLabelBehavior;
     private readonly FloatingLabelAlignment _floatingLabelAlignment;
@@ -471,13 +469,13 @@ public sealed class InputDecorationTheme : InheritedTheme
     private readonly EdgeInsetsGeometry? _contentPadding;
     private readonly bool _isCollapsed;
     private readonly Color? _iconColor;
-    private readonly WidgetStateTextStyle? _prefixStyle;
+    private readonly TextStyle? _prefixStyle;
     private readonly Color? _prefixIconColor;
     private readonly BoxConstraints? _prefixIconConstraints;
-    private readonly WidgetStateTextStyle? _suffixStyle;
+    private readonly TextStyle? _suffixStyle;
     private readonly Color? _suffixIconColor;
     private readonly BoxConstraints? _suffixIconConstraints;
-    private readonly WidgetStateTextStyle? _counterStyle;
+    private readonly TextStyle? _counterStyle;
     private readonly bool _filled;
     private readonly Color? _fillColor;
     private readonly WidgetStateBorderSide? _activeIndicatorBorder;
@@ -497,14 +495,14 @@ public sealed class InputDecorationTheme : InheritedTheme
     public InputDecorationTheme(
         InputDecorationThemeData? data = null,
         Widget? child = null,
-        WidgetStateTextStyle? labelStyle = null,
-        WidgetStateTextStyle? floatingLabelStyle = null,
-        WidgetStateTextStyle? helperStyle = null,
+        TextStyle? labelStyle = null,
+        TextStyle? floatingLabelStyle = null,
+        TextStyle? helperStyle = null,
         int? helperMaxLines = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         TimeSpan? hintFadeDuration = null,
         int? hintMaxLines = null,
-        WidgetStateTextStyle? errorStyle = null,
+        TextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior? floatingLabelBehavior = null,
         FloatingLabelAlignment? floatingLabelAlignment = null,
@@ -512,13 +510,13 @@ public sealed class InputDecorationTheme : InheritedTheme
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
         Color? iconColor = null,
-        WidgetStateTextStyle? prefixStyle = null,
+        TextStyle? prefixStyle = null,
         Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
-        WidgetStateTextStyle? suffixStyle = null,
+        TextStyle? suffixStyle = null,
         Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
-        WidgetStateTextStyle? counterStyle = null,
+        TextStyle? counterStyle = null,
         bool? filled = null,
         Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,
@@ -636,15 +634,15 @@ public sealed class InputDecorationTheme : InheritedTheme
         constraints: _constraints,
         visualDensity: _visualDensity);
 
-    public WidgetStateTextStyle? LabelStyle => _data is not null ? _data.LabelStyle : _labelStyle;
-    public WidgetStateTextStyle? FloatingLabelStyle =>
+    public TextStyle? LabelStyle => _data is not null ? _data.LabelStyle : _labelStyle;
+    public TextStyle? FloatingLabelStyle =>
         _data is not null ? _data.FloatingLabelStyle : _floatingLabelStyle;
-    public WidgetStateTextStyle? HelperStyle => _data is not null ? _data.HelperStyle : _helperStyle;
+    public TextStyle? HelperStyle => _data is not null ? _data.HelperStyle : _helperStyle;
     public int? HelperMaxLines => _data is not null ? _data.HelperMaxLines : _helperMaxLines;
-    public WidgetStateTextStyle? HintStyle => _data is not null ? _data.HintStyle : _hintStyle;
+    public TextStyle? HintStyle => _data is not null ? _data.HintStyle : _hintStyle;
     public TimeSpan? HintFadeDuration => _data is not null ? _data.HintFadeDuration : _hintFadeDuration;
     public int? HintMaxLines => _data is not null ? _data.HintMaxLines : _hintMaxLines;
-    public WidgetStateTextStyle? ErrorStyle => _data is not null ? _data.ErrorStyle : _errorStyle;
+    public TextStyle? ErrorStyle => _data is not null ? _data.ErrorStyle : _errorStyle;
     public int? ErrorMaxLines => _data is not null ? _data.ErrorMaxLines : _errorMaxLines;
     public FloatingLabelBehavior FloatingLabelBehavior =>
         _data is not null ? _data.FloatingLabelBehavior : _floatingLabelBehavior;
@@ -654,15 +652,15 @@ public sealed class InputDecorationTheme : InheritedTheme
     public EdgeInsetsGeometry? ContentPadding => _data is not null ? _data.ContentPadding : _contentPadding;
     public bool IsCollapsed => _data is not null ? _data.IsCollapsed : _isCollapsed;
     public Color? IconColor => _data is not null ? _data.IconColor : _iconColor;
-    public WidgetStateTextStyle? PrefixStyle => _data is not null ? _data.PrefixStyle : _prefixStyle;
+    public TextStyle? PrefixStyle => _data is not null ? _data.PrefixStyle : _prefixStyle;
     public Color? PrefixIconColor => _data is not null ? _data.PrefixIconColor : _prefixIconColor;
     public BoxConstraints? PrefixIconConstraints =>
         _data is not null ? _data.PrefixIconConstraints : _prefixIconConstraints;
-    public WidgetStateTextStyle? SuffixStyle => _data is not null ? _data.SuffixStyle : _suffixStyle;
+    public TextStyle? SuffixStyle => _data is not null ? _data.SuffixStyle : _suffixStyle;
     public Color? SuffixIconColor => _data is not null ? _data.SuffixIconColor : _suffixIconColor;
     public BoxConstraints? SuffixIconConstraints =>
         _data is not null ? _data.SuffixIconConstraints : _suffixIconConstraints;
-    public WidgetStateTextStyle? CounterStyle => _data is not null ? _data.CounterStyle : _counterStyle;
+    public TextStyle? CounterStyle => _data is not null ? _data.CounterStyle : _counterStyle;
     public bool Filled => _data is not null ? _data.Filled : _filled;
     public Color? FillColor => _data is not null ? _data.FillColor : _fillColor;
     public WidgetStateBorderSide? ActiveIndicatorBorder =>
@@ -693,14 +691,14 @@ public sealed class InputDecorationTheme : InheritedTheme
     /// Obsolete field-based copy. Like Flutter's, the result is field-backed — it keeps neither the
     /// `data` argument nor the `child` of the theme it was copied from.
     public InputDecorationTheme CopyWith(
-        WidgetStateTextStyle? labelStyle = null,
-        WidgetStateTextStyle? floatingLabelStyle = null,
-        WidgetStateTextStyle? helperStyle = null,
+        TextStyle? labelStyle = null,
+        TextStyle? floatingLabelStyle = null,
+        TextStyle? helperStyle = null,
         int? helperMaxLines = null,
-        WidgetStateTextStyle? hintStyle = null,
+        TextStyle? hintStyle = null,
         TimeSpan? hintFadeDuration = null,
         int? hintMaxLines = null,
-        WidgetStateTextStyle? errorStyle = null,
+        TextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior? floatingLabelBehavior = null,
         FloatingLabelAlignment? floatingLabelAlignment = null,
@@ -708,13 +706,13 @@ public sealed class InputDecorationTheme : InheritedTheme
         EdgeInsetsGeometry? contentPadding = null,
         bool? isCollapsed = null,
         Color? iconColor = null,
-        WidgetStateTextStyle? prefixStyle = null,
+        TextStyle? prefixStyle = null,
         Color? prefixIconColor = null,
         BoxConstraints? prefixIconConstraints = null,
-        WidgetStateTextStyle? suffixStyle = null,
+        TextStyle? suffixStyle = null,
         Color? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
-        WidgetStateTextStyle? counterStyle = null,
+        TextStyle? counterStyle = null,
         bool? filled = null,
         Color? fillColor = null,
         WidgetStateBorderSide? activeIndicatorBorder = null,

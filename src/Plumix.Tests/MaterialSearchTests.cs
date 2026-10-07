@@ -95,7 +95,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(EdgeInsetsGeometry.Zero, field.Decoration?.ContentPadding);
         Assert.True(field.Decoration?.IsDense);
         Assert.NotEqual(true, field.Decoration?.IsCollapsed);
-        Assert.Equal(theme.ColorScheme.OnSurfaceVariant, field.Decoration?.HintStyle?.DefaultValue.Color);
+        Assert.Equal(theme.ColorScheme.OnSurfaceVariant, field.Decoration?.HintStyle?.Color);
         Assert.Equal(theme.ColorScheme.OnSurface, field.Style?.Color);
         Assert.Contains(
             harness.FindWidgets<Semantics>(),
@@ -158,7 +158,7 @@ public sealed class MaterialSearchTests : IDisposable
                 textStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)))));
         fallback.Pump(new Size(900, 120));
         TextField fallbackField = Assert.Single(fallback.FindWidgets<TextField>());
-        Assert.Equal(Colors.Purple, fallbackField.Decoration?.HintStyle?.DefaultValue.Color);
+        Assert.Equal(Colors.Purple, fallbackField.Decoration?.HintStyle?.Color);
 
         using var overridden = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -168,7 +168,7 @@ public sealed class MaterialSearchTests : IDisposable
                 hintStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Green)))));
         overridden.Pump(new Size(900, 120));
         TextField overriddenField = Assert.Single(overridden.FindWidgets<TextField>());
-        Assert.Equal(Colors.Green, overriddenField.Decoration?.HintStyle?.DefaultValue.Color);
+        Assert.Equal(Colors.Green, overriddenField.Decoration?.HintStyle?.Color);
         Assert.Equal(Colors.Purple, overriddenField.Style?.Color);
     }
 
