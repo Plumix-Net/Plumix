@@ -1179,6 +1179,44 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
     }
 
+    /// <summary>Schedules the first paint for an attached repaint-boundary root.</summary>
+    /// <remarks>Flutter's <c>RenderObject.scheduleInitialPaint</c>; does not request a frame.</remarks>
+    public void ScheduleInitialPaint(ContainerLayer rootLayer)
+    {
+        EnsureNotDisposedMutation();
+        Debug.Assert(rootLayer.Attached);
+        Debug.Assert(Attached);
+        Debug.Assert(Parent is null);
+        Debug.Assert(!Owner!.DebugDoingPaint);
+        Debug.Assert(IsRepaintBoundary);
+        Debug.Assert(_layer is null);
+        Debug.Assert(_needsPaint);
+        _layer = rootLayer;
+        if (rootLayer is OffsetLayer offsetLayer)
+        {
+            Owner.RootLayer = offsetLayer;
+        }
+
+        Owner.RequestPaintFor(this);
+    }
+
+    /// <summary>Replaces the attached layer of a repaint-boundary root and marks it for paint.</summary>
+    /// <remarks>Flutter's <c>RenderObject.replaceRootLayer</c>.</remarks>
+    public void ReplaceRootLayer(OffsetLayer rootLayer)
+    {
+        EnsureNotDisposedMutation();
+        Debug.Assert(rootLayer.Attached);
+        Debug.Assert(Attached);
+        Debug.Assert(Parent is null);
+        Debug.Assert(!Owner!.DebugDoingPaint);
+        Debug.Assert(IsRepaintBoundary);
+        Debug.Assert(_layer is not null);
+        _layer!.Detach();
+        _layer = rootLayer;
+        Owner.RootLayer = rootLayer;
+        MarkNeedsPaint();
+    }
+
     public virtual void MarkNeedsPaint()
     {
         EnsureNotDisposedMutation();

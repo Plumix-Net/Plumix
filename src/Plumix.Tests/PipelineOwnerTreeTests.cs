@@ -59,16 +59,16 @@ public sealed class PipelineOwnerTreeTests
 
         rootRenderObject.MarkNeedsLayout();
         Assert.Equal(0, manifoldCount);
-        Assert.True(rootCount > 0);
+        Assert.Equal(1, rootCount);
         Assert.Equal(0, child1Count);
 
         child1RenderObject.MarkNeedsLayout();
         Assert.Equal(0, manifoldCount);
-        Assert.True(child1Count > 0);
+        Assert.Equal(1, child1Count);
 
         // child2 has no callback of its own, so it falls back to the manifold it shares with the tree.
         child2RenderObject.MarkNeedsLayout();
-        Assert.True(manifoldCount > 0);
+        Assert.Equal(1, manifoldCount);
     }
 
     [Fact]

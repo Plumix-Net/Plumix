@@ -155,8 +155,6 @@ public class PlumixHost : Control
         }
 
         _root.Child = child;
-        _pipeline.RequestLayout();
-        _pipeline.RequestPaint();
         ScheduleVisualUpdate();
     }
 
@@ -168,7 +166,6 @@ public class PlumixHost : Control
             OnMetricsChanged();
         }
 
-        _pipeline.RequestLayout();
         return base.ArrangeOverride(finalSize);
     }
 

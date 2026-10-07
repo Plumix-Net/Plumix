@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: PipelineOwner uses explicit dirty queues and single-pass paint; frame requests match Dart (object.dart).
+- RenderObject exposes initial paint and root-layer replacement for non-view roots (rendering/object.dart).
 - Breaking: WidgetStateTextStyle subclasses TextStyle with lazy resolvers and state maps (widgets/widget_state.dart).
 - Breaking: Input decoration uses plain TextStyle slots and TextField resolves state styles (input_decorator.dart).
 - TextField demo adds subclass input and mapped helper styles in both samples (widgets/widget_state.dart).

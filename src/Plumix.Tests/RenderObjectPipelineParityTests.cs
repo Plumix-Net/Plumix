@@ -15,6 +15,222 @@ namespace Plumix.Tests;
 public class RenderObjectPipelineParityTests
 {
     [Fact]
+    public void PrepareInitialFrame_QueuesLayoutAndPaintWithoutRequestingAFrame()
+    {
+        int requests = 0;
+        var view = new RenderView(new FlutterView(new Size(100, 100)))
+        {
+            Configuration = new ViewConfiguration(logicalConstraints: BoxConstraints.Tight(new Size(100, 100))),
+        };
+        var owner = new PipelineOwner(onNeedVisualUpdate: () => requests += 1) { RootNode = view };
+
+        view.PrepareInitialFrame();
+
+        Assert.Same(view, Assert.Single(owner.NodesNeedingLayoutForTest));
+        Assert.Same(view, Assert.Single(owner.NodesNeedingPaintForTest));
+        Assert.Equal(0, requests);
+        owner.FlushLayout();
+        owner.FlushCompositingBits();
+        owner.FlushPaint();
+        Assert.Empty(owner.NodesNeedingLayoutForTest);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public void MarkNeedsLayout_RequestsOneFrameAndCoalescesRepeatedRootRequests()
+    {
+        int requests = 0;
+        (PipelineOwner owner, RenderView view, _) = PumpView(() => requests += 1);
+        requests = 0;
+
+        view.MarkNeedsLayout();
+        owner.RequestLayout();
+        view.MarkNeedsLayout();
+
+        Assert.Equal(1, requests);
+        Assert.Same(view, Assert.Single(owner.NodesNeedingLayoutForTest));
+        owner.FlushLayout();
+        Assert.Empty(owner.NodesNeedingLayoutForTest);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void BoundaryPaintAndLayerUpdates_RequestOneFrame(bool layerUpdateOnly)
+    {
+        int requests = 0;
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView(() => requests += 1);
+        Layer? layer = view.DebugLayer;
+        int previousPaints = child.PaintCount;
+        requests = 0;
+
+        if (layerUpdateOnly)
+        {
+            view.MarkNeedsCompositedLayerUpdate();
+            view.MarkNeedsCompositedLayerUpdate();
+        }
+        else
+        {
+            view.MarkNeedsPaint();
+            owner.RequestPaint();
+        }
+
+        Assert.Equal(1, requests);
+        Assert.Same(view, Assert.Single(owner.NodesNeedingPaintForTest));
+        owner.FlushPaint();
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.False(view.NeedsPaint);
+        Assert.False(view.NeedsCompositedLayerUpdate);
+        Assert.Same(layer, view.DebugLayer);
+        Assert.Equal(previousPaints + (layerUpdateOnly ? 0 : 1), child.PaintCount);
+    }
+
+    [Fact]
+    public void MarkNeedsCompositingBitsUpdate_DoesNotRequestAFrame()
+    {
+        int requests = 0;
+        (PipelineOwner owner, RenderView view, _) = PumpView(() => requests += 1);
+        requests = 0;
+
+        view.MarkNeedsCompositingBitsUpdate();
+        owner.RequestCompositingBitsUpdate();
+        Assert.True(view.NeedsCompositingBitsUpdate);
+        Assert.Equal(0, requests);
+
+        owner.FlushCompositingBits();
+        Assert.False(view.NeedsCompositingBitsUpdate);
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public void FlushPaint_DoesNotDiscoverAnUnqueuedDirtyRoot()
+    {
+        var root = new SizeRenderBox(new Size(10, 10));
+        var owner = new PipelineOwner { RootNode = root };
+
+        owner.FlushPaint();
+
+        Assert.True(root.NeedsPaint);
+        Assert.Equal(0, root.PaintCount);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+    }
+
+    [Fact]
+    public void FlushPaint_DrainsADetachedRootLayerOnceAndLeavesItDirty()
+    {
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView();
+        Layer layer = Assert.IsType<TransformLayer>(view.DebugLayer);
+        int previousPaints = child.PaintCount;
+        layer.Detach();
+        view.MarkNeedsPaint();
+
+        owner.FlushPaint();
+        owner.FlushPaint();
+
+        Assert.True(view.NeedsPaint);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Equal(previousPaints, child.PaintCount);
+        Assert.False(owner.DebugDoingPaint);
+    }
+
+    [Fact]
+    public void FlushPaint_SkipsAQueuedRootThatNoLongerBelongsToTheOwner()
+    {
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView();
+        int previousPaints = child.PaintCount;
+        view.MarkNeedsPaint();
+        owner.RootNode = null;
+
+        owner.FlushPaint();
+
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Equal(previousPaints, child.PaintCount);
+        Assert.True(view.NeedsPaint);
+    }
+
+    [Fact]
+    public void FlushPaint_SkipsAFormerRootDisposedBeforeTheFlush()
+    {
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView();
+        int previousPaints = child.PaintCount;
+        view.MarkNeedsPaint();
+        owner.RootNode = null;
+        view.Dispose();
+
+        owner.FlushPaint();
+
+        Assert.Null(view.DebugLayer);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Equal(previousPaints, child.PaintCount);
+    }
+
+    [Fact]
+    public void ScheduleInitialPaint_IsAvailableOnANonViewRootAndDoesNotRequestAFrame()
+    {
+        int requests = 0;
+        var child = new SizeRenderBox(new Size(10, 10));
+        var root = new CountingRepaintBoundary(child);
+        var owner = new PipelineOwner(onNeedVisualUpdate: () => requests += 1) { RootNode = root };
+        root.Layout(BoxConstraints.Tight(new Size(10, 10)));
+        var layer = new OffsetLayer();
+        layer.Attach(owner);
+        requests = 0;
+
+        root.ScheduleInitialPaint(layer);
+
+        Assert.Equal(0, requests);
+        Assert.Same(root, Assert.Single(owner.NodesNeedingPaintForTest));
+        owner.FlushCompositingBits();
+        owner.FlushPaint();
+        Assert.Equal(1, root.PaintCount);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Same(layer, root.DebugLayer);
+    }
+
+    [Fact]
+    public void ReplaceRootLayer_OnANonViewRootDetachesOldLayerAndRequestsOneFrame()
+    {
+        int requests = 0;
+        var root = new CountingRepaintBoundary(new SizeRenderBox(new Size(10, 10)));
+        var owner = new PipelineOwner(onNeedVisualUpdate: () => requests += 1) { RootNode = root };
+        root.Layout(BoxConstraints.Tight(new Size(10, 10)));
+        var oldLayer = new OffsetLayer();
+        oldLayer.Attach(owner);
+        root.ScheduleInitialPaint(oldLayer);
+        owner.FlushCompositingBits();
+        owner.FlushPaint();
+        var replacement = new OffsetLayer();
+        replacement.Attach(owner);
+        requests = 0;
+
+        root.ReplaceRootLayer(replacement);
+
+        Assert.False(oldLayer.Attached);
+        Assert.Same(replacement, root.DebugLayer);
+        Assert.Equal(1, requests);
+        Assert.Same(root, Assert.Single(owner.NodesNeedingPaintForTest));
+        owner.FlushPaint();
+        Assert.Equal(2, root.PaintCount);
+    }
+
+    private static (PipelineOwner Owner, RenderView View, SizeRenderBox Child) PumpView(Action? onUpdate = null)
+    {
+        var child = new SizeRenderBox(new Size(10, 10));
+        var view = new RenderView(new FlutterView(new Size(100, 100)))
+        {
+            Child = child,
+            Configuration = new ViewConfiguration(logicalConstraints: BoxConstraints.Tight(new Size(100, 100))),
+        };
+        var owner = new PipelineOwner(onNeedVisualUpdate: onUpdate) { RootNode = view };
+        view.PrepareInitialFrame();
+        owner.FlushLayout();
+        owner.FlushCompositingBits();
+        owner.FlushPaint();
+        return (owner, view, child);
+    }
+
+    [Fact]
     public void RedepthChildren_GivesEveryDescendantADepthGreaterThanItsParent()
     {
         var leaf = new SizeRenderBox(new Size(10, 10));
@@ -270,10 +486,13 @@ public class RenderObjectPipelineParityTests
 
         public bool HasRelayoutBoundaryStateForTest => HasRelayoutBoundaryState;
 
+        public int PaintCount { get; private set; }
+
         protected override void PerformLayout() => Size = Constraints.Constrain(_size);
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
+            PaintCount += 1;
         }
     }
 

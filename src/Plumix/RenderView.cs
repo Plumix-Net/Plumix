@@ -298,47 +298,6 @@ public class RenderView : RenderObject, IRenderObjectSingleChildContainer
         return rootLayer;
     }
 
-    /// <summary>Flutter's <c>RenderObject.scheduleInitialPaint</c>, which only the root of a tree calls.</summary>
-    internal void ScheduleInitialPaint(OffsetLayer rootLayer)
-    {
-        Debug.Assert(rootLayer.Attached);
-        Debug.Assert(Attached);
-        Debug.Assert(Parent is null);
-        Debug.Assert(Owner?.DebugDoingPaint != true);
-        Debug.Assert(IsRepaintBoundary);
-        Debug.Assert(_layer is null);
-        _layer = rootLayer;
-        Owner!.RootLayer = rootLayer;
-        Owner.RequestPaintFor(this);
-    }
-
-    /// <summary>Flutter's <c>RenderObject.replaceRootLayer</c>, which only the root of a tree calls.</summary>
-    internal void ReplaceRootLayer(OffsetLayer rootLayer)
-    {
-        if (ReferenceEquals(_layer, rootLayer))
-        {
-            return;
-        }
-
-        if (_layer is Layer oldRootLayer && oldRootLayer.Attached)
-        {
-            oldRootLayer.Detach();
-        }
-
-        if (!rootLayer.Attached)
-        {
-            rootLayer.Attach(this);
-        }
-
-        _layer = rootLayer;
-        if (Owner is not null)
-        {
-            Owner.RootLayer = rootLayer;
-        }
-
-        MarkNeedsPaint();
-    }
-
     public override void VisitChildren(Action<RenderObject> visitor)
     {
         if (_child != null)

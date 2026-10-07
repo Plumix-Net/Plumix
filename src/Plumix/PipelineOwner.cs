@@ -148,9 +148,6 @@ public class PipelineOwner : DiagnosticableTree
         set => _rootLayer = value;
     }
 
-    private bool _needsLayout;
-    private bool _needsCompositingBitsUpdate;
-    private bool _needsPaint;
     private bool _needsSemantics;
     private readonly HashSet<RenderObject> _nodesNeedingLayout = [];
     private bool _shouldMergeDirtyNodes;
@@ -168,12 +165,12 @@ public class PipelineOwner : DiagnosticableTree
     private PipelineOwner? _parent;
     private bool _debugDoingChildLayout;
 
-    internal bool NeedsPaint => _needsPaint;
+    internal bool NeedsPaint => _nodesNeedingPaint.Count > 0;
 
     /// <summary>The render objects queued for the next layout pass.</summary>
     /// <remarks>
     /// Flutter's <c>PipelineOwner.nodesNeedingLayout</c>, a <c>@protected</c> getter subclasses use to
-    /// inspect the dirty list. <see cref="PipelineOwner"/> is sealed here, so it is internal instead.
+    /// inspect the dirty list. This accessor exposes it internally to the parity tests.
     /// </remarks>
     internal IReadOnlyCollection<RenderObject> NodesNeedingLayoutForTest => _nodesNeedingLayout;
 
@@ -252,72 +249,23 @@ public class PipelineOwner : DiagnosticableTree
         }
     }
 
-    /// <summary>Marks the whole render tree as needing layout.</summary>
-    /// <remarks>
-    /// Dart has no equivalent: its root enters the dirty list through <c>scheduleInitialLayout</c> and
-    /// stays there via <c>markNeedsLayout</c>. Hosts and tests use this to force a full pass, so it
-    /// dirties the root itself rather than only enqueueing it — enqueueing alone would be undone by
-    /// the unchanged-constraints early-out in <see cref="RenderObject.Layout"/>.
-    /// </remarks>
-    public void RequestLayout()
-    {
-        if (_rootNode is not { } root)
-        {
-            return;
-        }
+    /// <summary>Marks the root as needing layout through its normal relayout-boundary contract.</summary>
+    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsLayout()</c>.</remarks>
+    public void RequestLayout() => _rootNode?.MarkNeedsLayout();
 
-        root.MarkNeedsLayout();
-        RequestLayoutFor(root);
-    }
+    internal void RequestLayoutFor(RenderObject node) => _nodesNeedingLayout.Add(node);
 
-    internal void RequestLayoutFor(RenderObject node)
-    {
-        if (!_nodesNeedingLayout.Add(node))
-        {
-            return;
-        }
+    /// <summary>Marks the root's compositing bits as needing an update.</summary>
+    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsCompositingBitsUpdate()</c>.</remarks>
+    public void RequestCompositingBitsUpdate() => _rootNode?.MarkNeedsCompositingBitsUpdate();
 
-        _needsLayout = true;
-        RequestVisualUpdate();
-    }
+    internal void RequestCompositingBitsUpdateFor(RenderObject node) => _nodesNeedingCompositingBitsUpdate.Add(node);
 
-    public void RequestCompositingBitsUpdate()
-    {
-        if (_rootNode is { } root)
-        {
-            RequestCompositingBitsUpdateFor(root);
-        }
-    }
+    /// <summary>Marks the root as needing paint through its normal repaint-boundary contract.</summary>
+    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsPaint()</c>.</remarks>
+    public void RequestPaint() => _rootNode?.MarkNeedsPaint();
 
-    internal void RequestCompositingBitsUpdateFor(RenderObject node)
-    {
-        if (!_nodesNeedingCompositingBitsUpdate.Add(node))
-        {
-            return;
-        }
-
-        _needsCompositingBitsUpdate = true;
-        RequestVisualUpdate();
-    }
-
-    public void RequestPaint()
-    {
-        if (_rootNode is { } root)
-        {
-            RequestPaintFor(root);
-        }
-    }
-
-    internal void RequestPaintFor(RenderObject node)
-    {
-        if (!_nodesNeedingPaint.Add(node))
-        {
-            return;
-        }
-
-        _needsPaint = true;
-        RequestVisualUpdate();
-    }
+    internal void RequestPaintFor(RenderObject node) => _nodesNeedingPaint.Add(node);
 
     public void RequestSemanticsUpdate()
     {
@@ -501,7 +449,7 @@ public class PipelineOwner : DiagnosticableTree
         DebugDoingLayout = true;
         try
         {
-            if (_needsLayout)
+            if (_nodesNeedingLayout.Count > 0)
             {
                 FlushLayoutNodes();
             }
@@ -545,7 +493,6 @@ public class PipelineOwner : DiagnosticableTree
         {
             List<RenderObject> dirtyNodes = [.. _nodesNeedingLayout.OrderBy(static node => node.Depth)];
             _nodesNeedingLayout.Clear();
-            _needsLayout = false;
 
             for (int index = 0; index < dirtyNodes.Count; index += 1)
             {
@@ -576,25 +523,13 @@ public class PipelineOwner : DiagnosticableTree
                     continue;
                 }
 
-                if (node.IsRelayoutBoundary || node is IRenderObjectWithLayoutCallback)
-                {
-                    node.LayoutWithoutResize();
-                }
-                else if (node.HasConstraints)
-                {
-                    node.Layout(node.CurrentConstraints);
-                }
-                else
-                {
-                    RequestLayout();
-                }
+                node.LayoutWithoutResize();
             }
 
             _shouldMergeDirtyNodes = false;
         }
 
         _shouldMergeDirtyNodes = false;
-        _needsLayout = false;
     }
 
     /// <summary>Updates the <see cref="RenderObject.NeedsCompositing"/> bits.</summary>
@@ -607,7 +542,7 @@ public class PipelineOwner : DiagnosticableTree
             FlutterTimeline.StartSync("UPDATING COMPOSITING BITS" + DebugRootSuffixForTimelineEventNames);
         }
 
-        if (_needsCompositingBitsUpdate)
+        if (_nodesNeedingCompositingBitsUpdate.Count > 0)
         {
             FlushCompositingBitsNodes();
         }
@@ -628,32 +563,19 @@ public class PipelineOwner : DiagnosticableTree
 
     private void FlushCompositingBitsNodes()
     {
-        while (_nodesNeedingCompositingBitsUpdate.Count > 0)
+        var dirtyNodes = _nodesNeedingCompositingBitsUpdate
+            .OrderBy(static node => node.Depth)
+            .ToArray();
+
+        foreach (RenderObject node in dirtyNodes)
         {
-            var dirtyNodes = _nodesNeedingCompositingBitsUpdate
-                .OrderBy(static node => node.Depth)
-                .ToArray();
-
-            _nodesNeedingCompositingBitsUpdate.Clear();
-            _needsCompositingBitsUpdate = false;
-
-            foreach (var node in dirtyNodes)
+            if (node.NeedsCompositingBitsUpdate && ReferenceEquals(node.Owner, this))
             {
-                if (!node.Attached || !ReferenceEquals(node.Owner, this))
-                {
-                    continue;
-                }
-
-                if (!node.NeedsCompositingBitsUpdate)
-                {
-                    continue;
-                }
-
                 node.UpdateCompositingBits();
             }
         }
 
-        _needsCompositingBitsUpdate = false;
+        _nodesNeedingCompositingBitsUpdate.Clear();
     }
 
     /// <summary>
@@ -692,7 +614,7 @@ public class PipelineOwner : DiagnosticableTree
         DebugDoingPaint = true;
         try
         {
-            if (_needsPaint || _rootNode is { NeedsPaint: true })
+            if (_nodesNeedingPaint.Count > 0)
             {
                 FlushPaintNodes();
             }
@@ -714,61 +636,39 @@ public class PipelineOwner : DiagnosticableTree
                 FlutterTimeline.FinishSync();
             }
         }
-
-        _needsPaint = false;
     }
 
     private void FlushPaintNodes()
     {
-        while (_nodesNeedingPaint.Count > 0 || _rootNode is { NeedsPaint: true })
-        {
-            List<RenderObject> dirtyNodes =
-                [.. _nodesNeedingPaint.OrderByDescending(static node => node.Depth)];
+        List<RenderObject> dirtyNodes = [.. _nodesNeedingPaint.OrderByDescending(static node => node.Depth)];
+        _nodesNeedingPaint.Clear();
 
-            // Flutter's `markNeedsPaint` never enqueues the root — "the root is always told to paint
-            // regardless" — so the root is appended here (last, because the list is deepest-first)
-            // instead of relying on it having registered itself.
-            if (_rootNode is { NeedsPaint: true } root && !dirtyNodes.Contains(root))
+        foreach (RenderObject node in dirtyNodes)
+        {
+            if ((!node.NeedsPaint && !node.NeedsCompositedLayerUpdate) || !ReferenceEquals(node.Owner, this))
             {
-                dirtyNodes.Add(root);
+                continue;
             }
 
-            _nodesNeedingPaint.Clear();
-            _needsPaint = false;
-
-            foreach (var node in dirtyNodes)
+            // A disposed former entry can have released its layer before this snapshot is flushed.
+            Debug.Assert(node._layer is not null);
+            if (node._layer is { Attached: true })
             {
-                if (!node.Attached || !ReferenceEquals(node.Owner, this))
+                Debug.Assert(node.IsRepaintBoundary);
+                if (node.NeedsPaint)
                 {
-                    continue;
-                }
-
-                if (!node.NeedsPaint && !node.NeedsCompositedLayerUpdate)
-                {
-                    continue;
-                }
-
-                Debug.Assert(node._layer is not null);
-                if (node._layer is { Attached: true })
-                {
-                    Debug.Assert(node.IsRepaintBoundary);
-                    if (node.NeedsPaint)
-                    {
-                        PaintingContext.RepaintCompositedChild(node);
-                    }
-                    else
-                    {
-                        PaintingContext.UpdateLayerProperties(node);
-                    }
+                    PaintingContext.RepaintCompositedChild(node);
                 }
                 else
                 {
-                    node.HandleSkippedPaintingOnDetachedLayer();
+                    PaintingContext.UpdateLayerProperties(node);
                 }
             }
+            else
+            {
+                node.HandleSkippedPaintingOnDetachedLayer();
+            }
         }
-
-        _needsPaint = false;
     }
 
     /// <summary>
@@ -1039,6 +939,11 @@ public class PipelineOwner : DiagnosticableTree
 
     internal void ReplaceRootLayer(OffsetLayer rootLayer)
     {
+        if (!rootLayer.Attached)
+        {
+            rootLayer.Attach(Root);
+        }
+
         Root.ReplaceRootLayer(rootLayer);
         _rootLayer = rootLayer;
     }
