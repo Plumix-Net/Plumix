@@ -153,6 +153,7 @@ public class PipelineOwner : DiagnosticableTree
     private bool _shouldMergeDirtyNodes;
     private readonly HashSet<RenderObject> _nodesNeedingCompositingBitsUpdate = [];
     private readonly HashSet<RenderObject> _nodesNeedingPaint = [];
+    private LinkedList<RenderObject>? _paintNodesInProgress;
     private readonly HashSet<RenderObject> _nodesNeedingSemantics = [];
     private readonly HashSet<RenderObject> _nodesNeedingSemanticsGeometryUpdate = [];
     private SemanticsOwner? _semanticsOwner;
@@ -640,34 +641,43 @@ public class PipelineOwner : DiagnosticableTree
 
     private void FlushPaintNodes()
     {
-        List<RenderObject> dirtyNodes = [.. _nodesNeedingPaint.OrderByDescending(static node => node.Depth)];
+        var dirtyNodes = new LinkedList<RenderObject>(
+            _nodesNeedingPaint.OrderByDescending(static node => node.Depth));
         _nodesNeedingPaint.Clear();
-
-        foreach (RenderObject node in dirtyNodes)
+        _paintNodesInProgress = dirtyNodes;
+        try
         {
-            if ((!node.NeedsPaint && !node.NeedsCompositedLayerUpdate) || !ReferenceEquals(node.Owner, this))
+            while (dirtyNodes.First is { } entry)
             {
-                continue;
-            }
-
-            // A disposed former entry can have released its layer before this snapshot is flushed.
-            Debug.Assert(node._layer is not null);
-            if (node._layer is { Attached: true })
-            {
-                Debug.Assert(node.IsRepaintBoundary);
-                if (node.NeedsPaint)
+                RenderObject node = entry.Value;
+                dirtyNodes.RemoveFirst();
+                Debug.Assert(node._layer is not null);
+                if ((!node.NeedsPaint && !node.NeedsCompositedLayerUpdate) || !ReferenceEquals(node.Owner, this))
                 {
-                    PaintingContext.RepaintCompositedChild(node);
+                    continue;
+                }
+
+                if (node._layer is { Attached: true })
+                {
+                    Debug.Assert(node.IsRepaintBoundary);
+                    if (node.NeedsPaint)
+                    {
+                        PaintingContext.RepaintCompositedChild(node);
+                    }
+                    else
+                    {
+                        PaintingContext.UpdateLayerProperties(node);
+                    }
                 }
                 else
                 {
-                    PaintingContext.UpdateLayerProperties(node);
+                    node.HandleSkippedPaintingOnDetachedLayer();
                 }
             }
-            else
-            {
-                node.HandleSkippedPaintingOnDetachedLayer();
-            }
+        }
+        finally
+        {
+            _paintNodesInProgress = null;
         }
     }
 
@@ -935,6 +945,9 @@ public class PipelineOwner : DiagnosticableTree
     internal void ForgetPaintFor(RenderObject node)
     {
         _nodesNeedingPaint.Remove(node);
+        // Plumix tears isolated trees down before paint. Cancel entries already in the snapshot
+        // as well, before their render objects release the layer that FlushPaint must assert on.
+        _paintNodesInProgress?.Remove(node);
     }
 
     internal void ReplaceRootLayer(OffsetLayer rootLayer)

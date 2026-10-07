@@ -142,6 +142,8 @@ public class RenderObjectPipelineParityTests
         view.MarkNeedsPaint();
         owner.RootNode = null;
 
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+
         owner.FlushPaint();
 
         Assert.Empty(owner.NodesNeedingPaintForTest);
@@ -163,6 +165,123 @@ public class RenderObjectPipelineParityTests
         Assert.Null(view.DebugLayer);
         Assert.Empty(owner.NodesNeedingPaintForTest);
         Assert.Equal(previousPaints, child.PaintCount);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Dispose_CancelsQueuedPaintBeforeReleasingTheLayer(bool detachFirst, bool layerUpdateOnly)
+    {
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView();
+        int previousPaints = child.PaintCount;
+        if (layerUpdateOnly)
+        {
+            view.MarkNeedsCompositedLayerUpdate();
+        }
+        else
+        {
+            view.MarkNeedsPaint();
+        }
+
+        Assert.Same(view, Assert.Single(owner.NodesNeedingPaintForTest));
+        if (detachFirst)
+        {
+            owner.RootNode = null;
+        }
+
+        view.Dispose();
+
+        Assert.Null(view.DebugLayer);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        owner.FlushPaint();
+        Assert.Equal(previousPaints, child.PaintCount);
+        Assert.False(owner.DebugDoingPaint);
+        if (!detachFirst)
+        {
+            owner.RootNode = null;
+        }
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(false, true)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void DetachAndReattach_RequeuesDirtyPaintAndRetainsTheLayer(bool changeOwner, bool layerUpdateOnly)
+    {
+        // Flutter's reattach_test.dart: "objects can be detached and re-attached: paint".
+        (PipelineOwner owner, RenderView view, SizeRenderBox child) = PumpView();
+        Layer? layer = view.DebugLayer;
+        int previousPaints = child.PaintCount;
+        if (layerUpdateOnly)
+        {
+            view.MarkNeedsCompositedLayerUpdate();
+        }
+        else
+        {
+            view.MarkNeedsPaint();
+        }
+        owner.RootNode = null;
+
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.Equal(!layerUpdateOnly, view.NeedsPaint);
+        Assert.Equal(layerUpdateOnly, view.NeedsCompositedLayerUpdate);
+        Assert.Same(layer, view.DebugLayer);
+
+        PipelineOwner nextOwner = changeOwner ? new PipelineOwner() : owner;
+        nextOwner.RootNode = view;
+
+        Assert.Same(view, Assert.Single(nextOwner.NodesNeedingPaintForTest));
+        if (changeOwner)
+        {
+            owner.FlushPaint();
+            Assert.Equal(previousPaints, child.PaintCount);
+        }
+
+        nextOwner.FlushPaint();
+
+        Assert.Equal(previousPaints + (layerUpdateOnly ? 0 : 1), child.PaintCount);
+        Assert.Same(layer, view.DebugLayer);
+        Assert.False(view.NeedsPaint);
+        Assert.False(view.NeedsCompositedLayerUpdate);
+        Assert.Empty(nextOwner.NodesNeedingPaintForTest);
+    }
+
+    [Fact]
+    public void FlushPaint_TeardownCancelsAFormerRootAlreadyInTheSnapshot()
+    {
+        var boundary = new CountingRepaintBoundary(new SizeRenderBox(new Size(10, 10)));
+        var view = new RenderView(new FlutterView(new Size(100, 100)))
+        {
+            Child = boundary,
+            Configuration = new ViewConfiguration(logicalConstraints: BoxConstraints.Tight(new Size(100, 100))),
+        };
+        var owner = new PipelineOwner { RootNode = view };
+        view.PrepareInitialFrame();
+        owner.FlushLayout();
+        owner.FlushCompositingBits();
+        owner.FlushPaint();
+        boundary.OnPaint = () =>
+        {
+            owner.RootNode = null;
+            view.Dispose();
+        };
+        boundary.MarkNeedsPaint();
+        view.MarkNeedsPaint();
+        Assert.Equal(2, owner.NodesNeedingPaintForTest.Count);
+
+        owner.FlushPaint();
+
+        Assert.Equal(2, boundary.PaintCount);
+        Assert.True(view.DebugDisposed);
+        Assert.Null(view.DebugLayer);
+        Assert.Empty(owner.NodesNeedingPaintForTest);
+        Assert.False(owner.DebugDoingPaint);
+        boundary.OnPaint = null;
+        owner.FlushPaint();
+        Assert.Equal(2, boundary.PaintCount);
     }
 
     [Fact]
@@ -533,12 +652,15 @@ public class RenderObjectPipelineParityTests
 
         public int PaintCount { get; private set; }
 
+        public Action? OnPaint { get; set; }
+
         public override bool IsRepaintBoundary => true;
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
             PaintCount += 1;
             base.Paint(ctx, offset);
+            OnPaint?.Invoke();
         }
     }
 

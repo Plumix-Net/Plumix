@@ -208,6 +208,34 @@ public sealed class RenderObjectLifecycleTests
     }
 
     [Fact]
+    public void RenderObjectElement_Unmount_CancelsDirtyBoundaryPaintBeforeDisposal()
+    {
+        var widget = new RepaintBoundary(child: new SizedBox(width: 10, height: 10));
+        var buildOwner = TestBuildOwner.Create();
+        var root = new TestRootElement(widget);
+        root.Attach(buildOwner);
+        buildOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
+        buildOwner.FlushBuild();
+        PipelineOwner pipeline = root.Pipeline;
+        pipeline.FlushLayout(new Size(100, 100));
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+        var boundary = Assert.IsType<RenderRepaintBoundary>(root.RenderObject);
+        boundary.MarkNeedsPaint();
+        Assert.Contains<RenderObject>(boundary, pipeline.NodesNeedingPaintForTest);
+
+        root.UnmountRoot();
+
+        Assert.True(boundary.DebugDisposed);
+        Assert.Null(boundary.DebugLayer);
+        Assert.DoesNotContain<RenderObject>(boundary, pipeline.NodesNeedingPaintForTest);
+        pipeline.FlushLayout();
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+        Assert.Empty(pipeline.NodesNeedingPaintForTest);
+    }
+
+    [Fact]
     public void RenderObjectElement_Deactivation_KeepsTheDetachedRenderTreeIntact()
     {
         var innerWidget = new TrackingProxyRenderObjectWidget();
@@ -324,6 +352,8 @@ public sealed class RenderObjectLifecycleTests
             var pipelineOwner = new PipelineOwner(_renderView);
             pipelineOwner.Attach(_renderView);
         }
+
+        public PipelineOwner Pipeline => _renderView.Owner!;
 
         protected override void OnMount()
         {

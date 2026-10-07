@@ -399,6 +399,12 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             _needsPaint = false;
             MarkNeedsPaint();
         }
+        else if (_needsCompositedLayerUpdate && _layerHandle.Layer is not null)
+        {
+            // Detach canceled the old paint entry, so restore layer-only work as well as repaint.
+            _needsCompositedLayerUpdate = false;
+            MarkNeedsCompositedLayerUpdate();
+        }
 
         if (_semantics.ConfigProvider.Effective.IsSemanticBoundary
             && (_semantics.ParentDataDirty || !_semantics.Built))
@@ -426,6 +432,9 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
 
         OnDetach();
+        // Cancel the former owner's work before clearing Owner; keep the dirty flags and layer
+        // so Attach can register the repaint again if this object is reparented.
+        Owner.ForgetPaintFor(this);
         // Dart's `detach` keeps the semantics cache: a render object reparented by a GlobalKey (or
         // re-attached in the same frame) keeps its SemanticsNode and id. `ClearSemantics` is only for
         // the semantics owner going away.
@@ -445,6 +454,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             throw new AssertionError("RenderObject.Dispose() called more than once.");
         }
 
+        Owner?.ForgetPaintFor(this);
         _layerHandle.Layer = null;
         _debugDisposed = true;
         _debugCanParentUseSize = null;
