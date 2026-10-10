@@ -27,6 +27,8 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
     private readonly ScrollController _verticalController = new();
     private readonly ScrollController _horizontalController = new();
     private DiagonalDragBehavior _behavior = DiagonalDragBehavior.None;
+    private readonly GlobalKey _counterKey = new LabeledGlobalKey<State>("moving counter");
+    private bool _counterOutside;
 
     public override void Dispose()
     {
@@ -57,9 +59,20 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
                         BehaviorButton("Continuous", DiagonalDragBehavior.WeightedContinuous),
                         BehaviorButton("Free", DiagonalDragBehavior.Free),
                     ]),
+                new CounterTapButton(
+                    label: _counterOutside ? "Return counter to grid" : "Move counter above grid",
+                    onTap: () => SetState(() => _counterOutside = !_counterOutside),
+                    background: new Color(0xFF607D8B),
+                    foreground: Colors.White,
+                    fontSize: 13),
+                new SizedBox(
+                    height: 44,
+                    child: _counterOutside
+                        ? new MovingGridCounter(_counterKey)
+                        : new Text("Tap the grid counter, then move it: its count stays with it.")),
                 new Expanded(
                     child: new SampleTableView(
-                        @delegate: new TwoDimensionalChildBuilderDelegate(
+                        @delegate: new SampleCellDelegate(
                             BuildCell,
                             maxXIndex: ColumnCount - 1,
                             maxYIndex: RowCount - 1),
@@ -80,8 +93,13 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
                 fontSize: 13));
     }
 
-    private static Widget BuildCell(BuildContext context, ChildVicinity vicinity)
+    private Widget BuildCell(BuildContext context, ChildVicinity vicinity)
     {
+        if (!_counterOutside && vicinity == new ChildVicinity(0, 0))
+        {
+            return new MovingGridCounter(_counterKey);
+        }
+
         bool shaded = (vicinity.XIndex + vicinity.YIndex) % 2 == 0;
         return new Container(
             color: shaded ? new Color(0xFFE1F5FE) : new Color(0xFFFFF8E1),
@@ -91,6 +109,36 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
                 fontSize: 13,
                 color: Colors.Black));
     }
+}
+
+// Keep cell keys directly on the viewport's children to exercise cross-parent reparenting.
+internal sealed class SampleCellDelegate(
+    TwoDimensionalIndexedWidgetBuilder builder,
+    int maxXIndex,
+    int maxYIndex) : TwoDimensionalChildBuilderDelegate(builder, maxXIndex, maxYIndex)
+{
+    public override Widget? Build(BuildContext context, ChildVicinity vicinity) =>
+        vicinity.XIndex < 0 || vicinity.YIndex < 0
+        || vicinity.XIndex > MaxXIndex || vicinity.YIndex > MaxYIndex
+            ? null
+            : Builder(context, vicinity);
+}
+
+internal sealed class MovingGridCounter(Key key) : StatefulWidget(key)
+{
+    public override State CreateState() => new MovingGridCounterState();
+}
+
+internal sealed class MovingGridCounterState : State<MovingGridCounter>
+{
+    private int _count;
+
+    public override Widget Build(BuildContext context) => new CounterTapButton(
+        label: $"Count: {_count}",
+        onTap: () => SetState(() => _count++),
+        background: new Color(0xFF607D8B),
+        foreground: Colors.White,
+        fontSize: 13);
 }
 
 /// <summary>A minimal grid built on <see cref="TwoDimensionalScrollView"/>.</summary>
@@ -227,7 +275,7 @@ internal sealed class RenderSampleTableViewport : RenderTwoDimensionalViewport
                 if (child != null)
                 {
                     child.Layout(
-                        Constraints.Tighten(width: CellWidth, height: CellHeight),
+                        BoxConstraints.TightFor(width: CellWidth, height: CellHeight),
                         parentUsesSize: true);
                     ParentDataOf(child).LayoutOffset = new Point(xLayoutOffset, yLayoutOffset);
                 }

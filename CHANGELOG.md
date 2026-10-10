@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Viewport child extraction restores Dart slot/layout asserts (sliver.dart, two_dimensional_viewport.dart).
+- Two-dimensional element diagnostics and mirrored state-preserving grid counter demo (two_dimensional_viewport.dart).
+- Grid demo uses fixed cell constraints so adjacent cells do not cover the counter in either sample.
 - PlatformMenuBar, menu items/groups/system items and binding delegate (widgets/platform_menu_bar.dart).
 - Breaking: ShortcutSerialization validates arguments with debug-only Dart asserts (platform_menu_bar.dart).
 - Breaking: Shortcut activators expose Dart diagnostics and suppress release key descriptions (shortcuts.dart).

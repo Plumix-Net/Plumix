@@ -1420,17 +1420,12 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         }
     }
 
-    /// <remarks>
-    /// Flutter's <c>SliverMultiBoxAdaptorElement.forgetChild</c> asserts the slot is still
-    /// registered, because Dart only reaches it through the global-key retake path. Plumix's
-    /// <c>Element.DeactivateChild</c> used to call it too, so the entry is dropped only when it still
-    /// points at this child; restoring the assert is tracked in <c>docs/ai/BACKLOG.md</c>.
-    /// </remarks>
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.forgetChild</c>.</remarks>
     public override void ForgetChild(Element child)
     {
-        if (child.Slot is int slot
-            && _childElements.TryGetValue(slot, out Element? registered)
-            && ReferenceEquals(registered, child))
+        DebugAssertions.Assert(child.Slot is not null);
+        DebugAssertions.Assert(child.Slot is int index && _childElements.ContainsKey(index));
+        if (child.Slot is int slot)
         {
             _childElements.Remove(slot);
         }

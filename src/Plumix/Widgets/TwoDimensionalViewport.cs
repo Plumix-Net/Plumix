@@ -128,13 +128,10 @@ internal sealed class TwoDimensionalViewportElement
         TypedRenderObject.MarkNeedsLayout(withDelegateRebuild: true);
     }
 
-    /// <remarks>
-    /// Flutter asserts <c>!_debugIsDoingLayout</c> here, because its <c>deactivateChild</c> never
-    /// calls <c>forgetChild</c>. Plumix's <c>Element.DeactivateChild</c> used to, so the assert was
-    /// dropped; restoring it is tracked in <c>docs/ai/BACKLOG.md</c>.
-    /// </remarks>
+    /// <remarks>Flutter's <c>_TwoDimensionalViewportElement.forgetChild</c>.</remarks>
     public override void ForgetChild(Element child)
     {
+        DebugAssertions.Assert(!DebugIsDoingLayout);
         base.ForgetChild(child);
         if (child.Slot is ChildVicinity vicinity)
         {
@@ -170,9 +167,13 @@ internal sealed class TwoDimensionalViewportElement
         }
     }
 
-    // Flutter also overrides `debugDescribeChildren` here, naming each node by its slot. Plumix's
-    // `Element` is not `Diagnosticable`, so there is nothing to hook that onto; the equivalent dump
-    // lives on `RenderTwoDimensionalViewport.DebugDescribeChildren`.
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        return _vicinityToChild.Values
+            .OrderBy(child => (ChildVicinity)child.Slot!)
+            .Select(child => child.ToDiagnosticsNode(name: child.Slot!.ToString()))
+            .ToList();
+    }
 
     /// <inheritdoc />
     public void StartLayout()

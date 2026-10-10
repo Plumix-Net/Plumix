@@ -21,6 +21,8 @@ class _TwoDimensionalScrollViewDemoPageState
   final ScrollController _verticalController = ScrollController();
   final ScrollController _horizontalController = ScrollController();
   DiagonalDragBehavior _behavior = DiagonalDragBehavior.none;
+  final GlobalKey _counterKey = GlobalKey(debugLabel: 'moving counter');
+  bool _counterOutside = false;
 
   @override
   void dispose() {
@@ -49,22 +51,44 @@ class _TwoDimensionalScrollViewDemoPageState
           children: <Widget>[
             _behaviorButton('Locked', DiagonalDragBehavior.none),
             _behaviorButton('Weighted', DiagonalDragBehavior.weightedEvent),
-            _behaviorButton('Continuous', DiagonalDragBehavior.weightedContinuous),
+            _behaviorButton(
+              'Continuous',
+              DiagonalDragBehavior.weightedContinuous,
+            ),
             _behaviorButton('Free', DiagonalDragBehavior.free),
           ],
         ),
+        CounterTapButton(
+          label: _counterOutside
+              ? 'Return counter to grid'
+              : 'Move counter above grid',
+          onTap: () => setState(() => _counterOutside = !_counterOutside),
+          background: Colors.blueGrey,
+          foreground: Colors.white,
+          fontSize: 13,
+        ),
+        SizedBox(
+          height: 44,
+          child: _counterOutside
+              ? MovingGridCounter(key: _counterKey)
+              : const Text(
+                  'Tap the grid counter, then move it: its count stays with it.',
+                ),
+        ),
         Expanded(
           child: SampleTableView(
-            delegate: TwoDimensionalChildBuilderDelegate(
+            delegate: SampleCellDelegate(
               builder: _buildCell,
               maxXIndex: columnCount - 1,
               maxYIndex: rowCount - 1,
             ),
             diagonalDragBehavior: _behavior,
-            verticalDetails:
-                ScrollableDetails.vertical(controller: _verticalController),
-            horizontalDetails:
-                ScrollableDetails.horizontal(controller: _horizontalController),
+            verticalDetails: ScrollableDetails.vertical(
+              controller: _verticalController,
+            ),
+            horizontalDetails: ScrollableDetails.horizontal(
+              controller: _horizontalController,
+            ),
           ),
         ),
       ],
@@ -84,7 +108,11 @@ class _TwoDimensionalScrollViewDemoPageState
     );
   }
 
-  static Widget _buildCell(BuildContext context, ChildVicinity vicinity) {
+  Widget _buildCell(BuildContext context, ChildVicinity vicinity) {
+    if (!_counterOutside &&
+        vicinity == const ChildVicinity(xIndex: 0, yIndex: 0)) {
+      return MovingGridCounter(key: _counterKey);
+    }
     final bool shaded = (vicinity.xIndex + vicinity.yIndex) % 2 == 0;
     return Container(
       color: shaded ? const Color(0xFFE1F5FE) : const Color(0xFFFFF8E1),
@@ -95,6 +123,44 @@ class _TwoDimensionalScrollViewDemoPageState
       ),
     );
   }
+}
+
+// Keep cell keys directly on the viewport's children to exercise cross-parent reparenting.
+class SampleCellDelegate extends TwoDimensionalChildBuilderDelegate {
+  SampleCellDelegate({
+    required super.builder,
+    required int super.maxXIndex,
+    required int super.maxYIndex,
+  });
+
+  @override
+  Widget? build(BuildContext context, ChildVicinity vicinity) =>
+      vicinity.xIndex < 0 ||
+          vicinity.yIndex < 0 ||
+          vicinity.xIndex > maxXIndex! ||
+          vicinity.yIndex > maxYIndex!
+      ? null
+      : builder(context, vicinity);
+}
+
+class MovingGridCounter extends StatefulWidget {
+  const MovingGridCounter({super.key});
+
+  @override
+  State<MovingGridCounter> createState() => _MovingGridCounterState();
+}
+
+class _MovingGridCounterState extends State<MovingGridCounter> {
+  int _count = 0;
+
+  @override
+  Widget build(BuildContext context) => CounterTapButton(
+    label: 'Count: $_count',
+    onTap: () => setState(() => _count++),
+    background: Colors.blueGrey,
+    foreground: Colors.white,
+    fontSize: 13,
+  );
 }
 
 /// A minimal grid built on [TwoDimensionalScrollView].
@@ -190,7 +256,10 @@ class RenderSampleTableViewport extends RenderTwoDimensionalViewport {
     final double horizontalPixels = horizontalOffset.pixels;
     final double verticalPixels = verticalOffset.pixels;
 
-    final int leadingColumn = math.max((horizontalPixels / cellWidth).floor(), 0);
+    final int leadingColumn = math.max(
+      (horizontalPixels / cellWidth).floor(),
+      0,
+    );
     final int leadingRow = math.max((verticalPixels / cellHeight).floor(), 0);
     final int trailingColumn = math.min(
       ((horizontalPixels + viewportDimension.width) / cellWidth).ceil(),
@@ -209,10 +278,13 @@ class RenderSampleTableViewport extends RenderTwoDimensionalViewport {
         final RenderBox? child = buildOrObtainChildFor(vicinity);
         if (child != null) {
           child.layout(
-            constraints.tighten(width: cellWidth, height: cellHeight),
+            const BoxConstraints.tightFor(width: cellWidth, height: cellHeight),
             parentUsesSize: true,
           );
-          parentDataOf(child).layoutOffset = Offset(xLayoutOffset, yLayoutOffset);
+          parentDataOf(child).layoutOffset = Offset(
+            xLayoutOffset,
+            yLayoutOffset,
+          );
         }
         yLayoutOffset += cellHeight;
       }
