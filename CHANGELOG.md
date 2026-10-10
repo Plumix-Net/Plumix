@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- PlatformMenuBar, menu items/groups/system items and binding delegate (widgets/platform_menu_bar.dart).
+- Breaking: ShortcutSerialization validates arguments with debug-only Dart asserts (platform_menu_bar.dart).
+- Breaking: Shortcut activators expose Dart diagnostics and suppress release key descriptions (shortcuts.dart).
+- PlatformMenuBar demo in both samples; native host menu adapter remains open (widgets/platform_menu_bar.dart).
 - Breaking: Paint checks layers in Dart order; teardown cancels queued work before layer release (object.dart).
 - Breaking: PipelineOwner uses explicit dirty queues and single-pass paint; frame requests match Dart (object.dart).
 - RenderObject exposes initial paint and root-layer replacement for non-view roots (rendering/object.dart).

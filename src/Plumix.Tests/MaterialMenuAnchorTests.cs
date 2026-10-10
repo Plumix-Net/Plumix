@@ -674,15 +674,15 @@ public sealed class MaterialMenuAnchorTests
         Assert.False(channel.ContainsKey("shortcutTrigger"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShortcutSerialization_RejectsModifierTriggersAndNonSingleCharacters()
     {
-        Assert.Throws<ArgumentException>(
+        Assert.Throws<AssertionError>(
             () => ShortcutSerialization.Modifier(LogicalKeyboardKey.ShiftLeft));
-        Assert.Throws<ArgumentException>(
+        Assert.Throws<AssertionError>(
             () => ShortcutSerialization.Modifier(LogicalKeyboardKey.Control));
-        Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter("ab"));
-        Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter(string.Empty));
+        Assert.Throws<AssertionError>(() => ShortcutSerialization.ForCharacter("ab"));
+        Assert.Throws<AssertionError>(() => ShortcutSerialization.ForCharacter(string.Empty));
     }
 
     [Theory]

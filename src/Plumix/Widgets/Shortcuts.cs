@@ -201,7 +201,7 @@ public sealed class LogicalKeySet : KeySet<LogicalKeyboardKey>, ShortcutActivato
 /// <summary>
 /// A shortcut key combination of a single key and modifiers.
 /// </summary>
-public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<SingleActivator>
+public sealed class SingleActivator : Diagnosticable, IMenuSerializableShortcut, IEquatable<SingleActivator>
 {
     public SingleActivator(
         LogicalKeyboardKey trigger,
@@ -254,6 +254,11 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
 
     public string DebugDescribeKeys()
     {
+        if (!Constants.KDebugMode)
+        {
+            return string.Empty;
+        }
+
         var keys = new List<string>();
         if (Control)
         {
@@ -288,6 +293,13 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
             alt: Alt,
             meta: Meta,
             control: Control);
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new MessageProperty("keys", DebugDescribeKeys()));
+        properties.Add(new FlagProperty("includeRepeats", value: IncludeRepeats, ifFalse: "excluding repeats"));
     }
 
     public bool Equals(SingleActivator? other)
@@ -368,7 +380,7 @@ internal static class ActivatorModifiers
 /// <summary>
 /// A shortcut combination that is triggered by a key event producing a specific character.
 /// </summary>
-public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<CharacterActivator>
+public sealed class CharacterActivator : Diagnosticable, IMenuSerializableShortcut, IEquatable<CharacterActivator>
 {
     public CharacterActivator(
         string character,
@@ -411,6 +423,11 @@ public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<C
 
     public string DebugDescribeKeys()
     {
+        if (!Constants.KDebugMode)
+        {
+            return string.Empty;
+        }
+
         var keys = new List<string>();
         if (Alt)
         {
@@ -439,6 +456,13 @@ public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<C
             alt: Alt,
             control: Control,
             meta: Meta);
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new MessageProperty("character", DebugDescribeKeys()));
+        properties.Add(new FlagProperty("includeRepeats", value: IncludeRepeats, ifFalse: "excluding repeats"));
     }
 
     public bool Equals(CharacterActivator? other)

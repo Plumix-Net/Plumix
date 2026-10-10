@@ -27,6 +27,9 @@ public partial class WidgetsBinding
     /// <remarks>Flutter's <c>WidgetsBinding.buildOwner</c>.</remarks>
     public BuildOwner BuildOwner => _debugBuildOwnerOverrideForTests ?? _buildOwner;
 
+    /// <summary>The replaceable delegate that manages platform-rendered menus.</summary>
+    public PlatformMenuDelegate PlatformMenuDelegate { get; set; } = null!;
+
     /// <summary>The focus manager owned by the binding's current <see cref="BuildOwner"/>.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.focusManager</c>.</remarks>
     public FocusManager FocusManager => _buildOwner.FocusManager;

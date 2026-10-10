@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -34,7 +35,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.False(plain.Meta);
         Assert.True(plain.IncludeRepeats);
         Assert.Equal(LockState.Ignored, plain.NumLock);
-        Assert.Equal("Key A", plain.DebugDescribeKeys());
+        Assert.Equal(Constants.KDebugMode ? "Key A" : string.Empty, plain.DebugDescribeKeys());
         Assert.True(plain.Accepts(KeySim.Down(LogicalKeyboardKey.KeyA), HardwareKeyboard.Instance));
         Assert.False(plain.Accepts(
             KeySim.Down(LogicalKeyboardKey.KeyA, control: true),
@@ -47,7 +48,7 @@ public sealed class ActionsShortcutsTests : IDisposable
             shift: true,
             includeRepeats: false,
             numLock: LockState.Locked);
-        Assert.Equal("Control + Shift + Key K", modified.DebugDescribeKeys());
+        Assert.Equal(Constants.KDebugMode ? "Control + Shift + Key K" : string.Empty, modified.DebugDescribeKeys());
         Assert.True(modified.Accepts(
             KeySim.Down(LogicalKeyboardKey.KeyK, control: true, shift: true, numLock: true),
             HardwareKeyboard.Instance));
@@ -64,6 +65,38 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.NotEqual(
             new SingleActivator(LogicalKeyboardKey.KeyK, control: true),
             new SingleActivator(LogicalKeyboardKey.KeyK, meta: true));
+    }
+
+    [Theory]
+    [InlineData(false, false, false, "keys: Key A")]
+    [InlineData(false, true, false, "keys: Key A")]
+    [InlineData(false, false, true, "keys: Control + Alt + Meta + Shift + Key A")]
+    [InlineData(true, false, false, "character: 'A'")]
+    [InlineData(true, true, false, "character: 'A'")]
+    [InlineData(true, false, true, "character: Control + Meta + 'A'")]
+    public void ActivatorDiagnostics_MatchFlutter(
+        bool character, bool excludeRepeats, bool modifiers, string description)
+    {
+        Diagnosticable activator = character
+            ? new CharacterActivator("A", control: modifiers, meta: modifiers, includeRepeats: !excludeRepeats)
+            : new SingleActivator(LogicalKeyboardKey.KeyA, control: modifiers, alt: modifiers,
+                meta: modifiers, shift: modifiers, includeRepeats: !excludeRepeats);
+        var properties = new DiagnosticPropertiesBuilder();
+        activator.DebugFillProperties(properties);
+        if (Constants.KDebugMode)
+        {
+            string[] expected = excludeRepeats ? [description, "excluding repeats"] : [description];
+            Assert.Equal(expected, properties.Properties
+                .Where(property => !property.IsFiltered(DiagnosticLevel.Info)).Select(property => property.ToString()));
+        }
+        else
+        {
+            Assert.Empty(properties.Properties);
+            Assert.Equal(activator.ToStringShort(), activator.ToString());
+            Assert.Equal(string.Empty, character
+                ? ((CharacterActivator)activator).DebugDescribeKeys()
+                : ((SingleActivator)activator).DebugDescribeKeys());
+        }
     }
 
     [Fact]

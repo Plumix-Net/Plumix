@@ -329,6 +329,7 @@ public partial class WidgetsBinding
         SemanticsBinding.Instance.AccessibilityFeaturesChangedOverride = HandleAccessibilityFeaturesChanged;
         EnsureFrameCallback();
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
+        PlatformMenuDelegate = new DefaultPlatformMenuDelegate();
         if (Constants.KDebugMode)
         {
             FlutterErrorDetails.PropertiesTransformers.Add(WidgetInspectorDebug.DebugTransformDebugCreator);

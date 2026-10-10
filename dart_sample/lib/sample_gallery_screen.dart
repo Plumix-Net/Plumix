@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'demos/general/align_demo_page.dart';
+import 'demos/general/platform_menu_bar_demo_page.dart';
 import 'demos/general/async_builder_demo_page.dart';
 import 'demos/general/animated_list_demo_page.dart';
 import 'demos/general/animated_grid_demo_page.dart';
@@ -775,6 +776,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Router',
       subtitle: 'delegate + parser + provider + back-button dispatcher',
       builder: () => const RouterDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.platformMenuBar,
+      title: 'PlatformMenuBar',
+      subtitle: 'native menu hierarchy + groups + shortcuts + callbacks',
+      builder: () => const PlatformMenuBarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.listViewSeparated,
