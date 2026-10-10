@@ -28,6 +28,24 @@ public sealed class Path
     private bool _currentClosed;
     private (PathOperation Operation, Path First, Path Second)? _combination;
 
+    public Path()
+    {
+    }
+
+    /// <summary>Copies a path without sharing mutable subpaths, as in Dart's <c>Path.from</c>.</summary>
+    public Path(Path source)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        FillType = source.FillType;
+        _contours.AddRange(source._contours);
+        _currentPoints = source._currentPoints is null ? null : [.. source._currentPoints];
+        _currentClosed = source._currentClosed;
+        if (source._combination is { } combination)
+        {
+            _combination = (combination.Operation, new Path(combination.First), new Path(combination.Second));
+        }
+    }
+
     public PathFillType FillType { get; set; } = PathFillType.NonZero;
 
     /// Combines the two paths according to the manner specified by the given `operation`.

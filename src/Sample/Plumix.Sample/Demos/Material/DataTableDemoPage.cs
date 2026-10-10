@@ -84,6 +84,8 @@ internal sealed class DataTableDemoPageState : State
                             child: BuildTableCellProbe()),
                         new Text("Core TableColumnWidth algebra", fontSize: 16, color: Colors.Black),
                         BuildColumnWidthProbe(),
+                        new Text("Core TableBorder corners and stroke alignment", fontSize: 16, color: Colors.Black),
+                        new Padding(new Thickness(8), BuildBorderProbe()),
                         new Text("PaginatedDataTable", fontSize: 16, color: Colors.Black),
                         new PaginatedDataTable(
                             header: new Text("People"),
@@ -154,6 +156,22 @@ internal sealed class DataTableDemoPageState : State
                     BuildWidthCell("d"),
                 ],
                 decoration: new BoxDecoration(Color: new Color(0xFFFFFFFF))),
+        ]);
+
+    private static Table BuildBorderProbe() => new(
+        border: new TableBorder(
+            top: new BorderSide(new Color(0xFF6750A4), 6, strokeAlign: BorderSide.StrokeAlignCenter),
+            right: new BorderSide(new Color(0xFF6750A4), 4, strokeAlign: BorderSide.StrokeAlignOutside),
+            bottom: new BorderSide(new Color(0xFF6750A4), 2),
+            left: new BorderSide(new Color(0xFF6750A4), 8),
+            horizontalInside: new BorderSide(new Color(0xFF94A3B8)),
+            verticalInside: new BorderSide(new Color(0xFF94A3B8)),
+            borderRadius: new BorderRadius(
+                Radius.Circular(20), Radius.Circular(4), Radius.Circular(12), Radius.Circular(4))),
+        children:
+        [
+            new TableRow([BuildWidthCell("top: centered 6"), BuildWidthCell("right: outside 4")]),
+            new TableRow([BuildWidthCell("left: inside 8"), BuildWidthCell("bottom: inside 2")]),
         ]);
 
     private static Widget BuildWidthCell(string label) => new Padding(

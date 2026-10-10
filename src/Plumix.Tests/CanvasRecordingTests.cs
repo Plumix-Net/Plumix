@@ -13,6 +13,42 @@ namespace Plumix.Tests;
 public sealed class CanvasRecordingTests
 {
     [Fact]
+    public void PathCopy_PreservesOpenContoursAndFillTypeAfterSourceMutation()
+    {
+        var source = new Path { FillType = PathFillType.EvenOdd };
+        source.AddOval(new Rect(0, 0, 20, 20));
+        source.MoveTo(30, 0);
+        source.LineTo(30, 20);
+        var copy = new Path(source);
+        source.LineTo(50, 20);
+        source.Reset();
+        Assert.Equal(PathFillType.EvenOdd, copy.FillType);
+        Assert.Equal(new Rect(0, 0, 30, 20), copy.GetBounds());
+        Assert.True(copy.Contains(new Point(10, 10)));
+        Assert.False(copy.Contains(new Point(1, 1)));
+        copy.LineTo(40, 20);
+        Assert.Equal(new Rect(0, 0, 40, 20), copy.GetBounds());
+        Assert.Equal(default, source.GetBounds());
+    }
+
+    [Fact]
+    public void PathCopy_PreservesCombinedGeometryAfterOperandsAreReset()
+    {
+        var outer = new Path();
+        outer.AddRect(new Rect(0, 0, 20, 20));
+        var inner = new Path();
+        inner.AddRect(new Rect(5, 5, 10, 10));
+        var source = Path.Combine(PathOperation.Difference, outer, inner);
+        var copy = new Path(source);
+        outer.Reset();
+        inner.Reset();
+        source.Reset();
+        Assert.True(copy.Contains(new Point(2, 2)));
+        Assert.False(copy.Contains(new Point(10, 10)));
+        Assert.Equal(new Rect(0, 0, 20, 20), copy.GetBounds());
+    }
+
+    [Fact]
     public void Canvas_StartsWithOneSaveLevel()
     {
         var canvas = new Canvas(new PictureRecorder());

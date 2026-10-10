@@ -365,6 +365,57 @@ public static class BorderPainting
         }
     }
 
+    /// <summary>Dart's <c>paintBorder</c>, drawing filled sides or hairline paths on a canvas.</summary>
+    public static void PaintBorder(
+        Canvas canvas,
+        Rect rect,
+        BorderSide? top = null,
+        BorderSide? right = null,
+        BorderSide? bottom = null,
+        BorderSide? left = null)
+    {
+        BorderSide topSide = top ?? BorderSide.None;
+        BorderSide rightSide = right ?? BorderSide.None;
+        BorderSide bottomSide = bottom ?? BorderSide.None;
+        BorderSide leftSide = left ?? BorderSide.None;
+        var paint = new Paint { StrokeWidth = 0.0 };
+        var path = new Path();
+
+        PaintSide(topSide, new Point(rect.Left, rect.Top), new Point(rect.Right, rect.Top),
+            new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width),
+            new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width));
+        PaintSide(rightSide, new Point(rect.Right, rect.Top), new Point(rect.Right, rect.Bottom),
+            new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width),
+            new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width));
+        PaintSide(bottomSide, new Point(rect.Right, rect.Bottom), new Point(rect.Left, rect.Bottom),
+            new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width),
+            new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width));
+        PaintSide(leftSide, new Point(rect.Left, rect.Bottom), new Point(rect.Left, rect.Top),
+            new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width),
+            new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width));
+
+        void PaintSide(BorderSide side, Point start, Point end, Point innerEnd, Point innerStart)
+        {
+            if (side.Style != BorderStyle.Solid)
+            {
+                return;
+            }
+
+            paint.Color = side.Color;
+            path.Reset();
+            path.MoveTo(start.X, start.Y);
+            path.LineTo(end.X, end.Y);
+            paint.Style = side.Width == 0.0 ? PaintingStyle.Stroke : PaintingStyle.Fill;
+            if (side.Width != 0.0)
+            {
+                path.LineTo(innerEnd.X, innerEnd.Y);
+                path.LineTo(innerStart.X, innerStart.Y);
+            }
+
+            canvas.DrawPath(path, paint);
+        }
+    }
+
     private static void PaintSide(
         PaintingContext context,
         BorderSide side,

@@ -100,6 +100,15 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             _buildColumnWidthProbe(),
             const SizedBox(height: 12),
             const Text(
+              'Core TableBorder corners and stroke alignment',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: _buildBorderProbe(),
+            ),
+            const SizedBox(height: 12),
+            const Text(
               'PaginatedDataTable',
               style: TextStyle(fontSize: 16, color: Colors.black),
             ),
@@ -209,6 +218,47 @@ class _DataTableDemoPageState extends State<DataTableDemoPage> {
             _buildWidthCell('b'),
             _buildWidthCell('a wide intrinsic cell'),
             _buildWidthCell('d'),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Table _buildBorderProbe() {
+    return Table(
+      border: const TableBorder(
+        top: BorderSide(
+          color: Color(0xFF6750A4),
+          width: 6,
+          strokeAlign: BorderSide.strokeAlignCenter,
+        ),
+        right: BorderSide(
+          color: Color(0xFF6750A4),
+          width: 4,
+          strokeAlign: BorderSide.strokeAlignOutside,
+        ),
+        bottom: BorderSide(color: Color(0xFF6750A4), width: 2),
+        left: BorderSide(color: Color(0xFF6750A4), width: 8),
+        horizontalInside: BorderSide(color: Color(0xFF94A3B8)),
+        verticalInside: BorderSide(color: Color(0xFF94A3B8)),
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(4),
+          bottomRight: Radius.circular(12),
+          bottomLeft: Radius.circular(4),
+        ),
+      ),
+      children: <TableRow>[
+        TableRow(
+          children: <Widget>[
+            _buildWidthCell('top: centered 6'),
+            _buildWidthCell('right: outside 4'),
+          ],
+        ),
+        TableRow(
+          children: <Widget>[
+            _buildWidthCell('left: inside 8'),
+            _buildWidthCell('bottom: inside 2'),
           ],
         ),
       ],

@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: TableBorder uses Dart rounded rings, stroke alignment, paths and side interpolation (table_border.dart).
+- Path copy constructor and Canvas.DrawPath snapshots preserve drawings after path mutation (dart:ui).
 - Breaking: Viewport child extraction restores Dart slot/layout asserts (sliver.dart, two_dimensional_viewport.dart).
 - Two-dimensional element diagnostics and mirrored state-preserving grid counter demo (two_dimensional_viewport.dart).
 - Grid demo uses fixed cell constraints so adjacent cells do not cover the counter in either sample.

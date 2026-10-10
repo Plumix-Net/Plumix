@@ -174,12 +174,13 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(path);
         ArgumentNullException.ThrowIfNull(paint);
+        var snapshot = new Path(path);
         Geometry? geometry = null;
-        Geometry Source() => geometry ??= path.ToGeometry();
+        Geometry Source() => geometry ??= snapshot.ToGeometry();
         DrawShape(
             "drawPath",
             paint,
-            call => call with { Path = path },
+            call => call with { Path = snapshot },
             Source,
             (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
     }

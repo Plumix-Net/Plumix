@@ -1,5 +1,7 @@
 using Avalonia;
-using Avalonia.Media;
+using Plumix.UI;
+using Plumix.Widgets;
+using Path = Plumix.UI.Path;
 
 namespace Plumix.Rendering;
 
@@ -85,20 +87,38 @@ public sealed record TableBorder
 
     /// Whether all the sides of the border (outside and inside) are identical.
     public bool IsUniform =>
-        Right == Top && Bottom == Top && Left == Top && HorizontalInside == Top && VerticalInside == Top;
+        AllSidesMatch(side => side.Color)
+        && AllSidesMatch(side => side.Width)
+        && AllSidesMatch(side => side.Style);
 
-    private bool OuterBorderIsUniform => Right == Top && Bottom == Top && Left == Top;
+    private bool OuterBorderIsUniform =>
+        OuterSidesMatch(side => side.Color)
+        && OuterSidesMatch(side => side.Width)
+        && OuterSidesMatch(side => side.Style);
+
+    private bool AllSidesMatch<T>(Func<BorderSide, T> selector) =>
+        OuterSidesMatch(selector)
+        && EqualityComparer<T>.Default.Equals(selector(HorizontalInside), selector(Top))
+        && EqualityComparer<T>.Default.Equals(selector(VerticalInside), selector(Top));
+
+    private bool OuterSidesMatch<T>(Func<BorderSide, T> selector)
+    {
+        T topValue = selector(Top);
+        return EqualityComparer<T>.Default.Equals(selector(Right), topValue)
+            && EqualityComparer<T>.Default.Equals(selector(Bottom), topValue)
+            && EqualityComparer<T>.Default.Equals(selector(Left), topValue);
+    }
 
     /// Creates a copy of this border but with the widths scaled by the factor `t`.
     public TableBorder Scale(double t)
     {
         return new TableBorder(
-            top: ScaleSide(Top, t),
-            right: ScaleSide(Right, t),
-            bottom: ScaleSide(Bottom, t),
-            left: ScaleSide(Left, t),
-            horizontalInside: ScaleSide(HorizontalInside, t),
-            verticalInside: ScaleSide(VerticalInside, t));
+            top: Top.Scale(t),
+            right: Right.Scale(t),
+            bottom: Bottom.Scale(t),
+            left: Left.Scale(t),
+            horizontalInside: HorizontalInside.Scale(t),
+            verticalInside: VerticalInside.Scale(t));
     }
 
     /// Linearly interpolate between two table borders.
@@ -120,12 +140,12 @@ public sealed record TableBorder
         }
 
         return new TableBorder(
-            top: LerpSide(a.Top, b.Top, t),
-            right: LerpSide(a.Right, b.Right, t),
-            bottom: LerpSide(a.Bottom, b.Bottom, t),
-            left: LerpSide(a.Left, b.Left, t),
-            horizontalInside: LerpSide(a.HorizontalInside, b.HorizontalInside, t),
-            verticalInside: LerpSide(a.VerticalInside, b.VerticalInside, t));
+            top: BorderSide.Lerp(a.Top, b.Top, t),
+            right: BorderSide.Lerp(a.Right, b.Right, t),
+            bottom: BorderSide.Lerp(a.Bottom, b.Bottom, t),
+            left: BorderSide.Lerp(a.Left, b.Left, t),
+            horizontalInside: BorderSide.Lerp(a.HorizontalInside, b.HorizontalInside, t),
+            verticalInside: BorderSide.Lerp(a.VerticalInside, b.VerticalInside, t));
     }
 
     /// Paints the border around the given [rect], with the given rows and columns.
@@ -138,50 +158,84 @@ public sealed record TableBorder
         PaintingContext context,
         Rect rect,
         IReadOnlyList<double> rows,
+        IReadOnlyList<double> columns) => Paint(context.Canvas, rect, rows, columns);
+
+    /// <summary>Paints directly on a canvas, as in Dart's <c>TableBorder.paint</c>.</summary>
+    public void Paint(
+        Canvas canvas,
+        Rect rect,
+        IReadOnlyList<double> rows,
         IReadOnlyList<double> columns)
     {
         ArgumentNullException.ThrowIfNull(rows);
         ArgumentNullException.ThrowIfNull(columns);
+        DebugAssertions.Assert(rows.Count == 0 || (rows[0] >= 0.0 && rows[^1] <= rect.Height));
+        DebugAssertions.Assert(columns.Count == 0 || (columns[0] >= 0.0 && columns[^1] <= rect.Width));
 
-        if (columns.Count > 0 && VerticalInside.Style == BorderStyle.Solid)
+        if (columns.Count > 0 || rows.Count > 0)
         {
-            var pen = new Pen(new SolidColorBrush(VerticalInside.Color), VerticalInside.Width);
-            foreach (double x in columns)
+            var paint = new Paint();
+            var path = new Path();
+            if (columns.Count > 0 && VerticalInside.Style == BorderStyle.Solid)
             {
-                context.Canvas.DrawLine(pen, new Point(rect.Left + x, rect.Top), new Point(rect.Left + x, rect.Bottom));
+                paint.Color = VerticalInside.Color;
+                paint.StrokeWidth = VerticalInside.Width;
+                paint.Style = PaintingStyle.Stroke;
+                path.Reset();
+                foreach (double x in columns)
+                {
+                    path.MoveTo(rect.Left + x, rect.Top);
+                    path.LineTo(rect.Left + x, rect.Bottom);
+                }
+
+                canvas.DrawPath(path, paint);
+            }
+
+            if (rows.Count > 0 && HorizontalInside.Style == BorderStyle.Solid)
+            {
+                paint.Color = HorizontalInside.Color;
+                paint.StrokeWidth = HorizontalInside.Width;
+                paint.Style = PaintingStyle.Stroke;
+                path.Reset();
+                foreach (double y in rows)
+                {
+                    path.MoveTo(rect.Left, rect.Top + y);
+                    path.LineTo(rect.Right, rect.Top + y);
+                }
+
+                canvas.DrawPath(path, paint);
             }
         }
 
-        if (rows.Count > 0 && HorizontalInside.Style == BorderStyle.Solid)
-        {
-            var pen = new Pen(new SolidColorBrush(HorizontalInside.Color), HorizontalInside.Width);
-            foreach (double y in rows)
-            {
-                context.Canvas.DrawLine(pen, new Point(rect.Left, rect.Top + y), new Point(rect.Right, rect.Top + y));
-            }
-        }
-
-        PaintTableBorder(context, rect);
+        PaintTableBorder(canvas, rect);
     }
 
-    private void PaintTableBorder(PaintingContext context, Rect rect)
+    private void PaintTableBorder(Canvas canvas, Rect rect)
     {
         if (OuterBorderIsUniform && BorderRadius != BorderRadius.Zero)
         {
-            PaintRing(context, rect, BorderRadius, Top.Color, Top.Width);
+            RRect outer = BorderRadius.ToRRect(rect);
+            RRect inner = outer.Deflate(Top.Width);
+            canvas.DrawDRRect(outer, inner, new Paint { Color = Top.Color });
             return;
         }
 
         var visibleColors = DistinctVisibleOuterColors();
         if (visibleColors.Count == 1 && BorderRadius != BorderRadius.Zero)
         {
-            // Only the sides that are actually visible contribute an inset; the single
-            // shared color is used for the whole ring.
-            PaintNonUniformBorderWithRadius(context, rect, visibleColors.Single());
+            PaintNonUniformBorderWithRadius(
+                canvas,
+                rect,
+                BorderRadius,
+                visibleColors.Single(),
+                Top.Style == BorderStyle.None ? BorderSide.None : Top,
+                Right.Style == BorderStyle.None ? BorderSide.None : Right,
+                Bottom.Style == BorderStyle.None ? BorderSide.None : Bottom,
+                Left.Style == BorderStyle.None ? BorderSide.None : Left);
             return;
         }
 
-        PaintBorderSides(context, rect);
+        BorderPainting.PaintBorder(canvas, rect, Top, Right, Bottom, Left);
     }
 
     private HashSet<Color> DistinctVisibleOuterColors()
@@ -194,131 +248,24 @@ public sealed record TableBorder
         return colors;
     }
 
-    private void PaintNonUniformBorderWithRadius(PaintingContext context, Rect rect, Color color)
-    {
-        // Plumix's BorderSide has no strokeAlign, so every side is inset-aligned:
-        // strokeInset == width and strokeOutset == 0, matching Flutter's default.
-        double left = Left.Style == BorderStyle.None ? 0.0 : Left.Width;
-        double top = Top.Style == BorderStyle.None ? 0.0 : Top.Width;
-        double right = Right.Style == BorderStyle.None ? 0.0 : Right.Width;
-        double bottom = Bottom.Style == BorderStyle.None ? 0.0 : Bottom.Width;
-        var geometry = RingGeometry(rect, BorderRadius, left, top, right, bottom);
-        context.Canvas.DrawGeometry(new SolidColorBrush(color), null, geometry);
-    }
-
-    private static void PaintRing(PaintingContext context, Rect rect, BorderRadius radius, Color color, double width)
-    {
-        var geometry = RingGeometry(rect, radius, width, width, width, width);
-        context.Canvas.DrawGeometry(new SolidColorBrush(color), null, geometry);
-    }
-
-    private static Geometry RingGeometry(
+    private static void PaintNonUniformBorderWithRadius(
+        Canvas canvas,
         Rect rect,
-        BorderRadius radius,
-        double left,
-        double top,
-        double right,
-        double bottom)
+        BorderRadius borderRadius,
+        Color color,
+        BorderSide top,
+        BorderSide right,
+        BorderSide bottom,
+        BorderSide left)
     {
-        var outer = RoundedGeometry(rect, radius);
-        var innerRect = new Rect(
-            rect.Left + left,
-            rect.Top + top,
-            Math.Max(0.0, rect.Width - left - right),
-            Math.Max(0.0, rect.Height - top - bottom));
-        var inner = RoundedGeometry(innerRect, DeflateRadius(radius, Math.Max(Math.Max(left, top), Math.Max(right, bottom))));
-        return new CombinedGeometry(GeometryCombineMode.Exclude, outer, inner);
+        RRect borderRect = borderRadius.ToRRect(rect);
+        RRect inner = borderRect.DeflateEdges(
+            new Thickness(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset));
+        RRect outer = borderRect.InflateEdges(
+            new Thickness(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset));
+        canvas.DrawDRRect(outer, inner, new Paint { Color = color });
     }
 
-    private static Geometry RoundedGeometry(Rect rect, BorderRadius radius)
-    {
-        return new RectangleGeometry(rect, radius.TopLeftRadius.X, radius.TopLeftRadius.Y);
-    }
-
-    private static BorderRadius DeflateRadius(BorderRadius radius, double delta)
-    {
-        return new BorderRadius(
-            Deflate(radius.TopLeftRadius, delta),
-            Deflate(radius.TopRightRadius, delta),
-            Deflate(radius.BottomRightRadius, delta),
-            Deflate(radius.BottomLeftRadius, delta));
-    }
-
-    private static Radius Deflate(Radius radius, double delta) =>
-        Radius.Elliptical(Math.Max(0.0, radius.X - delta), Math.Max(0.0, radius.Y - delta));
-
-    private void PaintBorderSides(PaintingContext context, Rect rect)
-    {
-        PaintSide(context, Top, [
-            new Point(rect.Left, rect.Top),
-            new Point(rect.Right, rect.Top),
-            new Point(rect.Right - Right.Width, rect.Top + Top.Width),
-            new Point(rect.Left + Left.Width, rect.Top + Top.Width),
-        ]);
-        PaintSide(context, Right, [
-            new Point(rect.Right, rect.Top),
-            new Point(rect.Right, rect.Bottom),
-            new Point(rect.Right - Right.Width, rect.Bottom - Bottom.Width),
-            new Point(rect.Right - Right.Width, rect.Top + Top.Width),
-        ]);
-        PaintSide(context, Bottom, [
-            new Point(rect.Right, rect.Bottom),
-            new Point(rect.Left, rect.Bottom),
-            new Point(rect.Left + Left.Width, rect.Bottom - Bottom.Width),
-            new Point(rect.Right - Right.Width, rect.Bottom - Bottom.Width),
-        ]);
-        PaintSide(context, Left, [
-            new Point(rect.Left, rect.Bottom),
-            new Point(rect.Left, rect.Top),
-            new Point(rect.Left + Left.Width, rect.Top + Top.Width),
-            new Point(rect.Left + Left.Width, rect.Bottom - Bottom.Width),
-        ]);
-    }
-
-    private static void PaintSide(PaintingContext context, BorderSide side, IReadOnlyList<Point> quad)
-    {
-        if (side.Style != BorderStyle.Solid)
-        {
-            return;
-        }
-
-        var brush = new SolidColorBrush(side.Color);
-        if (side.Width == 0.0)
-        {
-            context.Canvas.DrawLine(new Pen(brush, 0.0), quad[0], quad[1]);
-            return;
-        }
-
-        context.Canvas.DrawPolygon(brush, null, quad);
-    }
-
-    private static BorderSide ScaleSide(BorderSide side, double t)
-    {
-        double width = Math.Max(0.0, side.Width * t);
-        return new BorderSide(side.Color, width, width == 0.0 ? BorderStyle.None : side.Style);
-    }
-
-    private static BorderSide LerpSide(BorderSide a, BorderSide b, double t)
-    {
-        if (t == 0.0) return a;
-        if (t == 1.0) return b;
-        double width = a.Width + ((b.Width - a.Width) * t);
-        if (width < 0.0)
-        {
-            return BorderSide.None;
-        }
-
-        if (a.Style == b.Style)
-        {
-            return new BorderSide(LerpColor(a.Color, b.Color, t), width, a.Style);
-        }
-
-        Color colorA = a.Style == BorderStyle.None ? WithAlpha(a.Color, 0) : a.Color;
-        Color colorB = b.Style == BorderStyle.None ? WithAlpha(b.Color, 0) : b.Color;
-        return new BorderSide(LerpColor(colorA, colorB, t), width, BorderStyle.Solid);
-    }
-
-    private static Color WithAlpha(Color color, int alpha) => color.WithAlpha(alpha);
-
-    private static Color LerpColor(Color a, Color b, double t) => Color.Lerp(a, b, t);
+    public override string ToString() =>
+        $"TableBorder({Top}, {Right}, {Bottom}, {Left}, {HorizontalInside}, {VerticalInside}, {BorderRadius})";
 }
