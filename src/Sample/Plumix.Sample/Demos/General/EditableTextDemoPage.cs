@@ -6,7 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/editable_text_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/editable_text_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -176,6 +176,25 @@ internal sealed class EditableTextDemoPageState : State
                     maxLines: 3,
                     onChanged: value => SetState(() => _lastChange = $"scrolling notes = {EscapeMultiline(value)}")),
                 new Text("Undo history (a formatter upper-cases input)", fontSize: 12, color: Colors.DimGray),
+                new SizedBox(
+                    width: 170,
+                    child: new CounterTapButton(
+                        label: "Seed undo value",
+                        onTap: () =>
+                        {
+                            ValueNotifier<TextEditingValue> value = _undoableController;
+                            value.Value = new TextEditingValue("SEEDED", TextSelection.Collapsed(6));
+                        },
+                        background: new Color(0xFFF3E8D8),
+                        foreground: Colors.Black,
+                        fontSize: 12,
+                        padding: new Thickness(10, 8))),
+                new ValueListenableBuilder<TextEditingValue>(
+                    valueListenable: _undoableController,
+                    builder: (_, value, _) => new Text(
+                        $"history value: '{value.Text}'",
+                        fontSize: 12,
+                        color: Colors.DarkSlateGray)),
                 new ValueListenableBuilder<UndoHistoryValue>(
                     valueListenable: _undoController,
                     builder: (_, value, _) => new Row(

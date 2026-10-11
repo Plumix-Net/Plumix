@@ -421,20 +421,26 @@ public readonly record struct TextEditingValue
     }
 }
 
-public class TextEditingController : ChangeNotifier, IValueListenable<TextEditingValue>
+public class TextEditingController : ValueNotifier<TextEditingValue>
 {
-    private string _text;
-    private TextSelection _selection;
-    private TextRange? _composing;
+    private string _text => base.Value.Text;
+    private TextSelection _selection => base.Value.Selection;
+    private TextRange? _composing => base.Value.Composing;
 
     public TextEditingController(
         string text = "",
         TextSelection? selection = null,
-        TextRange? composing = null)
+        TextRange? composing = null) : base(InitialValue(text, selection, composing))
     {
-        _text = text ?? string.Empty;
-        _selection = (selection ?? TextSelection.Collapsed(_text.Length)).Clamp(_text.Length);
-        _composing = composing?.Clamp(_text.Length);
+    }
+
+    private static TextEditingValue InitialValue(string text, TextSelection? selection, TextRange? composing)
+    {
+        string normalizedText = text ?? string.Empty;
+        return new TextEditingValue(
+            normalizedText,
+            (selection ?? TextSelection.Collapsed(normalizedText.Length)).Clamp(normalizedText.Length),
+            composing?.Clamp(normalizedText.Length));
     }
 
     public string Text
@@ -456,9 +462,9 @@ public class TextEditingController : ChangeNotifier, IValueListenable<TextEditin
         set => SetValue(text: _text, selection: value, composing: _composing);
     }
 
-    public TextEditingValue Value
+    public override TextEditingValue Value
     {
-        get => new(_text, _selection, _composing);
+        get => base.Value;
         set => SetValue(value.Text, value.Selection, value.Composing);
     }
 
@@ -490,17 +496,7 @@ public class TextEditingController : ChangeNotifier, IValueListenable<TextEditin
             normalizedComposing = null;
         }
 
-        if (string.Equals(_text, normalizedText, StringComparison.Ordinal)
-            && _selection.Equals(normalizedSelection)
-            && Nullable.Equals(_composing, normalizedComposing))
-        {
-            return;
-        }
-
-        _text = normalizedText;
-        _selection = normalizedSelection;
-        _composing = normalizedComposing;
-        NotifyListeners();
+        base.Value = new TextEditingValue(normalizedText, normalizedSelection, normalizedComposing);
     }
 
     /// <summary>Builds a <see cref="TextSpan"/> from the current editing value.</summary>

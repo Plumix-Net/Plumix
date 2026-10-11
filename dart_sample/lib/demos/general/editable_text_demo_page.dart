@@ -210,6 +210,30 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
           'Undo history (a formatter upper-cases input)',
           style: TextStyle(fontSize: 12, color: Colors.black54),
         ),
+        SizedBox(
+          width: 170,
+          child: _MenuButton(
+            label: 'Seed undo value',
+            onTap: () {
+              final ValueNotifier<TextEditingValue> value = _undoableController;
+              value.value = const TextEditingValue(
+                text: 'SEEDED',
+                selection: TextSelection.collapsed(offset: 6),
+              );
+            },
+            background: const Color(0xFFF3E8D8),
+          ),
+        ),
+        ValueListenableBuilder<TextEditingValue>(
+          valueListenable: _undoableController,
+          builder:
+              (BuildContext context, TextEditingValue value, Widget? child) {
+                return Text(
+                  "history value: '${value.text}'",
+                  style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                );
+              },
+        ),
         ValueListenableBuilder<UndoHistoryValue>(
           valueListenable: _undoController,
           builder:

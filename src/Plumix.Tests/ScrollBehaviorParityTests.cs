@@ -10,8 +10,18 @@ using Xunit;
 
 namespace Plumix.Tests;
 
-public sealed class ScrollBehaviorParityTests
+public sealed class ScrollBehaviorParityTests : IDisposable
 {
+    public ScrollBehaviorParityTests()
+    {
+        FocusManager.Instance.ResetForTests();
+    }
+
+    public void Dispose()
+    {
+        FocusManager.Instance.ResetForTests();
+    }
+
     [Fact]
     public void ScrollBehavior_VelocityTrackerBuilderUsesPlatformAndSurvivesCopyWith()
     {

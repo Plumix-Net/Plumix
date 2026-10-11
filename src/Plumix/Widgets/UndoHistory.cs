@@ -7,22 +7,20 @@ using Plumix.UI;
 namespace Plumix.Widgets;
 
 /// <summary>
-/// Provides undo/redo capabilities for a <see cref="IValueListenable{T}"/>: records the value's
+/// Provides undo/redo capabilities for a <see cref="ValueNotifier{T}"/>: records the value's
 /// history (throttled to one entry per 500 ms) and restores it on <see cref="UndoTextIntent"/>,
 /// <see cref="RedoTextIntent"/>, platform undo requests and <see cref="UndoHistoryController"/> calls.
 /// </summary>
 /// <remarks>
-/// Dart types <c>value</c> as a <c>ValueNotifier&lt;T&gt;</c>; Plumix's <see cref="TextEditingController"/>
-/// is not a <see cref="ValueNotifier{T}"/>, so the history listens to any
-/// <see cref="IValueListenable{T}"/> and relies on <see cref="OnTriggered"/> to write the value back,
-/// exactly as Dart's does. Dart passes <c>null</c> to <see cref="ShouldChangeUndoStack"/> before the
-/// first value is recorded; for a value type <typeparamref name="T"/> that is <c>default</c>.
+/// Dart passes <c>null</c> to <see cref="ShouldChangeUndoStack"/> before the first value is recorded.
+/// Use a nullable value type (for example <c>int?</c>) for <typeparamref name="T"/> if the callback
+/// needs to distinguish an absent previous value from <c>default(T)</c>.
 /// </remarks>
 /// <typeparam name="T">The type of the recorded value.</typeparam>
-public sealed class UndoHistory<T> : StatefulWidget where T : notnull
+public sealed class UndoHistory<T> : StatefulWidget
 {
     public UndoHistory(
-        IValueListenable<T> value,
+        ValueNotifier<T> value,
         Action<T> onTriggered,
         FocusNode focusNode,
         Widget child,
@@ -41,7 +39,7 @@ public sealed class UndoHistory<T> : StatefulWidget where T : notnull
     }
 
     /// <summary>The value to track over time.</summary>
-    public IValueListenable<T> Value { get; }
+    public ValueNotifier<T> Value { get; }
 
     /// <summary>Called when checking whether a value change should be pushed onto the undo stack.</summary>
     public Func<T?, T, bool>? ShouldChangeUndoStack { get; }
@@ -66,7 +64,7 @@ public sealed class UndoHistory<T> : StatefulWidget where T : notnull
 
 /// <summary>State for an <see cref="UndoHistory{T}"/>.</summary>
 /// <typeparam name="T">The type of the recorded value.</typeparam>
-public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerClient where T : notnull
+public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerClient
 {
     // This duration was chosen as a best fit for the behavior of Mac, Linux, and Windows undo/redo
     // state save durations, but it is not perfect for any of them.
@@ -88,7 +86,7 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
 
     public void Undo()
     {
-        if (!_stack.HasCurrentValue)
+        if (!_stack.HasCurrentValue || _stack.CurrentValue is null)
         {
             // Returns early if there is not a first value registered in the history. This is
             // important because, if an undo is received while the initial value is being pushed
@@ -151,7 +149,7 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
 
     private void Update(T? nextValue, bool hasValue)
     {
-        if (!hasValue)
+        if (!hasValue || nextValue is null)
         {
             return;
         }
@@ -180,7 +178,8 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
 
     private void Push()
     {
-        if (_hasLastValue && EqualityComparer<T>.Default.Equals(Widget.Value.Value, _lastValue!))
+        if ((_hasLastValue || Widget.Value.Value is null)
+            && EqualityComparer<T>.Default.Equals(Widget.Value.Value, _lastValue!))
         {
             return;
         }
@@ -197,9 +196,9 @@ public sealed class UndoHistoryState<T> : State<UndoHistory<T>>, IUndoManagerCli
         }
 
         T nextValue = Widget.UndoStackModifier is { } modifier
-            ? modifier(Widget.Value.Value)
+            ? modifier(Widget.Value.Value) ?? Widget.Value.Value
             : Widget.Value.Value;
-        if (_hasLastValue && EqualityComparer<T>.Default.Equals(nextValue, _lastValue!))
+        if ((_hasLastValue || nextValue is null) && EqualityComparer<T>.Default.Equals(nextValue, _lastValue!))
         {
             return;
         }

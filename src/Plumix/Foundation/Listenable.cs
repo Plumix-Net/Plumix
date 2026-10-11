@@ -287,7 +287,7 @@ public class ValueNotifier<T> : ChangeNotifier, IValueListenable<T>
         }
     }
 
-    public T Value
+    public virtual T Value
     {
         get => _value;
         set

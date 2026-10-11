@@ -122,6 +122,214 @@ public sealed class UndoHistoryDartParityTests : IDisposable
         Assert.Equal(canRedo, controller.Value.CanRedo);
     }
 
+    [Fact]
+    public void TextEditingControllerSharesValueAndNotificationsThroughValueNotifier()
+    {
+        using var controller = new TextEditingController("seed");
+        ValueNotifier<TextEditingValue> notifier = controller;
+        IValueListenable<TextEditingValue> listenable = controller;
+        int calls = 0;
+        notifier.AddListener(() => calls++);
+        var next = new TextEditingValue("next", TextSelection.Collapsed(4), new TextRange(0, 4));
+
+        notifier.Value = next;
+        Assert.Equal(next, controller.Value);
+        Assert.Equal(next, listenable.Value);
+        Assert.Equal("next", controller.Text);
+        Assert.Equal(1, calls);
+        notifier.Value = next;
+        Assert.Equal(1, calls);
+
+        controller.ClearComposing();
+        Assert.Null(notifier.Value.Composing);
+        Assert.Equal(2, calls);
+        controller.Text = "edited";
+        Assert.Equal("edited", notifier.Value.Text);
+        Assert.Equal(TextSelection.Collapsed(6), notifier.Value.Selection);
+        Assert.Equal(3, calls);
+    }
+
+    [Fact]
+    public void TextControllerHistoryRestoresSelectionAndComposingWithoutChangingChildLayout()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new TextEditingController("seed");
+        using var controller = new UndoHistoryController();
+        var childKey = new ValueKey<string>("child");
+        tester.PumpWidget(new Center(child: new UndoHistory<TextEditingValue>(
+            value, next => value.Value = next, focus,
+            new SizedBox(width: 80, height: 30, key: childKey), controller: controller)));
+        tester.Pump(Throttle);
+        TextEditingValue initial = value.Value;
+        var edited = new TextEditingValue("next", new TextSelection(1, 3), new TextRange(0, 4));
+        ValueNotifier<TextEditingValue> notifier = value;
+        notifier.Value = edited;
+        tester.Pump(Throttle);
+        controller.Undo();
+        Assert.Equal(initial, value.Value);
+        controller.Redo();
+        Assert.Equal(edited, value.Value);
+        Assert.Equal(new Avalonia.Size(80, 30), tester.GetSize(Find.ByKey(childKey)));
+        Assert.Same(
+            tester.Widget<UndoHistory<TextEditingValue>>(Find.ByType<UndoHistory<TextEditingValue>>()).Child,
+            tester.Widget<Actions>(Find.ByType<Actions>()).Child);
+    }
+
+    [Fact]
+    public void NullableValueTypeDistinguishesInitialAbsenceFromZero()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new ValueNotifier<int?>(0);
+        using var controller = new UndoHistoryController();
+        var previous = new List<int?>();
+        tester.PumpWidget(new UndoHistory<int?>(
+            value, next => value.Value = next, focus, new SizedBox(),
+            shouldChangeUndoStack: (oldValue, _) =>
+            {
+                previous.Add(oldValue);
+                return true;
+            },
+            controller: controller));
+        tester.Pump(Throttle);
+        value.Value = 1;
+        tester.Pump(Throttle);
+
+        Assert.Equal(new int?[] { null, 0 }, previous);
+        controller.Undo();
+        Assert.Equal(0, value.Value);
+        controller.Redo();
+        Assert.Equal(1, value.Value);
+    }
+
+    [Fact]
+    public void InitialNullIsIgnoredAndNullModifierFallsBackToTheValue()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new ValueNotifier<string?>(null);
+        using var controller = new UndoHistoryController();
+        int pushes = 0;
+        tester.PumpWidget(new UndoHistory<string?>(
+            value, next => value.Value = next, focus, new SizedBox(),
+            shouldChangeUndoStack: (_, _) =>
+            {
+                pushes++;
+                return true;
+            },
+            undoStackModifier: _ => null,
+            controller: controller));
+        tester.Pump(Throttle);
+        Assert.Equal(0, pushes);
+        value.Value = "first";
+        tester.Pump(Throttle);
+        AssertCan(controller, false, false);
+        value.Value = "second";
+        tester.Pump(Throttle);
+        controller.Undo();
+        Assert.Equal("first", value.Value);
+        controller.Redo();
+        Assert.Equal("second", value.Value);
+    }
+
+    [Fact]
+    public void UndoBeforeInitialThrottleExpiresPreservesTheInitialPush()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new ValueNotifier<int>(0);
+        using var controller = new UndoHistoryController();
+        var key = new LabeledGlobalKey<UndoHistoryState<int>>("undo");
+        tester.PumpWidget(new UndoHistory<int>(
+            value, next => value.Value = next, focus, new SizedBox(), controller: controller, key: key));
+        key.CurrentState!.Undo();
+        tester.Pump(Throttle);
+        value.Value = 1;
+        tester.Pump(Throttle);
+        controller.Undo();
+        Assert.Equal(0, value.Value);
+    }
+
+    [Fact]
+    public void ThrottleKeepsLatestValueWithoutRestartingAndUndoCancelsPendingPush()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new ValueNotifier<int>(0);
+        using var controller = new UndoHistoryController();
+        var key = new LabeledGlobalKey<UndoHistoryState<int>>("undo");
+        tester.PumpWidget(new UndoHistory<int>(
+            value, next => value.Value = next, focus, new SizedBox(), controller: controller, key: key));
+        tester.Pump(Throttle);
+        value.Value = 1;
+        tester.Pump(TimeSpan.FromMilliseconds(250));
+        value.Value = 2;
+        tester.Pump(TimeSpan.FromMilliseconds(250));
+        AssertCan(controller, true, false);
+        value.Value = 3;
+        key.CurrentState!.Undo();
+        Assert.Equal(2, value.Value);
+        tester.Pump(Throttle);
+        controller.Undo();
+        Assert.Equal(0, value.Value);
+        controller.Redo();
+        Assert.Equal(2, value.Value);
+    }
+
+    [Fact]
+    public void FiltersAndModifiersSelectTheValuesRecorded()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var value = new ValueNotifier<string>("SEED");
+        using var controller = new UndoHistoryController();
+        tester.PumpWidget(new UndoHistory<string>(
+            value, next => value.Value = next, focus, new SizedBox(),
+            shouldChangeUndoStack: (_, next) => next != "skip",
+            undoStackModifier: next => next.ToUpperInvariant(),
+            controller: controller));
+        tester.Pump(Throttle);
+        value.Value = "skip";
+        tester.Pump(Throttle);
+        AssertCan(controller, false, false);
+        value.Value = "next";
+        tester.Pump(Throttle);
+        controller.Undo();
+        Assert.Equal("SEED", value.Value);
+        controller.Redo();
+        Assert.Equal("NEXT", value.Value);
+    }
+
+    [Fact]
+    public void ReplacingNotifierAndControllerRemovesOldSubscriptions()
+    {
+        using FrameworkDartTester tester = NewTester();
+        using var focus = new FocusNode();
+        using var oldValue = new ValueNotifier<int>(0);
+        using var newValue = new ValueNotifier<int>(10);
+        using var oldController = new UndoHistoryController();
+        using var newController = new UndoHistoryController();
+        Widget History(ValueNotifier<int> value, UndoHistoryController controller) => new UndoHistory<int>(
+            value, next => value.Value = next, focus, new SizedBox(), controller: controller);
+        tester.PumpWidget(History(oldValue, oldController));
+        tester.Pump(Throttle);
+        oldValue.Value = 1;
+        tester.Pump(Throttle);
+        tester.PumpWidget(History(newValue, newController));
+        oldValue.Value = 2;
+        tester.Pump(Throttle);
+        newValue.Value = 11;
+        tester.Pump(Throttle);
+        AssertCan(newController, false, false);
+        newValue.Value = 12;
+        tester.Pump(Throttle);
+        oldController.Undo();
+        Assert.Equal(12, newValue.Value);
+        newController.Undo();
+        Assert.Equal(11, newValue.Value);
+    }
+
     // The shared body of 'allows undo and redo to be called programmatically from the
     // UndoHistoryController' and 'allows undo and redo to be called using the keyboard'.
     private static void RunUndoRedoSequence(bool useKeyboard, TargetPlatform platform)
