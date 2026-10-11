@@ -45,7 +45,8 @@ public sealed class TextFormField : FormField<string>
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
-        Key? key = null)
+        Key? key = null,
+        IReadOnlyList<TextInputFormatter>? inputFormatters = null)
         : base(
             builder: field => BuildField(
                 (TextFormFieldState)field,
@@ -76,7 +77,8 @@ public sealed class TextFormField : FormField<string>
                 contextMenuBuilder,
                 magnifierConfiguration,
                 onSelectionChanged,
-                errorBuilder),
+                errorBuilder,
+                inputFormatters),
             onSaved: onSaved,
             forceErrorText: forceErrorText,
             validator: validator,
@@ -117,9 +119,11 @@ public sealed class TextFormField : FormField<string>
         ContextMenuBuilder = contextMenuBuilder ?? TextField.DefaultContextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifier.AdaptiveMagnifierConfiguration;
         OnSelectionChanged = onSelectionChanged;
+        InputFormatters = inputFormatters;
     }
 
     public TextEditingController? Controller { get; }
+    public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
     public string? InitialText { get; }
     public FocusNode? FocusNode { get; }
     public InputDecoration Decoration { get; }
@@ -214,7 +218,8 @@ public sealed class TextFormField : FormField<string>
         EditableTextContextMenuBuilder? contextMenuBuilder,
         TextMagnifierConfiguration? magnifierConfiguration,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged,
-        FormFieldErrorBuilder? errorBuilder)
+        FormFieldErrorBuilder? errorBuilder,
+        IReadOnlyList<TextInputFormatter>? inputFormatters)
     {
         var effectiveDecoration = decoration;
         if (state.ErrorText is { } errorText)
@@ -240,6 +245,7 @@ public sealed class TextFormField : FormField<string>
             minLines: minLines,
             expands: expands,
             maxLength: maxLength,
+            inputFormatters: inputFormatters,
             onChanged: value => state.HandleTextFieldChanged(value, onChanged),
             onTap: onTap,
             onEditingComplete: onEditingComplete,

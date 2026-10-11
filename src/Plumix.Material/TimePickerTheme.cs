@@ -198,7 +198,7 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
             ? _colors.Primary
             : WithOpacity(_colors.OnSurface, 0.60));
 
-    public override TextStyle DayPeriodTextStyle => _textTheme.TitleMedium;
+    public override TextStyle DayPeriodTextStyle => _textTheme.TitleMedium.CopyWith(color: DayPeriodTextColor);
 
     public override Color DialBackgroundColor =>
         WithOpacity(_colors.OnSurface, _colors.Brightness == Brightness.Dark ? 0.12 : 0.08);
@@ -310,7 +310,7 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
             ? _colors.OnTertiaryContainer
             : _colors.OnSurfaceVariant);
 
-    public override TextStyle DayPeriodTextStyle => _textTheme.TitleMedium;
+    public override TextStyle DayPeriodTextStyle => _textTheme.TitleMedium.CopyWith(color: DayPeriodTextColor);
 
     public override Color DialBackgroundColor => _colors.SurfaceContainerHighest;
 
@@ -333,7 +333,8 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
 
     public override Color EntryModeIconColor => _colors.OnSurface;
 
-    public override TextStyle HelpTextStyle => _textTheme.LabelMedium.CopyWith(color: _colors.OnSurfaceVariant);
+    public override TextStyle HelpTextStyle => WidgetStateTextStyle.ResolveWith(
+        _ => _textTheme.LabelMedium.CopyWith(color: _colors.OnSurfaceVariant));
 
     public override Color HourMinuteColor => WidgetStateColor.ResolveWith(states =>
         {
@@ -388,11 +389,11 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
     public override Color HourMinuteTextColor => WidgetStateColor.ResolveWith(
         states => states.Contains(WidgetState.Selected) ? _colors.OnPrimaryContainer : _colors.OnSurface);
 
-    public override TextStyle HourMinuteTextStyle => _entryMode switch
-    {
-        TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly => _textTheme.DisplayLarge,
-        _ => _textTheme.DisplayMedium,
-    };
+    public override TextStyle HourMinuteTextStyle => WidgetStateTextStyle.ResolveWith(states =>
+        (_entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly
+            ? _textTheme.DisplayLarge
+            : _textTheme.DisplayMedium).CopyWith(
+                color: WidgetStateProperty<Color>.ResolveAs(HourMinuteTextColor, states)));
 
     // This is NOT correct, but there's no token for 'time-input.container.shape', so this reuses the
     // radius from the hour/minute selector shape, exactly as Dart does.

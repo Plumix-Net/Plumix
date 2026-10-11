@@ -1,4 +1,6 @@
 using Plumix.Widgets;
+using Plumix.UI;
+using System.Collections;
 
 namespace Plumix.Material;
 
@@ -75,4 +77,32 @@ public readonly record struct TimeOfDay : IComparable<TimeOfDay>
         TimeOfDayFormat.HColonMm => HourFormat.H,
         _ => HourFormat.HH,
     };
+}
+
+/// <summary>A restorable value that stores a time of day as minutes followed by hours.</summary>
+public class RestorableTimeOfDay : RestorableValue<TimeOfDay>
+{
+    private readonly TimeOfDay _defaultValue;
+
+    public RestorableTimeOfDay(TimeOfDay defaultValue)
+    {
+        _defaultValue = defaultValue;
+    }
+
+    public override TimeOfDay CreateDefaultValue() => _defaultValue;
+
+    protected override void DidUpdateValue(TimeOfDay oldValue)
+    {
+        RestorationSerialization.AssertSerializable(Value.Hour);
+        RestorationSerialization.AssertSerializable(Value.Minute);
+        NotifyListeners();
+    }
+
+    public override TimeOfDay FromPrimitives(object? data)
+    {
+        var timeData = (IList)data!;
+        return new TimeOfDay(hour: (int)timeData[1]!, minute: (int)timeData[0]!);
+    }
+
+    public override object ToPrimitives() => new List<int> { Value.Minute, Value.Hour };
 }

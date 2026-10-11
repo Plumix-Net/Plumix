@@ -35,6 +35,53 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage>
         },
       );
 
+  late final RestorableRouteFuture<TimeOfDay?> _restorableTimePickerRoute =
+      RestorableRouteFuture<TimeOfDay?>(
+        onComplete: (TimeOfDay? value) {
+          if (mounted && value != null) setState(() => _selectedTime = value);
+        },
+        onPresent: (NavigatorState navigator, Object? arguments) {
+          return navigator.restorablePush(
+            _timePickerRoute,
+            arguments: <String, Object?>{
+              'hour': _selectedTime.hour,
+              'minute': _selectedTime.minute,
+              'use24Hour': _use24HourTime,
+              'useMaterial3': _useMaterial3,
+            },
+          );
+        },
+      );
+
+  @pragma('vm:entry-point')
+  static Route<TimeOfDay> _timePickerRoute(
+    BuildContext context,
+    Object? arguments,
+  ) {
+    final Map<Object?, Object?> args = arguments! as Map<Object?, Object?>;
+    return DialogRoute<TimeOfDay>(
+      context: context,
+      builder: (BuildContext context) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(
+          alwaysUse24HourFormat: args['use24Hour']! as bool,
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            // ignore: deprecated_member_use
+            useMaterial3: args['useMaterial3']! as bool,
+          ),
+          child: TimePickerDialog(
+            initialTime: TimeOfDay(
+              hour: args['hour']! as int,
+              minute: args['minute']! as int,
+            ),
+            restorationId: 'time_picker_dialog',
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   String? get restorationId => 'date_picker_demo';
 
@@ -44,11 +91,13 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage>
       _restorableDatePickerRoute,
       'date_picker_route_future',
     );
+    registerForRestoration(_restorableTimePickerRoute, 'time_picker_route_future');
   }
 
   @override
   void dispose() {
     _restorableDatePickerRoute.dispose();
+    _restorableTimePickerRoute.dispose();
     super.dispose();
   }
 
@@ -273,6 +322,10 @@ class _DatePickerDemoPageState extends State<DatePickerDemoPage>
                 _buildToggle(
                   'Input time',
                   () => _openTimePicker(context, TimePickerEntryMode.input),
+                ),
+                _buildToggle(
+                  'Restorable time',
+                  () => _restorableTimePickerRoute.present(),
                 ),
               ],
             ),

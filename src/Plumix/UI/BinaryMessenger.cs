@@ -151,6 +151,13 @@ public class ServicesBinding
     {
         new MethodChannel(SystemChannels.Platform.Name, SystemChannels.Platform.Codec, DefaultBinaryMessenger)
             .SetMethodCallHandler(HandlePlatformMessage);
+        new BasicMessageChannel<object?>(
+                SystemChannels.System.Name, SystemChannels.System.Codec, DefaultBinaryMessenger)
+            .SetMessageHandler(async message =>
+            {
+                await Painting.PaintingBinding.Instance.HandleSystemMessage(message!);
+                return null;
+            });
     }
 
     /// <summary>The ambient services binding.</summary>

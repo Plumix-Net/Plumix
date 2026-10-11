@@ -12,7 +12,7 @@ using Xunit;
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
-public sealed class MaterialTimePickerDialogTests : IDisposable
+public sealed partial class MaterialTimePickerDialogTests : IDisposable
 {
     private static readonly Size ViewSize = new(500, 700);
 
@@ -21,6 +21,8 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Scheduler.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = null;
+        PlatformDefaults.DebugIsWebOverride = null;
     }
 
     public void Dispose()
@@ -28,6 +30,8 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Scheduler.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
+        PlatformDefaults.DebugTargetPlatformOverride = null;
+        PlatformDefaults.DebugIsWebOverride = null;
     }
 
     [Fact]
@@ -529,6 +533,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public void DayPeriodButtons_UseCheckedOffIOSAndSelectedOnIOS()
     {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         using var android = CreateHarness(
             DialogRoute(new TimePickerDialog(new TimeOfDay(14, 0))),
             theme: ThemeData.Light with { Platform = TargetPlatform.Android });
@@ -541,6 +546,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         var am = FindSemantics(semantics, node => ContainsLabel(node, "AM") && node.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.False(am!.Flags.HasFlag(SemanticsFlags.IsChecked));
 
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
         using var ios = CreateHarness(
             DialogRoute(new TimePickerDialog(new TimeOfDay(14, 0))),
             theme: ThemeData.Light with { Platform = TargetPlatform.IOS });
@@ -1016,7 +1022,10 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
                     Size: mediaSize ?? ViewSize,
                     AlwaysUse24HourFormat: alwaysUse24HourFormat,
                     TextScaler: textScaler),
-                new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child)))));
+                new Localizations(
+                    locale: new Locale("en"),
+                    delegates: [DefaultWidgetsLocalizations.Delegate, DefaultMaterialLocalizations.Delegate],
+                    child: new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child))))));
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 

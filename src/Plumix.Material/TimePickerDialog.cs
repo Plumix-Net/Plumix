@@ -228,7 +228,9 @@ internal sealed class DialTimePickerHeader : StatelessWidget
         double dayPeriodHeight = orientation == Orientation.Portrait
             ? defaultTheme.DayPeriodPortraitSize.Height
             : defaultTheme.DayPeriodLandscapeSize.Height;
-        double minInteractiveVerticalPadding = Math.Max(0, WidgetConstants.MinInteractiveDimension - dayPeriodHeight);
+        double minInteractiveVerticalPadding = Math.Max(
+            0,
+            WidgetConstants.MinInteractiveDimension * (orientation == Orientation.Portrait ? 2 : 1) - dayPeriodHeight);
         var helpStyle = theme.HelpTextStyle ?? defaultTheme.HelpTextStyle;
 
         Widget selector = new Row(
@@ -327,7 +329,8 @@ internal sealed class DialTimeSelectorControl : StatelessWidget
         var textColor = WidgetStateProperty<Color>.ResolveAs(
             (theme.HourMinuteTextColor ?? defaultTheme.HourMinuteTextColor),
             states);
-        var effectiveStyle = (theme.HourMinuteTextStyle ?? defaultTheme.HourMinuteTextStyle)
+        var effectiveStyle = WidgetStateProperty<TextStyle>.ResolveAs(
+                theme.HourMinuteTextStyle ?? defaultTheme.HourMinuteTextStyle, states)
             .CopyWith(color: textColor);
 
         return new SizedBox(
@@ -432,15 +435,21 @@ internal sealed class TimeSelectorSeparator : StatelessWidget
         bool useMaterial3 = Theme.Of(context).UseMaterial3;
         var entryMode = TimePickerModel.EntryModeOf(context);
         TimePickerDefaults defaultTheme = useMaterial3
-            ? new TimePickerDefaultsM3(context, entryMode)
+            ? new TimePickerDefaultsM3(context, TimePickerEntryMode.Dial)
             : new TimePickerDefaultsM2(context);
         var states = new HashSet<WidgetState>();
-        var separatorColor = (theme.TimeSelectorSeparatorColor ?? defaultTheme.TimeSelectorSeparatorColor)
-            ?.Resolve(states) ?? WidgetStateProperty<Color>.ResolveAs(
-                (theme.HourMinuteTextColor ?? defaultTheme.HourMinuteTextColor),
-                states);
-        var separatorStyle = (theme.TimeSelectorSeparatorTextStyle ?? defaultTheme.TimeSelectorSeparatorTextStyle)
-            ?.Resolve(states) ?? theme.HourMinuteTextStyle ?? defaultTheme.HourMinuteTextStyle;
+        var separatorColor = WidgetStateProperty<Color>.ResolveAs(
+            theme.TimeSelectorSeparatorColor?.Resolve(states)
+                ?? theme.HourMinuteTextColor
+                ?? defaultTheme.TimeSelectorSeparatorColor?.Resolve(states)
+                ?? defaultTheme.HourMinuteTextColor,
+            states);
+        var separatorStyle = WidgetStateProperty<TextStyle>.ResolveAs(
+            theme.TimeSelectorSeparatorTextStyle?.Resolve(states)
+                ?? theme.HourMinuteTextStyle
+                ?? defaultTheme.TimeSelectorSeparatorTextStyle?.Resolve(states)
+                ?? defaultTheme.HourMinuteTextStyle,
+            states);
         double height = entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly
             ? defaultTheme.HourMinuteSize.Height
             : defaultTheme.HourMinuteInputSize.Height;
@@ -628,9 +637,10 @@ internal sealed class AmPmButton : StatelessWidget
         var textColor = WidgetStateProperty<Color>.ResolveAs(
             (theme.DayPeriodTextColor ?? defaultTheme.DayPeriodTextColor),
             states);
-        var textStyle = (theme.DayPeriodTextStyle ?? defaultTheme.DayPeriodTextStyle)
+        var textStyle = WidgetStateProperty<TextStyle>.ResolveAs(
+                theme.DayPeriodTextStyle ?? defaultTheme.DayPeriodTextStyle, states)
             .CopyWith(color: textColor);
-        bool isIOS = Theme.Of(context).Platform == TargetPlatform.IOS;
+        bool isIOS = PlatformDefaults.TargetPlatform == TargetPlatform.IOS;
 
         return new Semantics(
             selected: isIOS ? Selected : null,
@@ -648,8 +658,7 @@ internal sealed class AmPmButton : StatelessWidget
                         child: new Center(child: new Text(
                             Label,
                             style: textStyle,
-                            textScaler: TextScaler
-                                .Linear(MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0)
+                            textScaler: MediaQuery.TextScalerOf(context)
                                 .Clamp(maxScaleFactor: 2.0)))))));
     }
 }
@@ -777,7 +786,10 @@ internal sealed class RenderDayPeriodInputPadding : RenderShiftedBox
             _ when position.X > center.X => new Point(center.X + 1, center.Y),
             _ => new Point(center.X - 1, center.Y),
         };
-        return Child.HitTest(result, newPosition);
+        return result.AddWithRawTransform(
+            MatrixUtils.ForceToPoint(newPosition),
+            newPosition,
+            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
 }
 
@@ -792,8 +804,10 @@ internal sealed class TimePickerInput : StatefulWidget
         bool? autofocusHour,
         bool? autofocusMinute,
         bool emptyInitialTime,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
+        RestorationId = restorationId;
         InitialSelectedTime = initialSelectedTime;
         ErrorInvalidText = errorInvalidText;
         HourLabelText = hourLabelText;
@@ -803,6 +817,8 @@ internal sealed class TimePickerInput : StatefulWidget
         AutofocusMinute = autofocusMinute;
         EmptyInitialTime = emptyInitialTime;
     }
+
+    public string? RestorationId { get; }
 
     public TimeOfDay InitialSelectedTime { get; }
     public string? ErrorInvalidText { get; }
@@ -816,31 +832,44 @@ internal sealed class TimePickerInput : StatefulWidget
     public override State CreateState() => new TimePickerInputState();
 }
 
-internal sealed class TimePickerInputState : State<TimePickerInput>
+internal sealed class TimePickerInputState : RestorationState<TimePickerInput>
 {
-    private TimeOfDay _selectedTime;
-    private bool _hourHasError;
-    private bool _minuteHasError;
+    private RestorableTimeOfDay? _selectedTimeValue;
+    private RestorableTimeOfDay _selectedTime => _selectedTimeValue ??= new(Current.InitialSelectedTime);
+    private readonly RestorableBool _hourHasError = new(false);
+    private readonly RestorableBool _minuteHasError = new(false);
 
-    private TimePickerInput Current => (TimePickerInput)StateWidget;
+    private TimePickerInput Current => Widget;
 
-    public override void InitState()
+    protected override string? RestorationId => Current.RestorationId;
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
     {
-        _selectedTime = Current.InitialSelectedTime;
+        RegisterForRestoration(_selectedTime, "selected_time");
+        RegisterForRestoration(_hourHasError, "hour_has_error");
+        RegisterForRestoration(_minuteHasError, "minute_has_error");
+    }
+
+    public override void Dispose()
+    {
+        _selectedTime.Dispose();
+        _hourHasError.Dispose();
+        _minuteHasError.Dispose();
+        base.Dispose();
     }
 
     private int? ParseHour(string? value)
     {
         if (value is null) return null;
-        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int newHour)) return null;
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int newHour)) return null;
         if (MediaQuery.MaybeAlwaysUse24HourFormatOf(Context) ?? false)
         {
             return newHour is >= 0 and < TimeOfDay.HoursPerDay ? newHour : null;
         }
 
         if (newHour is <= 0 or > TimeOfDay.HoursPerPeriod) return null;
-        if ((_selectedTime.Period == DayPeriod.Pm && newHour != 12)
-            || (_selectedTime.Period == DayPeriod.Am && newHour == 12))
+        if ((_selectedTime.Value.Period == DayPeriod.Pm && newHour != 12)
+            || (_selectedTime.Value.Period == DayPeriod.Am && newHour == 12))
         {
             newHour = (newHour + TimeOfDay.HoursPerPeriod) % TimeOfDay.HoursPerDay;
         }
@@ -851,14 +880,14 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
     private static int? ParseMinute(string? value)
     {
         if (value is null) return null;
-        if (!int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int newMinute)) return null;
+        if (!int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int newMinute)) return null;
         return newMinute is >= 0 and < TimeOfDay.MinutesPerHour ? newMinute : null;
     }
 
     private string? ValidateHour(string? value)
     {
         int? newHour = ParseHour(value);
-        SetState(() => _hourHasError = newHour is null);
+        SetState(() => _hourHasError.Value = newHour is null);
         // Return an empty error string so the field paints its error state without an inline message.
         return newHour is null ? string.Empty : null;
     }
@@ -866,7 +895,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
     private string? ValidateMinute(string? value)
     {
         int? newMinute = ParseMinute(value);
-        SetState(() => _minuteHasError = newMinute is null);
+        SetState(() => _minuteHasError.Value = newMinute is null);
         return newMinute is null ? string.Empty : null;
     }
 
@@ -874,29 +903,29 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
     {
         int? newHour = ParseHour(value);
         if (newHour is null) return;
-        _selectedTime = new TimeOfDay(newHour.Value, _selectedTime.Minute);
-        TimePickerModel.SetSelectedTime(Context, _selectedTime);
-        FocusManager.Instance.FocusNext();
+        _selectedTime.Value = new TimeOfDay(newHour.Value, _selectedTime.Value.Minute);
+        TimePickerModel.SetSelectedTime(Context, _selectedTime.Value);
+        FocusScope.Of(Context).RequestFocus();
     }
 
     private void HandleHourChanged(string value)
     {
         int? newHour = ParseHour(value);
-        if (newHour is not null && value.Length == 2) FocusManager.Instance.FocusNext();
+        if (newHour is not null && value.Length == 2) FocusScope.Of(Context).NextFocus();
     }
 
     private void HandleMinuteSavedSubmitted(string? value)
     {
         int? newMinute = ParseMinute(value);
         if (newMinute is null) return;
-        _selectedTime = new TimeOfDay(_selectedTime.Hour, newMinute.Value);
-        TimePickerModel.SetSelectedTime(Context, _selectedTime);
-        FocusManager.Instance.PrimaryFocus?.Unfocus();
+        _selectedTime.Value = new TimeOfDay(_selectedTime.Value.Hour, newMinute.Value);
+        TimePickerModel.SetSelectedTime(Context, _selectedTime.Value);
+        FocusScope.Of(Context).Unfocus();
     }
 
     private void HandleDayPeriodChanged(TimeOfDay value)
     {
-        _selectedTime = value;
+        _selectedTime.Value = value;
         TimePickerModel.SetSelectedTime(Context, value);
     }
 
@@ -937,7 +966,8 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                             new Padding(
                                 new Thickness(0, 0, 0, 10),
                                 new HourTextField(
-                                    selectedTime: _selectedTime,
+                                    restorationId: "hour_text_field",
+                                    selectedTime: _selectedTime.Value,
                                     style: hourStyle,
                                     autofocus: Current.AutofocusHour,
                                     inputAction: TextInputActionType.Next,
@@ -946,7 +976,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                                     onChanged: HandleHourChanged,
                                     hourLabelText: Current.HourLabelText,
                                     emptyInitialTime: Current.EmptyInitialTime)),
-                            .. _hourHasError || _minuteHasError
+                            .. _hourHasError.Value || _minuteHasError.Value
                                 ? Array.Empty<Widget>()
                                 : new Widget[]
                                 {
@@ -965,7 +995,8 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                             new Padding(
                                 new Thickness(0, 0, 0, 10),
                                 new MinuteTextField(
-                                    selectedTime: _selectedTime,
+                                    restorationId: "minute_text_field",
+                                    selectedTime: _selectedTime.Value,
                                     style: hourStyle,
                                     autofocus: Current.AutofocusMinute,
                                     inputAction: TextInputActionType.Done,
@@ -973,7 +1004,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                                     onSavedSubmitted: HandleMinuteSavedSubmitted,
                                     minuteLabelText: Current.MinuteLabelText,
                                     emptyInitialTime: Current.EmptyInitialTime)),
-                            .. _hourHasError || _minuteHasError
+                            .. _hourHasError.Value || _minuteHasError.Value
                                 ? Array.Empty<Widget>()
                                 : new Widget[]
                                 {
@@ -1007,7 +1038,7 @@ internal sealed class TimePickerInputState : State<TimePickerInput>
                             Current.HelpText,
                             style: pickerTheme.HelpTextStyle ?? defaultTheme.HelpTextStyle)),
                     new Row(crossAxisAlignment: CrossAxisAlignment.Start, children: rowChildren),
-                    _hourHasError || _minuteHasError
+                    _hourHasError.Value || _minuteHasError.Value
                         ? new Text(
                             Current.ErrorInvalidText ?? localizations.InvalidTimeLabel,
                             style: theme.TextTheme.BodyMedium.CopyWith(color: theme.ColorScheme.Error))
@@ -1028,8 +1059,10 @@ internal sealed class HourTextField : StatelessWidget
         Action<string> onChanged,
         string? hourLabelText,
         bool emptyInitialTime,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
+        RestorationId = restorationId;
         SelectedTime = selectedTime;
         Style = style;
         Autofocus = autofocus;
@@ -1040,6 +1073,8 @@ internal sealed class HourTextField : StatelessWidget
         HourLabelText = hourLabelText;
         EmptyInitialTime = emptyInitialTime;
     }
+
+    public string? RestorationId { get; }
 
     public TimeOfDay SelectedTime { get; }
     public TextStyle Style { get; }
@@ -1052,6 +1087,7 @@ internal sealed class HourTextField : StatelessWidget
     public bool EmptyInitialTime { get; }
 
     public override Widget Build(BuildContext context) => new HourMinuteTextField(
+        restorationId: RestorationId,
         selectedTime: SelectedTime,
         isHour: true,
         autofocus: Autofocus,
@@ -1075,8 +1111,10 @@ internal sealed class MinuteTextField : StatelessWidget
         Action<string?> onSavedSubmitted,
         string? minuteLabelText,
         bool emptyInitialTime,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
+        RestorationId = restorationId;
         SelectedTime = selectedTime;
         Style = style;
         Autofocus = autofocus;
@@ -1086,6 +1124,8 @@ internal sealed class MinuteTextField : StatelessWidget
         MinuteLabelText = minuteLabelText;
         EmptyInitialTime = emptyInitialTime;
     }
+
+    public string? RestorationId { get; }
 
     public TimeOfDay SelectedTime { get; }
     public TextStyle Style { get; }
@@ -1097,6 +1137,7 @@ internal sealed class MinuteTextField : StatelessWidget
     public bool EmptyInitialTime { get; }
 
     public override Widget Build(BuildContext context) => new HourMinuteTextField(
+        restorationId: RestorationId,
         selectedTime: SelectedTime,
         isHour: false,
         autofocus: Autofocus,
@@ -1121,8 +1162,10 @@ internal sealed class HourMinuteTextField : StatefulWidget
         Action<string?> onSavedSubmitted,
         bool emptyInitialTime,
         Action<string>? onChanged = null,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
+        RestorationId = restorationId;
         SelectedTime = selectedTime;
         IsHour = isHour;
         Autofocus = autofocus;
@@ -1134,6 +1177,8 @@ internal sealed class HourMinuteTextField : StatefulWidget
         EmptyInitialTime = emptyInitialTime;
         OnChanged = onChanged;
     }
+
+    public string? RestorationId { get; }
 
     public TimeOfDay SelectedTime { get; }
     public bool IsHour { get; }
@@ -1149,13 +1194,21 @@ internal sealed class HourMinuteTextField : StatefulWidget
     public override State CreateState() => new HourMinuteTextFieldState();
 }
 
-internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
+internal sealed class HourMinuteTextFieldState : RestorationState<HourMinuteTextField>
 {
-    private readonly TextEditingController _controller = new();
+    private readonly RestorableTextEditingController _controller = new();
     private readonly FocusNode _focusNode = new();
-    private bool _controllerHasBeenSet;
+    private readonly RestorableBool _controllerHasBeenSet = new(false);
 
     private HourMinuteTextField Current => (HourMinuteTextField)StateWidget;
+
+    protected override string? RestorationId => Current.RestorationId;
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
+    {
+        RegisterForRestoration(_controller, "text_editing_controller");
+        RegisterForRestoration(_controllerHasBeenSet, "has_controller_been_set");
+    }
 
     private string FormattedValue
     {
@@ -1171,19 +1224,30 @@ internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
 
     public override void InitState()
     {
-        _focusNode.AddListener(() => SetState(() => { }));
+        base.InitState();
+        _focusNode.AddListener(() => SetState(() =>
+        {
+            if (PlatformDefaults.IsWeb && _focusNode.HasFocus
+                && FocusManager.Instance.PrimaryFocus?.Context is { } primaryContext)
+            {
+                Actions.MaybeInvoke(primaryContext, new SelectAllTextIntent(SelectionChangedCause.Keyboard));
+            }
+        }));
     }
 
     public override void DidChangeDependencies()
     {
-        if (_controllerHasBeenSet) return;
-        _controllerHasBeenSet = true;
-        _controller.Text = Current.EmptyInitialTime ? string.Empty : FormattedValue;
+        base.DidChangeDependencies();
+        if (_controllerHasBeenSet.Value) return;
+        _controllerHasBeenSet.Value = true;
+        _controller.Value.Value = new TextEditingValue(
+            text: Current.EmptyInitialTime ? string.Empty : FormattedValue);
     }
 
     public override void Dispose()
     {
         _controller.Dispose();
+        _controllerHasBeenSet.Dispose();
         _focusNode.Dispose();
 
         base.Dispose();
@@ -1213,14 +1277,15 @@ internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
             ? WidgetStateProperty<Color>.ResolveAs(startingFillColor, focusedStates)
             : _focusNode.HasFocus
                 ? Colors.Transparent
-                : WidgetStateProperty<Color>.ResolveAs(startingFillColor, new HashSet<WidgetState>());
+                : startingFillColor;
 
         inputDecoration = inputDecoration with { HintText = hintText, FillColor = fillColor };
 
         var effectiveTextColor = WidgetStateProperty<Color>.ResolveAs((
             pickerTheme.HourMinuteTextColor ?? defaultTheme.HourMinuteTextColor)
             , focusedStates);
-        var effectiveStyle = Current.Style.CopyWith(color: effectiveTextColor);
+        var effectiveStyle = WidgetStateProperty<TextStyle>.ResolveAs(Current.Style, focusedStates)
+            .CopyWith(color: effectiveTextColor);
 
         return new SizedBox(
             width: alwaysUse24HourFormat
@@ -1231,26 +1296,28 @@ internal sealed class HourMinuteTextFieldState : State<HourMinuteTextField>
                 : defaultTheme.HourMinuteInputSize.Height,
             child: MediaQuery.WithNoTextScaling(
                 context,
-                new Semantics(
-                    label: Current.SemanticHintText,
-                    child: new TextFormField(
-                        controller: _controller,
-                        focusNode: _focusNode,
-                        autofocus: Current.Autofocus ?? false,
-                        expands: true,
-                        maxLines: null,
-                        maxLength: 2,
-                        buildCounter: (_, _, _, _) => new SizedBox(),
-                        textAlign: TextAlign.Center,
-                        textInputAction: Current.InputAction,
-                        keyboardType: TextInputType.Number,
-                        style: effectiveStyle,
-                        decoration: inputDecoration,
-                        validator: Current.Validator,
-                        onEditingComplete: () => Current.OnSavedSubmitted(_controller.Text),
-                        onSaved: value => Current.OnSavedSubmitted(value),
-                        onFieldSubmitted: value => Current.OnSavedSubmitted(value),
-                        onChanged: Current.OnChanged))));
+                new UnmanagedRestorationScope(
+                    bucket: Bucket,
+                    child: new Semantics(
+                        label: Current.SemanticHintText,
+                        child: new TextFormField(
+                            restorationId: "hour_minute_text_form_field",
+                            controller: _controller.Value,
+                            focusNode: _focusNode,
+                            autofocus: Current.Autofocus ?? false,
+                            expands: true,
+                            maxLines: null,
+                            inputFormatters: [new LengthLimitingTextInputFormatter(2)],
+                            textAlign: TextAlign.Center,
+                            textInputAction: Current.InputAction,
+                            keyboardType: TextInputType.Number,
+                            style: effectiveStyle,
+                            decoration: inputDecoration,
+                            validator: Current.Validator,
+                            onEditingComplete: () => Current.OnSavedSubmitted(_controller.Value.Text),
+                            onSaved: value => Current.OnSavedSubmitted(value),
+                            onFieldSubmitted: value => Current.OnSavedSubmitted(value),
+                            onChanged: Current.OnChanged)))));
     }
 }
 
@@ -1291,7 +1358,7 @@ internal sealed class TimeDialPainter : CustomPainter
         double theta,
         double radius,
         TextDirection textDirection,
-        int selectedValue)
+        int selectedValue) : base(PaintingBinding.Instance.SystemFonts)
     {
         PrimaryLabels = primaryLabels;
         SelectedLabels = selectedLabels;
@@ -1564,14 +1631,20 @@ internal sealed class DialState : State<Dial>
             switch (Current.HourDialType)
             {
                 case HourDialType.TwentyFourHour:
-                    newHour = (int)Math.Round(fraction * TimeOfDay.HoursPerDay) % TimeOfDay.HoursPerDay;
+                    newHour = (int)Math.Round(
+                        fraction * TimeOfDay.HoursPerDay,
+                        MidpointRounding.AwayFromZero) % TimeOfDay.HoursPerDay;
                     break;
                 case HourDialType.TwentyFourHourDoubleRing:
-                    newHour = (int)Math.Round(fraction * TimeOfDay.HoursPerPeriod) % TimeOfDay.HoursPerPeriod;
+                    newHour = (int)Math.Round(
+                        fraction * TimeOfDay.HoursPerPeriod,
+                        MidpointRounding.AwayFromZero) % TimeOfDay.HoursPerPeriod;
                     if (radius < 0.5) newHour += TimeOfDay.HoursPerPeriod;
                     break;
                 default:
-                    newHour = (int)Math.Round(fraction * TimeOfDay.HoursPerPeriod) % TimeOfDay.HoursPerPeriod;
+                    newHour = (int)Math.Round(
+                        fraction * TimeOfDay.HoursPerPeriod,
+                        MidpointRounding.AwayFromZero) % TimeOfDay.HoursPerPeriod;
                     newHour += Current.SelectedTime.PeriodOffset;
                     break;
             }
@@ -1579,7 +1652,9 @@ internal sealed class DialState : State<Dial>
             return Current.SelectedTime.Replacing(hour: newHour);
         }
 
-        int minute = (int)Math.Round(fraction * TimeOfDay.MinutesPerHour) % TimeOfDay.MinutesPerHour;
+        int minute = (int)Math.Round(
+            fraction * TimeOfDay.MinutesPerHour,
+            MidpointRounding.AwayFromZero) % TimeOfDay.MinutesPerHour;
         if (roundMinutes) minute = ((minute + 2) / 5 * 5) % TimeOfDay.MinutesPerHour;
         return Current.SelectedTime.Replacing(minute: minute);
     }
@@ -1629,7 +1704,7 @@ internal sealed class DialState : State<Dial>
     {
         _dragging = true;
         var box = (RenderBox)Context.FindRenderObject()!;
-        _position = ToLocal(box, details.GlobalPosition);
+        _position = box.GlobalToLocal(details.GlobalPosition);
         _dialSize = box.Size;
         _center = new Point(_dialSize.Width / 2, _dialSize.Height / 2);
         UpdateThetaForPan();
@@ -1653,16 +1728,10 @@ internal sealed class DialState : State<Dial>
         if (Current.HourMinuteMode == HourMinuteMode.Hour) Current.OnHourSelected?.Invoke();
     }
 
-    private static Point ToLocal(RenderBox box, Point globalPosition)
-    {
-        var origin = box.GetPaintOffsetToRoot();
-        return new Point(globalPosition.X - origin.X, globalPosition.Y - origin.Y);
-    }
-
     private void HandleTapUp(Point globalPosition)
     {
         var box = (RenderBox)Context.FindRenderObject()!;
-        _position = ToLocal(box, globalPosition);
+        _position = box.GlobalToLocal(globalPosition);
         _dialSize = box.Size;
         _center = new Point(_dialSize.Width / 2, _dialSize.Height / 2);
         UpdateThetaForPan(roundMinutes: true);
@@ -1897,8 +1966,10 @@ internal sealed class TimePickerBody : StatefulWidget
         Orientation? orientation = null,
         EntryModeChangeCallback? onEntryModeChanged = null,
         bool emptyInitialInput = false,
+        string? restorationId = null,
         Key? key = null) : base(key)
     {
+        RestorationId = restorationId;
         Time = time;
         OnTimeChanged = onTimeChanged;
         HelpText = helpText;
@@ -1910,6 +1981,8 @@ internal sealed class TimePickerBody : StatefulWidget
         OnEntryModeChanged = onEntryModeChanged;
         EmptyInitialInput = emptyInitialInput;
     }
+
+    public string? RestorationId { get; }
 
     public TimeOfDay Time { get; }
     public Action<TimeOfDay>? OnTimeChanged { get; }
@@ -1925,37 +1998,54 @@ internal sealed class TimePickerBody : StatefulWidget
     public override State CreateState() => new TimePickerBodyState();
 }
 
-internal sealed class TimePickerBodyState : State<TimePickerBody>
+internal sealed class TimePickerBodyState : RestorationState<TimePickerBody>
 {
-    private HourMinuteMode _hourMinuteMode = HourMinuteMode.Hour;
-    private bool? _autofocusHour;
-    private bool? _autofocusMinute;
-    private TimeOfDay _selectedTime;
-    private Orientation? _orientation;
-    private System.Threading.Timer? _vibrateTimer;
+    private readonly RestorableEnum<HourMinuteMode> _hourMinuteMode =
+        new(HourMinuteMode.Hour, Enum.GetValues<HourMinuteMode>());
+    private readonly RestorableEnumN<HourMinuteMode> _lastModeAnnounced =
+        new(null, Enum.GetValues<HourMinuteMode>());
+    private readonly RestorableBoolN _autofocusHour = new(null);
+    private readonly RestorableBoolN _autofocusMinute = new(null);
+    private RestorableTimeOfDay? _selectedTimeValue;
+    private RestorableTimeOfDay _selectedTime => _selectedTimeValue ??= new(Current.Time);
+    private RestorableEnumN<Orientation>? _orientationValue;
+    private RestorableEnumN<Orientation> _orientation =>
+        _orientationValue ??= new(Current.Orientation, Enum.GetValues<Orientation>());
+    private GestureTimer? _vibrateTimer;
 
-    private TimePickerBody Current => (TimePickerBody)StateWidget;
+    private TimePickerBody Current => Widget;
 
-    internal TimeOfDay SelectedTime => _selectedTime;
+    internal TimeOfDay SelectedTime => _selectedTime.Value;
 
-    public override void InitState()
+    protected override string? RestorationId => Current.RestorationId;
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
     {
-        _selectedTime = Current.Time;
-        _orientation = Current.Orientation;
+        RegisterForRestoration(_hourMinuteMode, "hour_minute_mode");
+        RegisterForRestoration(_lastModeAnnounced, "last_mode_announced");
+        RegisterForRestoration(_autofocusHour, "autofocus_hour");
+        RegisterForRestoration(_autofocusMinute, "autofocus_minute");
+        RegisterForRestoration(_selectedTime, "selected_time");
+        RegisterForRestoration(_orientation, "orientation");
     }
 
     public override void DidUpdateWidget(TimePickerBody oldWidget)
     {
         var old = (TimePickerBody)oldWidget;
-        if (old.Orientation != Current.Orientation) _orientation = Current.Orientation;
-        if (old.Time != Current.Time) _selectedTime = Current.Time;
+        if (old.Orientation != Current.Orientation) _orientation.Value = Current.Orientation;
+        if (old.Time != Current.Time) _selectedTime.Value = Current.Time;
     }
 
     public override void Dispose()
     {
         _vibrateTimer?.Dispose();
         _vibrateTimer = null;
-
+        _orientation.Dispose();
+        _selectedTime.Dispose();
+        _hourMinuteMode.Dispose();
+        _lastModeAnnounced.Dispose();
+        _autofocusHour.Dispose();
+        _autofocusMinute.Dispose();
         base.Dispose();
     }
 
@@ -1968,15 +2058,11 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
             case TargetPlatform.Linux:
             case TargetPlatform.Windows:
                 _vibrateTimer?.Dispose();
-                _vibrateTimer = new System.Threading.Timer(
-                    _ =>
-                    {
-                        HapticFeedback.Vibrate();
-                        _vibrateTimer = null;
-                    },
-                    null,
-                    TimePickerConstants.VibrateCommitDelay,
-                    System.Threading.Timeout.InfiniteTimeSpan);
+                _vibrateTimer = GestureTimer.Start(TimePickerConstants.VibrateCommitDelay, () =>
+                {
+                    HapticFeedback.Vibrate();
+                    _vibrateTimer = null;
+                });
                 break;
             default:
                 break;
@@ -1986,7 +2072,7 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
     private void HandleHourMinuteModeChanged(HourMinuteMode mode)
     {
         Vibrate();
-        SetState(() => _hourMinuteMode = mode);
+        SetState(() => _hourMinuteMode.Value = mode);
     }
 
     private void HandleEntryModeToggle()
@@ -2000,8 +2086,8 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
                     newMode = TimePickerEntryMode.Input;
                     break;
                 case TimePickerEntryMode.Input:
-                    _autofocusHour = false;
-                    _autofocusMinute = false;
+                    _autofocusHour.Value = false;
+                    _autofocusMinute.Value = false;
                     newMode = TimePickerEntryMode.Dial;
                     break;
                 default:
@@ -2016,24 +2102,24 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
         Vibrate();
         SetState(() =>
         {
-            _selectedTime = value;
+            _selectedTime.Value = value;
             Current.OnTimeChanged?.Invoke(value);
         });
     }
 
     private void HandleHourDoubleTapped()
     {
-        _autofocusHour = true;
+        _autofocusHour.Value = true;
         HandleEntryModeToggle();
     }
 
     private void HandleMinuteDoubleTapped()
     {
-        _autofocusMinute = true;
+        _autofocusMinute.Value = true;
         HandleEntryModeToggle();
     }
 
-    private void HandleHourSelected() => SetState(() => _hourMinuteMode = HourMinuteMode.Minute);
+    private void HandleHourSelected() => SetState(() => _hourMinuteMode.Value = HourMinuteMode.Minute);
 
     public override Widget Build(BuildContext context)
     {
@@ -2044,7 +2130,7 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
         TimePickerDefaults defaultTheme = theme.UseMaterial3
             ? new TimePickerDefaultsM3(context, Current.EntryMode)
             : new TimePickerDefaultsM2(context);
-        var orientation = _orientation ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
+        var orientation = _orientation.Value ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
         var hourMode = TimeOfDay.HourFormatOf(timeOfDayFormat) switch
         {
             HourFormat.H12 => HourDialType.TwelveHour,
@@ -2071,8 +2157,8 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
                     child: new AspectRatio(
                         aspectRatio: 1,
                         child: new Dial(
-                            selectedTime: _selectedTime,
-                            hourMinuteMode: _hourMinuteMode,
+                            selectedTime: _selectedTime.Value,
+                            hourMinuteMode: _hourMinuteMode.Value,
                             hourDialType: hourMode,
                             onChanged: HandleTimeChanged,
                             onHourSelected: HandleHourSelected)))));
@@ -2114,21 +2200,22 @@ internal sealed class TimePickerBodyState : State<TimePickerBody>
                 children:
                 [
                     new TimePickerInput(
-                        initialSelectedTime: _selectedTime,
+                        restorationId: "time_picker_input",
+                        initialSelectedTime: _selectedTime.Value,
                         errorInvalidText: Current.ErrorInvalidText,
                         hourLabelText: Current.HourLabelText,
                         minuteLabelText: Current.MinuteLabelText,
                         helpText: helpText,
-                        autofocusHour: _autofocusHour,
-                        autofocusMinute: _autofocusMinute,
+                        autofocusHour: _autofocusHour.Value,
+                        autofocusMinute: _autofocusMinute.Value,
                         emptyInitialTime: Current.EmptyInitialInput),
                 ]);
         }
 
         return new TimePickerModel(
             entryMode: Current.EntryMode,
-            selectedTime: _selectedTime,
-            hourMinuteMode: _hourMinuteMode,
+            selectedTime: _selectedTime.Value,
+            hourMinuteMode: _hourMinuteMode.Value,
             orientation: orientation,
             onHourMinuteModeChanged: HandleHourMinuteModeChanged,
             onHourDoubleTapped: HandleHourDoubleTapped,
@@ -2196,7 +2283,7 @@ public sealed class TimePickerDialog : StatefulWidget
     public override State CreateState() => new TimePickerDialogState();
 }
 
-internal sealed class TimePickerDialogState : State<TimePickerDialog>
+internal sealed class TimePickerDialogState : RestorationState<TimePickerDialog>
 {
     internal static readonly Size PortraitSize = new(310, 468);
     internal static readonly Size LandscapeSize = new(524, 342);
@@ -2208,35 +2295,53 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
     internal static readonly Size MinInputSize = new(312, 196);
 
     private readonly LabeledGlobalKey<FormState> _formKey = new("time-picker-form");
-    private TimeOfDay _selectedTime;
-    private TimePickerEntryMode _entryMode;
-    private AutovalidateMode _autovalidateMode = AutovalidateMode.Disabled;
-    private Orientation? _orientation;
+    private RestorableTimeOfDay? _selectedTimeValue;
+    private RestorableTimeOfDay _selectedTime => _selectedTimeValue ??= new(Current.InitialTime);
+    private RestorableEnum<TimePickerEntryMode>? _entryModeValue;
+    private RestorableEnum<TimePickerEntryMode> _entryMode =>
+        _entryModeValue ??= new(Current.InitialEntryMode, Enum.GetValues<TimePickerEntryMode>());
+    private readonly RestorableEnum<AutovalidateMode> _autovalidateMode =
+        new(AutovalidateMode.Disabled, Enum.GetValues<AutovalidateMode>());
+    private RestorableEnumN<Orientation>? _orientationValue;
+    private RestorableEnumN<Orientation> _orientation =>
+        _orientationValue ??= new(Current.Orientation, Enum.GetValues<Orientation>());
 
-    private TimePickerDialog Current => (TimePickerDialog)StateWidget;
+    private TimePickerDialog Current => Widget;
 
-    public override void InitState()
+    protected override string? RestorationId => Current.RestorationId;
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
     {
-        _selectedTime = Current.InitialTime;
-        _entryMode = Current.InitialEntryMode;
-        _orientation = Current.Orientation;
+        RegisterForRestoration(_selectedTime, "selected_time");
+        RegisterForRestoration(_entryMode, "entry_mode");
+        RegisterForRestoration(_autovalidateMode, "autovalidate_mode");
+        RegisterForRestoration(_orientation, "orientation");
+    }
+
+    public override void Dispose()
+    {
+        _selectedTime.Dispose();
+        _entryMode.Dispose();
+        _autovalidateMode.Dispose();
+        _orientation.Dispose();
+        base.Dispose();
     }
 
     private void HandleTimeChanged(TimeOfDay value)
     {
-        if (value == _selectedTime) return;
-        SetState(() => _selectedTime = value);
+        if (value == _selectedTime.Value) return;
+        SetState(() => _selectedTime.Value = value);
     }
 
     private void HandleEntryModeChanged(TimePickerEntryMode value)
     {
-        if (value == _entryMode) return;
+        if (value == _entryMode.Value) return;
         SetState(() =>
         {
-            switch (_entryMode)
+            switch (_entryMode.Value)
             {
                 case TimePickerEntryMode.Dial:
-                    _autovalidateMode = AutovalidateMode.Disabled;
+                    _autovalidateMode.Value = AutovalidateMode.Disabled;
                     break;
                 case TimePickerEntryMode.Input:
                     _formKey.CurrentState?.Save();
@@ -2245,35 +2350,35 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
                     break;
             }
 
-            _entryMode = value;
+            _entryMode.Value = value;
+            Current.OnEntryModeChanged?.Invoke(value);
         });
-        Current.OnEntryModeChanged?.Invoke(value);
     }
 
-    private void ToggleEntryMode() => HandleEntryModeChanged(_entryMode switch
+    private void ToggleEntryMode() => HandleEntryModeChanged(_entryMode.Value switch
     {
         TimePickerEntryMode.Dial => TimePickerEntryMode.Input,
         TimePickerEntryMode.Input => TimePickerEntryMode.Dial,
-        _ => _entryMode,
+        _ => _entryMode.Value,
     });
 
     private void HandleCancel() => Navigator.Pop(Context);
 
     private void HandleOk()
     {
-        if (_entryMode is TimePickerEntryMode.Input or TimePickerEntryMode.InputOnly)
+        if (_entryMode.Value is TimePickerEntryMode.Input or TimePickerEntryMode.InputOnly)
         {
             var form = _formKey.CurrentState;
             if (form is null || !form.Validate())
             {
-                SetState(() => _autovalidateMode = AutovalidateMode.Always);
+                SetState(() => _autovalidateMode.Value = AutovalidateMode.Always);
                 return;
             }
 
             form.Save();
         }
 
-        Navigator.Pop(Context, _selectedTime);
+        Navigator.Pop(Context, _selectedTime.Value);
     }
 
     private double InputWidth(BuildContext context, TimePickerDefaults defaults, bool useMaterial3, double baseWidth)
@@ -2290,8 +2395,8 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
 
     private Size MinDialogSize(BuildContext context, TimePickerDefaults defaults, bool useMaterial3)
     {
-        var orientation = _orientation ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
-        if (_entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly)
+        var orientation = _orientation.Value ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
+        if (_entryMode.Value is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly)
         {
             return orientation == Orientation.Portrait ? MinPortraitSize : MinLandscapeSize;
         }
@@ -2303,14 +2408,13 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
 
     private Size DialogSize(BuildContext context, TimePickerDefaults defaults, bool useMaterial3)
     {
-        var orientation = _orientation ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
-        var scaler = TextScaler
-            .Linear(MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0)
+        var orientation = _orientation.Value ?? MediaQuery.MaybeOrientationOf(context) ?? Orientation.Portrait;
+        var scaler = MediaQuery.TextScalerOf(context)
             .Clamp(maxScaleFactor: 1.1);
-        double textScaleFactor = scaler.Scale(TextDefaults.DefaultFontSize) / TextDefaults.DefaultFontSize;
+        double textScaleFactor = scaler.Scale(14.0) / 14.0;
 
         Size timePickerSize;
-        if (_entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly)
+        if (_entryMode.Value is TimePickerEntryMode.Dial or TimePickerEntryMode.DialOnly)
         {
             timePickerSize = orientation == Orientation.Portrait
                 ? PortraitSize
@@ -2334,16 +2438,16 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
         var localizations = MaterialLocalizations.Of(context);
         var pickerTheme = TimePickerTheme.Of(context);
         TimePickerDefaults defaultTheme = theme.UseMaterial3
-            ? new TimePickerDefaultsM3(context, _entryMode)
+            ? new TimePickerDefaultsM3(context, _entryMode.Value)
             : new TimePickerDefaultsM2(context);
         var shape = pickerTheme.Shape ?? defaultTheme.Shape;
         var entryModeIconColor = pickerTheme.EntryModeIconColor ?? defaultTheme.EntryModeIconColor;
-        bool inputMode = _entryMode is TimePickerEntryMode.Input or TimePickerEntryMode.InputOnly;
+        bool inputMode = _entryMode.Value is TimePickerEntryMode.Input or TimePickerEntryMode.InputOnly;
 
         var actionChildren = new List<Widget>();
-        if (_entryMode is TimePickerEntryMode.Dial or TimePickerEntryMode.Input)
+        if (_entryMode.Value is TimePickerEntryMode.Dial or TimePickerEntryMode.Input)
         {
-            bool dialMode = _entryMode == TimePickerEntryMode.Dial;
+            bool dialMode = _entryMode.Value == TimePickerEntryMode.Dial;
             actionChildren.Add(new IconButton(
                 color: theme.UseMaterial3 ? null : entryModeIconColor,
                 style: theme.UseMaterial3
@@ -2390,17 +2494,18 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
         minDialogSize = new Size(minDialogSize.Width, minDialogSize.Height + tapTargetHeightOffset);
 
         Widget body = new TimePickerBody(
+            restorationId: "time_picker",
             time: Current.InitialTime,
             onTimeChanged: HandleTimeChanged,
             helpText: Current.HelpText,
             errorInvalidText: Current.ErrorInvalidText,
             hourLabelText: Current.HourLabelText,
             minuteLabelText: Current.MinuteLabelText,
-            entryMode: _entryMode,
+            entryMode: _entryMode.Value,
             orientation: Current.Orientation,
             onEntryModeChanged: HandleEntryModeChanged,
             emptyInitialInput: Current.EmptyInitialInput);
-        body = new Form(key: _formKey, autovalidateMode: _autovalidateMode, child: body);
+        body = new Form(key: _formKey, autovalidateMode: _autovalidateMode.Value, child: body);
         if (!inputMode) body = new Flexible(body);
 
         return new Dialog(
@@ -2418,8 +2523,10 @@ internal sealed class TimePickerDialogState : State<TimePickerDialog>
                         Math.Max(constrainedSize.Width, minDialogSize.Width),
                         Math.Max(constrainedSize.Height, minDialogSize.Height));
                     return new SingleChildScrollView(
+                        restorationId: "time_picker_scroll_view_horizontal",
                         scrollDirection: Axis.Horizontal,
                         child: new SingleChildScrollView(
+                            restorationId: "time_picker_scroll_view_vertical",
                             child: new AnimatedContainer(
                                 duration: TimePickerConstants.DialogSizeAnimationDuration,
                                 curve: Curves.EaseIn,
@@ -2458,8 +2565,10 @@ public static class MaterialTimePickers
         Orientation? orientation = null,
         Icon? switchToInputEntryModeIcon = null,
         Icon? switchToTimerEntryModeIcon = null,
-        bool emptyInitialInput = false)
+        bool emptyInitialInput = false,
+        Point? anchorPoint = null)
     {
+        DebugAssertions.Assert(MaterialDebug.DebugCheckHasMaterialLocalizations(context));
         Widget dialog = new TimePickerDialog(
             initialTime: initialTime,
             initialEntryMode: initialEntryMode,
@@ -2481,6 +2590,7 @@ public static class MaterialTimePickers
             barrierColor: barrierColor,
             barrierLabel: barrierLabel,
             useRootNavigator: useRootNavigator,
-            routeSettings: routeSettings);
+            routeSettings: routeSettings,
+            anchorPoint: anchorPoint);
     }
 }

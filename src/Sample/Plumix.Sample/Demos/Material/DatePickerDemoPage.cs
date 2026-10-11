@@ -31,6 +31,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
         private readonly LabeledGlobalKey<FormState> _dateFormKey = new("date-input-form");
         private string _formStatus = "not validated";
         private RestorableRouteFuture<DateTime?>? _restorableDatePickerRoute;
+        private RestorableRouteFuture<TimeOfDay?>? _restorableTimePickerRoute;
 
         protected override string? RestorationId => "date_picker_demo";
 
@@ -44,14 +45,46 @@ public sealed class DatePickerDemoPage : StatefulWidget
                         ["selectedDate"] = new DateTimeOffset(_selectedDate).ToUnixTimeMilliseconds(),
                     }));
 
+        private RestorableRouteFuture<TimeOfDay?> RestorableTimePickerRoute =>
+            _restorableTimePickerRoute ??= new RestorableRouteFuture<TimeOfDay?>(
+                onComplete: value =>
+                {
+                    if (Mounted && value.HasValue) SetState(() => _selectedTime = value.Value);
+                },
+                onPresent: (navigator, _) => navigator.RestorablePush(
+                    TimePickerRoute,
+                    arguments: new Dictionary<string, object?>
+                    {
+                        ["hour"] = _selectedTime.Hour,
+                        ["minute"] = _selectedTime.Minute,
+                        ["use24Hour"] = _use24HourTime,
+                        ["useMaterial3"] = _useMaterial3,
+                    }));
+
+        private static Route TimePickerRoute(BuildContext context, object? arguments)
+        {
+            var args = (IDictionary)arguments!;
+            return new DialogRoute<TimeOfDay?>(
+                context,
+                dialogContext => new MediaQuery(
+                    MediaQuery.Of(dialogContext) with { AlwaysUse24HourFormat = (bool)args["use24Hour"]! },
+                    new Theme(
+                        Theme.Of(dialogContext) with { UseMaterial3 = (bool)args["useMaterial3"]! },
+                        new TimePickerDialog(
+                            new TimeOfDay(Convert.ToInt32(args["hour"]), Convert.ToInt32(args["minute"])),
+                            restorationId: "time_picker_dialog"))));
+        }
+
         protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
         {
             RegisterForRestoration(RestorableDatePickerRoute, "date_picker_route_future");
+            RegisterForRestoration(RestorableTimePickerRoute, "time_picker_route_future");
         }
 
         public override void Dispose()
         {
             RestorableDatePickerRoute.Dispose();
+            RestorableTimePickerRoute.Dispose();
             base.Dispose();
         }
 
@@ -212,6 +245,7 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                 [
                                     BuildToggle("Dial time", () => _ = OpenTimePicker(context, TimePickerEntryMode.Dial)),
                                     BuildToggle("Input time", () => _ = OpenTimePicker(context, TimePickerEntryMode.Input)),
+                                    BuildToggle("Restorable time", () => RestorableTimePickerRoute.Present()),
                                 ]),
                             new Row(
                                 spacing: 8,
