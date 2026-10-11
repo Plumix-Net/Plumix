@@ -7,7 +7,9 @@ using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/editable_text.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/editable_text.dart;
+// flutter/packages/flutter/lib/src/services/text_input.dart;
+// flutter/packages/flutter/lib/src/services/text_editing.dart; dart:ui TextRange
 
 namespace Plumix.Widgets;
 
@@ -17,11 +19,29 @@ public readonly record struct TextSelection(
     TextAffinity Affinity = TextAffinity.Downstream,
     bool IsDirectional = false)
 {
+    public int BaseOffset { get; init; } = TextRange.ValidateOffset(BaseOffset);
+
+    public int ExtentOffset { get; init; } = TextRange.ValidateOffset(ExtentOffset);
+
     public int Start => Math.Min(BaseOffset, ExtentOffset);
 
     public int End => Math.Max(BaseOffset, ExtentOffset);
 
     public bool IsCollapsed => BaseOffset == ExtentOffset;
+
+    public bool IsNormalized => true;
+
+    public string TextBefore(string text) => AsTextRange().TextBefore(text);
+
+    public string TextAfter(string text) => AsTextRange().TextAfter(text);
+
+    public TextSelection CopyWith(
+        int? baseOffset = null,
+        int? extentOffset = null,
+        TextAffinity? affinity = null,
+        bool? isDirectional = null) =>
+        new(baseOffset ?? BaseOffset, extentOffset ?? ExtentOffset,
+            affinity ?? Affinity, isDirectional ?? IsDirectional);
 
     /// <summary>Whether this selection represents a valid position in the text.</summary>
     public bool IsValid => Start >= 0 && End >= 0;
@@ -36,7 +56,7 @@ public readonly record struct TextSelection(
 
     /// <summary>The text inside this selection. Dart's <c>TextRange.textInside</c>, which
     /// <c>TextSelection</c> inherits.</summary>
-    public string TextInside(string text) => text[Start..End];
+    public string TextInside(string text) => AsTextRange().TextInside(text);
 
     /// <summary>Creates a collapsed selection at the given text position.</summary>
     /// <remarks>Dart's <c>TextSelection.fromPosition</c>.</remarks>
@@ -214,6 +234,28 @@ public readonly record struct TextSelection(
 
 public readonly record struct TextRange(int Start, int End)
 {
+    public int Start { get; init; } = ValidateOffset(Start);
+
+    public int End { get; init; } = ValidateOffset(End);
+
+    internal static int ValidateOffset(int offset)
+    {
+        if (Constants.KDebugMode && offset < -1)
+        {
+            throw new AssertionError("Text range offsets must be at least -1.");
+        }
+
+        return offset;
+    }
+
+    private void AssertNormalized()
+    {
+        if (Constants.KDebugMode && !IsNormalized)
+        {
+            throw new AssertionError("Text range must be normalized.");
+        }
+    }
+
     /// A text range that starts and ends at `offset`.
     public static TextRange Collapsed(int offset) => new(offset, offset);
 
@@ -229,17 +271,24 @@ public readonly record struct TextRange(int Start, int End)
     public bool IsNormalized => End >= Start;
 
     /// The text before this range.
-    public string TextBefore(string text) => text[..Math.Max(0, Start)];
+    public string TextBefore(string text)
+    {
+        AssertNormalized();
+        return text[..Start];
+    }
 
     /// The text after this range.
-    public string TextAfter(string text) => text[Math.Min(text.Length, End)..];
+    public string TextAfter(string text)
+    {
+        AssertNormalized();
+        return text[End..];
+    }
 
     /// The text inside this range.
     public string TextInside(string text)
     {
-        int start = Math.Clamp(Start, 0, text.Length);
-        int end = Math.Clamp(End, start, text.Length);
-        return text[start..end];
+        AssertNormalized();
+        return text[Start..End];
     }
 
     internal TextRange Clamp(int textLength)
@@ -269,16 +318,27 @@ public readonly record struct TextEditingValue
         TextSelection? selection = null,
         TextRange? composing = null)
     {
-        Text = text ?? string.Empty;
-        Selection = selection ?? TextSelection.Collapsed(Text.Length);
-        Composing = composing is { IsCollapsed: false } ? composing : null;
+        _text = text ?? throw new ArgumentNullException(nameof(text));
+        _selection = selection;
+        _composing = composing;
     }
 
-    public string Text { get; }
+    private readonly string? _text;
+    private readonly TextSelection? _selection;
+    private readonly TextRange? _composing;
 
-    public TextSelection Selection { get; }
+    public string Text => _text ?? string.Empty;
 
-    public TextRange? Composing { get; }
+    public TextSelection Selection => _selection ?? TextSelection.Invalid;
+
+    public TextRange Composing => _composing ?? TextRange.Empty;
+
+    public static TextEditingValue Empty => new();
+
+    public bool Equals(TextEditingValue other) =>
+        Text == other.Text && Selection == other.Selection && Composing == other.Composing;
+
+    public override int GetHashCode() => HashCode.Combine(Text, Selection, Composing);
 
     /// <summary>Whether the composing region is a valid range within the text.</summary>
     public bool IsComposingRangeValid =>
@@ -307,10 +367,8 @@ public readonly record struct TextEditingValue
             return this;
         }
 
-        string newText = string.Concat(
-            Text[..replacementRange.Start],
-            replacementString,
-            Text[replacementRange.End..]);
+        string newText = Text.Remove(replacementRange.Start, replacementRange.End - replacementRange.Start)
+            .Insert(replacementRange.Start, replacementString);
         if (replacementRange.End - replacementRange.Start == replacementString.Length)
         {
             return CopyWith(text: newText);
@@ -330,9 +388,7 @@ public readonly record struct TextEditingValue
         var adjustedSelection = new TextSelection(
             BaseOffset: AdjustIndex(Selection.BaseOffset),
             ExtentOffset: AdjustIndex(Selection.ExtentOffset));
-        TextRange? adjustedComposing = Composing is { } composing
-            ? new TextRange(AdjustIndex(composing.Start), AdjustIndex(composing.End))
-            : null;
+        var adjustedComposing = new TextRange(AdjustIndex(Composing.Start), AdjustIndex(Composing.End));
         DebugAssertTextRangeIsValid(adjustedSelection.AsTextRange(), newText);
         DebugAssertTextRangeIsValid(adjustedComposing, newText);
         return new TextEditingValue(text: newText, selection: adjustedSelection, composing: adjustedComposing);
@@ -353,8 +409,8 @@ public readonly record struct TextEditingValue
             ["selectionExtent"] = Selection.ExtentOffset,
             ["selectionAffinity"] = affinity,
             ["selectionIsDirectional"] = Selection.IsDirectional,
-            ["composingBase"] = Composing?.Start ?? -1,
-            ["composingExtent"] = Composing?.End ?? -1,
+            ["composingBase"] = Composing.Start,
+            ["composingExtent"] = Composing.End,
         };
     }
 
@@ -362,7 +418,9 @@ public readonly record struct TextEditingValue
     public static TextEditingValue FromJson(IDictionary json)
     {
         ArgumentNullException.ThrowIfNull(json);
-        string text = json["text"] as string ?? string.Empty;
+        string text = json["text"] is string encodedText
+            ? encodedText
+            : throw new ArgumentException("Text editing JSON must contain a string text.", nameof(json));
         int selectionBase = ReadInt(json, "selectionBase", -1);
         int selectionExtent = ReadInt(json, "selectionExtent", -1);
         int composingBase = ReadInt(json, "composingBase", -1);
@@ -374,7 +432,7 @@ public readonly record struct TextEditingValue
         var composing = new TextRange(composingBase, composingExtent);
         DebugAssertTextRangeIsValid(selection.AsTextRange(), text);
         DebugAssertTextRangeIsValid(composing, text);
-        return new TextEditingValue(text, selection, composing.IsValid ? composing : null);
+        return new TextEditingValue(text, selection, composing);
     }
 
     /// <summary>Dart's <c>assert(_textRangeIsValid(range, text))</c>: a range other than the
@@ -401,12 +459,12 @@ public readonly record struct TextEditingValue
     /// <inheritdoc/>
     public override string ToString() =>
         $"TextEditingValue(text: ┤{Text}├, selection: {Selection}, "
-        + $"composing: {Composing ?? TextRange.Empty})";
+        + $"composing: {Composing})";
 
     private static TextAffinity? ReadAffinity(IDictionary json)
     {
         object? value = json.Contains("selectionAffinity") ? json["selectionAffinity"] : null;
-        return value as string switch
+        return (value as string) switch
         {
             "TextAffinity.downstream" => TextAffinity.Downstream,
             "TextAffinity.upstream" => TextAffinity.Upstream,
@@ -423,81 +481,82 @@ public readonly record struct TextEditingValue
 
 public class TextEditingController : ValueNotifier<TextEditingValue>
 {
-    private string _text => base.Value.Text;
-    private TextSelection _selection => base.Value.Selection;
-    private TextRange? _composing => base.Value.Composing;
+    private string _text => Value.Text;
+    private TextSelection _selection => Value.Selection;
+    private TextRange _composing => Value.Composing;
 
     public TextEditingController(
-        string text = "",
+        string? text = null,
         TextSelection? selection = null,
-        TextRange? composing = null) : base(InitialValue(text, selection, composing))
+        TextRange? composing = null) : base(new TextEditingValue(text ?? string.Empty, selection, composing))
     {
-    }
-
-    private static TextEditingValue InitialValue(string text, TextSelection? selection, TextRange? composing)
-    {
-        string normalizedText = text ?? string.Empty;
-        return new TextEditingValue(
-            normalizedText,
-            (selection ?? TextSelection.Collapsed(normalizedText.Length)).Clamp(normalizedText.Length),
-            composing?.Clamp(normalizedText.Length));
+        AssertComposingRange(Value);
     }
 
     public string Text
     {
-        get => _text;
-        set
-        {
-            string next = value ?? string.Empty;
-            SetValue(
-                text: next,
-                selection: TextSelection.Collapsed(next.Length),
-                composing: null);
-        }
-    }
-
-    public TextSelection Selection
-    {
-        get => _selection;
-        set => SetValue(text: _text, selection: value, composing: _composing);
+        get => Value.Text;
+        set => Value = Value.CopyWith(
+            text: value,
+            selection: TextSelection.Invalid,
+            composing: TextRange.Empty);
     }
 
     public override TextEditingValue Value
     {
         get => base.Value;
-        set => SetValue(value.Text, value.Selection, value.Composing);
+        set
+        {
+            AssertComposingRange(value);
+            base.Value = value;
+        }
     }
 
-    public static TextEditingController FromValue(TextEditingValue? value)
+    private static void AssertComposingRange(TextEditingValue value)
     {
-        TextEditingValue initialValue = value ?? new TextEditingValue();
-        return new TextEditingController(
-            initialValue.Text,
-            initialValue.Selection,
-            initialValue.Composing);
+        if (Constants.KDebugMode && value.Composing.IsValid && !value.IsComposingRangeValid)
+        {
+            throw new AssertionError(
+                $"New TextEditingValue {value} has an invalid non-empty composing range {value.Composing}. "
+                + "It is recommended to use a valid composing range, even for readonly text fields.");
+        }
     }
 
-    public TextRange? Composing
+    public static TextEditingController FromValue(TextEditingValue? value = null)
     {
-        get => _composing;
-        set => SetValue(text: _text, selection: _selection, composing: value);
+        TextEditingValue initialValue = value ?? TextEditingValue.Empty;
+        return new TextEditingController(initialValue.Text, initialValue.Selection, initialValue.Composing);
+    }
+
+    public TextSelection Selection
+    {
+        get => Value.Selection;
+        set
+        {
+            if (Text.Length < value.End || Text.Length < value.Start)
+            {
+                throw new FlutterError($"invalid text selection: {value}");
+            }
+
+            TextRange composing = value.Start >= Value.Composing.Start && value.End <= Value.Composing.End
+                ? Value.Composing
+                : TextRange.Empty;
+            Value = Value.CopyWith(selection: value, composing: composing);
+        }
+    }
+
+    // Published C# editing helpers remain extensions of the Dart controller contract.
+    public TextRange Composing
+    {
+        get => Value.Composing;
+        set => Value = Value.CopyWith(composing: value);
     }
 
     public void SetValue(
         string text,
         TextSelection? selection = null,
-        TextRange? composing = null)
-    {
-        string normalizedText = text ?? string.Empty;
-        var normalizedSelection = (selection ?? _selection).Clamp(normalizedText.Length);
-        var normalizedComposing = composing?.Clamp(normalizedText.Length);
-        if (normalizedComposing.HasValue && normalizedComposing.Value.IsCollapsed)
-        {
-            normalizedComposing = null;
-        }
-
-        base.Value = new TextEditingValue(normalizedText, normalizedSelection, normalizedComposing);
-    }
+        TextRange? composing = null) =>
+        Value = new TextEditingValue(text, selection ?? Selection, composing);
 
     /// <summary>Builds a <see cref="TextSpan"/> from the current editing value.</summary>
     /// <remarks>
@@ -508,8 +567,10 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
     public virtual TextSpan BuildTextSpan(BuildContext context, TextStyle? style, bool withComposing)
     {
         TextEditingValue value = Value;
-        System.Diagnostics.Debug.Assert(
-            value.Composing is not { IsValid: true } || !withComposing || value.IsComposingRangeValid);
+        if (Constants.KDebugMode && value.Composing.IsValid && withComposing && !value.IsComposingRangeValid)
+        {
+            throw new AssertionError("The composing range must be valid when building composing text.");
+        }
         // If the composing range is out of range for the current text, ignore it to preserve the
         // tree integrity, otherwise in release mode a RangeError will be thrown and this EditableText
         // will be built with a broken subtree.
@@ -522,7 +583,7 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
         var underline = new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline);
         TextStyle composingStyle = style?.Merge(underline) ?? underline;
-        TextRange composing = value.Composing!.Value;
+        TextRange composing = value.Composing;
         return new TextSpan(
             style: style,
             children:
@@ -533,6 +594,10 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
             ]);
     }
 
+    private TextSelection _editingSelection => _selection.IsValid
+        ? _selection.Clamp(_text.Length)
+        : TextSelection.Collapsed(_text.Length);
+
     public bool SelectAll()
     {
         return UpdateSelection(new TextSelection(0, _text.Length));
@@ -540,28 +605,28 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool MoveCaretLeft(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.Start));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.Start));
         }
 
-        int nextExtentOffset = FindPreviousTextElementBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindPreviousTextElementBoundary(_editingSelection.ExtentOffset);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
 
     public bool MoveCaretRight(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.End));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.End));
         }
 
-        int nextExtentOffset = FindNextTextElementBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindNextTextElementBoundary(_editingSelection.ExtentOffset);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
@@ -569,7 +634,7 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
     public bool MoveCaretToStart(bool extendSelection = false)
     {
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, 0)
+            ? new TextSelection(_editingSelection.BaseOffset, 0)
             : TextSelection.Collapsed(0);
         return UpdateSelection(nextSelection);
     }
@@ -577,63 +642,63 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
     public bool MoveCaretToEnd(bool extendSelection = false)
     {
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, _text.Length)
+            ? new TextSelection(_editingSelection.BaseOffset, _text.Length)
             : TextSelection.Collapsed(_text.Length);
         return UpdateSelection(nextSelection);
     }
 
     public bool MoveCaretToPreviousWord(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.Start));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.Start));
         }
 
-        int nextExtentOffset = FindPreviousWordBoundary(_selection.ExtentOffset);
+        int nextExtentOffset = FindPreviousWordBoundary(_editingSelection.ExtentOffset);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
 
     public bool MoveCaretToNextWord(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.End));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.End));
         }
 
-        int nextExtentOffset = FindNextWordBoundary(_selection.ExtentOffset, includeWordAfterSeparator: false);
+        int nextExtentOffset = FindNextWordBoundary(_editingSelection.ExtentOffset, includeWordAfterSeparator: false);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
 
     public bool MoveCaretToParagraphStart(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.Start));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.Start));
         }
 
-        int nextExtentOffset = FindParagraphStart(_selection.ExtentOffset);
+        int nextExtentOffset = FindParagraphStart(_editingSelection.ExtentOffset);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
 
     public bool MoveCaretToParagraphEnd(bool extendSelection = false)
     {
-        if (!extendSelection && !_selection.IsCollapsed)
+        if (!extendSelection && !_editingSelection.IsCollapsed)
         {
-            return UpdateSelection(TextSelection.Collapsed(_selection.End));
+            return UpdateSelection(TextSelection.Collapsed(_editingSelection.End));
         }
 
-        int nextExtentOffset = FindParagraphEnd(_selection.ExtentOffset);
+        int nextExtentOffset = FindParagraphEnd(_editingSelection.ExtentOffset);
         var nextSelection = extendSelection
-            ? new TextSelection(_selection.BaseOffset, nextExtentOffset)
+            ? new TextSelection(_editingSelection.BaseOffset, nextExtentOffset)
             : TextSelection.Collapsed(nextExtentOffset);
         return UpdateSelection(nextSelection);
     }
@@ -645,8 +710,8 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
             return false;
         }
 
-        int start = _selection.Start;
-        int end = _selection.End;
+        int start = _editingSelection.Start;
+        int end = _editingSelection.End;
         string nextText = _text[..start] + text + _text[end..];
         int caretOffset = start + text.Length;
         return ApplyAndReportChange(
@@ -658,8 +723,8 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
     public bool SetComposing(string text)
     {
         string composingText = text ?? string.Empty;
-        int rangeStart = _composing?.Start ?? _selection.Start;
-        int rangeEnd = _composing?.End ?? _selection.End;
+        int rangeStart = _composing.IsValid ? _composing.Start : _editingSelection.Start;
+        int rangeEnd = _composing.IsValid ? _composing.End : _editingSelection.End;
         int clampedStart = Math.Clamp(rangeStart, 0, _text.Length);
         int clampedEnd = Math.Clamp(rangeEnd, 0, _text.Length);
 
@@ -672,13 +737,13 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool CommitComposing(string text)
     {
-        if (!_composing.HasValue)
+        if (!_composing.IsValid)
         {
             return Insert(text);
         }
 
         string composingText = text ?? string.Empty;
-        var currentComposing = _composing.Value.Clamp(_text.Length);
+        var currentComposing = _composing.Clamp(_text.Length);
         string nextText = _text[..currentComposing.Start] + composingText + _text[currentComposing.End..];
         var collapsedSelection = TextSelection.Collapsed(currentComposing.Start + composingText.Length);
         return ApplyAndReportChange(nextText, collapsedSelection, composing: null);
@@ -686,23 +751,20 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool ClearComposing()
     {
-        if (!_composing.HasValue)
-        {
-            return false;
-        }
-
-        return ApplyAndReportChange(_text, _selection, composing: null);
+        TextEditingValue previousValue = Value;
+        Value = Value.CopyWith(composing: TextRange.Empty);
+        return previousValue != Value;
     }
 
     public bool DeleteBackward()
     {
-        if (_selection.IsCollapsed && _selection.ExtentOffset <= 0)
+        if (_editingSelection.IsCollapsed && _editingSelection.ExtentOffset <= 0)
         {
             return false;
         }
 
-        int start = _selection.Start;
-        int end = _selection.End;
+        int start = _editingSelection.Start;
+        int end = _editingSelection.End;
         if (start == end)
         {
             start = FindPreviousTextElementBoundary(end);
@@ -717,12 +779,12 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool DeleteBackwardByWord()
     {
-        if (!_selection.IsCollapsed)
+        if (!_editingSelection.IsCollapsed)
         {
             return DeleteBackward();
         }
 
-        int end = _selection.ExtentOffset;
+        int end = _editingSelection.ExtentOffset;
         if (end <= 0)
         {
             return false;
@@ -743,13 +805,13 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool DeleteForward()
     {
-        if (_selection.IsCollapsed && _selection.ExtentOffset >= _text.Length)
+        if (_editingSelection.IsCollapsed && _editingSelection.ExtentOffset >= _text.Length)
         {
             return false;
         }
 
-        int start = _selection.Start;
-        int end = _selection.End;
+        int start = _editingSelection.Start;
+        int end = _editingSelection.End;
         if (start == end)
         {
             end = FindNextTextElementBoundary(start);
@@ -764,12 +826,12 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
 
     public bool DeleteForwardByWord()
     {
-        if (!_selection.IsCollapsed)
+        if (!_editingSelection.IsCollapsed)
         {
             return DeleteForward();
         }
 
-        int start = _selection.ExtentOffset;
+        int start = _editingSelection.ExtentOffset;
         if (start >= _text.Length)
         {
             return false;
@@ -800,8 +862,8 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
     {
         get
         {
-            int start = _selection.Start;
-            int end = _selection.End;
+            int start = _editingSelection.Start;
+            int end = _editingSelection.End;
             if (start >= end)
             {
                 return string.Empty;
@@ -980,7 +1042,7 @@ public class TextEditingController : ValueNotifier<TextEditingValue>
         SetValue(text, selection, composing);
         return !string.Equals(previousText, _text, StringComparison.Ordinal)
                || !previousSelection.Equals(_selection)
-               || !Nullable.Equals(previousComposing, _composing);
+               || previousComposing != _composing;
     }
 }
 
@@ -2338,7 +2400,7 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             return !string.Equals(oldValue.Text, newValue.Text, StringComparison.Ordinal)
-                   || !Nullable.Equals(oldValue.Composing, newValue.Composing);
+                   || oldValue.Composing != newValue.Composing;
         }
 
         /// <summary>Express interest in interacting with the keyboard. Dart's

@@ -93,7 +93,7 @@ public sealed class AutofillTests : IDisposable
         Assert.Equal<IReadOnlyList<string>>([AutofillHints.Username], (IReadOnlyList<string>)json["hints"]!);
         var editingValue = (Dictionary<string, object?>)json["editingValue"]!;
         Assert.Equal("bob", editingValue["text"]);
-        Assert.Equal(3, editingValue["selectionBase"]);
+        Assert.Equal(-1, editingValue["selectionBase"]);
         Assert.Equal("TextAffinity.downstream", editingValue["selectionAffinity"]);
         Assert.Equal(-1, editingValue["composingBase"]);
 

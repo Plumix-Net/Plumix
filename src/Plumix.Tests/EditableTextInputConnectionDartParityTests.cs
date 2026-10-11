@@ -185,7 +185,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
 
             plugin.InsertText("に");
             Assert.Equal("abに", _controller.Text);
-            Assert.Null(_controller.Composing);
+            Assert.Equal(TextRange.Empty, _controller.Composing);
             Assert.Equal(TextSelection.Collapsed(3), _controller.Selection);
 
             Assert.True(plugin.SetSelection(0, 1));
@@ -402,7 +402,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
 
             client.SetPreeditText(null);
             Assert.Equal("abcd", _controller.Text);
-            Assert.Null(_controller.Composing);
+            Assert.Equal(TextRange.Empty, _controller.Composing);
 
             client.Selection = new AvaloniaTextSelection(1, 3);
             Assert.Equal(new TextSelection(1, 3), _controller.Selection);

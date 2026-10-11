@@ -104,17 +104,21 @@ public class FilteringTextInputFormatter : TextInputFormatter
         mapping[text.Length] = output.Length;
 
         string formatted = output.ToString();
-        if (string.Equals(formatted, text, StringComparison.Ordinal)) return newValue;
-
-        var selection = new TextSelection(
-            BaseOffset: mapping[Math.Clamp(newValue.Selection.BaseOffset, 0, text.Length)],
-            ExtentOffset: mapping[Math.Clamp(newValue.Selection.ExtentOffset, 0, text.Length)]);
+        TextSelection selection = newValue.Selection.IsValid
+            ? newValue.Selection.CopyWith(
+                baseOffset: mapping[Math.Clamp(newValue.Selection.BaseOffset, 0, text.Length)],
+                extentOffset: mapping[Math.Clamp(newValue.Selection.ExtentOffset, 0, text.Length)])
+            : TextSelection.Invalid;
         TextRange? composing = null;
-        if (newValue.Composing is { } range)
+        if (newValue.Composing is { IsValid: true, IsCollapsed: false } range)
         {
             composing = new TextRange(
                 Start: mapping[Math.Clamp(range.Start, 0, text.Length)],
                 End: mapping[Math.Clamp(range.End, 0, text.Length)]);
+            if (composing.Value.IsCollapsed)
+            {
+                composing = null;
+            }
         }
 
         return new TextEditingValue(formatted, selection, composing);
@@ -136,7 +140,13 @@ public class FilteringTextInputFormatter : TextInputFormatter
 
         int replacementStart = output.Length;
         output.Append(ReplacementString);
-        for (int i = start; i < end; i++) mapping[i] = replacementStart;
+        bool sameLength = ReplacementString.Length == end - start;
+        for (int i = start; i < end; i++)
+        {
+            mapping[i] = sameLength
+                ? replacementStart + i - start
+                : i == start ? replacementStart : output.Length;
+        }
     }
 }
 

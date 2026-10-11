@@ -748,7 +748,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
 
         State(tester).UpdateEditingValue(new TextEditingValue(
             "abcd",
-            TextSelection.Collapsed(4),
+            TextSelection.Collapsed(3),
             composing: new TextRange(1, 3)));
         tester.Pump();
         tester.Pump();

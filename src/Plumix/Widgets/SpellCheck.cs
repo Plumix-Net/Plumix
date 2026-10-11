@@ -317,7 +317,7 @@ public static class SpellCheckTextSpans
         int endIndex;
         SuggestionSpan currentSpan;
         string text = value.Text;
-        TextRange composingRegion = value.Composing ?? TextRange.Empty;
+        TextRange composingRegion = value.Composing;
         var underline = new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline);
         TextStyle composingTextStyle = style?.Merge(underline) ?? underline;
         TextStyle misspelledJointStyle = style?.Merge(misspelledStyle) ?? misspelledStyle;

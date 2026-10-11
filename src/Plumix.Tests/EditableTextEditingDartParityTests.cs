@@ -271,7 +271,7 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
         TextEditingValue sent = Assert.Single(_control.EditingStates);
         Assert.Equal("Flutter is the best!", sent.Text);
         Assert.Equal(TextSelection.Collapsed(20), sent.Selection);
-        Assert.Null(sent.Composing);
+        Assert.Equal(TextRange.Empty, sent.Composing);
 
         // A local change is sent too.
         _controller.Value = new TextEditingValue("To be, or not to be, that is the question.");

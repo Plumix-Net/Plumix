@@ -60,220 +60,232 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   Widget build(BuildContext context) {
     final int notesLineCount = _countLines(_notesController.text);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 10,
-      children: <Widget>[
-        const Text(
-          'EditableText + Focus/IME',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Baseline input + multiline: Enter adds new line in Notes; ArrowUp/ArrowDown moves caret between lines.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            SizedBox(
-              width: 120,
-              child: _MenuButton(
-                label: _enabled ? 'Disable' : 'Enable',
-                onTap: () => setState(() => _enabled = !_enabled),
-                background: const Color(0xFFDCE3ED),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: <Widget>[
+          const Text(
+            'EditableText + Focus/IME',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'Baseline input + multiline: Enter adds new line in Notes; ArrowUp/ArrowDown moves caret between lines.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              SizedBox(
+                width: 120,
+                child: _MenuButton(
+                  label: _enabled ? 'Disable' : 'Enable',
+                  onTap: () => setState(() => _enabled = !_enabled),
+                  background: const Color(0xFFDCE3ED),
+                ),
+              ),
+              SizedBox(
+                width: 120,
+                child: _MenuButton(
+                  label: 'Clear',
+                  onTap: () {
+                    setState(() {
+                      _nameController.clear();
+                      _notesController.clear();
+                      _lastChange = '(cleared)';
+                    });
+                  },
+                  background: const Color(0xFFE9F5EC),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            width: 170,
+            child: _MenuButton(
+              label: 'Seed notes',
+              onTap: () {
+                setState(() {
+                  _notesController.text = 'First line\nSecond line\nThird line';
+                  _lastChange = '(seeded notes)';
+                });
+              },
+              background: const Color(0xFFF3E8D8),
+            ),
+          ),
+          Text(
+            'last change: $_lastChange',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          const Text(
+            'Name',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          _buildTextField(
+            controller: _nameController,
+            placeholder: 'Type your name',
+            onChanged: (String value) =>
+                setState(() => _lastChange = 'name = $value'),
+          ),
+          const Text(
+            'Notes (multiline)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          _buildTextField(
+            controller: _notesController,
+            multiline: true,
+            placeholder: 'Type notes (Enter creates new line)',
+            onChanged: (String value) => setState(
+              () => _lastChange = 'notes = ${_escapeMultiline(value)}',
+            ),
+          ),
+          Text(
+            'notes lines: $notesLineCount',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          const Text(
+            'PIN (obscured; mobile shows the last typed character briefly)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          _buildTextField(
+            controller: _pinController,
+            placeholder: 'Type a PIN',
+            obscureText: true,
+            onChanged: (String value) =>
+                setState(() => _lastChange = 'pin length = ${value.length}'),
+          ),
+          const Text(
+            'Caret (width 3, radius 2)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          _buildTextField(
+            controller: _caretController,
+            placeholder: '',
+            cursorWidth: 3,
+            cursorRadius: const Radius.circular(2),
+            cursorColor: const Color(0xFFD81B60),
+            onChanged: (String value) =>
+                setState(() => _lastChange = 'caret = $value'),
+          ),
+          const Text(
+            'Caret (opacity animates)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          _buildTextField(
+            controller: _animatedCaretController,
+            placeholder: '',
+            cursorOpacityAnimates: true,
+            onChanged: (String value) =>
+                setState(() => _lastChange = 'animated caret = $value'),
+          ),
+          const Text(
+            'Long line (scrolls to the caret)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: SizedBox(
+              width: 220,
+              child: _buildTextField(
+                controller: _longLineController,
+                placeholder: '',
+                onChanged: (String value) =>
+                    setState(() => _lastChange = 'long line = $value'),
               ),
             ),
-            SizedBox(
-              width: 120,
-              child: _MenuButton(
-                label: 'Clear',
-                onTap: () {
-                  setState(() {
-                    _nameController.clear();
-                    _notesController.clear();
-                    _lastChange = '(cleared)';
-                  });
-                },
-                background: const Color(0xFFE9F5EC),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(
-          width: 170,
-          child: _MenuButton(
-            label: 'Seed notes',
-            onTap: () {
-              setState(() {
-                _notesController.text = 'First line\nSecond line\nThird line';
-                _lastChange = '(seeded notes)';
-              });
-            },
-            background: const Color(0xFFF3E8D8),
           ),
-        ),
-        Text(
-          'last change: $_lastChange',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        const Text(
-          'Name',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _nameController,
-          placeholder: 'Type your name',
-          onChanged: (String value) =>
-              setState(() => _lastChange = 'name = $value'),
-        ),
-        const Text(
-          'Notes (multiline)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _notesController,
-          multiline: true,
-          placeholder: 'Type notes (Enter creates new line)',
-          onChanged: (String value) => setState(
-            () => _lastChange = 'notes = ${_escapeMultiline(value)}',
+          const Text(
+            'Notes (3 lines, scrolls)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
-        ),
-        Text(
-          'notes lines: $notesLineCount',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        const Text(
-          'PIN (obscured; mobile shows the last typed character briefly)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _pinController,
-          placeholder: 'Type a PIN',
-          obscureText: true,
-          onChanged: (String value) =>
-              setState(() => _lastChange = 'pin length = ${value.length}'),
-        ),
-        const Text(
-          'Caret (width 3, radius 2)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _caretController,
-          placeholder: '',
-          cursorWidth: 3,
-          cursorRadius: const Radius.circular(2),
-          cursorColor: const Color(0xFFD81B60),
-          onChanged: (String value) =>
-              setState(() => _lastChange = 'caret = $value'),
-        ),
-        const Text(
-          'Caret (opacity animates)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _animatedCaretController,
-          placeholder: '',
-          cursorOpacityAnimates: true,
-          onChanged: (String value) =>
-              setState(() => _lastChange = 'animated caret = $value'),
-        ),
-        const Text(
-          'Long line (scrolls to the caret)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: SizedBox(
-            width: 220,
-            child: _buildTextField(
-              controller: _longLineController,
-              placeholder: '',
-              onChanged: (String value) =>
-                  setState(() => _lastChange = 'long line = $value'),
+          _buildTextField(
+            controller: _scrollingNotesController,
+            placeholder: '',
+            multiline: true,
+            maxLines: 3,
+            onChanged: (String value) => setState(
+              () =>
+                  _lastChange = 'scrolling notes = ${_escapeMultiline(value)}',
             ),
           ),
-        ),
-        const Text(
-          'Notes (3 lines, scrolls)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        _buildTextField(
-          controller: _scrollingNotesController,
-          placeholder: '',
-          multiline: true,
-          maxLines: 3,
-          onChanged: (String value) => setState(
-            () => _lastChange = 'scrolling notes = ${_escapeMultiline(value)}',
+          const Text(
+            'Undo history (a formatter upper-cases input)',
+            style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
-        ),
-        const Text(
-          'Undo history (a formatter upper-cases input)',
-          style: TextStyle(fontSize: 12, color: Colors.black54),
-        ),
-        SizedBox(
-          width: 170,
-          child: _MenuButton(
-            label: 'Seed undo value',
-            onTap: () {
-              final ValueNotifier<TextEditingValue> value = _undoableController;
-              value.value = const TextEditingValue(
-                text: 'SEEDED',
-                selection: TextSelection.collapsed(offset: 6),
+          SizedBox(
+            width: 170,
+            child: _MenuButton(
+              label: 'Seed undo value',
+              onTap: () {
+                final ValueNotifier<TextEditingValue> value =
+                    _undoableController;
+                value.value = const TextEditingValue(
+                  text: 'SEEDED',
+                  selection: TextSelection.collapsed(offset: 6),
+                );
+              },
+              background: const Color(0xFFF3E8D8),
+            ),
+          ),
+          SizedBox(
+            width: 170,
+            child: _MenuButton(
+              label: 'Reset controller text',
+              onTap: () => _undoableController.text = 'RESET',
+              background: const Color(0xFFF3E8D8),
+            ),
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _undoableController,
+            builder: (BuildContext context, TextEditingValue value, Widget? child) {
+              return Text(
+                "history value: '${value.text}', selection: ${value.selection.baseOffset}/${value.selection.extentOffset}, "
+                'composing: ${value.composing.start}/${value.composing.end}',
+                style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
               );
             },
-            background: const Color(0xFFF3E8D8),
           ),
-        ),
-        ValueListenableBuilder<TextEditingValue>(
-          valueListenable: _undoableController,
-          builder:
-              (BuildContext context, TextEditingValue value, Widget? child) {
-                return Text(
-                  "history value: '${value.text}'",
-                  style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-                );
-              },
-        ),
-        ValueListenableBuilder<UndoHistoryValue>(
-          valueListenable: _undoController,
-          builder:
-              (BuildContext context, UndoHistoryValue value, Widget? child) {
-                return Row(
-                  spacing: 8,
-                  children: <Widget>[
-                    SizedBox(
-                      width: 120,
-                      child: _MenuButton(
-                        label: value.canUndo ? 'Undo' : 'Undo (-)',
-                        onTap: _undoController.undo,
-                        background: const Color(0xFFDCE3ED),
+          ValueListenableBuilder<UndoHistoryValue>(
+            valueListenable: _undoController,
+            builder:
+                (BuildContext context, UndoHistoryValue value, Widget? child) {
+                  return Row(
+                    spacing: 8,
+                    children: <Widget>[
+                      SizedBox(
+                        width: 120,
+                        child: _MenuButton(
+                          label: value.canUndo ? 'Undo' : 'Undo (-)',
+                          onTap: _undoController.undo,
+                          background: const Color(0xFFDCE3ED),
+                        ),
                       ),
-                    ),
-                    SizedBox(
-                      width: 120,
-                      child: _MenuButton(
-                        label: value.canRedo ? 'Redo' : 'Redo (-)',
-                        onTap: _undoController.redo,
-                        background: const Color(0xFFDCE3ED),
+                      SizedBox(
+                        width: 120,
+                        child: _MenuButton(
+                          label: value.canRedo ? 'Redo' : 'Redo (-)',
+                          onTap: _undoController.redo,
+                          background: const Color(0xFFDCE3ED),
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              },
-        ),
-        _buildTextField(
-          controller: _undoableController,
-          placeholder: 'Type, then undo/redo (Ctrl+Z / Ctrl+Shift+Z)',
-          undoController: _undoController,
-          inputFormatters: <TextInputFormatter>[_upperCaseFormatter],
-          onChanged: (String value) =>
-              setState(() => _lastChange = 'undoable = $value'),
-        ),
-        Text(
-          "current: name='${_nameController.text}', notes='${_escapeMultiline(_notesController.text)}'",
-          style: const TextStyle(fontSize: 12, color: Colors.black),
-        ),
-      ],
+                    ],
+                  );
+                },
+          ),
+          _buildTextField(
+            controller: _undoableController,
+            placeholder: 'Type, then undo/redo (Ctrl+Z / Ctrl+Shift+Z)',
+            undoController: _undoController,
+            inputFormatters: <TextInputFormatter>[_upperCaseFormatter],
+            onChanged: (String value) =>
+                setState(() => _lastChange = 'undoable = $value'),
+          ),
+          Text(
+            "current: name='${_nameController.text}', notes='${_escapeMultiline(_notesController.text)}'",
+            style: const TextStyle(fontSize: 12, color: Colors.black),
+          ),
+        ],
+      ),
     );
   }
 

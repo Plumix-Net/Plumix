@@ -413,7 +413,8 @@ public sealed class MaterialSearchTests : IDisposable
     [Fact]
     public void SearchAnchor_AsyncSuggestionsResolveOnceAndRefreshOnTextChange()
     {
-        var controller = new SearchController();
+        // Keep this query-only test independent of the initial invalid-caret focus notification.
+        var controller = new SearchController { Selection = TextSelection.Collapsed(0) };
         int builderCalls = 0;
         var completion = new TaskCompletionSource<IReadOnlyList<Widget>>();
         var size = new Size(640, 420);

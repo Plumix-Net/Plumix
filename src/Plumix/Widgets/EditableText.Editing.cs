@@ -73,7 +73,7 @@ public sealed partial class EditableText
             }
 
             if (string.Equals(value.Text, EditingValue.Text, StringComparison.Ordinal)
-                && Nullable.Equals(value.Composing, EditingValue.Composing))
+                && value.Composing == EditingValue.Composing)
             {
                 // `selection` is the only change.
                 SelectionChangedCause cause = (_textInputConnection?.ScribbleInProgress ?? false)

@@ -367,7 +367,7 @@ public sealed partial class EditableText
                 return;
             }
 
-            TextRange composingRange = TextEditingValue.Composing ?? new TextRange(-1, -1);
+            TextRange composingRange = TextEditingValue.Composing;
             Rect? composingRect = renderEditable.GetRectForComposingRange(composingRange);
             if (composingRect is null)
             {

@@ -209,7 +209,8 @@ public sealed class ContextMenuControllerTests : IDisposable
     [Fact]
     public void DirectAndEditableMenusReplaceEachOtherAndReportVisibility()
     {
-        using var text = new TextEditingController("select me");
+        // A valid initial caret keeps focus acquisition from creating a selection overlay.
+        using var text = new TextEditingController("select me", selection: TextSelection.Collapsed(9));
         using var focus = new FocusNode();
         var key = new LabeledGlobalKey<EditableText.EditableTextState>("editable");
         using var harness = new Harness(new EditableText(

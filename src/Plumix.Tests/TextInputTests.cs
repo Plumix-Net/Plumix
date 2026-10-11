@@ -200,13 +200,13 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
 
         Assert.True(controller.ClearComposing());
-        Assert.Null(controller.Composing);
+        Assert.Equal(TextRange.Empty, controller.Composing);
         Assert.Equal("aNb", controller.Text);
 
         Assert.True(controller.SetComposing("x"));
         Assert.True(controller.CommitComposing("!"));
         Assert.Equal("aN!b", controller.Text);
-        Assert.Null(controller.Composing);
+        Assert.Equal(TextRange.Empty, controller.Composing);
         Assert.Equal(TextSelection.Collapsed(3), controller.Selection);
     }
 
@@ -247,7 +247,7 @@ public sealed class TextInputTests : IDisposable
 
         Assert.True(HostTextInput.InsertText("N"));
         Assert.Equal("N", controller.Text);
-        Assert.Null(controller.Composing);
+        Assert.Equal(TextRange.Empty, controller.Composing);
         Assert.Equal(TextSelection.Collapsed(1), controller.Selection);
 
         Assert.True(HostTextInput.SetMarkedText("yz"));
@@ -264,7 +264,7 @@ public sealed class TextInputTests : IDisposable
         Assert.True(HostTextInput.SetMarkedText("x"));
         Assert.True(HostTextInput.InsertText("X"));
         Assert.Equal("X", controller.Text);
-        Assert.Null(controller.Composing);
+        Assert.Equal(TextRange.Empty, controller.Composing);
     }
 
     [Fact]
@@ -474,7 +474,7 @@ public sealed class TextInputTests : IDisposable
         Assert.False(compositionCommitHandled);
         Assert.False(keyHandled);
         Assert.Equal(string.Empty, controller.Text);
-        Assert.Null(controller.Composing);
+        Assert.Equal(TextRange.Empty, controller.Composing);
     }
 
     [Fact]

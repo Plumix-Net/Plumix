@@ -141,11 +141,11 @@ public sealed class UndoHistoryDartParityTests : IDisposable
         Assert.Equal(1, calls);
 
         controller.ClearComposing();
-        Assert.Null(notifier.Value.Composing);
+        Assert.Equal(TextRange.Empty, notifier.Value.Composing);
         Assert.Equal(2, calls);
         controller.Text = "edited";
         Assert.Equal("edited", notifier.Value.Text);
-        Assert.Equal(TextSelection.Collapsed(6), notifier.Value.Selection);
+        Assert.Equal(TextSelection.Invalid, notifier.Value.Selection);
         Assert.Equal(3, calls);
     }
 
