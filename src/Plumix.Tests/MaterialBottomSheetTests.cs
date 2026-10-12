@@ -1067,7 +1067,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         Assert.Same(before, FindParagraph(harness.RenderView, "Second"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShowBottomSheet_WhileScaffoldBottomSheetIsSet_Throws()
     {
         // Dart: `scaffold_test.dart` "showBottomSheet() while Scaffold has bottom sheet".
@@ -1079,12 +1079,12 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 bottomSheet: new SizedBox(height: 100, child: new Text("Sheet")))))));
         harness.Pump(new Size(500, 400));
 
-        var error = Assert.Throws<InvalidOperationException>(
+        var error = Assert.Throws<FlutterError>(
             () => MaterialBottomSheets.ShowBottomSheet(captured!, _ => new Text("Shown")));
         Assert.Contains("Rebuild the Scaffold with a null bottomSheet", error.Message, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Scaffold_GivenABottomSheetWhileAShownSheetIsVisible_Throws()
     {
         // Dart: `scaffold_test.dart` "didUpdate bottomSheet while a previous bottom sheet is still
@@ -1108,7 +1108,10 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Static")));
-        var error = BuildErrors.Throws<InvalidOperationException>(() => harness.Pump(new Size(500, 400)));
+        var error = BuildErrors.Throws<FlutterError>(() => harness.Pump(new Size(500, 400)));
+        Assert.Equal(2, error.Diagnostics.Count);
+        Assert.IsType<ErrorSummary>(error.Diagnostics[0]);
+        Assert.IsType<ErrorHint>(error.Diagnostics[1]);
         Assert.Contains("PersistentBottomSheetController", error.Message, StringComparison.Ordinal);
     }
 

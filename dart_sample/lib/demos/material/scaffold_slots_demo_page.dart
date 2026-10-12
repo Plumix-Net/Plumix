@@ -29,129 +29,173 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
   bool _extendBody = false;
   bool _extendBodyBehindAppBar = false;
   int _bottomSheetIndex = 0;
+  bool _showKeyboard = false;
+  bool _resizeForKeyboard = true;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 10,
-      children: <Widget>[
-        const Text(
-          'Scaffold slots',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'persistentFooterButtons, the extendBody padding restoration, and drawer paint order.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildControlButton(
-              label: _showFooter ? 'Footer on' : 'Footer off',
-              onTap: () => setState(() => _showFooter = !_showFooter),
-              width: 96,
-              background: const Color(0xFFE9F0FF),
-            ),
-            _buildControlButton(
-              label: 'Align ${_footerAlignmentLabels[_footerAlignmentIndex]}',
-              onTap: () => setState(
-                () => _footerAlignmentIndex =
-                    (_footerAlignmentIndex + 1) % _footerAlignments.length,
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: <Widget>[
+          const Text(
+            'Scaffold slots',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'persistentFooterButtons, the extendBody padding restoration, and drawer paint order.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _buildControlButton(
+                label: _showFooter ? 'Footer on' : 'Footer off',
+                onTap: () => setState(() => _showFooter = !_showFooter),
+                width: 96,
+                background: const Color(0xFFE9F0FF),
               ),
-              width: 106,
-              background: const Color(0xFFEFE8F8),
-            ),
-            _buildControlButton(
-              label: _useFooterDecoration ? 'Decoration' : 'Divider',
-              onTap: () =>
-                  setState(() => _useFooterDecoration = !_useFooterDecoration),
-              width: 106,
-              background: const Color(0xFFF7E9E3),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildControlButton(
-              label: _extendBody ? 'extendBody on' : 'extendBody off',
-              onTap: () => setState(() => _extendBody = !_extendBody),
-              width: 132,
-              background: const Color(0xFFE8F5E9),
-            ),
-            _buildControlButton(
-              label: _extendBodyBehindAppBar
-                  ? 'behind bar on'
-                  : 'behind bar off',
-              onTap: () => setState(
-                () => _extendBodyBehindAppBar = !_extendBodyBehindAppBar,
+              _buildControlButton(
+                label: 'Align ${_footerAlignmentLabels[_footerAlignmentIndex]}',
+                onTap: () => setState(
+                  () => _footerAlignmentIndex =
+                      (_footerAlignmentIndex + 1) % _footerAlignments.length,
+                ),
+                width: 106,
+                background: const Color(0xFFEFE8F8),
               ),
-              width: 132,
-              background: const Color(0xFFF3E8D8),
-            ),
-            _buildControlButton(
-              label: 'bottomSheet ${_bottomSheetLabels[_bottomSheetIndex]}',
-              onTap: () => setState(
-                () => _bottomSheetIndex =
-                    (_bottomSheetIndex + 1) % _bottomSheetLabels.length,
+              _buildControlButton(
+                label: _useFooterDecoration ? 'Decoration' : 'Divider',
+                onTap: () => setState(
+                  () => _useFooterDecoration = !_useFooterDecoration,
+                ),
+                width: 106,
+                background: const Color(0xFFF7E9E3),
               ),
-              width: 132,
-              background: const Color(0xFFEDE7F6),
-            ),
-          ],
-        ),
-        Text(
-          'footer=${_showFooter ? "true" : "false"}, '
-          'alignment=${_footerAlignmentLabels[_footerAlignmentIndex]}, '
-          'decoration=${_useFooterDecoration ? "true" : "false"}, '
-          'extendBody=${_extendBody ? "true" : "false"}, '
-          'extendBodyBehindAppBar=${_extendBodyBehindAppBar ? "true" : "false"}, '
-          'bottomSheet=${_bottomSheetLabels[_bottomSheetIndex]}',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: const Color(0xFFFDFEFF),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFD6DEEA), width: 1),
-            ),
-            child: Scaffold(
-              appBar: AppBar(title: const Text('Slots preview')),
-              extendBody: _extendBody,
-              extendBodyBehindAppBar: _extendBodyBehindAppBar,
-              drawer: _buildDrawerPanel(isStartDrawer: true),
-              endDrawer: _buildDrawerPanel(isStartDrawer: false),
-              bottomSheet: _buildPersistentBottomSheet(),
-              persistentFooterAlignment:
-                  _footerAlignments[_footerAlignmentIndex],
-              persistentFooterDecoration: _useFooterDecoration
-                  ? const BoxDecoration(color: Color(0xFFEFF4FF))
-                  : null,
-              persistentFooterButtons: _showFooter
-                  ? <Widget>[
-                      _buildFooterButton('Reset', _reset),
-                      _buildFooterButton('Save', () {}),
-                    ]
-                  : null,
-              bottomNavigationBar: Container(
-                color: const Color(0xFFE3ECFB),
-                height: 48,
-                child: const Center(
-                  child: Text(
-                    'bottomNavigationBar (48pt)',
-                    style: TextStyle(fontSize: 12, color: Color(0xFF30404D)),
+            ],
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _buildControlButton(
+                label: _extendBody ? 'extendBody on' : 'extendBody off',
+                onTap: () => setState(() => _extendBody = !_extendBody),
+                width: 132,
+                background: const Color(0xFFE8F5E9),
+              ),
+              _buildControlButton(
+                label: _extendBodyBehindAppBar
+                    ? 'behind bar on'
+                    : 'behind bar off',
+                onTap: () => setState(
+                  () => _extendBodyBehindAppBar = !_extendBodyBehindAppBar,
+                ),
+                width: 132,
+                background: const Color(0xFFF3E8D8),
+              ),
+              _buildControlButton(
+                label: 'bottomSheet ${_bottomSheetLabels[_bottomSheetIndex]}',
+                onTap: () => setState(
+                  () => _bottomSheetIndex =
+                      (_bottomSheetIndex + 1) % _bottomSheetLabels.length,
+                ),
+                width: 132,
+                background: const Color(0xFFEDE7F6),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: <Widget>[
+              _buildControlButton(
+                label: _showKeyboard ? 'Keyboard on' : 'Keyboard off',
+                onTap: () => setState(() => _showKeyboard = !_showKeyboard),
+                width: 132,
+                background: const Color(0xFFE8F5E9),
+              ),
+              _buildControlButton(
+                label: _resizeForKeyboard ? 'Resize on' : 'Resize off',
+                onTap: () =>
+                    setState(() => _resizeForKeyboard = !_resizeForKeyboard),
+                width: 132,
+                background: const Color(0xFFF3E8D8),
+              ),
+            ],
+          ),
+          Text(
+            'footer=${_showFooter ? "true" : "false"}, '
+            'alignment=${_footerAlignmentLabels[_footerAlignmentIndex]}, '
+            'decoration=${_useFooterDecoration ? "true" : "false"}, '
+            'extendBody=${_extendBody ? "true" : "false"}, '
+            'extendBodyBehindAppBar=${_extendBodyBehindAppBar ? "true" : "false"}, '
+            'bottomSheet=${_bottomSheetLabels[_bottomSheetIndex]}, '
+            'keyboard=${_showKeyboard ? "true" : "false"}, '
+            'resize=${_resizeForKeyboard ? "true" : "false"}',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          SizedBox(
+            height: 420,
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFFFDFEFF),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFD6DEEA), width: 1),
+              ),
+              child: Builder(
+                builder: (previewContext) => MediaQuery(
+                  data: MediaQuery.of(previewContext).copyWith(
+                    viewInsets: EdgeInsets.only(
+                      bottom: _showKeyboard ? 120 : 0,
+                    ),
+                  ),
+                  child: Scaffold(
+                    resizeToAvoidBottomInset: _resizeForKeyboard,
+                    appBar: AppBar(title: const Text('Slots preview')),
+                    extendBody: _extendBody,
+                    extendBodyBehindAppBar: _extendBodyBehindAppBar,
+                    drawer: _buildDrawerPanel(isStartDrawer: true),
+                    endDrawer: _buildDrawerPanel(isStartDrawer: false),
+                    bottomSheet: _buildPersistentBottomSheet(),
+                    persistentFooterAlignment:
+                        _footerAlignments[_footerAlignmentIndex],
+                    persistentFooterDecoration: _useFooterDecoration
+                        ? const BoxDecoration(color: Color(0xFFEFF4FF))
+                        : null,
+                    persistentFooterButtons: _showFooter
+                        ? <Widget>[
+                            _buildFooterButton('Reset', _reset),
+                            _buildFooterButton('Save', () {}),
+                          ]
+                        : null,
+                    bottomNavigationBar: Container(
+                      color: const Color(0xFFE3ECFB),
+                      height: 48,
+                      child: const Center(
+                        child: Text(
+                          'bottomNavigationBar (48pt)',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF30404D),
+                          ),
+                        ),
+                      ),
+                    ),
+                    body: Builder(
+                      builder: (BuildContext context) => SingleChildScrollView(
+                        child: _buildPreviewBody(context),
+                      ),
+                    ),
                   ),
                 ),
               ),
-              body: Builder(
-                builder: (BuildContext context) => _buildPreviewBody(context),
-              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -296,6 +340,8 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
       _extendBody = false;
       _extendBodyBehindAppBar = false;
       _bottomSheetIndex = 0;
+      _showKeyboard = false;
+      _resizeForKeyboard = true;
     });
   }
 }

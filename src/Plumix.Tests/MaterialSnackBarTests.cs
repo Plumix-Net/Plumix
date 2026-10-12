@@ -456,7 +456,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScaffoldMessenger_ThrowsWhenThereIsNoDescendantScaffold()
     {
         using var harness = new WidgetRenderHarness(WrapChrome(
@@ -464,7 +464,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             new ScaffoldMessenger(new SizedBox())));
         harness.Pump(new Size(360, 220));
         var messenger = harness.FindState<ScaffoldMessengerState>();
-        Assert.Throws<InvalidOperationException>(() => messenger.ShowSnackBar(Bar()));
+        Assert.Throws<AssertionError>(() => messenger.ShowSnackBar(Bar()));
     }
 
     [Fact]

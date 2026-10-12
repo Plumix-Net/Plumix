@@ -1354,7 +1354,8 @@ public sealed class MaterialTabsTests
     [Fact]
     public void TabsDemoPage_RendersNestedAppBarBottomAndPageViewAtDesktopSize()
     {
-        using var harness = new WidgetRenderHarness(Wrap(new TabsDemoPage()));
+        using var harness = new WidgetRenderHarness(
+            new MediaQuery(new MediaQueryData(), Wrap(new TabsDemoPage())));
         harness.Pump(new Size(1000, 700));
 
         Assert.NotNull(FindDescendant<RenderSliverFillViewport>(harness.RenderView));

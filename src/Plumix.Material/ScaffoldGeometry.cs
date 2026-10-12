@@ -80,13 +80,16 @@ internal sealed class ScaffoldGeometryNotifier : ChangeNotifier, IValueListenabl
     {
         get
         {
-            RenderObject? renderObject = _context.FindRenderObject();
-            if (renderObject is null || renderObject.Owner?.DebugDoingPaint != true)
+            if (Constants.KDebugMode)
             {
-                throw new InvalidOperationException(
-                    "Scaffold.geometryOf() must only be accessed during the paint phase.\n"
-                    + "The ScaffoldGeometry is only available during the paint phase, because its value is "
-                    + "computed during the animation and layout phases prior to painting.");
+                RenderObject? renderObject = _context.FindRenderObject();
+                if (renderObject is null || renderObject.Owner?.DebugDoingPaint != true)
+                {
+                    throw new FlutterError(
+                        "Scaffold.geometryOf() must only be accessed during the paint phase.\n"
+                        + "The ScaffoldGeometry is only available during the paint phase, because its value is "
+                        + "computed during the animation and layout phases prior to painting.");
+                }
             }
 
             return Geometry.ScaleFloatingActionButton(FloatingActionButtonScale!.Value);

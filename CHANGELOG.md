@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Scaffold matches Dart ancestor/geometry/sheet errors and nullable FAB defaults (scaffold.dart).
+- Breaking: ScaffoldMessenger matches Dart feature queues, dependency updates and disposal (scaffold.dart).
+- Scaffold slots demo adds mirrored keyboard-inset and resize probes (scaffold.dart).
 - Breaking: Sliders check MediaQuery and relayout labels/overlays on font changes (slider.dart, range_slider.dart).
 - Font-relayout mixin defers/coalesces updates; mirrored slider demos add text scaling (object.dart).
 - Breaking: Time picker restores state and matches Dart input, themes, scaling and dial behavior (time_picker.dart).

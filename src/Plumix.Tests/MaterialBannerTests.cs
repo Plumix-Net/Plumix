@@ -465,7 +465,7 @@ public sealed class MaterialBannerTests
         Assert.Null(FindParagraph(harness.RenderView, "Queued"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScaffoldMessenger_RequiresDescendantScaffoldForMaterialBanner()
     {
         using var harness = new WidgetRenderHarness(Wrap(
@@ -474,7 +474,7 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 220));
         var messenger = harness.FindState<ScaffoldMessengerState>();
 
-        var error = Assert.Throws<InvalidOperationException>(() => messenger.ShowMaterialBanner(Banner()));
+        var error = Assert.Throws<AssertionError>(() => messenger.ShowMaterialBanner(Banner()));
         Assert.Contains("no descendant Scaffold", error.Message, StringComparison.OrdinalIgnoreCase);
     }
 

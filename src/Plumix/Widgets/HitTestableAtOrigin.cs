@@ -21,8 +21,17 @@ internal sealed class HitTestableAtOrigin : StatelessWidget
 
     public static bool IsHitTestableAtOrigin(GlobalKey key)
     {
-        if (key.CurrentContext is not { } context
-            || context.FindRenderObject() is not RenderMetaData renderObject
+        if (key.CurrentContext is not { } context)
+        {
+            DebugAssertions.Assert(
+                false,
+                $"BuildContext associated with {key} is not mounted. "
+                + "If you see this in a test, this is likely because the test was trying "
+                + "to simulate status bar tap on a non-iOS platform");
+            return false;
+        }
+
+        if (context.FindRenderObject() is not RenderMetaData renderObject
             || renderObject.Owner?.Root is not { } view)
         {
             return false;

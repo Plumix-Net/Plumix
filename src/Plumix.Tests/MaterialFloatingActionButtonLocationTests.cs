@@ -17,7 +17,8 @@ public sealed class MaterialFloatingActionButtonLocationTests
         SnackBarSize: new Size(),
         MinInsets: new Thickness(4, 0, 8, 0),
         MinViewPadding: new Thickness(0, 24, 0, 12),
-        TextDirection: TextDirection.Ltr);
+        TextDirection: TextDirection.Ltr,
+        MaterialBannerSize: new Size());
 
     [Fact]
     public void StandardLocations_ResolveStartCenterEndAndTopGeometry()
@@ -98,13 +99,13 @@ public sealed class MaterialFloatingActionButtonLocationTests
     }
 
     [Fact]
-    public void Scaffold_UsesFlutterDefaultFabLocationAndAnimator()
+    public void Scaffold_LeavesFabLocationAndAnimatorNullUntilStateResolvesDefaults()
     {
         var scaffold = new Scaffold(
             body: new Text("body"),
             floatingActionButton: new FloatingActionButton(child: new Text("+"), onPressed: () => { }));
 
-        Assert.Same(FloatingActionButtonLocation.EndFloat, scaffold.FloatingActionButtonLocation);
-        Assert.Same(FloatingActionButtonAnimator.Scaling, scaffold.FloatingActionButtonAnimator);
+        Assert.Null(scaffold.FloatingActionButtonLocation);
+        Assert.Null(scaffold.FloatingActionButtonAnimator);
     }
 }

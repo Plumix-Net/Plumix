@@ -36,10 +36,12 @@ internal sealed class ScaffoldSlotsDemoPageState : State
     private bool _extendBody;
     private bool _extendBodyBehindAppBar;
     private int _bottomSheetIndex;
+    private bool _showKeyboard;
+    private bool _resizeForKeyboard = true;
 
     public override Widget Build(BuildContext context)
     {
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
@@ -49,8 +51,9 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                     "persistentFooterButtons, the extendBody padding restoration, and drawer paint order.",
                     fontSize: 14,
                     color: new Color(0x8A000000)),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         BuildControlButton(
@@ -70,8 +73,9 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             width: 106,
                             background: new Color(0xFFF7E9E3)),
                     ]),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         BuildControlButton(
@@ -91,50 +95,74 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             width: 132,
                             background: new Color(0xFFEDE7F6)),
                     ]),
+                new Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                    [
+                        BuildControlButton(
+                            label: _showKeyboard ? "Keyboard on" : "Keyboard off",
+                            onTap: () => SetState(() => _showKeyboard = !_showKeyboard),
+                            width: 132,
+                            background: new Color(0xFFE8F5E9)),
+                        BuildControlButton(
+                            label: _resizeForKeyboard ? "Resize on" : "Resize off",
+                            onTap: () => SetState(() => _resizeForKeyboard = !_resizeForKeyboard),
+                            width: 132,
+                            background: new Color(0xFFF3E8D8)),
+                    ]),
                 new Text(
                     $"footer={(_showFooter ? "true" : "false")}, "
                     + $"alignment={FooterAlignmentLabels[_footerAlignmentIndex]}, "
                     + $"decoration={(_useFooterDecoration ? "true" : "false")}, "
                     + $"extendBody={(_extendBody ? "true" : "false")}, "
                     + $"extendBodyBehindAppBar={(_extendBodyBehindAppBar ? "true" : "false")}, "
-                    + $"bottomSheet={BottomSheetLabels[_bottomSheetIndex]}",
+                    + $"bottomSheet={BottomSheetLabels[_bottomSheetIndex]}, "
+                    + $"keyboard={(_showKeyboard ? "true" : "false")}, "
+                    + $"resize={(_resizeForKeyboard ? "true" : "false")}",
                     fontSize: 12,
                     color: new Color(0xFF607D8B)),
-                new Expanded(
+                new SizedBox(
+                    height: 420,
                     child: new Container(
                         decoration: new BoxDecoration(
                             Color: new Color(0xFFFDFEFF),
                             BorderRadius: BorderRadius.Circular(10),
                             Border: Plumix.Rendering.Border.FromBorderSide(
                                 new BorderSide(new Color(0xFFD6DEEA), 1))),
-                        child: new Scaffold(
-                            appBar: new AppBar(title: new Text("Slots preview")),
-                            extendBody: _extendBody,
-                            extendBodyBehindAppBar: _extendBodyBehindAppBar,
-                            drawer: BuildDrawerPanel(isStartDrawer: true),
-                            endDrawer: BuildDrawerPanel(isStartDrawer: false),
-                            bottomSheet: BuildPersistentBottomSheet(),
-                            persistentFooterAlignment: FooterAlignments[_footerAlignmentIndex],
-                            persistentFooterDecoration: _useFooterDecoration
-                                ? new BoxDecoration(Color: new Color(0xFFEFF4FF))
-                                : null,
-                            persistentFooterButtons: _showFooter
-                                ?
-                                [
-                                    BuildFooterButton("Reset", Reset),
-                                    BuildFooterButton("Save", () => { }),
-                                ]
-                                : null,
-                            bottomNavigationBar: new Container(
-                                color: new Color(0xFFE3ECFB),
-                                height: 48,
-                                child: new Center(
-                                    child: new Text(
-                                        "bottomNavigationBar (48pt)",
-                                        fontSize: 12,
-                                        color: new Color(0xFF30404D)))),
-                            body: new ContextBuilder(BuildPreviewBody)))),
-            ]);
+                        child: new ContextBuilder(previewContext => new MediaQuery(
+                            data: MediaQuery.Of(previewContext).CopyWith(
+                                viewInsets: new Thickness(0, 0, 0, _showKeyboard ? 120 : 0)),
+                            child: new Scaffold(
+                                resizeToAvoidBottomInset: _resizeForKeyboard,
+                                appBar: new AppBar(title: new Text("Slots preview")),
+                                extendBody: _extendBody,
+                                extendBodyBehindAppBar: _extendBodyBehindAppBar,
+                                drawer: BuildDrawerPanel(isStartDrawer: true),
+                                endDrawer: BuildDrawerPanel(isStartDrawer: false),
+                                bottomSheet: BuildPersistentBottomSheet(),
+                                persistentFooterAlignment: FooterAlignments[_footerAlignmentIndex],
+                                persistentFooterDecoration: _useFooterDecoration
+                                    ? new BoxDecoration(Color: new Color(0xFFEFF4FF))
+                                    : null,
+                                persistentFooterButtons: _showFooter
+                                    ?
+                                    [
+                                        BuildFooterButton("Reset", Reset),
+                                        BuildFooterButton("Save", () => { }),
+                                    ]
+                                    : null,
+                                bottomNavigationBar: new Container(
+                                    color: new Color(0xFFE3ECFB),
+                                    height: 48,
+                                    child: new Center(
+                                        child: new Text(
+                                            "bottomNavigationBar (48pt)",
+                                            fontSize: 12,
+                                            color: new Color(0xFF30404D)))),
+                                body: new ContextBuilder(previewBodyContext =>
+                                    new SingleChildScrollView(child: BuildPreviewBody(previewBodyContext)))))))),
+            ]));
     }
 
     /// <summary>
@@ -269,6 +297,8 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             _extendBody = false;
             _extendBodyBehindAppBar = false;
             _bottomSheetIndex = 0;
+            _showKeyboard = false;
+            _resizeForKeyboard = true;
         });
     }
 }

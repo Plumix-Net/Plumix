@@ -41,17 +41,17 @@ internal sealed record BodyBoxMetrics(
     double AppBarHeight,
     double MaterialBannerHeight) : IBoxConstraintsMetadata
 {
-    public double BottomWidgetsHeight { get; } = BottomWidgetsHeight >= 0.0
-        ? BottomWidgetsHeight
-        : throw new ArgumentOutOfRangeException(nameof(BottomWidgetsHeight));
+    public double BottomWidgetsHeight { get; } = CheckNonNegative(BottomWidgetsHeight);
 
-    public double AppBarHeight { get; } = AppBarHeight >= 0.0
-        ? AppBarHeight
-        : throw new ArgumentOutOfRangeException(nameof(AppBarHeight));
+    public double AppBarHeight { get; } = CheckNonNegative(AppBarHeight);
 
-    public double MaterialBannerHeight { get; } = MaterialBannerHeight >= 0.0
-        ? MaterialBannerHeight
-        : throw new ArgumentOutOfRangeException(nameof(MaterialBannerHeight));
+    public double MaterialBannerHeight { get; } = CheckNonNegative(MaterialBannerHeight);
+
+    private static double CheckNonNegative(double value)
+    {
+        DebugAssertions.Assert(value >= 0.0);
+        return value;
+    }
 }
 
 /// <summary>
@@ -225,6 +225,7 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
             {
                 bodyMaxHeight += bottomWidgetsHeight;
                 bodyMaxHeight = Math.Clamp(bodyMaxHeight, 0.0, looseConstraints.MaxHeight - contentTop);
+                DebugAssertions.Assert(bodyMaxHeight <= Math.Max(0.0, looseConstraints.MaxHeight - contentTop));
             }
             else
             {
@@ -341,6 +342,22 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
 
             double xOffset = hasCustomWidth ? (size.Width - SnackBarWidth!.Value) / 2 : 0.0;
             PositionChild(ScaffoldSlot.SnackBar, new Point(xOffset, snackBarYOffsetBase - snackBarSize.Height));
+
+            if (Constants.KDebugMode && IsSnackBarFloating && snackBarYOffsetBase - snackBarSize.Height < 0.0)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary("Floating SnackBar presented off screen."),
+                    new ErrorDescription(
+                        "A SnackBar with behavior property set to SnackBarBehavior.floating is fully "
+                        + "or partially off screen because some or all the widgets provided to "
+                        + "Scaffold.floatingActionButton, Scaffold.persistentFooterButtons and "
+                        + "Scaffold.bottomNavigationBar take up too much vertical space.\n"),
+                    new ErrorHint(
+                        "Consider constraining the size of these widgets to allow room "
+                        + "for the SnackBar to be visible."),
+                ]);
+            }
         }
 
         if (HasChild(ScaffoldSlot.StatusBar))
@@ -587,6 +604,7 @@ internal sealed class FloatingActionButtonTransitionState : State<FloatingAction
         {
             if (CurrentWidget.Child is not null && status == AnimationStatus.Dismissed)
             {
+                DebugAssertions.Assert(CurrentWidget.CurrentController.Status == AnimationStatus.Dismissed);
                 CurrentWidget.CurrentController.Forward();
             }
         });

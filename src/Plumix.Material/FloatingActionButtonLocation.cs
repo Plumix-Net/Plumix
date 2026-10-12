@@ -29,7 +29,7 @@ public sealed record ScaffoldPrelayoutGeometry(
     Thickness MinInsets,
     Thickness MinViewPadding,
     TextDirection TextDirection,
-    Size MaterialBannerSize = default);
+    Size MaterialBannerSize);
 
 public abstract class FloatingActionButtonLocation
 {

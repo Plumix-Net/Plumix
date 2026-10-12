@@ -516,7 +516,7 @@ public sealed class MaterialActionButtonsTests
             protected override void PerformRebuild()
             {
                 base.PerformRebuild();
-                _child = UpdateChild(_child, Widget, Slot);
+                _child = UpdateChild(_child, new MediaQuery(new MediaQueryData(), Widget), Slot);
             }
             public override void Update(Widget newWidget)
             {

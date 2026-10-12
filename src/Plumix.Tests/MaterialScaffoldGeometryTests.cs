@@ -130,10 +130,10 @@ public sealed class MaterialScaffoldGeometryTests
         using var harness = new Harness(Wrap(Capture(c => context = c)));
         harness.Pump(Viewport);
 
-        Assert.Throws<InvalidOperationException>(() => Scaffold.GeometryOf(context!));
+        Assert.Throws<FlutterError>(() => Scaffold.GeometryOf(context!));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScaffoldGeometryValue_OutsideThePaintPhase_Throws()
     {
         BuildContext? context = null;
@@ -141,7 +141,7 @@ public sealed class MaterialScaffoldGeometryTests
         harness.Pump(Viewport);
 
         IValueListenable<ScaffoldGeometry> listenable = Scaffold.GeometryOf(context!);
-        Assert.Throws<InvalidOperationException>(() => _ = listenable.Value);
+        Assert.Throws<FlutterError>(() => _ = listenable.Value);
     }
 
     [Fact]

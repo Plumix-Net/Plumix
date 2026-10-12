@@ -48,7 +48,7 @@ public sealed class ScaffoldMessenger : StatefulWidget
     public static ScaffoldMessengerState Of(BuildContext context)
     {
         MaterialDebug.DebugCheckHasScaffoldMessenger(context);
-        return MaybeOf(context) ?? throw new InvalidOperationException("ScaffoldMessenger not found in context.");
+        return context.DependOnInheritedWidgetOfExactType<ScaffoldMessengerScope>()!.Messenger;
     }
 
     public static ScaffoldMessengerState? MaybeOf(BuildContext context) =>
@@ -59,25 +59,17 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
 {
     public ScaffoldMessengerScope(
         ScaffoldMessengerState messenger,
-        SnackBar? snackBar,
-        MaterialBanner? materialBanner,
         Widget child,
         Key? key = null) : base(child, key)
     {
         Messenger = messenger;
-        SnackBar = snackBar;
-        MaterialBanner = materialBanner;
     }
 
     public ScaffoldMessengerState Messenger { get; }
-    public SnackBar? SnackBar { get; }
-    public MaterialBanner? MaterialBanner { get; }
     public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ScaffoldMessengerScope)oldWidget;
-        return !ReferenceEquals(Messenger, oldScope.Messenger)
-               || !ReferenceEquals(SnackBar, oldScope.SnackBar)
-               || !ReferenceEquals(MaterialBanner, oldScope.MaterialBanner);
+        return !ReferenceEquals(Messenger, oldScope.Messenger);
     }
 }
 
@@ -87,7 +79,6 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
     {
         public required MaterialBanner Presented { get; init; }
         public required ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason> Controller { get; init; }
-        public MaterialBannerClosedReason PendingReason { get; set; } = MaterialBannerClosedReason.Hide;
     }
 
     private sealed class SnackBarEntry
@@ -98,7 +89,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
 
     private readonly LinkedList<SnackBarEntry> _snackBars = [];
     private readonly Queue<MaterialBannerEntry> _materialBanners = [];
-    private readonly HashSet<ScaffoldState> _scaffolds = [];
+    private readonly List<ScaffoldState> _scaffolds = [];
     private MaterialBannerEntry? _currentMaterialBanner;
     private AnimationController? _snackBarController;
     private AnimationController? _materialBannerAnimation;
@@ -109,26 +100,47 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
     private ScaffoldMessenger CurrentWidget => (ScaffoldMessenger)StateWidget;
 
     internal SnackBar? CurrentSnackBar => _snackBars.First?.Value.Presented;
+    internal ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? CurrentSnackBarController =>
+        _snackBars.First?.Value.Controller;
+    internal ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>? CurrentMaterialBannerController =>
+        _currentMaterialBanner?.Controller;
 
     internal void Register(ScaffoldState scaffold)
     {
         ArgumentNullException.ThrowIfNull(scaffold);
-        _scaffolds.Add(scaffold);
+        if (!_scaffolds.Contains(scaffold))
+        {
+            _scaffolds.Add(scaffold);
+        }
+        if (IsRoot(scaffold))
+        {
+            if (_snackBars.Count > 0)
+            {
+                scaffold.UpdateSnackBar();
+            }
+            if (_materialBanners.Count > 0)
+            {
+                scaffold.UpdateMaterialBanner();
+            }
+        }
     }
 
     internal void Unregister(ScaffoldState scaffold)
     {
-        _scaffolds.Remove(scaffold);
+        bool removed = _scaffolds.Remove(scaffold);
+        DebugAssertions.Assert(removed);
     }
 
-    internal SnackBar? SnackBarFor(ScaffoldState scaffold)
+    private void UpdateScaffolds()
     {
-        return IsRoot(scaffold) ? CurrentSnackBar : null;
-    }
-
-    internal MaterialBanner? MaterialBannerFor(ScaffoldState scaffold)
-    {
-        return IsRoot(scaffold) ? _currentMaterialBanner?.Presented : null;
+        foreach (ScaffoldState scaffold in _scaffolds)
+        {
+            if (IsRoot(scaffold))
+            {
+                scaffold.UpdateSnackBar();
+                scaffold.UpdateMaterialBanner();
+            }
+        }
     }
 
     private bool IsRoot(ScaffoldState scaffold)
@@ -142,12 +154,10 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         AnimationStyle? snackBarAnimationStyle = null)
     {
         ArgumentNullException.ThrowIfNull(snackBar);
-        if (_scaffolds.Count == 0)
-        {
-            throw new InvalidOperationException(
-                "ScaffoldMessenger.ShowSnackBar was called, but there are currently no "
-                + "descendant Scaffolds to present to.");
-        }
+        DebugAssertions.Assert(
+            _scaffolds.Count > 0,
+            "ScaffoldMessenger.showSnackBar was called, but there are currently no "
+            + "descendant Scaffolds to present to.");
 
         if (snackBarAnimationStyle is not null
             && (_snackBarController?.Duration != snackBarAnimationStyle.Duration
@@ -167,6 +177,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
 
         if (_snackBars.Count == 0)
         {
+            DebugAssertions.Assert(_snackBarController.Status == AnimationStatus.Dismissed);
             _snackBarController.Forward();
         }
 
@@ -175,11 +186,8 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
             snackBar.WithAnimation(_snackBarController, new UniqueKey()),
             () =>
             {
-                // The Dart close callback asserts the entry is still the head of the queue.
-                if (ReferenceEquals(_snackBars.First?.Value, entry))
-                {
-                    HideCurrentSnackBar();
-                }
+                DebugAssertions.Assert(ReferenceEquals(_snackBars.First?.Value, entry));
+                HideCurrentSnackBar();
             });
         entry = new SnackBarEntry
         {
@@ -187,7 +195,31 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
             Controller = controller,
         };
 
-        SetState(() => _snackBars.AddLast(entry));
+        try
+        {
+            SetState(() => _snackBars.AddLast(entry));
+            UpdateScaffolds();
+        }
+        catch (FlutterError exception) when (Constants.KDebugMode
+            && exception.Diagnostics[0].ToDescription() == "setState() or markNeedsBuild() called during build.")
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("The showSnackBar() method cannot be called during build."),
+                new ErrorDescription(
+                    "The showSnackBar() method was called during build, which is "
+                    + "prohibited as showing snack bars requires updating state. Updating "
+                    + "state is not possible during build."),
+                new ErrorHint(
+                    "Instead of calling showSnackBar() during build, call it directly "
+                    + "in your on tap (and related) callbacks. If you need to immediately "
+                    + "show a snack bar, make the call in initState() or "
+                    + "didChangeDependencies() instead. Otherwise, you can also schedule a "
+                    + "post-frame callback using SchedulerBinding.addPostFrameCallback to "
+                    + "show the snack bar after the current frame."),
+                Context.DescribeOwnershipChain("The ownership chain for the particular ScaffoldMessenger is"),
+            ]);
+        }
         return controller;
     }
 
@@ -206,7 +238,13 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         }
         else
         {
-            _snackBarController!.Reverse().WhenCompleteOrCancel(() => entry.Controller.Complete(reason));
+            TickerFuture reverse = _snackBarController!.Reverse();
+            Scheduler.RunAsync(async () =>
+            {
+                await reverse;
+                DebugAssertions.Assert(Mounted);
+                entry.Controller.Complete(reason);
+            });
         }
 
         CancelSnackBarTimer();
@@ -243,18 +281,21 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         MaterialBanner materialBanner)
     {
         ArgumentNullException.ThrowIfNull(materialBanner);
-        if (_scaffolds.Count == 0)
-        {
-            throw new InvalidOperationException(
-                "ScaffoldMessenger.ShowMaterialBanner was called, but there are currently no "
-                + "descendant Scaffolds to present to.");
-        }
+        DebugAssertions.Assert(
+            _scaffolds.Count > 0,
+            "ScaffoldMessenger.showMaterialBanner was called, but there are currently no "
+            + "descendant Scaffolds to present to.");
 
         MaterialBannerEntry? entry = null;
         if (_materialBannerAnimation is null)
         {
             _materialBannerAnimation = MaterialBanner.CreateAnimationController();
             _materialBannerAnimation.AddStatusListener(HandleMaterialBannerAnimationStatusChanged);
+        }
+        if (_materialBanners.Count == 0)
+        {
+            DebugAssertions.Assert(_materialBannerAnimation.Status == AnimationStatus.Dismissed);
+            _materialBannerAnimation.Forward();
         }
         MaterialBanner presented = materialBanner.WithAnimation(
             _materialBannerAnimation,
@@ -273,9 +314,10 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
             _materialBanners.Enqueue(entry);
             if (_currentMaterialBanner is null)
             {
-                ShowNextMaterialBanner();
+                _currentMaterialBanner = _materialBanners.Peek();
             }
         });
+        UpdateScaffolds();
         return controller;
     }
 
@@ -283,20 +325,26 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         MaterialBannerClosedReason reason = MaterialBannerClosedReason.Hide)
     {
         MaterialBannerEntry? entry = _currentMaterialBanner;
-        if (entry is null)
+        if (entry is null || _materialBannerAnimation!.Status == AnimationStatus.Dismissed)
         {
             return;
         }
 
-        entry.PendingReason = reason;
-        bool accessibleNavigation = MediaQuery.MaybeOf(Context)?.AccessibleNavigation == true;
-        if (accessibleNavigation || _materialBannerAnimation!.Value <= 0.0)
+        if (_accessibleNavigation)
         {
-            CompleteCurrentMaterialBanner(entry);
-            return;
+            _materialBannerAnimation!.SetValue(0.0);
+            entry.Controller.Complete(reason);
         }
-
-        _materialBannerAnimation.Reverse();
+        else
+        {
+            TickerFuture reverse = _materialBannerAnimation!.Reverse();
+            Scheduler.RunAsync(async () =>
+            {
+                await reverse;
+                DebugAssertions.Assert(Mounted);
+                entry.Controller.Complete(reason);
+            });
+        }
     }
 
     public void RemoveCurrentMaterialBanner(
@@ -308,46 +356,33 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
             return;
         }
 
-        entry.PendingReason = reason;
-        CompleteCurrentMaterialBanner(entry);
+        entry.Controller.Complete(reason);
+        _materialBannerAnimation!.SetValue(0.0);
     }
 
     public void ClearMaterialBanners()
     {
         MaterialBannerEntry? current = _currentMaterialBanner;
-        if (current is null)
+        if (current is null || _materialBannerAnimation!.Status == AnimationStatus.Dismissed)
         {
             return;
         }
 
-        foreach (MaterialBannerEntry queued in _materialBanners.Skip(1).ToArray())
-        {
-            RemoveQueuedMaterialBanner(queued);
-        }
+        _materialBanners.Clear();
+        _materialBanners.Enqueue(current);
         HideCurrentMaterialBanner();
     }
 
     public override void DidChangeDependencies()
     {
+        _accessibleNavigation = MediaQuery.AccessibleNavigationOf(Context);
         base.DidChangeDependencies();
-        bool accessibleNavigation = MediaQuery.MaybeOf(Context)?.AccessibleNavigation == true;
-        // If we transition from accessible navigation to non-accessible navigation and there is a
-        // SnackBar that would have timed out that has already completed its timer, dismiss that
-        // SnackBar. If the timer hasn't finished yet, let it timeout as normal.
-        if (_accessibleNavigation
-            && !accessibleNavigation
-            && _snackBars.Count > 0
-            && _snackBarTimer is null)
-        {
-            HideCurrentSnackBar(SnackBarClosedReason.Timeout);
-        }
-
-        _accessibleNavigation = accessibleNavigation;
     }
 
     public override Widget Build(BuildContext context)
     {
-        _accessibleNavigation = MediaQuery.MaybeOf(context)?.AccessibleNavigation == true;
+        WidgetsDebug.DebugCheckHasMediaQuery(context);
+        _accessibleNavigation = MediaQuery.AccessibleNavigationOf(context);
         if (_snackBars.Count > 0)
         {
             ModalRoute? route = ModalRoute.MaybeOf(context);
@@ -358,45 +393,31 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
                     SnackBar snackBar = _snackBars.First!.Value.Presented;
                     var cancellation = new CancellationTokenSource();
                     _snackBarTimer = cancellation;
-                    _ = RunSnackBarTimer(snackBar, cancellation.Token);
+                    Scheduler.RunAsync(() => RunSnackBarTimer(snackBar, cancellation.Token));
                 }
             }
         }
 
         return new ScaffoldMessengerScope(
             messenger: this,
-            snackBar: CurrentSnackBar,
-            materialBanner: _currentMaterialBanner?.Presented,
             child: CurrentWidget.Child);
     }
 
     public override void Dispose()
     {
         _disposed = true;
-        foreach (SnackBarEntry entry in _snackBars)
-        {
-            entry.Controller.Complete(SnackBarClosedReason.Remove);
-        }
-
-        _snackBars.Clear();
-        if (_snackBarController is not null)
-        {
-            _snackBarController.RemoveStatusListener(HandleSnackBarStatusChanged);
-            _snackBarController.Dispose();
-            _snackBarController = null;
-        }
-
-        CancelSnackBarTimer();
-        _materialBanners.Clear();
-        _currentMaterialBanner = null;
         if (_materialBannerAnimation is not null)
         {
             _materialBannerAnimation.RemoveStatusListener(HandleMaterialBannerAnimationStatusChanged);
             _materialBannerAnimation.Dispose();
-            _materialBannerAnimation = null;
+        }
+        if (_snackBarController is not null)
+        {
+            _snackBarController.RemoveStatusListener(HandleSnackBarStatusChanged);
+            _snackBarController.Dispose();
         }
 
-        _scaffolds.Clear();
+        CancelSnackBarTimer();
 
         base.Dispose();
     }
@@ -406,12 +427,13 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         switch (status)
         {
             case AnimationStatus.Dismissed:
-                if (_snackBars.Count == 0 || _disposed)
+                if (_disposed)
                 {
                     return;
                 }
-
+                DebugAssertions.Assert(_snackBars.Count > 0);
                 SetState(() => _snackBars.RemoveFirst());
+                UpdateScaffolds();
                 if (_snackBars.Count > 0)
                 {
                     _snackBarController!.Forward();
@@ -424,7 +446,8 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
                     return;
                 }
 
-                SetState(() => { });
+                SetState(() => DebugAssertions.Assert(_snackBarTimer is null));
+                UpdateScaffolds();
                 break;
         }
     }
@@ -442,7 +465,13 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
 
         Dispatcher.UIThread.Post(() =>
         {
-            if (cancellationToken.IsCancellationRequested || _disposed || snackBar.Persist)
+            if (cancellationToken.IsCancellationRequested || _disposed)
+            {
+                return;
+            }
+
+            DebugAssertions.Assert(_snackBarController!.Status.IsForwardOrCompleted());
+            if (snackBar.Persist)
             {
                 return;
             }
@@ -460,71 +489,33 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
 
     private void CloseMaterialBannerEntry(MaterialBannerEntry entry)
     {
-        if (!ReferenceEquals(entry, _currentMaterialBanner))
-        {
-            throw new InvalidOperationException("Only the current MaterialBanner can be closed.");
-        }
-
+        DebugAssertions.Assert(ReferenceEquals(entry, _currentMaterialBanner));
         HideCurrentMaterialBanner();
-    }
-
-    private void ShowNextMaterialBanner()
-    {
-        if (_currentMaterialBanner is not null || _materialBanners.Count == 0)
-        {
-            return;
-        }
-
-        _currentMaterialBanner = _materialBanners.Peek();
-        // Flutter forwards without resetting the value: the controller is dismissed at this point, and
-        // a `from: 0.0` would report `dismissed` again and re-enter the status handler.
-        _materialBannerAnimation!.Forward();
-    }
-
-    private void CompleteCurrentMaterialBanner(MaterialBannerEntry entry)
-    {
-        if (!ReferenceEquals(entry, _currentMaterialBanner))
-        {
-            return;
-        }
-
-        entry.Controller.Complete(entry.PendingReason);
-        if (_materialBanners.Count > 0 && ReferenceEquals(_materialBanners.Peek(), entry))
-        {
-            _materialBanners.Dequeue();
-        }
-
-        _currentMaterialBanner = null;
-        if (_disposed)
-        {
-            return;
-        }
-
-        SetState(ShowNextMaterialBanner);
-    }
-
-    private void RemoveQueuedMaterialBanner(MaterialBannerEntry entry)
-    {
-        if (!_materialBanners.Contains(entry))
-        {
-            return;
-        }
-
-        MaterialBannerEntry[] retained = _materialBanners
-            .Where(candidate => !ReferenceEquals(candidate, entry))
-            .ToArray();
-        _materialBanners.Clear();
-        foreach (MaterialBannerEntry candidate in retained)
-        {
-            _materialBanners.Enqueue(candidate);
-        }
     }
 
     private void HandleMaterialBannerAnimationStatusChanged(AnimationStatus status)
     {
-        if (status == AnimationStatus.Dismissed && _currentMaterialBanner is not null)
+        if (_disposed)
         {
-            CompleteCurrentMaterialBanner(_currentMaterialBanner);
+            return;
+        }
+        if (status == AnimationStatus.Dismissed)
+        {
+            DebugAssertions.Assert(_materialBanners.Count > 0);
+            SetState(() =>
+            {
+                _materialBanners.Dequeue();
+                _currentMaterialBanner = _materialBanners.Count > 0 ? _materialBanners.Peek() : null;
+            });
+            UpdateScaffolds();
+            if (_materialBanners.Count > 0)
+            {
+                _materialBannerAnimation!.Forward();
+            }
+        }
+        else if (status == AnimationStatus.Completed)
+        {
+            UpdateScaffolds();
         }
     }
 

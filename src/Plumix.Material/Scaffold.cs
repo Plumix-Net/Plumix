@@ -58,10 +58,8 @@ public sealed class Scaffold : StatefulWidget
         DrawerEnableOpenDragGesture = drawerEnableOpenDragGesture;
         EndDrawerEnableOpenDragGesture = endDrawerEnableOpenDragGesture;
         FloatingActionButton = floatingActionButton;
-        FloatingActionButtonLocation = floatingActionButtonLocation
-                                      ?? Plumix.Material.FloatingActionButtonLocation.EndFloat;
-        FloatingActionButtonAnimator = floatingActionButtonAnimator
-                                      ?? Plumix.Material.FloatingActionButtonAnimator.Scaling;
+        FloatingActionButtonLocation = floatingActionButtonLocation;
+        FloatingActionButtonAnimator = floatingActionButtonAnimator;
         PersistentFooterButtons = persistentFooterButtons;
         PersistentFooterAlignment = persistentFooterAlignment ?? AlignmentDirectional.CenterEnd;
         PersistentFooterDecoration = persistentFooterDecoration;
@@ -105,9 +103,9 @@ public sealed class Scaffold : StatefulWidget
 
     public Widget? FloatingActionButton { get; }
 
-    public FloatingActionButtonLocation FloatingActionButtonLocation { get; }
+    public FloatingActionButtonLocation? FloatingActionButtonLocation { get; }
 
-    public FloatingActionButtonAnimator FloatingActionButtonAnimator { get; }
+    public FloatingActionButtonAnimator? FloatingActionButtonAnimator { get; }
 
     /// <summary>
     /// A set of buttons displayed at the bottom of the scaffold, above <see cref="BottomNavigationBar"/> and
@@ -174,8 +172,34 @@ public sealed class Scaffold : StatefulWidget
 
     public static ScaffoldState Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException("Scaffold not found in context.");
+        ScaffoldState? result = context.FindAncestorStateOfType<ScaffoldState>();
+        if (result is not null)
+        {
+            return result;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("Scaffold.of() called with a context that does not contain a Scaffold."),
+            new ErrorDescription(
+                "No Scaffold ancestor could be found starting from the context that was passed to Scaffold.of(). "
+                + "This usually happens when the context provided is from the same StatefulWidget as that "
+                + "whose build function actually creates the Scaffold widget being sought."),
+            new ErrorHint(
+                "There are several ways to avoid this problem. The simplest is to use a Builder to get a "
+                + "context that is \"under\" the Scaffold. For an example of this, please see the "
+                + "documentation for Scaffold.of():\n"
+                + "  https://api.flutter.dev/flutter/material/Scaffold/of.html"),
+            new ErrorHint(
+                "A more efficient solution is to split your build function into several widgets. This "
+                + "introduces a new context from which you can obtain the Scaffold. In this solution, "
+                + "you would have an outer widget that creates the Scaffold populated by instances of "
+                + "your new inner widgets, and then in these inner widgets you would use Scaffold.of().\n"
+                + "A less elegant but more expedient solution is assign a GlobalKey to the Scaffold, "
+                + "then use the key.currentState property to obtain the ScaffoldState rather than "
+                + "using the Scaffold.of() function."),
+            context.DescribeElement("The context used was"),
+        ]);
     }
 
     public static ScaffoldState? MaybeOf(BuildContext context)
@@ -192,10 +216,24 @@ public sealed class Scaffold : StatefulWidget
         ScaffoldScope? scope = context.DependOnInheritedWidgetOfExactType<ScaffoldScope>();
         if (scope is null)
         {
-            throw new InvalidOperationException(
-                "Scaffold.geometryOf() called with a context that does not contain a Scaffold.\n"
-                + "This usually happens when the context provided is from the same StatefulWidget as that "
-                + "whose build function actually creates the Scaffold widget being sought.");
+            throw new FlutterError(
+            [
+                new ErrorSummary("Scaffold.geometryOf() called with a context that does not contain a Scaffold."),
+                new ErrorDescription(
+                    "This usually happens when the context provided is from the same StatefulWidget as that "
+                    + "whose build function actually creates the Scaffold widget being sought."),
+                new ErrorHint(
+                    "There are several ways to avoid this problem. The simplest is to use a Builder to get a "
+                    + "context that is \"under\" the Scaffold. For an example of this, please see the "
+                    + "documentation for Scaffold.of():\n"
+                    + "  https://api.flutter.dev/flutter/material/Scaffold/of.html"),
+                new ErrorHint(
+                    "A more efficient solution is to split your build function into several widgets. This "
+                    + "introduces a new context from which you can obtain the Scaffold. In this solution, "
+                    + "you would have an outer widget that creates the Scaffold populated by instances of "
+                    + "your new inner widgets, and then in these inner widgets you would use Scaffold.geometryOf()."),
+                context.DescribeElement("The context used was"),
+            ]);
         }
 
         return scope.GeometryNotifier;
@@ -322,6 +360,26 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
     private readonly LabeledGlobalKey<State> _bodyKey = new("Scaffold body");
     private readonly RestorableBool _drawerOpened = new(false);
     private readonly RestorableBool _endDrawerOpened = new(false);
+    private ScaffoldFeatureController<SnackBar, SnackBarClosedReason>? _messengerSnackBar;
+    private ScaffoldFeatureController<MaterialBanner, MaterialBannerClosedReason>? _messengerMaterialBanner;
+
+    internal void UpdateSnackBar()
+    {
+        var current = _scaffoldMessenger!.CurrentSnackBarController;
+        if (!ReferenceEquals(_messengerSnackBar, current))
+        {
+            SetState(() => _messengerSnackBar = current);
+        }
+    }
+
+    internal void UpdateMaterialBanner()
+    {
+        var current = _scaffoldMessenger!.CurrentMaterialBannerController;
+        if (!ReferenceEquals(_messengerMaterialBanner, current))
+        {
+            SetState(() => _messengerMaterialBanner = current);
+        }
+    }
 
     // Contains bottom sheets that may still be animating out of view. Important if the app or the user
     // takes an action that could repeatedly show a bottom sheet.
@@ -375,8 +433,10 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
     public override void InitState()
     {
         _geometryNotifier = new ScaffoldGeometryNotifier(new ScaffoldGeometry(), Context);
-        _floatingActionButtonLocation = CurrentWidget.FloatingActionButtonLocation;
-        _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator;
+        _floatingActionButtonLocation = CurrentWidget.FloatingActionButtonLocation
+                                        ?? FloatingActionButtonLocation.EndFloat;
+        _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator
+                                        ?? FloatingActionButtonAnimator.Scaling;
         _previousFloatingActionButtonLocation = _floatingActionButtonLocation;
         _floatingActionButtonMoveController = new AnimationController(
             value: 1.0,
@@ -573,6 +633,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
     /// </summary>
     public void HandleStatusBarTap()
     {
+        DebugAssertions.Assert(CurrentWidget.Primary);
         ScrollController? primaryScrollController = PrimaryScrollController.MaybeOf(Context);
         if (primaryScrollController is { HasClients: true }
             && HitTestableAtOrigin.IsHitTestableAtOrigin(_statusBarKey))
@@ -632,6 +693,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
             {
                 sheet.AnimationController.Reset();
             }
+            DebugAssertions.Assert(_dismissedBottomSheets.Count == 0);
         }
 
         _currentBottomSheet = BuildBottomSheet(
@@ -648,9 +710,22 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
     /// <summary>Ports Flutter's private <c>_closeCurrentBottomSheet</c>.</summary>
     private void CloseCurrentBottomSheet()
     {
-        if (_currentBottomSheet is { IsLocalHistoryEntry: false } sheet)
+        if (_currentBottomSheet is not { } sheet)
+        {
+            return;
+        }
+
+        if (!sheet.IsLocalHistoryEntry)
         {
             sheet.Close();
+        }
+        if (Constants.KDebugMode && _currentBottomSheet is { } remaining)
+        {
+            Scheduler.RunAsync(async () =>
+            {
+                await remaining.Closed;
+                DebugAssertions.Assert(_currentBottomSheet is null);
+            });
         }
     }
 
@@ -674,9 +749,10 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         bool? showDragHandle = null,
         bool shouldDisposeAnimationController = true)
     {
-        if (CurrentWidget.BottomSheet is not null && isPersistent && _currentBottomSheet is not null)
+        if (Constants.KDebugMode
+            && CurrentWidget.BottomSheet is not null && isPersistent && _currentBottomSheet is not null)
         {
-            throw new InvalidOperationException(
+            throw new FlutterError(
                 "Scaffold.bottomSheet cannot be specified while a bottom sheet displayed with "
                 + "showBottomSheet() is still visible.\n"
                 + "Rebuild the Scaffold with a null bottomSheet before calling showBottomSheet().");
@@ -691,6 +767,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
 
         void RemovePersistentSheetHistoryEntryIfNeeded()
         {
+            DebugAssertions.Assert(isPersistent);
             if (_persistentSheetHistoryEntry is not null)
             {
                 _persistentSheetHistoryEntry.Remove();
@@ -705,6 +782,9 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
             {
                 return;
             }
+
+            DebugAssertions.Assert(ReferenceEquals(_currentBottomSheet.Feature, bottomSheet));
+            DebugAssertions.Assert(bottomSheetKey.CurrentState is not null);
 
             ShowFloatingActionButton();
 
@@ -743,6 +823,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         {
             if (!isPersistent && !removedEntry)
             {
+                DebugAssertions.Assert(entry is not null);
                 entry!.Remove();
                 removedEntry = true;
             }
@@ -759,6 +840,8 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
                 {
                     return;
                 }
+
+                DebugAssertions.Assert(ReferenceEquals(_currentBottomSheet.Feature, bottomSheet));
 
                 RemoveEntryIfNeeded();
             },
@@ -816,14 +899,15 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         AnimationStyle? sheetAnimationStyle = null)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        if (CurrentWidget.BottomSheet is not null)
+        if (Constants.KDebugMode && CurrentWidget.BottomSheet is not null)
         {
-            throw new InvalidOperationException(
+            throw new FlutterError(
                 "Scaffold.bottomSheet cannot be specified while a bottom sheet displayed with "
                 + "showBottomSheet() is still visible.\n"
                 + "Rebuild the Scaffold with a null bottomSheet before calling showBottomSheet().");
         }
 
+        WidgetsDebug.DebugCheckHasMediaQuery(Context);
         CloseCurrentBottomSheet();
         AnimationController controller = transitionAnimationController
                                          ?? BottomSheet.CreateAnimationController(
@@ -855,25 +939,33 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
                 oldScaffold.FloatingActionButtonAnimator,
                 CurrentWidget.FloatingActionButtonAnimator))
         {
-            _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator;
+            _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator
+                                           ?? FloatingActionButtonAnimator.Scaling;
         }
 
         if (!ReferenceEquals(
                 oldScaffold.FloatingActionButtonLocation,
                 CurrentWidget.FloatingActionButtonLocation))
         {
-            MoveFloatingActionButton(CurrentWidget.FloatingActionButtonLocation);
+            MoveFloatingActionButton(
+                CurrentWidget.FloatingActionButtonLocation ?? FloatingActionButtonLocation.EndFloat);
         }
 
         if (!ReferenceEquals(oldScaffold.BottomSheet, CurrentWidget.BottomSheet))
         {
-            if (CurrentWidget.BottomSheet is not null && (_currentBottomSheet?.IsLocalHistoryEntry ?? false))
+            if (Constants.KDebugMode
+                && CurrentWidget.BottomSheet is not null && (_currentBottomSheet?.IsLocalHistoryEntry ?? false))
             {
-                throw new InvalidOperationException(
-                    "Scaffold.bottomSheet cannot be specified while a bottom sheet displayed with "
-                    + "showBottomSheet() is still visible.\n"
-                    + "Use the PersistentBottomSheetController returned by showBottomSheet() to close the "
-                    + "old bottom sheet before creating a Scaffold with a (non null) bottomSheet.");
+                throw new FlutterError(
+                [
+                    new ErrorSummary(
+                        "Scaffold.bottomSheet cannot be specified while a bottom sheet displayed "
+                        + "with showBottomSheet() is still visible."),
+                    new ErrorHint(
+                        "Use the PersistentBottomSheetController "
+                        + "returned by showBottomSheet() to close the old bottom sheet before creating "
+                        + "a Scaffold with a (non null) bottomSheet."),
+                ]);
             }
 
             if (CurrentWidget.BottomSheet is null)
@@ -906,13 +998,14 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
 
     public override Widget Build(BuildContext context)
     {
+        WidgetsDebug.DebugCheckHasMediaQuery(context);
+        WidgetsDebug.DebugCheckHasDirectionality(context);
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
         var textDirection = Directionality.Of(context);
-        var mediaQuery = MediaQuery.MaybeOf(context) ?? new MediaQueryData();
-        ScaffoldMessengerState? messenger = ScaffoldMessenger.MaybeOf(context);
-        var presentedSnackBar = messenger?.SnackBarFor(this);
-        MaterialBanner? presentedMaterialBanner = messenger?.MaterialBannerFor(this);
+        var mediaQuery = MediaQuery.Of(context);
+        SnackBar? presentedSnackBar = _messengerSnackBar?.Feature;
+        MaterialBanner? presentedMaterialBanner = _messengerMaterialBanner?.Feature;
         bool resizeToAvoidBottomInset = CurrentWidget.ResizeToAvoidBottomInset ?? true;
 
         var children = new List<Widget>();
@@ -949,12 +1042,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         {
             _appBarMaxHeight = Scaffold.PreferredAppBarHeight(context, appBar)
                                + (CurrentWidget.Primary ? mediaQuery.Padding.Top : 0.0);
-            if (double.IsNaN(_appBarMaxHeight.Value)
-                || double.IsInfinity(_appBarMaxHeight.Value)
-                || _appBarMaxHeight.Value < 0.0)
-            {
-                throw new InvalidOperationException("AppBar preferred height must be finite and non-negative.");
-            }
+            DebugAssertions.Assert(_appBarMaxHeight.Value >= 0.0 && double.IsFinite(_appBarMaxHeight.Value));
 
             AddIfNonNull(
                 children,
@@ -1150,6 +1238,8 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
             return;
         }
 
+        DebugAssertions.Assert(HasEndDrawer);
+
         AddIfNonNull(
             children,
             mediaQuery,
@@ -1178,6 +1268,8 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         {
             return;
         }
+
+        DebugAssertions.Assert(HasDrawer);
 
         AddIfNonNull(
             children,
@@ -1329,11 +1421,7 @@ public sealed class StandardBottomSheetState : State<StandardBottomSheet>
     public override void InitState()
     {
         base.InitState();
-        if (!CurrentWidget.AnimationController.Status.IsForwardOrCompleted())
-        {
-            throw new InvalidOperationException(
-                "A standard bottom sheet must be shown with a forward or completed animation controller.");
-        }
+        DebugAssertions.Assert(CurrentWidget.AnimationController.Status.IsForwardOrCompleted());
 
         CurrentWidget.AnimationController.AddStatusListener(HandleStatusChange);
     }
@@ -1348,11 +1436,7 @@ public sealed class StandardBottomSheetState : State<StandardBottomSheet>
     public override void DidUpdateWidget(StandardBottomSheet oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
-        if (!ReferenceEquals(((StandardBottomSheet)oldWidget).AnimationController, CurrentWidget.AnimationController))
-        {
-            throw new InvalidOperationException(
-                "A standard bottom sheet cannot change its animation controller after it has been shown.");
-        }
+        DebugAssertions.Assert(ReferenceEquals(oldWidget.AnimationController, CurrentWidget.AnimationController));
     }
 
     internal void Close()
