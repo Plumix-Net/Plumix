@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Sliders check MediaQuery and relayout labels/overlays on font changes (slider.dart, range_slider.dart).
+- Font-relayout mixin defers/coalesces updates; mirrored slider demos add text scaling (object.dart).
 - Breaking: Time picker restores state and matches Dart input, themes, scaling and dial behavior (time_picker.dart).
 - Breaking: Text controllers use Dart caret/range/composing contracts; Composing is non-null (editable_text.dart).
 - Breaking: UndoHistory uses ValueNotifier; text controllers share storage and nullable history works (undo_history.dart).

@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -26,6 +27,7 @@ internal sealed class RangeSliderDemoPageState : State
     private bool _useWidgetColorOverride;
     private bool _useMaterial3 = true;
     private bool _year2023 = true;
+    private bool _largeText;
     private RangeValues _values = new(0.2, 0.7);
     private string _status = "idle";
 
@@ -121,6 +123,7 @@ internal sealed class RangeSliderDemoPageState : State
                                     color: new Color(0xFF607D8B))),
                         ]),
                     new Row(
+                        spacing: 8,
                         children:
                         [
                             BuildControlButton(
@@ -129,6 +132,11 @@ internal sealed class RangeSliderDemoPageState : State
                                 width: 96,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    BuildControlButton(
+                        label: _largeText ? "Text 2x" : "Text 1x",
+                        onTap: () => SetState(() => _largeText = !_largeText),
+                        width: 96,
+                        background: new Color(0xFFFFF8E1)),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -162,7 +170,10 @@ internal sealed class RangeSliderDemoPageState : State
                     new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                     new Directionality(
                         textDirection: textDirection,
-                        child: BuildRangeSlider()),
+                        child: new Builder(context => new MediaQuery(
+                            data: MediaQuery.Of(context).CopyWith(
+                                textScaler: TextScaler.Linear(_largeText ? 2.0 : 1.0)),
+                            child: BuildRangeSlider()))),
                 ]));
     }
 

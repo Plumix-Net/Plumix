@@ -18,6 +18,7 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
   bool _useSecondaryColorOverride = false;
   bool _useMaterial3 = true;
   bool _year2023 = true;
+  bool _largeText = false;
   bool _tapOnly = false;
   bool _customShape = false;
   double _value = 0.35;
@@ -204,6 +205,13 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
             ],
           ),
           const SizedBox(height: 10),
+          _buildControlButton(
+            label: _largeText ? 'Text 2x' : 'Text 1x',
+            onTap: () => setState(() => _largeText = !_largeText),
+            width: 96,
+            background: const Color(0xFFFFF8E1),
+          ),
+          const SizedBox(height: 10),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -249,7 +257,17 @@ class _SliderDemoPageState extends State<SliderDemoPage> {
             style: const TextStyle(fontSize: 12, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 8),
-          Directionality(textDirection: textDirection, child: _buildSlider()),
+          Directionality(
+            textDirection: textDirection,
+            child: Builder(
+              builder: (BuildContext context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(_largeText ? 2.0 : 1.0),
+                ),
+                child: _buildSlider(),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -653,7 +653,7 @@ internal sealed partial class SliderState : State<Slider>
     public override Widget Build(BuildContext context)
     {
         MaterialDebug.DebugCheckHasMaterial(context);
-        // Dart also asserts `debugCheckHasMediaQuery(context)`, which is not ported (docs/ai/BACKLOG.md).
+        WidgetsDebug.DebugCheckHasMediaQuery(context);
         switch (Widget.SliderType)
         {
             case SliderType.Material:
@@ -1056,12 +1056,9 @@ internal sealed class SliderRenderObjectWidget : LeafRenderObjectWidget
 }
 
 /// <summary>Dart's private <c>_RenderSlider</c>.</summary>
-/// <remarks>
-/// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported; its
-/// <c>systemFontsDidChange</c> override is kept as <see cref="SystemFontsDidChange"/>.
-/// </remarks>
 internal sealed class RenderSlider : RenderBox
 {
+    private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
     private static readonly TimeSpan PositionAnimationDuration = TimeSpan.FromMilliseconds(75);
     private static readonly TimeSpan MinimumInteractionTime = TimeSpan.FromMilliseconds(500);
 
@@ -1141,6 +1138,7 @@ internal sealed class RenderSlider : RenderBox
         _hovering = hovering;
         _allowedInteraction = allowedInteraction;
 
+        _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this, SystemFontsDidChange);
         UpdateLabelPainter();
         var team = new GestureArenaTeam();
         _drag = new HorizontalDragGestureRecognizer
@@ -1576,18 +1574,18 @@ internal sealed class RenderSlider : RenderBox
         MarkNeedsLayout();
     }
 
-    /// <summary>
-    /// Dart's <c>systemFontsDidChange</c> override. <c>RelayoutWhenSystemFontsChangeMixin</c> is not
-    /// ported, so nothing calls this yet.
-    /// </summary>
+    /// <summary>Dart's <c>systemFontsDidChange</c> override.</summary>
     public void SystemFontsDidChange()
     {
+        _systemFonts.SystemFontsDidChange();
         _labelPainter.MarkNeedsLayout();
         UpdateLabelPainter();
     }
 
     protected override void OnAttach()
     {
+        base.OnAttach();
+        _systemFonts.OnAttach();
         _overlayAnimation.AddListener(MarkNeedsPaint);
         _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
         _enableAnimation.AddListener(MarkNeedsPaint);
@@ -1600,6 +1598,8 @@ internal sealed class RenderSlider : RenderBox
         _valueIndicatorAnimation.RemoveListener(MarkNeedsPaint);
         _enableAnimation.RemoveListener(MarkNeedsPaint);
         _state.PositionController.RemoveListener(MarkNeedsPaint);
+        _systemFonts.OnDetach();
+        base.OnDetach();
     }
 
     public override void Dispose()
@@ -2237,15 +2237,14 @@ internal sealed partial class SliderState
     }
 
     /// <summary>Dart's private <c>_RenderValueIndicator</c>.</summary>
-    /// <remarks>
-    /// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported.
-    /// </remarks>
     private sealed class RenderValueIndicator : RenderBox
     {
+        private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
         private readonly CurvedAnimation _valueIndicatorAnimation;
 
         public RenderValueIndicator(SliderState state)
         {
+            _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this);
             State = state;
             _valueIndicatorAnimation = new CurvedAnimation(
                 parent: State.ValueIndicatorController,
@@ -2259,6 +2258,8 @@ internal sealed partial class SliderState
 
         protected override void OnAttach()
         {
+            base.OnAttach();
+            _systemFonts.OnAttach();
             _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
             State.PositionController.AddListener(MarkNeedsPaint);
         }
@@ -2267,6 +2268,8 @@ internal sealed partial class SliderState
         {
             _valueIndicatorAnimation.RemoveListener(MarkNeedsPaint);
             State.PositionController.RemoveListener(MarkNeedsPaint);
+            _systemFonts.OnDetach();
+            base.OnDetach();
         }
 
         public override void Paint(PaintingContext context, Point offset)

@@ -17,6 +17,32 @@ public delegate void RebuildDirtyWidgetCallback(Element e, bool builtOnce);
 /// </summary>
 public static class WidgetsDebug
 {
+    /// <summary>Dart's debug-only, non-dependent MediaQuery ancestor check.</summary>
+    public static bool DebugCheckHasMediaQuery(BuildContext context)
+    {
+        if (!Constants.KDebugMode
+            || context.Widget is MediaQuery
+            || context.GetElementForInheritedWidgetOfExactType<MediaQuery>() is not null)
+        {
+            return true;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("No MediaQuery widget ancestor found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a MediaQuery "
+                + "widget ancestor."),
+            context.DescribeWidget("The specific widget that could not find a MediaQuery ancestor was"),
+            context.DescribeOwnershipChain("The ownership chain for the affected widget is"),
+            new ErrorHint(
+                "No MediaQuery ancestor could be found starting from the context "
+                + "that was passed to MediaQuery.of(). This can happen because the "
+                + "context used is not a descendant of a View widget, which introduces "
+                + "a MediaQuery."),
+        ]);
+    }
+
     /// <summary>Dart's debugCheckHasDirectionality.</summary>
     public static bool DebugCheckHasDirectionality(
         BuildContext context,

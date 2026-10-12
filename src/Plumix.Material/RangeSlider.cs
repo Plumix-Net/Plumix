@@ -406,8 +406,7 @@ public class RangeSlider : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             MaterialDebug.DebugCheckHasMaterial(context);
-            // Dart also asserts debugCheckHasMediaQuery(context), which is not ported; the MediaQuery lookups
-            // below throw the MediaQuery error themselves.
+            WidgetsDebug.DebugCheckHasMediaQuery(context);
 
             ThemeData theme = Theme.Of(context);
             SliderThemeData sliderTheme = SliderTheme.Of(context);
@@ -616,14 +615,12 @@ public class RangeSlider : StatefulWidget
     }
 
     /// <summary>Flutter's private <c>_RenderValueIndicator</c> (range variant).</summary>
-    /// <remarks>
-    /// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported; this render object
-    /// has no <c>systemFontsDidChange</c> override of its own, so nothing is lost beyond the relayout.
-    /// </remarks>
     private sealed class RenderValueIndicator : RenderBox
     {
+        private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
         public RenderValueIndicator(RangeSliderState state)
         {
+            _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this);
             _state = state;
             _valueIndicatorAnimation = new CurvedAnimation(
                 parent: _state.ValueIndicatorController,
@@ -639,6 +636,7 @@ public class RangeSlider : StatefulWidget
         protected override void OnAttach()
         {
             base.OnAttach();
+            _systemFonts.OnAttach();
             _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
             _state.StartPositionController.AddListener(MarkNeedsPaint);
             _state.EndPositionController.AddListener(MarkNeedsPaint);
@@ -649,6 +647,7 @@ public class RangeSlider : StatefulWidget
             _valueIndicatorAnimation.RemoveListener(MarkNeedsPaint);
             _state.StartPositionController.RemoveListener(MarkNeedsPaint);
             _state.EndPositionController.RemoveListener(MarkNeedsPaint);
+            _systemFonts.OnDetach();
             base.OnDetach();
         }
 
@@ -785,12 +784,9 @@ internal sealed class RangeSliderRenderObjectWidget : LeafRenderObjectWidget
 }
 
 /// <summary>Flutter's private <c>_RenderRangeSlider</c>.</summary>
-/// <remarks>
-/// Dart mixes in <c>RelayoutWhenSystemFontsChangeMixin</c>, which Plumix has not ported (tracked in
-/// docs/ai/BACKLOG.md); <see cref="SystemFontsDidChange"/> keeps Dart's body but nothing calls it yet.
-/// </remarks>
 internal sealed class RenderRangeSlider : RenderBox
 {
+    private readonly RelayoutWhenSystemFontsChangeMixin _systemFonts;
     public RenderRangeSlider(
         RangeValues values,
         int? divisions,
@@ -828,6 +824,7 @@ internal sealed class RenderRangeSlider : RenderBox
         _state = state;
         _textDirection = textDirection;
         _hovering = hovering;
+        _systemFonts = new RelayoutWhenSystemFontsChangeMixin(this, SystemFontsDidChange);
         UpdateLabelPainters();
         var team = new GestureArenaTeam();
         _drag = new HorizontalDragGestureRecognizer
@@ -1291,11 +1288,9 @@ internal sealed class RenderRangeSlider : RenderBox
     }
 
     /// <summary>Dart's <c>systemFontsDidChange</c> override.</summary>
-    /// <remarks>
-    /// <c>RelayoutWhenSystemFontsChangeMixin</c> is not ported, so nothing calls this yet.
-    /// </remarks>
     internal void SystemFontsDidChange()
     {
+        _systemFonts.SystemFontsDidChange();
         _startLabelPainter.MarkNeedsLayout();
         _endLabelPainter.MarkNeedsLayout();
         UpdateLabelPainters();
@@ -1304,6 +1299,7 @@ internal sealed class RenderRangeSlider : RenderBox
     protected override void OnAttach()
     {
         base.OnAttach();
+        _systemFonts.OnAttach();
         _overlayAnimation.AddListener(MarkNeedsPaint);
         _valueIndicatorAnimation.AddListener(MarkNeedsPaint);
         _enableAnimation.AddListener(MarkNeedsPaint);
@@ -1326,6 +1322,7 @@ internal sealed class RenderRangeSlider : RenderBox
         _state.StartFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
         _state.EndFocusNode.RemoveListener(MarkNeedsPaint);
         _state.EndFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
+        _systemFonts.OnDetach();
         base.OnDetach();
     }
 

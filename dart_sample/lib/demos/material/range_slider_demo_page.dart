@@ -16,6 +16,7 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
   bool _useWidgetColorOverride = false;
   bool _useMaterial3 = true;
   bool _year2023 = true;
+  bool _largeText = false;
   RangeValues _values = const RangeValues(0.2, 0.7);
   String _status = 'idle';
 
@@ -147,6 +148,13 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
             ],
           ),
           const SizedBox(height: 10),
+          _buildControlButton(
+            label: _largeText ? 'Text 2x' : 'Text 1x',
+            onTap: () => setState(() => _largeText = !_largeText),
+            width: 96,
+            background: const Color(0xFFFFF8E1),
+          ),
+          const SizedBox(height: 10),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -194,7 +202,14 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
           const SizedBox(height: 8),
           Directionality(
             textDirection: textDirection,
-            child: _buildRangeSlider(),
+            child: Builder(
+              builder: (BuildContext context) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(_largeText ? 2.0 : 1.0),
+                ),
+                child: _buildRangeSlider(),
+              ),
+            ),
           ),
         ],
       ),

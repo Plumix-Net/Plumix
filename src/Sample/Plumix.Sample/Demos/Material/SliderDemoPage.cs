@@ -29,6 +29,7 @@ internal sealed class SliderDemoPageState : State
     private bool _useSecondaryColorOverride;
     private bool _useMaterial3 = true;
     private bool _year2023 = true;
+    private bool _largeText;
     private bool _tapOnly;
     private bool _customShape;
     private double _value = 0.35;
@@ -159,6 +160,11 @@ internal sealed class SliderDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFE8F6EE)),
                         ]),
+                    BuildControlButton(
+                        label: _largeText ? "Text 2x" : "Text 1x",
+                        onTap: () => SetState(() => _largeText = !_largeText),
+                        width: 96,
+                        background: new Color(0xFFFFF8E1)),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -192,7 +198,10 @@ internal sealed class SliderDemoPageState : State
                     new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
                     new Directionality(
                         textDirection: textDirection,
-                        child: BuildSlider()),
+                        child: new Builder(context => new MediaQuery(
+                            data: MediaQuery.Of(context).CopyWith(
+                                textScaler: TextScaler.Linear(_largeText ? 2.0 : 1.0)),
+                            child: BuildSlider()))),
                 ]));
     }
 
