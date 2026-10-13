@@ -20,6 +20,7 @@ public partial class WidgetsBinding
     /// <summary>Creates a widget binding.</summary>
     public WidgetsBinding()
     {
+        _ = Painting.PaintingBinding.Instance;
         _buildOwner = CreateBuildOwner();
     }
 

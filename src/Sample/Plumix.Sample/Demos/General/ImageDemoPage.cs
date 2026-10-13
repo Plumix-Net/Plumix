@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -32,6 +33,8 @@ internal sealed class ImageDemoPageState : State
     private bool _rtl;
     private bool _dimmed;
     private bool _filtersEnabled = true;
+    private bool _smallDecode;
+    private int _decodeGeneration;
     private int _fadeGeneration;
     private byte[] _fadeTargetBytes = (byte[])SampleBytes.Clone();
 
@@ -74,8 +77,9 @@ internal sealed class ImageDemoPageState : State
                     "Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.",
                     fontSize: 14,
                     color: Colors.DimGray),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         ControlButton(_cover ? "fit: cover" : "fit: contain", () => _cover = !_cover),
@@ -91,7 +95,7 @@ internal sealed class ImageDemoPageState : State
                         }),
                     ]),
                 new Expanded(
-                    child: new Column(
+                    child: new SingleChildScrollView(new Column(
                         mainAxisAlignment: MainAxisAlignment.SpaceAround,
                         spacing: 10,
                         children:
@@ -255,9 +259,25 @@ internal sealed class ImageDemoPageState : State
                                                                         color: new Color(0x30FFFFFF))))),
                                                     ])))),
                                 ]),
-                        ])),
+                        ]))),
+                new Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                    [
+                        ControlButton(_smallDecode ? "decode: 24px" : "decode: native", () =>
+                        {
+                            _smallDecode = !_smallDecode;
+                            DecodeRawImage();
+                        }),
+                        ControlButton("memory pressure", () => PaintingBinding.Instance.HandleMemoryPressure()),
+                        ControlButton("evict asset", () => PaintingBinding.Instance.Evict("sample.png")),
+                    ]),
                 new Text(
-                    _rawInfo is null ? "Raw image: decoding..." : "Raw image: decoded handle is active",
+                    _rawInfo is null
+                        ? "Raw image: decoding..."
+                        : $"Raw image: {_rawInfo.Image.Size.Width:0} × {_rawInfo.Image.Size.Height:0} px; "
+                          + $"cache: {ImageCache.Shared.CurrentSize}; live: {ImageCache.Shared.LiveImageCount}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
             ]);
@@ -274,6 +294,30 @@ internal sealed class ImageDemoPageState : State
         _rawInfo?.Dispose();
 
         base.Dispose();
+    }
+
+    private void DecodeRawImage()
+    {
+        int generation = ++_decodeGeneration;
+        bool small = _smallDecode;
+        Scheduler.RunAsync(async () =>
+        {
+            var buffer = await Plumix.UI.ImmutableBuffer.FromUint8List(SampleBytes);
+            using var codec = await PaintingBinding.Instance.InstantiateImageCodecWithSize(
+                buffer, (_, _) => new Plumix.UI.TargetImageSize(width: small ? 24 : null));
+            var frame = await codec.GetNextFrame();
+            if (!Mounted || generation != _decodeGeneration)
+            {
+                frame.Image.Dispose();
+                return;
+            }
+
+            SetState(() =>
+            {
+                _rawInfo?.Dispose();
+                _rawInfo = new ImageInfo(frame.Image);
+            });
+        });
     }
 
     private Widget ControlButton(string label, Action update)
@@ -297,7 +341,7 @@ internal sealed class ImageDemoPageState : State
             [
                 new Text(label, fontSize: 13, color: Colors.Black),
                 new Container(
-                    width: 150,
+                    width: 132,
                     height: 112,
                     color: new Color(0xFFE8EEF5),
                     alignment: Alignment.Center,

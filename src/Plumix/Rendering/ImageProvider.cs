@@ -96,6 +96,11 @@ public abstract class AssetBundle
 {
     public abstract Task<Stream> LoadAsync(string key, CancellationToken cancellationToken = default);
 
+    // Dart's base AssetBundle has no cache; caching bundles override these hooks.
+    public virtual void Evict(string key) { }
+
+    public virtual void Clear() { }
+
     public virtual Task<IReadOnlyList<string>> ListAssetsAsync(
         string key,
         CancellationToken cancellationToken = default)
@@ -343,8 +348,10 @@ public sealed class MemoryImage : ImageProvider<MemoryImage>, IEquatable<MemoryI
             throw new InvalidOperationException("Image bytes are empty and cannot be decoded.");
         }
 
-        using var stream = new MemoryStream(bytes, writable: false);
-        return new ImageInfo(new Bitmap(stream), scale, debugLabel);
+        ImmutableBuffer buffer = await ImmutableBuffer.FromUint8List(bytes);
+        using Codec codec = await Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize(buffer);
+        FrameInfo frame = await codec.GetNextFrame();
+        return new ImageInfo(frame.Image, scale, debugLabel);
     }
 
     internal static double ValidateScale(double scale)

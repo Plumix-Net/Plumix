@@ -164,6 +164,24 @@ public sealed class Picture
         }
     }
 
+    /// <summary>Rasterizes this picture into a new image of the specified pixel size.</summary>
+    public Avalonia.Media.Imaging.Bitmap ToImageSync(int width, int height)
+    {
+        if (Constants.KDebugMode && _disposed)
+        {
+            throw new AssertionError("A disposed Picture cannot be rasterized.");
+        }
+
+        var builder = new SceneBuilder();
+        builder.AddPicture(default, this);
+        using var scene = builder.Build();
+        return scene.ToImageSync(width, height);
+    }
+
+    /// <summary>Rasterizes this picture into a new image.</summary>
+    public Task<Avalonia.Media.Imaging.Bitmap> ToImage(int width, int height) =>
+        Task.FromResult(ToImageSync(width, height));
+
     /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
     public void Playback(DrawingContext context, Point offset)
     {

@@ -12,7 +12,7 @@ public readonly record struct ImageCacheStatus(bool Pending, bool KeepAlive, boo
     public static ImageCacheStatus UntrackedStatus => new(false, false, false);
 }
 
-public sealed class ImageCache
+public class ImageCache
 {
     private const int DefaultMaximumSize = 1000;
     private const long DefaultMaximumSizeBytes = 100L << 20;
@@ -25,7 +25,7 @@ public sealed class ImageCache
     private long _maximumSizeBytes = DefaultMaximumSizeBytes;
     private long _currentSizeBytes;
 
-    public static ImageCache Shared { get; } = new();
+    public static ImageCache Shared => Painting.PaintingBinding.Instance.ImageCache;
 
     public int MaximumSize
     {
@@ -385,7 +385,7 @@ public sealed class ImageCache
         return false;
     }
 
-    public void Clear()
+    public virtual void Clear()
     {
         PendingImage[] pending;
         CachedImage[] cached;
@@ -416,7 +416,7 @@ public sealed class ImageCache
         DisposeAll(cached);
     }
 
-    public void ClearLiveImages()
+    public virtual void ClearLiveImages()
     {
         LiveImage[] live;
         lock (_sync)

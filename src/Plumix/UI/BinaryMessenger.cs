@@ -166,6 +166,24 @@ public class ServicesBinding
     /// <summary>The messenger every channel uses unless it was given one explicitly.</summary>
     public virtual BinaryMessenger DefaultBinaryMessenger { get; } = new PlatformBinaryMessenger();
 
+    public virtual Rendering.AssetBundle RootBundle => Rendering.PlatformAssetBundle.Root;
+
+    public virtual void Evict(string asset) => RootBundle.Evict(asset);
+
+    public virtual void HandleMemoryPressure() => RootBundle.Clear();
+
+    public virtual Task HandleSystemMessage(object systemMessage)
+    {
+        var message = (System.Collections.IDictionary)systemMessage;
+        if ((string)message["type"]! == "memoryPressure")
+        {
+            // The bindings are separate singletons: dispatch to Dart's painting override explicitly.
+            Painting.PaintingBinding.Instance.HandleMemoryPressure();
+        }
+
+        return Task.CompletedTask;
+    }
+
     /// <summary>
     /// Sets the callback for the <c>SystemChrome.systemUIChange</c> method call received on the
     /// <see cref="SystemChannels.Platform"/> channel.

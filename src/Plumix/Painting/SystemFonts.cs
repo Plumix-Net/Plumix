@@ -1,31 +1,87 @@
 using System.Collections;
 using Plumix.Foundation;
+using Plumix.Rendering;
+using Plumix.UI;
 
-// Dart parity source: flutter/packages/flutter/lib/src/painting/binding.dart (subset: system-font notifications)
+// Dart parity source: flutter/packages/flutter/lib/src/painting/binding.dart
 
 namespace Plumix.Painting;
 
 /// <summary>
-/// The system-font notification surface of Dart's painting binding. Image caching and codec
-/// services live in the framework's image pipeline; services dispatches system messages here.
+/// Owns image caching, engine codec entry points, shader warm-up and system-font notifications.
 /// </summary>
-public sealed class PaintingBinding
+public class PaintingBinding
 {
-    public static PaintingBinding Instance { get; } = new();
+    private static PaintingBinding? _instance;
+
+    public PaintingBinding()
+    {
+        _instance = this;
+        ImageCache = CreateImageCache();
+        if (ShaderWarmUp is { } warmUp)
+        {
+            Scheduler.RunAsync(warmUp.Execute);
+        }
+    }
+
+    public static PaintingBinding Instance
+    {
+        get => _instance ?? new PaintingBinding();
+        set => _instance = value ?? throw new ArgumentNullException(nameof(value));
+    }
+
+    public static ShaderWarmUp? ShaderWarmUp { get; set; }
+
+    public virtual ImageCache ImageCache { get; }
+
+    protected virtual ImageCache CreateImageCache() => new();
+
+    /// <summary>Decodes an image, capping requested dimensions to the intrinsic size by default.</summary>
+    [Obsolete("Use InstantiateImageCodecWithSize instead.")]
+    public virtual Task<Codec> InstantiateImageCodecFromBuffer(
+        ImmutableBuffer buffer,
+        int? cacheWidth = null,
+        int? cacheHeight = null,
+        bool allowUpscaling = false)
+    {
+        if (Constants.KDebugMode && (cacheWidth <= 0 || cacheHeight <= 0))
+        {
+            throw new AssertionError("Cache image dimensions must be positive or null.");
+        }
+
+        return ImageDecoding.InstantiateImageCodecFromBuffer(buffer, cacheWidth, cacheHeight, allowUpscaling);
+    }
+
+    public virtual Task<Codec> InstantiateImageCodecWithSize(
+        ImmutableBuffer buffer,
+        TargetImageSizeCallback? getTargetSize = null) =>
+        ImageDecoding.InstantiateImageCodecWithSize(buffer, getTargetSize);
+
+    public virtual void Evict(string asset)
+    {
+        ServicesBinding.Instance.Evict(asset);
+        ImageCache.Clear();
+        ImageCache.ClearLiveImages();
+    }
+
+    public virtual void HandleMemoryPressure()
+    {
+        ServicesBinding.Instance.HandleMemoryPressure();
+        ImageCache.Clear();
+    }
 
     private readonly SystemFontsNotifier _systemFonts = new();
 
     public IListenable SystemFonts => _systemFonts;
 
-    public Task HandleSystemMessage(object systemMessage)
+    public virtual async Task HandleSystemMessage(object systemMessage)
     {
+        await ServicesBinding.Instance.HandleSystemMessage(systemMessage);
         var message = (IDictionary)systemMessage;
         if ((string)message["type"]! == "fontsChange")
         {
             _systemFonts.NotifyListeners();
         }
-
-        return Task.CompletedTask;
     }
 
     private sealed class SystemFontsNotifier : IListenable
