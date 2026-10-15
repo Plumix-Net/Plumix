@@ -106,7 +106,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         startValue = null;
         endValue = null;
         tester.Pump(); // No animation should start.
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
         Point topLeft = tester.GetTopLeft(tester.ElementsWithKey(sliderKey).Single());
         Point bottomRight = tester.GetBottomRight(tester.ElementsWithKey(sliderKey).Single());
@@ -118,7 +118,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         Assert.NotNull(endValue);
         Assert.Equal(0.25, endValue!.Value, 0.05);
         tester.Pump(); // No animation should start.
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     // Flutter: "Slider can move when tapped (RTL)"
@@ -143,7 +143,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         Tap(tester, tester.ElementsWithKey(sliderKey).Single());
         Assert.Equal(0.5, value);
         tester.Pump(); // No animation should start.
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
         Point topLeft = tester.GetTopLeft(tester.ElementsWithKey(sliderKey).Single());
         Point bottomRight = tester.GetBottomRight(tester.ElementsWithKey(sliderKey).Single());
@@ -152,7 +152,7 @@ public sealed class SliderDartParityTestsA : IDisposable
         TapAt(tester, target);
         Assert.Equal(0.75, value, 0.05);
         tester.Pump(); // No animation should start.
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     // Flutter: "Slider doesn't send duplicate change events if tapped on the same value" (L339)
@@ -230,19 +230,19 @@ public sealed class SliderDartParityTestsA : IDisposable
         Assert.Equal(0.5, value);
         tester.Pump(TimeSpan.FromMilliseconds(100));
         // Starts with the position animation and value indicator
-        Assert.Equal(2, Scheduler.TransientCallbackCount);
+        Assert.Equal(2, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromMilliseconds(100));
         // Value indicator is longer than position.
-        Assert.Equal(1, Scheduler.TransientCallbackCount);
+        Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromMilliseconds(100));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromMilliseconds(100));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromMilliseconds(100));
         // Shown for long enough, value indicator is animated closed.
-        Assert.Equal(1, Scheduler.TransientCallbackCount);
+        Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromMilliseconds(101));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     // Flutter: "Discrete Slider repaints and animates when dragged"
@@ -378,13 +378,13 @@ public sealed class SliderDartParityTestsA : IDisposable
         Assert.Equal(80.0, value);
 
         tester.Pump(); // Starts animation.
-        Assert.True(Scheduler.TransientCallbackCount > 0);
+        Assert.True(SchedulerBinding.Instance.TransientCallbackCount > 0);
         tester.Pump(TimeSpan.FromMilliseconds(200));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         tester.Pump(TimeSpan.FromMilliseconds(200));
         // Animation complete.
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     // Flutter: "Slider can be given zero values"
@@ -807,14 +807,14 @@ public sealed class SliderDartParityTestsA : IDisposable
             tester.Pump();
             gesture.Up();
             tester.PumpAndSettle();
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
             PaintAssert.Paints(material, Ticks(PaintPattern.Paints).Circle(x: 26.0, y: 24.0, radius: 10.0));
 
             gesture = tester.StartGesture(center, PointerDeviceKind.Touch);
             tester.Pump();
             // Wait for animations to start.
             tester.Pump(TimeSpan.FromMilliseconds(25));
-            Assert.Equal(2, Scheduler.TransientCallbackCount);
+            Assert.Equal(2, SchedulerBinding.Instance.TransientCallbackCount);
             PaintAssert.Paints(
                 material,
                 Ticks(PaintPattern.Paints.Circle(x: 112.7431640625, y: 24.0, radius: 5.687664985656738))
@@ -828,21 +828,21 @@ public sealed class SliderDartParityTestsA : IDisposable
 
             // Move a little further in the animations.
             tester.Pump(TimeSpan.FromMilliseconds(10));
-            Assert.Equal(2, Scheduler.TransientCallbackCount);
+            Assert.Equal(2, SchedulerBinding.Instance.TransientCallbackCount);
             PaintAssert.Paints(
                 material,
                 Ticks(PaintPattern.Paints.Circle(x: 191.130521774292, y: 24.0, radius: 12.0))
                     .Circle(x: 191.130521774292, y: 24.0, radius: 10.0));
             // Wait for animations to finish.
             tester.PumpAndSettle();
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
             PaintAssert.Paints(
                 material,
                 Ticks(PaintPattern.Paints.Circle(x: 400.0, y: 24.0, radius: 24.0))
                     .Circle(x: 400.0, y: 24.0, radius: 10.0));
             gesture.Up();
             tester.PumpAndSettle();
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
             PaintAssert.Paints(material, Ticks(PaintPattern.Paints).Circle(x: 400.0, y: 24.0, radius: 10.0));
         }
 

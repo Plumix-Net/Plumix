@@ -29,7 +29,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
 
     public RendererBindingDartParityTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         PlatformDispatcher.Instance.TimerRun = _timers.Add;
         _parkedViews = [.. RendererBinding.Instance.RenderViews];
@@ -52,7 +52,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
 
         PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
@@ -62,20 +62,20 @@ public sealed class RendererBindingDartParityTests : IDisposable
         // binding_test.dart: "handleMetricsChanged does not scheduleForcedFrame unless there a
         // registered renderView with a child".
         RendererBinding binding = RendererBinding.Instance;
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         binding.HandleMetricsChanged();
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
         var renderView = new RenderView(new FlutterView(new Size(800, 600), viewId: 8101));
         binding.AddRenderView(renderView);
         try
         {
             binding.HandleMetricsChanged();
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
             renderView.Child = new RenderLimitedBox();
             binding.HandleMetricsChanged();
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
@@ -163,11 +163,11 @@ public sealed class RendererBindingDartParityTests : IDisposable
         var box = new RenderLimitedBox();
         AddView(8105, box);
         PumpFrame();
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
         box.MarkNeedsLayout();
 
-        Assert.True(Scheduler.HasScheduledFrame);
+        Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
     }
 
     [Fact]
@@ -435,17 +435,17 @@ public sealed class RendererBindingDartParityTests : IDisposable
         try
         {
             Assert.Equal("false", (await Extension(name))["enabled"]);
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
             Assert.Equal("true", (await Extension(name, ("enabled", "true")))["enabled"]);
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
             PumpFrame();
 
             Assert.Equal("true", (await Extension(name, ("enabled", "true")))["enabled"]);
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
             Assert.Equal("false", (await Extension(name, ("enabled", "false")))["enabled"]);
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
             PumpFrame();
         }
         finally
@@ -467,11 +467,11 @@ public sealed class RendererBindingDartParityTests : IDisposable
             Assert.Equal("false", (await Extension("repaintRainbow"))["enabled"]);
             Assert.Equal("true", (await Extension("repaintRainbow", ("enabled", "true")))["enabled"]);
             Assert.True(RenderingDebug.RepaintRainbowEnabled);
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
             Assert.Equal("false", (await Extension("repaintRainbow", ("enabled", "false")))["enabled"]);
             Assert.False(RenderingDebug.RepaintRainbowEnabled);
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
@@ -492,7 +492,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
                 ? RenderingDebug.ProfilePaintsEnabled
                 : RenderingDebug.ProfileLayoutsEnabled);
             Assert.Equal("false", (await Extension(name, ("enabled", "false")))["enabled"]);
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
@@ -531,7 +531,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
             Assert.Equal("1.0", (await Extension("timeDilation", ("timeDilation", "1.0")))["timeDilation"]);
             Assert.Equal(1.0, Scheduler.TimeDilation);
             Assert.Equal(2, events.Count);
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
@@ -662,9 +662,9 @@ public sealed class RendererBindingDartParityTests : IDisposable
     private void PumpFrame()
     {
         _clock += TimeSpan.FromMilliseconds(16);
-        Scheduler.HandleBeginFrame(_clock);
-        Scheduler.FlushMicrotasks();
-        Scheduler.HandleDrawFrame();
+        SchedulerBinding.Instance.HandleBeginFrame(_clock);
+        EventLoop.FlushMicrotasks();
+        SchedulerBinding.Instance.HandleDrawFrame();
     }
 
     private void RunTimers()

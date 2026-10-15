@@ -530,7 +530,7 @@ internal sealed class DropdownRoute<T> : PopupRoute
     public override void DidComplete(object? result)
     {
         base.DidComplete(result);
-        Scheduler.ScheduleMicrotask(() => RouteCompleted?.Invoke(this, result as DropdownRouteResult<T>));
+        EventLoop.ScheduleMicrotask(() => RouteCompleted?.Invoke(this, result as DropdownRouteResult<T>));
     }
 
     /// <summary>Dart's `_DropdownRoute._dismiss`: drops the route without waiting for a pop.</summary>

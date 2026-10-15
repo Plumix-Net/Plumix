@@ -422,7 +422,7 @@ public sealed partial class EditableText
         internal TextBoundary CharacterBoundaryForActions() => CharacterBoundaryFor();
 
         internal void PasteTextWithReportingForActions(SelectionChangedCause cause) =>
-            Scheduler.RunAsync(() => PasteTextWithReportingAsync(cause));
+            EventLoop.RunAsync(() => PasteTextWithReportingAsync(cause));
 
         /// Dart's `_textEditingValueforTextLayoutMetrics`: the value the editable was last laid out
         /// with.

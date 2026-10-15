@@ -24,12 +24,12 @@ public sealed class NavigatorPagesTests : IDisposable
 
     public NavigatorPagesTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

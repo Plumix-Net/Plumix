@@ -66,7 +66,7 @@ file static class Consts
 
     // Dart's top-level `_reportAnnouncementError`, attached to the announcement future as `.catchError`.
     public static void ReportAnnouncementError(Task announcement) =>
-        Scheduler.RunAsync(() => ReportAnnouncementErrorAsync(announcement));
+        EventLoop.RunAsync(() => ReportAnnouncementErrorAsync(announcement));
 
     private static async Task ReportAnnouncementErrorAsync(Task announcement)
     {

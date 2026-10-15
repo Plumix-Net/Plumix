@@ -279,13 +279,13 @@ public abstract class RawMenuAnchorBaseState : State
     internal void ChildChangedOpenState()
     {
         _parent?.ChildChangedOpenState();
-        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             SetState(static () => { });
         }
         else
         {
-            Scheduler.AddPostFrameCallback(_ => SetState(static () => { }));
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => SetState(static () => { }));
         }
     }
 
@@ -469,13 +469,13 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
         }
 
         CloseChildren(inDispose);
-        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             _overlayController.Hide();
         }
         else if (!inDispose)
         {
-            Scheduler.AddPostFrameCallback(_ => _overlayController.Hide());
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => _overlayController.Hide());
         }
 
         if (inDispose)
@@ -485,7 +485,7 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
 
         AnchorParent?.ChildChangedOpenState();
         Current.OnClose?.Invoke();
-        if (Mounted && Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (Mounted && SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             SetState(static () => { });
         }
@@ -493,13 +493,13 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState<RawMenuAnchor>
 
     internal override void HandleCloseRequest()
     {
-        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             Current.OnCloseRequested(HideOverlay);
         }
         else
         {
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted)
                 {
@@ -613,13 +613,13 @@ public sealed class RawMenuAnchorGroupState : RawMenuAnchorBaseState<RawMenuAnch
             return;
         }
 
-        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             SetState(static () => { });
         }
         else
         {
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted)
                 {

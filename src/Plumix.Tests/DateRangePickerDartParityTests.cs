@@ -108,7 +108,7 @@ public sealed class DateRangePickerDartParityTests : IDisposable
     {
         if (!task.IsCompleted)
         {
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
 
         Assert.True(task.IsCompleted, "The date range picker future has not completed.");

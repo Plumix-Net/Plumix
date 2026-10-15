@@ -175,13 +175,13 @@ internal static class FakePlatformViewArgs
     /// <summary>
     /// Resumes in the next microtask, the way every Dart <c>await</c> does. Plumix's mock messenger and
     /// <see cref="TaskCompletionSource"/> resume synchronously; fakes created with
-    /// <c>dartAsyncReplies: true</c> hop through <see cref="Scheduler.ScheduleMicrotask"/> instead, so a
+    /// <c>dartAsyncReplies: true</c> hop through <see cref="EventLoop.ScheduleMicrotask"/> instead, so a
     /// reply lands after the frame that sent the call, as platform_view_test.dart expects.
     /// </summary>
     public static Task NextMicrotask()
     {
         var resumed = new TaskCompletionSource();
-        Scheduler.ScheduleMicrotask(resumed.SetResult);
+        EventLoop.ScheduleMicrotask(resumed.SetResult);
         return resumed.Task;
     }
 

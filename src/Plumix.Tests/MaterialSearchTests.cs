@@ -20,7 +20,7 @@ public sealed class MaterialSearchTests : IDisposable
 
     public MaterialSearchTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -29,7 +29,7 @@ public sealed class MaterialSearchTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     private static SuggestionsBuilder Sync(Func<SearchController, IReadOnlyList<Widget>> builder) =>
@@ -644,7 +644,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(AnimationStatus.Forward, searchDelegate.TransitionAnimation.Status);
         harness.Pump(new Size(640, 420));
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         Assert.Equal(AnimationStatus.Completed, searchDelegate.TransitionAnimation.Status);
@@ -666,7 +666,7 @@ public sealed class MaterialSearchTests : IDisposable
         searchDelegate.Close("Widget");
         Assert.Equal(AnimationStatus.Reverse, searchDelegate.TransitionAnimation.Status);
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         Assert.Equal(AnimationStatus.Dismissed, searchDelegate.TransitionAnimation.Status);
@@ -690,7 +690,7 @@ public sealed class MaterialSearchTests : IDisposable
         harness.FindState<SearchLaunchHostState>().Open();
         harness.Pump(new Size(640, 420));
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
@@ -811,7 +811,7 @@ public sealed class MaterialSearchTests : IDisposable
         {
             harness.Pump(size);
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.7));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.7));
         }
 
         harness.Pump(size);

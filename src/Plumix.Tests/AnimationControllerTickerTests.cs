@@ -15,13 +15,13 @@ public sealed class AnimationControllerTickerTests : IDisposable
 
     public AnimationControllerTickerTests()
     {
-        Scheduler.ResetForTests();
-        _baseTicks = Scheduler.CurrentSystemFrameTimeStamp.Ticks;
+        SchedulerBinding.ResetForTests();
+        _baseTicks = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp.Ticks;
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     /// <summary>
@@ -32,7 +32,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
     {
         // Built from ticks so that the difference between two frame timestamps is exact; going through
         // TimeSpan.FromSeconds twice rounds each end independently.
-        Scheduler.PumpFrameForTests(
+        SchedulerBinding.PumpFrameForTests(
             TimeSpan.FromTicks(_baseTicks + (long)Math.Round(seconds * TimeSpan.TicksPerSecond)));
     }
 
@@ -116,7 +116,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
 
         // Dart resolves the callback in a microtask, not inside the call that canceled the ticker.
         Assert.False(completedOrCanceled);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(completedOrCanceled);
     }
 
@@ -288,7 +288,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
         Assert.Equal(0.5, controller.Value, 6);
         Assert.Equal(AnimationStatus.Completed, controller.Status);
         Assert.Equal([AnimationStatus.Completed], statuses);
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
         // Even a target at the lower bound reports `completed`, because the direction is forward.
         controller.SetValue(0.0);
@@ -305,7 +305,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
 
         Assert.Equal(1.0, controller.Value, 6);
         Assert.Equal(AnimationStatus.Completed, controller.Status);
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     [Fact]

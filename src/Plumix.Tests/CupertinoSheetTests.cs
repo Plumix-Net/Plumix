@@ -16,13 +16,13 @@ public sealed class CupertinoSheetTests : IDisposable
 {
     public CupertinoSheetTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemChrome.ResetForTests();
     }
 
@@ -295,9 +295,9 @@ public sealed class CupertinoSheetTests : IDisposable
 
     private static void Settle(BuildOwner owner)
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
     }
 

@@ -25,9 +25,9 @@ public sealed class NestedScrollViewTests : IDisposable
 
     // The coordinator schedules its shadow updates as post-frame callbacks, so a test must not leave
     // any of them queued on the process-wide scheduler for the next one to run.
-    public NestedScrollViewTests() => Scheduler.ResetForTests();
+    public NestedScrollViewTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     // ---------------------------------------------------------------------------------------------
     // SliverOverlapAbsorberHandle
@@ -559,13 +559,13 @@ public sealed class NestedScrollViewTests : IDisposable
         // Scrolling the header away alone does not count as a scrolled body.
         Drag(key, -HeaderExtent);
         harness.Pump(new Size(800, ViewportExtent));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(800, ViewportExtent));
         Assert.DoesNotContain(true, seen);
 
         Drag(key, -50.0);
         harness.Pump(new Size(800, ViewportExtent));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(800, ViewportExtent));
         Assert.Contains(true, seen);
     }

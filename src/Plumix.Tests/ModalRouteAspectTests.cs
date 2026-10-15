@@ -21,14 +21,14 @@ public sealed class ModalRouteAspectTests : IDisposable
 
     public ModalRouteAspectTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -166,7 +166,7 @@ public sealed class ModalRouteAspectTests : IDisposable
         using var outside = new FocusScopeNode();
         FocusManager.Instance.RegisterNode(outside, FocusManager.Instance.RootScope);
         outside.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(outside.HasPrimaryFocus);
 
         using var harness = new Harness(new Navigator(
@@ -188,11 +188,11 @@ public sealed class ModalRouteAspectTests : IDisposable
         FocusManager.Instance.RegisterNode(child, parent);
 
         parent.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(parent.HasFocusInScope);
 
         parent.SetFirstFocus(child);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(child.HasPrimaryFocus);
     }
@@ -212,7 +212,7 @@ public sealed class ModalRouteAspectTests : IDisposable
 
         // Focusing the parent now walks back down to the recorded child.
         parent.RequestFirstFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(child.HasPrimaryFocus);
     }
 

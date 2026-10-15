@@ -310,7 +310,7 @@ public sealed class ScrollableSelectionTests
     private static void PumpFully(RestorationHarness harness)
     {
         harness.Pump(Surface);
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(Surface);
     }
 
@@ -478,7 +478,7 @@ public sealed class ScrollableSelectionTests
             for (int i = 0; i < frames; i += 1)
             {
                 _harness.Pump(Surface);
-                Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
+                SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
                 _harness.Pump(Surface);
             }
         }
@@ -501,7 +501,7 @@ public sealed class ScrollableSelectionTests
             for (int i = 0; i < frames; i += 1)
             {
                 _harness.Pump(Surface);
-                Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
+                SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
                 _harness.Pump(Surface);
                 if (_endPosition is { } position)
                 {

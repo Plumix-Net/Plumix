@@ -397,7 +397,7 @@ public sealed class OneFrameImageStreamCompleter : ImageStreamCompleter
     public OneFrameImageStreamCompleter(Task<ImageInfo> image, string? debugLabel = null)
     {
         DebugLabel = debugLabel;
-        Scheduler.RunAsync(() => CompleteAsync(image ?? throw new ArgumentNullException(nameof(image))));
+        EventLoop.RunAsync(() => CompleteAsync(image ?? throw new ArgumentNullException(nameof(image))));
     }
 
     private async Task CompleteAsync(Task<ImageInfo> image)

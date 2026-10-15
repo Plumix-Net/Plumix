@@ -399,9 +399,10 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/viewport.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs`<br>`src/Plumix/Rendering/Viewport.Reveal.cs` | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/EditableTextScrollingDartParityTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollActivityTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollDelegateTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsDartParityTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollableDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableEnsureVisibleDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableMiscDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionDartParityTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionTests.cs`<br>`src/Plumix.Tests/ScrollableTests.cs`<br>`src/Plumix.Tests/SingleChildScrollViewTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollViewTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollableDartParityTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/two_dimensional_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/TwoDimensionalScrollViewDemoPage.cs` |
 | `rendering/viewport_offset.dart` | `src/Plumix/Rendering/ViewportOffset.cs` | — | — |
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
-| `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` _(adapted)_ | `src/Plumix.Tests/SchedulerBindingTests.cs` | — |
+| `scheduler/binding.dart` | `src/Plumix/SchedulerBinding.cs` | `src/Plumix.Tests/SchedulerBindingTests.cs` | — |
 | `scheduler/debug.dart` | `src/Plumix/SchedulerDebug.cs` | — | — |
 | `scheduler/priority.dart` | `src/Plumix/SchedulerPriority.cs` | — | — |
+| `scheduler/service_extensions.dart` | `src/Plumix/SchedulerServiceExtensions.cs` | — | — |
 | `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/binding.dart` | `src/Plumix/Rendering/Semantics.Binding.cs` | — | — |
 | `semantics/debug.dart` | `src/Plumix/Rendering/Semantics.Debug.cs` | — | — |
@@ -606,6 +607,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/Developer/DeveloperService.cs`
 - `src/Plumix/Developer/Timeline.cs`
+- `src/Plumix/EventLoop.cs`
 - `src/Plumix/FlutterExtensions.cs`
 - `src/Plumix/Foundation/DartRandom.cs`
 - `src/Plumix/Foundation/DartStopwatch.cs`
@@ -618,6 +620,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Foundation/Intl/PluralRules.cs`
 - `src/Plumix/Foundation/Intl/StringStack.cs`
 - `src/Plumix/Foundation/TypedData.cs`
+- `src/Plumix/FrameClock.cs`
 - `src/Plumix/FrameworkSynchronizationContext.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/GlobalUsings.cs`
@@ -683,14 +686,13 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
 - `src/Plumix/PipelineOwner.cs` — (host integration extras)
-- `src/Plumix/Scheduler.cs` — (adapted)
 - `src/Plumix/WidgetHost.cs` — (reference) (host integration, adapted)
 
 ## Summary
 
-- Flutter files mapped: 574
-- C# files carrying a marker: 760
-- C# files without a marker: 70
+- Flutter files mapped: 575
+- C# files carrying a marker: 761
+- C# files without a marker: 72
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 5
+- C# files with a qualified (non-strict) marker: 4
 

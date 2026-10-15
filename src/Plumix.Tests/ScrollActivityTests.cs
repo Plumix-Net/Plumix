@@ -134,26 +134,26 @@ public class ScrollActivityTests
     [Fact]
     public void ScrollMetricsNotification_FiresOncePerRealDimensionChange()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new ScrollNotificationRecorder();
             using ScrollPositionWithSingleContext position = recorder.CreatePosition(new ClampingScrollPhysics());
             position.ApplyViewportDimension(600);
             position.ApplyContentDimensions(0, 600);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Single(recorder.Notifications.OfType<ScrollMetricsNotification>());
 
             // The same dimensions again change nothing, so nothing is dispatched.
             recorder.Notifications.Clear();
             position.ApplyViewportDimension(600);
             position.ApplyContentDimensions(0, 600);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Empty(recorder.Notifications);
 
             // Shrinking the content is a real change.
             position.ApplyContentDimensions(0, 400);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             ScrollMetricsNotification metrics =
                 Assert.Single(recorder.Notifications.OfType<ScrollMetricsNotification>());
             Assert.Equal(400.0, metrics.Metrics.ExtentAfter);
@@ -161,7 +161,7 @@ public class ScrollActivityTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -230,7 +230,7 @@ public class ScrollActivityTests
     [Fact]
     public void DrivenScrollActivity_LetsASubclassOverrideApplyMoveTo()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new ScrollNotificationRecorder();
@@ -256,14 +256,14 @@ public class ScrollActivityTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void DrivenScrollActivity_FromSimulation_StartsAtZeroAndFollowsTheSimulation()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new ScrollNotificationRecorder();
@@ -287,14 +287,14 @@ public class ScrollActivityTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void AnimateTo_CompletesItsTaskWhenTheActivityIsReplaced()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new ScrollNotificationRecorder();
@@ -313,7 +313,7 @@ public class ScrollActivityTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -334,7 +334,7 @@ public class ScrollActivityTests
     [Fact]
     public void Absorb_MovesTheActivityAndTheDragOntoTheNewPosition()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new ScrollNotificationRecorder();
@@ -359,7 +359,7 @@ public class ScrollActivityTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -397,7 +397,7 @@ public class ScrollActivityTests
         while (_clock + frame <= target + 1e-9)
         {
             _clock += frame;
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         }
     }
 

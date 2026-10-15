@@ -17,7 +17,7 @@ public sealed class MaterialDialogTests : IDisposable
 {
     public MaterialDialogTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
@@ -25,7 +25,7 @@ public sealed class MaterialDialogTests : IDisposable
     {
         PlatformDefaults.DebugTargetPlatformOverride = null;
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -541,7 +541,7 @@ public sealed class MaterialDialogTests : IDisposable
                 new Focus(focusNode: homeFocus, child: new Text("Home")))))));
         harness.Pump(new Size(600, 400));
         homeFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(homeFocus, FocusManager.Instance.PrimaryFocus);
 
         var kept = MaterialDialogs.ShowDialog<string>(
@@ -588,20 +588,20 @@ public sealed class MaterialDialogTests : IDisposable
                 return new AlertDialog(title: new Text("Slow"));
             },
             animationStyle: new AnimationStyle(Duration: TimeSpan.FromSeconds(1)));
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(600, 400));
         Assert.Equal(TimeSpan.FromSeconds(1), Assert.IsType<DialogRoute<string>>(route).TransitionDuration);
         Assert.True(route!.Animation.Value < 1.0);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.2));
         harness.Pump(new Size(600, 400));
         Assert.Equal(1.0, route.Animation.Value, precision: 3);
 
         Navigator.Of(captured).Pop();
         PumpAnimation();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 1.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 1.2));
         harness.Pump(new Size(600, 400));
         Assert.Null(await result);
     }
@@ -639,10 +639,10 @@ public sealed class MaterialDialogTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }
 
     private static bool Close(double actual, double expected) => Math.Abs(actual - expected) < 0.01;
@@ -656,14 +656,14 @@ public sealed class MaterialDialogTests : IDisposable
     private static bool PumpFocus(Func<bool> action)
     {
         bool result = action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return result;
     }
 
     private static void PumpFocus(Action action)
     {
         action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

@@ -445,7 +445,7 @@ public sealed class SelectionSubsystemTests
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
             _pipeline.CompositeFrame();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             _owner.FlushBuild();
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);

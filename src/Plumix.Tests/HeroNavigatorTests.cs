@@ -16,7 +16,7 @@ public sealed partial class HeroNavigatorTests
     [Fact]
     public void Navigator_Push_WithSharedHeroTag_ShowsBothRoutesDuringFlight_ThenSettlesToDestination()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -63,14 +63,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Pop_WithSharedHeroTag_KeepsPoppedRouteDuringFlight_ThenDisposesIt()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -115,14 +115,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_UsesDestinationHeroCreateRectTween_ForFlightBounds()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -169,9 +169,9 @@ public sealed partial class HeroNavigatorTests
                     }));
             harness.Pump(viewportSize);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
             harness.Pump(viewportSize);
 
             Assert.Equal(0, sourceCreateRectTweenCalls);
@@ -192,14 +192,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_UsesDestinationHeroFlightShuttleBuilder_WhenBothHeroesProvideBuilder()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -249,14 +249,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_UsesSourceHeroFlightShuttleBuilder_AsFallbackWhenDestinationBuilderIsMissing()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -298,14 +298,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_WithDisabledDestinationHeroMode_DoesNotStartHeroFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -346,14 +346,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_WithNestedNavigatorHeroes_ShowsBothRoutesDuringFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -395,14 +395,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Pop_FromUserGesture_SkipsHeroFlight_WhenTransitionOnUserGesturesDisabled()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -447,14 +447,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Pop_FromUserGesture_UsesHeroFlight_WhenBothHeroesAllowGestureTransition()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -499,14 +499,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_UsesSourceHeroPlaceholderBuilder_DuringFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -557,14 +557,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Pop_UsesDestinationHeroPlaceholderBuilder_DuringFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -624,14 +624,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_DefaultHeroPlaceholder_UsesOffstageChildForSourceHero()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -668,14 +668,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Pop_DefaultHeroPlaceholder_DoesNotUseOffstageChild()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -714,14 +714,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_PushFlight_InterruptedByPop_DivertsActiveHeroFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -783,14 +783,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [DebugOnlyFact]
     public void Navigator_Push_WithDuplicateHeroTagsInRouteSubtree_ReportsFlutterError()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -834,14 +834,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [DebugOnlyFact]
     public void Navigator_InitialRoute_WithNestedHero_Asserts()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -860,14 +860,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_SamplesFlightRectThroughDestinationHeroCurve()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -903,7 +903,7 @@ public sealed partial class HeroNavigatorTests
 
             // A linear `Hero.curve` makes the flight sample the raw route animation value.
             double rawBefore = destinationAnimation!.Value;
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.05));
             harness.Pump(viewportSize);
             double rawAfter = destinationAnimation.Value;
 
@@ -916,14 +916,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_DefaultHeroCurveIsFastOutSlowIn()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -955,7 +955,7 @@ public sealed partial class HeroNavigatorTests
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.05));
             harness.Pump(viewportSize);
 
             Assert.NotNull(destinationAnimation);
@@ -969,14 +969,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void HeroController_CreateRectTween_IsUsedWhenTheHeroSuppliesNone_AndLosesToTheDestinationHero()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -1038,14 +1038,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_WithoutAHeroControllerScope_DoesNotFly()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -1085,14 +1085,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Navigator_Push_WithNoMatchingTagOnTheDestination_DoesNotFly()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -1129,14 +1129,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void HeroController_Dispose_DetachesFromTheNavigatorAndDropsInFlightHeroes()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -1175,7 +1175,7 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1183,11 +1183,11 @@ public sealed partial class HeroNavigatorTests
     {
         PumpHeroTransitionFrame(harness, viewportSize);
 
-        double afterStart = Scheduler.CurrentSeconds;
+        double afterStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
         harness.Pump(viewportSize);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.001));
         harness.Pump(viewportSize);
     }
 
@@ -1201,10 +1201,10 @@ public sealed partial class HeroNavigatorTests
         harness.Pump(viewportSize);
         AnimationPump.Prime();
         harness.Pump(viewportSize);
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
         harness.Pump(viewportSize);
     }
 

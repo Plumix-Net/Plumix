@@ -537,7 +537,7 @@ public static class TextInput
         }
 
         _hidePending = true;
-        Scheduler.ScheduleMicrotask(() =>
+        EventLoop.ScheduleMicrotask(() =>
         {
             _hidePending = false;
             if (CurrentConnection is null)

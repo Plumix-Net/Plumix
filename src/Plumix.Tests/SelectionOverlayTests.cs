@@ -13,14 +13,14 @@ public sealed class SelectionOverlayTests : IDisposable
 {
     public SelectionOverlayTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         Feedback.ResetForTests();
     }
 
     public void Dispose()
     {
         Feedback.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

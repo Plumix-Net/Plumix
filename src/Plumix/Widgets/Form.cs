@@ -248,7 +248,7 @@ public sealed class FormState : State<Form>
             if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS)
             {
                 // Dart's `unawaited(Future<void>(() async { ... }))`.
-                Scheduler.RunAsync(async () =>
+                EventLoop.RunAsync(async () =>
                 {
                     await Delayed(FormConstants.IOSAnnouncementDelayDuration);
                     try
@@ -272,7 +272,7 @@ public sealed class FormState : State<Form>
                     errorMessage,
                     directionality,
                     assertiveness: Assertiveness.Assertive);
-                Scheduler.RunAsync(() => CatchAnnouncementError(announcement));
+                EventLoop.RunAsync(() => CatchAnnouncementError(announcement));
             }
         }
 
@@ -503,7 +503,7 @@ public class FormFieldState<T> : FormFieldState
 
         // Dart defers to a post-frame callback: `IsValid` runs the field's validator, which is free
         // to call `setState` on an ancestor, and this hook runs in the middle of a build.
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             // If the form is already validated, don't validate again.
             if (Mounted && CurrentField.Enabled && !HasError && !IsValid)

@@ -446,7 +446,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
 
             object callbackIdentity = new object();
             _activeCallbackIdentity = callbackIdentity;
-            Scheduler.RunAsync(() => ObserveFuture(future, callbackIdentity));
+            EventLoop.RunAsync(() => ObserveFuture(future, callbackIdentity));
             if (_snapshot.ConnectionState != ConnectionState.Done)
             {
                 _snapshot = _snapshot.InState(ConnectionState.Waiting);
@@ -479,7 +479,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
         /// </remarks>
         private void Deliver(object callbackIdentity, AsyncSnapshot<T> snapshot, Exception? error)
         {
-            Scheduler.ScheduleMicrotask(() =>
+            EventLoop.ScheduleMicrotask(() =>
             {
                 if (!Mounted || !ReferenceEquals(_activeCallbackIdentity, callbackIdentity))
                 {

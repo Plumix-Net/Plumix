@@ -12,9 +12,9 @@ public sealed class RestorationBucketTests : IDisposable
 {
     private readonly MockRestorationManager _manager = new();
 
-    public RestorationBucketTests() => Scheduler.ResetForTests();
+    public RestorationBucketTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void RootBucket_ExposesIdAndOwner()

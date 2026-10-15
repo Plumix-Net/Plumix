@@ -179,17 +179,17 @@ public sealed class RenderPlatformViewTests : IDisposable
         _harness.Send(new PointerAddedEvent(pointer: 1, position: default));
         _harness.Send(new PointerDownEvent(pointer: 1, position: new Point(10, 10)));
         _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Point(10, 10)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         _harness.Send(new PointerAddedEvent(pointer: 2, position: default));
         _harness.Send(new PointerDownEvent(pointer: 2, position: new Point(20, 10)));
         _harness.Send(new PointerCancelEvent(pointer: 2, position: new Point(20, 10)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         _harness.Send(new PointerAddedEvent(pointer: 1, position: default));
         _harness.Send(new PointerMoveEvent(pointer: 1, position: new Point(10, 10)));
         _harness.Send(new PointerRemovedEvent(pointer: 1, position: new Point(10, 10)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     [Fact]
@@ -250,7 +250,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         Assert.False(renderBox.DebugNeedsPaint);
 
         viewCreation.SetResult();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(viewController.IsCreated);
         Assert.True(renderBox.DebugNeedsPaint);
@@ -292,7 +292,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         _harness.DetachChild();
         renderBox.Dispose();
         viewCreation.SetResult();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(viewController.IsCreated);
         Assert.False(renderBox.DebugNeedsPaint);

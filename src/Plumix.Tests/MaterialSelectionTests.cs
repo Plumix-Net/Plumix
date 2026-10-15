@@ -359,7 +359,7 @@ public sealed class MaterialSelectionTests
         Assert.Equal("long pressed", state.SelectedContent?.PlainText);
 
         // As in Dart, the selection only dismisses when unfocused while the app is resumed.
-        Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
         try
         {
             focusNode.Unfocus();
@@ -369,7 +369,7 @@ public sealed class MaterialSelectionTests
         }
         finally
         {
-            Scheduler.ResetInternalState();
+            SchedulerBinding.Instance.ResetInternalState();
         }
     }
 
@@ -571,7 +571,7 @@ public sealed class MaterialSelectionTests
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
             _pipeline.CompositeFrame();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             _owner.FlushBuild();
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);

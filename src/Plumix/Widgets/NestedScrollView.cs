@@ -1009,7 +1009,7 @@ internal sealed class NestedScrollController : ScrollController
     {
         // We do this asynchronously because the shadow is driven by whether the body has scrolled,
         // which cannot be answered while the body is still being laid out.
-        Scheduler.AddPostFrameCallback(_ => _coordinator.UpdateShadow());
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => _coordinator.UpdateShadow());
     }
 }
 

@@ -605,7 +605,7 @@ public class SearchAnchor : StatefulWidget
 
             _toggleVisibility?.Invoke();
             _viewOnClose?.Invoke();
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 BuildContext? context = _anchorKey.CurrentContext;
                 if (context is not null)
@@ -1111,7 +1111,7 @@ internal sealed class SearchViewContent : StatefulWidget
             // Dart coalesces bursts of dependency changes through Timer(Duration.zero, ...); the post-frame
             // callback plays that role here, with the generation counter as the cancellation token.
             int generation = ++_refreshGeneration;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (generation != _refreshGeneration || !Mounted)
                 {

@@ -77,7 +77,7 @@ public sealed class GestureBinding : IHitTestTarget
     /// </summary>
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(root);
         ArgumentNullException.ThrowIfNull(@event);
         if (ResamplingEnabled)
@@ -146,7 +146,7 @@ public sealed class GestureBinding : IHitTestTarget
         }
 
         _resamplingTimer ??= new Timer(
-            _ => Scheduler.ScheduleMicrotask(HandleSampleTimeChanged),
+            _ => EventLoop.ScheduleMicrotask(HandleSampleTimeChanged),
             null,
             SamplingInterval,
             SamplingInterval);
@@ -179,7 +179,7 @@ public sealed class GestureBinding : IHitTestTarget
         {
             _frameCallbackScheduled = true;
             int generation = _resamplingGeneration;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (generation != _resamplingGeneration)
                 {
@@ -199,7 +199,7 @@ public sealed class GestureBinding : IHitTestTarget
 
     private void HandleSampleTimeChanged()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         if (ResamplingEnabled)
         {
             SampleResampledEvents();
@@ -265,7 +265,7 @@ public sealed class GestureBinding : IHitTestTarget
         _pendingPointerEvents.AddFirst((root, cancel));
         if (wasEmpty && !_flushingPointerEvents)
         {
-            Scheduler.ScheduleMicrotask(FlushPointerEventQueue);
+            EventLoop.ScheduleMicrotask(FlushPointerEventQueue);
         }
     }
 

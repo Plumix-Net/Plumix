@@ -17,7 +17,7 @@ public sealed class CupertinoAppTests : IDisposable
 
     public CupertinoAppTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemChrome.ResetForTests();
         SystemChrome.ResetForTests();
     }
@@ -25,7 +25,7 @@ public sealed class CupertinoAppTests : IDisposable
     public void Dispose()
     {
         PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemChrome.ResetForTests();
         SystemChrome.ResetForTests();
     }
@@ -105,7 +105,7 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.IsType<CupertinoScrollBehavior>(scrollBehavior);
         Assert.Equal(CupertinoUserInterfaceLevelData.Base, interfaceLevel);
         Assert.IsType<CupertinoPageRoute<object?>>(navigatorKey.CurrentState!.CurrentRoute);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
         platform.AssertLastApplicationSwitcherDescription("Cupertino shell", 0xFF28323C);
         root.UnmountRoot();

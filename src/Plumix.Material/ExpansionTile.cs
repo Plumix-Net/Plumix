@@ -425,14 +425,14 @@ public sealed class ExpansionTile : StatefulWidget
                 _announcementCancellation?.Dispose();
                 _announcementCancellation = new CancellationTokenSource();
                 CancellationToken cancellationToken = _announcementCancellation.Token;
-                Scheduler.RunAsync(() => SendDelayedAnnouncement(view, stateHint, direction, cancellationToken));
+                EventLoop.RunAsync(() => SendDelayedAnnouncement(view, stateHint, direction, cancellationToken));
                 return;
             }
 
             // SemanticsService.SendAnnouncement is deprecated on android. We use live region to achieve the
             // announcement effect instead.
             Task announcement = SemanticsService.SendAnnouncement(view, stateHint, direction);
-            Scheduler.RunAsync(() => ReportAnnouncementError(announcement));
+            EventLoop.RunAsync(() => ReportAnnouncementError(announcement));
         }
 
         private static async Task SendDelayedAnnouncement(

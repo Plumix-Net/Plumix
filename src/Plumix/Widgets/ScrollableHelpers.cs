@@ -229,7 +229,7 @@ public sealed class EdgeDraggingAutoScroller
         }
 
         Debug.Assert(!_scrolling, "An auto scroll is already in flight.");
-        Scheduler.RunAsync(Scroll);
+        EventLoop.RunAsync(Scroll);
     }
 
     /// <summary>Stops any ongoing auto scrolling.</summary>

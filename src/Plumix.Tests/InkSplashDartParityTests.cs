@@ -163,7 +163,7 @@ public sealed class InkSplashDartParityTests
             Assert.True(count++ < 1000, "pumpAndSettle timed out");
             tester.Pump(step);
         }
-        while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
+        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
     }
 
     // The test file's `Page`: a FilledButton page that reports its disposal.

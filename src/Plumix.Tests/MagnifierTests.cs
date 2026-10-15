@@ -16,12 +16,12 @@ public sealed class MagnifierTests : IDisposable
 {
     public MagnifierTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -138,13 +138,13 @@ public sealed class MagnifierTests : IDisposable
         var probeState = harness.FindState<ContextProbeState>();
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
         var controller = new MagnifierController(animation);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
 
         Task show = controller.Show(probeState.Context, _ => new SizedBox(width: 20, height: 10));
         Assert.Equal(AnimationStatus.Forward, animation.Status);
         Assert.True(controller.Shown);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
         await show;
 
         Assert.Equal(AnimationStatus.Completed, animation.Status);
@@ -153,8 +153,8 @@ public sealed class MagnifierTests : IDisposable
         Task hide = controller.Hide();
         Assert.Equal(AnimationStatus.Reverse, animation.Status);
         Assert.False(controller.Shown);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
         await hide;
 
         Assert.Equal(AnimationStatus.Dismissed, animation.Status);

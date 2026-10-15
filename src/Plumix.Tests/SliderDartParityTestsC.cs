@@ -1369,7 +1369,7 @@ public sealed class SliderDartParityTestsC : IDisposable
             Assert.True(count++ < 1000, "pumpAndSettle timed out");
             tester.Pump(step);
         }
-        while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
+        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
     }
 
 

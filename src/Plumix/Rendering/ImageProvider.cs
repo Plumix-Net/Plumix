@@ -190,7 +190,7 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
         }
         else
         {
-            Scheduler.RunAsync(() => ResolveKeyAsync(configuration, stream, keyTask));
+            EventLoop.RunAsync(() => ResolveKeyAsync(configuration, stream, keyTask));
         }
 
         return stream;
@@ -285,7 +285,7 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
 
     private static void ResolveError(ImageStream stream, Exception exception)
     {
-        Scheduler.RunAsync(() => ReportErrorAfterListenerTurnAsync(stream, exception));
+        EventLoop.RunAsync(() => ReportErrorAfterListenerTurnAsync(stream, exception));
     }
 
     private static async Task ReportErrorAfterListenerTurnAsync(ImageStream stream, Exception exception)

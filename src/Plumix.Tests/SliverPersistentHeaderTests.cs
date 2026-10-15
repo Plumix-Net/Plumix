@@ -20,9 +20,9 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 {
     private const double ViewportExtent = 600.0;
 
-    public SliverPersistentHeaderTests() => Scheduler.ResetForTests();
+    public SliverPersistentHeaderTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void Configurations_ExposeFlutterDefaults()
@@ -580,10 +580,10 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         public void Advance(TimeSpan elapsed)
         {
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             // The first frame only gives a freshly started ticker its start timestamp.
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now) + elapsed);
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now) + elapsed);
         }
     }
 

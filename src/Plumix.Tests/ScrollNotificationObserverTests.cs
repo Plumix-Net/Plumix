@@ -326,13 +326,13 @@ public sealed class ScrollNotificationObserverTests
             _pipeline.CompositeFrame();
             // The position schedules its metrics notification as a microtask, because the listeners
             // that would receive it have already been built by the time layout establishes them.
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
 
         public void Dispose()
         {
             _root.UnmountRoot();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

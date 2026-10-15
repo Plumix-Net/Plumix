@@ -50,7 +50,7 @@ public sealed class PlumixHostInputTests : IDisposable
 
         FrameworkFocusManager.Instance.RegisterNode(focusNode);
         FrameworkFocusManager.Instance.RequestFocus(focusNode);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         var host = new TestPlumixHost();
         Assert.True(host.DispatchKeyDown(Key.Space));
@@ -80,7 +80,7 @@ public sealed class PlumixHostInputTests : IDisposable
         };
         FrameworkFocusManager.Instance.RegisterNode(focusNode);
         FrameworkFocusManager.Instance.RequestFocus(focusNode);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         var host = new TestPlumixHost();
         Assert.True(host.DispatchKeyDown(Key.OemQuestion, keySymbol: "?", physicalKey: PhysicalKey.Slash));

@@ -13,12 +13,12 @@ public sealed class CupertinoLocalizationsTests : IDisposable
 {
     public CupertinoLocalizationsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

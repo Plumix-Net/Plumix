@@ -58,7 +58,7 @@ internal sealed class SliverLayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        bool deferMarkNeedsLayout = Scheduler.Phase
+        bool deferMarkNeedsLayout = SchedulerBinding.Instance.SchedulerPhase
             is SchedulerPhase.Idle or SchedulerPhase.PostFrameCallbacks;
         if (!deferMarkNeedsLayout)
         {
@@ -67,7 +67,7 @@ internal sealed class SliverLayoutBuilderElement : RenderObjectElement
         }
 
         _deferredCallbackScheduled = true;
-        Scheduler.ScheduleFrameCallback(_ =>
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ =>
         {
             _deferredCallbackScheduled = false;
             if (Mounted)

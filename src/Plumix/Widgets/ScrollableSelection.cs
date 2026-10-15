@@ -159,7 +159,7 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         }
 
         _scheduledLayoutChange = true;
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             if (!_scheduledLayoutChange)
             {

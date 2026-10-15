@@ -275,7 +275,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     {
         Debug.Assert(HasPixels);
         Debug.Assert(
-            Scheduler.Phase != SchedulerPhase.PersistentCallbacks,
+            SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks,
             "A scrollable's position should not change during the build, layout, and paint phases, "
             + "otherwise the rendering will be confused.");
         if (newPixels != Pixels)
@@ -350,7 +350,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
         _impliedVelocity = value - Pixels;
         _pixels = value;
         NotifyListeners();
-        Scheduler.AddPostFrameCallback(_ => _impliedVelocity = 0);
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => _impliedVelocity = 0);
     }
 
     /// <summary>
@@ -498,7 +498,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
             // until after the frame is complete.
             if (!_haveScheduledUpdateNotification)
             {
-                Scheduler.ScheduleMicrotask(DidUpdateScrollMetrics);
+                EventLoop.ScheduleMicrotask(DidUpdateScrollMetrics);
                 _haveScheduledUpdateNotification = true;
             }
 
@@ -853,7 +853,7 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     /// </summary>
     public void DidUpdateScrollMetrics()
     {
-        Debug.Assert(Scheduler.Phase != SchedulerPhase.PersistentCallbacks);
+        Debug.Assert(SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks);
         Debug.Assert(_haveScheduledUpdateNotification);
         _haveScheduledUpdateNotification = false;
         if (Context.NotificationContext is { } context)

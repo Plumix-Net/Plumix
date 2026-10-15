@@ -87,10 +87,11 @@ public sealed class SemanticsBinding
             // https://github.com/flutter/flutter/issues/158399
             // Plumix's scheduler also reports `persistentCallbacks` for builds driven outside a frame,
             // where no post-frame callback would run; the check is qualified the way
-            // `Scheduler.EnsureVisualUpdate` qualifies it.
-            if (Scheduler.Phase == SchedulerPhase.PersistentCallbacks && Scheduler.IsHandlingFrame)
+            // `SchedulerBinding.Instance.EnsureVisualUpdate` qualifies it.
+            if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PersistentCallbacks
+                && SchedulerBinding.Instance.IsHandlingFrame)
             {
-                Scheduler.AddPostFrameCallback(
+                SchedulerBinding.Instance.AddPostFrameCallback(
                     _ => InvokeHandleAccessibilityFeaturesChanged(),
                     debugLabel: "SemanticsBinding.handleAccessibilityFeaturesChanged");
             }

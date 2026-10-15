@@ -252,7 +252,7 @@ public sealed class MaterialReorderableListTests
     [Fact]
     public void SliverReorderableList_UsesNearestAncestorDragBoundary()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         var listKey = new LabeledGlobalKey<SliverReorderableListState>("bounded-reorderable");
@@ -292,14 +292,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void SliverReorderableList_ExplicitNullBoundaryProviderOverridesAncestor()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         var listKey = new LabeledGlobalKey<SliverReorderableListState>("unbounded-reorderable");
@@ -336,14 +336,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void CoreReorderableList_ImmediateDragReportsAdjustedItemIndexAndLifecycle()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<int> starts = [];
@@ -378,14 +378,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void CoreReorderableList_DeprecatedCallbackRetainsInsertionIndex()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<(int OldIndex, int NewIndex)> reorders = [];
@@ -416,14 +416,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void CoreReorderableList_HorizontalDragUsesMainAxisGeometry()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<(int OldIndex, int NewIndex)> reorders = [];
@@ -453,7 +453,7 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -491,7 +491,7 @@ public sealed class MaterialReorderableListTests
     [Fact]
     public void ReorderableListView_DesktopHandleResolvesDraggedMouseCursorState()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<IReadOnlySet<WidgetState>> resolvedStates = [];
@@ -531,14 +531,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ReorderableListView_DesktopHandleOwnsDragAndReportsAdjustedIndex()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<(int OldIndex, int NewIndex)> reorders = [];
@@ -571,7 +571,7 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -657,7 +657,7 @@ public sealed class MaterialReorderableListTests
     [Fact]
     public void ReorderableList_UsesOverlayCapturedThemesAndCompletesCallbackAfterDropAnimation()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         List<(int OldIndex, int NewIndex)> reorders = [];
@@ -690,37 +690,37 @@ public sealed class MaterialReorderableListTests
             Assert.Equal(31, proxyText.FontSize);
 
             AnimationPump.Prime();
-            double pickupClock = Scheduler.CurrentSeconds;
+            double pickupClock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
 
             DispatchUp(binding, harness.RenderView, 80, new Point(100, 115), start.AddMilliseconds(200));
             Assert.Empty(reorders);
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
 
             AnimationPump.Prime();
-            double clock = Scheduler.CurrentSeconds;
+            double clock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.13));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.13));
             Assert.Empty(reorders);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
             Assert.Equal([(0, 2)], reorders);
             Assert.Equal(baselineEntries, harness.FindState<OverlayState>().Entries.Count);
         }
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ReorderableList_DropRebuildsMutatedKeyedItemsWithoutCorruptingSliverChildren()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -745,14 +745,14 @@ public sealed class MaterialReorderableListTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ReorderableList_StationaryEdgeDragContinuesAutoScrolling()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
         var controller = new ScrollController();
@@ -775,12 +775,12 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 81, new Point(100, 25), start);
             DispatchMove(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(100));
 
-            double clock = Scheduler.CurrentSeconds;
+            double clock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             harness.Pump(new Size(200, 150));
             double firstOffset = controller.Offset;
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.05));
             harness.Pump(new Size(200, 150));
 
             Assert.True(firstOffset > 0.0);
@@ -791,7 +791,7 @@ public sealed class MaterialReorderableListTests
         {
             controller.Dispose();
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

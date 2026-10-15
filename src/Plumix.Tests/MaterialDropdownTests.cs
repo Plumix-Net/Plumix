@@ -24,7 +24,7 @@ public sealed class MaterialDropdownTests : IDisposable
         // instead of inheriting the host OS — CI runs Linux, developers run macOS/Windows.
         _previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -33,7 +33,7 @@ public sealed class MaterialDropdownTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
     }
     [Fact]
@@ -345,7 +345,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
         // `_resize` runs over the [0.25, 0.5] interval of the 300 ms route animation.
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.03));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.03));
         harness.Pump(new Size(500, 360));
         // The route's scroll view now carries a scrollbar of its own, which is also a CustomPaint.
         var painter = Assert.IsType<DropdownMenuPainter>(
@@ -353,7 +353,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 .Where(paint => paint.Painter is DropdownMenuPainter)).Painter);
         Assert.Equal(0.0, painter.Resize.Value, precision: 3);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.09));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.09));
         harness.Pump(new Size(500, 360));
         Assert.True(painter.Resize.Value > 0.0);
 
@@ -584,7 +584,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Contains(
             FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
             layout => layout.LayoutDelegate is DropdownMenuRouteLayout<string>);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
         harness.Pump(new Size(300, 500));
         Assert.DoesNotContain(
             FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
@@ -601,7 +601,7 @@ public sealed class MaterialDropdownTests : IDisposable
         route.DidComplete(new DropdownRouteResult<string>("one"));
 
         Assert.Null(completion);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal("one", completion?.Result);
     }
 
@@ -794,7 +794,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
         Assert.False(controller.IsOpen);
         Assert.Equal(1, activations);
@@ -1503,7 +1503,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
 
         Assert.True(invoked);
@@ -1541,7 +1541,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var item = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(item);
         Assert.True(item!.PerformAction(SemanticsActions.Tap));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(500, 360));
 
         Assert.Null(changed);
@@ -1789,10 +1789,10 @@ public sealed class MaterialDropdownTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
     }
 
     private static async Task WaitForConditionAsync(Func<bool> condition)

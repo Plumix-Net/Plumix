@@ -365,7 +365,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             return;
         }
 
-        if (Constants.KDebugMode && _frameTimeStamp != Scheduler.CurrentSystemFrameTimeStamp)
+        if (Constants.KDebugMode && _frameTimeStamp != SchedulerBinding.Instance.CurrentSystemFrameTimeStamp)
         {
             throw new InvalidOperationException("Boundary movement must be recorded within its original frame.");
         }
@@ -434,7 +434,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             return localDelta;
         }
 
-        TimeSpan currentSystemFrameTimeStamp = Scheduler.CurrentSystemFrameTimeStamp;
+        TimeSpan currentSystemFrameTimeStamp = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp;
         if (_frameTimeStamp != currentSystemFrameTimeStamp)
         {
             _moveDeltaBeforeFrame.Clear();

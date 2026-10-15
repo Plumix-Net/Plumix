@@ -9,14 +9,14 @@ public sealed class AsyncBuilderTests : IDisposable
 {
     public AsyncBuilderTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FutureBuilder<int>.DebugRethrowError = false;
     }
 
     public void Dispose()
     {
         FutureBuilder<int>.DebugRethrowError = false;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -314,7 +314,7 @@ public sealed class AsyncBuilderTests : IDisposable
 
         Assert.False(builderElement.Dirty);
 
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(builderElement.Dirty);
 
         owner.FlushBuild();

@@ -17,7 +17,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
 {
     public MaterialPopupMenuTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
@@ -27,7 +27,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
@@ -266,7 +266,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(action!.PerformAction(SemanticsActions.Tap));
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.075));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.075));
         harness.Pump(new Size(500, 360));
         Assert.NotNull(FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Done.CodePoint)));
         Assert.Contains(FindDescendants<RenderOpacity>(harness.RenderView), opacity =>
@@ -682,7 +682,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             position: new RelativeRect(20, 20, 200, 100));
         PumpAnimation();
         harness.Pump(new Size(300, 200));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.02));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.02));
         harness.Pump(new Size(300, 200));
 
         RenderSingleChildViewport viewport = Assert.Single(
@@ -808,7 +808,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             constraints: new BoxConstraints(MinWidth: 180, MaxWidth: 180),
             clipBehavior: Clip.HardEdge,
             popUpAnimationStyle: AnimationStyle.NoAnimation);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
         harness.Pump(new Size(500, 360));
 
         Assert.True(positionBuilds >= 1);
@@ -837,10 +837,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>

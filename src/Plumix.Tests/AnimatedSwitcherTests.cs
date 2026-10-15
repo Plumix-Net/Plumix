@@ -12,12 +12,12 @@ public sealed class AnimatedSwitcherTests : IDisposable
 {
     public AnimatedSwitcherTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -104,9 +104,9 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
         Assert.Equal(2, previousCount);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
         owner.FlushBuild();
         Assert.Equal(0, previousCount);
 
@@ -264,9 +264,9 @@ public sealed class AnimatedSwitcherTests : IDisposable
         clip.MarkNeedsLayout();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 5.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 5.0));
         owner.FlushBuild();
         FindRenderObject<RenderAnimatedSize>(clip)!.MarkNeedsLayout();
         clip.MarkNeedsLayout();
@@ -277,7 +277,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.InRange(clip.Size.Height, 20.1, 59.9);
         Assert.Equal(0, completed);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 12.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 12.0));
         owner.FlushBuild();
         FindRenderObject<RenderAnimatedSize>(clip)!.MarkNeedsLayout();
         clip.MarkNeedsLayout();
@@ -335,9 +335,9 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
         Assert.True(bottomTickerEnabled);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         Assert.False(bottomTickerEnabled);
 

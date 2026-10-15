@@ -204,7 +204,7 @@ public class RestorableRouteFuture<T> : RestorableProperty<string?>
         Route route = Route!;
         route.RestorationScopeId.AddListener(_notifyListeners);
         // Dart's `route!.popped.then(...)`: the continuation runs as a microtask once the route pops.
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             object? result = await route.Popped;
             if (_disposed)

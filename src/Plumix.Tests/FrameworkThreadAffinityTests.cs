@@ -6,7 +6,7 @@ using Xunit;
 namespace Plumix.Tests;
 
 /// <summary>
-/// Covers <see cref="Scheduler.EnterFrameworkThread"/>, <see cref="Scheduler.RunAsync"/> and the
+/// Covers <see cref="EventLoop.EnterFrameworkThread"/>, <see cref="EventLoop.RunAsync"/> and the
 /// <c>FrameworkSynchronizationContext</c> they install: framework <c>async</c> work must resume on
 /// the framework thread, at an event-loop turn, and never on a thread-pool thread.
 /// </summary>
@@ -16,13 +16,13 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void RunAsync_ResumesTheContinuationOnTheStartingThreadAtTheNextDrain()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int startThread = Environment.CurrentManagedThreadId;
         int resumedThread = 0;
         bool resumed = false;
 
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             await gate.Task;
             resumedThread = Environment.CurrentManagedThreadId;
@@ -41,13 +41,13 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void RunAsync_KeepsEveryFurtherAwaitOnTheFrameworkThread()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         var first = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var second = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         int startThread = Environment.CurrentManagedThreadId;
         List<int> threads = [];
 
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             await first.Task;
             threads.Add(Environment.CurrentManagedThreadId);
@@ -65,10 +65,10 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void RunAsync_RunsTheBodyUpToItsFirstAwaitSynchronously()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         bool ranSynchronously = false;
 
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             ranSynchronously = true;
             await Task.CompletedTask;
@@ -80,21 +80,21 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void RunAsync_RejectsANullBody()
     {
-        Assert.Throws<ArgumentNullException>(() => Scheduler.RunAsync(null!));
+        Assert.Throws<ArgumentNullException>(() => EventLoop.RunAsync(null!));
     }
 
     [Fact]
     public void EnterFrameworkThread_ClaimsTheThreadAndRestoresThePreviousContext()
     {
         SynchronizationContext? outer = SynchronizationContext.Current;
-        using (Scheduler.EnterFrameworkThread())
+        using (EventLoop.EnterFrameworkThread())
         {
-            Assert.True(Scheduler.IsFrameworkThread);
+            Assert.True(EventLoop.IsFrameworkThread);
             Assert.NotNull(SynchronizationContext.Current);
             Assert.NotSame(outer, SynchronizationContext.Current);
 
             SynchronizationContext inner = SynchronizationContext.Current!;
-            using (Scheduler.EnterFrameworkThread())
+            using (EventLoop.EnterFrameworkThread())
             {
                 // A nested scope is a no-op, so the context object stays the same one.
                 Assert.Same(inner, SynchronizationContext.Current);
@@ -109,14 +109,14 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void FrameworkContext_PostsThroughTheMicrotaskQueueAndSendsInline()
     {
-        Scheduler.FlushMicrotasks();
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        EventLoop.FlushMicrotasks();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         SynchronizationContext context = SynchronizationContext.Current!;
 
         bool posted = false;
         context.Post(_ => posted = true, null);
         Assert.False(posted);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(posted);
 
         bool sent = false;
@@ -127,20 +127,20 @@ public sealed class FrameworkThreadAffinityTests
     [Fact]
     public void FrameworkThread_IsClaimedForTheWholeFramePipeline()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             List<bool> observed = [];
-            Scheduler.ScheduleFrameCallback(_ => observed.Add(Scheduler.IsFrameworkThread));
-            Scheduler.AddPostFrameCallback(_ => observed.Add(Scheduler.IsFrameworkThread));
-            Scheduler.ScheduleFrame();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => observed.Add(EventLoop.IsFrameworkThread));
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => observed.Add(EventLoop.IsFrameworkThread));
+            SchedulerBinding.Instance.ScheduleFrame();
+            SchedulerBinding.PumpFrameForTests();
 
             Assert.Equal([true, true], observed);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 }

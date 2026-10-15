@@ -198,9 +198,9 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         _hasFocus = _focusNode!.HasFocus;
         if (_hasFocus)
         {
-            Scheduler.AddPostFrameCallback(timestamp =>
+            SchedulerBinding.Instance.AddPostFrameCallback(timestamp =>
             {
-                Scheduler.RunAsync(() => UpdateOptionsAsync());
+                EventLoop.RunAsync(() => UpdateOptionsAsync());
             });
         }
     }
@@ -336,7 +336,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
         _hasFocus = hasFocus;
         if (hasFocus && _lastFieldText is null)
         {
-            Scheduler.RunAsync(() => UpdateOptionsAsync());
+            EventLoop.RunAsync(() => UpdateOptionsAsync());
             return;
         }
 
@@ -345,7 +345,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
 
     private void HandleControllerChanged()
     {
-        Scheduler.RunAsync(() => UpdateOptionsAsync());
+        EventLoop.RunAsync(() => UpdateOptionsAsync());
     }
 
     private async Task UpdateOptionsAsync()
@@ -632,7 +632,7 @@ internal sealed class RawAutocompleteState<T> : State<RawAutocomplete<T>>
             View.Of(Context),
             optionsHint,
             localizations.TextDirection);
-        Scheduler.RunAsync(() => ReportAnnouncementError(announcement));
+        EventLoop.RunAsync(() => ReportAnnouncementError(announcement));
     }
 
     // Dart's `.catchError` on the announcement future.

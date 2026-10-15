@@ -170,9 +170,9 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.Equal([0xFF007AFFu, 0x33007AFFu], ColorsOf(FindRender(harness)));
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.08));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.08));
         harness.PumpWidget(Wrap(new CupertinoSegmentedControl<string>(
             children,
             _ => { },
@@ -180,7 +180,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.Equal([0xFF7CBAFFu, 0x96007AFFu], ColorsOf(FindRender(harness)));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.20));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.20));
         harness.Pump(ViewSize);
         Assert.Equal([0xFFFFFFFFu, 0xFF007AFFu], ColorsOf(FindRender(harness)));
     }
@@ -257,15 +257,15 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             disabledChildren: new HashSet<string> { "two" })));
         harness.Pump(ViewSize);
         Tap(harness.RenderView, new Point(41.0, 14.0), pointer: 30);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("three", reported);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         reported = null;
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("one", reported);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         reported = null;
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal("three", reported);

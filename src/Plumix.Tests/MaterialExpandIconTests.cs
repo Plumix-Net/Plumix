@@ -20,7 +20,7 @@ public sealed class MaterialExpandIconTests : IDisposable
 
     public MaterialExpandIconTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -29,7 +29,7 @@ public sealed class MaterialExpandIconTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -156,19 +156,19 @@ public sealed class MaterialExpandIconTests : IDisposable
         Assert.Equal(0.0, rotation.Turns.Value, precision: 6);
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.1));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.InRange(rotation.Turns.Value, 0.0, 0.5);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.25));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.Equal(0.5, rotation.Turns.Value, precision: 6);
 
         harness.Update(BuildThemed(new ExpandIcon(_ => { }, isExpanded: false)));
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.25));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.Equal(0.0, rotation.Turns.Value, precision: 6);
@@ -251,9 +251,9 @@ public sealed class MaterialExpandIconTests : IDisposable
     {
         var size = new Size(80, 80);
         harness.Pump(size);
-        Scheduler.PumpFrameForTests(timestamp);
+        SchedulerBinding.PumpFrameForTests(timestamp);
         harness.Pump(size);
-        Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+        SchedulerBinding.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
         harness.Pump(size);
     }
 

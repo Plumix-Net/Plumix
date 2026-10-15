@@ -18,12 +18,12 @@ public sealed class MaterialElevationOverlayTests : IDisposable
 {
     public MaterialElevationOverlayTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

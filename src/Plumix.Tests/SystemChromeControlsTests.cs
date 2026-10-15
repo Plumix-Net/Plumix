@@ -22,7 +22,7 @@ public sealed class SystemChromeControlsTests : IDisposable
 
     public SystemChromeControlsTests()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
         // flutter_test runs every widget test as Android unless a variant says otherwise.
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
@@ -33,7 +33,7 @@ public sealed class SystemChromeControlsTests : IDisposable
     {
         _tester.Dispose();
         PlatformDefaults.DebugTargetPlatformOverride = null;
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
     }
 
@@ -186,12 +186,12 @@ public sealed class SystemChromeControlsTests : IDisposable
     private void Pump(Widget widget)
     {
         _tester.PumpWidget(widget);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private void Settle()
     {
         _tester.PumpAndSettle();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 }

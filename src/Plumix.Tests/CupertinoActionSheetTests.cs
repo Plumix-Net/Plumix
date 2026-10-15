@@ -16,14 +16,14 @@ public sealed class CupertinoActionSheetTests : IDisposable
 
     public CupertinoActionSheetTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

@@ -9,6 +9,10 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Scheduler is now SchedulerBinding.Instance; strategy receives the binding (scheduler/binding.dart).
+- Breaking: Priority is an identity class with KMaxOffset (scheduler/priority.dart).
+- Breaking: lockEvents locks first, unlocks in a microtask; persistent callbacks not deduped (scheduler/binding.dart).
+- Breaking: Microtasks/framework thread move to EventLoop, vsync timer and clock to FrameClock (C#-only).
 - Breaking: PaintingBinding owns cache, codec sizing, memory-pressure eviction and warm-up (painting/binding.dart).
 - Immutable image buffers and static codecs adapt Avalonia; mirrored image demo adds decode/cache probes (dart:ui).
 - Breaking: Scaffold matches Dart ancestor/geometry/sheet errors and nullable FAB defaults (scaffold.dart).

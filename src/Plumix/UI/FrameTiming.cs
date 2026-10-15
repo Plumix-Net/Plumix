@@ -33,7 +33,7 @@ public enum FramePhase
 /// <remarks>
 /// dart:ui's <c>FrameTiming</c>. A host reports these through
 /// <see cref="PlatformDispatcher.ReportTimings"/>; the framework hands them to every callback
-/// registered with <c>Scheduler.AddTimingsCallback</c>.
+/// registered with <c>SchedulerBinding.Instance.AddTimingsCallback</c>.
 /// </remarks>
 public sealed class FrameTiming
 {

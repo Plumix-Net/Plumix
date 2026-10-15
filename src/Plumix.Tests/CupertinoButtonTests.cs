@@ -18,9 +18,9 @@ public sealed class CupertinoButtonTests : IDisposable
 {
     private static readonly Size ViewSize = new(400.0, 300.0);
 
-    public CupertinoButtonTests() => Scheduler.ResetForTests();
+    public CupertinoButtonTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void DefaultLayout_AppliesLargePaddingAndMinimumSize()
@@ -766,9 +766,9 @@ public sealed class CupertinoButtonTests : IDisposable
     private static void Settle()
     {
         // Two frames past the longest of the fade-in (180ms) and fade-out (120ms) durations.
-        TimeSpan now = Scheduler.CurrentSystemFrameTimeStamp;
-        Scheduler.PumpFrameForTests(now + TimeSpan.FromMilliseconds(1));
-        Scheduler.PumpFrameForTests(now + TimeSpan.FromMilliseconds(400));
+        TimeSpan now = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp;
+        SchedulerBinding.PumpFrameForTests(now + TimeSpan.FromMilliseconds(1));
+        SchedulerBinding.PumpFrameForTests(now + TimeSpan.FromMilliseconds(400));
     }
 
     private static TapDownDetails Down(Point position) =>

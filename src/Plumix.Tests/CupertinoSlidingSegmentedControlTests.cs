@@ -431,7 +431,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.Null(reported);
 
         Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 60);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("three", reported);
         harness.PumpWidget(Wrap(new CupertinoSlidingSegmentedControl<string>(
@@ -441,7 +441,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             disabledChildren: new HashSet<string> { "two" })));
         harness.Pump(ViewSize);
         reported = null;
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal("one", reported);
     }
@@ -552,9 +552,9 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
 
     private static void PumpAnimation(CupertinoThemeTestHarness harness, double milliseconds)
     {
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + (milliseconds / 1000.0)));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + (milliseconds / 1000.0)));
         harness.Pump(ViewSize);
     }
 

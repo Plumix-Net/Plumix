@@ -28,7 +28,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         // field editable and therefore filterable/searchable — Flutter's own tests do the same.
         _previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Linux;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -37,7 +37,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
     }
 
@@ -1217,7 +1217,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         public void Pump(Size size)
         {
             _owner.FlushBuild();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             _owner.FlushBuild();
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);

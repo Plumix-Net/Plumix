@@ -139,7 +139,7 @@ internal class TestWidgetInspectorService : WidgetInspectorService
     {
         Assert.Contains(name, Extensions.Keys);
         Task<Dictionary<string, object?>> task = Extensions[name](arguments);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Dictionary<string, object?> raw = task.GetAwaiter().GetResult();
         // Emulate the JSON round trip the VM service performs.
         return (Dictionary<string, object?>)JsonRoundTrip.Decode(JsonSerializer.Serialize(raw))!;

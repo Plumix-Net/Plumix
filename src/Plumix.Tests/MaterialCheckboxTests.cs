@@ -268,7 +268,7 @@ public sealed class MaterialCheckboxTests
             _ = harness.PumpAndGetSemantics(new Size(120, 120));
 
             focusNode.RequestFocus();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.True(FocusManager.Instance.HandleKeyEvent(
                 KeySim.Down(LogicalKeyboardKey.Space)));
 
@@ -747,7 +747,7 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_Transition_FromCheckedToNull_CrossfadesCheckAndDash()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             Action<bool?>? setValue = null;
@@ -760,16 +760,16 @@ public sealed class MaterialCheckboxTests
             setValue!(null);
             harness.Pump(new Size(160, 120));
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
             harness.Pump(new Size(160, 120));
 
             CheckboxPainter duringTransition = FindCheckboxPainter(harness.RenderView);
             Assert.Equal(true, duringTransition.PreviousValue);
             Assert.Null(duringTransition.Value);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
             harness.Pump(new Size(160, 120));
 
             CheckboxPainter afterTransition = FindCheckboxPainter(harness.RenderView);
@@ -777,7 +777,7 @@ public sealed class MaterialCheckboxTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

@@ -416,7 +416,7 @@ public class PipelineOwner : DiagnosticableTree
 
     private void FlushLayoutCore(Size? rootSize)
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         if (rootSize is { } viewSize && _rootNode is RenderView configuredView)
         {
             // Flutter's `RendererBinding` writes the `ViewConfiguration` onto the `RenderView`
@@ -537,7 +537,7 @@ public class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.flushCompositingBits</c>.</remarks>
     public void FlushCompositingBits()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         if (!Constants.KReleaseMode)
         {
             FlutterTimeline.StartSync("UPDATING COMPOSITING BITS" + DebugRootSuffixForTimelineEventNames);
@@ -594,7 +594,7 @@ public class PipelineOwner : DiagnosticableTree
 
     public void FlushPaint()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         if (!Constants.KReleaseMode)
         {
             Dictionary<string, object?>? debugTimelineArguments = null;
@@ -694,7 +694,7 @@ public class PipelineOwner : DiagnosticableTree
     /// </remarks>
     public void CompositeFrame()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         try
         {
             CompositeFrameHeadless();
@@ -702,9 +702,9 @@ public class PipelineOwner : DiagnosticableTree
         finally
         {
             RenderingDebug.AdvanceRepaintColorForFrame();
-            if (Scheduler.Phase == SchedulerPhase.Idle)
+            if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.Idle)
             {
-                Scheduler.FlushMicrotasks();
+                EventLoop.FlushMicrotasks();
             }
         }
     }
@@ -722,7 +722,7 @@ public class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.flushSemantics</c>.</remarks>
     public void FlushSemantics()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         if (_semanticsOwner is null)
         {
             return;

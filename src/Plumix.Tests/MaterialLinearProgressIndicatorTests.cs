@@ -396,7 +396,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         double first = ReadProperty<double>(renderIndicator!, "AnimationValue");
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.30));
         harness.Pump(new Size(240, 80));
 
         renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderLinearProgressIndicator");

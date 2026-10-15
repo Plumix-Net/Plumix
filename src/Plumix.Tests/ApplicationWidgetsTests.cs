@@ -19,7 +19,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 {
     public ApplicationWidgetsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemNavigator.ResetForTests();
         SystemChrome.ResetForTests();
         SystemChrome.ResetForTests();
@@ -27,7 +27,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         SystemNavigator.ResetForTests();
         SystemChrome.ResetForTests();
         SystemChrome.ResetForTests();
@@ -516,7 +516,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Same(DefaultMaterialLocalizations.Instance, materialLocalizations);
         Assert.Same(DefaultCupertinoLocalizations.Instance, cupertinoLocalizations);
         Assert.IsType<MaterialScrollBehavior>(scrollBehavior);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
         root.UnmountRoot();
     }
@@ -744,7 +744,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         for (int index = 0; index < 3; index++)
         {
             owner.FlushBuild();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
             owner.FlushBuild();
         }
     }

@@ -19,12 +19,12 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
 
     public CupertinoActivityIndicatorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -33,21 +33,21 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         using (var harness = new WidgetRenderHarness(BuildCupertinoActivityIndicator()))
         {
             harness.Pump(new Size(800, 600));
-            Assert.Equal(1, Scheduler.TransientCallbackCount);
+            Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
 
             harness.Update(BuildCupertinoActivityIndicator(animating: false));
             harness.Pump(new Size(800, 600));
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         }
 
         using (var harness = new WidgetRenderHarness(BuildCupertinoActivityIndicator(animating: false)))
         {
             harness.Pump(new Size(800, 600));
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
             harness.Update(BuildCupertinoActivityIndicator());
             harness.Pump(new Size(800, 600));
-            Assert.Equal(1, Scheduler.TransientCallbackCount);
+            Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
         }
     }
 
@@ -102,7 +102,7 @@ public sealed class CupertinoActivityIndicatorTests : IDisposable
         using var harness = new WidgetRenderHarness(new Center(child: widget));
         harness.Pump(new Size(800, 600));
 
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         var painter = FindPainter<CupertinoActivityIndicatorPainter>(harness.RenderView);
         Assert.Equal(progress, painter!.Progress, 3);
     }

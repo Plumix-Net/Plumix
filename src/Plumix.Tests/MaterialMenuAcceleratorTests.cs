@@ -15,14 +15,14 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
 {
     public MaterialMenuAcceleratorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Theory]
@@ -129,7 +129,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         Assert.Equal("O", Assert.Single(underlined).Text);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
             KeySim.Down(LogicalKeyboardKey.KeyO, alt: true, character: "o")));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         Assert.Equal(1, invoked);
 
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.AltLeft)));
@@ -459,7 +459,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
             _pipeline.CompositeFrame();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
 
         public void Dispose() => _rootElement.UnmountRoot();

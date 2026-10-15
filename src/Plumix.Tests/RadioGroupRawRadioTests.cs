@@ -14,7 +14,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
 {
     public RadioGroupRawRadioTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -23,7 +23,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -74,8 +74,8 @@ public sealed class RadioGroupRawRadioTests : IDisposable
             registry.SetGroupValue("b");
             state.AnimateToValue();
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(
-                TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + TimeSpan.FromMilliseconds(250));
+            SchedulerBinding.PumpFrameForTests(
+                TimeSpan.FromSeconds(FrameClock.CurrentSeconds) + TimeSpan.FromMilliseconds(250));
             harness.Pump(new Size(80, 40));
 
             Assert.False(state.Selected);
@@ -98,7 +98,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         state.FirstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
@@ -125,7 +125,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         state.FirstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
@@ -146,7 +146,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         state.FirstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
@@ -167,7 +167,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         state.FirstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space)));
         harness.Pump(new Size(240, 120));
 
@@ -206,12 +206,12 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
 
         otherFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
 
         radioFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
         Assert.Equal("first", groupValue);
@@ -354,14 +354,14 @@ public sealed class RadioGroupRawRadioTests : IDisposable
     private static bool PumpFocus(Func<bool> action)
     {
         bool result = action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return result;
     }
 
     private static void PumpFocus(Action action)
     {
         action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private static List<SemanticsNode> FindNodes(

@@ -12,12 +12,12 @@ public sealed class TickerModeTests : IDisposable
 {
     public TickerModeTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -154,24 +154,24 @@ public sealed class TickerModeTests : IDisposable
         var root = new TestRootElement(new TickerMode(child: child, enabled: true));
         Mount(root, owner);
         TickingState state = Assert.IsType<TickingState>(key.CurrentState);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
 
         // A ticker started outside a frame takes its start timestamp from the first frame it sees, so
         // this frame reports zero elapsed time and establishes the clock the mute must not reset.
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
         Assert.Equal(1, state.TickCount);
         Assert.Equal(TimeSpan.Zero, state.LastElapsed);
 
         root.Update(new TickerMode(child: child, enabled: false));
         owner.FlushBuild();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         Assert.Equal(1, state.TickCount);
         Assert.False(state.Ticker.IsTicking);
         Assert.True(state.Ticker.IsActive);
 
         root.Update(new TickerMode(child: child, enabled: true));
         owner.FlushBuild();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.0));
 
         Assert.Equal(2, state.TickCount);
         Assert.True(state.LastElapsed >= TimeSpan.FromSeconds(1.9));
@@ -194,15 +194,15 @@ public sealed class TickerModeTests : IDisposable
         var root = new TestRootElement(new TickerMode(child: animation, enabled: false));
         Mount(root, owner);
         int initialBuilds = builds;
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
         Assert.Equal(initialBuilds, builds);
 
         root.Update(new TickerMode(child: animation, enabled: true));
         owner.FlushBuild();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         owner.FlushBuild();
 
         Assert.True(builds > initialBuilds);

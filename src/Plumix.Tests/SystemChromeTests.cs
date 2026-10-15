@@ -15,13 +15,13 @@ public sealed class SystemChromeTests : IDisposable
 {
     public SystemChromeTests()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
     }
 
@@ -33,12 +33,12 @@ public sealed class SystemChromeTests : IDisposable
 
         // The first call is a cache miss and will queue a microtask.
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Dark);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         platform.Log.Clear();
 
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Light);
-        Assert.Equal(1, Scheduler.MicrotaskCount);
-        Scheduler.FlushMicrotasks();
+        Assert.Equal(1, EventLoop.MicrotaskCount);
+        EventLoop.FlushMicrotasks();
         MethodCall call = Assert.Single(platform.Log);
         Assert.Equal("SystemChrome.setSystemUIOverlayStyle", call.Method);
         AssertMap(
@@ -54,18 +54,18 @@ public sealed class SystemChromeTests : IDisposable
                 ["systemNavigationBarContrastEnforced"] = null,
             },
             (IDictionary)call.Arguments!);
-        Assert.Equal(0, Scheduler.MicrotaskCount);
+        Assert.Equal(0, EventLoop.MicrotaskCount);
 
         // The second call with the same value should be a no-op.
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Light);
-        Assert.Equal(0, Scheduler.MicrotaskCount);
+        Assert.Equal(0, EventLoop.MicrotaskCount);
 
         platform.Log.Clear();
         SystemChrome.SetSystemUIOverlayStyle(new SystemUiOverlayStyle(
             systemStatusBarContrastEnforced: false,
             systemNavigationBarContrastEnforced: true));
-        Assert.Equal(1, Scheduler.MicrotaskCount);
-        Scheduler.FlushMicrotasks();
+        Assert.Equal(1, EventLoop.MicrotaskCount);
+        EventLoop.FlushMicrotasks();
         call = Assert.Single(platform.Log);
         Assert.Equal("SystemChrome.setSystemUIOverlayStyle", call.Method);
         AssertMap(
@@ -92,15 +92,15 @@ public sealed class SystemChromeTests : IDisposable
 
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Dark);
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Light);
-        Assert.Equal(1, Scheduler.MicrotaskCount);
-        Scheduler.FlushMicrotasks();
+        Assert.Equal(1, EventLoop.MicrotaskCount);
+        EventLoop.FlushMicrotasks();
         MethodCall call = Assert.Single(platform.Log);
         Assert.Equal("Brightness.light", ((IDictionary)call.Arguments!)["statusBarIconBrightness"]);
         Assert.Same(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
 
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Dark);
         SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Light);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Single(platform.Log);
         Assert.Same(SystemUiOverlayStyle.Light, SystemChrome.LatestStyle);
     }
@@ -468,18 +468,18 @@ public sealed class SystemChromeTests : IDisposable
         var style = new SystemUiOverlayStyle();
 
         SystemChrome.SetSystemUIOverlayStyle(style);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Single(platform.Log);
 
         SystemChrome.SetSystemUIOverlayStyle(style);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Single(platform.Log);
 
         SystemChrome.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
         SystemChrome.SetSystemUIOverlayStyle(style);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(2, platform.Log.Count);
     }
 
@@ -495,11 +495,11 @@ public sealed class SystemChromeTests : IDisposable
         {
             binding.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
             SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Dark);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Same(SystemUiOverlayStyle.Dark, SystemChrome.LatestStyle);
 
             binding.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Null(SystemChrome.LatestStyle);
         }
         finally
@@ -527,7 +527,7 @@ public sealed class SystemChromeTests : IDisposable
         try
         {
             SystemChrome.SetSystemUIOverlayStyle(SystemUiOverlayStyle.Light);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
         finally
         {

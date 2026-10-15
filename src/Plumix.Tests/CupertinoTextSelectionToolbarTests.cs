@@ -19,12 +19,12 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
 
     public CupertinoTextSelectionToolbarTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

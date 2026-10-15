@@ -17,7 +17,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
 {
     public MaterialExpansionPanelTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -26,7 +26,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -73,9 +73,9 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 harness.FindWidgets<AnimatedContainer>(),
                 container => container.Child is ConstrainedBox box && box.Constraints.MinHeight == 48.0).Margin);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 240));
         Assert.Equal(CrossFadeState.ShowSecond, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
     }
@@ -112,16 +112,16 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         TapParagraph(harness.RenderView, "First gap panel", pointer: 813);
         harness.Pump(new Size(360, 280));
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 280));
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight is > 0 and < 16
                    && Math.Abs(box.AdditionalConstraints.MinHeight - box.AdditionalConstraints.MaxHeight) < 0.001);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 280));
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),

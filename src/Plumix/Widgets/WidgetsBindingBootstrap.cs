@@ -47,7 +47,7 @@ public partial class WidgetsBinding
     public bool IsRootWidgetAttached => _rootElement is not null;
 
     /// <summary>Whether scheduler frames may currently produce the widget tree.</summary>
-    public bool FramesEnabled => Scheduler.FramesEnabled && _readyToProduceFrames;
+    public bool FramesEnabled => SchedulerBinding.Instance.FramesEnabled && _readyToProduceFrames;
 
     /// <summary>Wraps an application in the platform's implicit <see cref="View"/>.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.wrapWithDefaultView</c>.</remarks>
@@ -98,7 +98,7 @@ public partial class WidgetsBinding
         _rootElement = widget.Attach(_buildOwner, _rootElement);
         if (isBootstrapFrame)
         {
-            Scheduler.EnsureVisualUpdate();
+            SchedulerBinding.Instance.EnsureVisualUpdate();
         }
     }
 
@@ -266,7 +266,7 @@ public partial class WidgetsBinding
 
         if (_readyToProduceFrames)
         {
-            Scheduler.EnsureVisualUpdate();
+            SchedulerBinding.Instance.EnsureVisualUpdate();
         }
     }
 

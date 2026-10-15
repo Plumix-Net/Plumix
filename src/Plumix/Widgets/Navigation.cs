@@ -406,7 +406,7 @@ public abstract class Route
     {
         if (RequestFocus)
         {
-            Scheduler.ScheduleMicrotask(() => Navigator?.FocusNode.Scope?.RequestFirstFocus());
+            EventLoop.ScheduleMicrotask(() => Navigator?.FocusNode.Scope?.RequestFirstFocus());
         }
     }
 
@@ -1087,7 +1087,7 @@ public abstract class ModalRoute : TransitionRoute
     {
         base.ChangedInternalState();
         // No need to mark dirty if this method is called during build phase.
-        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks)
         {
             SetState(static () => { });
             _modalBarrier?.MarkNeedsBuild();
@@ -1380,13 +1380,13 @@ public abstract class ModalRoute : TransitionRoute
             canHandlePop: PopDisposition == RoutePopDisposition.DoNotPop || hasWillPopCallbacks);
 
         // Avoid dispatching a notification in the middle of a build.
-        if (Scheduler.Phase == SchedulerPhase.PostFrameCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PostFrameCallbacks)
         {
             notification.Dispatch(SubtreeContext);
             return;
         }
 
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             if (SubtreeContext is not { Mounted: true } context)
             {

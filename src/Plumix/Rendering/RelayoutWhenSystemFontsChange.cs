@@ -21,12 +21,12 @@ public sealed class RelayoutWhenSystemFontsChangeMixin(RenderObject owner, Actio
         }
 
         _hasPendingSystemFontsDidChangeCallback = true;
-        Scheduler.ScheduleFrameCallback(_ =>
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ =>
         {
             DebugAssert(_hasPendingSystemFontsDidChangeCallback, "A system-font callback must be pending.");
             _hasPendingSystemFontsDidChangeCallback = false;
             DebugAssert(owner.Attached || owner.DebugDisposed,
-                $"{owner} is detached during {Scheduler.Phase} but is not disposed.");
+                $"{owner} is detached during {SchedulerBinding.Instance.SchedulerPhase} but is not disposed.");
             if (owner.Attached)
             {
                 if (systemFontsDidChange is null)

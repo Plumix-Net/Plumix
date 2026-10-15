@@ -435,10 +435,10 @@ public sealed class TwoDimensionalScrollViewTests
     /// <summary>Runs enough frames for a ballistic settle to finish.</summary>
     private static void Settle(TwoDimensionalRenderHarness harness)
     {
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         foreach (double offset in new[] { 0.01, 0.2, 0.4, 0.8, 1.4, 2.4 })
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + offset));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + offset));
             harness.Pump(Surface);
         }
     }

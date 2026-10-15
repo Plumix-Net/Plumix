@@ -15,12 +15,12 @@ public sealed class RestorationWidgetsTests : IDisposable
     private readonly MockRestorationManager _manager = new();
     private readonly RestorationManager _previousInstance = RestorationManager.Instance;
 
-    public RestorationWidgetsTests() => Scheduler.ResetForTests();
+    public RestorationWidgetsTests() => SchedulerBinding.ResetForTests();
 
     public void Dispose()
     {
         RestorationManager.Instance = _previousInstance;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     // ---------------------------------------------------------------- UnmanagedRestorationScope

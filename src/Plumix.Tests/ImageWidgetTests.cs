@@ -22,7 +22,7 @@ public sealed class ImageWidgetTests : IDisposable
     {
         ImageCache.Shared.Clear();
         ImageCache.Shared.ClearLiveImages();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -191,9 +191,9 @@ public sealed class ImageWidgetTests : IDisposable
         await PumpUntilAsync(
             harness,
             () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, targetImage)));
-        double start = Scheduler.CurrentSeconds;
+        double start = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
         harness.FlushBuild();
 
         IReadOnlyList<RenderImage> fadeOutImages = FindRenderImages(harness.RenderView);
@@ -206,7 +206,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(0.0, fadingTarget.Opacity!.Value, 6);
         Assert.InRange(fadingPlaceholder.Opacity!.Value, 0.27, 0.35);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.65));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.65));
         harness.FlushBuild();
         IReadOnlyList<RenderImage> fadeInImages = FindRenderImages(harness.RenderView);
         fadingTarget = Assert.Single(fadeInImages, image => ReferenceEquals(image.Image, targetImage));
@@ -216,7 +216,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.InRange(fadingTarget.Opacity!.Value, 0.27, 0.35);
         Assert.Equal(0.0, fadingPlaceholder.Opacity!.Value, 6);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 1.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 1.1));
         harness.FlushBuild();
         RenderImage finalImage = Assert.Single(FindRenderImages(harness.RenderView));
         Assert.Same(targetImage, finalImage.Image);
@@ -555,7 +555,7 @@ public sealed class ImageWidgetTests : IDisposable
         public void Dispose()
         {
             _root.UnmountRoot();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
 
         private static T? FindWidget<T>(Element element) where T : Widget

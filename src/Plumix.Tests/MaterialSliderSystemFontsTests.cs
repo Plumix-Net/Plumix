@@ -56,7 +56,7 @@ public sealed class MaterialSliderSystemFontsTests
 
         bool? needsLayout = null;
         bool? indicatorNeedsLayout = null;
-        Scheduler.ScheduleFrameCallback(_ =>
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ =>
         {
             needsLayout = render.DebugNeedsLayout;
             indicatorNeedsLayout = indicator?.DebugNeedsLayout;

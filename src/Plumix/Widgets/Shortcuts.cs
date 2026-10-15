@@ -861,7 +861,7 @@ public sealed class ShortcutRegistry : ChangeNotifier
         }
 
         _notificationScheduled = true;
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             _notificationScheduled = false;
             NotifyListeners();

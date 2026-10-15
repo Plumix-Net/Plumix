@@ -17,12 +17,12 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
 {
     public CupertinoTextSelectionControlsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

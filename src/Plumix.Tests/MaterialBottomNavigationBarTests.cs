@@ -569,7 +569,7 @@ public sealed class MaterialBottomNavigationBarTests
     [Fact]
     public void BottomNavigationBar_ShiftingSelectionChange_AnimatesTileWidths()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             Widget Build(int currentIndex) => WrapWithThemeAndMediaQuery(
@@ -590,7 +590,7 @@ public sealed class MaterialBottomNavigationBarTests
 
             harness.UpdateRootWidget(Build(1));
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.60));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.60));
             harness.Pump(new Size(800, 600));
 
             List<double> settled = GetBottomNavigationTileWidths(harness.RenderView.Child, 2);
@@ -599,7 +599,7 @@ public sealed class MaterialBottomNavigationBarTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

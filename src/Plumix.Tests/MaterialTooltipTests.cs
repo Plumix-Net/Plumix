@@ -63,7 +63,7 @@ public sealed class MaterialTooltipTests
 
         var state = harness.FindState<TooltipState>();
         Assert.True(state.EnsureTooltipVisible());
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(200, 120));
 
         RenderParagraph bubble = Assert.Single(
@@ -271,7 +271,7 @@ public sealed class MaterialTooltipTests
         // no hover plumbing at all.
         Assert.Null(FindTooltipListener(harness.RenderView));
         Assert.Empty(harness.FindWidgets<RawTooltip>());
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.2));
         harness.Pump(new Size(120, 60));
 
         Assert.Null(FindParagraph(harness.RenderView, "Hidden tip"));
@@ -303,7 +303,7 @@ public sealed class MaterialTooltipTests
     [Fact]
     public void Tooltip_DefaultDesktopAppearance_UsesPlatformMetricsAndBrightnessColors()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var theme = ThemeData.Light with { Platform = TargetPlatform.Windows };
@@ -327,14 +327,14 @@ public sealed class MaterialTooltipTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Tooltip_WidgetOverridesLocalAndGlobalThemeValues()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var globalTheme = ThemeData.Light with
@@ -376,14 +376,14 @@ public sealed class MaterialTooltipTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Tooltip_HoverHonorsWaitAndExitDurationsAndTriggeredCallback()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             int triggered = 0;
@@ -401,33 +401,33 @@ public sealed class MaterialTooltipTests
             var listener = FindTooltipListener(harness.RenderView);
             Assert.NotNull(listener);
             listener!.OnEnter?.Invoke(PointerEnter(1));
-            double clock = Scheduler.CurrentSeconds;
+            double clock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Delayed tip"));
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));
             Assert.Equal(0, triggered);
 
             listener = FindTooltipListener(harness.RenderView);
             listener!.OnExit?.Invoke(PointerExit(1));
-            clock = Scheduler.CurrentSeconds;
+            clock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.50));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.30));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.50));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Delayed tip"));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -494,7 +494,7 @@ public sealed class MaterialTooltipTests
     [Fact]
     public void Tooltip_DismissAllToolTips_ClosesVisibleInstances()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var harness = new WidgetRenderHarness(
@@ -519,14 +519,14 @@ public sealed class MaterialTooltipTests
             Assert.Contains(paragraphs, paragraph => paragraph.PlainText == "Two");
 
             Assert.True(Tooltip.DismissAllToolTips());
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.20));
             harness.Pump(new Size(120, 60));
             Assert.Null(FindParagraph(harness.RenderView, "One"));
             Assert.Null(FindParagraph(harness.RenderView, "Two"));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

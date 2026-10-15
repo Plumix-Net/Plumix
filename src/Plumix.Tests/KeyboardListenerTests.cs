@@ -14,7 +14,7 @@ public sealed class KeyboardListenerTests : IDisposable
 {
     public KeyboardListenerTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
@@ -25,7 +25,7 @@ public sealed class KeyboardListenerTests : IDisposable
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
         RawKeyboard.Instance.ClearListeners();
@@ -97,7 +97,7 @@ public sealed class KeyboardListenerTests : IDisposable
         Assert.False(focusable.Flags.HasFlag(SemanticsFlags.IsFocused));
         Assert.True(focusable.Actions.HasFlag(SemanticsActions.Focus));
         Assert.True(harness.PerformSemanticsAction(focusable.Id, SemanticsActions.Focus));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(focusNode.HasFocus);
 
         semantics = harness.PumpAndGetSemantics(new Size(120, 60));
@@ -159,7 +159,7 @@ public sealed class KeyboardListenerTests : IDisposable
         Assert.All(rawEvents, @event => Assert.Equal(LogicalKeyboardKey.Enter, @event.LogicalKey));
 
         focusNode.Unfocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         KeySim.DispatchRaw(LogicalKeyboardKey.Escape, down: true);
         Assert.Equal(2, rawEvents.Count);
 #pragma warning restore CS0618
@@ -189,7 +189,7 @@ public sealed class KeyboardListenerTests : IDisposable
         // leaves the new one unfocused; the listener has to ask for focus explicitly.
         Assert.False(secondNode.HasFocus);
         secondNode.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: true);
         Assert.Equal(1, eventCount);

@@ -721,7 +721,7 @@ public sealed class ScaffoldState : RestorationState<Scaffold>, WidgetsBindingOb
         }
         if (Constants.KDebugMode && _currentBottomSheet is { } remaining)
         {
-            Scheduler.RunAsync(async () =>
+            EventLoop.RunAsync(async () =>
             {
                 await remaining.Closed;
                 DebugAssertions.Assert(_currentBottomSheet is null);

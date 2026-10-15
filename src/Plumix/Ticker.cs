@@ -42,8 +42,8 @@ public class Ticker : IDisposable
     public string? DebugLabel { get; }
 
     /// <summary>
-    /// If true, this ticker requests frames using <see cref="Scheduler.ScheduleForcedFrame"/> instead
-    /// of <see cref="Scheduler.ScheduleFrame"/>.
+    /// If true, this ticker requests frames using <see cref="SchedulerBinding.ScheduleForcedFrame"/> instead
+    /// of <see cref="SchedulerBinding.ScheduleFrame"/>.
     /// </summary>
     public bool ForceFrames { get; set; }
 
@@ -89,13 +89,13 @@ public class Ticker : IDisposable
                 return false;
             }
 
-            if (Scheduler.FramesEnabled)
+            if (SchedulerBinding.Instance.FramesEnabled)
             {
                 return true;
             }
 
             // For example, we might be in a warm-up frame or forced frame.
-            return Scheduler.Phase != SchedulerPhase.Idle;
+            return SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.Idle;
         }
     }
 
@@ -135,11 +135,11 @@ public class Ticker : IDisposable
             ScheduleTick();
         }
 
-        if (Scheduler.IsHandlingFrame
-            && Scheduler.Phase > SchedulerPhase.Idle
-            && Scheduler.Phase < SchedulerPhase.PostFrameCallbacks)
+        if (SchedulerBinding.Instance.IsHandlingFrame
+            && SchedulerBinding.Instance.SchedulerPhase > SchedulerPhase.Idle
+            && SchedulerBinding.Instance.SchedulerPhase < SchedulerPhase.PostFrameCallbacks)
         {
-            _startTime = Scheduler.CurrentFrameTimeStamp;
+            _startTime = SchedulerBinding.Instance.CurrentFrameTimeStamp;
         }
 
         return _future;
@@ -178,14 +178,14 @@ public class Ticker : IDisposable
     {
         if (ForceFrames)
         {
-            Scheduler.ScheduleForcedFrame();
+            SchedulerBinding.Instance.ScheduleForcedFrame();
         }
         else
         {
-            Scheduler.ScheduleFrame();
+            SchedulerBinding.Instance.ScheduleFrame();
         }
 
-        _animationId = Scheduler.ScheduleFrameCallback(
+        _animationId = SchedulerBinding.Instance.ScheduleFrameCallback(
             InternalTick,
             rescheduling: rescheduling,
             scheduleNewFrame: false,
@@ -200,7 +200,7 @@ public class Ticker : IDisposable
             return;
         }
 
-        Scheduler.CancelFrameCallbackWithId(animationId);
+        SchedulerBinding.Instance.CancelFrameCallbackWithId(animationId);
         _animationId = null;
     }
 
@@ -367,7 +367,7 @@ public sealed class TickerFuture
         ObserveOrCancel();
         if (_completed is not null)
         {
-            Scheduler.ScheduleMicrotask(callback);
+            EventLoop.ScheduleMicrotask(callback);
             return;
         }
 
@@ -385,7 +385,7 @@ public sealed class TickerFuture
 
         if (_completed == true)
         {
-            Scheduler.ScheduleMicrotask(callback);
+            EventLoop.ScheduleMicrotask(callback);
             return;
         }
 
@@ -470,7 +470,7 @@ public sealed class TickerFuture
 
         foreach (Action callback in callbacks)
         {
-            Scheduler.ScheduleMicrotask(callback);
+            EventLoop.ScheduleMicrotask(callback);
         }
     }
 }

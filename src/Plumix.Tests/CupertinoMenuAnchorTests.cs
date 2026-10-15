@@ -20,10 +20,10 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
 
     public CupertinoMenuAnchorTests()
     {
-        // `Scheduler.ResetForTests` drops any frame callback the gesture binding had already
+        // `SchedulerBinding.ResetForTests` drops any frame callback the gesture binding had already
         // scheduled, which would leave its mouse-tracker update flag stuck and swallow hover exits.
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
     }
@@ -32,7 +32,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     {
         TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

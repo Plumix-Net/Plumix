@@ -392,7 +392,7 @@ internal sealed class CupertinoSliverRefreshControlState : State<CupertinoSliver
                     if (CurrentWidget.OnRefresh != null)
                     {
                         _ = HapticFeedback.MediumImpact();
-                        Scheduler.AddPostFrameCallback(
+                        SchedulerBinding.Instance.AddPostFrameCallback(
                             _ => StartRefreshTask(CurrentWidget.OnRefresh));
                     }
 
@@ -434,13 +434,13 @@ internal sealed class CupertinoSliverRefreshControlState : State<CupertinoSliver
 
     private void GoToDone()
     {
-        if (Scheduler.Phase == SchedulerPhase.Idle)
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.Idle)
         {
             SetState(() => _hasSliverLayoutExtent = false);
             return;
         }
 
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             _ =>
             {
                 if (Mounted)
@@ -458,7 +458,7 @@ internal sealed class CupertinoSliverRefreshControlState : State<CupertinoSliver
         }
 
         _refreshTask = callback();
-        Scheduler.RunAsync(() => CompleteRefreshTaskAsync(_refreshTask));
+        EventLoop.RunAsync(() => CompleteRefreshTaskAsync(_refreshTask));
         SetState(() => _hasSliverLayoutExtent = true);
     }
 

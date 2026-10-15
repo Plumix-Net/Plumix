@@ -966,7 +966,7 @@ internal class DraggableGestureRecognizer : GestureRecognizer
 
             // Dart's `Timer` callback runs on the isolate, so the timer hands the work back to the
             // framework thread instead of touching the drag state from the pool.
-            Scheduler.ScheduleMicrotask(() => HandleDelayPassed(pointer, tracker));
+            EventLoop.ScheduleMicrotask(() => HandleDelayPassed(pointer, tracker));
         });
     }
 

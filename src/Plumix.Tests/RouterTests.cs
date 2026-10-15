@@ -29,7 +29,7 @@ public sealed class RouterTests : IDisposable
 
     private static void ResetEnvironment()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         WidgetsBinding.Instance.ResetObserversForTests();
         SystemNavigator.ResetForTests();
     }
@@ -37,9 +37,9 @@ public sealed class RouterTests : IDisposable
     private static void Pump(RestorationHarness harness)
     {
         harness.FlushBuild();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         harness.FlushBuild();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.FlushBuild();
     }
 
@@ -697,12 +697,12 @@ public sealed class RouterTests : IDisposable
             routeInformationParser: new SimpleRouteInformationParser()));
         Pump(harness);
         reports.Clear();
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
         Router.Neglect(routerContext!, () => { });
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         Assert.Empty(reports);
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         Assert.Equal([RouteInformationReportingType.Neglect], reports);
     }
 

@@ -20,14 +20,14 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
 
     public MaterialRefreshIndicatorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -263,24 +263,24 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     public void AnimationController_AnimateToUsesTheRequestedTargetAndDuration()
     {
         using var controller = new AnimationController(duration: TimeSpan.FromSeconds(1));
-        double start = Scheduler.CurrentSeconds;
+        double start = FrameClock.CurrentSeconds;
         TickerFuture animation = controller.AnimateTo(0.4, TimeSpan.FromMilliseconds(100));
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.05));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.05));
         Assert.InRange(controller.Value, 0.1, 0.3);
         Assert.False(animation.Task.IsCompleted);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.11));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.11));
         Assert.True(animation.Task.IsCompleted);
         Assert.Equal(0.4, controller.Value, 3);
         Assert.Equal(AnimationStatus.Completed, controller.Status);
 
-        start = Scheduler.CurrentSeconds;
+        start = FrameClock.CurrentSeconds;
         TickerFuture decreasingAnimation = controller.AnimateTo(0.1, TimeSpan.FromMilliseconds(50));
         Assert.Equal(AnimationStatus.Forward, controller.Status);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.06));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.06));
         Assert.True(decreasingAnimation.Task.IsCompleted);
         Assert.Equal(0.1, controller.Value, 3);
         Assert.Equal(AnimationStatus.Completed, controller.Status);

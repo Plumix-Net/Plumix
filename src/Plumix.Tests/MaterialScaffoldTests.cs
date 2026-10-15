@@ -1036,7 +1036,7 @@ public sealed class MaterialScaffoldTests
     [Fact]
     public void Scaffold_OpenDrawer_AnimatesScrimOpacity_ToFullValue()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1067,9 +1067,9 @@ public sealed class MaterialScaffoldTests
             // and no scrim - is what the scaffold builds first.
             Assert.Null(FindColoredBox(harness.RenderView, IsBlackScrim));
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.05));
             harness.Pump(size);
 
             RenderColoredBox? scrimAtStart = FindColoredBox(harness.RenderView, IsBlackScrim);
@@ -1077,14 +1077,14 @@ public sealed class MaterialScaffoldTests
             int alphaAtStart = scrimAtStart!.Color.Alpha;
             Assert.True(alphaAtStart < 0x8A);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.15));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.15));
             harness.Pump(size);
 
             RenderColoredBox? scrimMid = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimMid);
             Assert.True(scrimMid!.Color.Alpha > alphaAtStart);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             RenderColoredBox? scrimFull = FindColoredBox(harness.RenderView, IsBlackScrim);
@@ -1095,14 +1095,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_ScrimTap_ClosesDrawer_WhenBarrierDismissible()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1129,9 +1129,9 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
 
@@ -1139,9 +1139,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7115, position: new Point(360, 120));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1150,14 +1150,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_ScrimTap_DoesNotCloseDrawer_WhenBarrierIsNotDismissible()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1185,9 +1185,9 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
 
@@ -1195,9 +1195,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7116, position: new Point(360, 120));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.True(state.IsDrawerOpen);
@@ -1206,14 +1206,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_DragReleaseVelocity_OpensDrawer_BelowHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1246,9 +1246,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7101, new Point(260, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1258,14 +1258,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_DragReleaseVelocity_ClosesDrawer_AboveHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1292,9 +1292,9 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
 
@@ -1308,9 +1308,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7102, new Point(40, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1319,14 +1319,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_DragCancel_SettlesDrawerClosed_BelowHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1354,9 +1354,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1366,14 +1366,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_DragCancel_SettlesDrawerOpen_AboveHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1401,9 +1401,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1413,14 +1413,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_DragCancel_UsesThemedDrawerWidth_ForProgressThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1449,9 +1449,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(122, 120));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1461,14 +1461,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_EndDrawer_DragReleaseVelocity_OpensDrawer_BelowHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1501,9 +1501,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7111, new Point(120, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1513,14 +1513,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_EndDrawer_DragReleaseVelocity_ClosesDrawer_AboveHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1547,9 +1547,9 @@ public sealed class MaterialScaffoldTests
             state.OpenEndDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsEndDrawerOpen);
 
@@ -1563,9 +1563,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7112, new Point(360, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsEndDrawerOpen);
@@ -1574,14 +1574,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_EndDrawer_DragCancel_SettlesDrawerClosed_BelowHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1609,9 +1609,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1621,14 +1621,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_EndDrawer_DragCancel_SettlesDrawerOpen_AboveHalfThreshold()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1656,9 +1656,9 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -1668,14 +1668,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_AlternatingDrawerDrags_StartThenEnd_KeepSingleDrawerVisible()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1711,9 +1711,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7121, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.True(state.IsDrawerOpen);
@@ -1731,9 +1731,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7122, new Point(40, 120), startCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1750,9 +1750,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7123, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1763,14 +1763,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_AlternatingDrawerDrags_EndThenStart_KeepSingleDrawerVisible()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1806,9 +1806,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7124, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1826,9 +1826,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7125, new Point(360, 120), endCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.False(state.IsDrawerOpen);
@@ -1845,9 +1845,9 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7126, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = Scheduler.CurrentSeconds;
+            now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             Assert.True(state.IsDrawerOpen);
@@ -1858,14 +1858,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_OpenDrawer_UsesDrawerThemeScrimColor_WhenWidgetScrimColorIsNull()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1894,9 +1894,9 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var scrim = FindColoredBox(harness.RenderView, color => color == themedScrim);
@@ -1906,14 +1906,14 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scaffold_OpenDrawer_WidgetScrimColor_OverridesDrawerThemeScrimColor()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
 
@@ -1944,9 +1944,9 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
             var scrim = FindColoredBox(harness.RenderView, color => color == widgetScrim);
@@ -1956,7 +1956,7 @@ public sealed class MaterialScaffoldTests
         finally
         {
             binding.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -3958,15 +3958,15 @@ public sealed class MaterialScaffoldTests
         Assert.False(key.CurrentState!.IsOpen);
 
         key.CurrentState.Open();
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
         harness.Pump(new Size(400, 300));
         Assert.True(key.CurrentState.IsOpen);
 
         key.CurrentState.Close();
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.80));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.80));
         harness.Pump(new Size(400, 300));
         Assert.False(key.CurrentState.IsOpen);
         Assert.Equal([true, false], callbacks);
@@ -4021,9 +4021,9 @@ public sealed class MaterialScaffoldTests
                 position: new Point(200, 120),
                 timestampUtc: start.AddMilliseconds(150));
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
 
             Assert.True(key.CurrentState!.IsOpen);
@@ -4081,9 +4081,9 @@ public sealed class MaterialScaffoldTests
                 position: new Point(40, 120),
                 timestampUtc: start.AddSeconds(1.1));
 
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
 
             Assert.False(key.CurrentState!.IsOpen);

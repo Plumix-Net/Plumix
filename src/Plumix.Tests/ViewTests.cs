@@ -853,7 +853,7 @@ public sealed class ViewTests
             _owner.FlushBuild();
             RendererBinding.Instance.RootPipelineOwner.FlushLayout();
             _owner.FinalizeTree();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             _owner.FlushBuild();
             RendererBinding.Instance.RootPipelineOwner.FlushLayout();
         }
@@ -861,7 +861,7 @@ public sealed class ViewTests
         public void Dispose()
         {
             Root.UnmountRoot();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
     }
 

@@ -366,7 +366,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         SchedulerPhase? phaseDuringBuild = null;
         duringBuild = () =>
         {
-            phaseDuringBuild = Scheduler.Phase;
+            phaseDuringBuild = SchedulerBinding.Instance.SchedulerPhase;
             // Marking the overlay entries dirty now would be too late for this frame; one rebuild
             // is scheduled for after it instead.
             overlay.MarkNeedsBuild();
@@ -632,7 +632,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         _focusNode.RequestFocus();
         tester.Pump();
         Select(tester, 2, 2);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         tester.Pump();
 
         EditableText.EditableTextState state = State(tester);
@@ -669,7 +669,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         _focusNode.RequestFocus();
         tester.Pump();
         Select(tester, 2, 2);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         tester.Pump();
 
         ContextMenuButtonItem liveText = Assert.Single(
@@ -681,7 +681,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         try
         {
             liveText.OnPressed!();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
         finally
         {
@@ -703,14 +703,14 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         PlatformDefaults.DebugIsWebOverride = true;
         using var clipboard = new MockClipboardPlatform("pasteable");
         using FrameworkDartTester tester = Pump(Field(obscureText: true, multiline: false));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.DoesNotContain(clipboard.Calls, call => call.Method == "Clipboard.hasStrings");
         Assert.Equal(ClipboardStatus.Pasteable, State(tester).ClipboardStatus.Value);
 
         Select(tester, 0, 2);
         _ = State(tester).ShowToolbar();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.DoesNotContain(clipboard.Calls, call => call.Method == "Clipboard.hasStrings");
     }
 
@@ -719,7 +719,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
     {
         using var clipboard = new MockClipboardPlatform("pasteable");
         using FrameworkDartTester tester = Pump(Field());
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Contains(clipboard.Calls, call => call.Method == "Clipboard.hasStrings");
         Assert.Equal(ClipboardStatus.Pasteable, State(tester).ClipboardStatus.Value);

@@ -540,7 +540,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         double firstSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.30));
         harness.Pump(new Size(140, 140));
 
         renderIndicator = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");

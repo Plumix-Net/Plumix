@@ -686,7 +686,7 @@ internal sealed class CupertinoDatePickerDateState : State<CupertinoDatePicker>
         }
 
         _correctionScheduled = true;
-        global::Plumix.Scheduler.AddPostFrameCallback(_ =>
+        global::Plumix.SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             _correctionScheduled = false;
             CorrectSelection();
@@ -967,7 +967,7 @@ internal sealed class CupertinoDatePickerMonthYearState : State<CupertinoDatePic
         }
 
         _correctionScheduled = true;
-        global::Plumix.Scheduler.AddPostFrameCallback(_ =>
+        global::Plumix.SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             _correctionScheduled = false;
             CorrectSelection();
@@ -1421,7 +1421,7 @@ internal sealed class CupertinoDatePickerDateTimeState : State<CupertinoDatePick
         }
 
         _correctionScheduled = true;
-        global::Plumix.Scheduler.AddPostFrameCallback(_ =>
+        global::Plumix.SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             _correctionScheduled = false;
             CorrectSelection();

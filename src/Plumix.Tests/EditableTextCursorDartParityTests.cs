@@ -129,7 +129,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         for (int i = 0; i < 40; i += 1)
         {
             tester.Pump(TimeSpan.FromMilliseconds(100));
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
             int alpha = Editable(tester).CursorColor!.Alpha;
             Assert.True(alpha is 0 or 255, $"alpha {alpha}");
         }
@@ -223,7 +223,7 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         for (int i = 0; i < 10; i += 1)
         {
             Assert.False(renderEditable.ShowCursor.Value);
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
             tester.Pump(TimeSpan.FromMilliseconds(29));
         }
 

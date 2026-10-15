@@ -155,7 +155,7 @@ internal sealed class ElementLifecycleLog
 
         // The counters change while the framework is building or finalizing the tree, so the page is told
         // after the frame instead of from inside the call that changed them.
-        Scheduler.AddPostFrameCallback(_ => Changed?.Invoke());
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => Changed?.Invoke());
     }
 }
 

@@ -42,9 +42,9 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 
 ## Framework Thread
 
-- Framework state (elements, render objects, scroll positions, `State`) is mutated only on the framework thread — the thread `Scheduler.EnterFrameworkThread` claims for the frame pipeline, the build scope, the pipeline flushes and pointer dispatch.
-- Start every fire-and-forget framework `async` body with `Scheduler.RunAsync(Body)`, never a bare `_ = BodyAsync()`: only then does each `await` inside resume as a microtask on that thread instead of on a thread-pool thread.
-- Do not write `ConfigureAwait(false)` on an await whose continuation touches framework state; it is for legs that touch none — `ImageProvider`'s IO/decode chain, or a `Task.Run` timer that hands its callback back through `Scheduler.ScheduleMicrotask` the way a Dart `Timer` returns to the isolate.
+- Framework state (elements, render objects, scroll positions, `State`) is mutated only on the framework thread — the thread `EventLoop.EnterFrameworkThread` claims for the frame pipeline, the build scope, the pipeline flushes and pointer dispatch.
+- Start every fire-and-forget framework `async` body with `EventLoop.RunAsync(Body)`, never a bare `_ = BodyAsync()`: only then does each `await` inside resume as a microtask on that thread instead of on a thread-pool thread.
+- Do not write `ConfigureAwait(false)` on an await whose continuation touches framework state; it is for legs that touch none — `ImageProvider`'s IO/decode chain, or a `Task.Run` timer that hands its callback back through `EventLoop.ScheduleMicrotask` the way a Dart `Timer` returns to the isolate.
 
 ## Rendering Pipeline
 

@@ -92,7 +92,8 @@ public sealed class PlatformDispatcher
     /// A callback invoked when any view begins a frame, with the raw timestamp of the frame.
     /// </summary>
     /// <remarks>
-    /// dart:ui's <c>PlatformDispatcher.onBeginFrame</c>. <c>Scheduler.EnsureFrameCallbacksRegistered</c>
+    /// dart:ui's <c>PlatformDispatcher.onBeginFrame</c>.
+    /// <c>SchedulerBinding.EnsureFrameCallbacksRegistered</c>
     /// installs the framework's handler here, and only when the slot is still null.
     /// </remarks>
     public Action<TimeSpan>? OnBeginFrame { get; set; }
@@ -113,7 +114,7 @@ public sealed class PlatformDispatcher
     /// </summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.onReportTimings</c>. It is a single slot, not an event:
-    /// <c>Scheduler.AddTimingsCallback</c> owns it and multiplexes to the callbacks it holds.
+    /// <c>SchedulerBinding.Instance.AddTimingsCallback</c> owns it and multiplexes to the callbacks it holds.
     /// </remarks>
     public Action<IReadOnlyList<FrameTiming>>? OnReportTimings { get; set; }
 
@@ -261,8 +262,8 @@ public sealed class PlatformDispatcher
 
     /// <summary>Raised by <see cref="ScheduleFrame"/>; whoever drives frames arms itself here.</summary>
     /// <remarks>
-    /// Flutter asks the engine for a vsync signal. Plumix has no engine, so the request is published
-    /// and <see cref="Scheduler"/> (or a host that drives frames itself) answers it.
+    /// Flutter asks the engine for a vsync signal. Plumix has no engine, so <see cref="FrameClock"/>
+    /// answers the request, and the request is also published for a host that drives frames itself.
     /// </remarks>
     public event Action? FrameRequested;
 
@@ -281,7 +282,7 @@ public sealed class PlatformDispatcher
     /// dart:async's <c>Timer.run</c>, which dart:ui's <c>scheduleWarmUpFrame</c> and Flutter's
     /// <c>SchedulerBinding._ensureEventLoopCallback</c> both use. Plumix has no Dart event loop, so
     /// the default posts to Avalonia's dispatcher at background priority — below the
-    /// <c>DispatcherPriority.Send</c> that <c>Scheduler.ScheduleMicrotask</c> drains at, which is
+    /// <c>DispatcherPriority.Send</c> that <c>EventLoop.ScheduleMicrotask</c> drains at, which is
     /// what keeps the microtask-before-next-turn ordering. A test harness replaces this to drive the
     /// turns itself.
     /// </remarks>
@@ -290,7 +291,11 @@ public sealed class PlatformDispatcher
 
     /// <summary>Requests that the operating system schedule a new frame.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.scheduleFrame</c>.</remarks>
-    public void ScheduleFrame() => FrameRequested?.Invoke();
+    public void ScheduleFrame()
+    {
+        FrameClock.RequestFrame();
+        FrameRequested?.Invoke();
+    }
 
     /// <summary>
     /// Schedules a frame as soon as possible, without waiting for the platform's vsync signal.
@@ -305,11 +310,17 @@ public sealed class PlatformDispatcher
         ArgumentNullException.ThrowIfNull(beginFrame);
         ArgumentNullException.ThrowIfNull(drawFrame);
 
-        TimerRun(beginFrame);
+        // Each timer callback ends its event-loop turn, and Dart drains the microtask queue there.
         TimerRun(() =>
         {
-            Scheduler.FlushMicrotasks();
+            beginFrame();
+            EventLoop.FlushMicrotasks();
+        });
+        TimerRun(() =>
+        {
+            EventLoop.FlushMicrotasks();
             drawFrame();
+            EventLoop.FlushMicrotasks();
         });
     }
 

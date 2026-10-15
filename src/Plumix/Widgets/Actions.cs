@@ -683,7 +683,7 @@ public sealed class FocusableActionDetector : StatefulWidget
 
         public override void InitState()
         {
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted)
                 {
@@ -701,7 +701,7 @@ public sealed class FocusableActionDetector : StatefulWidget
                 return;
             }
 
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted)
                 {
@@ -795,7 +795,7 @@ public sealed class FocusableActionDetector : StatefulWidget
             FocusableActionDetector? oldWidget = null)
         {
             System.Diagnostics.Debug.Assert(
-                Scheduler.Phase != SchedulerPhase.PersistentCallbacks,
+                SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks,
                 "The highlight callbacks must not run during the build phase.");
             FocusableActionDetector oldTarget = oldWidget ?? Current;
             bool didShowHoverHighlight = ShouldShowHoverHighlight(oldTarget);

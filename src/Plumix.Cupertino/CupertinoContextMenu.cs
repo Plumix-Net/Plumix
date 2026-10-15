@@ -231,7 +231,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
                 builder: BuildRoutePreview,
                 onDismissed: HandleRouteDismissed);
             Navigator.Of(Context, rootNavigator: true).Push(_route);
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (!Mounted)
                 {

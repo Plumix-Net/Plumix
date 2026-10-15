@@ -18,8 +18,8 @@ public sealed class CupertinoScrollbarTests
     private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     // Frame timestamps have to advance monotonically from where the scheduler's clock stands, or a
-    // ticker started mid-frame (which anchors to `Scheduler.CurrentFrameTimeStamp`) never advances.
-    private double _clock = Scheduler.CurrentSeconds;
+    // ticker started mid-frame (which anchors to `SchedulerBinding.Instance.CurrentFrameTimeStamp`) never advances.
+    private double _clock = FrameClock.CurrentSeconds;
 
     public CupertinoScrollbarTests()
     {
@@ -340,7 +340,7 @@ public sealed class CupertinoScrollbarTests
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
 
         harness.Pump(new Size(0, 0));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         harness.Pump(new Size(0, 0));
 
         Assert.Null(RequirePainter(harness).Geometry);
@@ -375,7 +375,7 @@ public sealed class CupertinoScrollbarTests
     private void Settle(WidgetRenderHarness harness)
     {
         harness.Pump(ViewportSize);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         harness.Pump(ViewportSize);
         AdvanceAndPump(harness, 0.4);
     }
@@ -383,10 +383,10 @@ public sealed class CupertinoScrollbarTests
     private void AdvanceAndPump(WidgetRenderHarness harness, double seconds)
     {
         // Prime any freshly started ticker, then advance the frame clock.
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         _clock += seconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
-        Scheduler.FlushMicrotasks();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        EventLoop.FlushMicrotasks();
         harness.Pump(ViewportSize);
     }
 

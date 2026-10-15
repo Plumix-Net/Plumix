@@ -1044,7 +1044,7 @@ public sealed class LayerLink
         }
 
         _debugLeaderCheckScheduled = true;
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             _ =>
             {
                 _debugLeaderCheckScheduled = false;

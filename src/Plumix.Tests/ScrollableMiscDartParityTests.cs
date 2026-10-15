@@ -414,7 +414,7 @@ public sealed class ScrollableMiscDartParityTests
 
     private static void ExpectNoAnimation()
     {
-        Assert.True(Scheduler.TransientCallbackCount == 0, "Expected no animation.");
+        Assert.True(SchedulerBinding.Instance.TransientCallbackCount == 0, "Expected no animation.");
     }
 
     // Flutter: 'scrollable_animations_test.dart: Does not animate if already at target position'
@@ -467,7 +467,7 @@ public sealed class ScrollableMiscDartParityTests
         double targetPosition = controller.Position.Pixels + doubleTolerance;
         _ = controller.Position.AnimateTo(targetPosition, TimeSpan.FromSeconds(10), Curves.Linear);
 
-        Assert.True(Scheduler.TransientCallbackCount == 1, "Expected an animation.");
+        Assert.True(SchedulerBinding.Instance.TransientCallbackCount == 1, "Expected an animation.");
     }
 
     // Flutter: 'scrollable_animations_test.dart: HoldActivity can interrupt ScrollPosition.animateTo'
@@ -1627,7 +1627,7 @@ public sealed class ScrollableMiscDartParityTests
                 FocusManager.Instance.HandleKeyEvent(KeySim.Down(key, control: Control, meta: Meta));
             }
 
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
 
         public void SendKeyUpEvent(LogicalKeyboardKey key)
@@ -1651,7 +1651,7 @@ public sealed class ScrollableMiscDartParityTests
                 FocusManager.Instance.HandleKeyEvent(KeySim.Up(key, control: Control, meta: Meta));
             }
 
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
 
         private bool Control => _modifiersDown.Contains(LogicalKeyboardKey.ControlLeft);

@@ -460,7 +460,7 @@ public static class SystemChrome
         }
 
         _pendingStyle = style;
-        Scheduler.ScheduleMicrotask(() =>
+        EventLoop.ScheduleMicrotask(() =>
         {
             Debug.Assert(_pendingStyle is not null);
             if (_pendingStyle != _latestStyle)
@@ -468,7 +468,7 @@ public static class SystemChrome
                 Task<object?> invocation = SystemChannels.Platform.InvokeMethod<object>(
                     "SystemChrome.setSystemUIOverlayStyle",
                     _pendingStyle!.ToMap());
-                Scheduler.RunAsync(() => ReportOverlayStyleError(invocation));
+                EventLoop.RunAsync(() => ReportOverlayStyleError(invocation));
                 _latestStyle = _pendingStyle;
             }
 
@@ -485,7 +485,7 @@ public static class SystemChrome
         // be sent again when the app is reattached.
         if (state == AppLifecycleState.Detached)
         {
-            Scheduler.ScheduleMicrotask(() => _latestStyle = null);
+            EventLoop.ScheduleMicrotask(() => _latestStyle = null);
         }
     }
 

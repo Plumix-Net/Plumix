@@ -22,7 +22,7 @@ public sealed class MouseTrackerTests : IDisposable
 
     public MouseTrackerTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         SystemChannels.MouseCursor.SetPlatformMethodCallHandler(call =>
         {
@@ -41,7 +41,7 @@ public sealed class MouseTrackerTests : IDisposable
     {
         SystemChannels.MouseCursor.SetPlatformMethodCallHandler(null);
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

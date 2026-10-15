@@ -19,7 +19,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 {
     public MaterialRadioExpansionTileTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -28,7 +28,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -86,9 +86,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         harness.Pump(new Size(360, 180));
         firstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Equal("b", changed);
         Assert.True(secondFocus.HasFocus);
@@ -260,9 +260,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         harness.Pump(new Size(360, 180));
         firstFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Equal("b", changed);
         Assert.True(secondFocus.HasFocus);
@@ -318,15 +318,15 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 240));
         Assert.True(callbackValue);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 240));
         var midAlign = FindDescendants<RenderPositionedBox>(harness.RenderView)
             .FirstOrDefault(align => align.HeightFactor is > 0 and < 1);
         Assert.NotNull(midAlign);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(360, 240));
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Controller body"));
         var arrowTransform = FindDescendants<RenderTransform>(harness.RenderView).FirstOrDefault();
@@ -350,9 +350,9 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Disposable body"));
 
         controller.Collapse();
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(360, 240));
 
         Assert.Null(FindParagraphByText(harness.RenderView, "Disposable body"));

@@ -25,7 +25,7 @@ public sealed class PaintingBindingTests : IDisposable
 
     public PaintingBindingTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         PaintingBinding.ShaderWarmUp = null;
     }
 
@@ -42,7 +42,7 @@ public sealed class PaintingBindingTests : IDisposable
         PaintingBinding.ShaderWarmUp = _warmUp;
         PaintingDebug.DebugCaptureShaderWarmUpPicture = _capturePicture;
         PaintingDebug.DebugCaptureShaderWarmUpImage = _captureImage;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public sealed class PaintingBindingTests : IDisposable
             canvas.DrawPaint(new Paint { Color = new Color(0xFFFF0000) });
             await Completion.Task;
             // A microtask after the execution continuation makes trailing disposal observable.
-            Scheduler.ScheduleMicrotask(() => Finished = true);
+            EventLoop.ScheduleMicrotask(() => Finished = true);
         }
     }
 

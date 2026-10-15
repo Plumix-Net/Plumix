@@ -15,12 +15,12 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 {
     public CupertinoPageScaffoldTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -166,8 +166,8 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
         WidgetsBinding.Instance.HandleStatusBarTap();
         AnimationPump.Prime();
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         harness.Pump(new Size(400.0, 600.0));
 
         Assert.Equal(0.0, controller.Offset, precision: 3);
@@ -190,8 +190,8 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
         harness.Pump(new Size(400.0, 600.0));
         WidgetsBinding.Instance.HandleStatusBarTap();
         AnimationPump.Prime();
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         harness.Pump(new Size(400.0, 600.0));
 
         Assert.Equal(1000.0, backgroundController.Offset, precision: 3);

@@ -143,7 +143,7 @@ public sealed partial class MaterialTimePickerDialogTests
                 Assert.Single(field.InputFormatters!)).MaxLength);
         });
         Assert.True(FocusManager.Instance.FocusNext());
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(HostTextInput.InsertText("ABC"));
         harness.Pump(ViewSize);
@@ -173,10 +173,10 @@ public sealed partial class MaterialTimePickerDialogTests
         harness.Pump(ViewSize);
         var fields = FindWidgets<TextFormField>(harness);
         fields[0].FocusNode!.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(new TextSelection(0, 2), fields[0].Controller!.Selection);
         fields[1].FocusNode!.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(new TextSelection(0, 2), fields[1].Controller!.Selection);
     }
 
@@ -188,14 +188,14 @@ public sealed partial class MaterialTimePickerDialogTests
         harness.Pump(ViewSize);
         var fields = FindWidgets<TextFormField>(harness);
         fields[0].FocusNode!.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         fields[0].OnFieldSubmitted!("9");
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(fields[0].FocusNode!.HasFocus);
         fields[1].FocusNode!.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         fields[1].OnFieldSubmitted!("45");
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.False(fields[1].FocusNode!.HasFocus);
     }
 
@@ -226,7 +226,7 @@ public sealed partial class MaterialTimePickerDialogTests
             var fields = FindWidgets<TextFormField>(harness);
             Assert.Equal(23, fields[0].Style!.FontSize);
             fields[0].FocusNode!.RequestFocus();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             harness.Pump(ViewSize);
             Assert.Equal(31, FindWidgets<TextFormField>(harness)[0].Style!.FontSize);
         }

@@ -11,9 +11,9 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class SystemFontsRelayoutTests : IDisposable
 {
-    public SystemFontsRelayoutTests() => Scheduler.ResetForTests();
+    public SystemFontsRelayoutTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public async Task FontChangesCoalesceUntilTheTransientPhaseAndStopAfterDetach()
@@ -28,7 +28,7 @@ public sealed class SystemFontsRelayoutTests : IDisposable
         Assert.Equal(0, box.Updates);
         if (Constants.KDebugMode) Assert.False(box.DebugNeedsLayout);
 
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(16));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(16));
         Assert.Equal(1, box.Updates);
         Assert.Equal(SchedulerPhase.TransientCallbacks, box.UpdatePhase);
         if (Constants.KDebugMode) Assert.True(box.DebugNeedsLayout);
@@ -36,17 +36,17 @@ public sealed class SystemFontsRelayoutTests : IDisposable
 
         box.Detach();
         await NotifyFonts();
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(32));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(32));
         Assert.Equal(1, box.Updates);
 
         box.Attach(owner);
         await NotifyFonts();
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(48));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(48));
         Assert.Equal(2, box.Updates);
         box.Detach();
         box.Dispose();
         await NotifyFonts();
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(64));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(64));
         Assert.Equal(2, box.Updates);
     }
 
@@ -55,15 +55,15 @@ public sealed class SystemFontsRelayoutTests : IDisposable
     {
         var box = new FontAwareBox();
         box.Attach(new PipelineOwner());
-        Scheduler.ScheduleFrameCallback(_ => Scheduler.ScheduleMicrotask(() =>
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ => EventLoop.ScheduleMicrotask(() =>
         {
-            Assert.Equal(SchedulerPhase.MidFrameMicrotasks, Scheduler.Phase);
+            Assert.Equal(SchedulerPhase.MidFrameMicrotasks, SchedulerBinding.Instance.SchedulerPhase);
             NotifyFonts().GetAwaiter().GetResult();
         }));
 
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(16));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(16));
         Assert.Equal(0, box.Updates);
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(32));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(32));
         Assert.Equal(1, box.Updates);
         Assert.Equal(SchedulerPhase.TransientCallbacks, box.UpdatePhase);
         box.Detach();
@@ -79,7 +79,7 @@ public sealed class SystemFontsRelayoutTests : IDisposable
         await NotifyFonts();
         box.Layout(BoxConstraints.Tight(new Size(100, 40)));
         Assert.Equal(1, box.Layouts);
-        Scheduler.HandleFrame(TimeSpan.FromMilliseconds(16));
+        SchedulerBinding.Instance.HandleFrame(TimeSpan.FromMilliseconds(16));
         box.Layout(BoxConstraints.Tight(new Size(100, 40)));
         Assert.Equal(2, box.Layouts);
         box.Detach();
@@ -106,7 +106,7 @@ public sealed class SystemFontsRelayoutTests : IDisposable
         {
             _fonts.SystemFontsDidChange();
             Updates++;
-            UpdatePhase = Scheduler.Phase;
+            UpdatePhase = SchedulerBinding.Instance.SchedulerPhase;
         }
 
         protected override void OnAttach()

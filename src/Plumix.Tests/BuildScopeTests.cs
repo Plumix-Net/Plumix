@@ -489,25 +489,25 @@ public sealed class BuildScopeTests
         var renderObject = (RenderLayoutBuilder)root.ChildElement!.RenderObject!;
         LayoutOnce(renderObject, BoxConstraints.Tight(new Size(100, 100)));
         Assert.False(renderObject.DebugNeedsLayout);
-        Assert.Equal(SchedulerPhase.Idle, Scheduler.Phase);
+        Assert.Equal(SchedulerPhase.Idle, SchedulerBinding.Instance.SchedulerPhase);
 
         try
         {
             // Pausing the app disables frames, which keeps `ScheduleFrame` from arming the real
             // dispatcher timer; the transient callback is still queued, which is what this test is
             // about.
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
-            int before = Scheduler.TransientCallbackCount;
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
+            int before = SchedulerBinding.Instance.TransientCallbackCount;
             inner!.Bump();
 
             // Dart's _scheduleRebuild hands the request to the next frame rather than dirtying layout
             // from the idle phase, so a `markNeedsBuild` at rest never marks the render tree.
             Assert.False(renderObject.DebugNeedsLayout);
-            Assert.Equal(before + 1, Scheduler.TransientCallbackCount);
+            Assert.Equal(before + 1, SchedulerBinding.Instance.TransientCallbackCount);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

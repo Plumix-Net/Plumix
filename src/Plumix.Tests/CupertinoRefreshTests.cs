@@ -143,8 +143,8 @@ public sealed class CupertinoRefreshTests
         MethodCall haptic = Assert.Single(platform.Log);
         Assert.Equal("HapticFeedback.vibrate", haptic.Method);
         Assert.Equal("HapticFeedbackType.mediumImpact", haptic.Arguments);
-        Scheduler.ScheduleFrame();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.Instance.ScheduleFrame();
+        SchedulerBinding.PumpFrameForTests();
         await WaitUntilAsync(() => refreshCalls == 1);
 
         harness.Layout(Viewport);

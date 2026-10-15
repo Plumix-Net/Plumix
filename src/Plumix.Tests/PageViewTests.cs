@@ -742,10 +742,10 @@ public sealed class PageViewTests
 
     private static void Settle(WidgetRenderHarness harness)
     {
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         foreach (double step in new[] { 0.01, 0.2, 0.4, 0.8, 1.4, 2.4 })
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + step));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + step));
             harness.Pump(Viewport);
         }
     }

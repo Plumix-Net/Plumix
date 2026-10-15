@@ -14,14 +14,14 @@ public sealed class FocusTraversalTests : IDisposable
 
     public FocusTraversalTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -542,7 +542,7 @@ public sealed class FocusTraversalTests : IDisposable
 
         var next = new NextFocusAction();
         Assert.Equal(true, next.Invoke(new NextFocusIntent()));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
         Assert.Equal(KeyEventResult.Handled, next.ToKeyEventResult(new NextFocusIntent(), true));
         Assert.Equal(
@@ -551,7 +551,7 @@ public sealed class FocusTraversalTests : IDisposable
 
         var previous = new PreviousFocusAction();
         Assert.Equal(true, previous.Invoke(new PreviousFocusIntent()));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -592,20 +592,20 @@ public sealed class FocusTraversalTests : IDisposable
 
         DirectionalFocusAction.ForTextField().Invoke(
             new DirectionalFocusIntent(TraversalDirection.Right, ignoreTextFields: false));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
     }
 
     private static bool PumpFocus(Func<bool> action)
     {
         bool result = action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return result;
     }
 
     private static void PumpFocus(Action action)
     {
         action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 }

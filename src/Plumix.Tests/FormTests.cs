@@ -106,7 +106,7 @@ public sealed class FormTests : IDisposable
         harness.Pump(new Size(320, 80));
 
         fieldFocus.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Null(fieldState!.ErrorText);
         FocusManager.Instance.RequestFocus(nextFocus);
         harness.Pump(new Size(320, 80));

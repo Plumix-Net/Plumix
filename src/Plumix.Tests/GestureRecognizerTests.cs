@@ -37,7 +37,7 @@ public sealed class GestureRecognizerTests : IDisposable
         _binding.GestureArena.Add(pointer, new IndefiniteRecognizer());
         recognizer.AddPointer(Down(pointer));
         _binding.GestureArena.Close(pointer);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         _binding.PointerRouter.Route(Down(pointer));
     }
 
@@ -340,7 +340,7 @@ public sealed class GestureRecognizerTests : IDisposable
         recognizer.AddPointer(Down(6));
         _binding.PointerRouter.Route(Down());
         _binding.GestureArena.Close(5);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Equal(new[] { "accepted" }, recognizer.Resolutions);
         _binding.PointerRouter.Route(Move(position: new Point(15, 10)));
         Assert.Equal(GestureRecognizerState.Possible, recognizer.State);
@@ -362,7 +362,7 @@ public sealed class GestureRecognizerTests : IDisposable
         recognizer.AddPointer(Down());
         _binding.PointerRouter.Route(Down());
         _binding.GestureArena.Close(5);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         recognizer.SupportedDevices = new HashSet<PointerDeviceKind> { PointerDeviceKind.Touch };
         recognizer.AddPointer(Down(6, PointerDeviceKind.Mouse));
         _timers.Elapse(TimeSpan.FromSeconds(1));

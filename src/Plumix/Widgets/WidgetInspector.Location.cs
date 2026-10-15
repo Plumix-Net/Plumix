@@ -185,7 +185,7 @@ public static class WidgetInspectorDebug
         }
         catch (Exception error)
         {
-            Scheduler.ScheduleMicrotask(() =>
+            EventLoop.ScheduleMicrotask(() =>
             {
                 FlutterError.ReportError(new FlutterErrorDetails(
                     exception: error,

@@ -48,7 +48,7 @@ public sealed class ScrollPipelineTests
                 new Point(80, 100),
                 PointerButtons.Primary,
                 now.AddMilliseconds(16)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.False(focusNode.HasFocus);
         GestureBinding.Instance.HandlePointerEvent(
@@ -86,7 +86,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void ScrollPosition_EndDrag_EntersBallisticActivity()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var position = new ScrollPositionWithSingleContext(
@@ -103,7 +103,7 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1043,7 +1043,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void Scrollable_PhysicsMinFlingVelocity_ReachesTheDragRecognizer()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         try
         {
@@ -1055,14 +1055,14 @@ public sealed class ScrollPipelineTests
         finally
         {
             GestureBinding.Instance.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scrollable_RecommendDeferredLoadingForContext_FollowsTheActivityVelocity()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var controller = new ScrollController();
@@ -1095,7 +1095,7 @@ public sealed class ScrollPipelineTests
             // Park the position mid-list so a fling in either direction has somewhere to go.
             controller.JumpTo(200.0);
             harness.Pump(new Size(100, 200));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
 
             position.GoBallistic(-300.0);
             Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
@@ -1109,14 +1109,14 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scrollable_JumpContributesImpliedVelocityUntilTheNextFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var controller = new ScrollController();
@@ -1141,13 +1141,13 @@ public sealed class ScrollPipelineTests
 
             Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
 
             Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1172,7 +1172,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void ScrollActivity_ShouldIgnorePointer_FollowsFlutterPerActivity()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var context = new TestScrollContext();
@@ -1223,14 +1223,14 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScrollPosition_OverscrolledPosition_LetsChildrenReceivePointers()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var context = new TestScrollContext();
@@ -1255,14 +1255,14 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScrollPosition_DrivesTheContext_ForCanDragSemanticsAndSaveOffset()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var context = new TestScrollContext(AxisDirection.Right, devicePixelRatio: 3.0);
@@ -1297,14 +1297,14 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScrollPosition_ConstructorAbsorbsTheOldPosition_AndPushesItsIgnoreFlag()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             // Dart asserts a position only absorbs one that shares its ScrollContext.
@@ -1338,7 +1338,7 @@ public sealed class ScrollPipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1374,7 +1374,7 @@ public sealed class ScrollPipelineTests
     {
         // Regression test for https://github.com/flutter/flutter/issues/66816.
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var controller = new ScrollController();
@@ -1401,7 +1401,7 @@ public sealed class ScrollPipelineTests
         finally
         {
             GestureBinding.Instance.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1409,7 +1409,7 @@ public sealed class ScrollPipelineTests
     public void Scrollable_DragDisablesUserInteractionWhenRecognized_BallisticUntilItStops()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var controller = new ScrollController();
@@ -1457,7 +1457,7 @@ public sealed class ScrollPipelineTests
             // ... and stops when the activity ends.
             for (int frame = 1; frame <= 600 && controller.PrimaryPosition!.Activity is not IdleScrollActivity; frame++)
             {
-                Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16 * frame));
+                SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16 * frame));
                 harness.Pump(viewport);
             }
 
@@ -1467,7 +1467,7 @@ public sealed class ScrollPipelineTests
         finally
         {
             GestureBinding.Instance.ResetForTests();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

@@ -386,7 +386,7 @@ public sealed class CupertinoRadioTests
             using var harness = new CupertinoThemeTestHarness(Wrap(
                 new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { }, focusNode: node)));
 
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             node.RequestFocus();
             harness.Pump(ViewSize);
 
@@ -412,7 +412,7 @@ public sealed class CupertinoRadioTests
                     onChanged: _ => { },
                     focusColor: testFocusColor,
                     focusNode: custom)));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             custom.RequestFocus();
             customHarness.Pump(ViewSize);
             Assert.Equal(testFocusColor, Painter(customHarness).EffectiveFocusColor);
@@ -504,7 +504,7 @@ public sealed class CupertinoRadioTests
                 onChanged: _ => { },
                 mouseCursor: cursor,
                 focusNode: node)));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             node.RequestFocus();
             focused.Pump(ViewSize);
             Assert.Equal(

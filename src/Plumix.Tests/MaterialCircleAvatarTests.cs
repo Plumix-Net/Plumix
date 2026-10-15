@@ -12,7 +12,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
 {
     public MaterialCircleAvatarTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         ImageCache.Shared.Clear();
         ImageCache.Shared.ClearLiveImages();
     }
@@ -21,7 +21,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
     {
         ImageCache.Shared.Clear();
         ImageCache.Shared.ClearLiveImages();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -203,9 +203,9 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             ThemeData.Light,
             new CircleAvatar(radius: 40, backgroundColor: Colors.Blue)));
         harness.Pump(new Size(120, 120));
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(120, 120));
 
         var midDecoration = FindDescendants<RenderDecoratedBox>(harness.RenderView)
@@ -218,7 +218,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         Assert.NotEqual(Colors.Blue, midDecoration.Color);
         Assert.InRange(midConstraints.MinWidth, 40.1, 79.9);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(120, 120));
         Assert.Contains(
             FindDescendants<RenderConstrainedBox>(harness.RenderView),

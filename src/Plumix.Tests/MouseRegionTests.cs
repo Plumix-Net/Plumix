@@ -20,14 +20,14 @@ public sealed class MouseRegionTests : IDisposable
 
     public MouseRegionTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

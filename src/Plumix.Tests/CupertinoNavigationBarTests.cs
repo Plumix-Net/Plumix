@@ -15,12 +15,12 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 {
     public CupertinoNavigationBarTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -587,7 +587,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 
         AnimationPump.Prime();
         harness.Pump(new Size(400, 600));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.35));
         harness.Pump(new Size(400, 600));
 
         var active = Assert.Single(harness.FindWidgets<ActiveSearchableBottom>());
@@ -598,7 +598,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 
         AnimationPump.Prime();
         harness.Pump(new Size(400, 600));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.35));
         harness.Pump(new Size(400, 600));
 
         Assert.Single(harness.FindWidgets<InactiveSearchableBottom>());
@@ -790,11 +790,11 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     {
         PumpHeroTransitionFrame(harness, viewportSize);
 
-        double afterStart = Scheduler.CurrentSeconds;
+        double afterStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.60));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.60));
         harness.Pump(viewportSize);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.001));
         harness.Pump(viewportSize);
     }
 
@@ -808,10 +808,10 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         harness.Pump(viewportSize);
         AnimationPump.Prime();
         harness.Pump(viewportSize);
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
         harness.Pump(viewportSize);
     }
 

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Plumix.Foundation;
 using Plumix.UI;
 using Xunit;
@@ -11,105 +12,105 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class SchedulerBindingTests
 {
+    // scheduler_test.dart: "Tasks are executed in the right order".
     [Fact]
-    public void ScheduleTask_RunsInDescendingPriorityOrderOneTaskPerEventLoopTurn()
+    public void ScheduleTask_RunsTasksInTheRightOrder()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
+            SchedulerBinding scheduler = SchedulerBinding.Instance;
             List<int> executedTasks = [];
             int allowedPriority = 10000;
-            Scheduler.SchedulingStrategy = priority => priority >= allowedPriority;
-
-            foreach (int priority in new[] { 2, 23, 23, 11, 0, 80, 3 })
+            List<SchedulerBinding> strategySchedulers = [];
+            scheduler.SchedulingStrategy = (priority, binding) =>
             {
-                int captured = priority;
-                Scheduler.ScheduleTask(
+                strategySchedulers.Add(binding);
+                return priority >= allowedPriority;
+            };
+
+            void ScheduleAddingTask(int x)
+            {
+                scheduler.ScheduleTask(
                     () =>
                     {
-                        executedTasks.Add(captured);
-                        return captured;
+                        executedTasks.Add(x);
+                        return x;
                     },
-                    Priority.Idle + captured);
+                    Priority.Idle + x);
             }
 
-            // Nothing runs while the strategy rejects the head of the queue, and the callback keeps
-            // reporting that there is still work.
-            Assert.True(Scheduler.HandleEventLoopCallback());
-            Assert.True(Scheduler.HandleEventLoopCallback());
+            void RunTurns(int count, bool expectedResult = true)
+            {
+                for (int index = 0; index < count; index++)
+                {
+                    Assert.Equal(expectedResult, scheduler.HandleEventLoopCallback());
+                }
+            }
+
+            foreach (int x in new[] { 2, 23, 23, 11, 0, 80, 3 })
+            {
+                ScheduleAddingTask(x);
+            }
+
+            allowedPriority = 100;
+            RunTurns(3);
             Assert.Empty(executedTasks);
 
-            allowedPriority = 20;
-            for (int index = 0; index < 3; index++)
-            {
-                Assert.True(Scheduler.HandleEventLoopCallback());
-            }
-
-            Assert.Equal([80, 23, 23], executedTasks);
-
+            allowedPriority = 50;
+            RunTurns(3);
+            Assert.Equal([80], executedTasks);
             executedTasks.Clear();
-            allowedPriority = 0;
-            for (int index = 0; index < 3; index++)
+
+            allowedPriority = 20;
+            RunTurns(3);
+            Assert.Equal([23, 23], executedTasks);
+            executedTasks.Clear();
+
+            foreach (int x in new[] { 99, 19, 5, 97 })
             {
-                Assert.True(Scheduler.HandleEventLoopCallback());
-            }
-
-            // The queue drains on the last task, which is what reports false.
-            Assert.False(Scheduler.HandleEventLoopCallback());
-            Assert.Equal([11, 3, 2, 0], executedTasks);
-        }
-        finally
-        {
-            Scheduler.ResetForTests();
-        }
-    }
-
-    [Fact]
-    public void ScheduleTask_LaterHigherPriorityTasksPreemptQueuedOnes()
-    {
-        Scheduler.ResetForTests();
-        try
-        {
-            List<int> executedTasks = [];
-            int allowedPriority = 100;
-            Scheduler.SchedulingStrategy = priority => priority >= allowedPriority;
-
-            foreach (int priority in new[] { 99, 19, 5, 97 })
-            {
-                int captured = priority;
-                Scheduler.ScheduleTask(
-                    () =>
-                    {
-                        executedTasks.Add(captured);
-                        return captured;
-                    },
-                    Priority.Idle + captured);
+                ScheduleAddingTask(x);
             }
 
             allowedPriority = 20;
-            for (int index = 0; index < 2; index++)
-            {
-                Assert.True(Scheduler.HandleEventLoopCallback());
-            }
-
+            RunTurns(3);
             Assert.Equal([99, 97], executedTasks);
+            executedTasks.Clear();
+
+            allowedPriority = 10;
+            RunTurns(3);
+            Assert.Equal([19, 11], executedTasks);
+            executedTasks.Clear();
+
+            // A head the strategy turns away still reports that work remains.
+            allowedPriority = 1;
+            RunTurns(4);
+            Assert.Equal([5, 3, 2], executedTasks);
+            executedTasks.Clear();
+
+            allowedPriority = 0;
+            RunTurns(1, expectedResult: false);
+            Assert.Equal([0], executedTasks);
+
+            // The strategy receives the binding that consults it.
+            Assert.All(strategySchedulers, binding => Assert.Same(scheduler, binding));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public async Task ScheduleTask_ChainsAnAsynchronousTaskInsteadOfCompletingOnItsSynchronousPart()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var inner = new TaskCompletionSource<int>();
-            Task<int> scheduled = Scheduler.ScheduleTask(() => inner.Task, Priority.Animation);
+            Task<int> scheduled = SchedulerBinding.Instance.ScheduleTask(() => inner.Task, Priority.Animation);
 
-            Assert.False(Scheduler.HandleEventLoopCallback());
+            Assert.False(SchedulerBinding.Instance.HandleEventLoopCallback());
             Assert.False(scheduled.IsCompleted);
 
             inner.SetResult(7);
@@ -117,101 +118,102 @@ public sealed class SchedulerBindingTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScheduleFrameCallback_CanRegisterWithoutSchedulingANewFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             bool ran = false;
-            Scheduler.ScheduleFrameCallback(_ => ran = true, scheduleNewFrame: false);
-            Assert.False(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => ran = true, scheduleNewFrame: false);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.True(ran);
 
-            Scheduler.ScheduleFrameCallback(_ => { });
-            Assert.True(Scheduler.HasScheduledFrame);
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(2));
-            Scheduler.HandleDrawFrame();
-            Assert.False(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => { });
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(2));
+            SchedulerBinding.Instance.HandleDrawFrame();
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void TransientCallbacks_RunInRegistrationOrderShareOneTimestampAndAreOneShot()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             List<string> order = [];
             List<TimeSpan> stamps = [];
             int secondId = 0;
 
-            Scheduler.ScheduleFrameCallback(timeStamp =>
+            SchedulerBinding.Instance.ScheduleFrameCallback(timeStamp =>
             {
                 order.Add("first");
                 stamps.Add(timeStamp);
 
                 // A callback cancelled by an earlier callback of the same frame must not run.
-                Scheduler.CancelFrameCallbackWithId(secondId);
+                SchedulerBinding.Instance.CancelFrameCallbackWithId(secondId);
             });
-            secondId = Scheduler.ScheduleFrameCallback(timeStamp =>
+            secondId = SchedulerBinding.Instance.ScheduleFrameCallback(timeStamp =>
             {
                 order.Add("second");
                 stamps.Add(timeStamp);
             });
-            int thirdId = Scheduler.ScheduleFrameCallback(timeStamp =>
+            int thirdId = SchedulerBinding.Instance.ScheduleFrameCallback(timeStamp =>
             {
                 order.Add("third");
                 stamps.Add(timeStamp);
             });
-            Assert.Equal(3, Scheduler.TransientCallbackCount);
+            Assert.Equal(3, SchedulerBinding.Instance.TransientCallbackCount);
             Assert.True(thirdId > secondId);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
 
             Assert.Equal(["first", "third"], order);
             Assert.Equal(2, stamps.Count);
             Assert.Equal(stamps[0], stamps[1]);
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
             // One-shot: nothing runs on the next frame without a re-registration.
             order.Clear();
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(2));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(2));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.Empty(order);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void FramePhases_FollowDartsOrderIncludingMidFrameMicrotasks()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             List<SchedulerPhase> phases = [];
-            Scheduler.ScheduleFrameCallback(_ => phases.Add(Scheduler.Phase));
-            Scheduler.AddPersistentFrameCallback(_ => phases.Add(Scheduler.Phase));
-            Scheduler.AddPostFrameCallback(_ => phases.Add(Scheduler.Phase));
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => phases.Add(SchedulerBinding.Instance.SchedulerPhase));
+            SchedulerBinding.Instance.AddPersistentFrameCallback(
+                _ => phases.Add(SchedulerBinding.Instance.SchedulerPhase));
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => phases.Add(SchedulerBinding.Instance.SchedulerPhase));
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Assert.Equal(SchedulerPhase.MidFrameMicrotasks, Scheduler.Phase);
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            Assert.Equal(SchedulerPhase.MidFrameMicrotasks, SchedulerBinding.Instance.SchedulerPhase);
+            SchedulerBinding.Instance.HandleDrawFrame();
 
             Assert.Equal(
                 [
@@ -220,81 +222,81 @@ public sealed class SchedulerBindingTests
                     SchedulerPhase.PostFrameCallbacks,
                 ],
                 phases);
-            Assert.Equal(SchedulerPhase.Idle, Scheduler.Phase);
+            Assert.Equal(SchedulerPhase.Idle, SchedulerBinding.Instance.SchedulerPhase);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void PersistentCallback_AddedDuringThePersistentPhaseRunsOnTheNextFrameOnly()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             int addedRuns = 0;
             bool added = false;
             void Inner(TimeSpan _) => addedRuns++;
-            Scheduler.AddPersistentFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ =>
             {
                 if (!added)
                 {
                     added = true;
-                    Scheduler.AddPersistentFrameCallback(Inner);
+                    SchedulerBinding.Instance.AddPersistentFrameCallback(Inner);
                 }
             });
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.Equal(0, addedRuns);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(2));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(2));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.Equal(1, addedRuns);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void AddPostFrameCallback_DoesNotRequestAFrameAndCallbacksAddedMidPhaseWaitForTheNextOne()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             List<string> order = [];
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 order.Add("first");
-                Scheduler.AddPostFrameCallback(_ => order.Add("nested"));
+                SchedulerBinding.Instance.AddPostFrameCallback(_ => order.Add("nested"));
             });
-            Scheduler.AddPostFrameCallback(_ => order.Add("second"));
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => order.Add("second"));
 
             // Dart's addPostFrameCallback never schedules a frame on its own.
-            Assert.False(Scheduler.HasScheduledFrame);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.Equal(["first", "second"], order);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(2));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(2));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.Equal(["first", "second", "nested"], order);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void CurrentFrameTimeStamp_IsAdjustedForTheEpochAndTimeDilationWhileTheRawOneIsNot()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             List<TimeSpan> adjusted = [];
@@ -302,12 +304,12 @@ public sealed class SchedulerBindingTests
             void Record(TimeSpan timeStamp)
             {
                 adjusted.Add(timeStamp);
-                raw.Add(Scheduler.CurrentSystemFrameTimeStamp);
-                Scheduler.ScheduleFrameCallback(Record);
+                raw.Add(SchedulerBinding.Instance.CurrentSystemFrameTimeStamp);
+                SchedulerBinding.Instance.ScheduleFrameCallback(Record);
             }
 
-            Scheduler.ScheduleFrameCallback(Record);
-            Scheduler.ResetEpoch();
+            SchedulerBinding.Instance.ScheduleFrameCallback(Record);
+            SchedulerBinding.Instance.ResetEpoch();
 
             Tick(TimeSpan.FromSeconds(2));
             Tick(TimeSpan.FromSeconds(4));
@@ -319,69 +321,74 @@ public sealed class SchedulerBindingTests
             Tick(TimeSpan.FromSeconds(8));
             Assert.Equal(TimeSpan.FromSeconds(2), adjusted[2]);
             Assert.Equal(TimeSpan.FromSeconds(3), adjusted[3]);
-            Assert.Equal(TimeSpan.FromSeconds(8), Scheduler.CurrentSystemFrameTimeStamp);
+            Assert.Equal(TimeSpan.FromSeconds(8), SchedulerBinding.Instance.CurrentSystemFrameTimeStamp);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
-    [Fact]
+    // Dart asserts that a frame is in progress before the null check.
+    [DebugOnlyFact]
     public void CurrentFrameTimeStamp_IsOnlyReadableWhileAFrameIsBeingProduced()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Assert.Throws<InvalidOperationException>(() => Scheduler.CurrentFrameTimeStamp);
+            Assert.Throws<AssertionError>(() => SchedulerBinding.Instance.CurrentFrameTimeStamp);
 
             TimeSpan? seen = null;
-            Scheduler.ScheduleFrameCallback(_ => seen = Scheduler.CurrentFrameTimeStamp);
+            SchedulerBinding.Instance.ScheduleFrameCallback(
+                _ => seen = SchedulerBinding.Instance.CurrentFrameTimeStamp);
             Tick(TimeSpan.FromSeconds(1));
 
             Assert.Equal(TimeSpan.Zero, seen);
-            Assert.Throws<InvalidOperationException>(() => Scheduler.CurrentFrameTimeStamp);
+            Assert.Throws<AssertionError>(() => SchedulerBinding.Instance.CurrentFrameTimeStamp);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
-    [Fact]
+    // binding.dart: `assert(value > 0.0)`.
+    [DebugOnlyFact]
     public void TimeDilation_DefaultsToOneAndRejectsNonPositiveValues()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             Assert.Equal(1.0, Scheduler.TimeDilation);
-            Assert.Throws<ArgumentOutOfRangeException>(() => Scheduler.TimeDilation = 0.0);
-            Assert.Throws<ArgumentOutOfRangeException>(() => Scheduler.TimeDilation = -1.0);
+            Assert.Throws<AssertionError>(() => Scheduler.TimeDilation = 0.0);
+            Assert.Throws<AssertionError>(() => Scheduler.TimeDilation = -1.0);
+            Assert.Equal(1.0, Scheduler.TimeDilation);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void DebugAssertNoTimeDilation_ThrowsWithTheGivenReasonOnlyWhileDilated()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Assert.True(Scheduler.DebugAssertNoTimeDilation("reason"));
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoTimeDilation("reason"));
 
             Scheduler.TimeDilation = 2.0;
-            FlutterError error = Assert.Throws<FlutterError>(() => Scheduler.DebugAssertNoTimeDilation("reason"));
+            FlutterError error = Assert.Throws<FlutterError>(
+                () => SchedulerBinding.Instance.DebugAssertNoTimeDilation("reason"));
             Assert.Equal("reason", error.Message);
 
             Scheduler.TimeDilation = 1.0;
-            Assert.True(Scheduler.DebugAssertNoTimeDilation("reason"));
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoTimeDilation("reason"));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -418,87 +425,96 @@ public sealed class SchedulerBindingTests
     [Fact]
     public void DebugAssertNoTransientCallbacks_ReportsTheLeakInsteadOfThrowing()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<FlutterErrorDetails> reported = [];
         FlutterExceptionHandler? previous = FlutterError.OnError;
         FlutterError.OnError = reported.Add;
         try
         {
-            Assert.True(Scheduler.DebugAssertNoTransientCallbacks("reason"));
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoTransientCallbacks("reason"));
             Assert.Empty(reported);
 
-            Scheduler.ScheduleFrameCallback(_ => { });
-            Assert.True(Scheduler.DebugAssertNoTransientCallbacks("reason"));
-            Assert.Equal("reason", RequireException(Assert.Single(reported)).Message);
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => { });
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoTransientCallbacks("reason"));
+            // Dart reports the reason string itself as the exception.
+            FlutterErrorDetails details = Assert.Single(reported);
+            Assert.Equal("reason", details.Exception);
+            Assert.Equal("scheduler library", details.Library);
         }
         finally
         {
             FlutterError.OnError = previous;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void PerformanceMode_RefCountsSameModeRequestsAndRejectsConflictingOnes()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            PerformanceModeRequestHandle? first = Scheduler.RequestPerformanceMode(DartPerformanceMode.Latency);
+            PerformanceModeRequestHandle? first =
+                SchedulerBinding.Instance.RequestPerformanceMode(DartPerformanceMode.Latency);
             Assert.NotNull(first);
-            Assert.Equal(DartPerformanceMode.Latency, Scheduler.DebugGetRequestedPerformanceMode());
+            Assert.Equal(DartPerformanceMode.Latency, SchedulerBinding.Instance.DebugGetRequestedPerformanceMode());
 
-            Assert.Null(Scheduler.RequestPerformanceMode(DartPerformanceMode.Throughput));
-            Assert.Equal(DartPerformanceMode.Latency, Scheduler.DebugGetRequestedPerformanceMode());
+            Assert.Null(SchedulerBinding.Instance.RequestPerformanceMode(DartPerformanceMode.Throughput));
+            Assert.Equal(DartPerformanceMode.Latency, SchedulerBinding.Instance.DebugGetRequestedPerformanceMode());
 
-            PerformanceModeRequestHandle? second = Scheduler.RequestPerformanceMode(DartPerformanceMode.Latency);
+            PerformanceModeRequestHandle? second =
+                SchedulerBinding.Instance.RequestPerformanceMode(DartPerformanceMode.Latency);
             Assert.NotNull(second);
 
             first.Dispose();
-            Assert.Equal(DartPerformanceMode.Latency, Scheduler.DebugGetRequestedPerformanceMode());
+            Assert.Equal(DartPerformanceMode.Latency, SchedulerBinding.Instance.DebugGetRequestedPerformanceMode());
 
             second.Dispose();
-            Assert.Null(Scheduler.DebugGetRequestedPerformanceMode());
+            Assert.Null(SchedulerBinding.Instance.DebugGetRequestedPerformanceMode());
 
             // Only the last release tells the runtime to go back to balanced.
             Assert.Equal(
                 DartPerformanceMode.Balanced,
                 PlatformDispatcher.Instance.LastRequestedPerformanceMode);
-            Assert.Throws<InvalidOperationException>(second.Dispose);
+            // Dart asserts against a second dispose, and its release build fails the null check.
+            Assert.Throws(
+                Constants.KDebugMode ? typeof(AssertionError) : typeof(InvalidOperationException),
+                second.Dispose);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void DebugAssertNoPendingPerformanceModeRequests_ThrowsWhileARequestIsOutstanding()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Assert.True(Scheduler.DebugAssertNoPendingPerformanceModeRequests("reason"));
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoPendingPerformanceModeRequests("reason"));
 
-            PerformanceModeRequestHandle? handle = Scheduler.RequestPerformanceMode(DartPerformanceMode.Memory);
+            PerformanceModeRequestHandle? handle =
+                SchedulerBinding.Instance.RequestPerformanceMode(DartPerformanceMode.Memory);
             Assert.Equal(
                 "reason",
                 Assert.Throws<FlutterError>(
-                    () => Scheduler.DebugAssertNoPendingPerformanceModeRequests("reason")).Message);
+                    () => SchedulerBinding.Instance.DebugAssertNoPendingPerformanceModeRequests("reason")).Message);
 
             handle!.Dispose();
-            Assert.True(Scheduler.DebugAssertNoPendingPerformanceModeRequests("reason"));
+            Assert.True(SchedulerBinding.Instance.DebugAssertNoPendingPerformanceModeRequests("reason"));
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void TimingsCallbacks_AreMultiplexedSkipRemovedOnesAndSurviveAThrowingCallback()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<FlutterErrorDetails> reported = [];
         FlutterExceptionHandler? previous = FlutterError.OnError;
         FlutterError.OnError = reported.Add;
@@ -509,15 +525,15 @@ public sealed class SchedulerBindingTests
             void First(IReadOnlyList<FrameTiming> _)
             {
                 order.Add("first");
-                Scheduler.RemoveTimingsCallback(Second);
+                SchedulerBinding.Instance.RemoveTimingsCallback(Second);
                 throw new InvalidOperationException("Test");
             }
 
             void Third(IReadOnlyList<FrameTiming> _) => order.Add("third");
 
-            Scheduler.AddTimingsCallback(First);
-            Scheduler.AddTimingsCallback(Second);
-            Scheduler.AddTimingsCallback(Third);
+            SchedulerBinding.Instance.AddTimingsCallback(First);
+            SchedulerBinding.Instance.AddTimingsCallback(Second);
+            SchedulerBinding.Instance.AddTimingsCallback(Third);
 
             var timing = new FrameTiming(
                 vsyncStart: 5000,
@@ -541,32 +557,33 @@ public sealed class SchedulerBindingTests
             Assert.Equal(TimeSpan.FromMilliseconds(5), timing.VsyncOverhead);
             Assert.Equal(TimeSpan.FromMilliseconds(15), timing.TotalSpan);
 
-            Scheduler.RemoveTimingsCallback(First);
-            Scheduler.RemoveTimingsCallback(Third);
-            Assert.Null(PlatformDispatcher.Instance.OnReportTimings);
+            SchedulerBinding.Instance.RemoveTimingsCallback(First);
+            SchedulerBinding.Instance.RemoveTimingsCallback(Third);
+            // The binding's own `Flutter.Frame` profiler keeps the platform slot wired outside release.
+            Assert.Equal(Constants.KReleaseMode, PlatformDispatcher.Instance.OnReportTimings is null);
         }
         finally
         {
             FlutterError.OnError = previous;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void FrameCallbackExceptions_AreReportedAndDoNotAbortTheRemainingCallbacks()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<FlutterErrorDetails> reported = [];
         FlutterExceptionHandler? previous = FlutterError.OnError;
         FlutterError.OnError = reported.Add;
         try
         {
             List<string> order = [];
-            Scheduler.ScheduleFrameCallback(_ => throw new InvalidOperationException("transient"));
-            Scheduler.ScheduleFrameCallback(_ => order.Add("survivor"));
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => throw new InvalidOperationException("transient"));
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => order.Add("survivor"));
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
 
             Assert.Equal(["survivor"], order);
             FlutterErrorDetails details = Assert.Single(reported);
@@ -576,116 +593,116 @@ public sealed class SchedulerBindingTests
         finally
         {
             FlutterError.OnError = previous;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScheduleForcedFrame_WiresTheHostFrameCallbacksAndIgnoresDisabledFrames()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
-            Assert.False(Scheduler.FramesEnabled);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
+            Assert.False(SchedulerBinding.Instance.FramesEnabled);
 
-            Scheduler.ScheduleFrame();
-            Assert.False(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.ScheduleFrame();
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
             Assert.Null(PlatformDispatcher.Instance.OnBeginFrame);
 
-            Scheduler.ScheduleForcedFrame();
-            Assert.True(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.ScheduleForcedFrame();
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
             Assert.NotNull(PlatformDispatcher.Instance.OnBeginFrame);
             Assert.NotNull(PlatformDispatcher.Instance.OnDrawFrame);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void AppLifecycle_EnablesFramesForResumedAndInactiveAndDisablesThemOtherwise()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Assert.Null(Scheduler.LifecycleState);
+            Assert.Null(SchedulerBinding.Instance.LifecycleState);
 
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
-            Assert.False(Scheduler.FramesEnabled);
-            Assert.Equal(AppLifecycleState.Paused, Scheduler.LifecycleState);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
+            Assert.False(SchedulerBinding.Instance.FramesEnabled);
+            Assert.Equal(AppLifecycleState.Paused, SchedulerBinding.Instance.LifecycleState);
 
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Hidden);
-            Assert.False(Scheduler.FramesEnabled);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Hidden);
+            Assert.False(SchedulerBinding.Instance.FramesEnabled);
 
             // Re-enabling frames also asks for one.
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
-            Assert.True(Scheduler.FramesEnabled);
-            Assert.True(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
+            Assert.True(SchedulerBinding.Instance.FramesEnabled);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
 
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
-            Assert.False(Scheduler.FramesEnabled);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
+            Assert.False(SchedulerBinding.Instance.FramesEnabled);
 
-            Scheduler.ResetInternalState();
-            Assert.Null(Scheduler.LifecycleState);
-            Assert.True(Scheduler.FramesEnabled);
+            SchedulerBinding.Instance.ResetInternalState();
+            Assert.Null(SchedulerBinding.Instance.LifecycleState);
+            Assert.True(SchedulerBinding.Instance.FramesEnabled);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Ticker_StopsTickingWhilePausedAndResumesAfterTheAppIsResumed()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var ticker = new Ticker(_ => { });
         try
         {
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
             ticker.Start();
             Assert.True(ticker.IsTicking);
 
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
             Assert.False(ticker.IsTicking);
             Assert.True(ticker.IsActive);
 
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
             Assert.True(ticker.IsTicking);
         }
         finally
         {
             ticker.Dispose();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Ticker_ForceFramesRequestsAFrameEvenWhileFramesAreDisabled()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var ticker = new Ticker(_ => { }) { ForceFrames = true };
         try
         {
-            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
-            Assert.False(Scheduler.HasScheduledFrame);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
             ticker.Start();
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
             ticker.Dispose();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Ticker_ElapsedTimeFollowsTimeDilation()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var elapsed = new List<TimeSpan>();
         var ticker = new Ticker(elapsed.Add);
         try
@@ -705,47 +722,48 @@ public sealed class SchedulerBindingTests
         finally
         {
             ticker.Dispose();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScheduleWarmUpFrame_RunsBeginAndDrawOnSeparateTurnsAndLocksEventsUntilTheFrameEnds()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<Action> turns = [];
         Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
         PlatformDispatcher.Instance.TimerRun = turns.Add;
         try
         {
             List<string> order = [];
-            Scheduler.AddPersistentFrameCallback(_ => order.Add("draw"));
-            Scheduler.ScheduleFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ => order.Add("draw"));
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ =>
             {
                 order.Add("begin");
-                Scheduler.ScheduleMicrotask(() => order.Add("microtask"));
+                EventLoop.ScheduleMicrotask(() => order.Add("microtask"));
             });
 
-            Scheduler.ScheduleWarmUpFrame();
+            SchedulerBinding.Instance.ScheduleWarmUpFrame();
 
             // Two turns, one for the begin half and one for the draw half. A second call while the
             // warm-up frame is in flight adds none.
             Assert.Equal(2, turns.Count);
-            Scheduler.ScheduleWarmUpFrame();
+            SchedulerBinding.Instance.ScheduleWarmUpFrame();
             Assert.Equal(2, turns.Count);
 
             // Events are locked, so a scheduled task queues without arming a turn of its own.
             bool taskRan = false;
-            Assert.True(Scheduler.Locked);
-            Scheduler.ScheduleTask(() => taskRan = true, Priority.Animation);
+            Assert.True(SchedulerBinding.Instance.Locked);
+            SchedulerBinding.Instance.ScheduleTask(() => taskRan = true, Priority.Animation);
             Assert.Equal(2, turns.Count);
 
+            // The begin turn ends like any event-loop turn, by draining the microtasks it queued.
             turns[0]();
-            Assert.Equal(["begin"], order);
+            Assert.Equal(["begin", "microtask"], order);
 
             turns[1]();
             Assert.Equal(["begin", "microtask", "draw"], order);
-            Assert.False(Scheduler.Locked);
+            Assert.False(SchedulerBinding.Instance.Locked);
 
             // Unlocking re-arms the queue that stayed unserviced while locked.
             Assert.False(taskRan);
@@ -756,70 +774,254 @@ public sealed class SchedulerBindingTests
         finally
         {
             PlatformDispatcher.Instance.TimerRun = previousTimerRun;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScheduleWarmUpFrame_SwallowsAHostFrameThatArrivesMidWarmUpAndReschedulesIt()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<Action> turns = [];
         Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
         PlatformDispatcher.Instance.TimerRun = turns.Add;
         try
         {
             int frames = 0;
-            Scheduler.AddPersistentFrameCallback(_ => frames++);
-            Scheduler.EnsureFrameCallbacksRegistered();
-            Scheduler.ScheduleWarmUpFrame();
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ => frames++);
+            SchedulerBinding.Instance.EnsureFrameCallbacksRegistered();
+            SchedulerBinding.Instance.ScheduleWarmUpFrame();
 
             turns[0]();
 
             // A host frame delivered between the two halves of the warm-up frame is dropped: neither
             // half of it reaches the pipeline.
             PlatformDispatcher.Instance.OnBeginFrame!(TimeSpan.FromSeconds(1));
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
             PlatformDispatcher.Instance.OnDrawFrame!();
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
             Assert.Equal(0, frames);
 
             // The drop installs a post-frame callback that asks for the dropped frame again; it runs
             // in the warm-up frame's own post-frame phase.
             turns[1]();
             Assert.Equal(1, frames);
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
             PlatformDispatcher.Instance.TimerRun = previousTimerRun;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void EndOfFrame_CompletesOncePerFrameAndSharesOneCompleterBetweenAwaiters()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
-            Task first = Scheduler.EndOfFrame;
-            Task second = Scheduler.EndOfFrame;
+            Task first = SchedulerBinding.Instance.EndOfFrame;
+            Task second = SchedulerBinding.Instance.EndOfFrame;
             Assert.Same(first, second);
 
             // Reading it while idle asks for the frame that will complete it.
-            Assert.True(Scheduler.HasScheduledFrame);
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
             Assert.False(first.IsCompleted);
 
-            Scheduler.HandleBeginFrame(TimeSpan.FromSeconds(1));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromSeconds(1));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Assert.True(first.IsCompletedSuccessfully);
 
-            Task third = Scheduler.EndOfFrame;
+            Task third = SchedulerBinding.Instance.EndOfFrame;
             Assert.NotSame(first, third);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
+    }
+
+    // binding_test.dart: "Flutter.Frame event fired".
+    [Fact]
+    public void ReportedTimings_PostAFlutterFrameEventPerTiming()
+    {
+        SchedulerBinding.ResetForTests();
+        List<(string Kind, IReadOnlyDictionary<string, object?> Data)> events = [];
+        void OnEvent(string kind, IReadOnlyDictionary<string, object?> data) => events.Add((kind, data));
+
+        BindingBase.EventPosted += OnEvent;
+        try
+        {
+            PlatformDispatcher.Instance.OnReportTimings!(
+            [
+                new FrameTiming(
+                    vsyncStart: 5000,
+                    buildStart: 10000,
+                    buildFinish: 15000,
+                    rasterStart: 16000,
+                    rasterFinish: 20000,
+                    rasterFinishWallTime: 20010,
+                    frameNumber: 1991),
+            ]);
+
+            (string kind, IReadOnlyDictionary<string, object?> data) = Assert.Single(events);
+            Assert.Equal("Flutter.Frame", kind);
+            Assert.Equal(1991L, Convert.ToInt64(data["number"], CultureInfo.InvariantCulture));
+            Assert.Equal(10000L, Convert.ToInt64(data["startTime"], CultureInfo.InvariantCulture));
+            Assert.Equal(15000L, Convert.ToInt64(data["elapsed"], CultureInfo.InvariantCulture));
+            Assert.Equal(5000L, Convert.ToInt64(data["build"], CultureInfo.InvariantCulture));
+            Assert.Equal(4000L, Convert.ToInt64(data["raster"], CultureInfo.InvariantCulture));
+            Assert.Equal(5000L, Convert.ToInt64(data["vsyncOverhead"], CultureInfo.InvariantCulture));
+        }
+        finally
+        {
+            BindingBase.EventPosted -= OnEvent;
+            SchedulerBinding.ResetForTests();
+        }
+    }
+
+    // performance_mode_test.dart: "PerformanceModeRequestHandle dispatches memory events".
+    [Fact]
+    public void PerformanceModeRequestHandle_DispatchesMemoryEvents()
+    {
+        SchedulerBinding.ResetForTests();
+        List<ObjectEvent> events = [];
+        FlutterMemoryAllocations.Instance.AddListener(events.Add);
+        try
+        {
+            PerformanceModeRequestHandle handle =
+                SchedulerBinding.Instance.RequestPerformanceMode(DartPerformanceMode.Latency)!;
+            handle.Dispose();
+
+            if (Constants.KDebugMode)
+            {
+                Assert.Collection(
+                    events,
+                    @event =>
+                    {
+                        ObjectCreated created = Assert.IsType<ObjectCreated>(@event);
+                        Assert.Same(handle, created.Object);
+                        Assert.Equal("package:flutter/scheduler.dart", created.Library);
+                        Assert.Equal("PerformanceModeRequestHandle", created.ClassName);
+                    },
+                    @event => Assert.Same(handle, Assert.IsType<ObjectDisposed>(@event).Object));
+            }
+            else
+            {
+                Assert.Empty(events);
+            }
+        }
+        finally
+        {
+            FlutterMemoryAllocations.Instance.RemoveListener(events.Add);
+            SchedulerBinding.ResetForTests();
+        }
+    }
+
+    // foundation/binding.dart `lockEvents`: the lock is taken before the callback runs, the
+    // callback's own task is returned, and the release (with `unlocked`) runs as a microtask.
+    [Fact]
+    public async Task LockEvents_LocksBeforeTheCallbackAndUnlocksInAMicrotaskAfterIt()
+    {
+        SchedulerBinding.ResetForTests();
+        try
+        {
+            SchedulerBinding scheduler = SchedulerBinding.Instance;
+            bool lockedInsideCallback = false;
+            var gate = new TaskCompletionSource();
+            Task callbackTask = gate.Task;
+            Task returned = scheduler.LockEvents(() =>
+            {
+                lockedInsideCallback = scheduler.Locked;
+                return callbackTask;
+            });
+
+            Assert.True(lockedInsideCallback);
+            Assert.Same(callbackTask, returned);
+
+            gate.SetResult();
+            Assert.True(scheduler.Locked);
+            EventLoop.FlushMicrotasks();
+            Assert.False(scheduler.Locked);
+
+            // A faulted callback task reaches the caller instead of being swallowed.
+            Task faulted = scheduler.LockEvents(() => Task.FromException(new InvalidOperationException("lock")));
+            await Assert.ThrowsAsync<InvalidOperationException>(() => faulted);
+            EventLoop.FlushMicrotasks();
+            Assert.False(scheduler.Locked);
+        }
+        finally
+        {
+            SchedulerBinding.ResetForTests();
+        }
+    }
+
+    // binding.dart `scheduleFrame`/`scheduleForcedFrame`: the debugPrintScheduleFrameStacks label
+    // names the Dart method and the phase the way Dart interpolates an enum.
+    [DebugOnlyFact]
+    public void ScheduleFrame_PrintsTheDartLabelWhenScheduleFrameStacksAreTraced()
+    {
+        SchedulerBinding.ResetForTests();
+        List<string?> printed = [];
+        DebugPrintCallback previousPrint = Print.DebugPrint;
+        Print.DebugPrint = (message, _) => printed.Add(message);
+        SchedulerDebug.DebugPrintScheduleFrameStacks = true;
+        try
+        {
+            SchedulerBinding.Instance.ScheduleFrame();
+            Assert.Equal("scheduleFrame() called. Current phase is SchedulerPhase.idle.", printed[0]);
+
+            SchedulerBinding.ResetForTests();
+            printed.Clear();
+            SchedulerBinding.Instance.ScheduleForcedFrame();
+            Assert.Equal("scheduleForcedFrame() called. Current phase is SchedulerPhase.idle.", printed[0]);
+        }
+        finally
+        {
+            SchedulerDebug.DebugPrintScheduleFrameStacks = false;
+            Print.DebugPrint = previousPrint;
+            SchedulerBinding.ResetForTests();
+        }
+    }
+
+    // binding.dart reports scheduler-callback and task errors with the stack they were thrown on.
+    [Fact]
+    public void CallbackAndTaskErrors_CarryTheThrownStack()
+    {
+        SchedulerBinding.ResetForTests();
+        List<FlutterErrorDetails> reported = [];
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => throw new InvalidOperationException("frame"));
+            Tick(TimeSpan.FromSeconds(1));
+            Func<int> throwingTask = () => throw new InvalidOperationException("task");
+            _ = SchedulerBinding.Instance.ScheduleTask(throwingTask, Priority.Touch);
+            SchedulerBinding.Instance.HandleEventLoopCallback();
+
+            Assert.Equal(2, reported.Count);
+            Assert.All(reported, details =>
+            {
+                Assert.Equal("scheduler library", details.Library);
+                Assert.False(string.IsNullOrEmpty(details.Stack));
+            });
+            Assert.Equal("during a scheduler callback", reported[0].Context!.ToString());
+            Assert.Equal("during a task callback", reported[1].Context!.ToString());
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+            SchedulerBinding.ResetForTests();
+        }
+    }
+
+    // service_extensions.dart: the extension is registered under its Dart enum name.
+    [Fact]
+    public void SchedulerServiceExtensions_UseTheDartNames()
+    {
+        Assert.Equal("timeDilation", SchedulerServiceExtensions.TimeDilation.DartName());
     }
 
     private static Exception RequireException(FlutterErrorDetails details)
@@ -829,7 +1031,7 @@ public sealed class SchedulerBindingTests
 
     private static void Tick(TimeSpan rawTimeStamp)
     {
-        Scheduler.HandleBeginFrame(rawTimeStamp);
-        Scheduler.HandleDrawFrame();
+        SchedulerBinding.Instance.HandleBeginFrame(rawTimeStamp);
+        SchedulerBinding.Instance.HandleDrawFrame();
     }
 }

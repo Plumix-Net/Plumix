@@ -546,7 +546,7 @@ public sealed class PopupMenuButtonState<T> : State<PopupMenuButton<T>>
             popUpAnimationStyle: widget.PopUpAnimationStyle,
             requestFocus: widget.RequestFocus);
         SetState(() => _isMenuExpanded = true);
-        Scheduler.RunAsync(() => HandleResult(task));
+        EventLoop.RunAsync(() => HandleResult(task));
     }
 
     private async Task HandleResult(Task<T?> task)
@@ -1017,7 +1017,7 @@ internal sealed class PopupMenuEnsureVisible : StatefulWidget
 
         public override void InitState()
         {
-            Scheduler.AddPostFrameCallback(EnsureVisible);
+            SchedulerBinding.Instance.AddPostFrameCallback(EnsureVisible);
         }
 
         public override Widget Build(BuildContext context) => CurrentWidget.Child;
@@ -1040,7 +1040,7 @@ internal sealed class PopupMenuEnsureVisible : StatefulWidget
 
             if (_attempts < 3)
             {
-                Scheduler.AddPostFrameCallback(EnsureVisible);
+                SchedulerBinding.Instance.AddPostFrameCallback(EnsureVisible);
             }
         }
     }

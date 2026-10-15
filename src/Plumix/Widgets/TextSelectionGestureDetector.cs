@@ -234,7 +234,7 @@ public class TextSelectionGestureDetectorBuilder
                     if (stylusEnabled)
                     {
                         // Dart attaches no error handler to this future either.
-                        Scheduler.RunAsync(async () =>
+                        EventLoop.RunAsync(async () =>
                         {
                             bool isAvailable = await Scribe.IsFeatureAvailable();
                             if (isAvailable)

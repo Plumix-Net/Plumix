@@ -2,51 +2,58 @@
 
 namespace Plumix;
 
-/// <summary>A priority for a task scheduled through <see cref="Scheduler.ScheduleTask{T}"/>.</summary>
-public readonly record struct Priority
+/// <summary>
+/// A task priority, as passed to
+/// <see cref="SchedulerBinding.ScheduleTask{T}(Func{T}, Priority, string?, Flow?)"/>.
+/// </summary>
+/// <remarks>
+/// Dart's immutable <c>Priority</c>, which keeps identity equality: like Dart, this class does not
+/// override equality, so compare <see cref="Value"/>s.
+/// </remarks>
+public sealed class Priority
 {
-    private Priority(int value) => Value = value;
+    private readonly int _value;
 
-    /// <summary>Integer that describes this <see cref="Priority"/> value.</summary>
-    public int Value { get; }
+    private Priority(int value) => _value = value;
+
+    /// <summary>Integer that describes this Priority value.</summary>
+    public int Value => _value;
 
     /// <summary>A task to run after all other tasks, when no animations are running.</summary>
-    public static Priority Idle => new(0);
+    public static readonly Priority Idle = new(0);
 
     /// <summary>A task to run even when animations are running.</summary>
-    public static Priority Animation => new(100000);
+    public static readonly Priority Animation = new(100000);
 
     /// <summary>A task to run even when the user is interacting with the device.</summary>
-    public static Priority Touch => new(200000);
+    public static readonly Priority Touch = new(200000);
 
-    /// <summary>Maximum offset by which to clamp relative priorities.</summary>
-    public const int MaxOffset = 10000;
+    /// <summary>Relative priorities are clamped by this offset.</summary>
+    /// <remarks>It is still possible to have priorities that are offset by more than this amount by
+    /// repeatedly taking relative offsets, but that's generally discouraged.</remarks>
+    public const int KMaxOffset = 10000;
 
-    /// <summary>Returns a priority relative to this one; a positive offset indicates a higher priority.</summary>
+    /// <summary>Returns a priority relative to this priority.</summary>
+    /// <remarks>
+    /// A positive <paramref name="offset"/> indicates a higher priority. The parameter
+    /// <paramref name="offset"/> is clamped to ±<see cref="KMaxOffset"/>.
+    /// </remarks>
     public static Priority operator +(Priority priority, int offset)
     {
-        if (Math.Abs(offset) > MaxOffset)
+        ArgumentNullException.ThrowIfNull(priority);
+
+        if (Math.Abs((long)offset) > KMaxOffset)
         {
-            offset = MaxOffset * Math.Sign(offset);
+            // Clamp the input offset.
+            offset = KMaxOffset * Math.Sign(offset);
         }
 
-        return new Priority(priority.Value + offset);
+        return new Priority(priority._value + offset);
     }
 
-    /// <summary>Returns a priority relative to this one; a positive offset indicates a lower priority.</summary>
-    public static Priority operator -(Priority priority, int offset)
-    {
-        if (Math.Abs(offset) > MaxOffset)
-        {
-            offset = MaxOffset * Math.Sign(offset);
-        }
-
-        return new Priority(priority.Value - offset);
-    }
+    /// <summary>Returns a priority relative to this priority.</summary>
+    /// <remarks>A positive <paramref name="offset"/> indicates a lower priority. The parameter
+    /// <paramref name="offset"/> is clamped to ±<see cref="KMaxOffset"/>.</remarks>
+    public static Priority operator -(Priority priority, int offset) =>
+        priority + (offset == int.MinValue ? int.MaxValue : -offset);
 }
-
-/// <summary>
-/// Decides whether a task at a given priority should run now. Dart's `SchedulingStrategy` also takes the
-/// binding instance; Plumix's scheduler is static, so the strategy only receives the priority.
-/// </summary>
-public delegate bool SchedulingStrategy(int priority);

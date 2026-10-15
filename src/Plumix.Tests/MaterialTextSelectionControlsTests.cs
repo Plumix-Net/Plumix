@@ -14,12 +14,12 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
 {
     public MaterialTextSelectionControlsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

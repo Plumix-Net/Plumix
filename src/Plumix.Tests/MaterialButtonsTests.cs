@@ -578,7 +578,7 @@ public sealed class MaterialButtonsTests
             Assert.True(buttonNode.PerformAction(SemanticsActions.Tap));
             Assert.True(buttonNode.PerformAction(SemanticsActions.LongPress));
             Assert.True(buttonNode.PerformAction(SemanticsActions.Focus));
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Equal(1, tapCount);
             Assert.Equal(1, longPressCount);
         }
@@ -810,11 +810,11 @@ public sealed class MaterialButtonsTests
         owner.FlushBuild();
 
         Assert.Equal(Colors.Black, capturedIconTheme!.Color);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         statesController.Update(WidgetState.Focused, true);
         owner.FlushBuild();
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -824,7 +824,7 @@ public sealed class MaterialButtonsTests
         // own theme animation, so both are mid-flight here without being frame-locked together.
         Assert.InRange(capturedIconTheme!.Color!.Red, (byte)1, (byte)254);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
         paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);

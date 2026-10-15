@@ -14,12 +14,12 @@ public sealed class TransitionsTests : IDisposable
 {
     public TransitionsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -370,9 +370,9 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         animation.Forward(from: 0.0);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);

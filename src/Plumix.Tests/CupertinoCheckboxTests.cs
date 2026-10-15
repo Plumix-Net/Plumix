@@ -403,7 +403,7 @@ public sealed class CupertinoCheckboxTests
             using var harness = new CupertinoThemeTestHarness(Wrap(
                 new CupertinoCheckbox(value: true, onChanged: _ => { }, focusNode: node)));
 
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             node.RequestFocus();
             harness.Pump(ViewSize);
 
@@ -426,7 +426,7 @@ public sealed class CupertinoCheckboxTests
                     onChanged: _ => { },
                     focusColor: testFocusColor,
                     focusNode: custom)));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             custom.RequestFocus();
             customHarness.Pump(ViewSize);
             Assert.Equal(testFocusColor, Painter(customHarness).EffectiveFocusColor);

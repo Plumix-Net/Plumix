@@ -1023,10 +1023,11 @@ public sealed class OverlayState : State<Overlay>
             return;
         }
 
-        if (global::Plumix.Scheduler.Phase == global::Plumix.SchedulerPhase.PersistentCallbacks)
+        if (global::Plumix.SchedulerBinding.Instance.SchedulerPhase
+            == global::Plumix.SchedulerPhase.PersistentCallbacks)
         {
             // OverlayEntry.remove is legal during build; Dart defers only the dirty notification.
-            global::Plumix.Scheduler.AddPostFrameCallback(_ => MarkDirty());
+            global::Plumix.SchedulerBinding.Instance.AddPostFrameCallback(_ => MarkDirty());
             return;
         }
 

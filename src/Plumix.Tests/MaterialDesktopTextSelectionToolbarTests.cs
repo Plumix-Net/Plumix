@@ -18,14 +18,14 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
 {
     public MaterialDesktopTextSelectionToolbarTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
     public void Dispose()
     {
         PlatformDefaults.DebugTargetPlatformOverride = null;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

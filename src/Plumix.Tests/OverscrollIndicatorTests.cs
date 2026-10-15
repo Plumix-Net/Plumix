@@ -17,12 +17,12 @@ public sealed class OverscrollIndicatorTests : IDisposable
 
     public OverscrollIndicatorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

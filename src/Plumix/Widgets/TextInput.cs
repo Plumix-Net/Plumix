@@ -1859,7 +1859,7 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             _restartConnectionScheduled = true;
-            Scheduler.ScheduleMicrotask(RestartConnectionIfNeeded);
+            EventLoop.ScheduleMicrotask(RestartConnectionIfNeeded);
         }
 
         // Discards the current TextInputConnection and establishes a new one, so the platform's
@@ -1996,7 +1996,7 @@ public sealed partial class EditableText : StatefulWidget
         /// computed with the new style.
         private void ScheduleStyleUpdate()
         {
-            Scheduler.AddPostFrameCallback(
+            SchedulerBinding.Instance.AddPostFrameCallback(
                 _ =>
                 {
                     if (!Mounted || !HasInputConnection)
@@ -2057,7 +2057,7 @@ public sealed partial class EditableText : StatefulWidget
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
             _appLifecycleListener = new AppLifecycleListener(onResume: OnResume);
-            Scheduler.RunAsync(InitProcessTextActions);
+            EventLoop.RunAsync(InitProcessTextActions);
         }
 
         public override void DidUpdateWidget(EditableText oldWidget)
@@ -2127,7 +2127,7 @@ public sealed partial class EditableText : StatefulWidget
                 {
                     if (!string.IsNullOrEmpty(TextEditingValue.Text))
                     {
-                        Scheduler.RunAsync(() => RequestSpellCheckAsync());
+                        EventLoop.RunAsync(() => RequestSpellCheckAsync());
                     }
                 }
                 else

@@ -18,7 +18,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
 
     public CupertinoExpansionTileTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
     }
@@ -27,7 +27,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
     {
         PlatformDefaults.DebugTargetPlatformOverride = null;
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -93,15 +93,15 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         Assert.True(controller.IsExpanded);
         Assert.Equal(2, FindParagraphs(harness.RenderView, "Content").Count);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
         harness.Pump(ViewSize);
         RenderTransform icon = Assert.Single(FindAll<RenderTransform>(harness.RenderView));
         Assert.InRange(icon.DebugTransformMatrix()[0], 0.70, 0.72);
         Assert.InRange(icon.DebugTransformMatrix()[1], 0.70, 0.72);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(ViewSize);
         Assert.Single(FindParagraphs(harness.RenderView, "Content"));
         Assert.False(Assert.Single(FindAll<RenderOffstage>(harness.RenderView)).Offstage);
@@ -121,9 +121,9 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         harness.Pump(ViewSize);
 
         Tap(harness.RenderView, new Point(160.0, 22.0), 812);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
         harness.Pump(ViewSize);
 
         Assert.True(controller.IsExpanded);

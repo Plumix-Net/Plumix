@@ -240,13 +240,13 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     private void HandleHistoryChanged()
     {
         // Avoid dispatching a notification in the middle of a build.
-        if (Scheduler.Phase == SchedulerPhase.PostFrameCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PostFrameCallbacks)
         {
             new NavigationNotification(GetNavigatorCanHandlePop()).Dispatch(Context);
             return;
         }
 
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             if (!Mounted)
             {
@@ -1606,7 +1606,7 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             {
                 // A controller may move between navigators during this build. Check after both
                 // owners have had the opportunity to update their inherited scope.
-                Scheduler.AddPostFrameCallback(_ =>
+                SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                 {
                     if (!ReferenceEquals(_heroControllerFromScope, newHeroController))
                     {

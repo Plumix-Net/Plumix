@@ -894,11 +894,11 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
             tester.Pump(TimeSpan.FromMilliseconds(150));
             tester.Pump(TimeSpan.FromMilliseconds(500));
             state.UpdateFloatingCursor(new RawFloatingCursorPoint(FloatingCursorDragState.End, new Point(0, 0)));
-            Assert.True(Scheduler.TransientCallbackCount > 0);
+            Assert.True(SchedulerBinding.Instance.TransientCallbackCount > 0);
 
             tester.PumpWidget(new SizedBox());
             tester.Pump();
-            Assert.Equal(0, Scheduler.TransientCallbackCount);
+            Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         }
     }
 

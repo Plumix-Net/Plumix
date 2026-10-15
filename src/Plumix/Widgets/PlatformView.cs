@@ -1103,7 +1103,7 @@ internal sealed class PlatformViewPlaceholderBox : RenderConstrainedBox
     {
         base.PerformLayout();
         // A call to `localToGlobal` requires waiting for a frame to render first.
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             _ =>
             {
                 if (!Attached)
@@ -1143,7 +1143,7 @@ internal static class PlatformViewControllerDisposal
     /// their listeners before the controller is disposed.</summary>
     internal static void DisposePostFrame(this PlatformViewController controller)
     {
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             timeStamp => { _ = controller.Dispose(); },
             debugLabel: "PlatformViewController.dispose");
     }

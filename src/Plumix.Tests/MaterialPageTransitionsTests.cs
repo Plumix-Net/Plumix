@@ -19,13 +19,13 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 {
     public MaterialPageTransitionsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
@@ -361,9 +361,9 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
     private static void Settle(BuildOwner owner)
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
     }
 

@@ -5,7 +5,7 @@ using Plumix.Foundation;
 namespace Plumix;
 
 /// <summary>
-/// The debug-only switches of Flutter's <c>scheduler/debug.dart</c> that <see cref="Scheduler"/>
+/// The debug-only switches of Flutter's <c>scheduler/debug.dart</c> that <see cref="SchedulerBinding"/>
 /// reads. Every flag defaults to <see langword="false"/>, and setting one has an effect only in
 /// debug builds.
 /// </summary>
@@ -20,7 +20,7 @@ public static class SchedulerDebug
     /// Dart's <c>debugPrintBeginFrameBanner</c>: print a banner at the beginning of each frame.
     /// </summary>
     /// <remarks>
-    /// Frames triggered by <see cref="Scheduler.ScheduleWarmUpFrame"/> show
+    /// Frames triggered by <see cref="SchedulerBinding.ScheduleWarmUpFrame"/> show
     /// <c>(warm-up frame)</c> instead of the frame timestamp.
     /// </remarks>
     public static bool DebugPrintBeginFrameBanner { get; set; }
@@ -30,7 +30,7 @@ public static class SchedulerDebug
 
     /// <summary>
     /// Dart's <c>debugPrintScheduleFrameStacks</c>: log the stack of every
-    /// <see cref="Scheduler.ScheduleFrame"/> and <see cref="Scheduler.ScheduleForcedFrame"/> call.
+    /// <see cref="SchedulerBinding.ScheduleFrame"/> and <see cref="SchedulerBinding.ScheduleForcedFrame"/> call.
     /// </summary>
     public static bool DebugPrintScheduleFrameStacks { get; set; }
 

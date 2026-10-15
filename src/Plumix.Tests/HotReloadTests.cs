@@ -73,7 +73,7 @@ public sealed class HotReloadTests
         Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
 
         host.ReassembleApplication();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
 
         Assert.Same(initialState, ReassembleTracker.CurrentState);
         Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
@@ -97,7 +97,7 @@ public sealed class HotReloadTests
         Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
 
         HotReloadManager.ReassembleApplication();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
 
         Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
         Assert.Equal(1, ReassembleTracker.StateReassembleCount);
@@ -127,7 +127,7 @@ public sealed class HotReloadTests
 
             HotReloadManager.IsManualReassembleAvailable = true;
             Assert.True(probeHost.DispatchKeyDown(Key.R, KeyModifiers.Control | KeyModifiers.Shift));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
         finally
         {

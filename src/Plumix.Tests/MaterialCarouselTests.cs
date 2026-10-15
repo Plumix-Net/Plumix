@@ -598,12 +598,12 @@ public sealed class MaterialCarouselTests
         /// </summary>
         public void PumpAnimation(TimeSpan duration)
         {
-            double start = Scheduler.CurrentSeconds;
+            double start = FrameClock.CurrentSeconds;
             const double frame = 1.0 / 60.0;
             int frames = (int)Math.Ceiling(duration.TotalSeconds / frame) + 2;
             for (int step = 1; step <= frames; step++)
             {
-                Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));
+                SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));
                 Pump();
             }
         }

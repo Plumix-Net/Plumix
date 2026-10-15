@@ -383,7 +383,7 @@ internal sealed class RouterState<T> : RouterStateBase<T>
         }
 
         _routeInformationReportingTaskScheduled = true;
-        Scheduler.AddPostFrameCallback(ReportRouteInformation, debugLabel: "Router.reportRouteInfo");
+        SchedulerBinding.Instance.AddPostFrameCallback(ReportRouteInformation, debugLabel: "Router.reportRouteInfo");
     }
 
     private void ReportRouteInformation(TimeSpan timestamp)
@@ -435,7 +435,7 @@ internal sealed class RouterState<T> : RouterStateBase<T>
             return;
         }
 
-        Scheduler.RunAsync(() => AwaitParsedRouteInformationAsync(parsed, transaction, delegateRouteSetter));
+        EventLoop.RunAsync(() => AwaitParsedRouteInformationAsync(parsed, transaction, delegateRouteSetter));
     }
 
     private async Task AwaitParsedRouteInformationAsync(
@@ -462,11 +462,11 @@ internal sealed class RouterState<T> : RouterStateBase<T>
         {
             // Dart awaits the setter even when it returns a SynchronousFuture, so the rebuild is always
             // at least one microtask away; keeping that keeps SetState out of the ongoing build.
-            Scheduler.ScheduleMicrotask(() => RebuildAfterRouteSet(transaction));
+            EventLoop.ScheduleMicrotask(() => RebuildAfterRouteSet(transaction));
             return;
         }
 
-        Scheduler.RunAsync(() => AwaitRouteSetAsync(applied, transaction));
+        EventLoop.RunAsync(() => AwaitRouteSetAsync(applied, transaction));
     }
 
     private async Task AwaitRouteSetAsync(Task applied, object? transaction)

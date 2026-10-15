@@ -1437,7 +1437,7 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer
 
             // Dart's `Timer` callback runs on the isolate, so the deadline hands the work back to
             // the framework thread instead of resolving the arena entry from the pool.
-            Scheduler.ScheduleMicrotask(() =>
+            EventLoop.ScheduleMicrotask(() =>
             {
                 if (_pointer != pointer || token.IsCancellationRequested)
                 {

@@ -250,7 +250,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs` (`SystemChrome` over `flutter/platform`, `SystemUiOverlayStyle`; sampled by
     `RenderView.UpdateSystemChrome`, answered by the host adapter)
-  - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
+  - `src/Plumix/SchedulerBinding.cs` (`SchedulerBinding`, library-level `Scheduler`), `src/Plumix/SchedulerDebug.cs`,
+    `src/Plumix/UI/FrameTiming.cs`
+  - `src/Plumix/EventLoop.cs` (microtask queue, framework thread), `src/Plumix/FrameClock.cs` (vsync stand-in)
   - `src/Plumix/Foundation/Timeline.cs` (`FlutterTimeline`), `src/Plumix/Developer/Timeline.cs` (`dart:developer`
     `Timeline`/`TimelineTask`/`Flow` over the `Plumix-Timeline` `EventSource`)
   - `src/Plumix/FrameworkSynchronizationContext.cs`
@@ -263,7 +265,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     `WidgetInspector.Screenshot.cs` (screenshot painting context, multicast canvas),
     `WidgetInspector.Location.cs` (creation locations, `InspectorSerializationDelegate`, `WeakMap`)
 - Framework `async` work runs on the framework thread: start every fire-and-forget body with
-  `Scheduler.RunAsync(Body)` (never a bare `_ = BodyAsync()`) and do not write `ConfigureAwait(false)`
+  `EventLoop.RunAsync(Body)` (never a bare `_ = BodyAsync()`) and do not write `ConfigureAwait(false)`
   on an await whose continuation touches framework state.
 - Primary Tests:
   - `src/Plumix.Tests/SchedulerBindingTests.cs`
@@ -282,7 +284,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/Ticker.cs` (`Ticker`, `TickerFuture`, `TickerCanceled`, `ITickerProvider`)
   - `src/Plumix/AnimationController.cs`
-  - `src/Plumix/Scheduler.cs`
+  - `src/Plumix/SchedulerBinding.cs`
   - `src/Plumix/Widgets/TickerProvider.cs`
   - `src/Plumix/Physics/Simulation.cs`
 - A ticker callback receives the time elapsed since the ticker started, so the first frame after a start

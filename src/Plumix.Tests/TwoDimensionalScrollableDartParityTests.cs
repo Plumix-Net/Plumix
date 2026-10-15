@@ -1389,7 +1389,7 @@ public sealed class TwoDimensionalScrollableDartParityTests
         tester.Tap(finder);
         // flutter_test's `tap` runs inside `TestAsyncUtils.guard`, whose await drains the microtasks
         // the focus request scheduled.
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(testTextInput.IsVisible);
 
         tester.Drag(tester.ElementsOfType<SimpleBuilderTableView>().First(), new Vector(-40.0, -40.0));

@@ -195,10 +195,10 @@ public sealed class MaterialDrawerHeaderTests
             semantics,
             node => node.Label?.Contains("Hide accounts", StringComparison.Ordinal) == true));
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.InRange(transform.DebugTransformMatrix()[0], -1.000001, -0.999999);
@@ -210,10 +210,10 @@ public sealed class MaterialDrawerHeaderTests
                     && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(button!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(304, 260));
-        now = Scheduler.CurrentSeconds;
+        now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.InRange(transform.DebugTransformMatrix()[0], 0.999999, 1.000001);
@@ -299,9 +299,9 @@ public sealed class MaterialDrawerHeaderTests
         harness.Pump(new Size(304, 260));
         harness.Update(BuildHeader());
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(304, 260));
 
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
@@ -320,10 +320,10 @@ public sealed class MaterialDrawerHeaderTests
             ThemeData.Light));
 
         TapDetails(harness);
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
         harness.Pump(new Size(304, 260));
         double openingM11 = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView))
             .DebugTransformMatrix()[0];
@@ -332,10 +332,10 @@ public sealed class MaterialDrawerHeaderTests
         TapDetails(harness);
         TapDetails(harness);
         TapDetails(harness);
-        now = Scheduler.CurrentSeconds;
+        now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(304, 260));
 
         Assert.Equal(4, detailsPressed);

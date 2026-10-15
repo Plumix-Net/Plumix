@@ -103,7 +103,7 @@ public sealed class RawTooltipTests
     [Fact]
     public void RawTooltip_TapTriggersFeedbackCallbackAndTimedDismiss()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             int triggered = 0;
@@ -143,17 +143,17 @@ public sealed class RawTooltipTests
             Assert.Equal(1, feedback);
             Assert.NotNull(FindParagraph(harness.RenderView, "Tap overlay"));
 
-            double clock = Scheduler.CurrentSeconds;
+            double clock = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.25));
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.25));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Tap overlay"));
             Feedback.FeedbackTriggered -= HandleFeedback;
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

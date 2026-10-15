@@ -120,7 +120,7 @@ public class RestorationManager : ChangeNotifier
             return;
         }
 
-        Scheduler.RunAsync(() => AwaitRootBucketFromEngine(pending));
+        EventLoop.RunAsync(() => AwaitRootBucketFromEngine(pending));
     }
 
     private async Task AwaitRootBucketFromEngine(Task<object?> pending)
@@ -142,7 +142,7 @@ public class RestorationManager : ChangeNotifier
         _isReplacing = _rootBucketIsValid && enabled;
         if (_isReplacing)
         {
-            Scheduler.AddPostFrameCallback(_ => _isReplacing = false);
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => _isReplacing = false);
         }
 
         RestorationBucket? oldRoot = _rootBucket;
@@ -213,7 +213,7 @@ public class RestorationManager : ChangeNotifier
         }
 
         _serializationScheduled = true;
-        Scheduler.AddPostFrameCallback(_ => DoSerialization());
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => DoSerialization());
     }
 
     /// <summary>Cancels a pending serialization scheduled for <paramref name="bucket"/>.</summary>
@@ -233,7 +233,7 @@ public class RestorationManager : ChangeNotifier
     public void FlushData()
     {
         AssertNotDoingUpdate();
-        if (Scheduler.HasScheduledFrame)
+        if (SchedulerBinding.Instance.HasScheduledFrame)
         {
             return;
         }

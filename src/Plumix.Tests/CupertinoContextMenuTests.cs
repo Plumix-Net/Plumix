@@ -21,7 +21,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
 
     public CupertinoContextMenuTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
     }
@@ -30,7 +30,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
     {
         PlatformDefaults.DebugTargetPlatformOverride = null;
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

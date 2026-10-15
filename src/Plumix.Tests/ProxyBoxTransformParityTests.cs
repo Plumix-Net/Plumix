@@ -54,14 +54,14 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
 
     public ProxyBoxTransformParityTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -1414,7 +1414,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Send(tester, MouseTrackingHarness.Added(new Point(400.0, 300.0), device: 7201, viewId: viewId));
         tester.PumpAndSettle();
         Send(tester, MouseTrackingHarness.Hover(new Point(410.0, 310.0), device: 7201, viewId: viewId));
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
     }
 
     // ---------------------------------------------------------------------------------------------

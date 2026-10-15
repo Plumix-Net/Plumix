@@ -104,7 +104,7 @@ public class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<Clipboar
         {
             // Dart's `update()` yields at its first await, so the listener below is added before
             // the status changes; a C# await of a completed task does not yield.
-            Scheduler.ScheduleMicrotask(() => Scheduler.RunAsync(Update));
+            EventLoop.ScheduleMicrotask(() => EventLoop.RunAsync(Update));
         }
         base.AddListener(listener);
     }
@@ -122,7 +122,7 @@ public class ClipboardStatusNotifier : ChangeNotifier, IValueListenable<Clipboar
     {
         if (state == AppLifecycleState.Resumed)
         {
-            Scheduler.RunAsync(Update);
+            EventLoop.RunAsync(Update);
         }
     }
 
@@ -214,7 +214,7 @@ public class LiveTextInputStatusNotifier : ValueNotifier<LiveTextInputStatus>, W
         if (Value == LiveTextInputStatus.Unknown)
         {
             // See ClipboardStatusNotifier.AddListener.
-            Scheduler.ScheduleMicrotask(() => Scheduler.RunAsync(Update));
+            EventLoop.ScheduleMicrotask(() => EventLoop.RunAsync(Update));
         }
 
         base.AddListener(listener);
@@ -234,7 +234,7 @@ public class LiveTextInputStatusNotifier : ValueNotifier<LiveTextInputStatus>, W
         switch (state)
         {
             case AppLifecycleState.Resumed:
-                Scheduler.RunAsync(Update);
+                EventLoop.RunAsync(Update);
                 break;
             case AppLifecycleState.Detached:
             case AppLifecycleState.Inactive:
@@ -381,7 +381,7 @@ public abstract class TextSelectionControls
     [Obsolete("Use a contextMenuBuilder instead. This feature was deprecated after Flutter v3.3.0-0.5.pre.")]
     public virtual void HandlePaste(ITextSelectionDelegate @delegate)
     {
-        Scheduler.RunAsync(() => @delegate.PasteTextAsync(SelectionChangedCause.Toolbar));
+        EventLoop.RunAsync(() => @delegate.PasteTextAsync(SelectionChangedCause.Toolbar));
     }
 
     /// <summary>Selects the whole document. Does not hide the toolbar.</summary>
@@ -619,7 +619,7 @@ public sealed class TextSelectionOverlay : IDisposable
     /// <summary>Shows the toolbar by inserting it into the context's overlay.</summary>
     public void ShowToolbar()
     {
-        if (Constants.KDebugMode && Scheduler.Phase == SchedulerPhase.PersistentCallbacks)
+        if (Constants.KDebugMode && SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PersistentCallbacks)
         {
             throw new AssertionError("showToolbar must not be called during the build or layout phase.");
         }
@@ -1740,7 +1740,7 @@ public sealed class SelectionOverlay : IDisposable
 
         // If we are in build state, it will be too late to update visibility. We will need to
         // schedule the build in next frame.
-        if (Scheduler.Phase == SchedulerPhase.PersistentCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PersistentCallbacks)
         {
             if (_buildScheduled)
             {
@@ -1748,7 +1748,7 @@ public sealed class SelectionOverlay : IDisposable
             }
 
             _buildScheduled = true;
-            Scheduler.AddPostFrameCallback(
+            SchedulerBinding.Instance.AddPostFrameCallback(
                 _ =>
                 {
                     _buildScheduled = false;

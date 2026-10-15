@@ -14,29 +14,29 @@ public sealed class FramePipelineTests
     [Fact]
     public void Scheduler_EnsureVisualUpdateSchedulesOnlyOutsideAFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var phases = new List<(SchedulerPhase Phase, bool Scheduled)>();
 
-            Scheduler.ScheduleFrameCallback(_ =>
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ =>
             {
-                Scheduler.EnsureVisualUpdate();
-                phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
+                SchedulerBinding.Instance.EnsureVisualUpdate();
+                phases.Add((SchedulerBinding.Instance.SchedulerPhase, SchedulerBinding.Instance.HasScheduledFrame));
             });
-            Scheduler.DrawFrame += _ =>
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ =>
             {
-                Scheduler.EnsureVisualUpdate();
-                phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
-            };
-            Scheduler.AddPostFrameCallback(
+                SchedulerBinding.Instance.EnsureVisualUpdate();
+                phases.Add((SchedulerBinding.Instance.SchedulerPhase, SchedulerBinding.Instance.HasScheduledFrame));
+            });
+            SchedulerBinding.Instance.AddPostFrameCallback(
                 _ =>
                 {
-                    Scheduler.EnsureVisualUpdate();
-                    phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
+                    SchedulerBinding.Instance.EnsureVisualUpdate();
+                    phases.Add((SchedulerBinding.Instance.SchedulerPhase, SchedulerBinding.Instance.HasScheduledFrame));
                 });
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
             // Dart's `ensureVisualUpdate` leaves the frame in flight to cover the update; only the
             // post-frame phase asks for another frame.
@@ -48,72 +48,72 @@ public sealed class FramePipelineTests
                 ],
                 phases);
 
-            Scheduler.ResetForTests();
-            Assert.False(Scheduler.HasScheduledFrame);
-            Scheduler.EnsureVisualUpdate();
-            Assert.True(Scheduler.HasScheduledFrame);
+            SchedulerBinding.ResetForTests();
+            Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
+            SchedulerBinding.Instance.EnsureVisualUpdate();
+            Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
-    public void Scheduler_RunsBeginThenDrawThenPostFrame()
+    public void Scheduler_RunsTransientThenPersistentThenPostFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var events = new List<string>();
 
-            Scheduler.BeginFrame += _ => events.Add("begin");
-            Scheduler.DrawFrame += _ => events.Add("draw");
-            Scheduler.AddPostFrameCallback(_ => events.Add("post"));
+            SchedulerBinding.Instance.ScheduleFrameCallback(_ => events.Add("transient"));
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ => events.Add("persistent"));
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => events.Add("post"));
 
-            Scheduler.ScheduleFrame();
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.Instance.ScheduleFrame();
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
-            Assert.Equal(["begin", "draw", "post"], events);
+            Assert.Equal(["transient", "persistent", "post"], events);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void Scheduler_PostFrameAddedDuringPostFrame_RunsOnNextFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var events = new List<string>();
 
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 events.Add("post-1");
-                Scheduler.AddPostFrameCallback(_ => events.Add("post-2"));
+                SchedulerBinding.Instance.AddPostFrameCallback(_ => events.Add("post-2"));
             });
 
-            Scheduler.ScheduleFrame();
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.Instance.ScheduleFrame();
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
             Assert.Equal(["post-1"], events);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
             Assert.Equal(["post-1", "post-2"], events);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
-    public void Scheduler_RunsPersistentBetweenBeginAndDraw()
+    public void Scheduler_RunsPersistentCallbacksInRegistrationOrderAndDuplicatesTwice()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var events = new List<string>();
@@ -123,40 +123,42 @@ public sealed class FramePipelineTests
                 events.Add("persistent");
             }
 
-            Scheduler.BeginFrame += _ => events.Add("begin");
-            Scheduler.AddPersistentFrameCallback(Persistent);
-            Scheduler.DrawFrame += _ => events.Add("draw");
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ => events.Add("first"));
+            SchedulerBinding.Instance.AddPersistentFrameCallback(Persistent);
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ => events.Add("last"));
+            // Dart appends without deduplicating, so a second registration runs twice.
+            SchedulerBinding.Instance.AddPersistentFrameCallback(Persistent);
 
-            Scheduler.ScheduleFrame();
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.Instance.ScheduleFrame();
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
-            Assert.Equal(["begin", "persistent", "draw"], events);
+            Assert.Equal(["first", "persistent", "last", "persistent"], events);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void BuildOwner_ScheduledBuilds_RunInsideDrawFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var owner = new BuildOwner(focusManager: FocusManager.Instance)
             {
-                OnBuildScheduled = Scheduler.ScheduleFrame
+                OnBuildScheduled = SchedulerBinding.Instance.ScheduleFrame
             };
             var element = new ProbeElement();
             element.Attach(owner);
 
             int drawFrames = 0;
-            Scheduler.DrawFrame += _ =>
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_ =>
             {
                 drawFrames += 1;
                 owner.BuildScope(element);
-            };
+            });
 
             owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
 
@@ -171,25 +173,25 @@ public sealed class FramePipelineTests
             Assert.Equal(0, drawFrames);
             Assert.Equal(1, element.RebuildCount);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
             Assert.Equal(1, drawFrames);
             Assert.Equal(2, element.RebuildCount);
 
-            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
             Assert.Equal(1, drawFrames);
             Assert.Equal(2, element.RebuildCount);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void HeadlessPump_DrainsBuildMicrotasksAfterComposite()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var owner = new BuildOwner(focusManager: FocusManager.Instance);
@@ -198,7 +200,7 @@ public sealed class FramePipelineTests
             owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
 
             bool microtaskRan = false;
-            element.OnRebuild = () => Scheduler.ScheduleMicrotask(() => microtaskRan = true);
+            element.OnRebuild = () => EventLoop.ScheduleMicrotask(() => microtaskRan = true);
             element.MarkNeedsBuild();
             owner.FlushBuild();
             Assert.False(microtaskRan);
@@ -217,7 +219,7 @@ public sealed class FramePipelineTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -265,7 +267,7 @@ public sealed class FramePipelineTests
         {
             FlutterError.OnError = previous;
             host.RootWidget = null;
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
     }
 

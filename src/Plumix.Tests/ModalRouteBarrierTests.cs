@@ -18,14 +18,14 @@ public sealed class ModalRouteBarrierTests : IDisposable
 {
     public ModalRouteBarrierTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -64,10 +64,10 @@ public sealed class ModalRouteBarrierTests : IDisposable
         var barrier = Assert.IsType<AnimatedModalBarrier>(route.BuildModalBarrier());
         Assert.Equal(0, barrier.Color.Value!.Alpha);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         harness.Pump(new Size(400, 300));
 
         double progress = route.Animation.Value;
@@ -76,7 +76,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
             (byte)Math.Round(255 * Curves.Ease.Transform(progress)),
             barrier.Color.Value!.Alpha);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(400, 300));
         Assert.Equal(255, barrier.Color.Value!.Alpha);
     }
@@ -176,10 +176,10 @@ public sealed class ModalRouteBarrierTests : IDisposable
         Assert.False(SingleIgnorePointer(harness).Ignoring);
 
         Navigator.Of(context).Pop();
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         harness.Pump(new Size(400, 300));
 
         Assert.Equal(AnimationStatus.Reverse, route.Animation.Status);
@@ -225,11 +225,11 @@ public sealed class ModalRouteBarrierTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));
     }
 
     private static void TapAt(WidgetRenderHarness harness, Point position)

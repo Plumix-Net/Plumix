@@ -350,7 +350,7 @@ internal sealed class RestorationHarness : IDisposable
     public void Dispose()
     {
         _root.UnmountRoot();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
     }
 
     private static T? FindWidget<T>(Element element) where T : Widget

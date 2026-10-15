@@ -19,7 +19,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
 
     public CupertinoDialogGestureTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -28,7 +28,7 @@ public sealed class CupertinoDialogGestureTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Theory]

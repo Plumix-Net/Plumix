@@ -16,14 +16,14 @@ internal static class AnimationPump
     /// <summary>Runs the frame that gives every freshly started ticker its start timestamp.</summary>
     public static void Prime()
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds));
     }
 
     /// <summary>Primes any freshly started ticker and then advances time by <paramref name="seconds"/>.</summary>
     public static void Advance(double seconds)
     {
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + seconds));
+        double now = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + seconds));
     }
 }

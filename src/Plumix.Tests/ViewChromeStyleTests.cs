@@ -24,7 +24,7 @@ public sealed class ViewChromeStyleTests : IDisposable
 
     public ViewChromeStyleTests()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
         _tester = new FrameworkDartTester();
     }
@@ -34,7 +34,7 @@ public sealed class ViewChromeStyleTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = null;
         _tester.Dispose();
         SystemChrome.SetSystemUIOverlayStyle(new SystemUiOverlayStyle());
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         SystemChrome.ResetForTests();
     }
 
@@ -279,6 +279,6 @@ public sealed class ViewChromeStyleTests : IDisposable
     {
         _tester.PumpWidget(widget);
         _tester.PumpAndSettle();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 }

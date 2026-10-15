@@ -237,7 +237,7 @@ public class RenderAndroidView : PlatformViewRenderBox
     // screen.
     private void SetOffset()
     {
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             timeStamp => { _ = SetOffsetAfterFrame(); },
             debugLabel: "RenderAndroidView.setOffset");
     }

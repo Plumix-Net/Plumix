@@ -92,19 +92,20 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
     {
         using var tester = new FrameworkDartTester();
         tester.PumpWidget(new AnimatedContainer(duration: Ms200, color: new Color(0xFF00FF00)));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.PumpWidget(new AnimatedContainer(duration: Ms200, color: new Color(0xFF00FF00)));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.PumpWidget(new AnimatedContainer(duration: Ms200, color: new Color(0xFF0000FF)));
-        Assert.Equal(1, Scheduler.TransientCallbackCount); // this is the only time an animation should have started!
+        // this is the only time an animation should have started!
+        Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
         tester.Pump(TimeSpan.FromSeconds(1));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
         tester.PumpWidget(new AnimatedContainer(duration: Ms200, color: new Color(0xFF0000FF)));
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
     }
 
     // Flutter: "AnimatedContainer padding visual-to-directional animation"

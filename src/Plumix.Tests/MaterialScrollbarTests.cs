@@ -18,7 +18,7 @@ public sealed class MaterialScrollbarTests
     private static readonly Size ViewportSize = new(200, 240);
     private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    private double _clock = Scheduler.CurrentSeconds;
+    private double _clock = FrameClock.CurrentSeconds;
 
     public MaterialScrollbarTests()
     {
@@ -722,12 +722,12 @@ public sealed class MaterialScrollbarTests
     public void RawScrollbar_ForcedVisibilityRequiresExactlyOneAttachedPosition()
     {
         using var timers = new FakeGestureTimers();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         using var missingControllerHarness = new WidgetRenderHarness(new RawScrollbar(
             thumbVisibility: true,
             child: new SizedBox()));
         missingControllerHarness.Pump(ViewportSize);
-        double schedulerNow = Scheduler.CurrentSeconds;
+        double schedulerNow = FrameClock.CurrentSeconds;
 
         // Dart's `_invokeFrameCallback` reports a throwing post-frame callback through
         // `FlutterError.reportError` rather than letting it escape the frame.
@@ -735,7 +735,7 @@ public sealed class MaterialScrollbarTests
             PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
         Assert.Contains("ScrollController", missing.Message);
 
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         using var controller = new ScrollController();
         using var multipleHarness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -747,11 +747,11 @@ public sealed class MaterialScrollbarTests
                     BuildVerticalList(controller, 20),
                 ])));
         multipleHarness.Pump(ViewportSize);
-        schedulerNow = Scheduler.CurrentSeconds;
+        schedulerNow = FrameClock.CurrentSeconds;
         FlutterError multiple = Assert.IsType<FlutterError>(
             PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
         Assert.Contains("more than one ScrollPosition", multiple.Message);
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     private static object PumpAndCaptureReportedError(TimeSpan timestamp)
@@ -761,7 +761,7 @@ public sealed class MaterialScrollbarTests
         FlutterError.OnError = reported.Add;
         try
         {
-            Scheduler.PumpFrameForTests(timestamp);
+            SchedulerBinding.PumpFrameForTests(timestamp);
         }
         finally
         {
@@ -874,7 +874,7 @@ public sealed class MaterialScrollbarTests
 
         var emptySize = new Size(0, 0);
         harness.Pump(emptySize);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         harness.Pump(emptySize);
 
         Assert.Null(RequirePainter(harness).Geometry);
@@ -1337,7 +1337,7 @@ public sealed class MaterialScrollbarTests
     private void Settle(WidgetRenderHarness harness, Size size)
     {
         harness.Pump(size);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         harness.Pump(size);
         AdvanceAndPump(harness, 0.4, size);
     }
@@ -1347,10 +1347,10 @@ public sealed class MaterialScrollbarTests
 
     private void AdvanceAndPump(WidgetRenderHarness harness, double seconds, Size size)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         _clock += seconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
-        Scheduler.FlushMicrotasks();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        EventLoop.FlushMicrotasks();
         harness.Pump(size);
     }
 

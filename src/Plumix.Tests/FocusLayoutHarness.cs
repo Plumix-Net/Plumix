@@ -22,7 +22,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _owner.FlushBuild();
         _pipeline.RequestLayout();
         _pipeline.FlushLayout(size);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     public SemanticsNode? LayoutAndGetSemantics(Size size)
@@ -60,7 +60,7 @@ internal sealed class FocusLayoutHarness : IDisposable
     public void Dispose()
     {
         _rootElement.UnmountRoot();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost

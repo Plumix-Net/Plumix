@@ -28,7 +28,7 @@ public sealed class PlatformMenuBarTests : IDisposable
 
     public void Dispose()
     {
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         WidgetsBinding.Instance.PlatformMenuDelegate = _original;
         _channel.SetMethodCallHandler(null);
         _platform.Dispose();

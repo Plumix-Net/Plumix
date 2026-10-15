@@ -20,7 +20,7 @@ public class PaintingBinding
         ImageCache = CreateImageCache();
         if (ShaderWarmUp is { } warmUp)
         {
-            Scheduler.RunAsync(warmUp.Execute);
+            EventLoop.RunAsync(warmUp.Execute);
         }
     }
 

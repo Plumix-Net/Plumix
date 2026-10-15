@@ -18,7 +18,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
 
     public MaterialTimePickerDialogTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
@@ -27,7 +27,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
@@ -760,7 +760,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.True(FocusManager.Instance.FocusNext());
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(HostTextInput.InsertText("99"));
         var semantics = harness.PumpAndGetSemantics(ViewSize);
@@ -774,7 +774,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         // A complete, valid hour advances focus to the minute field on its own.
         Assert.True(HostTextInput.InsertText("11"));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(HostTextInput.InsertText("45"));
         semantics = harness.PumpAndGetSemantics(ViewSize);
@@ -935,10 +935,10 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }
 
     private static TimeDialPainter FindPainter(WidgetRenderHarness harness) => Assert.IsType<TimeDialPainter>(

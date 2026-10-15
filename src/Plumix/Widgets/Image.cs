@@ -492,7 +492,7 @@ public sealed class Image : StatefulWidget
             _imageInfo = info;
             if (oldImage is not null)
             {
-                Scheduler.AddPostFrameCallback(_ => oldImage.Dispose());
+                SchedulerBinding.Instance.AddPostFrameCallback(_ => oldImage.Dispose());
             }
         }
 

@@ -23,7 +23,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     {
         // A flutter_test binding starts with no lifecycle state, so a SelectableRegion keeps its
         // selection when it loses focus; do not inherit a state an earlier test left behind.
-        Scheduler.ResetInternalState();
+        SchedulerBinding.Instance.ResetInternalState();
     }
 
     public void Dispose()
@@ -108,7 +108,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
             tester.Pump(duration);
             count += 1;
         }
-        while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
+        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
     }
 
     // keyboard_utils.dart: `sendKeyCombination`.
@@ -159,7 +159,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         void Send(LogicalKeyboardKey key, bool down)
         {
             KeySim.DispatchRaw(key, down: down, control: controlDown, shift: shiftDown, meta: metaDown);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
         }
 
         foreach (LogicalKeyboardKey modifier in modifiers)

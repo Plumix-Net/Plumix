@@ -768,8 +768,8 @@ public sealed class MaterialScaffoldGeometryTests
         harness.Pump(Viewport);
 
         WidgetsBinding.Instance.HandleStatusBarTap();
-        double start = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
+        double start = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start));
 
         // The source animation runs for 1000ms on Curves.easeOutCirc; these are the offsets Flutter's own
         // status-bar test samples.
@@ -781,7 +781,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         double PixelsAt(double offset)
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + offset));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + offset));
             harness.Pump(Viewport);
             return controller.Position.Pixels;
         }

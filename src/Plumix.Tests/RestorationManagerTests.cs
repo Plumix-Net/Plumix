@@ -7,9 +7,9 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class RestorationManagerTests : IDisposable
 {
-    public RestorationManagerTests() => Scheduler.ResetForTests();
+    public RestorationManagerTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void RootBucket_IsRetrievedFromTheEngineOnceAndCarriesItsData()
@@ -157,12 +157,12 @@ public sealed class RestorationManagerTests : IDisposable
         RestorationBucket? bucket = null;
         manager.GetRootBucket(value => bucket = value);
 
-        Scheduler.ScheduleFrame();
+        SchedulerBinding.Instance.ScheduleFrame();
         bucket!.Write("foo", 10);
         manager.FlushData();
         Assert.Empty(manager.SentToEngine);
 
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
 
         Dictionary<object, object?> sent = Assert.Single(manager.SentToEngine);
         Assert.Equal(10, RawRestorationData.Values(sent)!["foo"]);
@@ -200,8 +200,8 @@ public sealed class RestorationManagerTests : IDisposable
         Assert.True(manager.IsReplacing);
         Assert.True(newBucket!.IsReplacing);
 
-        Scheduler.ScheduleFrame();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.Instance.ScheduleFrame();
+        SchedulerBinding.PumpFrameForTests();
 
         Assert.False(manager.IsReplacing);
         Assert.False(newBucket.IsReplacing);

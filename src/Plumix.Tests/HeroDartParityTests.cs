@@ -20,7 +20,7 @@ public sealed partial class HeroNavigatorTests
     [InlineData(44.0, 0.0)]
     public void Manifest_BoundsAreRelativeToRoute_AndZeroAreaIsValid(double width, double height)
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var route = GeometryRoute(width, height);
@@ -36,14 +36,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void BuildModeGates_ManifestRejectsUnlaidOutBoxWithoutSilentlySkippingFlight()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var route = GeometryRoute();
@@ -64,14 +64,14 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void BuildModeGates_MissingRouteContextAssertsInDebug_AndMeasuresGloballyOtherwise()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var route = GeometryRoute();
@@ -92,7 +92,7 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -104,7 +104,7 @@ public sealed partial class HeroNavigatorTests
     public void Manifest_RejectsUnpaintableBounds_ButDivertedFlightDoesNotMeasureSource(
         bool unpaintableDestination, bool diverted, bool valid)
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             Widget SizedHero() => new Hero(SharedHeroTag, new SizedBox(width: 44, height: 44));
@@ -129,7 +129,7 @@ public sealed partial class HeroNavigatorTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

@@ -321,7 +321,7 @@ public abstract class RestorableChangeNotifier<T> : RestorableListenable<T>
         {
             // Scheduled instead of disposed directly to give other entities a chance to remove
             // their listeners first.
-            Scheduler.ScheduleMicrotask(oldValue.Dispose);
+            EventLoop.ScheduleMicrotask(oldValue.Dispose);
         }
     }
 }

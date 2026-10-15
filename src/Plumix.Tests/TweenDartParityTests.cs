@@ -22,19 +22,20 @@ public sealed class TweenDartParityTests : IDisposable
 
     public TweenDartParityTests()
     {
-        Scheduler.ResetForTests();
-        _baseTicks = Scheduler.CurrentSystemFrameTimeStamp.Ticks;
+        SchedulerBinding.ResetForTests();
+        _baseTicks = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp.Ticks;
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     // Flutter's `tick(Duration)` helper: an absolute frame timestamp.
     private void Tick(int milliseconds)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromTicks(_baseTicks + TimeSpan.FromMilliseconds(milliseconds).Ticks));
+        SchedulerBinding.PumpFrameForTests(
+            TimeSpan.FromTicks(_baseTicks + TimeSpan.FromMilliseconds(milliseconds).Ticks));
     }
 
     // flutter_test's `hasOneLineDescription`.

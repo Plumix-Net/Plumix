@@ -820,7 +820,7 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButtonDemoPage_SecondaryProbesDoNotRegisterDuplicateDefaultHeroes()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
 
         try
         {
@@ -846,7 +846,7 @@ public sealed class MaterialFloatingActionButtonTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -856,9 +856,9 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
         // The first pump establishes the ticker's start time; the second one runs the 200 ms
         // `kThemeChangeDuration` to completion.
-        Scheduler.PumpFrameForTests(timestamp);
+        SchedulerBinding.PumpFrameForTests(timestamp);
         owner.FlushBuild();
-        Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+        SchedulerBinding.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
         owner.FlushBuild();
     }
 
@@ -1113,9 +1113,9 @@ public sealed class MaterialFloatingActionButtonTests
         public void Settle(Size size, TimeSpan timestamp)
         {
             Pump(size);
-            Scheduler.PumpFrameForTests(timestamp);
+            SchedulerBinding.PumpFrameForTests(timestamp);
             Pump(size);
-            Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+            SchedulerBinding.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
             Pump(size);
         }
 

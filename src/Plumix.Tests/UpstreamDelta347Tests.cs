@@ -29,12 +29,12 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
     public UpstreamDelta347Tests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -234,20 +234,20 @@ public sealed class UpstreamDelta347Tests : IDisposable
     public void Scheduler_ScheduleFrameCallbackRunsOnceAndCanBeCancelled()
     {
         var order = new List<string>();
-        int cancelled = Scheduler.ScheduleFrameCallback(_ => order.Add("cancelled"));
-        Scheduler.ScheduleFrameCallback(_ => order.Add("first"));
-        Scheduler.CancelFrameCallbackWithId(cancelled);
+        int cancelled = SchedulerBinding.Instance.ScheduleFrameCallback(_ => order.Add("cancelled"));
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ => order.Add("first"));
+        SchedulerBinding.Instance.CancelFrameCallbackWithId(cancelled);
 
-        Assert.Equal(1, Scheduler.TransientCallbackCount);
-        Assert.True(Scheduler.HasScheduledFrame);
+        Assert.Equal(1, SchedulerBinding.Instance.TransientCallbackCount);
+        Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
         Assert.Equal(["first"], order);
-        Assert.Equal(0, Scheduler.TransientCallbackCount);
+        Assert.Equal(0, SchedulerBinding.Instance.TransientCallbackCount);
 
         // A transient callback is one-shot: a later frame does not run it again.
-        Scheduler.ScheduleFrameCallback(_ => order.Add("second"));
-        Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
+        SchedulerBinding.Instance.ScheduleFrameCallback(_ => order.Add("second"));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
         Assert.Equal(["first", "second"], order);
     }
 

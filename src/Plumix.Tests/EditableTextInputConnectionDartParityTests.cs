@@ -377,9 +377,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             Assert.Null(RequestClient(host));
 
             _focusNode.RequestFocus();
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             host.FlushPipelineForTests(new Size(300, 200));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
 
             TextInputMethodClient client = Assert.IsAssignableFrom<TextInputMethodClient>(RequestClient(host));
             Assert.True(client.SupportsPreedit);
@@ -408,14 +408,14 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             Assert.Equal(new TextSelection(1, 3), _controller.Selection);
 
             host.FlushPipelineForTests(new Size(300, 200));
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             Rect cursor = client.CursorRectangle;
             Assert.True(cursor.Height > 0, cursor.ToString());
         }
         finally
         {
             host.RootWidget = null;
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
     }
 

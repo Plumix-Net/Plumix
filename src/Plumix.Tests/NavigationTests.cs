@@ -1008,7 +1008,7 @@ public sealed class NavigationTests
     [Fact]
     public void PageRouteBuilder_DrivesPrimaryAndSecondaryAnimations_AndDefersPopDisposal()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
         Animation<double>? rootSecondaryAnimation = null;
@@ -1056,14 +1056,14 @@ public sealed class NavigationTests
         Assert.Equal(AnimationStatus.Forward, detailsAnimation!.Status);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation!.Value, precision: 6);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         owner.FlushBuild();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.3));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.3));
         owner.FlushBuild();
         Assert.Equal(AnimationStatus.Completed, detailsAnimation.Status);
 
@@ -1073,19 +1073,19 @@ public sealed class NavigationTests
         Assert.Equal(AnimationStatus.Reverse, detailsAnimation.Status);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
 
-        double reverseNow = Scheduler.CurrentSeconds;
+        double reverseNow = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.05));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.05));
         owner.FlushBuild();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.2));
         owner.FlushBuild();
         Assert.Equal(AnimationStatus.Dismissed, rootSecondaryAnimation.Status);
         Assert.Throws<InvalidOperationException>(() => _ = detailsRoute.Animation);
 
         root.UnmountRoot();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

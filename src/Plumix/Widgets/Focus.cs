@@ -1131,7 +1131,7 @@ public sealed class FocusManager : ChangeNotifier
         }
 
         _haveScheduledUpdate = true;
-        Scheduler.ScheduleMicrotask(ApplyScheduledFocusChanges);
+        EventLoop.ScheduleMicrotask(ApplyScheduledFocusChanges);
     }
 
     private void ApplyScheduledFocusChanges()
@@ -1146,7 +1146,7 @@ public sealed class FocusManager : ChangeNotifier
     public void ApplyFocusChangesIfNeeded()
     {
         System.Diagnostics.Debug.Assert(
-            Scheduler.Phase != SchedulerPhase.PersistentCallbacks,
+            SchedulerBinding.Instance.SchedulerPhase != SchedulerPhase.PersistentCallbacks,
             "Focus changes must not be applied during the build phase.");
         _haveScheduledUpdate = false;
         FocusNode? previousFocus = PrimaryFocus;

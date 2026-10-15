@@ -23,7 +23,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     public WidgetsBindingBootstrapTests()
     {
         _previousTimerRun = _dispatcher.TimerRun;
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         _binding.ResetRootForTests();
         _dispatcher.TimerRun = _turns.Enqueue;
         StatefulProbe.Reset();
@@ -32,7 +32,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     public void Dispose()
     {
         _binding.ResetRootForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         _dispatcher.TimerRun = _previousTimerRun;
     }
 
@@ -52,7 +52,7 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     {
         _ = new WidgetsBinding();
 
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
         Assert.Null(_dispatcher.OnBeginFrame);
         Assert.Null(_dispatcher.OnDrawFrame);
     }
@@ -212,13 +212,13 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     public void AttachRootWidget_EnablesFramesAndSchedulesTheBootstrapFrame()
     {
         Assert.False(_binding.FramesEnabled);
-        Assert.False(Scheduler.HasScheduledFrame);
+        Assert.False(SchedulerBinding.Instance.HasScheduledFrame);
 
         _binding.AttachRootWidget(new ViewCollection([]));
 
         Assert.True(_binding.FramesEnabled);
         Assert.True(_binding.IsRootWidgetAttached);
-        Assert.True(Scheduler.HasScheduledFrame);
+        Assert.True(SchedulerBinding.Instance.HasScheduledFrame);
         Assert.NotNull(_dispatcher.OnBeginFrame);
         Assert.NotNull(_dispatcher.OnDrawFrame);
     }

@@ -163,7 +163,7 @@ public class DefaultPlatformMenuDelegate : PlatformMenuDelegate
         }
 
         var windowMenu = new Dictionary<string, object?> { ["0"] = representation };
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             try
             {

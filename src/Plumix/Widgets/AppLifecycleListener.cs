@@ -252,7 +252,7 @@ public partial class WidgetsBinding
 
             // Dart's override calls `super.handleAppLifecycleStateChanged` first, which is where the
             // scheduler enables or disables frames for the new state.
-            Scheduler.HandleAppLifecycleStateChanged(generatedState);
+            SchedulerBinding.Instance.HandleAppLifecycleStateChanged(generatedState);
             foreach (WidgetsBindingObserver observer in _observers.ToArray())
             {
                 try
@@ -393,7 +393,7 @@ public partial class WidgetsBinding
             }
         }
 
-        Scheduler.RunAsync(() => ReportPopFailure(SystemNavigator.Pop()));
+        EventLoop.RunAsync(() => ReportPopFailure(SystemNavigator.Pop()));
         return false;
     }
 

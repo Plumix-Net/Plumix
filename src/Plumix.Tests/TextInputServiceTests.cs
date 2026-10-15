@@ -40,7 +40,7 @@ public sealed class TextInputServiceTests : IDisposable
         FlutterError.OnError = _previousOnError;
         SystemChannels.TextInput.SetPlatformMethodCallHandler(null);
         UI.TextInput.DebugReset();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     // -------------------------------------------------------------- TextSelection
@@ -1062,7 +1062,7 @@ public sealed class TextInputServiceTests : IDisposable
 
         // The hide is deferred to a microtask, exactly like Dart's `_scheduleHide`.
         Assert.DoesNotContain("hide", control.MethodCalls);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Contains("hide", control.MethodCalls);
         Assert.Equal("TextInput.hide", _log[^1].Method);
     }
@@ -1076,7 +1076,7 @@ public sealed class TextInputServiceTests : IDisposable
         UI.TextInput.Attach(client, new TextInputConfiguration());
         _log.Clear();
 
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.DoesNotContain(_log, call => call.Method == "TextInput.hide");
     }
@@ -1255,7 +1255,7 @@ public sealed class TextInputServiceTests : IDisposable
         connection.RequestAutofill();
         UI.TextInput.FinishAutofillContext();
         connection.Close();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Contains(_errors, error => error.Context == context);
     }

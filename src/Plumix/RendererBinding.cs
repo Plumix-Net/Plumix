@@ -56,11 +56,13 @@ public sealed class RendererBinding
         // Dart installs handleMetricsChanged, handleTextScaleFactorChanged and
         // handlePlatformBrightnessChanged on the platform dispatcher here. Plumix hosts call the
         // widgets binding's overrides directly, which call these in turn (docs/ai/DIVERGENCES.md).
-        Scheduler.AddPersistentFrameCallback(_persistentFrameCallback);
+        SchedulerBinding.Instance.AddPersistentFrameCallback(_persistentFrameCallback);
         InitMouseTracker();
         if (Constants.KIsWeb)
         {
-            Scheduler.AddPostFrameCallback(HandleWebFirstFrame, debugLabel: "RendererBinding.webFirstFrame");
+            SchedulerBinding.Instance.AddPostFrameCallback(
+                HandleWebFirstFrame,
+                debugLabel: "RendererBinding.webFirstFrame");
         }
 
         RootPipelineOwner.Attach(Manifold);
@@ -71,7 +73,7 @@ public sealed class RendererBinding
     /// <remarks>Flutter's private <c>RendererBinding._handleWebFirstFrame</c>.</remarks>
     private static void HandleWebFirstFrame(TimeSpan timeStamp)
     {
-        Scheduler.RunAsync(static async () =>
+        EventLoop.RunAsync(static async () =>
         {
             try
             {
@@ -299,7 +301,7 @@ public sealed class RendererBinding
 
         if (forceFrame)
         {
-            Scheduler.ScheduleForcedFrame();
+            SchedulerBinding.Instance.ScheduleForcedFrame();
         }
     }
 
@@ -429,7 +431,7 @@ public sealed class RendererBinding
             _debugMouseTrackerUpdateScheduled = true;
         }
 
-        Scheduler.AddPostFrameCallback(
+        SchedulerBinding.Instance.AddPostFrameCallback(
             _ =>
             {
                 DebugAssert(_debugMouseTrackerUpdateScheduled, "_debugMouseTrackerUpdateScheduled");
@@ -479,7 +481,7 @@ public sealed class RendererBinding
         // are lower in the widget tree.
         if (!_firstFrameSent)
         {
-            Scheduler.ScheduleWarmUpFrame();
+            SchedulerBinding.Instance.ScheduleWarmUpFrame();
         }
     }
 
@@ -546,8 +548,8 @@ public sealed class RendererBinding
             }
         }
 
-        Scheduler.ScheduleWarmUpFrame();
-        await Scheduler.EndOfFrame;
+        SchedulerBinding.Instance.ScheduleWarmUpFrame();
+        await SchedulerBinding.Instance.EndOfFrame;
     }
 
     /// <summary>
@@ -587,7 +589,7 @@ public sealed class RendererBinding
             renderView.VisitChildren(Visitor);
         }
 
-        return Scheduler.EndOfFrame;
+        return SchedulerBinding.Instance.EndOfFrame;
     }
 
     /// <summary>
@@ -600,14 +602,18 @@ public sealed class RendererBinding
         _firstFrameDeferredCount = 0;
         _firstFrameSent = false;
         DrawFrameOverrideForTests = null;
-        Scheduler.AddPersistentFrameCallback(_persistentFrameCallback);
+        EnsurePersistentFrameCallback();
         InitMouseTracker();
     }
 
     /// <summary>Makes sure the persistent frame callback survives a test that reset the scheduler.</summary>
     internal void EnsurePersistentFrameCallback()
     {
-        Scheduler.AddPersistentFrameCallback(_persistentFrameCallback);
+        // Dart's persistent callbacks are not deduplicated, so only re-add one a reset removed.
+        if (!SchedulerBinding.Instance.HasPersistentFrameCallback(_persistentFrameCallback))
+        {
+            SchedulerBinding.Instance.AddPersistentFrameCallback(_persistentFrameCallback);
+        }
     }
 
     private static void DebugAssert(bool condition, string expression)
@@ -634,7 +640,7 @@ public sealed class RendererBinding
 
         public override bool SemanticsEnabled => SemanticsBinding.Instance.SemanticsEnabled;
 
-        public override void RequestVisualUpdate() => Scheduler.EnsureVisualUpdate();
+        public override void RequestVisualUpdate() => SchedulerBinding.Instance.EnsureVisualUpdate();
 
         public override void AddListener(Action listener) => _notifier.AddListener(listener);
 

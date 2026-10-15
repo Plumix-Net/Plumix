@@ -342,13 +342,13 @@ public sealed class TimelineTracingTests : IDisposable
     [NonReleaseFact]
     public void Scheduler_FrameReportsFrameAndAnimateTasksAndThePostFrameBlock()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new TimelineRecorder();
-            Scheduler.AddPostFrameCallback(_ => { });
-            Scheduler.HandleBeginFrame(TimeSpan.FromMilliseconds(16));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => { });
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.Instance.HandleDrawFrame();
 
             List<TimelineRecorder.Event> events = recorder.Take();
             Assert.Equal(
@@ -365,23 +365,23 @@ public sealed class TimelineTracingTests : IDisposable
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [NonReleaseFact]
     public void Scheduler_TracePostFrameCallbacksReportsEachCallbackUnderItsDebugLabel()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var recorder = new TimelineRecorder();
-            Scheduler.AddPostFrameCallback(_ => { }, debugLabel: "untraced");
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => { }, debugLabel: "untraced");
             SchedulerDebug.DebugTracePostFrameCallbacks = true;
-            Scheduler.AddPostFrameCallback(_ => { }, debugLabel: "traced");
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => { }, debugLabel: "traced");
             SchedulerDebug.DebugTracePostFrameCallbacks = false;
-            Scheduler.HandleBeginFrame(TimeSpan.FromMilliseconds(16));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromMilliseconds(16));
+            SchedulerBinding.Instance.HandleDrawFrame();
 
             List<string> names = [.. recorder.Take()
                 .Where(e => e.Kind == TimelineEventSource.SyncBeginId)
@@ -397,14 +397,14 @@ public sealed class TimelineTracingTests : IDisposable
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [NonReleaseFact]
     public void Scheduler_ScheduledTaskRunsInATimedBlockThatStepsItsFlow()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<Action> turns = [];
         Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
         PlatformDispatcher.Instance.TimerRun = turns.Add;
@@ -412,8 +412,8 @@ public sealed class TimelineTracingTests : IDisposable
         {
             using var recorder = new TimelineRecorder();
             Developer.Flow flow = Developer.Flow.Begin();
-            Scheduler.ScheduleTask(() => 1, Priority.Animation, debugLabel: "labelled", flow: flow);
-            Scheduler.ScheduleTask(() => 2, Priority.Animation);
+            SchedulerBinding.Instance.ScheduleTask(() => 1, Priority.Animation, debugLabel: "labelled", flow: flow);
+            SchedulerBinding.Instance.ScheduleTask(() => 2, Priority.Animation);
             while (turns.Count > 0)
             {
                 Action turn = turns[0];
@@ -433,21 +433,21 @@ public sealed class TimelineTracingTests : IDisposable
         finally
         {
             PlatformDispatcher.Instance.TimerRun = previousTimerRun;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [NonReleaseFact]
     public void Scheduler_WarmUpFrameAndEventLockAreTimelineTasksThatEndWithTheFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         List<Action> turns = [];
         Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
         PlatformDispatcher.Instance.TimerRun = turns.Add;
         try
         {
             using var recorder = new TimelineRecorder();
-            Scheduler.ScheduleWarmUpFrame();
+            SchedulerBinding.Instance.ScheduleWarmUpFrame();
             Assert.Equal(
                 ["Warm-up frame", "Lock events"],
                 recorder.Take().Where(e => e.Kind == TimelineEventSource.AsyncBeginId).Select(e => e.Name));
@@ -459,12 +459,12 @@ public sealed class TimelineTracingTests : IDisposable
                 .Where(e => e.Kind == TimelineEventSource.AsyncEndId)
                 .Select(e => e.Name)];
             Assert.Equal(["Animate", "Frame", "Warm-up frame", "Lock events"], ended);
-            Assert.False(Scheduler.Locked);
+            Assert.False(SchedulerBinding.Instance.Locked);
         }
         finally
         {
             PlatformDispatcher.Instance.TimerRun = previousTimerRun;
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -551,8 +551,8 @@ public sealed class TimelineTracingTests : IDisposable
                 turn();
             }
 
-            Scheduler.FlushMicrotasks();
-            Assert.False(Scheduler.Locked);
+            EventLoop.FlushMicrotasks();
+            Assert.False(SchedulerBinding.Instance.Locked);
             List<string> names = [.. recorder.Take()
                 .Where(e => e.Kind == TimelineEventSource.SyncBeginId)
                 .Select(e => e.Name)];

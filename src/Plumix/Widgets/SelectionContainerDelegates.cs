@@ -67,13 +67,13 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         }
 
         _scheduledSelectableUpdate = true;
-        if (Scheduler.Phase == SchedulerPhase.PostFrameCallbacks)
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.PostFrameCallbacks)
         {
-            Scheduler.ScheduleMicrotask(RunScheduledTask);
+            EventLoop.ScheduleMicrotask(RunScheduledTask);
         }
         else
         {
-            Scheduler.AddPostFrameCallback(_ => RunScheduledTask());
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => RunScheduledTask());
         }
     }
 

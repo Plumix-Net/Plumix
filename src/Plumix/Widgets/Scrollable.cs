@@ -418,7 +418,7 @@ public class ScrollableState : RestorationState<Scrollable>, IScrollContext
             // It's important that we not dispose the old position until after the viewport has
             // had a chance to unregister its listeners from the old position. So, schedule a
             // microtask to do it.
-            Scheduler.ScheduleMicrotask(oldPosition.Dispose);
+            EventLoop.ScheduleMicrotask(oldPosition.Dispose);
         }
 
         _position = EffectiveScrollController.CreateScrollPosition(_physics!, this, oldPosition);

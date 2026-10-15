@@ -154,7 +154,7 @@ public sealed class TextMagnifier : StatefulWidget
             _positionAnimationCancellation?.Cancel();
             _positionAnimationCancellation?.Dispose();
             _positionAnimationCancellation = new CancellationTokenSource();
-            Scheduler.RunAsync(() => ClearPositionAnimationWindowAsync(_positionAnimationCancellation.Token));
+            EventLoop.RunAsync(() => ClearPositionAnimationWindowAsync(_positionAnimationCancellation.Token));
         }
 
         private async Task ClearPositionAnimationWindowAsync(CancellationToken cancellationToken)
@@ -168,7 +168,7 @@ public sealed class TextMagnifier : StatefulWidget
                 return;
             }
 
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (!Mounted || cancellationToken.IsCancellationRequested)
                 {

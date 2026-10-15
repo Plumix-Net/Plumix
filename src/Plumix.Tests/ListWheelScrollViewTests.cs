@@ -904,17 +904,17 @@ public sealed class ListWheelScrollViewTests
         using var harness = Harness(Wheel(controller, 100, itemExtent: 100.0));
         harness.Pump(Screen);
 
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         _ = controller.AnimateToItem(0, TimeSpan.FromSeconds(1), Curves.Linear);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(Screen);
         Assert.NotEqual(0, controller.SelectedItem);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.5));
         harness.Pump(Screen);
         Assert.InRange(controller.Offset, 1.0, 999.0);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.05));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.05));
         harness.Pump(Screen);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.1));
         harness.Pump(Screen);
         Assert.Equal([0, 1, 2, 3], PaintedIndices(harness));
         Assert.Equal(0, controller.SelectedItem);
@@ -1070,10 +1070,10 @@ public sealed class ListWheelScrollViewTests
 
         // Flutter's test pumps one frame and then a single one-second frame, which is where the
         // spring's remaining fraction of a pixel goes below the asserted 0.2.
-        double clock = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.016));
+        double clock = FrameClock.CurrentSeconds;
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.016));
         harness.Pump(Screen);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.016));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.016));
         harness.Pump(Screen);
         Assert.True(scrolledPositions.Count > flingCount);
         Assert.Equal(40, controller.SelectedItem);
@@ -1260,14 +1260,14 @@ public sealed class ListWheelScrollViewTests
         Settle(harness);
         Assert.Equal(900.0, controller.Offset);
 
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         OuterChild(harness, 7).ShowOnScreen(duration: TimeSpan.FromSeconds(2));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(Screen);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
         harness.Pump(Screen);
         Assert.InRange(controller.Offset, 700.0 + 1e-6, 900.0 - 1e-6);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 2.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 2.1));
         harness.Pump(Screen);
         Settle(harness);
         Assert.Equal(700.0, controller.Offset, precision: 6);
@@ -1487,7 +1487,7 @@ public sealed class ListWheelScrollViewTests
             pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, now.AddMilliseconds(50)));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.5));
         harness.Pump(Screen);
     }
 
@@ -1530,12 +1530,12 @@ public sealed class ListWheelScrollViewTests
 
     private static void Settle(WidgetRenderHarness harness)
     {
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         // Flutter's pumpAndSettle pumps every 100 ms; the wheel corrects its extents on every layout,
         // so the ballistic must not skip frames.
         for (double step = 0.016; step < 6.0; step += 0.05)
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + step));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + step));
             harness.Pump(Screen);
         }
     }

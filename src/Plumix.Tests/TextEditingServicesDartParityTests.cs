@@ -17,7 +17,7 @@ public sealed class TextEditingServicesDartParityTests : IDisposable
 
     public TextEditingServicesDartParityTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FlutterError.OnError = _errors.Add;
     }
 
@@ -26,7 +26,7 @@ public sealed class TextEditingServicesDartParityTests : IDisposable
         FlutterError.OnError = _previousOnError;
         PlatformDefaults.DebugIsWebOverride = null;
         BrowserContextMenu.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     // ------------------------------------------------------------------------ Scribe
@@ -181,7 +181,7 @@ public sealed class TextEditingServicesDartParityTests : IDisposable
         var notifier = new LiveTextInputStatusNotifier();
         int notifications = 0;
         notifier.AddListener(() => notifications += 1);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         await notifier.Update();
 

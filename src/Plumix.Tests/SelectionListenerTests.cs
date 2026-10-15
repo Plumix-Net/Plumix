@@ -305,7 +305,7 @@ public sealed class SelectionListenerTests
             _pipeline.FlushCompositingBits();
             _pipeline.FlushPaint();
             _pipeline.CompositeFrame();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             _owner.FlushBuild();
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);

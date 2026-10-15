@@ -19,12 +19,12 @@ public sealed class MaterialThemeAnimationTests : IDisposable
 {
     public MaterialThemeAnimationTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -243,9 +243,9 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             onEnd: () => completed++));
         owner.FlushBuild();
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         owner.FlushBuild();
         Color interruptedColor = observedTheme!.PrimaryColor;
         Assert.NotEqual(begin.PrimaryColor, interruptedColor);
@@ -261,7 +261,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
 
         // The interrupting update restarts the controller, so it needs its own start frame.
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         Assert.Equal(secondTarget.PrimaryColor, observedTheme.PrimaryColor);
         Assert.Equal(1, completed);

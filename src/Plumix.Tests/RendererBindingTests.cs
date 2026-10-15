@@ -133,7 +133,7 @@ public sealed class RendererBindingTests
     [DebugOnlyFact]
     public void ScheduleMouseTrackerUpdate_RejectsASecondUpdateInTheSameFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         try
         {
@@ -143,7 +143,7 @@ public sealed class RendererBindingTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
             GestureBinding.Instance.ResetForTests();
         }
     }

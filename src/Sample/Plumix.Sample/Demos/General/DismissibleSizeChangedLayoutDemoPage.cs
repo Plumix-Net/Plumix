@@ -59,7 +59,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
                 new NotificationListener<SizeChangedLayoutNotification>(
                     onNotification: _ =>
                     {
-                        Scheduler.AddPostFrameCallback(_ =>
+                        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                         {
                             if (Mounted)
                             {

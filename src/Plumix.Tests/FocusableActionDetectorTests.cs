@@ -17,7 +17,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
 {
     public FocusableActionDetectorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         StatefulProbe.Reset();
@@ -27,7 +27,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         StatefulProbe.Reset();
     }
 
@@ -101,7 +101,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
                 onFocusChange: focusChanges.Add));
 
         harness.Layout(new Size(120, 80));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         Assert.Equal([true], focusChanges);
         Assert.Equal([true], focusHighlights);
 
@@ -226,12 +226,12 @@ public sealed class FocusableActionDetectorTests : IDisposable
 
         Assert.False(blocked.CanRequestFocus);
         blocked.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.False(blocked.HasFocus);
         Assert.True(skipped.CanRequestFocus);
         PumpFocus(skipped.RequestFocus);
         skipped.Unfocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
         Assert.True(skipped.SkipTraversal);
@@ -265,14 +265,14 @@ public sealed class FocusableActionDetectorTests : IDisposable
     private static bool PumpFocus(Func<bool> action)
     {
         bool result = action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return result;
     }
 
     private static void PumpFocus(Action action)
     {
         action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private sealed class ProbeIntent : Intent;

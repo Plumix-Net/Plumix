@@ -621,7 +621,7 @@ internal sealed class DraggableScrollableSheetState : State<DraggableScrollableS
 
         // Trigger a snap in case snap or snapSizes has changed, deferred so that the sheet has a
         // chance to build and set the new extent's available pixels first.
-        Scheduler.AddPostFrameCallback(_ =>
+        SchedulerBinding.Instance.AddPostFrameCallback(_ =>
         {
             foreach (var position in _scrollController.Positions.ToArray())
             {

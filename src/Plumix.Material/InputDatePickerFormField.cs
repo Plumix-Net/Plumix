@@ -206,7 +206,7 @@ internal sealed class InputDatePickerFormFieldState : State<InputDatePickerFormF
         if (Widget.InitialDate != oldWidget.InitialDate)
         {
             // Can't update the form field in the middle of a build, so do it next frame
-            Scheduler.AddPostFrameCallback(
+            SchedulerBinding.Instance.AddPostFrameCallback(
                 _ =>
                 {
                     SetState(() =>

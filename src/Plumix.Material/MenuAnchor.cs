@@ -1490,7 +1490,7 @@ public sealed class MenuItemButtonState : State<MenuItemButton>
         // unmounted by the close above, and an unmounted State has no widget to read the callback
         // from, so the callback is captured before the frame boundary.
         Action? onPressed = Current.OnPressed;
-        Scheduler.AddPostFrameCallback(_ => onPressed?.Invoke());
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => onPressed?.Invoke());
     }
 
     private void HandlePointerHover()
@@ -2101,7 +2101,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
         if (!_waitingToFocusMenu)
         {
             _waitingToFocusMenu = true;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted)
                 {
@@ -2121,7 +2121,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
         if (!ButtonFocusNode.HasFocus)
         {
             _isOpenOnFocusEnabled = false;
-            Scheduler.AddPostFrameCallback(_ => _isOpenOnFocusEnabled = true);
+            SchedulerBinding.Instance.AddPostFrameCallback(_ => _isOpenOnFocusEnabled = true);
         }
 
         SetState(static () => { });
@@ -2209,7 +2209,7 @@ public sealed class SubmenuButtonState : State<SubmenuButton>
         }
 
         _hoverOpenCancellation = new CancellationTokenSource();
-        Scheduler.RunAsync(() => DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token));
+        EventLoop.RunAsync(() => DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token));
     }
 
     private async Task DelayOpenAsync(TimeSpan delay, CancellationToken cancellationToken)
@@ -2347,7 +2347,7 @@ internal sealed class SubmenuDirectionalFocusAction : FlutterAction<DirectionalF
                 else
                 {
                     controller.Open();
-                    Scheduler.AddPostFrameCallback(_ =>
+                    SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                     {
                         if (controller.IsOpen)
                         {

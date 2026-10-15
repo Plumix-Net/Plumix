@@ -17,12 +17,12 @@ public sealed class CupertinoDatePickerTests : IDisposable
 
     public CupertinoDatePickerTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

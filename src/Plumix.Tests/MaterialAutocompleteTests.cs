@@ -25,7 +25,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
 
     public MaterialAutocompleteTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         SemanticsService.ResetForTests();
@@ -36,7 +36,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
         SemanticsService.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -564,7 +564,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown, control: true)));
         for (int frame = 0; frame < 4; frame++)
         {
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
             harness.Pump(new Size(480, 320));
         }
 

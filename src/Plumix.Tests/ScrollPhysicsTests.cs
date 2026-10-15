@@ -712,7 +712,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_ForcePixelsBypassesBoundariesAndResetsImpliedVelocityAfterTheFrame()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             var physics = new RecordingDeferredLoadingPhysics();
@@ -736,14 +736,14 @@ public sealed class ScrollPhysicsTests
             Assert.True(position.RecommendDeferredLoading(null!));
             Assert.Equal(-500.0, physics.LastVelocity);
 
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
 
             Assert.False(position.RecommendDeferredLoading(null!));
             Assert.Equal(0.0, physics.LastVelocity);
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -875,7 +875,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_Hold_StopsBallisticMotionAndRemembersItsVelocity()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var position = new ScrollPositionWithSingleContext(
@@ -905,7 +905,7 @@ public sealed class ScrollPhysicsTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1010,7 +1010,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_ReversedAxis_NegatesOffsetsAndVelocities()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using var position = new ScrollPositionWithSingleContext(
@@ -1034,14 +1034,14 @@ public sealed class ScrollPhysicsTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
     [Fact]
     public void ScrollDragController_CarriedMomentum_IsAddedOnlyToAMatchingFling()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -1069,7 +1069,7 @@ public sealed class ScrollPhysicsTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -1126,10 +1126,10 @@ public sealed class ScrollPhysicsTests
     private static void PumpSeconds(double seconds)
     {
         const double frame = 1.0 / 60.0;
-        double start = Scheduler.CurrentSeconds;
+        double start = FrameClock.CurrentSeconds;
         for (int step = 1; step * frame <= seconds; step++)
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));
         }
     }
 

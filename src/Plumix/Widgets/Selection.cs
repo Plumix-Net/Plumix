@@ -324,7 +324,7 @@ public sealed class SelectableRegionState
             },
             onShare: () =>
             {
-                Scheduler.RunAsync(ShareAsync);
+                EventLoop.RunAsync(ShareAsync);
 
                 // On Android, share should clear the selection.
                 switch (PlatformDefaults.TargetPlatform)
@@ -358,7 +358,7 @@ public sealed class SelectableRegionState
             {
                 buttonItems.Add(new ContextMenuButtonItem(
                     label: action.Label,
-                    onPressed: () => Scheduler.RunAsync(async () =>
+                    onPressed: () => EventLoop.RunAsync(async () =>
                     {
                         string selectedText = data.PlainText;
                         if (selectedText.Length > 0)
@@ -384,7 +384,7 @@ public sealed class SelectableRegionState
             new GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
                 () => new TapGestureRecognizer { DebugOwner = this },
                 instance => instance.OnSecondaryTapDown = HandleRightClickDown);
-        Scheduler.RunAsync(InitProcessTextActions);
+        EventLoop.RunAsync(InitProcessTextActions);
     }
 
     // Query the engine to initialize the list of text processing actions to show in the text
@@ -495,7 +495,7 @@ public sealed class SelectableRegionState
             return;
         }
 
-        Scheduler.RunAsync(() => Clipboard.SetData(new ClipboardData(data.PlainText)));
+        EventLoop.RunAsync(() => Clipboard.SetData(new ClipboardData(data.PlainText)));
     }
 
     private async Task ShareAsync()
@@ -669,7 +669,7 @@ public sealed class SelectableRegionState
                 SelectionEdgeUpdateEvent.ForStart(position, granularity)) == SelectionResult.Pending)
         {
             _scheduledSelectionStartEdgeUpdate = true;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (!_scheduledSelectionStartEdgeUpdate)
                 {
@@ -693,7 +693,7 @@ public sealed class SelectableRegionState
                 SelectionEdgeUpdateEvent.ForEnd(position, granularity)) == SelectionResult.Pending)
         {
             _scheduledSelectionEndEdgeUpdate = true;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (!_scheduledSelectionEndEdgeUpdate)
                 {
@@ -1620,7 +1620,8 @@ public sealed class SelectableRegionState
         // Dart only clears the selection when focus is lost while the application is running: on
         // desktop, switching to another window makes the app inactive, and the selection must
         // survive until the user comes back.
-        if (_attachedFocusNode?.HasFocus == false && Scheduler.LifecycleState == AppLifecycleState.Resumed)
+        if (_attachedFocusNode?.HasFocus == false
+            && SchedulerBinding.Instance.LifecycleState == AppLifecycleState.Resumed)
         {
             ClearSelection();
             SetChangingThenFinalize();

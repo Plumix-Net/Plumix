@@ -291,7 +291,7 @@ public abstract partial class WidgetInspectorService
         if (binding.RootElement is { } rootElement)
         {
             binding.BuildOwner.Reassemble(rootElement);
-            return Scheduler.EndOfFrame;
+            return SchedulerBinding.Instance.EndOfFrame;
         }
 
         return Task.CompletedTask;
@@ -379,7 +379,7 @@ public abstract partial class WidgetInspectorService
             _debugServiceExtensionsRegistered = true;
         }
 
-        Scheduler.AddPersistentFrameCallback(OnFrameStart);
+        SchedulerBinding.Instance.AddPersistentFrameCallback(OnFrameStart);
 
         RegisterBoolServiceExtension(
             WidgetInspectorServiceExtensions.StructuredErrors.DartName(),
@@ -1912,7 +1912,7 @@ public abstract partial class WidgetInspectorService
     {
         _frameStart = timeStamp;
         _frameNumber = PlatformDispatcher.Instance.FrameData.FrameNumber;
-        Scheduler.AddPostFrameCallback(OnFrameEnd, debugLabel: "WidgetInspector.onFrameStart");
+        SchedulerBinding.Instance.AddPostFrameCallback(OnFrameEnd, debugLabel: "WidgetInspector.onFrameStart");
     }
 
     private void OnFrameEnd(TimeSpan timeStamp)

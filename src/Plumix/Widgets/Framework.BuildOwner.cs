@@ -225,7 +225,7 @@ public sealed class BuildOwner
 
     private void RunBuildScope(BuildScope buildScope, Element? context, Action? callback)
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         DebugAssertions.Assert(_debugStateLockLevel >= 0);
         DebugAssertions.Assert(!DebugBuilding);
         if (Constants.KDebugMode)
@@ -259,7 +259,7 @@ public sealed class BuildOwner
             FlutterTimeline.StartSync("BUILD", arguments: debugTimelineArguments);
         }
 
-        using IDisposable buildPhase = Scheduler.BuildScope();
+        using IDisposable buildPhase = SchedulerBinding.Instance.BuildScope();
         try
         {
             _scheduledFlushDirtyElements = true;
@@ -324,13 +324,13 @@ public sealed class BuildOwner
     /// </summary>
     internal void FlushBuild()
     {
-        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
-        Scheduler.FlushMicrotasks();
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        EventLoop.FlushMicrotasks();
 
         // Dart runs the transient frame callbacks before the build phase of every frame, and
         // `LayoutBuilder`'s scope defers its rebuild request to one. A harness pump produces no
         // frame, so drain them here or that rebuild is dropped.
-        Scheduler.RunScheduledFrameCallbacksOutsideFrame();
+        SchedulerBinding.Instance.RunScheduledFrameCallbacksOutsideFrame();
         if (_rootElement is not null)
         {
             BuildScope(_rootElement);

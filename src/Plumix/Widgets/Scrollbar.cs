@@ -995,7 +995,7 @@ public class RawScrollbarState<T> : State<T> where T : RawScrollbar
             return;
         }
 
-        global::Plumix.Scheduler.AddPostFrameCallback(_ => CheckHasValidScrollPosition());
+        global::Plumix.SchedulerBinding.Instance.AddPostFrameCallback(_ => CheckHasValidScrollPosition());
     }
 
     private void ValidateInteractions(AnimationStatus status)

@@ -81,7 +81,7 @@ public sealed class WidgetHost : PlumixHost
     {
         if (WidgetsBinding.IsImplicitView(RootFlutterView))
         {
-            using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
+            using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
             WidgetsBinding.Instance.BuildDirtyWidgets();
         }
     }

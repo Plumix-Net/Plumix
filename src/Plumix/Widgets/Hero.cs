@@ -844,7 +844,7 @@ public sealed class HeroController : NavigatorObserver, IDisposable
             // we'll know where the heroes in the `to` route are going to end up, and the `to` route will
             // go back onstage.
             to.Offstage = to.Animation.Value == 0.0;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (from.Navigator is null || to.Navigator is null)
                 {

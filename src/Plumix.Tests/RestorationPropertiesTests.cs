@@ -19,9 +19,9 @@ public sealed class RestorationPropertiesTests : IDisposable
 {
     private readonly MockRestorationManager _manager = new();
 
-    public RestorationPropertiesTests() => Scheduler.ResetForTests();
+    public RestorationPropertiesTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void Value_IsNotAccessibleBeforeTheePropertyIsRegistered()
@@ -215,7 +215,7 @@ public sealed class RestorationPropertiesTests : IDisposable
         bag.Controller.InitWithValue(new TextEditingController("replacement"));
 
         original.AddListener(() => { });
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Throws<FlutterError>(() => original.AddListener(() => { }));
         Assert.Equal("replacement", bag.Controller.Value.Text);
     }

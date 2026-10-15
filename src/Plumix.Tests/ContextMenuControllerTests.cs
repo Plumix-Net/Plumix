@@ -19,7 +19,7 @@ public sealed class ContextMenuControllerTests : IDisposable
 
     public ContextMenuControllerTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         ContextMenuController.RemoveAny();
         FocusManager.Instance.ResetForTests();
     }
@@ -29,7 +29,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         ContextMenuController.RemoveAny();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

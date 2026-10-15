@@ -397,7 +397,7 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
 
     private void RefreshLeadingPadding()
     {
-        Scheduler.AddPostFrameCallback(timestamp =>
+        SchedulerBinding.Instance.AddPostFrameCallback(timestamp =>
         {
             if (!Mounted) return;
             SetState(() => _leadingPadding = GetWidth(_leadingKey));
@@ -406,7 +406,7 @@ public sealed class DropdownMenuState<T> : State<DropdownMenu<T>>
 
     private void ScrollToHighlight()
     {
-        Scheduler.AddPostFrameCallback(timestamp =>
+        SchedulerBinding.Instance.AddPostFrameCallback(timestamp =>
         {
             if (_currentHighlight is not { } highlight
                 || highlight < 0

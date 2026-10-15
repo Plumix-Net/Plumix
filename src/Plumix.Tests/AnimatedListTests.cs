@@ -14,14 +14,14 @@ public sealed class AnimatedListTests : IDisposable
 {
     public AnimatedListTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         KeyedProbeState.Reset();
     }
 
     public void Dispose()
     {
         KeyedProbeState.Reset();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -135,10 +135,10 @@ public sealed class AnimatedListTests : IDisposable
             build.Index == 1 && build.Value == 0.0 && build.Status == AnimationStatus.Forward);
         Assert.Contains(itemBuilds, build => build.Index == 2 && build.Value == 1.0);
 
-        double insertStart = Scheduler.CurrentSeconds;
+        double insertStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
         harness.Pump(new Size(206, 220));
 
         key.CurrentState.RemoveItem(
@@ -156,10 +156,10 @@ public sealed class AnimatedListTests : IDisposable
             build.Value == 1.0 && build.Status == AnimationStatus.Reverse);
         Assert.Contains(itemBuilds, build => build.Index == 1);
 
-        double removeStart = Scheduler.CurrentSeconds;
+        double removeStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
         harness.Pump(new Size(206, 220));
 
         Assert.Equal(4, key.CurrentState.ItemsCount);
@@ -233,10 +233,10 @@ public sealed class AnimatedListTests : IDisposable
         Assert.Equal(initialStates[1], KeyedProbeState.StateIds[1]);
         Assert.Equal(initialStates[2], KeyedProbeState.StateIds[2]);
 
-        double insertStart = Scheduler.CurrentSeconds;
+        double insertStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
         harness.Pump(new Size(200, 180));
 
         ids.Clear();
@@ -249,10 +249,10 @@ public sealed class AnimatedListTests : IDisposable
         harness.Pump(new Size(200, 180));
 
         Assert.Equal(5, removedValues.Count(value => value == 1.0));
-        double removeStart = Scheduler.CurrentSeconds;
+        double removeStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
         harness.Pump(new Size(200, 180));
         Assert.Equal(0, key.CurrentState.ItemsCount);
     }
@@ -293,14 +293,14 @@ public sealed class AnimatedListTests : IDisposable
             build.Index == 1 && build.Value == 0.0 && build.Status == AnimationStatus.Forward);
         Assert.Contains(itemBuilds, build => build.Index == 2 && build.Value == 1.0);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.16));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.16));
         harness.Pump(new Size(200, 160));
         Assert.Contains(itemBuilds, build => build.Index == 1 && build.Value is > 0.0 and < 1.0);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
         harness.Pump(new Size(200, 160));
 
         key.CurrentState.RemoveItem(
@@ -319,14 +319,14 @@ public sealed class AnimatedListTests : IDisposable
         Assert.Contains(itemBuilds, build => build.Index == 1);
         Assert.Contains(itemBuilds, build => build.Index == 2);
 
-        double removeStart = Scheduler.CurrentSeconds;
+        double removeStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.16));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.16));
         harness.Pump(new Size(200, 160));
         Assert.Contains(removedBuilds, build => build.Value is > 0.0 and < 1.0);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
         harness.Pump(new Size(200, 160));
 
         Assert.Equal(3, key.CurrentState.ItemsCount);
@@ -378,10 +378,10 @@ public sealed class AnimatedListTests : IDisposable
         Assert.Contains(1, removedSeparators);
         Assert.Contains(1.0, removedItems);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         harness.Pump(new Size(200, 160));
 
         builtItems.Clear();
@@ -450,10 +450,10 @@ public sealed class AnimatedListTests : IDisposable
         harness.Pump(new Size(200, 160));
         Assert.Equal(3, key.CurrentState.ItemsCount);
 
-        double insertStart = Scheduler.CurrentSeconds;
+        double insertStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(insertStart + 0.35));
         harness.Pump(new Size(200, 160));
 
         key.CurrentState.RemoveAllItems(
@@ -467,10 +467,10 @@ public sealed class AnimatedListTests : IDisposable
         Assert.Equal(3, key.CurrentState.ItemsCount);
         Assert.Equal(3, removedValues.Count(value => value == 1.0));
 
-        double removeStart = Scheduler.CurrentSeconds;
+        double removeStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(removeStart + 0.35));
         harness.Pump(new Size(200, 160));
 
         Assert.Equal(0, key.CurrentState.ItemsCount);

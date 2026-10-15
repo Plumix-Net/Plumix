@@ -82,7 +82,7 @@ public partial class WidgetsBinding
     /// </remarks>
     internal void ResetInternalState()
     {
-        Scheduler.ResetInternalState();
+        SchedulerBinding.Instance.ResetInternalState();
         _debugShowWidgetInspectorOverrideNotifierObject?.Dispose();
         _debugShowWidgetInspectorOverrideNotifierObject = null;
         _debugWidgetInspectorSelectionOnTapEnabledNotifierObject?.Dispose();
@@ -177,7 +177,7 @@ public partial class WidgetsBinding
         if (RootElement is { } rootElement)
         {
             BuildOwner.Reassemble(rootElement);
-            return Scheduler.EndOfFrame;
+            return SchedulerBinding.Instance.EndOfFrame;
         }
 
         return Task.CompletedTask;

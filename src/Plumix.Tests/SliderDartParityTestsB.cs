@@ -1257,9 +1257,9 @@ public sealed class SliderDartParityTestsB : IDisposable
         };
         try
         {
-            Scheduler.HandleBeginFrame(clock);
-            Scheduler.FlushMicrotasks();
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(clock);
+            EventLoop.FlushMicrotasks();
+            SchedulerBinding.Instance.HandleDrawFrame();
         }
         finally
         {

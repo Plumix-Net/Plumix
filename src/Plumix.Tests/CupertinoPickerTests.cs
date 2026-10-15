@@ -316,11 +316,11 @@ public sealed class CupertinoPickerTests : IDisposable
                                && detector.OnTap is not null)
             .ToArray();
         Assert.True(tappableChildren.Length >= 3);
-        double clock = Scheduler.CurrentSeconds;
+        double clock = FrameClock.CurrentSeconds;
         tappableChildren[2].OnTap!.Invoke();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(ViewSize);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(ViewSize);
 
         Assert.Equal(2, selectedItem);
@@ -354,16 +354,16 @@ public sealed class CupertinoPickerTests : IDisposable
                 .ToArray();
             Assert.True(tappableChildren.Length >= 3);
 
-            clock = Scheduler.CurrentSeconds;
+            clock = FrameClock.CurrentSeconds;
             tappableChildren[2].OnTap!.Invoke();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             harness.Pump(ViewSize);
         }
 
         // The picker is unmounted mid-animation; draining the remaining frames must not fault.
         controller.Dispose();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
     }
 
     [Fact]

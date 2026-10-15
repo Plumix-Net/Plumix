@@ -7,8 +7,8 @@ namespace Plumix.Tests;
 /// Turns the framework's event loop while a test waits for framework <c>async</c> work.
 /// </summary>
 /// <remarks>
-/// Framework continuations resume as <see cref="Scheduler.ScheduleMicrotask"/> microtasks on the
-/// framework thread (<see cref="Scheduler.EnterFrameworkThread"/>), so a test that blocks on a task
+/// Framework continuations resume as <see cref="EventLoop.ScheduleMicrotask"/> microtasks on the
+/// framework thread (<see cref="EventLoop.EnterFrameworkThread"/>), so a test that blocks on a task
 /// without turning the loop would wait forever. These helpers do the turning.
 /// </remarks>
 internal static class EventLoopPump
@@ -41,7 +41,7 @@ internal static class EventLoopPump
         var elapsed = System.Diagnostics.Stopwatch.StartNew();
         while (true)
         {
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             if (predicate())
             {
                 return true;
@@ -63,7 +63,7 @@ internal static class EventLoopPump
     public static async Task Turn()
     {
         await Task.Delay(1);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ internal static class EventLoopPump
         var elapsed = System.Diagnostics.Stopwatch.StartNew();
         while (true)
         {
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             if (predicate())
             {
                 return;

@@ -16,18 +16,18 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class DismissibleSizeChangedLayoutTests : IDisposable
 {
-    private double _clock = Scheduler.CurrentSeconds;
+    private double _clock = FrameClock.CurrentSeconds;
 
     public DismissibleSizeChangedLayoutTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -370,19 +370,19 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
     private void PumpAnimation(WidgetRenderHarness harness, Size viewport, double seconds)
     {
         _clock += 0.01;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         harness.Pump(viewport);
         _clock += seconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         harness.Pump(viewport);
     }
 
     private void PumpScheduler(double seconds)
     {
         _clock += 0.01;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         _clock += seconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
     }
 
     private static RenderView BuildRenderView(RenderBox child, Size size)

@@ -70,7 +70,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         GestureBinding.Instance.ResetForTests();
         // flutter_test's postTest ends every test with ServicesBinding.resetInternalState: no lifecycle
         // state and frames enabled. A host detached by an earlier test must not disable this one's frames.
-        Scheduler.ResetInternalState();
+        SchedulerBinding.Instance.ResetInternalState();
         _timers = fakeGestureTimers ? new FakeGestureTimers() : null;
         Size size = logicalSize ?? new Size(800, 600);
         _flutterView = new FlutterView(
@@ -91,7 +91,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
         _previousOnError = FlutterError.OnError;
         FlutterError.OnError = HandleError;
         _drawFrame = DrawFrame;
-        double seconds = Math.Max(Scheduler.CurrentSeconds, Scheduler.CurrentSystemFrameTimeStamp.TotalSeconds);
+        double seconds = Math.Max(
+            FrameClock.CurrentSeconds,
+            SchedulerBinding.Instance.CurrentSystemFrameTimeStamp.TotalSeconds);
         _clock = TimeSpan.FromSeconds(seconds + 1.0);
         GestureBinding.Instance.SamplingClock = new TestSamplingClock(this);
 
@@ -143,9 +145,11 @@ internal sealed partial class FrameworkDartTester : IDisposable
         binding.DrawFrameOverrideForTests = _drawFrame;
         try
         {
-            Scheduler.HandleBeginFrame(_clock);
-            Scheduler.FlushMicrotasks();
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(_clock);
+            EventLoop.FlushMicrotasks();
+            SchedulerBinding.Instance.HandleDrawFrame();
+            // AutomatedTestWidgetsFlutterBinding.pump drains the fake-async microtasks after the frame.
+            EventLoop.FlushMicrotasks();
         }
         finally
         {
@@ -173,7 +177,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             Pump(step);
             count += 1;
         }
-        while (Scheduler.HasScheduledFrame);
+        while (SchedulerBinding.Instance.HasScheduledFrame);
 
         return count;
     }
@@ -310,7 +314,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             {
                 PumpWidget(new SizedBox(key: new UniqueKey()));
                 _root.UnmountRoot();
-                Scheduler.FlushMicrotasks();
+                EventLoop.FlushMicrotasks();
             }
             catch (Exception)
             {
@@ -333,7 +337,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             _timers?.Dispose();
             HardwareKeyboard.Instance.ClearState();
             GestureBinding.Instance.SamplingClock = new SamplingClock();
-            Scheduler.ResetInternalState();
+            SchedulerBinding.Instance.ResetInternalState();
         }
 
         if (leftover is not null || unexpected.Count > 0)

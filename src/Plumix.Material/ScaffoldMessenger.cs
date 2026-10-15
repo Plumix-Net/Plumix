@@ -239,7 +239,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         else
         {
             TickerFuture reverse = _snackBarController!.Reverse();
-            Scheduler.RunAsync(async () =>
+            EventLoop.RunAsync(async () =>
             {
                 await reverse;
                 DebugAssertions.Assert(Mounted);
@@ -338,7 +338,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
         else
         {
             TickerFuture reverse = _materialBannerAnimation!.Reverse();
-            Scheduler.RunAsync(async () =>
+            EventLoop.RunAsync(async () =>
             {
                 await reverse;
                 DebugAssertions.Assert(Mounted);
@@ -393,7 +393,7 @@ public sealed class ScaffoldMessengerState : State<ScaffoldMessenger>
                     SnackBar snackBar = _snackBars.First!.Value.Presented;
                     var cancellation = new CancellationTokenSource();
                     _snackBarTimer = cancellation;
-                    Scheduler.RunAsync(() => RunSnackBarTimer(snackBar, cancellation.Token));
+                    EventLoop.RunAsync(() => RunSnackBarTimer(snackBar, cancellation.Token));
                 }
             }
         }

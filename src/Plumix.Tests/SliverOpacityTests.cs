@@ -12,12 +12,12 @@ public sealed class SliverOpacityTests : IDisposable
 {
     public SliverOpacityTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -192,9 +192,9 @@ public sealed class SliverOpacityTests : IDisposable
             onEnd: () => completed++));
         owner.FlushBuild();
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         var halfway = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
         Assert.InRange(halfway.Opacity.Value, 0.01, 0.99);
@@ -214,7 +214,7 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.True(interrupted.AlwaysIncludeSemantics);
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         var finished = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
         Assert.Equal(0.2, finished.Opacity.Value, precision: 6);

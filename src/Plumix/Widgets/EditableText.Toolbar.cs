@@ -285,7 +285,7 @@ public sealed partial class EditableText
 
             if (HasInputConnection)
             {
-                Scheduler.RunAsync(async () =>
+                EventLoop.RunAsync(async () =>
                 {
                     try
                     {
@@ -514,13 +514,13 @@ public sealed partial class EditableText
                     : null,
                 onSelectAll: SelectAllEnabled ? () => SelectAll(SelectionChangedCause.Toolbar) : null,
                 onLookUp: LookUpEnabled
-                    ? () => Scheduler.RunAsync(() => LookUpSelection(SelectionChangedCause.Toolbar))
+                    ? () => EventLoop.RunAsync(() => LookUpSelection(SelectionChangedCause.Toolbar))
                     : null,
                 onSearchWeb: SearchWebEnabled
-                    ? () => Scheduler.RunAsync(() => SearchWebForSelection(SelectionChangedCause.Toolbar))
+                    ? () => EventLoop.RunAsync(() => SearchWebForSelection(SelectionChangedCause.Toolbar))
                     : null,
                 onShare: ShareEnabled
-                    ? () => Scheduler.RunAsync(() => ShareSelection(SelectionChangedCause.Toolbar))
+                    ? () => EventLoop.RunAsync(() => ShareSelection(SelectionChangedCause.Toolbar))
                     : null,
                 onLiveTextInput: LiveTextInputEnabled
                     ? () => StartLiveTextInput(SelectionChangedCause.Toolbar)
@@ -551,7 +551,7 @@ public sealed partial class EditableText
                 {
                     buttonItems.Add(new ContextMenuButtonItem(
                         label: action.Label,
-                        onPressed: () => Scheduler.RunAsync(async () =>
+                        onPressed: () => EventLoop.RunAsync(async () =>
                         {
                             string selectedText = selection.TextInside(TextEditingValue.Text);
                             if (selectedText.Length > 0)
@@ -634,7 +634,7 @@ public sealed partial class EditableText
                 : Widget.SelectionControls?.CanPaste(this) ?? false;
             if (Widget.SelectionEnabled && PasteEnabled && canPaste)
             {
-                Scheduler.RunAsync(ClipboardStatus.Update);
+                EventLoop.RunAsync(ClipboardStatus.Update);
             }
         }
 #pragma warning restore CS0618
@@ -668,10 +668,10 @@ public sealed partial class EditableText
 
             if (_liveTextInputStatus is not null)
             {
-                Scheduler.RunAsync(_liveTextInputStatus.Update);
+                EventLoop.RunAsync(_liveTextInputStatus.Update);
             }
 
-            Scheduler.RunAsync(ClipboardStatus.Update);
+            EventLoop.RunAsync(ClipboardStatus.Update);
             _selectionOverlay.ShowToolbar();
             // Listen to parent scroll events when the toolbar is visible so it can be hidden during
             // a scroll on supported platforms.
@@ -815,7 +815,7 @@ public sealed partial class EditableText
                 // Deferred to the next frame because ShowToolbar() calls renderBox.LocalToGlobal(),
                 // which requires a fully laid-out render tree, and DidUpdateWidget is called before
                 // layout.
-                Scheduler.AddPostFrameCallback(_ =>
+                SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                 {
                     if (Mounted && (_selectionOverlay?.ToolbarIsVisible ?? false))
                     {
@@ -837,7 +837,7 @@ public sealed partial class EditableText
                 _selectionOverlay = CreateSelectionOverlay();
                 if (shouldShowToolbar || shouldShowHandles)
                 {
-                    Scheduler.AddPostFrameCallback(_ =>
+                    SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                     {
                         if (shouldShowToolbar)
                         {

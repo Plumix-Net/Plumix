@@ -711,7 +711,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
     {
         _pendingRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         SetStatus(RefreshIndicatorStatus.Snap);
-        Scheduler.RunAsync(() => SnapAndRefreshAsync());
+        EventLoop.RunAsync(() => SnapAndRefreshAsync());
     }
 
     private async Task SnapAndRefreshAsync()
@@ -743,7 +743,7 @@ public sealed class RefreshIndicatorState : State<RefreshIndicator>
 
     private void BeginDismiss(RefreshIndicatorStatus status)
     {
-        Scheduler.RunAsync(() => DismissAsync(status));
+        EventLoop.RunAsync(() => DismissAsync(status));
     }
 
     private async Task DismissAsync(RefreshIndicatorStatus status)

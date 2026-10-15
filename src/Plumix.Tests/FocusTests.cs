@@ -14,14 +14,14 @@ public sealed class FocusTests : IDisposable
 {
     public FocusTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public sealed class FocusTests : IDisposable
         Assert.Null(manager.PrimaryFocus);
         Assert.Equal(0, notificationCount);
 
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(second, manager.PrimaryFocus);
         Assert.Equal(1, notificationCount);
@@ -130,7 +130,7 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(first);
         manager.RegisterNode(second);
         first.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         int managerNotificationCount = 0;
         int firstNotificationCount = 0;
@@ -141,7 +141,7 @@ public sealed class FocusTests : IDisposable
 
         second.RequestFocus();
         first.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(first, manager.PrimaryFocus);
         Assert.Equal(0, managerNotificationCount);
@@ -160,14 +160,14 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(second);
         manager.RegisterNode(third);
         first.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         int managerNotificationCount = 0;
         manager.AddListener(() => managerNotificationCount += 1);
         first.AddListener(() => third.RequestFocus());
 
         second.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(third, manager.PrimaryFocus);
         Assert.Equal(2, managerNotificationCount);
@@ -216,7 +216,7 @@ public sealed class FocusTests : IDisposable
         Assert.Same(secondChild, secondScope.FocusedChild);
 
         parent.SetFirstFocus(firstScope);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(firstChild, manager.PrimaryFocus);
     }
@@ -285,7 +285,7 @@ public sealed class FocusTests : IDisposable
 
         manager.RegisterNode(node);
         manager.RequestFocus(node);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         bool handled = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter));
 
@@ -317,17 +317,17 @@ public sealed class FocusTests : IDisposable
         Assert.Same(first, manager.PrimaryFocus);
 
         Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(second, manager.PrimaryFocus);
 
         Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab, shift: true)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(first, manager.PrimaryFocus);
 
         // `canRequestFocus: false` keeps the third node out of the order, so the scope wraps.
         PumpFocus(() => manager.RequestFocus(second));
         Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(first, manager.PrimaryFocus);
     }
 
@@ -396,7 +396,7 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(second);
         manager.RegisterNode(third);
         manager.RequestFocus(first);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.False(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(first, manager.PrimaryFocus);
@@ -556,7 +556,7 @@ public sealed class FocusTests : IDisposable
         Assert.False(second.HasFocus);
 
         bool handled = owner.FocusManager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(handled);
         Assert.Same(second, owner.FocusManager.PrimaryFocus);
@@ -592,18 +592,18 @@ public sealed class FocusTests : IDisposable
         // The default closed loop wraps within the scope instead of escaping into the siblings.
         bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(
             KeySim.Down(LogicalKeyboardKey.Tab, shift: true));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(movedBeforeScopeStart);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
         bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(movedInsideScope);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
         bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.True(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
@@ -637,16 +637,16 @@ public sealed class FocusTests : IDisposable
         // `Shortcuts` consumes the arrow key whenever it maps to a `DirectionalFocusIntent`, so the
         // key result reports "handled", not "the focus moved"; the focus assertions carry the test.
         FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
         FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
 
         FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
     }
@@ -691,7 +691,7 @@ public sealed class FocusTests : IDisposable
 
         Assert.False(blocked.CanRequestFocus);
         blocked.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.False(blocked.HasFocus);
         Assert.Empty(blocker.TraversalDescendants);
     }
@@ -710,7 +710,7 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(node, scopeNode.FocusedChild);
         node.Unfocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Null(scopeNode.FocusedChild);
         Assert.Same(scopeNode, FocusManager.Instance.PrimaryFocus);
@@ -735,7 +735,7 @@ public sealed class FocusTests : IDisposable
 
         PumpFocus(second.RequestFocus);
         second.Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
         Assert.Same(first, scopeNode.FocusedChild);
@@ -748,11 +748,11 @@ public sealed class FocusTests : IDisposable
         var node = new FocusNode(debugLabel: "node");
 
         node.RequestFocus();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         Assert.Null(manager.PrimaryFocus);
 
         manager.RegisterNode(node);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.True(node.HasPrimaryFocus);
     }
@@ -769,7 +769,7 @@ public sealed class FocusTests : IDisposable
         Assert.True(attachment.IsAttached);
 
         attachment.Detach();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.False(attachment.IsAttached);
         Assert.Null(node.Parent);
@@ -789,7 +789,7 @@ public sealed class FocusTests : IDisposable
 
         taken.RequestFocus();
         scopeNode.Autofocus(late);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         Assert.Same(taken, manager.PrimaryFocus);
     }
@@ -801,7 +801,7 @@ public sealed class FocusTests : IDisposable
         var node = new FocusNode(debugLabel: "node");
         manager.RegisterNode(node);
         manager.RequestFocus(node);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         var order = new List<string>();
         node.OnKeyEvent = (_, _) =>
@@ -831,7 +831,7 @@ public sealed class FocusTests : IDisposable
         var node = new FocusNode(debugLabel: "node");
         manager.RegisterNode(node);
         manager.RequestFocus(node);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
 
         bool nodeSaw = false;
         node.OnKeyEvent = (_, _) =>
@@ -876,7 +876,7 @@ public sealed class FocusTests : IDisposable
             Assert.Same(manager.RootScope, manager.PrimaryFocus);
 
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             Assert.Same(node, manager.PrimaryFocus);
         }
         finally
@@ -903,7 +903,7 @@ public sealed class FocusTests : IDisposable
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
             other.RequestFocus();
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
 
             Assert.Same(other, manager.PrimaryFocus);
         }
@@ -929,14 +929,14 @@ public sealed class FocusTests : IDisposable
     private static bool PumpFocus(Func<bool> action)
     {
         bool result = action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return result;
     }
 
     private static void PumpFocus(Action action)
     {
         action();
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

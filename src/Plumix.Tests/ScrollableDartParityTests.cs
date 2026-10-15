@@ -1807,7 +1807,7 @@ public sealed class ScrollableDartParityTests
             tester.Pump(duration);
             count += 1;
         }
-        while (Scheduler.HasScheduledFrame || Scheduler.TransientCallbackCount > 0);
+        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
 
         return count;
     }
@@ -1926,7 +1926,7 @@ public sealed class ScrollableDartParityTests
 
         private void Arm()
         {
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (_disposed)
                 {

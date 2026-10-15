@@ -64,7 +64,7 @@ internal sealed partial class FrameworkDartTester
             physicalKey ?? KeySim.PhysicalFor(logicalKey),
             logicalKey,
             character: character ?? KeyLabelCharacter(key)));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         if (!handled)
         {
             _testTextInput?.HandleKeyDownEvent(key);
@@ -80,7 +80,7 @@ internal sealed partial class FrameworkDartTester
         bool handled = FocusManager.Instance.HandleKeyEvent(new KeyUpEvent(
             physicalKey ?? KeySim.PhysicalFor(logicalKey),
             logicalKey));
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         if (!handled)
         {
             _testTextInput?.HandleKeyUpEvent(key);
@@ -123,7 +123,7 @@ internal sealed partial class FrameworkDartTester
     {
         ShowKeyboard(finder);
         TestTextInput.EnterText(text);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
     }
 
     /// <summary>Dart's <c>tester.enterText</c> for an element already found.</summary>

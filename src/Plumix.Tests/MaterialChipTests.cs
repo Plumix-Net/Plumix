@@ -14,13 +14,13 @@ public sealed class MaterialChipTests : IDisposable
 {
     public MaterialChipTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
         GestureBinding.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -416,15 +416,15 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
         var start = FindChipDecoration(harness.RenderView).Color;
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         harness.Pump(new Size(320, 120));
         var middle = FindChipDecoration(harness.RenderView).Color;
         Assert.NotEqual(start, middle);
         Assert.NotEqual(Colors.DarkGreen, middle);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 11));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 11));
         harness.Pump(new Size(320, 120));
         Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Color);
     }
@@ -851,15 +851,15 @@ public sealed class MaterialChipTests : IDisposable
                 onDeleted: () => { },
                 chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
-        double forwardStart = Scheduler.CurrentSeconds;
+        double forwardStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 0.25));
         harness.Pump(new Size(320, 120));
         RenderChip opening = FindChipRender(harness.RenderView);
         Assert.InRange(opening.AvatarDrawerProgress, 0.001, 0.999);
         Assert.InRange(opening.DeleteDrawerProgress, 0.001, 0.999);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 1.0));
         harness.Pump(new Size(320, 120));
         Assert.Equal(1.0, FindChipRender(harness.RenderView).AvatarDrawerProgress);
         Assert.Equal(1.0, FindChipRender(harness.RenderView).DeleteDrawerProgress);
@@ -868,15 +868,15 @@ public sealed class MaterialChipTests : IDisposable
             ThemeData.Light,
             new RawChip(label: new Text("Animated slots"), chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
-        double reverseStart = Scheduler.CurrentSeconds;
+        double reverseStart = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 0.125));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 0.125));
         harness.Pump(new Size(320, 120));
         RenderChip closing = FindChipRender(harness.RenderView);
         Assert.InRange(closing.AvatarDrawerProgress, 0.001, 0.999);
         Assert.InRange(closing.DeleteDrawerProgress, 0.001, 0.999);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 1.0));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 1.0));
         harness.Pump(new Size(320, 120));
         RenderChip closed = FindChipRender(harness.RenderView);
         Assert.Equal(0.0, closed.AvatarDrawerProgress);

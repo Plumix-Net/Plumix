@@ -183,7 +183,7 @@ public sealed partial class DragGestureRecognizerTests
     [InlineData(2)]
     public void AverageBoundaryPointers_ReproducesFlutterSequenceAcrossFrames(int axis)
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         try
         {
             using DragGestureRecognizer drag = AxisRecognizer(axis);
@@ -200,8 +200,8 @@ public sealed partial class DragGestureRecognizerTests
             Route(Move(8, AxisPoint(axis, -110), AxisPoint(axis, -110)));
             Route(Move(5, AxisPoint(axis, 120), AxisPoint(axis, 20)));
             Route(Move(7, AxisPoint(axis, -120), AxisPoint(axis, -20)));
-            Scheduler.HandleBeginFrame(TimeSpan.FromMilliseconds(100));
-            Scheduler.HandleDrawFrame();
+            SchedulerBinding.Instance.HandleBeginFrame(TimeSpan.FromMilliseconds(100));
+            SchedulerBinding.Instance.HandleDrawFrame();
             Route(Move(6, AxisPoint(axis, 120), AxisPoint(axis, 10)));
             Route(Move(8, AxisPoint(axis, -120), AxisPoint(axis, -10)));
             Route(Move(5, AxisPoint(axis, 130), AxisPoint(axis, 10)));
@@ -224,7 +224,7 @@ public sealed partial class DragGestureRecognizerTests
         }
         finally
         {
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 
@@ -421,7 +421,7 @@ public sealed partial class DragGestureRecognizerTests
     [Fact]
     public void SubclassedPan_CanBeatCustomScrollViewThroughMountedDetector()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         int starts = 0;
         var harness = new ScrollSemanticsHarness(
             new Directionality(TextDirection.Ltr,
@@ -448,7 +448,7 @@ public sealed partial class DragGestureRecognizerTests
         finally
         {
             harness.RootElement.UnmountRoot();
-            Scheduler.ResetForTests();
+            SchedulerBinding.ResetForTests();
         }
     }
 

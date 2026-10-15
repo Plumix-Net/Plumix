@@ -284,7 +284,7 @@ internal sealed class AutocompleteOptionsListState<T> : State<AutocompleteOption
 
     private void ScheduleEnsureHighlightedVisible()
     {
-        Scheduler.AddPostFrameCallback(timestamp =>
+        SchedulerBinding.Instance.AddPostFrameCallback(timestamp =>
         {
             if (!Mounted || !_scrollController.HasClients)
             {

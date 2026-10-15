@@ -460,7 +460,7 @@ public sealed class StateStorageWidgetsTests
         public void Dispose()
         {
             _root.UnmountRoot();
-            Scheduler.PumpFrameForTests();
+            SchedulerBinding.PumpFrameForTests();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

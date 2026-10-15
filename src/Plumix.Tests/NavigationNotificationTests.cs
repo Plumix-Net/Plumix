@@ -22,12 +22,12 @@ public sealed class NavigationNotificationTests : IDisposable
 
     public NavigationNotificationTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -320,7 +320,7 @@ public sealed class NavigationNotificationTests : IDisposable
         for (int index = 0; index < 3; index++)
         {
             owner.FlushBuild();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
             owner.FlushBuild();
         }
     }

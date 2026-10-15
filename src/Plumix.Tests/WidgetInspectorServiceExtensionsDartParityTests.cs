@@ -125,7 +125,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             Task<ServiceExtensionResponse> pendingResponse = BindingBase.InvokeServiceExtensionAsync(
                 "ext.flutter.debugAllowBanner",
                 new Dictionary<string, string> { ["enabled"] = "false" });
-            // Changing the banner reassembles the root and waits for Scheduler.EndOfFrame.
+            // Changing the banner reassembles the root and waits for SchedulerBinding.Instance.EndOfFrame.
             tester.Pump();
             ServiceExtensionResponse response = await pendingResponse;
             Assert.Contains("\"enabled\":\"false\"", response.Result);
@@ -1160,7 +1160,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             margin: margin,
             maxPixelRatio: maxPixelRatio,
             debugPaint: debugPaint);
-        Scheduler.FlushMicrotasks();
+        EventLoop.FlushMicrotasks();
         return task.GetAwaiter().GetResult()!;
     }
 

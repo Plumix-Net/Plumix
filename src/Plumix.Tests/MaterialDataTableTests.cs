@@ -13,8 +13,8 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialDataTableTests : IDisposable
 {
-    public MaterialDataTableTests() => Scheduler.ResetForTests();
-    public void Dispose() => Scheduler.ResetForTests();
+    public MaterialDataTableTests() => SchedulerBinding.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void DataTable_ModelsAndConstructorMatchFlutterContracts()
@@ -254,23 +254,23 @@ public sealed class MaterialDataTableTests : IDisposable
         RenderTransform initial = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.Equal(1.0, initial.DebugTransformMatrix()[0], precision: 6);
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         state.SetAscending(false);
         harness.Pump(new Size(360.0, 180.0));
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.075));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.075));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform halfway = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.InRange(halfway.DebugTransformMatrix()[0], -0.999, 0.999);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.200));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.200));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform reversed = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.Equal(-1.0, reversed.DebugTransformMatrix()[0], precision: 6);
 
         state.RebuildWithoutSortChange();
         harness.Pump(new Size(360.0, 180.0));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.400));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.400));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform unchanged = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.Equal(-1.0, unchanged.DebugTransformMatrix()[0], precision: 6);

@@ -687,7 +687,7 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
     public override void InitState()
     {
         base.InitState();
-        Scheduler.RunAsync(() => InitLicensesAsync());
+        EventLoop.RunAsync(() => InitLicensesAsync());
     }
 
     private async Task InitLicensesAsync()
@@ -712,7 +712,7 @@ internal sealed class PackageLicensePageState : State<PackageLicensePage>
                 Developer.Timeline.TimeSync("_initLicenses()", () => { }, flow: Developer.Flow.Step(debugFlowId));
             }
 
-            var paragraphs = await Scheduler.ScheduleTask(
+            var paragraphs = await SchedulerBinding.Instance.ScheduleTask(
                 () => license.Paragraphs.ToList(),
                 Priority.Animation,
                 debugLabel: "License").ConfigureAwait(true);
@@ -1127,13 +1127,13 @@ internal sealed class MasterDetailScaffoldState : State<MasterDetailScaffold>, I
 
     public void OpenDetailPage(object arguments)
     {
-        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
         MasterDetailFlow.Of(Context).OpenDetailPage(arguments);
     }
 
     public void SetInitialDetailPage(object arguments)
     {
-        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
+        SchedulerBinding.Instance.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
         MasterDetailFlow.Of(Context).SetInitialDetailPage(arguments);
     }
 

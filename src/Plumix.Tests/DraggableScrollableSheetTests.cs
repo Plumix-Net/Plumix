@@ -850,7 +850,7 @@ public sealed class DraggableScrollableSheetTests
         harness.Dispose();
 
         // Pumping after teardown must not throw or move anything.
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.5));
     }
 
     // ---------- Position absorption ----------
@@ -1095,8 +1095,8 @@ public sealed class DraggableScrollableSheetTests
         /// </summary>
         public void PumpFrame(double seconds)
         {
-            _clockSeconds = Math.Max(_clockSeconds, Scheduler.CurrentSeconds) + seconds;
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clockSeconds));
+            _clockSeconds = Math.Max(_clockSeconds, FrameClock.CurrentSeconds) + seconds;
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clockSeconds));
             Pump();
         }
 

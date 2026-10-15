@@ -14,14 +14,14 @@ public sealed class RawMenuAnchorTests : IDisposable
 {
     public RawMenuAnchorTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -309,7 +309,7 @@ public sealed class RawMenuAnchorTests : IDisposable
 
         harness.Update(Build(new Size(200, 200)));
         harness.Pump(new Size(200, 200));
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(new Size(200, 200));
         Assert.False(controller.IsOpen);
     }

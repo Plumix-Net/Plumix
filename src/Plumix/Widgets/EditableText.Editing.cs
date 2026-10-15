@@ -193,7 +193,7 @@ public sealed partial class EditableText
                         && !string.Equals(EditingValue.Text, value.Text, StringComparison.Ordinal))
                     {
                         string text = value.Text;
-                        Scheduler.RunAsync(() => RequestSpellCheckAsync(text));
+                        EventLoop.RunAsync(() => RequestSpellCheckAsync(text));
                     }
                 }
                 catch (Exception exception)
@@ -458,7 +458,7 @@ public sealed partial class EditableText
                 }
             }
 
-            Scheduler.RunAsync(ClipboardStatus.Update);
+            EventLoop.RunAsync(ClipboardStatus.Update);
         }
 
         /// <summary>Cuts the selected text to the clipboard. Dart's <c>cutSelection</c>.</summary>
@@ -481,7 +481,7 @@ public sealed partial class EditableText
             if (cause == SelectionChangedCause.Toolbar)
             {
                 // Schedule a call to bringIntoView() after renderEditable updates.
-                Scheduler.AddPostFrameCallback(_ =>
+                SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                 {
                     if (Mounted)
                     {
@@ -491,12 +491,12 @@ public sealed partial class EditableText
                 HideToolbar();
             }
 
-            Scheduler.RunAsync(ClipboardStatus.Update);
+            EventLoop.RunAsync(ClipboardStatus.Update);
         }
 
         private void SetClipboard(string text, string errorContext)
         {
-            Scheduler.RunAsync(async () =>
+            EventLoop.RunAsync(async () =>
             {
                 try
                 {
@@ -525,7 +525,7 @@ public sealed partial class EditableText
         /// fire-and-forget, so it runs <see cref="PasteTextAsync"/> the way the paste action does,
         /// reporting a failed clipboard read to <see cref="FlutterError"/>.</remarks>
         public void PasteText(SelectionChangedCause cause) =>
-            Scheduler.RunAsync(() => PasteTextWithReportingAsync(cause));
+            EventLoop.RunAsync(() => PasteTextWithReportingAsync(cause));
 
         /// <summary>Pastes the clipboard's text over the selection. Dart's <c>pasteText</c>.</summary>
         public async Task PasteTextAsync(SelectionChangedCause cause)
@@ -566,7 +566,7 @@ public sealed partial class EditableText
             if (cause == SelectionChangedCause.Toolbar)
             {
                 // Schedule a call to bringIntoView() after renderEditable updates.
-                Scheduler.AddPostFrameCallback(_ =>
+                SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                 {
                     if (Mounted)
                     {

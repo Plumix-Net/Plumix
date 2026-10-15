@@ -345,7 +345,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
                     // If the child doesn't exist yet, we got called during the very first build of
                     // this subtree. Wait until the end of the frame to update the child when the
                     // child is guaranteed to be present.
-                    Scheduler.AddPostFrameCallback(_ =>
+                    SchedulerBinding.Instance.AddPostFrameCallback(_ =>
                     {
                         if (!Mounted || GetChildElement() is not { } lateChildElement)
                         {
@@ -388,7 +388,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
                 return;
             }
 
-            if (Scheduler.Phase < SchedulerPhase.PersistentCallbacks)
+            if (SchedulerBinding.Instance.SchedulerPhase < SchedulerPhase.PersistentCallbacks)
             {
                 // Build/layout haven't started yet so let's just schedule this for the next frame.
                 SetState(() => _keepingAlive = false);
@@ -399,7 +399,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
             // are in the middle of build or layout, so the only way to clean this up is to schedule
             // another build for it.
             _keepingAlive = false;
-            Scheduler.ScheduleMicrotask(() =>
+            EventLoop.ScheduleMicrotask(() =>
             {
                 if (Mounted && _releaseCallbacks.Count == 0)
                 {

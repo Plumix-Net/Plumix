@@ -16,12 +16,12 @@ public sealed class CupertinoTabViewTests : IDisposable
 
     public CupertinoTabViewTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     public void Dispose()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]

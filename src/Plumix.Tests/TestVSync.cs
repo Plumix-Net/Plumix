@@ -6,7 +6,7 @@ namespace Plumix.Tests;
 
 /// <summary>
 /// flutter_test's <c>TestVSync</c>: a ticker provider that creates plain tickers, which the test's
-/// pumps (or <see cref="Scheduler.PumpFrameForTests"/>) drive.
+/// pumps (or <see cref="SchedulerBinding.PumpFrameForTests"/>) drive.
 /// </summary>
 internal sealed class TestVSync : ITickerProvider
 {

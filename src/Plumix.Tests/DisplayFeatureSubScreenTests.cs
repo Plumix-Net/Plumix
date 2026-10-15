@@ -17,9 +17,9 @@ public sealed class DisplayFeatureSubScreenTests : IDisposable
         Padding: new Thickness(10),
         DisplayFeatures: [new DisplayFeature(new Rect(390, 0, 20, 600), DisplayFeatureType.Hinge)]);
 
-    public DisplayFeatureSubScreenTests() => Scheduler.ResetForTests();
+    public DisplayFeatureSubScreenTests() => SchedulerBinding.ResetForTests();
 
-    public void Dispose() => Scheduler.ResetForTests();
+    public void Dispose() => SchedulerBinding.ResetForTests();
 
     [Fact]
     public void SubScreen_WithoutDisplayFeatures_LeavesTheChildUntouched()

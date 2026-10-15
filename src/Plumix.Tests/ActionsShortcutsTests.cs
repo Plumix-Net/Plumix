@@ -15,14 +15,14 @@ public sealed class ActionsShortcutsTests : IDisposable
 {
     public ActionsShortcutsTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -537,7 +537,7 @@ public sealed class ActionsShortcutsTests : IDisposable
                             child: new SizedBox(width: 20, height: 20)));
                 })));
         Mount(root, owner);
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F2)));
         Assert.Equal(1, invocationCount);
@@ -547,13 +547,13 @@ public sealed class ActionsShortcutsTests : IDisposable
             {
                 [new SingleActivator(LogicalKeyboardKey.F3)] = new InnerIntent()
             });
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F2)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F3)));
         Assert.Equal(2, invocationCount);
 
         entry.Dispose();
-        Scheduler.PumpFrameForTests();
+        SchedulerBinding.PumpFrameForTests();
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F3)));
         root.UnmountRoot();
     }

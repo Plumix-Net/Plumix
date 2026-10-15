@@ -14,7 +14,7 @@ public sealed class MaterialStepperTests : IDisposable
 {
     public MaterialStepperTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
@@ -23,7 +23,7 @@ public sealed class MaterialStepperTests : IDisposable
     {
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -126,12 +126,12 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Equal(0, controller.Offset);
 
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.1));
         harness.Pump(new Size(320, 300));
         Assert.True(controller.Offset > 0);
         Assert.IsType<DrivenScrollActivity>(controller.PrimaryPosition!.Activity);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.2));
         harness.Pump(new Size(320, 300));
         Assert.IsType<IdleScrollActivity>(controller.PrimaryPosition.Activity);
     }

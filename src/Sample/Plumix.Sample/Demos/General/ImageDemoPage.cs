@@ -300,7 +300,7 @@ internal sealed class ImageDemoPageState : State
     {
         int generation = ++_decodeGeneration;
         bool small = _smallDecode;
-        Scheduler.RunAsync(async () =>
+        EventLoop.RunAsync(async () =>
         {
             var buffer = await Plumix.UI.ImmutableBuffer.FromUint8List(SampleBytes);
             using var codec = await PaintingBinding.Instance.InstantiateImageCodecWithSize(

@@ -62,6 +62,6 @@ public static class PlumixExtensions
     private static void RunWidgetCore(Widget application, WidgetsBinding binding)
     {
         binding.ScheduleAttachRootWidget(application);
-        Scheduler.ScheduleWarmUpFrame();
+        SchedulerBinding.Instance.ScheduleWarmUpFrame();
     }
 }

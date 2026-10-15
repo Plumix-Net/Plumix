@@ -19,7 +19,7 @@ public sealed class MaterialAboutTests : IDisposable
 
     public MaterialAboutTests()
     {
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
         LicenseRegistry.Reset();
@@ -30,7 +30,7 @@ public sealed class MaterialAboutTests : IDisposable
         LicenseRegistry.Reset();
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
-        Scheduler.ResetForTests();
+        SchedulerBinding.ResetForTests();
     }
 
     [Fact]
@@ -71,19 +71,19 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.Empty(entries);
     }
 
-    // ---- Scheduler.ScheduleTask (primitive landed for _PackageLicensePageState._initLicenses) ----
+    // ---- SchedulerBinding.Instance.ScheduleTask (primitive landed for _PackageLicensePageState._initLicenses) ----
 
     [Fact]
     public void ScheduleTask_RunsInPriorityOrderAndKeepsInsertionOrderWithinAPriority()
     {
         var order = new List<string>();
-        _ = Scheduler.ScheduleTask(() => { order.Add("idle-a"); return 0; }, Priority.Idle);
-        _ = Scheduler.ScheduleTask(() => { order.Add("touch"); return 0; }, Priority.Touch);
-        _ = Scheduler.ScheduleTask(() => { order.Add("idle-b"); return 0; }, Priority.Idle);
-        _ = Scheduler.ScheduleTask(() => { order.Add("animation"); return 0; }, Priority.Animation);
+        _ = SchedulerBinding.Instance.ScheduleTask(() => { order.Add("idle-a"); return 0; }, Priority.Idle);
+        _ = SchedulerBinding.Instance.ScheduleTask(() => { order.Add("touch"); return 0; }, Priority.Touch);
+        _ = SchedulerBinding.Instance.ScheduleTask(() => { order.Add("idle-b"); return 0; }, Priority.Idle);
+        _ = SchedulerBinding.Instance.ScheduleTask(() => { order.Add("animation"); return 0; }, Priority.Animation);
 
         Assert.Empty(order);
-        while (Scheduler.HandleEventLoopCallback())
+        while (SchedulerBinding.Instance.HandleEventLoopCallback())
         {
         }
 
@@ -93,12 +93,12 @@ public sealed class MaterialAboutTests : IDisposable
     [Fact]
     public async Task ScheduleTask_CompletesWithTheResultAndSurfacesFailures()
     {
-        var completed = Scheduler.ScheduleTask(() => 42, Priority.Animation, debugLabel: "answer");
-        var failing = Scheduler.ScheduleTask(
+        var completed = SchedulerBinding.Instance.ScheduleTask(() => 42, Priority.Animation, debugLabel: "answer");
+        var failing = SchedulerBinding.Instance.ScheduleTask(
             int () => throw new InvalidOperationException("boom"),
             Priority.Animation);
 
-        while (Scheduler.HandleEventLoopCallback())
+        while (SchedulerBinding.Instance.HandleEventLoopCallback())
         {
         }
 
@@ -111,13 +111,13 @@ public sealed class MaterialAboutTests : IDisposable
     public void DefaultSchedulingStrategy_SkipsSubAnimationTasksWhileTransientCallbacksArePending()
     {
         // With no ticking tickers every priority is admitted.
-        Assert.True(Scheduler.DefaultSchedulingStrategy(Priority.Idle.Value));
+        Assert.True(Scheduler.DefaultSchedulingStrategy(Priority.Idle.Value, SchedulerBinding.Instance));
 
-        Scheduler.SchedulingStrategy = _ => false;
+        SchedulerBinding.Instance.SchedulingStrategy = (_, _) => false;
         bool ran = false;
-        _ = Scheduler.ScheduleTask(() => { ran = true; return 0; }, Priority.Idle);
+        _ = SchedulerBinding.Instance.ScheduleTask(() => { ran = true; return 0; }, Priority.Idle);
 
-        Assert.True(Scheduler.HandleEventLoopCallback());
+        Assert.True(SchedulerBinding.Instance.HandleEventLoopCallback());
         Assert.False(ran);
     }
 
@@ -129,8 +129,8 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.Equal(200000, Priority.Touch.Value);
         Assert.Equal(100001, (Priority.Animation + 1).Value);
         Assert.Equal(99999, (Priority.Animation - 1).Value);
-        Assert.Equal(100000 + Priority.MaxOffset, (Priority.Animation + 999999).Value);
-        Assert.Equal(100000 - Priority.MaxOffset, (Priority.Animation - 999999).Value);
+        Assert.Equal(100000 + Priority.KMaxOffset, (Priority.Animation + 999999).Value);
+        Assert.Equal(100000 - Priority.KMaxOffset, (Priority.Animation - 999999).Value);
     }
 
     // ---- AboutDialog / AboutListTile ----
@@ -271,18 +271,18 @@ public sealed class MaterialAboutTests : IDisposable
         harness.Pump(new Size(640, 480));
         Assert.NotNull(FindParagraph(harness.RenderView, "Dialog app"));
 
-        double now = Scheduler.CurrentSeconds;
+        double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         var semantics = harness.PumpAndGetSemantics(new Size(640, 480));
         var actionNodes = FindNodes(semantics!, node => node.Actions.HasFlag(SemanticsActions.Tap)).ToArray();
         Assert.True(actionNodes.Length >= 2);
         Assert.True(harness.PerformSemanticsAction(actionNodes[^1].Id, SemanticsActions.Tap));
-        now = Scheduler.CurrentSeconds;
+        now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(640, 480));
         Assert.Null(FindParagraph(harness.RenderView, "Dialog app"));
         Assert.NotNull(FindParagraph(harness.RenderView, "Home"));
@@ -838,15 +838,15 @@ public sealed class MaterialAboutTests : IDisposable
         var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(5);
         while (!condition() && DateTime.UtcNow < deadline)
         {
-            while (Scheduler.HandleEventLoopCallback())
+            while (SchedulerBinding.Instance.HandleEventLoopCallback())
             {
             }
 
-            Scheduler.FlushMicrotasks();
+            EventLoop.FlushMicrotasks();
             harness.Pump(size);
-            double now = Scheduler.CurrentSeconds;
+            double now = FrameClock.CurrentSeconds;
             AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.6));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.6));
             harness.Pump(size);
             Thread.Sleep(2);
         }

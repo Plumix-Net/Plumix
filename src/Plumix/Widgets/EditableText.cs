@@ -66,7 +66,7 @@ public sealed partial class EditableText
             }
 
             _showCaretOnScreenScheduled = true;
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 _showCaretOnScreenScheduled = false;
                 // Dart only checks for a render object; Plumix's scheduler is process-wide, so the
@@ -252,7 +252,7 @@ public sealed partial class EditableText
         /// Dart's post-frame `bringIntoView` after a toolbar cut or paste.
         private void BringSelectionIntoViewAfterFrame()
         {
-            Scheduler.AddPostFrameCallback(_ =>
+            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
             {
                 if (Mounted && RenderEditable is { HasSize: true } && EffectiveScrollController.HasClients)
                 {
@@ -301,7 +301,7 @@ public sealed partial class EditableText
 
             if (_lastBottomViewInset != view.ViewInsets.Bottom)
             {
-                Scheduler.AddPostFrameCallback(
+                SchedulerBinding.Instance.AddPostFrameCallback(
                     _ => _selectionOverlay?.UpdateForScroll(),
                     "EditableText.updateForScroll");
                 if (_lastBottomViewInset < view.ViewInsets.Bottom)
@@ -354,7 +354,7 @@ public sealed partial class EditableText
             UpdateSelectionRects();
             UpdateComposingRectIfNeeded();
             UpdateCaretRectIfNeeded();
-            Scheduler.AddPostFrameCallback(
+            SchedulerBinding.Instance.AddPostFrameCallback(
                 SchedulePeriodicPostFrameCallbacks,
                 "EditableText.postFrameCallbacks");
         }
@@ -710,16 +710,16 @@ public sealed partial class EditableText
                 }
 
                 _showToolbarOnScreenScheduled = true;
-                switch (Scheduler.Phase)
+                switch (SchedulerBinding.Instance.SchedulerPhase)
                 {
                     case SchedulerPhase.Idle:
                     case SchedulerPhase.PostFrameCallbacks:
-                        Scheduler.ScheduleFrameCallback(ScheduleToolbar);
+                        SchedulerBinding.Instance.ScheduleFrameCallback(ScheduleToolbar);
                         break;
                     case SchedulerPhase.TransientCallbacks:
                     case SchedulerPhase.MidFrameMicrotasks:
                     case SchedulerPhase.PersistentCallbacks:
-                        Scheduler.AddPostFrameCallback(ScheduleToolbar, "EditableText.scheduleToolbar");
+                        SchedulerBinding.Instance.AddPostFrameCallback(ScheduleToolbar, "EditableText.scheduleToolbar");
                         break;
                 }
             }

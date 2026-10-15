@@ -812,7 +812,7 @@ public class PlumixHost : Control
 
     protected void ScheduleVisualUpdate()
     {
-        Scheduler.EnsureVisualUpdate();
+        SchedulerBinding.Instance.EnsureVisualUpdate();
     }
 
     /// Cause the widget and render trees hosted by this control to be fully
@@ -954,7 +954,7 @@ public class PlumixHost : Control
             return;
         }
 
-        Scheduler.AddPersistentFrameCallback(HandleSchedulerDrawFrame);
+        SchedulerBinding.Instance.AddPersistentFrameCallback(HandleSchedulerDrawFrame);
         _isSubscribedToScheduler = true;
     }
 
@@ -965,7 +965,7 @@ public class PlumixHost : Control
             return;
         }
 
-        Scheduler.RemovePersistentFrameCallback(HandleSchedulerDrawFrame);
+        SchedulerBinding.Instance.RemovePersistentFrameCallback(HandleSchedulerDrawFrame);
         _isSubscribedToScheduler = false;
     }
 
