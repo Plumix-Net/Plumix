@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Foundation;
 
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart (host integration extras)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 
 namespace Plumix;
 
@@ -24,7 +24,7 @@ public delegate void PipelineOwnerVisitor(PipelineOwner child);
 /// attached to a <see cref="PipelineManifold"/>, which tells it whether semantics are being produced
 /// and how to ask for a frame.
 /// </remarks>
-public class PipelineOwner : DiagnosticableTree
+public partial class PipelineOwner : DiagnosticableTree
 {
     /// <summary>Creates a pipeline owner that is not yet driving any render tree.</summary>
     /// <remarks>Flutter's <c>PipelineOwner</c> constructor.</remarks>
@@ -39,45 +39,6 @@ public class PipelineOwner : DiagnosticableTree
         _onSemanticsUpdate = onSemanticsUpdate;
         OnSemanticsOwnerDisposed = onSemanticsOwnerDisposed;
     }
-
-    /// <summary>
-    /// Creates the single-view pipeline a Plumix host drives for <paramref name="root"/>, producing
-    /// semantics unconditionally.
-    /// </summary>
-    /// <remarks>
-    /// Plumix-only convenience constructor. Flutter builds the same thing out of a
-    /// <c>PipelineOwner</c>, a <c>RenderView</c> and a <c>PipelineManifold</c> fed by
-    /// <c>SemanticsBinding.semanticsEnabled</c>; no Plumix host reports platform accessibility state
-    /// yet (see <c>docs/ai/BACKLOG.md</c>), so this constructor takes a <see cref="SemanticsHandle"/>
-    /// it never closes and semantics stay on for the lifetime of the owner. The view is not attached
-    /// here: a host's <c>View</c> widget (or <see cref="Attach(RenderObject)"/> for a render-only
-    /// tree) sets <see cref="RootNode"/> later, exactly as Flutter's deprecated binding-owned
-    /// <c>renderView</c> is only attached once the implicit <c>View</c> mounts. The view is given a
-    /// configuration from its <see cref="FlutterView"/> if it has none yet, so
-    /// <see cref="RenderView.PrepareInitialFrame"/> can run without a <c>RendererBinding</c>.
-    /// </remarks>
-    public PipelineOwner(RenderView root)
-        : this(onSemanticsUpdate: static _ => { })
-    {
-        ArgumentNullException.ThrowIfNull(root);
-        if (!root.HasConfiguration)
-        {
-            root.Configuration = ViewConfiguration.FromView(root.FlutterView);
-        }
-
-        ViewSemanticsHandle = EnsureSemantics();
-    }
-
-    /// <summary>The never-closed handle the single-view constructor takes.</summary>
-    internal SemanticsHandle? ViewSemanticsHandle { get; }
-
-    /// <summary>The <see cref="RenderView"/> this owner drives.</summary>
-    /// <remarks>
-    /// Plumix-only shorthand for <see cref="RootNode"/> on an owner that manages a view. Flutter
-    /// reaches the same object through <c>pipelineOwner.rootNode as RenderView</c>.
-    /// </remarks>
-    public RenderView Root => _rootNode as RenderView
-        ?? throw new InvalidOperationException("This PipelineOwner is not managing a RenderView.");
 
     /// <summary>Called when a render object of this pipeline wants to update its appearance.</summary>
     /// <remarks>
@@ -136,18 +97,6 @@ public class PipelineOwner : DiagnosticableTree
         }
     }
 
-    /// <summary>
-    /// The layer <see cref="CompositeFrame"/> draws. Flutter composites <c>RenderView.layer</c>
-    /// directly; Plumix's owner keeps a handle to the same layer because the host hands it an
-    /// Avalonia drawing context rather than a scene builder. <see cref="RenderView"/> keeps it in
-    /// step from <c>ScheduleInitialPaint</c> and <c>ReplaceRootLayer</c>.
-    /// </summary>
-    internal OffsetLayer RootLayer
-    {
-        get => _rootLayer;
-        set => _rootLayer = value;
-    }
-
     private bool _needsSemantics;
     private readonly HashSet<RenderObject> _nodesNeedingLayout = [];
     private bool _shouldMergeDirtyNodes;
@@ -158,15 +107,12 @@ public class PipelineOwner : DiagnosticableTree
     private readonly HashSet<RenderObject> _nodesNeedingSemanticsGeometryUpdate = [];
     private SemanticsOwner? _semanticsOwner;
     private int _outstandingSemanticsHandles;
-    private OffsetLayer _rootLayer = new();
 
     // TREE MANAGEMENT
     private readonly List<PipelineOwner> _children = [];
     private PipelineManifold? _manifold;
     private PipelineOwner? _parent;
     private bool _debugDoingChildLayout;
-
-    internal bool NeedsPaint => _nodesNeedingPaint.Count > 0;
 
     /// <summary>The render objects queued for the next layout pass.</summary>
     /// <remarks>
@@ -223,61 +169,11 @@ public class PipelineOwner : DiagnosticableTree
         }
     }
 
-    /// <summary>
-    /// Makes <paramref name="obj"/> the <see cref="RootNode"/> of this owner and, for a
-    /// <see cref="RenderView"/>, prepares its initial frame.
-    /// </summary>
-    /// <remarks>
-    /// Plumix-only. Flutter's <c>_RawViewElement.mount</c> does the same two steps
-    /// (<c>rootNode = renderObject</c>, <c>renderObject.prepareInitialFrame()</c>) for a view that
-    /// a <c>View</c> widget publishes; hosts and tests that drive a bare render tree use this.
-    /// </remarks>
-    public void Attach(RenderObject obj)
-    {
-        ArgumentNullException.ThrowIfNull(obj);
-        if (!ReferenceEquals(_rootNode, obj))
-        {
-            RootNode = obj;
-        }
-        else if (!obj.Attached)
-        {
-            obj.Attach(this);
-        }
-
-        if (obj is RenderView { HasRelayoutBoundaryState: false } view)
-        {
-            view.PrepareInitialFrame();
-        }
-    }
-
-    /// <summary>Marks the root as needing layout through its normal relayout-boundary contract.</summary>
-    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsLayout()</c>.</remarks>
-    public void RequestLayout() => _rootNode?.MarkNeedsLayout();
-
     internal void RequestLayoutFor(RenderObject node) => _nodesNeedingLayout.Add(node);
-
-    /// <summary>Marks the root's compositing bits as needing an update.</summary>
-    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsCompositingBitsUpdate()</c>.</remarks>
-    public void RequestCompositingBitsUpdate() => _rootNode?.MarkNeedsCompositingBitsUpdate();
 
     internal void RequestCompositingBitsUpdateFor(RenderObject node) => _nodesNeedingCompositingBitsUpdate.Add(node);
 
-    /// <summary>Marks the root as needing paint through its normal repaint-boundary contract.</summary>
-    /// <remarks>Plumix-only shorthand for <c>RootNode?.MarkNeedsPaint()</c>.</remarks>
-    public void RequestPaint() => _rootNode?.MarkNeedsPaint();
-
     internal void RequestPaintFor(RenderObject node) => _nodesNeedingPaint.Add(node);
-
-    public void RequestSemanticsUpdate()
-    {
-        if (_rootNode is not { } root)
-        {
-            return;
-        }
-
-        RequestSemanticsUpdateFor(root);
-        RequestSemanticsGeometryUpdateFor(root);
-    }
 
     /// <summary>The object managing semantics for this pipeline owner, if any.</summary>
     /// <remarks>
@@ -398,38 +294,7 @@ public class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.flushLayout</c>.</remarks>
     public void FlushLayout()
     {
-        FlushLayoutCore(null);
-    }
-
-    /// <summary>
-    /// Update the layout information for all dirty render objects, laying the <see cref="Root"/> view
-    /// out under <paramref name="rootSize"/>.
-    /// </summary>
-    /// <remarks>
-    /// The single-view entry point Plumix hosts call. Flutter's <c>RenderView</c> reads its size from
-    /// its own <c>configuration</c>, so <c>flushLayout</c> takes no argument there.
-    /// </remarks>
-    public void FlushLayout(Size rootSize)
-    {
-        FlushLayoutCore(rootSize);
-    }
-
-    private void FlushLayoutCore(Size? rootSize)
-    {
         using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
-        if (rootSize is { } viewSize && _rootNode is RenderView configuredView)
-        {
-            // Flutter's `RendererBinding` writes the `ViewConfiguration` onto the `RenderView`
-            // whenever the platform view's metrics change; Plumix hosts hand the size to the frame
-            // instead, so the owner keeps the configuration in step here.
-            BoxConstraints logicalConstraints = new BoxConstraints(0, viewSize.Width, 0, viewSize.Height);
-            double devicePixelRatio = configuredView.FlutterView.DevicePixelRatio;
-            configuredView.Configuration = new ViewConfiguration(
-                physicalConstraints: logicalConstraints * devicePixelRatio,
-                logicalConstraints: logicalConstraints,
-                devicePixelRatio: devicePixelRatio);
-        }
-
         if (!Constants.KReleaseMode)
         {
             Dictionary<string, object?>? debugTimelineArguments = null;
@@ -458,9 +323,7 @@ public class PipelineOwner : DiagnosticableTree
             _debugDoingChildLayout = true;
             foreach (PipelineOwner child in _children.ToArray())
             {
-                // A child owner's view is configured from its own `FlutterView`, never from the
-                // size the host handed this owner.
-                child.FlushLayoutCore(null);
+                child.FlushLayout();
             }
 
             Debug.Assert(
@@ -678,43 +541,6 @@ public class PipelineOwner : DiagnosticableTree
         finally
         {
             _paintNodesInProgress = null;
-        }
-    }
-
-    /// <summary>
-    /// Composites the layer tree into a scene that nothing renders: runs every layer's composition-time
-    /// work (<see cref="FollowerLayer"/> transforms, composition callbacks, dirty flags and retained
-    /// engine layers) the way <see cref="RenderView.CompositeFrame"/> does.
-    /// </summary>
-    /// <remarks>
-    /// Plumix-only. Flutter's <c>RendererBinding.drawFrame</c> composites every registered <c>RenderView</c>
-    /// after flushing paint; this is that composite for tests and host-less trees that pump the pipeline
-    /// by hand: it builds this owner's root layer into a scene and disposes it, then does the same for
-    /// its child owners (one per nested <c>View</c>).
-    /// </remarks>
-    public void CompositeFrame()
-    {
-        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
-        try
-        {
-            CompositeFrameHeadless();
-        }
-        finally
-        {
-            RenderingDebug.AdvanceRepaintColorForFrame();
-            if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.Idle)
-            {
-                EventLoop.FlushMicrotasks();
-            }
-        }
-    }
-
-    private void CompositeFrameHeadless()
-    {
-        _rootLayer.BuildScene(new SceneBuilder()).Dispose();
-        foreach (PipelineOwner child in _children.ToArray())
-        {
-            child.CompositeFrameHeadless();
         }
     }
 
@@ -950,17 +776,6 @@ public class PipelineOwner : DiagnosticableTree
         _paintNodesInProgress?.Remove(node);
     }
 
-    internal void ReplaceRootLayer(OffsetLayer rootLayer)
-    {
-        if (!rootLayer.Attached)
-        {
-            rootLayer.Attach(Root);
-        }
-
-        Root.ReplaceRootLayer(rootLayer);
-        _rootLayer = rootLayer;
-    }
-
     /// <summary>
     /// Marks this pipeline owner as attached to <paramref name="manifold"/>.
     /// </summary>
@@ -1126,21 +941,4 @@ public class PipelineOwner : DiagnosticableTree
             RootNode,
             defaultValue: DiagnosticsDefaults.NullValue));
     }
-
-    /// <summary>A textual representation of the render tree rooted at <see cref="RootNode"/>.</summary>
-    /// <remarks>
-    /// A single-root convenience helper. For Flutter's binding-wide printing function, use
-    /// <see cref="RenderingDebug.DebugDumpRenderTree"/>.
-    /// </remarks>
-    public string DebugDumpRenderTree() => _rootNode?.ToStringDeep() ?? string.Empty;
-
-    /// <summary>
-    /// A deep dump of the semantics-fragment tree the compiler builds behind the render tree, one
-    /// entry per render object that contributes to semantics.
-    /// </summary>
-    /// <remarks>
-    /// A single-root convenience helper. For Flutter's binding-wide printing function, use
-    /// <see cref="RenderingDebug.DebugDumpRenderObjectSemanticsTree"/>.
-    /// </remarks>
-    public string DebugDumpRenderObjectSemanticsTree() => _rootNode?.Semantics.ToStringDeep() ?? string.Empty;
 }

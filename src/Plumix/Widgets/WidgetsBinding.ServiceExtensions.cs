@@ -13,6 +13,7 @@ public partial class WidgetsBinding
     private ValueNotifier<bool>? _debugShowWidgetInspectorOverrideNotifierObject;
     private ValueNotifier<bool>? _debugWidgetInspectorSelectionOnTapEnabledNotifierObject;
     private bool _needToReportFirstFrame = true;
+    private TaskCompletionSource _firstFrameCompleter = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private Element? _debugRootElementOverrideForTests;
     private BuildOwner? _debugBuildOwnerOverrideForTests;
 
@@ -57,6 +58,18 @@ public partial class WidgetsBinding
     /// </remarks>
     public bool DebugExcludeRootWidgetInspector { get; set; }
 
+    /// <summary>Whether the Flutter engine has rasterized the first frame.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.firstFrameRasterized</c>: set once the platform reported the timings
+    /// of the first frame that <see cref="DrawFrame"/> sent (a host reports them after it rasterized
+    /// the frame); usually followed by <see cref="WaitUntilFirstFrameRasterized"/>.
+    /// </remarks>
+    public bool FirstFrameRasterized => _firstFrameCompleter.Task.IsCompleted;
+
+    /// <summary>A task that completes when the Flutter engine has rasterized the first frame.</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.waitUntilFirstFrameRasterized</c>.</remarks>
+    public Task WaitUntilFirstFrameRasterized => _firstFrameCompleter.Task;
+
     /// <summary>Whether the first frame has finished building.</summary>
     /// <remarks>
     /// Flutter's <c>WidgetsBinding.debugDidSendFirstFrameEvent</c>; also available as the
@@ -73,6 +86,14 @@ public partial class WidgetsBinding
     {
         _debugRootElementOverrideForTests = rootElement;
         _debugBuildOwnerOverrideForTests = buildOwner;
+    }
+
+    /// <summary>Forgets that the first frame was reported, as a fresh binding starts.</summary>
+    /// <remarks>Dart's binding tests get a fresh binding per test file; the process-wide one needs this.</remarks>
+    internal void ResetFirstFrameForTests()
+    {
+        _needToReportFirstFrame = true;
+        _firstFrameCompleter = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
     }
 
     /// <summary>Resets the widget inspector notifiers.</summary>
@@ -92,8 +113,7 @@ public partial class WidgetsBinding
     /// <summary>Registers the widgets library's service extensions.</summary>
     /// <remarks>
     /// Flutter's <c>WidgetsBinding.initServiceExtensions</c>, which <c>BindingBase</c> runs right after
-    /// <c>initInstances</c>. <c>debugDumpFocusTree</c> (the focus manager has no diagnostics tree),
-    /// <c>didSendFirstFrameRasterizedEvent</c> (no host reports frame timings) and
+    /// <c>initInstances</c>. <c>debugDumpFocusTree</c> (the focus manager has no diagnostics tree) and
     /// <c>accessibilityEvaluations</c> (<c>_accessibility_evaluations.dart</c> is not ported) are not
     /// registered; see <c>docs/ai/BACKLOG.md</c>.
     /// </remarks>
@@ -130,6 +150,16 @@ public partial class WidgetsBinding
                     // Devtools, the Intellij plugin, and the flutter tool all depend
                     // on it returning a string and not a boolean.
                     ["enabled"] = _needToReportFirstFrame ? "false" : "true",
+                }));
+
+            BindingBase.RegisterServiceExtension(
+                WidgetsServiceExtensions.DidSendFirstFrameRasterizedEvent.DartName(),
+                _ => Task.FromResult(new Dictionary<string, object?>
+                {
+                    // This is defined to return a STRING, not a boolean.
+                    // Devtools, the Intellij plugin, and the flutter tool all depend
+                    // on it returning a string and not a boolean.
+                    ["enabled"] = FirstFrameRasterized ? "true" : "false",
                 }));
 
             // Expose the ability to send Widget rebuilds as [Timeline] events.
@@ -211,27 +241,5 @@ public partial class WidgetsBinding
     public static void DebugDumpApp()
     {
         Print.DebugPrint(DebugDumpAppString());
-    }
-
-    /// <summary>Records that a frame was built, reporting the first one.</summary>
-    /// <remarks>
-    /// The first-frame bookkeeping of Flutter's <c>WidgetsBinding.drawFrame</c>: the
-    /// <c>Widgets built first useful frame</c> timeline instant and <c>_needToReportFirstFrame</c>. The
-    /// rasterized half (<c>firstFrameRasterized</c>, the <c>Flutter.FirstFrame</c> event) waits on a
-    /// timings callback no host reports; see <c>docs/ai/BACKLOG.md</c>.
-    /// </remarks>
-    private void ReportFirstFrameBuilt()
-    {
-        bool sendFramesToEngine = RendererBinding.Instance.SendFramesToEngine;
-        if (!Constants.KReleaseMode)
-        {
-            if (_needToReportFirstFrame && sendFramesToEngine)
-            {
-                FlutterTimeline.InstantSync("Widgets built first useful frame");
-            }
-        }
-
-        // A frame that is deferred is not the first frame sent to the engine that should be reported.
-        _needToReportFirstFrame = !sendFramesToEngine && _needToReportFirstFrame;
     }
 }

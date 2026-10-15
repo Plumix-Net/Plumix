@@ -336,8 +336,13 @@ public sealed class BuildOwner
             BuildScope(_rootElement);
         }
 
-        // A harness pump has no render phase of its own to finalize after, so it finalizes here.
-        FinalizeTree();
+        // A harness pump has no render phase of its own to finalize after, so it finalizes here, in
+        // the persistent-callback phase every Dart `finalizeTree` runs in: an OverlayEntry a disposing
+        // State removes then defers marking its overlay dirty until after the frame.
+        using (SchedulerBinding.Instance.BuildScope())
+        {
+            FinalizeTree();
+        }
 
         // The harness finishes its render frame in PipelineOwner.CompositeFrame. Microtasks
         // scheduled during build must wait until then, as they do in a production frame.

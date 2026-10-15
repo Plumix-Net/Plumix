@@ -76,9 +76,12 @@ public sealed class ServiceExtensionResponse
 /// </para>
 /// <para>
 /// Plumix has no binding object for these members to live on, so they are static; the bindings'
-/// <c>initServiceExtensions</c> call them. Construction checks (<c>checkInstance</c>,
-/// <c>debugCheckZone</c>) and the foundation-level extensions (<c>reassemble</c>, <c>exit</c>,
-/// <c>platformOverride</c>, ...) are not ported (see <c>docs/ai/BACKLOG.md</c>).
+/// <c>initServiceExtensions</c> call them. The members Dart's composed binding reaches through its
+/// mixin chain are spelled out: <see cref="ReassembleApplication"/> locks events on
+/// <c>SchedulerBinding</c> (where <c>lockEvents</c> lives) and runs the most derived
+/// <c>performReassemble</c>, the widgets binding's, which ends in <see cref="PerformReassemble"/>.
+/// Construction checks (<c>checkInstance</c>, <c>debugCheckZone</c>) are not ported (see
+/// <c>docs/ai/BACKLOG.md</c>).
 /// </para>
 /// </remarks>
 public static class BindingBase
@@ -100,6 +103,145 @@ public static class BindingBase
     /// service-extension harness captures by overriding <c>registerServiceExtension</c>.
     /// </summary>
     internal static IReadOnlyDictionary<string, ServiceExtensionCallback> RegisteredCallbacks => Callbacks;
+
+    /// <summary>
+    /// Cause the entire application to redraw, e.g. after a hot reload.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>BindingBase.reassembleApplication</c>: <c>lockEvents(performReassemble)</c>. Events
+    /// are locked while the widgets binding reassembles its tree, the renderer binding reassembles every
+    /// registered render view and waits for the warm-up frame, and <see cref="PerformReassemble"/> resets
+    /// the error count. This is expensive and should not be called except during development.
+    /// </remarks>
+    public static Task ReassembleApplication() =>
+        SchedulerBinding.Instance.LockEvents(static () => Widgets.WidgetsBinding.Instance.PerformReassemble());
+
+    /// <summary>The base of the <c>performReassemble</c> chain: resets the error count.</summary>
+    /// <remarks>
+    /// Flutter's <c>BindingBase.performReassemble</c>, which every binding's override ends in. It resets
+    /// <see cref="FlutterError"/>'s error count, so the next error after a hot reload prints in full.
+    /// </remarks>
+    public static Task PerformReassemble()
+    {
+        FlutterError.ResetErrorCount();
+        return Task.CompletedTask;
+    }
+
+    /// <summary>Registers the foundation library's service extensions.</summary>
+    /// <remarks>
+    /// Flutter's <c>BindingBase.initServiceExtensions</c>, the first link of every binding's chain:
+    /// <c>reassemble</c> (debug), <c>exit</c> (not in release, not on the web),
+    /// <c>connectedVmServiceUri</c> and <c>activeDevToolsServerAddress</c> (not in release), and
+    /// <c>platformOverride</c> and <c>brightnessOverride</c> (debug), which reassemble the application
+    /// after changing the override.
+    /// </remarks>
+    internal static void InitServiceExtensions()
+    {
+        if (Constants.KDebugMode)
+        {
+            RegisterSignalServiceExtension(
+                FoundationServiceExtensions.Reassemble.DartName(),
+                ReassembleApplication);
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            if (!Constants.KIsWeb)
+            {
+                RegisterSignalServiceExtension(FoundationServiceExtensions.Exit.DartName(), ExitApplication);
+            }
+
+            // These service extensions are used in profile mode applications.
+            RegisterStringServiceExtension(
+                FoundationServiceExtensions.ConnectedVmServiceUri.DartName(),
+                static () => Task.FromResult(FoundationDebug.ConnectedVmServiceUri ?? string.Empty),
+                static uri =>
+                {
+                    FoundationDebug.ConnectedVmServiceUri = uri;
+                    return Task.CompletedTask;
+                });
+            RegisterStringServiceExtension(
+                FoundationServiceExtensions.ActiveDevToolsServerAddress.DartName(),
+                static () => Task.FromResult(FoundationDebug.ActiveDevToolsServerAddress ?? string.Empty),
+                static serverAddress =>
+                {
+                    FoundationDebug.ActiveDevToolsServerAddress = serverAddress;
+                    return Task.CompletedTask;
+                });
+        }
+
+        if (Constants.KDebugMode)
+        {
+            RegisterServiceExtension(
+                FoundationServiceExtensions.PlatformOverride.DartName(),
+                static async parameters =>
+                {
+                    if (parameters.TryGetValue("value", out string? value))
+                    {
+                        PlatformDefaults.DebugDefaultTargetPlatform = null;
+                        foreach (TargetPlatform candidate in Enum.GetValues<TargetPlatform>())
+                        {
+                            if (Diagnostics.EnumName(candidate) == value)
+                            {
+                                PlatformDefaults.DebugDefaultTargetPlatform = candidate;
+                                break;
+                            }
+                        }
+
+                        PostExtensionStateChangedEvent(
+                            FoundationServiceExtensions.PlatformOverride.DartName(),
+                            Diagnostics.EnumName(PlatformDefaults.TargetPlatform));
+                        await ReassembleApplication();
+                    }
+
+                    return new Dictionary<string, object?>
+                    {
+                        ["value"] = Diagnostics.EnumName(PlatformDefaults.TargetPlatform),
+                    };
+                });
+
+            RegisterServiceExtension(
+                FoundationServiceExtensions.BrightnessOverride.DartName(),
+                static async parameters =>
+                {
+                    if (parameters.TryGetValue("value", out string? value))
+                    {
+                        FoundationDebug.DebugBrightnessOverride = value switch
+                        {
+                            "Brightness.light" => Widgets.PlatformBrightness.Light,
+                            "Brightness.dark" => Widgets.PlatformBrightness.Dark,
+                            _ => null,
+                        };
+                        PostExtensionStateChangedEvent(
+                            FoundationServiceExtensions.BrightnessOverride.DartName(),
+                            BrightnessToString(EffectivePlatformBrightness()));
+                        await ReassembleApplication();
+                    }
+
+                    return new Dictionary<string, object?>
+                    {
+                        ["value"] = BrightnessToString(EffectivePlatformBrightness()),
+                    };
+                });
+        }
+    }
+
+    /// <summary>Replaces <c>dart:io</c>'s <c>exit</c> for the <c>exit</c> extension; a test captures it.</summary>
+    internal static Action<int> ExitProcess { get; set; } = Environment.Exit;
+
+    /// <remarks>Flutter's private top-level <c>_exitApplication</c>: <c>exit(0)</c>.</remarks>
+    private static Task ExitApplication()
+    {
+        ExitProcess(0);
+        return Task.CompletedTask;
+    }
+
+    private static Widgets.PlatformBrightness EffectivePlatformBrightness() =>
+        FoundationDebug.DebugBrightnessOverride ?? PlatformDispatcher.Instance.PlatformBrightness;
+
+    /// <summary>dart:ui's <c>Brightness.toString()</c>, e.g. <c>Brightness.dark</c>.</summary>
+    private static string BrightnessToString(Widgets.PlatformBrightness brightness) =>
+        "Brightness." + Diagnostics.EnumName(brightness);
 
     /// <summary>Registers a service extension that takes no arguments and returns an empty map.</summary>
     /// <remarks>Flutter's <c>BindingBase.registerSignalServiceExtension</c>.</remarks>

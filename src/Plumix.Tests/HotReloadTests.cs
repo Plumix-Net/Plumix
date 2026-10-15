@@ -1,15 +1,35 @@
 using Avalonia.Input;
+using Key = Avalonia.Input.Key;
+using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (Element.reassemble, StatefulElement.reassemble); flutter/packages/flutter/lib/src/foundation/binding.dart (reassembleApplication, adapted to .NET MetadataUpdateHandler)
+// Dart parity sources: flutter/packages/flutter/lib/src/widgets/framework.dart (Element.reassemble,
+// StatefulElement.reassemble); flutter/packages/flutter/lib/src/foundation/binding.dart
+// (reassembleApplication, performReassemble); flutter/packages/flutter/test/foundation/reassemble_test.dart
 
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
-public sealed class HotReloadTests
+public sealed class HotReloadTests : IDisposable
 {
+    private readonly Action<Action> _previousTimerRun = PlatformDispatcher.Instance.TimerRun;
+    private readonly List<Action> _timers = [];
+
+    public HotReloadTests()
+    {
+        SchedulerBinding.ResetForTests();
+        PlatformDispatcher.Instance.TimerRun = _timers.Add;
+    }
+
+    public void Dispose()
+    {
+        PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        SchedulerBinding.ResetForTests();
+    }
+
     [Fact]
     public void Reassemble_RebuildsEntireTree_AndPreservesState()
     {
@@ -59,61 +79,101 @@ public sealed class HotReloadTests
     }
 
     [Fact]
-    public void WidgetHost_ReassembleApplication_RebuildsWidgetTree_PreservingState()
+    public async Task BindingBase_ReassembleApplication_RebuildsTheTreeUnderLockedEvents_PreservingState()
     {
         ReassembleTracker.Reset();
-
         var host = new WidgetHost
         {
-            RootWidget = new ReassembleHost()
+            RootWidget = new ReassembleHost(),
         };
+        try
+        {
+            ReassembleHostState? initialState = ReassembleTracker.CurrentState;
+            Assert.NotNull(initialState);
+            Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
 
-        var initialState = ReassembleTracker.CurrentState;
-        Assert.NotNull(initialState);
-        Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
+            Task reassembled = BindingBase.ReassembleApplication();
 
-        host.ReassembleApplication();
-        SchedulerBinding.PumpFrameForTests();
+            // reassemble_test.dart: events are locked while performReassemble runs, and the state
+            // was reassembled synchronously inside it.
+            Assert.Equal([true], ReassembleTracker.LockedDuringReassemble);
+            Assert.True(SchedulerBinding.Instance.Locked);
+            Assert.False(reassembled.IsCompleted);
 
-        Assert.Same(initialState, ReassembleTracker.CurrentState);
-        Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
-        Assert.Equal(2, ReassembleTracker.StatelessBuildCount);
-        Assert.Equal(1, ReassembleTracker.StateReassembleCount);
+            // RendererBinding.performReassemble waits for the warm-up frame that shows the result.
+            await DrainWarmUpFrame(reassembled);
 
-        host.RootWidget = null;
+            Assert.False(SchedulerBinding.Instance.Locked);
+            Assert.Same(initialState, ReassembleTracker.CurrentState);
+            Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
+            Assert.Equal(2, ReassembleTracker.StatelessBuildCount);
+            Assert.Equal(1, ReassembleTracker.StateReassembleCount);
+        }
+        finally
+        {
+            host.RootWidget = null;
+        }
     }
 
     [Fact]
-    public void HotReloadManager_ReassembleApplication_ReassemblesLiveHosts()
+    public async Task BindingBase_ReassembleApplication_ResetsTheErrorCount()
     {
-        ReassembleTracker.Reset();
-        HotReloadManager.ResetForTests();
-
-        var host = new WidgetHost
+        // BindingBase.performReassemble: the first error after a hot reload prints in full again.
+        List<string?> log = [];
+        DebugPrintCallback previousPrint = Print.DebugPrint;
+        Print.DebugPrint = (message, _) => log.Add(message);
+        try
         {
-            RootWidget = new ReassembleHost()
-        };
+            FlutterError.ResetErrorCount();
+            FlutterError.DumpErrorToConsole(new FlutterErrorDetails(exception: new InvalidOperationException("one")));
+            FlutterError.DumpErrorToConsole(new FlutterErrorDetails(exception: new InvalidOperationException("two")));
+            Assert.StartsWith("Another exception was thrown:", log[^1]);
 
-        Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
+            await DrainWarmUpFrame(BindingBase.ReassembleApplication());
+            log.Clear();
+            FlutterError.DumpErrorToConsole(new FlutterErrorDetails(exception: new InvalidOperationException("three")));
 
-        HotReloadManager.ReassembleApplication();
-        SchedulerBinding.PumpFrameForTests();
-
-        Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
-        Assert.Equal(1, ReassembleTracker.StateReassembleCount);
-
-        host.RootWidget = null;
+            Assert.DoesNotContain(
+                log,
+                static line => line?.StartsWith("Another exception", StringComparison.Ordinal) == true);
+        }
+        finally
+        {
+            Print.DebugPrint = previousPrint;
+            FlutterError.ResetErrorCount();
+        }
     }
 
     [Fact]
-    public void ManualReassembleShortcut_ReassemblesLiveHosts_WhenHotReloadAvailable()
+    public async Task HotReloadManager_ReassembleApplication_RunsTheBindingChain()
     {
         ReassembleTracker.Reset();
-        HotReloadManager.ResetForTests();
+        var host = new WidgetHost
+        {
+            RootWidget = new ReassembleHost(),
+        };
+        try
+        {
+            Assert.Equal(1, ReassembleTracker.StatefulBuildCount);
 
+            await DrainWarmUpFrame(HotReloadManager.ReassembleApplication());
+
+            Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
+            Assert.Equal(1, ReassembleTracker.StateReassembleCount);
+        }
+        finally
+        {
+            host.RootWidget = null;
+        }
+    }
+
+    [Fact]
+    public void ManualReassembleShortcut_ReassemblesTheApplication_WhenHotReloadAvailable()
+    {
+        ReassembleTracker.Reset();
         var widgetHost = new WidgetHost
         {
-            RootWidget = new ReassembleHost()
+            RootWidget = new ReassembleHost(),
         };
         var probeHost = new KeyProbeHost();
 
@@ -127,17 +187,87 @@ public sealed class HotReloadTests
 
             HotReloadManager.IsManualReassembleAvailable = true;
             Assert.True(probeHost.DispatchKeyDown(Key.R, KeyModifiers.Control | KeyModifiers.Shift));
-            SchedulerBinding.PumpFrameForTests();
+            for (int turn = 0; turn < 10 && SchedulerBinding.Instance.Locked; turn++)
+            {
+                RunTimers();
+                EventLoop.FlushMicrotasks();
+                WaitForUnlock();
+            }
         }
         finally
         {
             HotReloadManager.IsManualReassembleAvailable = wasAvailable;
+            widgetHost.RootWidget = null;
         }
 
         Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
         Assert.Equal(1, ReassembleTracker.StateReassembleCount);
+    }
 
-        widgetHost.RootWidget = null;
+    [DebugOnlyFact]
+    public async Task ReassembleServiceExtension_ReassemblesTheApplication()
+    {
+        ReassembleTracker.Reset();
+        var host = new WidgetHost
+        {
+            RootWidget = new ReassembleHost(),
+        };
+        try
+        {
+            // flutter_test's harness calls the registered callback directly, bypassing the VM wrapper.
+            Task<Dictionary<string, object?>> response =
+                BindingBase.RegisteredCallbacks[FoundationServiceExtensions.Reassemble.DartName()](
+                    new Dictionary<string, string>());
+            await DrainWarmUpFrame(response);
+
+            Assert.Empty(response.Result);
+            Assert.Equal(1, ReassembleTracker.StateReassembleCount);
+        }
+        finally
+        {
+            host.RootWidget = null;
+        }
+    }
+
+    /// <summary>Runs the warm-up frame <c>performReassemble</c> waits for, then the unlock microtask.</summary>
+    private async Task DrainWarmUpFrame(Task reassembled)
+    {
+        for (int turn = 0; turn < 10 && !reassembled.IsCompleted; turn++)
+        {
+            RunTimers();
+            EventLoop.FlushMicrotasks();
+        }
+
+        await reassembled.WaitAsync(TimeSpan.FromSeconds(5));
+        WaitForUnlock();
+    }
+
+    /// <summary>
+    /// lockEvents releases its lock in a microtask queued by the locked task's continuation, which may
+    /// complete on another thread; drain microtasks until that release ran.
+    /// </summary>
+    internal static void WaitForUnlock()
+    {
+        for (int attempt = 0; attempt < 400; attempt++)
+        {
+            EventLoop.FlushMicrotasks();
+            if (!SchedulerBinding.Instance.Locked)
+            {
+                return;
+            }
+
+            Thread.Sleep(5);
+        }
+    }
+
+    private void RunTimers()
+    {
+        while (_timers.Count > 0)
+        {
+            Action timer = _timers[0];
+            _timers.RemoveAt(0);
+            timer();
+        }
     }
 
     private sealed class KeyProbeHost : PlumixHost
@@ -162,6 +292,7 @@ public sealed class HotReloadTests
         public static int StateReassembleCount;
         public static ReassembleHostState? CurrentState;
         public static List<string> Events = [];
+        public static List<bool> LockedDuringReassemble = [];
 
         public static void Reset()
         {
@@ -170,6 +301,7 @@ public sealed class HotReloadTests
             StateReassembleCount = 0;
             CurrentState = null;
             Events = [];
+            LockedDuringReassemble = [];
         }
     }
 
@@ -191,6 +323,7 @@ public sealed class HotReloadTests
             base.Reassemble();
             ReassembleTracker.StateReassembleCount += 1;
             ReassembleTracker.Events.Add("state-reassemble");
+            ReassembleTracker.LockedDuringReassemble.Add(SchedulerBinding.Instance.Locked);
         }
 
         public override Widget Build(BuildContext context)

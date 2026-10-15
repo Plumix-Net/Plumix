@@ -30,6 +30,17 @@ public static class FoundationDebug
     public static string? ConnectedVmServiceUri { get; set; }
 
     /// <summary>
+    /// A setting that can be used to override the platform brightness exposed from the platform
+    /// dispatcher.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>debugBrightnessOverride</c> (<see cref="Widgets.PlatformBrightness"/> is dart:ui's
+    /// <c>Brightness</c>). <c>MediaQuery.FromView</c> reads it outside release builds, and the
+    /// <c>brightnessOverride</c> service extension writes it.
+    /// </remarks>
+    public static Widgets.PlatformBrightness? DebugBrightnessOverride { get; set; }
+
+    /// <summary>
     /// Runs <paramref name="action"/>; while <see cref="DebugInstrumentationEnabled"/> is set, prints
     /// how long it took, labelled with <paramref name="description"/>.
     /// </summary>

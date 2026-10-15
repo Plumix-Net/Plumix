@@ -373,12 +373,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
                     child: new SizedBox(
                         width: 200,
                         child: new EditableText(controller: _controller, focusNode: _focusNode))));
-            host.FlushPipelineForTests(new Size(300, 200));
+            host.PumpFrameForTests(new Size(300, 200));
             Assert.Null(RequestClient(host));
 
             _focusNode.RequestFocus();
             EventLoop.FlushMicrotasks();
-            host.FlushPipelineForTests(new Size(300, 200));
+            host.PumpFrameForTests(new Size(300, 200));
             SchedulerBinding.PumpFrameForTests();
 
             TextInputMethodClient client = Assert.IsAssignableFrom<TextInputMethodClient>(RequestClient(host));
@@ -407,7 +407,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             client.Selection = new AvaloniaTextSelection(1, 3);
             Assert.Equal(new TextSelection(1, 3), _controller.Selection);
 
-            host.FlushPipelineForTests(new Size(300, 200));
+            host.PumpFrameForTests(new Size(300, 200));
             SchedulerBinding.PumpFrameForTests();
             Rect cursor = client.CursorRectangle;
             Assert.True(cursor.Height > 0, cursor.ToString());

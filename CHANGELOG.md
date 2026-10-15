@@ -9,6 +9,20 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: PlumixHost is an engine embedder: no own layout/paint; it rasterizes FlutterView.render scenes (C#-only).
+- Breaking: Render-only hosts register views with RendererBinding; semantics follow semanticsEnabled (binding.dart).
+- Breaking: Hot reload runs reassembleApplication under lockEvents; host hooks are gone (foundation/binding.dart).
+- Breaking: WidgetsBinding.PerformReassemble chains renderer/base reassemble and resets error count (binding.dart).
+- BindingBase registers reassemble/exit/vm-service/devtools/platform/brightness extensions (foundation/binding.dart).
+- debugBrightnessOverride replaces MediaQuery.fromView brightness outside release (foundation/debug.dart).
+- firstFrameRasterized, waitUntilFirstFrameRasterized, Flutter.FirstFrame and its extension (widgets/binding.dart).
+- Hosts record and batch FrameTiming reports like the engine's FrameTimingsRecorder/Shell (C#-only).
+- Breaking: PlatformDispatcher metrics/text-scale/brightness slots; theme changes report brightness (binding.dart).
+- Breaking: Binding observers report errors via FlutterError; back-gesture/memory/status-bar paths match (binding.dart).
+- didPushRoute default delegation and unknown navigation methods answer false (widgets/binding.dart).
+- Breaking: PipelineOwner headless conveniences move to a C#-only partial; marker now strict (rendering/object.dart).
+- Harness FlushBuild finalizes in the persistent phase, so disposing states defer overlay rebuilds (framework.dart).
+- Lifecycle demo adds binding-event counters and memory pressure in both samples (widgets/binding.dart).
 - Breaking: Scheduler is now SchedulerBinding.Instance; strategy receives the binding (scheduler/binding.dart).
 - Breaking: Priority is an identity class with KMaxOffset (scheduler/priority.dart).
 - Breaking: lockEvents locks first, unlocks in a microtask; persistent callbacks not deduped (scheduler/binding.dart).

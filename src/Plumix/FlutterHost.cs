@@ -15,7 +15,12 @@ using Plumix.UI;
 using Plumix.Widgets;
 using AvaloniaTextSelection = Avalonia.Input.TextInput.TextSelection;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/binding.dart; flutter/packages/flutter/lib/src/rendering/binding.dart (host integration, adapted)
+// C#-only infrastructure: the engine embedder of one `FlutterView` on Avalonia. It owns no framework
+// behavior — frames are built, laid out, painted and composited by `WidgetsBinding.drawFrame` over
+// `RendererBinding.drawFrame`; this control reports platform state to `PlatformDispatcher`, rasterizes
+// the scene `FlutterView.render` hands it, records and reports `FrameTiming`s (the engine's
+// `FrameTimingsRecorder`/`Shell::OnFrameRasterized`), and answers the platform channels the engine's
+// plugins answer.
 
 namespace Plumix;
 
@@ -46,9 +51,8 @@ public class PlumixHost : Control
     private Size _layerTreeTargetSize;
     private Matrix _layerTreeTransform = Matrix.Identity;
     private List<IDisposable> _rasterResources = [];
-    private long _renderPassStart;
-    private bool _inRenderPass;
-    private bool _isSubscribedToScheduler;
+    private FrameTimingsRecorder? _pendingFrameTimings;
+    private bool _isRenderOnlyViewAttached;
     private Size _lastArrangedSize;
     private TopLevel? _attachedTopLevel;
     private IInsetsManager? _insetsManager;
@@ -99,15 +103,15 @@ public class PlumixHost : Control
 
     public PlumixHost()
     {
-        // Dart's deprecated `RendererBinding.pipelineOwner`/`renderView` pair, per host: the view is
-        // attached when the implicit `View` widget mounts (or by `SetRootChild` for a render-only
-        // tree), and the semantics feed goes through the `FlutterView` like `RenderView.updateSemantics`.
+        // Dart's deprecated `RendererBinding.pipelineOwner`/`renderView` pair, per host: the owner is
+        // created exactly as Dart's (no visual-update callback — the binding's manifold answers that once
+        // the owner is adopted — and semantics follow `SemanticsBinding.semanticsEnabled`). The view is
+        // attached when the implicit `View` widget mounts, or by `SetRootChild` for a render-only tree.
         _root = new ReusableRenderView(_view);
-        _pipeline = new PipelineOwner(_root);
-        _pipeline.OnNeedVisualUpdate = ScheduleVisualUpdate;
-        _pipeline.OnSemanticsOwnerCreated = () => (_pipeline.RootNode as RenderView)?.ScheduleInitialSemantics();
-        _pipeline.OnSemanticsOwnerDisposed = () => (_pipeline.RootNode as RenderView)?.ClearSemantics();
-        _pipeline.OnSemanticsUpdate = _view.UpdateSemantics;
+        _pipeline = new PipelineOwner(
+            onSemanticsOwnerCreated: () => (_pipeline!.RootNode as RenderView)?.ScheduleInitialSemantics(),
+            onSemanticsUpdate: update => (_pipeline!.RootNode as RenderView)?.UpdateSemantics(update),
+            onSemanticsOwnerDisposed: () => (_pipeline!.RootNode as RenderView)?.ClearSemantics());
         _view.SemanticsUpdated += HandleViewSemanticsUpdated;
         _view.RenderRequested += HandleViewRenderRequested;
         _textInputClient = new PlumixTextInputMethodClient(this);
@@ -119,8 +123,6 @@ public class PlumixHost : Control
 
         ClipToBounds = true;
         Focusable = true;
-        EnsureSchedulerSubscription();
-        HotReloadManager.RegisterHost(this);
     }
 
     internal RenderBox? RootChild => _root.Child;
@@ -144,18 +146,35 @@ public class PlumixHost : Control
     public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner?.RootNode;
 
     /// <summary>
-    /// Renders a bare render tree, without a widget layer. The host's view is attached to its
-    /// pipeline the first time this is called.
+    /// Renders a bare render tree, without a widget layer.
     /// </summary>
+    /// <remarks>
+    /// Dart leaves wiring the deprecated <c>renderView</c> to "a higher level" for apps that do not call
+    /// <c>runApp</c>: the first child makes the view the root of this host's pipeline owner, adopts that
+    /// owner into <see cref="RendererBinding.RootPipelineOwner"/> and registers the view with
+    /// <see cref="RendererBinding.AddRenderView"/> — the steps <c>_RawViewElement.mount</c> takes for a
+    /// <c>View</c> widget — so the binding's frame lays it out, paints and composites it. Clearing the
+    /// child undoes them.
+    /// </remarks>
     public void SetRootChild(RenderBox? child)
     {
-        if (_pipeline.RootNode is null)
+        if (child is not null && !_isRenderOnlyViewAttached)
         {
-            _pipeline.Attach(_root);
+            _isRenderOnlyViewAttached = true;
+            _pipeline.RootNode = _root;
+            RendererBinding.Instance.RootPipelineOwner.AdoptChild(_pipeline);
+            RendererBinding.Instance.AddRenderView(_root);
+            _root.PrepareInitialFrame();
         }
 
         _root.Child = child;
-        ScheduleVisualUpdate();
+        if (child is null && _isRenderOnlyViewAttached)
+        {
+            _isRenderOnlyViewAttached = false;
+            RendererBinding.Instance.RemoveRenderView(_root);
+            RendererBinding.Instance.RootPipelineOwner.DropChild(_pipeline);
+            _pipeline.RootNode = null;
+        }
     }
 
     protected override Size ArrangeOverride(Size finalSize)
@@ -197,7 +216,7 @@ public class PlumixHost : Control
             && !e.KeyModifiers.HasFlag(KeyModifiers.Alt))
         {
             e.Handled = true;
-            HotReloadManager.ReassembleApplication();
+            _ = HotReloadManager.ReassembleApplication();
             return;
         }
 
@@ -412,36 +431,30 @@ public class PlumixHost : Control
             timestampUtc: DateTime.UtcNow));
     }
 
+    /// <summary>
+    /// The engine's rasterizer: draws the layer tree <see cref="FlutterView.Render"/> last handed to this
+    /// host, and reports the frame's timings the first time that tree is drawn.
+    /// </summary>
+    /// <remarks>
+    /// Frames are produced by the binding (<c>WidgetsBinding.drawFrame</c>); this pass never builds, lays
+    /// out or paints. Avalonia may render again without a new frame (an expose, a resize before the
+    /// forced frame arrives), which redraws the last scene, as the engine shows its last frame.
+    /// </remarks>
     public override void Render(DrawingContext context)
     {
-        _renderPassStart = System.Diagnostics.Stopwatch.GetTimestamp();
-        _inRenderPass = true;
-        try
+        FrameTimingsRecorder? timings = _pendingFrameTimings;
+        _pendingFrameTimings = null;
+        if (timings is not null)
         {
-            OnBuildBeforeLayout();
-            _pipeline.FlushLayout(Bounds.Size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            // Dart's `RendererBinding.drawFrame` sends nothing to the engine while the first frame is
-            // deferred; the host shows no frame instead of a half-initialized one.
-            if (!RendererBinding.Instance.SendFramesToEngine)
-            {
-                return;
-            }
-
-            // `RenderView.compositeFrame` builds the scene and hands it to `FlutterView.render`, which
-            // takes its layer tree (HandleViewRenderRequested); the rasterizer then draws that tree.
-            if (_pipeline.RootNode is RenderView renderView)
-            {
-                renderView.CompositeFrame();
-            }
-
-            RasterizeLayerTree(context);
-            FlushSemanticsAndNotify();
+            // `Rasterizer::DoDraw`: the UI-time lap is the frame's build duration.
+            _compositor.UiTime.SetLapTime(timings.BuildDuration);
+            timings.RecordRasterStart();
         }
-        finally
+
+        RasterizeLayerTree(context);
+        if (timings is not null)
         {
-            _inRenderPass = false;
+            FrameTimingsReporter.OnFrameRasterized(timings.RecordRasterEnd());
         }
     }
 
@@ -476,7 +489,6 @@ public class PlumixHost : Control
     {
         base.OnAttachedToVisualTree(e);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
-        EnsureSchedulerSubscription();
         AttachMouseCursorListener();
         AttachFeedbackListener();
         AttachPlatformChannelHandler();
@@ -503,42 +515,15 @@ public class PlumixHost : Control
         DetachFeedbackListener();
         DetachTextInputPlugin();
         DetachMouseCursorListener();
-        RemoveSchedulerSubscription();
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
         base.OnDetachedFromVisualTree(e);
     }
 
-    protected virtual void OnDrawFrame(TimeSpan timestamp)
-    {
-    }
-
-    /// <summary>
-    /// Called right before every layout flush the host performs. Dart's <c>WidgetsBinding.drawFrame</c>
-    /// runs <c>buildScope</c> immediately before <c>super.drawFrame()</c> lays out, so layout never
-    /// meets a dirty widget. Plumix's host lays out from its own persistent callback, whose order
-    /// against the binding's build callback depends on which was registered first, and again from
-    /// Avalonia's <see cref="Render"/> pass, which runs on its own schedule after microtasks or input
-    /// may have dirtied widgets. <see cref="WidgetHost"/> rebuilds them here, so a lazy list that
-    /// creates children during layout never meets a dirty element outside its build scope.
-    /// </summary>
-    protected virtual void OnBuildBeforeLayout()
-    {
-    }
-
-    /// <summary>
-    /// Called after the frame's layout and compositing-bits passes. <see cref="WidgetHost"/> finalizes
-    /// its element tree here, the way Dart's <c>WidgetsBinding.drawFrame</c> calls
-    /// <c>buildOwner.finalizeTree()</c> after the render phase.
-    /// </summary>
-    protected virtual void OnFinalizeFrame()
-    {
-    }
-
     /// <summary>
     /// Called when the host's size, scale or insets changed. Writes the new metrics to
-    /// <see cref="RootFlutterView"/>, as the engine does, and runs Flutter's
-    /// <c>handleMetricsChanged</c> chain: the renderer binding reconfigures the registered views and
-    /// the widgets binding tells its observers.
+    /// <see cref="RootFlutterView"/> and invokes <see cref="PlatformDispatcher.OnMetricsChanged"/>, as the
+    /// engine's <c>_updateWindowMetrics</c> does: the renderer binding reconfigures the registered views
+    /// and the widgets binding tells its observers.
     /// </summary>
     protected virtual void OnMetricsChanged()
     {
@@ -555,7 +540,25 @@ public class PlumixHost : Control
             displayFeatures: data.DisplayFeatures,
             displayCornerRadii: data.DisplayCornerRadii);
         PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, data);
-        WidgetsBinding.Instance.HandleMetricsChanged();
+        PlatformDispatcher.Instance.OnMetricsChanged?.Invoke();
+        ReportAccessibilityFeatures();
+    }
+
+    /// <summary>
+    /// The platform theme changed: reports the new brightness through
+    /// <see cref="PlatformDispatcher.OnPlatformBrightnessChanged"/> when it differs (the engine's
+    /// <c>_updatePlatformBrightness</c>), and the high-contrast bit through the accessibility features.
+    /// </summary>
+    private void OnPlatformSettingsChanged()
+    {
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        PlatformBrightness previous = dispatcher.PlatformBrightness;
+        dispatcher.UpdateImplicitViewPlatformData(_view, GetMediaQueryData());
+        if (WidgetsBinding.IsImplicitView(_view) && dispatcher.PlatformBrightness != previous)
+        {
+            dispatcher.OnPlatformBrightnessChanged?.Invoke();
+        }
+
         ReportAccessibilityFeatures();
     }
 
@@ -815,64 +818,6 @@ public class PlumixHost : Control
         SchedulerBinding.Instance.EnsureVisualUpdate();
     }
 
-    /// Cause the widget and render trees hosted by this control to be fully
-    /// rebuilt, laid out, and repainted, so that the effects of a hot reload
-    /// can be seen.
-    ///
-    /// This is expensive and should not be called except during development.
-    ///
-    /// See also:
-    ///
-    ///  * [HotReloadManager], which invokes this for all live hosts after the
-    ///    runtime applies .NET Hot Reload deltas.
-    public void ReassembleApplication()
-    {
-        PerformReassemble();
-        ScheduleVisualUpdate();
-    }
-
-    /// This method is called by [ReassembleApplication] to actually cause the
-    /// application to reassemble, e.g. after a hot reload.
-    protected virtual void PerformReassemble()
-    {
-        if (_pipeline.RootNode is { } root)
-        {
-            root.Reassemble();
-        }
-    }
-
-    private void HandleSchedulerDrawFrame(TimeSpan timestamp)
-    {
-        // The scheduler is process-wide and a frame can be pumped from any thread, while an Avalonia
-        // control may only be touched from the thread that created it. Flutter has one isolate per
-        // engine and needs no such guard.
-        if (!ReferenceEquals(Thread.CurrentThread, _ownerThread))
-        {
-            return;
-        }
-
-        if (!IsVisible)
-        {
-            return;
-        }
-
-        OnDrawFrame(timestamp);
-        OnBuildBeforeLayout();
-        _pipeline.FlushLayout(Bounds.Size);
-        _pipeline.FlushCompositingBits();
-
-        if (_pipeline.NeedsPaint)
-        {
-            InvalidateVisual();
-        }
-        else if (RendererBinding.Instance.SendFramesToEngine)
-        {
-            FlushSemanticsAndNotify();
-        }
-
-        OnFinalizeFrame();
-    }
-
     /// <summary>
     /// Performs a semantics action the platform sent for a node of this host's view, and reports
     /// whether a handler ran.
@@ -936,37 +881,22 @@ public class PlumixHost : Control
         return _pipeline.SemanticsOwner?.PerformAction(nodeId, action, arguments) ?? false;
     }
 
-    internal void FlushPipelineForTests(Size? viewport = null)
+    /// <summary>
+    /// Lays the host out at <paramref name="viewport"/> (as an Avalonia arrange would) and pumps one
+    /// binding frame, which builds, lays out, paints and composites this host's view.
+    /// </summary>
+    internal void PumpFrameForTests(Size? viewport = null)
     {
-        OnBuildBeforeLayout();
-        _pipeline.FlushLayout(viewport ?? Bounds.Size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
-        UpdateSystemChrome();
-        FlushSemanticsAndNotify();
-    }
-
-    private void EnsureSchedulerSubscription()
-    {
-        if (_isSubscribedToScheduler)
+        if (viewport is { } size && !_lastArrangedSize.Equals(size))
         {
-            return;
+            _lastArrangedSize = size;
+            OnMetricsChanged();
         }
 
-        SchedulerBinding.Instance.AddPersistentFrameCallback(HandleSchedulerDrawFrame);
-        _isSubscribedToScheduler = true;
-    }
-
-    private void RemoveSchedulerSubscription()
-    {
-        if (!_isSubscribedToScheduler)
-        {
-            return;
-        }
-
-        SchedulerBinding.Instance.RemovePersistentFrameCallback(HandleSchedulerDrawFrame);
-        _isSubscribedToScheduler = false;
+        // A test that reset the scheduler dropped the renderer binding's persistent frame callback.
+        RendererBinding.Instance.EnsurePersistentFrameCallback();
+        SchedulerBinding.Instance.ScheduleForcedFrame();
+        SchedulerBinding.PumpFrameForTests();
     }
 
     private void AttachMetricSources()
@@ -1123,7 +1053,7 @@ public class PlumixHost : Control
 
     private void HandleActualThemeVariantChanged(object? sender, EventArgs e)
     {
-        OnMetricsChanged();
+        OnPlatformSettingsChanged();
     }
 
     private PlatformBrightness ResolvePlatformBrightness()
@@ -1392,18 +1322,6 @@ public class PlumixHost : Control
     {
     }
 
-    /// <summary>
-    /// Runs <c>RenderView._updateSystemChrome</c> after this host's own composite, which Avalonia can
-    /// perform without a scheduler frame (a resize, for example).
-    /// </summary>
-    private void UpdateSystemChrome()
-    {
-        if (_pipeline.RootNode is RenderView { AutomaticSystemUiAdjustment: true } renderView)
-        {
-            renderView.UpdateSystemChrome();
-        }
-    }
-
     private void ApplySystemUiOverlayStyle()
     {
         if (_insetsManager == null)
@@ -1577,14 +1495,9 @@ public class PlumixHost : Control
         _gestureBinding.HandlePointerEvent(_root, @event);
     }
 
-    private void FlushSemanticsAndNotify()
-    {
-        _pipeline.FlushSemantics();
-    }
-
     /// <summary>
-    /// Republishes every semantics update of this host's view, whichever pass flushed it — the
-    /// host's own or <c>RendererBinding.DrawFrame</c>'s flush of the pipeline owner tree.
+    /// Republishes every semantics update of this host's view, which <c>RendererBinding.DrawFrame</c>'s
+    /// flush of the pipeline owner tree sends through <see cref="FlutterView.UpdateSemantics"/>.
     /// </summary>
     private void HandleViewSemanticsUpdated(SemanticsUpdate update)
     {
@@ -1593,8 +1506,8 @@ public class PlumixHost : Control
     }
 
     /// <summary>
-    /// <c>FlutterView.render</c> for this host: takes the scene's layer tree, which the host's render pass
-    /// rasterizes, and records the build time of the frame for the performance overlay.
+    /// <c>FlutterView.render</c> for this host: takes the scene's layer tree, ends the frame's build phase
+    /// on its timings recorder (the engine's <c>Animator::Render</c>), and asks Avalonia to rasterize it.
     /// </summary>
     private void HandleViewRenderRequested(Scene scene, Size? physicalSize)
     {
@@ -1615,12 +1528,10 @@ public class PlumixHost : Control
         _layerTreeTargetSize = devicePixelRatio > 0.0
             ? new Size(physical.Width / devicePixelRatio, physical.Height / devicePixelRatio)
             : Bounds.Size;
-        if (_inRenderPass)
-        {
-            _compositor.UiTime.SetLapTime(System.Diagnostics.Stopwatch.GetElapsedTime(_renderPassStart));
-            return;
-        }
+        _pendingFrameTimings = FrameTimingsRecorder.ForRender();
 
+        // The scheduler is process-wide and a frame can be pumped from any thread, while an Avalonia
+        // control may only be touched from the thread that created it.
         if (ReferenceEquals(Thread.CurrentThread, _ownerThread))
         {
             InvalidateVisual();

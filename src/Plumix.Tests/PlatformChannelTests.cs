@@ -382,8 +382,8 @@ public sealed class PlatformChannelTests : IDisposable
             Assert.Equal(true, pushed);
             Assert.Equal(["pop", "push:/deep:", "push:/linked:carried"], observer.Log);
 
-            // An unknown method is answered with null, the way Flutter's switch default does.
-            Assert.Null(Inbound(codec, new MethodCall("unknown")));
+            // An unknown method is answered with false, the way Flutter's switch default does.
+            Assert.Equal(false, Inbound(codec, new MethodCall("unknown")));
         }
         finally
         {

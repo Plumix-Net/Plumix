@@ -224,12 +224,11 @@ public sealed class FramePipelineTests
     }
 
     [Fact]
-    public void WidgetHost_RenderPass_BuildsDirtyWidgetsBeforeLayingOutLazyList()
+    public void WidgetHost_BindingFrame_BuildsDirtyWidgetsBeforeLayingOutLazyList()
     {
-        // Avalonia renders on its own schedule, so input and microtasks can dirty widgets after the
-        // scheduler frame. Before the fix, the render pass laid out without building: the list's
-        // child creation flushed its build scope, met the dirty widget outside it and threw, and the
-        // half-laid-out list left a child without a layout offset for semantics to crash on.
+        // The host never lays out on its own: every frame is WidgetsBinding.drawFrame, which builds the
+        // dirty widgets before RendererBinding.drawFrame lays out, so a lazy list that creates children
+        // during layout never meets a dirty element outside its build scope.
         var controller = new ScrollController();
         var probe = new RebuildCounter();
         var reported = new List<FlutterErrorDetails>();
@@ -253,12 +252,12 @@ public sealed class FramePipelineTests
                                 label: $"row {index}",
                                 child: new SizedBox(height: 40)))),
                 ]));
-            host.FlushPipelineForTests(new Size(300, 400));
+            host.PumpFrameForTests(new Size(300, 400));
             Assert.Equal(1, probe.BuildCount);
 
             probe.State!.Poke();
             controller.JumpTo(1000);
-            host.FlushPipelineForTests(new Size(300, 400));
+            host.PumpFrameForTests(new Size(300, 400));
 
             Assert.Empty(reported);
             Assert.Equal(2, probe.BuildCount);

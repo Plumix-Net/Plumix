@@ -1,6 +1,7 @@
 using Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/binding.dart; flutter/packages/flutter/lib/src/rendering/binding.dart (host integration, adapted)
+// C#-only infrastructure: the Avalonia control that makes a `PlumixHost` the platform's implicit view and
+// starts `runApp` in it. Every frame-producing step belongs to the bindings.
 
 namespace Plumix;
 
@@ -8,10 +9,10 @@ namespace Plumix;
 /// The Avalonia adapter for the implicit view owned by the process <see cref="WidgetsBinding"/>.
 /// </summary>
 /// <remarks>
-/// The binding owns the <see cref="BuildOwner"/> and <see cref="RootElement"/>. This control supplies
-/// the implicit <see cref="View"/>, its legacy single-view render pipeline, platform metrics and the
-/// Avalonia frame/paint boundary. Assigning <see cref="RootWidget"/> remains a synchronous embedding
-/// convenience; <see cref="PlumixExtensions.RunApp"/> uses Flutter's queued bootstrap.
+/// The binding owns the <see cref="BuildOwner"/> and <see cref="RootElement"/> and produces every frame.
+/// This control supplies the implicit <see cref="View"/> with its deprecated single-view pipeline owner
+/// and render view, and the platform metrics. Assigning <see cref="RootWidget"/> remains a synchronous
+/// embedding convenience; <see cref="PlumixExtensions.RunApp"/> uses Flutter's queued bootstrap.
 /// </remarks>
 public sealed class WidgetHost : PlumixHost
 {
@@ -75,32 +76,5 @@ public sealed class WidgetHost : PlumixHost
             // No widget tree, no text input clients; setting a root widget attaches the plugin again.
             DetachTextInputPlugin();
         }
-    }
-
-    protected override void OnBuildBeforeLayout()
-    {
-        if (WidgetsBinding.IsImplicitView(RootFlutterView))
-        {
-            using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
-            WidgetsBinding.Instance.BuildDirtyWidgets();
-        }
-    }
-
-    protected override void OnFinalizeFrame()
-    {
-        if (WidgetsBinding.IsImplicitView(RootFlutterView))
-        {
-            WidgetsBinding.Instance.FinalizeTree();
-        }
-    }
-
-    protected override void PerformReassemble()
-    {
-        if (WidgetsBinding.IsImplicitView(RootFlutterView))
-        {
-            WidgetsBinding.Instance.ReassembleApplication();
-        }
-
-        base.PerformReassemble();
     }
 }

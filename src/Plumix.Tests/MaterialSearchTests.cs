@@ -1001,7 +1001,16 @@ public sealed class MaterialSearchTests : IDisposable
             _pipeline.FlushSemantics();
         }
 
-        public void Dispose() => _rootElement.UnmountRoot();
+        public void Dispose()
+        {
+            // flutter_test tears the tree down inside a frame's persistent-callback phase, where an
+            // OverlayEntry removed by a disposing State defers marking its overlay dirty to after the
+            // frame; unmounting outside that phase would mark the half-unmounted overlay dirty, abort
+            // the State's dispose and leave its binding observers registered.
+            using IDisposable frame = SchedulerBinding.Instance.BuildScope();
+            _owner.FinalizeTree();
+            _rootElement.UnmountRoot();
+        }
 
         public T FindState<T>() where T : State
         {

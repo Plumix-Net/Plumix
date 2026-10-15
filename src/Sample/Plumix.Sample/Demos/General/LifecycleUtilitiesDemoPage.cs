@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
@@ -15,13 +16,16 @@ public sealed class LifecycleUtilitiesDemoPage : StatefulWidget
     public override State CreateState() => new LifecycleUtilitiesDemoPageState();
 }
 
-internal sealed class LifecycleUtilitiesDemoPageState : State
+internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObserver
 {
     private AnimationController _controller = null!;
     private AppLifecycleListener _lifecycleListener = null!;
     private DisposableBuildContext<LifecycleUtilitiesDemoPageState> _disposableContext = null!;
     private AppLifecycleState? _lastLifecycleState;
     private int _statusBuildCount;
+    private int _metricsChanges;
+    private int _brightnessChanges;
+    private int _memoryPressureEvents;
 
     public override void InitState()
     {
@@ -29,10 +33,27 @@ internal sealed class LifecycleUtilitiesDemoPageState : State
         _controller = new AnimationController(duration: TimeSpan.FromMilliseconds(600), vsync: this);
         _disposableContext = new DisposableBuildContext<LifecycleUtilitiesDemoPageState>(this);
         _lifecycleListener = new AppLifecycleListener(onStateChange: HandleLifecycleStateChanged);
+        WidgetsBinding.Instance.AddObserver(this);
+        WidgetsBinding.Instance.WaitUntilFirstFrameRasterized.ContinueWith(
+            _ => EventLoop.ScheduleMicrotask(() =>
+            {
+                if (Mounted)
+                {
+                    SetState(static () => { });
+                }
+            }),
+            TaskScheduler.Default);
     }
+
+    public void DidChangeMetrics() => SetState(() => _metricsChanges++);
+
+    public void DidChangePlatformBrightness() => SetState(() => _brightnessChanges++);
+
+    public void DidHaveMemoryPressure() => SetState(() => _memoryPressureEvents++);
 
     public override void Dispose()
     {
+        WidgetsBinding.Instance.RemoveObserver(this);
         _lifecycleListener.Dispose();
         _disposableContext.Dispose();
         _controller.Dispose();
@@ -74,6 +95,31 @@ internal sealed class LifecycleUtilitiesDemoPageState : State
                                 new TextButton(
                                     onPressed: () => _controller.Reverse(from: 1),
                                     child: new Text("Reverse")),
+                            ]),
+                        new Text("Binding events", fontSize: 16, color: Colors.Black),
+                        new Text(
+                            "Resize the window or switch the system theme: WidgetsBindingObserver hears "
+                            + "didChangeMetrics and didChangePlatformBrightness from the platform.",
+                            color: Colors.DimGray),
+                        new Container(
+                            color: new Color(0xFFF4F7FA),
+                            padding: new Thickness(12),
+                            child: new Text(
+                                $"Metrics changes: {_metricsChanges}\n"
+                                + $"Platform brightness changes: {_brightnessChanges} "
+                                + $"(now {MediaQuery.PlatformBrightnessOf(context)})\n"
+                                + $"Memory pressure events: {_memoryPressureEvents}\n"
+                                + $"First frame rasterized: {WidgetsBinding.Instance.FirstFrameRasterized}")),
+                        new Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                            [
+                                // Dart calls PaintingBinding.instance.handleMemoryPressure(), which the
+                                // composed binding dispatches to the widgets binding's override.
+                                new TextButton(
+                                    onPressed: () => WidgetsBinding.Instance.HandleMemoryPressure(),
+                                    child: new Text("Simulate memory pressure")),
                             ]),
                     ])));
     }

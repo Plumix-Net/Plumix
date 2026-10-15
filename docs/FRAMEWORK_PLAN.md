@@ -48,7 +48,7 @@ milestones:
 - [x] Binding-owned `RunApp`/`RunWidget` bootstrap drives the desktop `WidgetHost` implicit view.
 - [x] Sample gallery demonstrates navigation, scrolling, and editable text/focus demos through framework widgets.
 - [x] Automated test project exists and covers lifecycle, rendering, layers, semantics, gestures, navigation, and scrolling.
-- [x] Hot reload is supported via .NET Hot Reload + Flutter-style reassemble flow (`HotReloadManager`, `ReassembleApplication`, `Element.Reassemble`), preserving `State` across code patches.
+- [x] Hot reload is supported via .NET Hot Reload + Flutter's reassemble flow (`HotReloadManager` → `BindingBase.ReassembleApplication`, `Element.Reassemble`), preserving `State` across code patches.
 - [x] Every widget family in `material_ui/lib/src/` is ported and the Material theming foundation is closed in both Material 2 and Material 3 (M4, closed 2026-08-15).
 
 ## Milestones

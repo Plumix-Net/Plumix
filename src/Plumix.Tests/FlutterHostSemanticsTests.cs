@@ -3,20 +3,69 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 
-// Dart parity sources (reference, host semantics bridge regression tests):
-// flutter/packages/flutter/lib/src/semantics/semantics.dart
-// flutter/packages/flutter/lib/src/widgets/binding.dart
+// C#-only infrastructure: the host's half of the semantics bridge. Semantics are produced by
+// `RendererBinding.drawFrame` for the render-only view the host registers (rendering/binding.dart), and
+// only while `SemanticsBinding.semanticsEnabled` holds, as for Dart's deprecated `pipelineOwner`.
 
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
-public sealed class PlumixHostSemanticsTests
+public sealed class PlumixHostSemanticsTests : IDisposable
 {
+    private SemanticsHandle? _semantics;
+    private readonly List<PlumixHost> _hosts = [];
+
+    public PlumixHostSemanticsTests()
+    {
+        SchedulerBinding.ResetForTests();
+        _semantics = SemanticsBinding.Instance.EnsureSemantics();
+    }
+
+    public void Dispose()
+    {
+        foreach (PlumixHost host in _hosts)
+        {
+            host.SetRootChild(null);
+        }
+
+        _semantics?.Dispose();
+        SchedulerBinding.ResetForTests();
+    }
+
+    private PlumixHost CreateHost()
+    {
+        var host = new PlumixHost();
+        _hosts.Add(host);
+        return host;
+    }
+
+    [Fact]
+    public void PlumixHost_WithoutSemanticsEnabled_ProducesNoSemanticsTree()
+    {
+        // Dart's deprecated pipelineOwner only builds semantics while the binding's manifold reports
+        // them enabled; nothing forces them on for a host.
+        _semantics!.Dispose();
+        _semantics = null;
+        PlumixHost host = CreateHost();
+        host.SetRootChild(new RenderButton(
+            label: "Quiet",
+            onPressed: static () => { },
+            background: Colors.SteelBlue,
+            foreground: Colors.White,
+            fontSize: 14));
+        host.PumpFrameForTests(new Size(320, 180));
+
+        Assert.Null(host.SemanticsRoot);
+        _semantics = SemanticsBinding.Instance.EnsureSemantics();
+        host.PumpFrameForTests(new Size(320, 180));
+        Assert.NotNull(host.SemanticsRoot);
+    }
+
     [Fact]
     public void PlumixHost_SemanticsBridge_ExposesRootAndDispatchesAction()
     {
         bool tapped = false;
-        var host = new PlumixHost();
+        PlumixHost host = CreateHost();
         host.SetRootChild(new RenderButton(
             label: "Tap me",
             onPressed: () => tapped = true,
@@ -24,7 +73,7 @@ public sealed class PlumixHostSemanticsTests
             foreground: Colors.White,
             fontSize: 14));
 
-        host.FlushPipelineForTests(new Size(320, 180));
+        host.PumpFrameForTests(new Size(320, 180));
 
         var root = host.SemanticsRoot;
         Assert.NotNull(root);
@@ -41,7 +90,7 @@ public sealed class PlumixHostSemanticsTests
     [Fact]
     public void PlumixHost_SemanticsUpdated_EventRaisedOnSemanticsFlush()
     {
-        var host = new PlumixHost();
+        PlumixHost host = CreateHost();
         var button = new RenderButton(
             label: "Initial",
             onPressed: null,
@@ -58,7 +107,7 @@ public sealed class PlumixHostSemanticsTests
         };
 
         host.SetRootChild(button);
-        host.FlushPipelineForTests(new Size(320, 180));
+        host.PumpFrameForTests(new Size(320, 180));
 
         Assert.Equal(1, updateCount);
         Assert.NotNull(lastRoot);
@@ -66,7 +115,7 @@ public sealed class PlumixHostSemanticsTests
         Assert.NotNull(firstButtonNode);
 
         button.Label = "Updated";
-        host.FlushPipelineForTests(new Size(320, 180));
+        host.PumpFrameForTests(new Size(320, 180));
 
         Assert.Equal(2, updateCount);
         Assert.NotNull(lastRoot);
@@ -77,14 +126,14 @@ public sealed class PlumixHostSemanticsTests
     [Fact]
     public void PlumixHost_GetRectOfSemanticsNodeInViewCoordinates_ResolvesTheNodeBox()
     {
-        var host = new PlumixHost();
+        PlumixHost host = CreateHost();
         host.SetRootChild(new RenderButton(
             label: "Measure me",
             onPressed: static () => { },
             background: Colors.SteelBlue,
             foreground: Colors.White,
             fontSize: 14));
-        host.FlushPipelineForTests(new Size(320, 180));
+        host.PumpFrameForTests(new Size(320, 180));
 
         SemanticsNode? root = host.SemanticsRoot;
         Assert.NotNull(root);

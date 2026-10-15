@@ -878,7 +878,18 @@ internal sealed class MediaQueryFromView : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new MediaQuery(data: _data!, child: TypedWidget.Child);
+            MediaQueryData effectiveData = _data!;
+            // If we get our platformBrightness from the PlatformDispatcher (i.e. we have no parentData)
+            // replace it with the debugBrightnessOverride in non-release mode.
+            if (!Constants.KReleaseMode
+                && _parentData is null
+                && FoundationDebug.DebugBrightnessOverride is { } brightnessOverride
+                && effectiveData.PlatformBrightness != brightnessOverride)
+            {
+                effectiveData = effectiveData with { PlatformBrightness = brightnessOverride };
+            }
+
+            return new MediaQuery(data: effectiveData, child: TypedWidget.Child);
         }
     }
 }

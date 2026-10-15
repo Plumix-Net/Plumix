@@ -234,7 +234,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 - Goal: frame scheduling, pipeline wiring, Avalonia host integration.
 - Read First:
-  - `src/Plumix/FlutterHost.cs`
+  - `src/Plumix/FlutterHost.cs` (engine embedder: reports metrics/brightness/focus to `PlatformDispatcher`, rasterizes
+    the scene `FlutterView.Render` hands it; never lays out or paints), `src/Plumix/UI/FrameTimingsRecorder.cs`
+    (engine-side `FrameTiming` recording and batching), `src/Plumix/HotReload.cs` (.NET deltas →
+    `BindingBase.ReassembleApplication`)
   - `src/Plumix/AndroidLifecycleChannel.cs`
   - `src/Plumix/WidgetHost.cs`
   - `src/Plumix/Widgets/AppLifecycleListener.cs`
@@ -246,7 +249,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/FlutterView.cs`
   - `src/Plumix/RendererBinding.cs` (root pipeline owner, `RenderView` registry, `DrawFrame`, first-frame deferral,
     rendering service extensions), `src/Plumix/Rendering/Semantics.Binding.cs` (`SemanticsBinding`),
-    `src/Plumix/Foundation/Binding.cs` (service-extension registry)
+    `src/Plumix/Foundation/Binding.cs` (service-extension registry, `reassembleApplication` chain, foundation
+    extensions)
   - `src/Plumix/UI/PlatformDispatcher.cs` (launch route, frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs` (`SystemChrome` over `flutter/platform`, `SystemUiOverlayStyle`; sampled by
     `RenderView.UpdateSystemChrome`, answered by the host adapter)

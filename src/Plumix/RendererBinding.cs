@@ -26,8 +26,8 @@ namespace Plumix;
 /// <para>
 /// Each Plumix host keeps its own <see cref="PipelineOwner"/>/<see cref="ReusableRenderView"/> pair
 /// (Flutter's deprecated <c>pipelineOwner</c>/<c>renderView</c>), adopted by
-/// <see cref="RootPipelineOwner"/> through the implicit <c>View</c>, and draws the frame this
-/// binding composited from its own Avalonia render pass — see <c>docs/ai/DIVERGENCES.md</c>.
+/// <see cref="RootPipelineOwner"/> through the implicit <c>View</c>; like the engine, the host only
+/// rasterizes the scene this binding's frame hands to <c>FlutterView.Render</c>.
 /// </para>
 /// </remarks>
 public sealed class RendererBinding
@@ -53,9 +53,14 @@ public sealed class RendererBinding
         _instance = this;
         _persistentFrameCallback = HandlePersistentFrameCallback;
         RootPipelineOwner = CreateRootPipelineOwner();
-        // Dart installs handleMetricsChanged, handleTextScaleFactorChanged and
-        // handlePlatformBrightnessChanged on the platform dispatcher here. Plumix hosts call the
-        // widgets binding's overrides directly, which call these in turn (docs/ai/DIVERGENCES.md).
+        // Dart installs the composed binding's virtual handlers, whose most derived overrides are the
+        // widgets binding's; they call back into this binding's.
+        PlatformDispatcher platformDispatcher = PlatformDispatcher.Instance;
+        platformDispatcher.OnMetricsChanged = static () => WidgetsBinding.Instance.HandleMetricsChanged();
+        platformDispatcher.OnTextScaleFactorChanged =
+            static () => WidgetsBinding.Instance.HandleTextScaleFactorChanged();
+        platformDispatcher.OnPlatformBrightnessChanged =
+            static () => WidgetsBinding.Instance.HandlePlatformBrightnessChanged();
         SchedulerBinding.Instance.AddPersistentFrameCallback(_persistentFrameCallback);
         InitMouseTracker();
         if (Constants.KIsWeb)
@@ -524,10 +529,14 @@ public sealed class RendererBinding
     /// frame that shows the result.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RendererBinding.performReassemble</c>.
+    /// Flutter's <c>RendererBinding.performReassemble</c>. Its <c>super</c> call reaches
+    /// <see cref="BindingBase.PerformReassemble"/> directly: no binding between the two overrides it.
+    /// Reached from <see cref="BindingBase.ReassembleApplication"/> through
+    /// <see cref="WidgetsBinding.PerformReassemble"/>.
     /// </remarks>
     public async Task PerformReassemble()
     {
+        await BindingBase.PerformReassemble();
         if (!Constants.KReleaseMode)
         {
             FlutterTimeline.StartSync("Preparing Hot Reload (layout)");

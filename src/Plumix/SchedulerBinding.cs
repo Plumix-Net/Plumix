@@ -1375,16 +1375,6 @@ public sealed class SchedulerBinding
         binding.HandleFrame(timestamp ?? TimeSpan.FromSeconds(FrameClock.CurrentSeconds));
     }
 
-    /// <summary>
-    /// Removes a callback added with <see cref="AddPersistentFrameCallback"/>. Dart's persistent
-    /// callbacks cannot be unregistered because a binding lives as long as the isolate; a Plumix host
-    /// is disposable, so it removes its own callback on teardown.
-    /// </summary>
-    internal void RemovePersistentFrameCallback(Action<TimeSpan> callback)
-    {
-        _persistentCallbacks.Remove(callback);
-    }
-
     /// <summary>Whether <paramref name="callback"/> is registered as a persistent frame callback.</summary>
     /// <remarks>Lets a binding re-register its callback after a test reset this one.</remarks>
     internal bool HasPersistentFrameCallback(Action<TimeSpan> callback) =>

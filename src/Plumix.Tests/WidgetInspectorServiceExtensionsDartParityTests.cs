@@ -846,7 +846,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
     [Fact]
     public void StructuredErrorsExtension()
     {
-        CreateTester();
+        FrameworkDartTester tester = CreateTester();
         List<IReadOnlyDictionary<string, object?>> flutterErrorEvents = Service.DispatchedEvents("Flutter.Error");
         Assert.Empty(flutterErrorEvents);
 
@@ -894,8 +894,19 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             Assert.Equal(1, error["errorsSinceReload"]);
             Assert.StartsWith("Another exception was thrown:", (string)error["renderedErrorText"]!);
 
-            // Reloads the app.
-            WidgetsBinding.Instance.ReassembleApplication();
+            // Reloads the app: reassembleApplication, then a pump for the frame it waits on.
+            Action<Action> previousTimerRun = PlatformDispatcher.Instance.TimerRun;
+            PlatformDispatcher.Instance.TimerRun = static callback => callback();
+            try
+            {
+                _ = BindingBase.ReassembleApplication();
+                tester.Pump();
+                HotReloadTests.WaitForUnlock();
+            }
+            finally
+            {
+                PlatformDispatcher.Instance.TimerRun = previousTimerRun;
+            }
 
             // Send another error.
             FlutterError.ReportError(new FlutterErrorDetails(

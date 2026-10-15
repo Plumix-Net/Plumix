@@ -9,13 +9,16 @@ class LifecycleUtilitiesDemoPage extends StatefulWidget {
 }
 
 class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late final AnimationController _controller;
   late final AppLifecycleListener _lifecycleListener;
   late final DisposableBuildContext<_LifecycleUtilitiesDemoPageState>
   _disposableContext;
   AppLifecycleState? _lastLifecycleState;
   int _statusBuildCount = 0;
+  int _metricsChanges = 0;
+  int _brightnessChanges = 0;
+  int _memoryPressureEvents = 0;
 
   @override
   void initState() {
@@ -29,10 +32,32 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
     _lifecycleListener = AppLifecycleListener(
       onStateChange: _handleLifecycleStateChanged,
     );
+    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.waitUntilFirstFrameRasterized.then((_) {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  void didChangeMetrics() {
+    setState(() => _metricsChanges++);
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    setState(() => _brightnessChanges++);
+  }
+
+  @override
+  void didHaveMemoryPressure() {
+    setState(() => _memoryPressureEvents++);
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _lifecycleListener.dispose();
     _disposableContext.dispose();
     _controller.dispose();
@@ -82,6 +107,38 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
                 TextButton(
                   onPressed: () => _controller.reverse(from: 1),
                   child: const Text('Reverse'),
+                ),
+              ],
+            ),
+            const Text(
+              'Binding events',
+              style: TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            const Text(
+              'Resize the window or switch the system theme: WidgetsBindingObserver '
+              'hears didChangeMetrics and didChangePlatformBrightness from the platform.',
+              style: TextStyle(color: Colors.black54),
+            ),
+            Container(
+              color: const Color(0xFFF4F7FA),
+              padding: const EdgeInsets.all(12),
+              child: Text(
+                'Metrics changes: $_metricsChanges\n'
+                'Platform brightness changes: $_brightnessChanges '
+                '(now ${MediaQuery.platformBrightnessOf(context).name})\n'
+                'Memory pressure events: $_memoryPressureEvents\n'
+                'First frame rasterized: '
+                '${WidgetsBinding.instance.firstFrameRasterized}',
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                TextButton(
+                  onPressed: () =>
+                      PaintingBinding.instance.handleMemoryPressure(),
+                  child: const Text('Simulate memory pressure'),
                 ),
               ],
             ),

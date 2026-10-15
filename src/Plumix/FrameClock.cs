@@ -71,8 +71,19 @@ public static class FrameClock
         }
 
         _frameRequested = false;
-        PlatformDispatcher.Instance.OnBeginFrame?.Invoke(TimeSpan.FromSeconds(CurrentSeconds));
-        EventLoop.FlushMicrotasks();
-        PlatformDispatcher.Instance.OnDrawFrame?.Invoke();
+        // The engine's animator: the vsync starts the frame's timings recorder, the build phase starts
+        // with `onBeginFrame`, and each view's `render` ends it (`FrameTimingsRecorder`).
+        FrameTimingsRecorder.RecordVsync();
+        try
+        {
+            FrameTimingsRecorder.RecordBuildStart();
+            PlatformDispatcher.Instance.OnBeginFrame?.Invoke(TimeSpan.FromSeconds(CurrentSeconds));
+            EventLoop.FlushMicrotasks();
+            PlatformDispatcher.Instance.OnDrawFrame?.Invoke();
+        }
+        finally
+        {
+            FrameTimingsRecorder.EndFrame();
+        }
     }
 }

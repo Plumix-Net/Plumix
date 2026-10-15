@@ -108,9 +108,10 @@ public partial class WidgetsBinding
     /// </summary>
     /// <remarks>
     /// Flutter's <c>WidgetsBinding.drawFrame</c>, the override of <c>RendererBinding.drawFrame</c> that
-    /// the renderer binding's persistent frame callback reaches. The first-frame reporting half
-    /// (<c>firstFrameRasterized</c>, the <c>Flutter.FirstFrame</c> event) is not ported; see
-    /// <c>docs/ai/BACKLOG.md</c>.
+    /// the renderer binding's persistent frame callback reaches. Until the first frame is reported, a
+    /// timings callback waits for the platform to report a rasterized frame
+    /// (<see cref="FirstFrameRasterized"/>, the <c>Rasterized first useful frame</c> instant and the
+    /// <c>Flutter.FirstFrame</c> event); a frame that was deferred is not that frame.
     /// </remarks>
     public void DrawFrame()
     {
@@ -120,11 +121,41 @@ public partial class WidgetsBinding
             DebugBuildingDirtyElements = true;
         }
 
+        Action<IReadOnlyList<FrameTiming>>? firstFrameCallback = null;
+        bool debugFrameWasSentToEngine = false;
+        if (_needToReportFirstFrame)
+        {
+            DebugAssertions.Assert(!_firstFrameCompleter.Task.IsCompleted);
+
+            firstFrameCallback = _ =>
+            {
+                DebugAssertions.Assert(debugFrameWasSentToEngine);
+                if (!Constants.KReleaseMode)
+                {
+                    FlutterTimeline.InstantSync("Rasterized first useful frame");
+                    Developer.DeveloperService.PostEvent("Flutter.FirstFrame", new Dictionary<string, object?>());
+                }
+
+                SchedulerBinding.Instance.RemoveTimingsCallback(firstFrameCallback!);
+                firstFrameCallback = null;
+                _firstFrameCompleter.TrySetResult();
+            };
+            // Callback is only invoked when FlutterView.render is called. When
+            // sendFramesToEngine is set to false during the frame, it will not be
+            // called and we need to remove the callback (see below).
+            SchedulerBinding.Instance.AddTimingsCallback(firstFrameCallback);
+        }
+
         try
         {
             BuildDirtyWidgets();
             RendererBinding.Instance.DrawFrame();
-            FinalizeTree();
+            if (Constants.KDebugMode)
+            {
+                debugFrameWasSentToEngine = RendererBinding.Instance.SendFramesToEngine;
+            }
+
+            _buildOwner.FinalizeTree();
         }
         finally
         {
@@ -134,7 +165,23 @@ public partial class WidgetsBinding
             }
         }
 
-        ReportFirstFrameBuilt();
+        bool sendFramesToEngine = RendererBinding.Instance.SendFramesToEngine;
+        if (!Constants.KReleaseMode)
+        {
+            if (_needToReportFirstFrame && sendFramesToEngine)
+            {
+                FlutterTimeline.InstantSync("Widgets built first useful frame");
+            }
+        }
+
+        _needToReportFirstFrame = false;
+        if (firstFrameCallback is not null && !sendFramesToEngine)
+        {
+            // This frame is deferred and not the first frame sent to the engine that should be
+            // reported.
+            _needToReportFirstFrame = true;
+            SchedulerBinding.Instance.RemoveTimingsCallback(firstFrameCallback);
+        }
     }
 
     /// <summary>
@@ -145,10 +192,7 @@ public partial class WidgetsBinding
     public bool DebugBuildingDirtyElements { get; set; }
 
     /// <summary>Rebuilds the dirty widgets of the binding-owned tree.</summary>
-    /// <remarks>
-    /// The <c>buildOwner.buildScope(rootElement)</c> step of <see cref="DrawFrame"/>. A host also runs
-    /// it right before a layout pass it drives outside a frame (Avalonia's render pass).
-    /// </remarks>
+    /// <remarks>The <c>buildOwner.buildScope(rootElement)</c> step of <see cref="DrawFrame"/>.</remarks>
     internal void BuildDirtyWidgets()
     {
         if (_rootElement is not null)
@@ -157,7 +201,7 @@ public partial class WidgetsBinding
         }
     }
 
-    /// <summary>Finalizes inactive elements after the host has flushed its render pipeline.</summary>
+    /// <summary>Finalizes inactive elements after a synchronous root attachment.</summary>
     internal void FinalizeTree()
     {
         if (_rootElement is not null)
@@ -166,22 +210,29 @@ public partial class WidgetsBinding
         }
     }
 
-    /// <summary>Reassembles the binding-owned widget tree after a hot reload.</summary>
+    /// <summary>
+    /// Reassembles the widget tree after a hot reload, then the render views (the renderer binding's
+    /// override this calls into).
+    /// </summary>
     /// <remarks>
-    /// Flutter's <c>WidgetsBinding.performReassemble</c>: the widget inspector drops its statistics
-    /// and error count first.
+    /// Flutter's <c>WidgetsBinding.performReassemble</c>, the most derived link of the chain
+    /// <see cref="BindingBase.ReassembleApplication"/> runs under <c>lockEvents</c>: the widget inspector
+    /// drops its statistics and error count first, then every element below the root is reassembled and
+    /// marked dirty, then <see cref="RendererBinding.PerformReassemble"/> (Dart's <c>super</c>) runs.
     /// </remarks>
-    internal void ReassembleApplication()
+    public Task PerformReassemble()
     {
         if (Constants.KDebugMode)
         {
             WidgetInspectorService.Instance.PerformReassemble();
         }
 
-        if (_rootElement is not null)
+        if (RootElement is { } rootElement)
         {
-            _buildOwner.Reassemble(_rootElement);
+            BuildOwner.Reassemble(rootElement);
         }
+
+        return RendererBinding.Instance.PerformReassemble();
     }
 
     /// <summary>Installs the host resources used by <see cref="WrapWithDefaultView"/>.</summary>

@@ -70,14 +70,42 @@ public interface WidgetsBindingObserver
         return Task.FromResult(false);
     }
 
+    /// <summary>Called when the host tells the application to push a new route.</summary>
+    /// <remarks>
+    /// Flutter's deprecated <c>WidgetsBindingObserver.didPushRoute</c>, which the default
+    /// <see cref="DidPushRouteInformation"/> still calls with the decoded path, query and fragment.
+    /// </remarks>
+    [Obsolete("Use DidPushRouteInformation instead. This feature was deprecated after v3.8.0-14.0.pre.")]
+    Task<bool> DidPushRoute(string route)
+    {
+        _ = route;
+        return Task.FromResult(false);
+    }
+
     /// <summary>
     /// Called when the host pushes a new route location into the application. Returning <c>true</c> stops the
     /// dispatch.
     /// </summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBindingObserver.didPushRouteInformation</c>. The default calls the deprecated
+    /// <see cref="DidPushRoute"/> with <c>Uri.decodeComponent</c> of the location's path (<c>/</c> when
+    /// empty), query and fragment.
+    /// </remarks>
     Task<bool> DidPushRouteInformation(RouteInformation routeInformation)
     {
-        _ = routeInformation;
-        return Task.FromResult(false);
+        ArgumentNullException.ThrowIfNull(routeInformation);
+#pragma warning disable CS0618 // Dart's default still forwards to the deprecated callback.
+        return DidPushRoute(DidPushRouteLocation.From(routeInformation.Uri));
+#pragma warning restore CS0618
+    }
+
+    /// <summary>Called when the system is running low on memory.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBindingObserver.didHaveMemoryPressure</c>: the <c>memoryPressure</c> system
+    /// message reaches it after the image cache and the root asset bundle were cleared.
+    /// </remarks>
+    void DidHaveMemoryPressure()
+    {
     }
 
     bool HandleStartBackGesture(PredictiveBackEvent backEvent)
@@ -97,6 +125,81 @@ public interface WidgetsBindingObserver
 
     void HandleCancelBackGesture()
     {
+    }
+}
+
+/// <summary>The location the default <see cref="WidgetsBindingObserver.DidPushRouteInformation"/> hands on.</summary>
+/// <remarks>
+/// Dart's <c>Uri.decodeComponent(Uri(path: uri.path.isEmpty ? '/' : uri.path, queryParameters:
+/// uri.queryParametersAll.isEmpty ? null : uri.queryParametersAll, fragment: uri.fragment.isEmpty ? null
+/// : uri.fragment).toString())</c>: the scheme and authority are dropped, an empty path becomes <c>/</c>,
+/// repeated query keys are grouped in first-seen order, and the whole location is percent-decoded.
+/// </remarks>
+internal static class DidPushRouteLocation
+{
+    public static string From(Uri uri)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
+        string path;
+        string query;
+        string fragment;
+        if (uri.IsAbsoluteUri)
+        {
+            path = uri.AbsolutePath;
+            query = uri.Query.TrimStart('?');
+            fragment = uri.Fragment.TrimStart('#');
+        }
+        else
+        {
+            string text = uri.OriginalString;
+            int hash = text.IndexOf('#', StringComparison.Ordinal);
+            fragment = hash >= 0 ? text[(hash + 1)..] : string.Empty;
+            text = hash >= 0 ? text[..hash] : text;
+            int question = text.IndexOf('?', StringComparison.Ordinal);
+            query = question >= 0 ? text[(question + 1)..] : string.Empty;
+            path = question >= 0 ? text[..question] : text;
+        }
+
+        var location = new System.Text.StringBuilder(path.Length == 0 ? "/" : path);
+        if (query.Length > 0)
+        {
+            // `queryParametersAll` groups the values of a repeated key under its first occurrence.
+            var parameters = new List<(string Key, List<string> Values)>();
+            foreach (string pair in query.Split('&'))
+            {
+                if (pair.Length == 0)
+                {
+                    continue;
+                }
+
+                int equals = pair.IndexOf('=', StringComparison.Ordinal);
+                string key = equals >= 0 ? pair[..equals] : pair;
+                string value = equals >= 0 ? pair[(equals + 1)..] : string.Empty;
+                int index = parameters.FindIndex(entry => entry.Key == key);
+                if (index < 0)
+                {
+                    parameters.Add((key, [value]));
+                }
+                else
+                {
+                    parameters[index].Values.Add(value);
+                }
+            }
+
+            if (parameters.Count > 0)
+            {
+                location.Append('?').Append(string.Join(
+                    '&',
+                    parameters.SelectMany(static entry => entry.Values.Select(value => $"{entry.Key}={value}"))));
+            }
+        }
+
+        if (fragment.Length > 0)
+        {
+            location.Append('#').Append(fragment);
+        }
+
+        return Uri.UnescapeDataString(location.ToString());
     }
 }
 
@@ -121,6 +224,9 @@ public partial class WidgetsBinding
         // must not hijack them.
         SharedInstance.FocusManager.ListenToApplicationLifecycleChangesIfSupported();
         SharedInstance.InitInstances();
+        // `BindingBase()` runs `initServiceExtensions` after `initInstances`; BindingBase's own link of
+        // that chain registers first, the widgets binding's (from InitInstances) follows in Dart.
+        BindingBase.InitServiceExtensions();
 
         if (!Constants.KReleaseMode)
         {
@@ -153,9 +259,15 @@ public partial class WidgetsBinding
         _observers.Add(observer);
     }
 
+    /// <summary>Unregisters the given observer.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.removeObserver</c>: an observer that took part in the current back
+    /// gesture stops hearing it, then the first registration is removed.
+    /// </remarks>
     public bool RemoveObserver(WidgetsBindingObserver observer)
     {
         ArgumentNullException.ThrowIfNull(observer);
+        _backGestureObservers.Remove(observer);
         return _observers.Remove(observer);
     }
 
@@ -169,64 +281,71 @@ public partial class WidgetsBinding
     public void HandleAccessibilityFeaturesChanged()
     {
         SemanticsBinding.Instance.HandleAccessibilityFeaturesChanged();
-        foreach (WidgetsBindingObserver observer in _observers.ToArray())
-        {
-            try
-            {
-                observer.DidChangeAccessibilityFeatures();
-            }
-            catch (Exception exception)
-            {
-                FlutterError.ReportError(new FlutterErrorDetails(
-                    exception: exception,
-                    library: "widgets library",
-                    context: new ErrorDescription(
-                        "while dispatching notifications for "
-                        + "WidgetsBindingObserver.didChangeAccessibilityFeatures")));
-            }
-        }
+        Dispatch(static observer => observer.DidChangeAccessibilityFeatures(), "didChangeAccessibilityFeatures");
     }
 
     /// <summary>
     /// Called when the platform's view metrics changed: the renderer binding reconfigures every
     /// registered <see cref="RenderView"/>, then the observers hear <c>DidChangeMetrics</c>.
     /// </summary>
-    /// <remarks>Flutter's <c>WidgetsBinding.handleMetricsChanged</c> over <c>RendererBinding</c>'s.</remarks>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleMetricsChanged</c> over <c>RendererBinding</c>'s, installed as
+    /// <see cref="PlatformDispatcher.OnMetricsChanged"/>.
+    /// </remarks>
     public void HandleMetricsChanged()
     {
         RendererBinding.Instance.HandleMetricsChanged();
-        Dispatch(static observer => observer.DidChangeMetrics(), nameof(WidgetsBindingObserver.DidChangeMetrics));
+        Dispatch(static observer => observer.DidChangeMetrics(), "didChangeMetrics");
     }
 
     /// <summary>Called when the platform's text scale factor changed.</summary>
-    /// <remarks>Flutter's <c>WidgetsBinding.handleTextScaleFactorChanged</c>.</remarks>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleTextScaleFactorChanged</c>, installed as
+    /// <see cref="PlatformDispatcher.OnTextScaleFactorChanged"/>.
+    /// </remarks>
     public void HandleTextScaleFactorChanged()
     {
         RendererBinding.Instance.HandleTextScaleFactorChanged();
-        Dispatch(
-            static observer => observer.DidChangeTextScaleFactor(),
-            nameof(WidgetsBindingObserver.DidChangeTextScaleFactor));
+        Dispatch(static observer => observer.DidChangeTextScaleFactor(), "didChangeTextScaleFactor");
     }
 
     /// <summary>Called when the platform brightness changed.</summary>
-    /// <remarks>Flutter's <c>WidgetsBinding.handlePlatformBrightnessChanged</c>.</remarks>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handlePlatformBrightnessChanged</c>, installed as
+    /// <see cref="PlatformDispatcher.OnPlatformBrightnessChanged"/>.
+    /// </remarks>
     public void HandlePlatformBrightnessChanged()
     {
         RendererBinding.Instance.HandlePlatformBrightnessChanged();
-        Dispatch(
-            static observer => observer.DidChangePlatformBrightness(),
-            nameof(WidgetsBindingObserver.DidChangePlatformBrightness));
+        Dispatch(static observer => observer.DidChangePlatformBrightness(), "didChangePlatformBrightness");
     }
 
     /// <summary>Called when a view gained or lost focus on the platform.</summary>
-    /// <remarks>Flutter's <c>WidgetsBinding._handleViewFocusChanged</c>, which the platform dispatcher feeds.</remarks>
+    /// <remarks>Flutter's <c>WidgetsBinding.handleViewFocusChanged</c>, which the platform dispatcher feeds.</remarks>
     public void HandleViewFocusChanged(ViewFocusEvent @event)
     {
         ArgumentNullException.ThrowIfNull(@event);
-        Dispatch(observer => observer.DidChangeViewFocus(@event), nameof(WidgetsBindingObserver.DidChangeViewFocus));
+        Dispatch(observer => observer.DidChangeViewFocus(@event), "didChangeViewFocus");
     }
 
-    private void Dispatch(Action<WidgetsBindingObserver> callback, string name)
+    /// <summary>Called when the operating system notifies the application of a memory pressure situation.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleMemoryPressure</c>, the most derived override the services
+    /// binding's <c>memoryPressure</c> system message reaches: the painting binding clears the image cache
+    /// and the root asset bundle first (Dart's <c>super</c>), then every observer hears
+    /// <c>DidHaveMemoryPressure</c>.
+    /// </remarks>
+    public void HandleMemoryPressure()
+    {
+        Painting.PaintingBinding.Instance.HandleMemoryPressure();
+        Dispatch(static observer => observer.DidHaveMemoryPressure(), "didHaveMemoryPressure");
+    }
+
+    /// <summary>
+    /// Calls <paramref name="callback"/> on a snapshot of the observers, reporting a throwing observer
+    /// and continuing with the next one, as every Dart <c>WidgetsBinding</c> dispatch loop does.
+    /// </summary>
+    private void Dispatch(Action<WidgetsBindingObserver> callback, string dartMethodName)
     {
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
@@ -236,47 +355,48 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                Debug.WriteLine($"Exception while dispatching {name}: " + exception);
+                ReportObserverError(exception, dartMethodName);
             }
         }
+    }
+
+    private static void ReportObserverError(Exception exception, string dartMethodName)
+    {
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "widgets library",
+            context: new ErrorDescription(
+                $"while dispatching notifications for WidgetsBindingObserver.{dartMethodName}")));
     }
 
     /// <summary>Forgets the lifecycle state, as a fresh test binding starts without one.</summary>
     internal void ResetLifecycleStateForTests() => LifecycleState = null;
 
+    /// <summary>Delivers a platform lifecycle change.</summary>
+    /// <remarks>
+    /// The <c>flutter/lifecycle</c> path: <c>ServicesBinding._handleLifecycleMessage</c> generates the
+    /// intermediate states, and for each one Flutter's <c>WidgetsBinding.handleAppLifecycleStateChanged</c>
+    /// lets the scheduler enable or disable frames (its <c>super</c> call) before every observer hears it,
+    /// then <c>SystemChrome.handleAppLifecycleStateChanged</c> runs. Plumix's bindings are separate
+    /// singletons, so the services message handler and the binding method are one entry point here.
+    /// </remarks>
     public void HandleAppLifecycleStateChanged(AppLifecycleState state)
     {
         foreach (AppLifecycleState generatedState in GenerateStateTransitions(LifecycleState, state))
         {
             LifecycleState = generatedState;
-
-            // Dart's override calls `super.handleAppLifecycleStateChanged` first, which is where the
-            // scheduler enables or disables frames for the new state.
             SchedulerBinding.Instance.HandleAppLifecycleStateChanged(generatedState);
-            foreach (WidgetsBindingObserver observer in _observers.ToArray())
-            {
-                try
-                {
-                    observer.DidChangeAppLifecycleState(generatedState);
-                }
-                catch (Exception exception)
-                {
-                    Debug.WriteLine(
-                        $"Exception while dispatching {nameof(WidgetsBindingObserver.DidChangeAppLifecycleState)}: "
-                        + exception);
-                }
-            }
-
-            // Dart's `ServicesBinding._handleLifecycleMessage` calls this right after the binding's
-            // own `handleAppLifecycleStateChanged` for every generated state.
+            Dispatch(observer => observer.DidChangeAppLifecycleState(generatedState), "didChangeAppLifecycleState");
             SystemChrome.HandleAppLifecycleStateChanged(generatedState);
         }
     }
 
-    /// <summary>
-    /// Dispatches a host status-bar tap to every registered observer. Hosts whose platform reports the
-    /// gesture (iOS, macOS) call this; the default adapters never do.
-    /// </summary>
+    /// <summary>Dispatches a host status-bar tap to every registered observer.</summary>
+    /// <remarks>
+    /// Flutter's private <c>WidgetsBinding._handleStatusBarActions</c> for <c>handleScrollToTop</c> on
+    /// <c>flutter/status_bar</c>; only iOS and macOS report the gesture.
+    /// </remarks>
     public void HandleStatusBarTap()
     {
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
@@ -287,13 +407,27 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                Debug.WriteLine(
-                    $"Exception while dispatching {nameof(WidgetsBindingObserver.HandleStatusBarTap)}: "
-                    + exception);
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    stack: exception.StackTrace,
+                    library: "widgets library",
+                    context: new ErrorDescription("handling status bar action")));
             }
         }
     }
 
+    private Task<object?> HandleStatusBarActions(MethodCall call)
+    {
+        DebugAssertions.Assert(call.Method == "handleScrollToTop");
+        HandleStatusBarTap();
+        return Task.FromResult<object?>(null);
+    }
+
+    /// <summary>Asks every observer whether the application may exit.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleRequestAppExit</c>: every observer is asked (no early return),
+    /// and the exit is cancelled if any of them cancels it.
+    /// </remarks>
     public async Task<AppExitResponse> HandleRequestAppExit()
     {
         bool didCancel = false;
@@ -304,13 +438,14 @@ public partial class WidgetsBinding
                 if (await observer.DidRequestAppExit() == AppExitResponse.Cancel)
                 {
                     didCancel = true;
+                    // Don't early return. For the case where someone is just using the
+                    // observer to know when exit happens, we want to call all the
+                    // observers, even if we already know we're going to cancel.
                 }
             }
             catch (Exception exception)
             {
-                Debug.WriteLine(
-                    $"Exception while dispatching {nameof(WidgetsBindingObserver.DidRequestAppExit)}: "
-                    + exception);
+                ReportObserverError(exception, "didRequestAppExit");
             }
         }
 
@@ -318,9 +453,9 @@ public partial class WidgetsBinding
     }
 
     /// <summary>
-    /// Flutter's <c>WidgetsBinding.initInstances</c>: installs the <c>flutter/navigation</c> handler so a
-    /// host can push deep links and back requests through the channel, and registers the persistent
-    /// widget-build callback before a renderer host begins flushing layout.
+    /// Flutter's <c>WidgetsBinding.initInstances</c>: installs the <c>flutter/navigation</c>,
+    /// <c>flutter/backgesture</c> and <c>flutter/status_bar</c> handlers, and registers the persistent
+    /// widget-build callback.
     /// </summary>
     public void InitInstances()
     {
@@ -329,6 +464,8 @@ public partial class WidgetsBinding
         SemanticsBinding.Instance.AccessibilityFeaturesChangedOverride = HandleAccessibilityFeaturesChanged;
         EnsureFrameCallback();
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
+        SystemChannels.BackGesture.SetMethodCallHandler(HandleBackGestureInvocation);
+        SystemChannels.StatusBar.SetMethodCallHandler(HandleStatusBarActions);
         PlatformMenuDelegate = new DefaultPlatformMenuDelegate();
         if (Constants.KDebugMode)
         {
@@ -352,7 +489,41 @@ public partial class WidgetsBinding
                     new Uri((string)arguments["location"]!, UriKind.RelativeOrAbsolute),
                     arguments.TryGetValue("state", out object? state) ? state : null)));
             default:
+                return Task.FromResult<object?>(false);
+        }
+    }
+
+    /// <summary>The <c>flutter/backgesture</c> handler.</summary>
+    /// <remarks>Flutter's private <c>WidgetsBinding._handleBackGestureInvocation</c>.</remarks>
+    private Task<object?> HandleBackGestureInvocation(MethodCall call)
+    {
+        IReadOnlyDictionary<string, object?>? arguments = call.Arguments switch
+        {
+            null => null,
+            IReadOnlyDictionary<string, object?> map => map,
+            System.Collections.IDictionary map => map.Keys.Cast<object>()
+                .ToDictionary(static key => key.ToString()!, key => map[key]),
+            _ => throw new InvalidCastException("backGesture arguments must be a map."),
+        };
+        switch (call.Method)
+        {
+            case "startBackGesture":
+                return Task.FromResult<object?>(HandleStartBackGesture(PredictiveBackEvent.FromMap(arguments!)));
+            case "updateBackGestureProgress":
+                if (_backGestureObservers.Count > 0)
+                {
+                    HandleUpdateBackGestureProgress(PredictiveBackEvent.FromMap(arguments!));
+                }
+
                 return Task.FromResult<object?>(null);
+            case "commitBackGesture":
+                HandleCommitBackGesture();
+                return Task.FromResult<object?>(null);
+            case "cancelBackGesture":
+                HandleCancelBackGesture();
+                return Task.FromResult<object?>(null);
+            default:
+                throw new MissingPluginException();
         }
     }
 
@@ -385,11 +556,7 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                FlutterError.ReportError(new FlutterErrorDetails(
-                    exception: exception,
-                    library: "widgets library",
-                    context: new ErrorDescription(
-                        "while dispatching notifications for WidgetsBindingObserver.DidPopRoute")));
+                ReportObserverError(exception, "didPopRoute");
             }
         }
 
@@ -407,6 +574,7 @@ public partial class WidgetsBinding
         {
             FlutterError.ReportError(new FlutterErrorDetails(
                 exception: exception,
+                stack: exception.StackTrace,
                 library: "widgets library",
                 context: new ErrorDescription("while popping route")));
         }
@@ -431,17 +599,18 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                FlutterError.ReportError(new FlutterErrorDetails(
-                    exception: exception,
-                    library: "widgets library",
-                    context: new ErrorDescription(
-                        "while dispatching notifications for WidgetsBindingObserver.DidPushRouteInformation")));
+                ReportObserverError(exception, "didPushRouteInformation");
             }
         }
 
         return false;
     }
 
+    /// <summary>Starts a predictive back gesture.</summary>
+    /// <remarks>
+    /// Flutter's private <c>WidgetsBinding._handleStartBackGesture</c>: every observer is asked, and each
+    /// one that returns <see langword="true"/> follows the rest of the gesture.
+    /// </remarks>
     public bool HandleStartBackGesture(PredictiveBackEvent backEvent)
     {
         ArgumentNullException.ThrowIfNull(backEvent);
@@ -457,48 +626,87 @@ public partial class WidgetsBinding
             }
             catch (Exception exception)
             {
-                Debug.WriteLine(
-                    $"Exception while dispatching {nameof(WidgetsBindingObserver.HandleStartBackGesture)}: "
-                    + exception);
+                ReportObserverError(exception, "handleStartBackGesture");
             }
         }
 
         return _backGestureObservers.Count > 0;
     }
 
+    /// <summary>Updates the progress of the current predictive back gesture.</summary>
+    /// <remarks>Flutter's private <c>WidgetsBinding._handleUpdateBackGestureProgress</c>.</remarks>
     public void HandleUpdateBackGestureProgress(PredictiveBackEvent backEvent)
     {
         ArgumentNullException.ThrowIfNull(backEvent);
+        if (_backGestureObservers.Count == 0)
+        {
+            return;
+        }
+
         foreach (WidgetsBindingObserver observer in _backGestureObservers.ToArray())
         {
-            observer.HandleUpdateBackGestureProgress(backEvent);
+            try
+            {
+                observer.HandleUpdateBackGestureProgress(backEvent);
+            }
+            catch (Exception exception)
+            {
+                ReportObserverError(exception, "handleUpdateBackGestureProgress");
+            }
         }
     }
 
+    /// <summary>Commits the current predictive back gesture.</summary>
+    /// <remarks>
+    /// Flutter's private <c>WidgetsBinding._handleCommitBackGesture</c>: without a tracking observer the
+    /// commit is a pop (<see cref="HandlePopRoute"/>); otherwise every tracking observer commits. The
+    /// tracking list is kept until the next gesture starts. Returns whether the gesture was handled,
+    /// which a host that maps the system back button onto the gesture needs.
+    /// </remarks>
     public bool HandleCommitBackGesture()
     {
-        WidgetsBindingObserver[] observers = _backGestureObservers.ToArray();
-        _backGestureObservers.Clear();
-        if (observers.Length == 0)
+        if (_backGestureObservers.Count == 0)
         {
+            // If the predictive back was not handled, then the route should be popped
+            // like a normal, non-predictive back. For example, this will happen if a
+            // back gesture occurs but no predictive back route transition exists to
+            // handle it. The back gesture should still cause normal pop even if it
+            // doesn't cause a predictive transition.
             return HandlePopRoute();
         }
 
-        foreach (WidgetsBindingObserver observer in observers)
+        foreach (WidgetsBindingObserver observer in _backGestureObservers.ToArray())
         {
-            observer.HandleCommitBackGesture();
+            try
+            {
+                observer.HandleCommitBackGesture();
+            }
+            catch (Exception exception)
+            {
+                ReportObserverError(exception, "handleCommitBackGesture");
+            }
         }
 
         return true;
     }
 
+    /// <summary>Cancels the current predictive back gesture.</summary>
+    /// <remarks>
+    /// Flutter's private <c>WidgetsBinding._handleCancelBackGesture</c>; the tracking list is kept until
+    /// the next gesture starts.
+    /// </remarks>
     public void HandleCancelBackGesture()
     {
-        WidgetsBindingObserver[] observers = _backGestureObservers.ToArray();
-        _backGestureObservers.Clear();
-        foreach (WidgetsBindingObserver observer in observers)
+        foreach (WidgetsBindingObserver observer in _backGestureObservers.ToArray())
         {
-            observer.HandleCancelBackGesture();
+            try
+            {
+                observer.HandleCancelBackGesture();
+            }
+            catch (Exception exception)
+            {
+                ReportObserverError(exception, "handleCancelBackGesture");
+            }
         }
     }
 

@@ -177,8 +177,9 @@ public class ServicesBinding
         var message = (System.Collections.IDictionary)systemMessage;
         if ((string)message["type"]! == "memoryPressure")
         {
-            // The bindings are separate singletons: dispatch to Dart's painting override explicitly.
-            Painting.PaintingBinding.Instance.HandleMemoryPressure();
+            // The bindings are separate singletons: dispatch to Dart's most derived override, the
+            // widgets binding's, which runs the painting binding's (and this one's) first.
+            WidgetsBinding.Instance.HandleMemoryPressure();
         }
 
         return Task.CompletedTask;

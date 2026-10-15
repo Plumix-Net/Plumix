@@ -67,6 +67,38 @@ public sealed class PlatformDispatcher
         ImplicitViewPlatformData = null;
     }
 
+    /// <summary>The setting indicating the current brightness mode of the host platform.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.platformBrightness</c>: the implicit view's platform data, or
+    /// <see cref="Widgets.PlatformBrightness.Light"/> before a host reported any.
+    /// </remarks>
+    public PlatformBrightness PlatformBrightness =>
+        ImplicitViewPlatformData?.PlatformBrightness ?? PlatformBrightness.Light;
+
+    /// <summary>
+    /// A callback invoked whenever the metrics of any view (its size, device pixel ratio, insets)
+    /// change.
+    /// </summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onMetricsChanged</c>; <c>RendererBinding</c> installs the composed
+    /// binding's <c>handleMetricsChanged</c> here, and a host invokes it after it updated a view's metrics.
+    /// </remarks>
+    public Action? OnMetricsChanged { get; set; }
+
+    /// <summary>A callback invoked whenever the platform's text scale factor changes.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onTextScaleFactorChanged</c>; <c>RendererBinding</c> installs the
+    /// composed binding's <c>handleTextScaleFactorChanged</c> here.
+    /// </remarks>
+    public Action? OnTextScaleFactorChanged { get; set; }
+
+    /// <summary>A callback invoked whenever <see cref="PlatformBrightness"/> changes.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onPlatformBrightnessChanged</c>; <c>RendererBinding</c> installs
+    /// the composed binding's <c>handlePlatformBrightnessChanged</c> here.
+    /// </remarks>
+    public Action? OnPlatformBrightnessChanged { get; set; }
+
     /// <summary>The route requested by the platform when the application was launched, or <c>/</c>.</summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.defaultRouteName</c>. A host sets this before mounting the app;

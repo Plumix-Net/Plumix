@@ -151,10 +151,19 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
         FlutterMemoryAllocations.Instance.AddListener(Listener);
         try
         {
-            using FrameworkDartTester tester = Pump(Field());
-            Select(tester, 0, 4);
-            TextSelectionOverlay overlay = State(tester).SelectionOverlay!;
-            overlay.Dispose();
+            // Dart disposes a standalone overlay; here the field owns it, so the field's own dispose (the
+            // tester's teardown) disposes it, which keeps that teardown intact.
+            FrameworkDartTester tester = Pump(Field());
+            TextSelectionOverlay overlay;
+            try
+            {
+                Select(tester, 0, 4);
+                overlay = State(tester).SelectionOverlay!;
+            }
+            finally
+            {
+                tester.Dispose();
+            }
 
             Assert.Single(events, @event => @event is ObjectCreated { ClassName: "TextSelectionOverlay" }
                                             && ReferenceEquals(@event.Object, overlay));
