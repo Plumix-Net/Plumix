@@ -525,17 +525,17 @@ public sealed class RouterTests : IDisposable
     }
 
     [Fact]
-    public void RootBackButtonDispatcher_RegistersWithTheBindingWhileItHasCallbacks()
+    public async Task RootBackButtonDispatcher_RegistersWithTheBindingWhileItHasCallbacks()
     {
         var dispatcher = new RootBackButtonDispatcher();
-        Assert.False(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.False(await WidgetsBinding.Instance.HandlePopRoute());
 
         Task<bool> Callback() => Task.FromResult(true);
         dispatcher.AddCallback(Callback);
-        Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.True(await WidgetsBinding.Instance.HandlePopRoute());
 
         dispatcher.RemoveCallback(Callback);
-        Assert.False(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.False(await WidgetsBinding.Instance.HandlePopRoute());
     }
 
     // ------------------------------------------------------- BackButtonListener
@@ -969,7 +969,7 @@ public sealed class RouterTests : IDisposable
     }
 
     [Fact]
-    public void PlatformRouteInformationProvider_PushesHostRouteInformationIntoTheRouter()
+    public async Task PlatformRouteInformationProvider_PushesHostRouteInformationIntoTheRouter()
     {
         var provider = new PlatformRouteInformationProvider(Info("initial"));
         var parser = new SimpleRouteInformationParser();
@@ -987,24 +987,24 @@ public sealed class RouterTests : IDisposable
         Pump(harness);
         Assert.Equal("initial:", built);
 
-        Assert.True(WidgetsBinding.Instance.HandlePushRouteInformation(Info("pushed", state: "state")));
+        Assert.True(await WidgetsBinding.Instance.HandlePushRouteInformation(Info("pushed", state: "state")));
         Pump(harness);
         Assert.Equal("pushed:state", built);
     }
 
     [Fact]
-    public void PlatformRouteInformationProvider_RegistersWithTheBindingOnlyWhileListenedTo()
+    public async Task PlatformRouteInformationProvider_RegistersWithTheBindingOnlyWhileListenedTo()
     {
         var provider = new PlatformRouteInformationProvider(Info("initial"));
         void Listener()
         {
         }
 
-        Assert.False(WidgetsBinding.Instance.HandlePushRouteInformation(Info("a")));
+        Assert.False(await WidgetsBinding.Instance.HandlePushRouteInformation(Info("a")));
         provider.AddListener(Listener);
-        Assert.True(WidgetsBinding.Instance.HandlePushRouteInformation(Info("a")));
+        Assert.True(await WidgetsBinding.Instance.HandlePushRouteInformation(Info("a")));
         provider.RemoveListener(Listener);
-        Assert.False(WidgetsBinding.Instance.HandlePushRouteInformation(Info("b")));
+        Assert.False(await WidgetsBinding.Instance.HandlePushRouteInformation(Info("b")));
     }
 
     // ----------------------------------------------------------- restoration
@@ -1139,7 +1139,7 @@ public sealed class RouterTests : IDisposable
     /// of a navigator.
     /// </summary>
     [Fact]
-    public void WidgetsAppRouter_SystemBack_ReachesTheRouterDelegateInsteadOfANavigator()
+    public async Task WidgetsAppRouter_SystemBack_ReachesTheRouterDelegateInsteadOfANavigator()
     {
         int delegatePops = 0;
         var routerDelegate = new SimpleRouterDelegate(
@@ -1159,7 +1159,7 @@ public sealed class RouterTests : IDisposable
         using var harness = new RestorationHarness(app);
         Pump(harness);
 
-        Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.True(await WidgetsBinding.Instance.HandlePopRoute());
         Assert.Equal(1, delegatePops);
     }
 

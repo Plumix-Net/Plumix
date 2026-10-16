@@ -9,6 +9,10 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Pop/push route handlers return Task<bool> and await each observer; hosts follow (widgets/binding.dart).
+- PlatformDispatcher locales/onLocaleChanged reach didChangeLocales; computePlatformResolvedLocale (binding.dart).
+- Breaking: WidgetsApp resolves locales via LocalizationsResolver from the platform locales (localizations.dart).
+- Debug stack filters elide element mounting; framework errors report the full CLR stack (widgets/binding.dart).
 - Breaking: PlumixHost is an engine embedder: no own layout/paint; it rasterizes FlutterView.render scenes (C#-only).
 - Breaking: Render-only hosts register views with RendererBinding; semantics follow semanticsEnabled (binding.dart).
 - Breaking: Hot reload runs reassembleApplication under lockEvents; host hooks are gone (foundation/binding.dart).

@@ -91,8 +91,13 @@ public class PlumixHost : Control
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(backEvent);
     }
 
-    public bool CommitPredictiveBack()
+    /// <summary>
+    /// Commits the current predictive back gesture; the task completes with whether the framework
+    /// handled it, so a host can fall back to its own back behavior.
+    /// </summary>
+    public Task<bool> CommitPredictiveBack()
     {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         return WidgetsBinding.Instance.HandleCommitBackGesture();
     }
 
@@ -244,7 +249,15 @@ public class PlumixHost : Control
             return;
         }
 
-        if (WidgetsBinding.Instance.HandlePopRoute())
+        // The engine's back key is a `popRoute` message the platform does not wait on. Avalonia needs the
+        // answer now: a pop an observer is still deciding stays with the framework.
+        Task<bool> handled;
+        using (EventLoop.EnterFrameworkThread())
+        {
+            handled = WidgetsBinding.Instance.HandlePopRoute();
+        }
+
+        if (!handled.IsCompleted || handled is { IsCompletedSuccessfully: true, Result: true })
         {
             e.Handled = true;
         }
@@ -985,6 +998,21 @@ public class PlumixHost : Control
             : AppLifecycleState.Resumed;
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
         UpdateViewFocusForWindowActivation(active: state == AppLifecycleState.Resumed);
+        // Avalonia has no locale-change notification; the user changes the system language in another
+        // window, so the culture is re-read when this one comes back.
+        System.Globalization.CultureInfo.CurrentCulture.ClearCachedData();
+        ReportLocales();
+    }
+
+    /// <summary>
+    /// Reports the system UI culture as the platform's preferred locale list, as the engine's
+    /// <c>_updateLocales</c> does; <see cref="PlatformDispatcher.UpdateLocales"/> notifies only a change.
+    /// </summary>
+    /// <remarks>.NET exposes one UI culture rather than the user's ordered language list.</remarks>
+    internal static void ReportLocales()
+    {
+        PlatformDispatcher.Instance.UpdateLocales(
+            [Locale.FromCultureInfo(System.Globalization.CultureInfo.CurrentUICulture)]);
     }
 
     internal void UpdateViewFocusForWindowActivation(bool active)

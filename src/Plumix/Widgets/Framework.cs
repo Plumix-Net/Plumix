@@ -20,7 +20,7 @@ internal static class FrameworkErrors
     {
         var details = new FlutterErrorDetails(
             exception: exception,
-            stack: exception.StackTrace,
+            stack: FlutterError.FullStackOf(exception),
             library: "widgets library",
             context: context,
             informationCollector: informationCollector);

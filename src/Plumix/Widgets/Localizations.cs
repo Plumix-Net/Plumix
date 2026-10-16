@@ -541,3 +541,225 @@ internal sealed class LocalizationsScope : InheritedWidget
                || !ReferenceEquals(oldScope.Resources, Resources);
     }
 }
+
+/// <summary>A helper class used to manage localization resolution.</summary>
+/// <remarks>
+/// Flutter's <c>LocalizationsResolver</c>, which <see cref="WidgetsApp"/> uses to resolve its locale
+/// from <see cref="PlatformDispatcher.Locales"/> and to follow the platform's locale changes.
+/// </remarks>
+public sealed class LocalizationsResolver : ChangeNotifier, WidgetsBindingObserver
+{
+    private Locale? _locale;
+    private LocaleListResolutionCallback? _localeListResolutionCallback;
+    private LocaleResolutionCallback? _localeResolutionCallback;
+    private IReadOnlyList<LocalizationsDelegate>? _localizationsDelegates;
+    private IReadOnlyList<Locale> _supportedLocales;
+
+    // This is the resolved locale, and is one of the supportedLocales.
+    private Locale? _resolvedLocale;
+
+    /// <summary>
+    /// Creates a resolver that determines the best-fit locale from the set of
+    /// <paramref name="supportedLocales"/>.
+    /// </summary>
+    /// <remarks>
+    /// If provided, locale resolution will attempt to use <paramref name="locale"/> as the current locale
+    /// rather than the system locale. Locale resolution behavior can be overridden by providing
+    /// <paramref name="localeListResolutionCallback"/> or <paramref name="localeResolutionCallback"/>.
+    /// </remarks>
+    public LocalizationsResolver(
+        IReadOnlyList<Locale> supportedLocales,
+        Locale? locale = null,
+        LocaleListResolutionCallback? localeListResolutionCallback = null,
+        LocaleResolutionCallback? localeResolutionCallback = null,
+        IReadOnlyList<LocalizationsDelegate>? localizationsDelegates = null)
+    {
+        ArgumentNullException.ThrowIfNull(supportedLocales);
+        _locale = locale;
+        _localeListResolutionCallback = localeListResolutionCallback;
+        _localeResolutionCallback = localeResolutionCallback;
+        _localizationsDelegates = localizationsDelegates;
+        _supportedLocales = supportedLocales;
+        _resolvedLocale = ResolveLocales(PlatformDispatcher.Instance.Locales, supportedLocales);
+        WidgetsBinding.Instance.AddObserver(this);
+    }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _ = WidgetsBinding.Instance.RemoveObserver(this);
+        base.Dispose();
+    }
+
+    /// <summary>
+    /// Replace one or more of the properties used for localization resolution and re-resolve the locale.
+    /// </summary>
+    /// <remarks>
+    /// Like Dart, the platform locales are re-resolved only when a different
+    /// <paramref name="supportedLocales"/> instance is given.
+    /// </remarks>
+    public void Update(
+        Locale? locale,
+        LocaleListResolutionCallback? localeListResolutionCallback,
+        LocaleResolutionCallback? localeResolutionCallback,
+        IReadOnlyList<LocalizationsDelegate>? localizationsDelegates,
+        IReadOnlyList<Locale> supportedLocales)
+    {
+        ArgumentNullException.ThrowIfNull(supportedLocales);
+        _locale = locale;
+        _localeListResolutionCallback = localeListResolutionCallback;
+        _localeResolutionCallback = localeResolutionCallback;
+        _localizationsDelegates = localizationsDelegates;
+        if (!ReferenceEquals(_supportedLocales, supportedLocales))
+        {
+            _supportedLocales = supportedLocales;
+            UpdateResolvedLocale(PlatformDispatcher.Instance.Locales);
+        }
+    }
+
+    /// <summary>
+    /// The currently resolved <see cref="Widgets.Locale"/> based on the current platform locale and the
+    /// provided set of <see cref="SupportedLocales"/>.
+    /// </summary>
+    public Locale Locale
+    {
+        get
+        {
+            Locale appLocale = _locale != null
+                ? ResolveLocales([_locale], SupportedLocales)
+                : _resolvedLocale!;
+            if (Foundation.Constants.KDebugMode)
+            {
+                DebugCheckLocalizations(appLocale);
+            }
+
+            return appLocale;
+        }
+    }
+
+    /// <summary>
+    /// The application's delegates followed by <see cref="DefaultWidgetsLocalizations.Delegate"/>; only the
+    /// first delegate of a particular <see cref="LocalizationsDelegate.ResourceType"/> is loaded, so an
+    /// application delegate can override the widgets one.
+    /// </summary>
+    public IReadOnlyList<LocalizationsDelegate> LocalizationsDelegates =>
+        [.. _localizationsDelegates ?? [], DefaultWidgetsLocalizations.Delegate];
+
+    /// <summary>The callback that resolves the application locale from the preferred list.</summary>
+    public LocaleListResolutionCallback? LocaleListResolutionCallback => _localeListResolutionCallback;
+
+    /// <summary>The callback that resolves the application locale from the first preferred locale.</summary>
+    public LocaleResolutionCallback? LocaleResolutionCallback => _localeResolutionCallback;
+
+    /// <summary>The locales the application has been localized for.</summary>
+    public IReadOnlyList<Locale> SupportedLocales => _supportedLocales;
+
+    /// <inheritdoc />
+    public void DidChangeLocales(IReadOnlyList<Locale>? locales)
+    {
+        UpdateResolvedLocale(locales);
+    }
+
+    /// <inheritdoc />
+    public override string ToString() => nameof(LocalizationsResolver);
+
+    // Recompute the resolved locale based on preferredLocales and supportedLocales, update the resolved
+    // locale, and notify listeners only if the resolved locale changed. Called from both Update (when
+    // locale resolution parameters change) and DidChangeLocales (when system locales change).
+    private void UpdateResolvedLocale(IReadOnlyList<Locale>? preferredLocales)
+    {
+        Locale newLocale = ResolveLocales(preferredLocales, SupportedLocales);
+        if (newLocale != _resolvedLocale)
+        {
+            _resolvedLocale = newLocale;
+            NotifyListeners();
+        }
+    }
+
+    private Locale ResolveLocales(IReadOnlyList<Locale>? preferredLocales, IReadOnlyList<Locale> supportedLocales)
+    {
+        // Attempt to use localeListResolutionCallback.
+        if (LocaleListResolutionCallback != null)
+        {
+            Locale? locale = LocaleListResolutionCallback(preferredLocales, supportedLocales);
+            if (locale != null)
+            {
+                return locale;
+            }
+        }
+
+        // localeListResolutionCallback failed, falling back to localeResolutionCallback.
+        if (LocaleResolutionCallback != null)
+        {
+            Locale? locale = LocaleResolutionCallback(
+                preferredLocales is { Count: > 0 } ? preferredLocales[0] : null,
+                supportedLocales);
+            if (locale != null)
+            {
+                return locale;
+            }
+        }
+
+        // Both callbacks failed, falling back to default algorithm.
+        return Localizations.BasicLocaleListResolution(preferredLocales, supportedLocales);
+    }
+
+    private void DebugCheckLocalizations(Locale locale)
+    {
+        var unsupportedTypes = new HashSet<Type>(LocalizationsDelegates.Select(static entry => entry.ResourceType));
+        foreach (LocalizationsDelegate entry in LocalizationsDelegates)
+        {
+            if (!unsupportedTypes.Contains(entry.ResourceType))
+            {
+                continue;
+            }
+
+            if (entry.IsSupported(locale))
+            {
+                unsupportedTypes.Remove(entry.ResourceType);
+            }
+        }
+
+        if (unsupportedTypes.Count == 0)
+        {
+            return;
+        }
+
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: $"Warning: This application's locale, {locale}, is not supported by all of its "
+                       + "localization delegates.",
+            library: "widgets",
+            informationCollector: () => DebugUnsupportedLocalizationsInformation(locale, unsupportedTypes)));
+    }
+
+    private IEnumerable<DiagnosticsNode> DebugUnsupportedLocalizationsInformation(
+        Locale locale,
+        HashSet<Type> unsupportedTypes)
+    {
+        foreach (Type unsupportedType in unsupportedTypes)
+        {
+            yield return new ErrorDescription(
+                $"• A {unsupportedType.Name} delegate that supports the {locale} locale was not found.");
+        }
+
+        yield return new ErrorSpacer();
+        if (unsupportedTypes.Count == 1 && unsupportedTypes.Single().Name == "CupertinoLocalizations")
+        {
+            // We previously explicitly avoided checking for this class so it's not uncommon for applications
+            // to have omitted importing the required delegate.
+            yield return new ErrorHint(
+                "If the application is built using GlobalMaterialLocalizations.delegate, consider using "
+                + "GlobalMaterialLocalizations.delegates (plural) instead, as that will automatically declare "
+                + "the appropriate Cupertino localizations.");
+            yield return new ErrorSpacer();
+        }
+
+        yield return new ErrorHint(
+            $"The declared supported locales for this app are: {string.Join(", ", SupportedLocales)}");
+        yield return new ErrorSpacer();
+        yield return new ErrorDescription(
+            "See https://flutter.dev/to/internationalization/ for more "
+            + "information about configuring an app's locale, supportedLocales, "
+            + "and localizationsDelegates parameters.");
+    }
+}

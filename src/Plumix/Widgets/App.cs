@@ -1,4 +1,3 @@
-using System.Globalization;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -599,6 +598,7 @@ public sealed class WidgetsApp : StatefulWidget
         private PlatformRouteInformationProvider? _defaultRouteInformationProvider;
         private RootBackButtonDispatcher? _defaultBackButtonDispatcher;
         private AppLifecycleState? _appLifecycleState;
+        private LocalizationsResolver? _localizationsResolverValue;
 
         private WidgetsApp CurrentWidget => (WidgetsApp)StateWidget;
 
@@ -632,6 +632,7 @@ public sealed class WidgetsApp : StatefulWidget
         {
             base.DidUpdateWidget(oldWidget);
             UpdateRouting();
+            UpdateLocalizations(oldWidget);
         }
 
         public override void Dispose()
@@ -639,7 +640,39 @@ public sealed class WidgetsApp : StatefulWidget
             _ = WidgetsBinding.Instance.RemoveObserver(this);
             _defaultRouteInformationProvider?.Dispose();
             _defaultRouteInformationProvider = null;
+            LocalizationsResolverInstance.Dispose();
             base.Dispose();
+        }
+
+        // Dart's `late final _localizationsResolver`: created, and registered as an observer, on first use.
+        private LocalizationsResolver LocalizationsResolverInstance =>
+            _localizationsResolverValue ??= new LocalizationsResolver(
+                locale: CurrentWidget.Locale,
+                localeListResolutionCallback: CurrentWidget.LocaleListResolutionCallback,
+                localeResolutionCallback: CurrentWidget.LocaleResolutionCallback,
+                localizationsDelegates: CurrentWidget.LocalizationsDelegates,
+                supportedLocales: CurrentWidget.SupportedLocales);
+
+        private bool ShouldUpdateLocalizations(WidgetsApp oldWidget)
+        {
+            return !Equals(CurrentWidget.Locale, oldWidget.Locale)
+                   || CurrentWidget.LocaleListResolutionCallback != oldWidget.LocaleListResolutionCallback
+                   || CurrentWidget.LocaleResolutionCallback != oldWidget.LocaleResolutionCallback
+                   || !ReferenceEquals(CurrentWidget.SupportedLocales, oldWidget.SupportedLocales)
+                   || !ReferenceEquals(CurrentWidget.LocalizationsDelegates, oldWidget.LocalizationsDelegates);
+        }
+
+        private void UpdateLocalizations(WidgetsApp oldWidget)
+        {
+            if (ShouldUpdateLocalizations(oldWidget))
+            {
+                LocalizationsResolverInstance.Update(
+                    locale: CurrentWidget.Locale,
+                    localeListResolutionCallback: CurrentWidget.LocaleListResolutionCallback,
+                    localeResolutionCallback: CurrentWidget.LocaleResolutionCallback,
+                    localizationsDelegates: CurrentWidget.LocalizationsDelegates,
+                    supportedLocales: CurrentWidget.SupportedLocales);
+            }
         }
 
         public Task<bool> DidPopRoute()
@@ -749,17 +782,14 @@ public sealed class WidgetsApp : StatefulWidget
                     color: Opaque(CurrentWidget.Color),
                     child: result);
 
-            Locale locale = ResolveLocale();
-            var delegates = new List<LocalizationsDelegate>(CurrentWidget.LocalizationsDelegates)
-            {
-                DefaultWidgetsLocalizations.Delegate,
-            };
-
-            Widget child = new Localizations(
-                locale: locale,
-                delegates: delegates,
-                isApplicationLevel: true,
-                child: titledResult);
+            LocalizationsResolver localizationsResolver = LocalizationsResolverInstance;
+            Widget child = new ListenableBuilder(
+                listenable: localizationsResolver,
+                builder: (_, _) => new Localizations(
+                    locale: localizationsResolver.Locale,
+                    delegates: [.. localizationsResolver.LocalizationsDelegates],
+                    isApplicationLevel: true,
+                    child: titledResult));
             child = new ShortcutRegistrar(child);
             child = new TapRegionSurface(child);
             child = new FocusTraversalGroup(
@@ -909,18 +939,6 @@ public sealed class WidgetsApp : StatefulWidget
             }
 
             return CurrentWidget.OnGenerateRoute?.Invoke(settings);
-        }
-
-        private Locale ResolveLocale()
-        {
-            IReadOnlyList<Locale> preferredLocales = CurrentWidget.Locale != null
-                ? [CurrentWidget.Locale]
-                : [Locale.FromCultureInfo(CultureInfo.CurrentUICulture)];
-            return Localizations.Resolve(
-                preferredLocales,
-                CurrentWidget.SupportedLocales,
-                CurrentWidget.LocaleListResolutionCallback,
-                CurrentWidget.LocaleResolutionCallback);
         }
 
         private static KeyEventResult HandleRootKeyEvent(FocusNode node, UI.KeyEvent @event)

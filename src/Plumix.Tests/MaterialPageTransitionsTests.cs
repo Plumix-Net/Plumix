@@ -209,7 +209,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     }
 
     [Fact]
-    public void WidgetsBinding_KeepsTheStartTimePredictiveObserverSetForTheWholeGesture()
+    public async Task WidgetsBinding_KeepsTheStartTimePredictiveObserverSetForTheWholeGesture()
     {
         var binding = new WidgetsBinding();
         var first = new RecordingBackObserver(accept: true);
@@ -223,7 +223,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         binding.AddObserver(late);
         binding.HandleUpdateBackGestureProgress(
             new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(40.0, 3.0)));
-        binding.HandleCommitBackGesture();
+        _ = await binding.HandleCommitBackGesture();
 
         Assert.Equal(1, first.StartCount);
         Assert.Equal(1, first.UpdateCount);
@@ -235,7 +235,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     }
 
     [Fact]
-    public void MaterialPageRoute_PredictiveGestureUpdatesCancelsAndCommitsTheRoute()
+    public async Task MaterialPageRoute_PredictiveGestureUpdatesCancelsAndCommitsTheRoute()
     {
         NavigatorState? navigator = null;
         var initialRoute = new MaterialPageRoute(
@@ -272,7 +272,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(start));
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
             new PredictiveBackEvent(0.6, SwipeEdge.Left, new Point(100.0, 360.0)));
-        WidgetsBinding.Instance.HandleCommitBackGesture();
+        _ = await WidgetsBinding.Instance.HandleCommitBackGesture();
         root.TestOwner.FlushBuild();
         Assert.Same(initialRoute, navigator.CurrentRoute);
         Settle(root.TestOwner);

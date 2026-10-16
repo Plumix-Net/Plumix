@@ -407,7 +407,7 @@ public class AssertionsTests
         }
         finally
         {
-            FlutterError.ClearDefaultStackFilters();
+            FlutterError.RemoveDefaultStackFilter(filter);
         }
     }
 

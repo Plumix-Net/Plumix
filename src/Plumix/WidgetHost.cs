@@ -60,6 +60,8 @@ public sealed class WidgetHost : PlumixHost
         // Likewise the platform side of `flutter/textinput`: an autofocused field opens its
         // connection during that first build.
         AttachTextInputPlugin();
+        // The engine knows the platform locales before `runApp`; the first build resolves against them.
+        ReportLocales();
         WidgetsBinding.Instance.SetImplicitView(
             RootFlutterView,
             Pipeline,

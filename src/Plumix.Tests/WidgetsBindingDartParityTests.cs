@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -8,7 +9,8 @@ namespace Plumix.Tests;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/binding.dart
 // Mirrors widgets/binding_test.dart (observer callbacks, the "callbacks handle exceptions gracefully"
-// group, navigation/back-gesture/memory-pressure channels) and binding_first_frame_rasterized_test.dart.
+// group, locale/navigation/back-gesture/memory-pressure channels, the element-mounting stack filters),
+// binding_first_frame_rasterized_test.dart, and localizations_test.dart's LocalizationsResolver cases.
 
 [Collection(SchedulerTestCollection.Name)]
 public sealed class WidgetsBindingDartParityTests : IDisposable
@@ -38,6 +40,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
 
         FlutterError.OnError = _previousOnError;
         PlatformDispatcher.Instance.TimerRun = _previousTimerRun;
+        PlatformDispatcher.Instance.SetLocalesTestValue(null);
         _binding.ResetLifecycleStateForTests();
         SchedulerBinding.ResetForTests();
     }
@@ -58,8 +61,10 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         "didChangePlatformBrightness",
         "didChangeAppLifecycleState",
         "didChangeViewFocus",
+        "didChangeLocales",
         "didHaveMemoryPressure",
         "didRequestAppExit",
+        "didPopRoute",
     ];
 
     [Theory]
@@ -81,18 +86,23 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
     }
 
     [Fact]
-    public void RentrantObserverCallbacks_DoNotResultInExceptions()
+    public async Task RentrantObserverCallbacks_DoNotResultInExceptions()
     {
         // binding_test.dart: every dispatch iterates a snapshot of the observers.
         var observer = Observe(new RentrantObserver(_binding));
 
-        PlatformDispatcher.Instance.OnMetricsChanged!();
-        PlatformDispatcher.Instance.OnTextScaleFactorChanged!();
-        PlatformDispatcher.Instance.OnPlatformBrightnessChanged!();
         _binding.HandleAccessibilityFeaturesChanged();
         _binding.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
-        _binding.HandleViewFocusChanged(new ViewFocusEvent(0, ViewFocusState.Focused, ViewFocusDirection.Forward));
+        _binding.HandleLocaleChanged();
+        PlatformDispatcher.Instance.OnMetricsChanged!();
+        PlatformDispatcher.Instance.OnPlatformBrightnessChanged!();
+        PlatformDispatcher.Instance.OnTextScaleFactorChanged!();
         _binding.HandleMemoryPressure();
+        Assert.True(await _binding.HandlePopRoute());
+        Assert.True(await _binding.HandlePushRoute("/"));
+        Assert.Equal(AppExitResponse.Exit, await _binding.HandleRequestAppExit());
+        _binding.HandleViewFocusChanged(new ViewFocusEvent(0, ViewFocusState.Focused, ViewFocusDirection.Forward));
+        EventLoop.FlushMicrotasks();
 
         Assert.Empty(_errors);
         Assert.True(observer.RemoveSelf() > 1);
@@ -319,6 +329,260 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
             error.Context!.ToString());
     }
 
+    [Fact]
+    public void DidPushRouteInformation_Callback_ReceivesTheLocationAndState()
+    {
+        var observer = Observe(new PushRouteInformationObserver());
+
+        InboundNavigation(new MethodCall(
+            "pushRouteInformation",
+            new Dictionary<string, object?> { ["location"] = "testRouteName", ["state"] = "state" }));
+
+        Assert.Equal("testRouteName", observer.PushedRouteInformation!.Uri.OriginalString);
+        Assert.Equal("state", observer.PushedRouteInformation.State);
+    }
+
+    [Fact]
+    public void DidPushRouteInformation_Callback_CanHandleUrl()
+    {
+        var observer = Observe(new PushRouteInformationObserver());
+
+        InboundNavigation(new MethodCall(
+            "pushRouteInformation",
+            new Dictionary<string, object?>
+            {
+                ["location"] = "http://hostname/abc?def=123&def=456#789",
+                ["state"] = "state",
+            }));
+
+        // Dart also checks the deprecated `location`, which Plumix's RouteInformation does not carry.
+        RouteInformation information = observer.PushedRouteInformation!;
+        Assert.Equal("http://hostname/abc?def=123&def=456#789", information.Uri.OriginalString);
+        Assert.Equal("state", information.State);
+    }
+
+    [Fact]
+    public void PopRoute_NotHandledByAnObserver_RepliesFalse()
+    {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+
+        Assert.Equal(false, InboundNavigation(new MethodCall("popRoute")));
+        Assert.Contains("SystemNavigator.pop", platform.Methods);
+    }
+
+    [Fact]
+    public async Task HandlePopRoute_ReportsAnErrorWhenSystemNavigatorPopFails()
+    {
+        using var platform = new MockMethodCallHandler(
+            SystemChannels.Platform,
+            call => call.Method == "SystemNavigator.pop"
+                ? throw new InvalidOperationException("Platform error")
+                : null);
+
+        Assert.False(await _binding.HandlePopRoute());
+        EventLoop.FlushMicrotasks();
+
+        FlutterErrorDetails error = Assert.Single(_errors);
+        Assert.Contains("Platform error", error.Exception.ToString(), StringComparison.Ordinal);
+        Assert.Contains("while popping route", error.Context!.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task HandlePopRoute_AwaitsEachObserverBeforeAskingTheNext()
+    {
+        // Dart awaits every `didPopRoute` in turn: a pending answer is neither handled nor unhandled yet.
+        var first = Observe(new PendingRouteObserver());
+        var second = Observe(new PendingRouteObserver());
+
+        Task<bool> handled = _binding.HandlePopRoute();
+        Assert.False(handled.IsCompleted);
+        Assert.Equal(1, first.PopCalls);
+        Assert.Equal(0, second.PopCalls);
+
+        first.Answer.SetResult(false);
+        Assert.False(handled.IsCompleted);
+        Assert.Equal(1, second.PopCalls);
+
+        second.Answer.SetResult(true);
+        Assert.True(await handled);
+    }
+
+    [Fact]
+    public void PushRouteInformation_ThroughTheChannel_RepliesOnceAPendingObserverAnswers()
+    {
+        var observer = Observe(new PendingRouteObserver());
+
+        ByteData? reply = null;
+        ServicesBinding.Instance.DefaultBinaryMessenger.HandlePlatformMessage(
+            SystemChannels.Navigation.Name,
+            SystemChannels.Navigation.Codec.EncodeMethodCall(new MethodCall(
+                "pushRouteInformation",
+                new Dictionary<string, object?> { ["location"] = "/pending" })),
+            data => reply = data);
+        EventLoop.FlushMicrotasks();
+        Assert.Null(reply);
+        Assert.Equal("/pending", observer.PushedLocation);
+
+        observer.Answer.SetResult(true);
+        EventLoop.FlushMicrotasks();
+
+        Assert.NotNull(reply);
+        Assert.Equal(true, SystemChannels.Navigation.Codec.DecodeEnvelope(reply!));
+    }
+
+    // ------------------------------------------------------------------ locales
+
+    [Fact]
+    public void DidChangeLocales_ReceivesThePlatformLocales()
+    {
+        var observer = Observe(new LocalesObserver());
+        IReadOnlyList<Locale> previous = PlatformDispatcher.Instance.Locales;
+        try
+        {
+            PlatformDispatcher.Instance.UpdateLocales([new Locale("fr", "FR"), new Locale("en")]);
+
+            Assert.Equal([new Locale("fr", "FR"), new Locale("en")], Assert.Single(observer.Calls)!);
+            Assert.Equal(new Locale("fr", "FR"), PlatformDispatcher.Instance.Locale);
+
+            // The engine's `_updateLocales` notifies nobody when the list did not change.
+            PlatformDispatcher.Instance.UpdateLocales([new Locale("fr", "FR"), new Locale("en")]);
+            Assert.Single(observer.Calls);
+        }
+        finally
+        {
+            PlatformDispatcher.Instance.UpdateLocales(previous);
+        }
+    }
+
+    [Fact]
+    public void Locale_IsUndeterminedWhileThePlatformReportsNoLocales()
+    {
+        var observer = Observe(new LocalesObserver());
+
+        PlatformDispatcher.Instance.SetLocalesTestValue([]);
+
+        Assert.Empty(PlatformDispatcher.Instance.Locales);
+        Assert.Equal("und", PlatformDispatcher.Instance.Locale.LanguageCode);
+        Assert.Empty(Assert.Single(observer.Calls)!);
+    }
+
+    [Fact]
+    public void ComputePlatformResolvedLocale_AsksThePlatformResolver()
+    {
+        Func<IReadOnlyList<Locale>, Locale?>? previous = PlatformDispatcher.Instance.PlatformLocaleResolver;
+        try
+        {
+            PlatformDispatcher.Instance.PlatformLocaleResolver = null;
+            Assert.Null(_binding.ComputePlatformResolvedLocale([new Locale("en")]));
+
+            IReadOnlyList<Locale>? asked = null;
+            PlatformDispatcher.Instance.PlatformLocaleResolver = supported =>
+            {
+                asked = supported;
+                return supported[^1];
+            };
+            Locale[] supportedLocales = [new Locale("en"), new Locale("de")];
+
+            Assert.Equal(new Locale("de"), _binding.ComputePlatformResolvedLocale(supportedLocales));
+            Assert.Same(supportedLocales, asked);
+        }
+        finally
+        {
+            PlatformDispatcher.Instance.PlatformLocaleResolver = previous;
+        }
+    }
+
+    [Fact]
+    public void WidgetsApp_ResolvesItsLocaleFromThePlatformLocales_AndFollowsChanges()
+    {
+        PlatformDispatcher.Instance.SetLocalesTestValue([new Locale("fr", "FR")]);
+        using var tester = new FrameworkDartTester();
+        Locale? resolved = null;
+        tester.PumpWidget(new WidgetsApp(
+            color: Colors.Blue,
+            supportedLocales: [new Locale("en", "US"), new Locale("fr", "FR"), new Locale("de")],
+            builder: (context, _) =>
+            {
+                resolved = Localizations.LocaleOf(context);
+                return new SizedBox();
+            }));
+        Assert.Equal(new Locale("fr", "FR"), resolved);
+
+        PlatformDispatcher.Instance.SetLocalesTestValue([new Locale("de", "AT")]);
+        tester.Pump();
+
+        Assert.Equal(new Locale("de"), resolved);
+    }
+
+    [Fact]
+    public void LocalizationsResolverUpdate_NotifiesListenersWhenSupportedLocalesChange()
+    {
+        PlatformDispatcher.Instance.SetLocalesTestValue([new Locale("en", "US")]);
+        using var resolver = new LocalizationsResolver(supportedLocales: [new Locale("en")]);
+        bool notified = false;
+        resolver.AddListener(() => notified = true);
+
+        resolver.Update(
+            locale: null,
+            localeListResolutionCallback: null,
+            localeResolutionCallback: null,
+            localizationsDelegates: null,
+            supportedLocales: [new Locale("de")]);
+
+        Assert.True(notified);
+    }
+
+    [Fact]
+    public void LocalizationsResolverUpdate_DoesNotNotifyWhenTheResolvedLocaleIsUnchanged()
+    {
+        PlatformDispatcher.Instance.SetLocalesTestValue([new Locale("en", "US")]);
+        using var resolver = new LocalizationsResolver(supportedLocales: [new Locale("en"), new Locale("de")]);
+        bool notified = false;
+        resolver.AddListener(() => notified = true);
+
+        // Update with the same effective supportedLocales shouldn't change resolved locale.
+        resolver.Update(
+            locale: null,
+            localeListResolutionCallback: null,
+            localeResolutionCallback: null,
+            localizationsDelegates: null,
+            supportedLocales: [new Locale("en"), new Locale("de")]);
+
+        Assert.False(notified);
+    }
+
+    // ------------------------------------------------------------------ stack filters
+
+    [DebugOnlyFact]
+    public void DefaultStackFilter_ElidesFrameworkElementMountingStacks()
+    {
+        using var tester = new FrameworkDartTester();
+        FlutterErrorDetails? errorDetails = null;
+        FlutterExceptionHandler? oldHandler = FlutterError.OnError;
+        FlutterError.OnError = details => errorDetails = details;
+        try
+        {
+            tester.PumpWidget(new Directionality(
+                TextDirection.Ltr,
+                new TestStatefulWidget(new Builder(_ => new Opacity(
+                    0.5,
+                    child: new Builder(_ =>
+                    {
+                        DebugAssertions.Assert(false);
+                        return new Text(string.Empty);
+                    }))))));
+        }
+        finally
+        {
+            FlutterError.OnError = oldHandler;
+        }
+
+        Assert.IsAssignableFrom<AssertionError>(errorDetails!.Exception);
+        const string toMatch = "...     Normal element mounting (";
+        string rendered = errorDetails.ToString();
+        Assert.Equal(1, CountOccurrences(rendered, toMatch));
+    }
+
     // ------------------------------------------------------------- first frame rasterized
 
     [Fact]
@@ -400,8 +664,14 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
                 _binding.HandleViewFocusChanged(
                     new ViewFocusEvent(0, ViewFocusState.Focused, ViewFocusDirection.Forward));
                 break;
+            case "didChangeLocales":
+                _binding.HandleLocaleChanged();
+                break;
             case "didHaveMemoryPressure":
                 await SendMemoryPressure();
+                break;
+            case "didPopRoute":
+                Assert.True(await _binding.HandlePopRoute());
                 break;
             case "didRequestAppExit":
                 Assert.Equal(AppExitResponse.Exit, await _binding.HandleRequestAppExit());
@@ -466,7 +736,13 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
 
         public void DidChangeViewFocus(ViewFocusEvent @event) => throw new InvalidOperationException("Exception");
 
+        public void DidChangeLocales(IReadOnlyList<Locale>? locales) =>
+            throw new InvalidOperationException("Exception");
+
         public void DidHaveMemoryPressure() => throw new InvalidOperationException("Exception");
+
+        // Dart's `didPopRoute` is `async`, so its exception surfaces from the awaited future.
+        public Task<bool> DidPopRoute() => Task.FromException<bool>(new InvalidOperationException("Exception"));
 
         public Task<AppExitResponse> DidRequestAppExit() => throw new InvalidOperationException("Exception");
 
@@ -497,6 +773,8 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         public void DidChangeAppLifecycleState(AppLifecycleState state) => log.Add("didChangeAppLifecycleState");
 
         public void DidChangeViewFocus(ViewFocusEvent @event) => log.Add("didChangeViewFocus");
+
+        public void DidChangeLocales(IReadOnlyList<Locale>? locales) => log.Add("didChangeLocales");
 
         public void DidHaveMemoryPressure() => log.Add("didHaveMemoryPressure");
 
@@ -559,7 +837,80 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
 
         public void DidChangeViewFocus(ViewFocusEvent @event) => binding.AddObserver(this);
 
+        public void DidChangeLocales(IReadOnlyList<Locale>? locales) => binding.AddObserver(this);
+
         public void DidHaveMemoryPressure() => binding.AddObserver(this);
+
+        public Task<bool> DidPopRoute()
+        {
+            binding.AddObserver(this);
+            return Task.FromResult(true);
+        }
+
+        public Task<bool> DidPushRouteInformation(RouteInformation routeInformation)
+        {
+            binding.AddObserver(this);
+            return Task.FromResult(true);
+        }
+
+        public Task<AppExitResponse> DidRequestAppExit()
+        {
+            binding.AddObserver(this);
+            return Task.FromResult(AppExitResponse.Exit);
+        }
+    }
+
+    private sealed class PendingRouteObserver : WidgetsBindingObserver
+    {
+        public TaskCompletionSource<bool> Answer { get; } = new();
+
+        public int PopCalls { get; private set; }
+
+        public string? PushedLocation { get; private set; }
+
+        public Task<bool> DidPopRoute()
+        {
+            PopCalls += 1;
+            return Answer.Task;
+        }
+
+        public Task<bool> DidPushRouteInformation(RouteInformation routeInformation)
+        {
+            PushedLocation = routeInformation.Uri.OriginalString;
+            return Answer.Task;
+        }
+    }
+
+    private sealed class LocalesObserver : WidgetsBindingObserver
+    {
+        public List<IReadOnlyList<Locale>?> Calls { get; } = [];
+
+        public void DidChangeLocales(IReadOnlyList<Locale>? locales) => Calls.Add(locales);
+    }
+
+    private sealed class TestStatefulWidget(Widget child) : StatefulWidget
+    {
+        public Widget Child { get; } = child;
+
+        public override State CreateState() => new TestStatefulWidgetState();
+    }
+
+    private sealed class TestStatefulWidgetState : State<TestStatefulWidget>
+    {
+        public override Widget Build(BuildContext context) => Widget.Child;
+    }
+
+    private static int CountOccurrences(string text, string value)
+    {
+        int count = 0;
+        for (int index = text.IndexOf(value, StringComparison.Ordinal);
+             index >= 0;
+             index = text.IndexOf(value, index + value.Length, StringComparison.Ordinal))
+        {
+            count += 1;
+        }
+
+        return count;
     }
 
     private sealed class PushRouteObserver : WidgetsBindingObserver

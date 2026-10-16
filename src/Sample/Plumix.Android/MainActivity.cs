@@ -132,10 +132,13 @@ public class MainActivity : AvaloniaMainActivity
 
         public void OnBackInvoked()
         {
-            if (!WidgetsBinding.Instance.HandleCommitBackGesture())
+            EventLoop.RunAsync(async () =>
             {
-                _activity.Finish();
-            }
+                if (!await WidgetsBinding.Instance.HandleCommitBackGesture())
+                {
+                    _activity.Finish();
+                }
+            });
         }
 
         private static PredictiveBackEvent ToFrameworkEvent(BackEvent backEvent)

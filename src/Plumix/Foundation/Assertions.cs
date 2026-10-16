@@ -776,11 +776,11 @@ public class FlutterError : AssertionError, IDiagnosticableTree
         StackFilters.Add(filter);
     }
 
-    /// Removes every filter registered through [AddDefaultStackFilter].
+    /// Removes a filter registered through [AddDefaultStackFilter].
     ///
     /// Plumix-only: Dart's `_stackFilters` is file-private and append-only, which leaves tests no
-    /// way to undo a registration.
-    internal static void ClearDefaultStackFilters() => StackFilters.Clear();
+    /// way to undo a registration without dropping the binding's own filters.
+    internal static void RemoveDefaultStackFilter(StackFilter filter) => StackFilters.Remove(filter);
 
     /// Converts a stack to a string that is more readable by omitting stack frames that correspond
     /// to runtime internals.
@@ -881,6 +881,43 @@ public class FlutterError : AssertionError, IDiagnosticableTree
         }
 
         return result;
+    }
+
+    /// The stack a Dart `catch (exception, stack)` clause sees: from the throw site down to the program's
+    /// entry point.
+    ///
+    /// Plumix-only. A CLR exception's [Exception.StackTrace] stops at the frame that caught it, so the
+    /// frames below the catching method are appended from the current stack. Call it inside the `catch`
+    /// (directly or through helpers); the catching method is located as the innermost current frame
+    /// whose method matches the exception stack's last frame. Element-mounting frames reach
+    /// [DefaultStackFilter] this way, as they do in Dart.
+    internal static string? FullStackOf(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+        string? thrown = exception.StackTrace;
+        if (string.IsNullOrEmpty(thrown))
+        {
+            return thrown;
+        }
+
+        string[] thrownLines = thrown.TrimEnd().Split('\n');
+        string catching = FrameTarget(thrownLines[^1]);
+        string[] currentLines = new System.Diagnostics.StackTrace(1, true).ToString().TrimEnd().Split('\n');
+        int index = Array.FindIndex(currentLines, line => FrameTarget(line) == catching);
+        if (index < 0 || index == currentLines.Length - 1)
+        {
+            return thrown;
+        }
+
+        return $"{thrown.TrimEnd()}\n{string.Join('\n', currentLines[(index + 1)..])}";
+
+        // `   at Namespace.Type.Method(args) in file:line N` without its location.
+        static string FrameTarget(string line)
+        {
+            string target = line.Trim();
+            int location = target.IndexOf(" in ", StringComparison.Ordinal);
+            return location >= 0 ? target[..location] : target;
+        }
     }
 
     /// Calls [OnError] with the given details, unless it is null.

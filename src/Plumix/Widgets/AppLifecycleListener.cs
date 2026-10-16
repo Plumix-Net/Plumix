@@ -41,6 +41,19 @@ public interface WidgetsBindingObserver
     {
     }
 
+    /// <summary>
+    /// Called when the system tells the app that the user's locale has changed, for example when the user
+    /// changes the system language settings.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBindingObserver.didChangeLocales</c>; this exposes
+    /// <see cref="PlatformDispatcher.OnLocaleChanged"/>.
+    /// </remarks>
+    void DidChangeLocales(IReadOnlyList<Locale>? locales)
+    {
+        _ = locales;
+    }
+
     /// <summary>Called when a view gained or lost focus on the platform.</summary>
     /// <remarks>Flutter's <c>WidgetsBindingObserver.didChangeViewFocus</c>.</remarks>
     void DidChangeViewFocus(ViewFocusEvent @event)
@@ -320,6 +333,38 @@ public partial class WidgetsBinding
         Dispatch(static observer => observer.DidChangePlatformBrightness(), "didChangePlatformBrightness");
     }
 
+    /// <summary>Called when the system locale changes.</summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.handleLocaleChanged</c>, installed as
+    /// <see cref="PlatformDispatcher.OnLocaleChanged"/>: notifies the observers with the dispatcher's
+    /// <see cref="PlatformDispatcher.Locales"/>.
+    /// </remarks>
+    public void HandleLocaleChanged()
+    {
+        DispatchLocalesChanged(PlatformDispatcher.Instance.Locales);
+    }
+
+    /// <summary>Notify all the observers that the locale has changed (using <c>DidChangeLocales</c>).</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.dispatchLocalesChanged</c>.</remarks>
+    public void DispatchLocalesChanged(IReadOnlyList<Locale>? locales)
+    {
+        Dispatch(observer => observer.DidChangeLocales(locales), "didChangeLocales");
+    }
+
+    /// <summary>
+    /// Performs the platform-native locale resolution: the supported locale the platform's own algorithm
+    /// picks for the user's preferences, or <see langword="null"/> when the platform does not resolve
+    /// locales.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>WidgetsBinding.computePlatformResolvedLocale</c>. The first of
+    /// <paramref name="supportedLocales"/> is the platform's default when nothing matches.
+    /// </remarks>
+    public Locale? ComputePlatformResolvedLocale(IReadOnlyList<Locale> supportedLocales)
+    {
+        return PlatformDispatcher.Instance.ComputePlatformResolvedLocale(supportedLocales);
+    }
+
     /// <summary>Called when a view gained or lost focus on the platform.</summary>
     /// <remarks>Flutter's <c>WidgetsBinding.handleViewFocusChanged</c>, which the platform dispatcher feeds.</remarks>
     public void HandleViewFocusChanged(ViewFocusEvent @event)
@@ -453,16 +498,22 @@ public partial class WidgetsBinding
     }
 
     /// <summary>
-    /// Flutter's <c>WidgetsBinding.initInstances</c>: installs the <c>flutter/navigation</c>,
-    /// <c>flutter/backgesture</c> and <c>flutter/status_bar</c> handlers, and registers the persistent
-    /// widget-build callback.
+    /// Flutter's <c>WidgetsBinding.initInstances</c>: adds the debug stack filters, installs the locale
+    /// callback and the <c>flutter/navigation</c>, <c>flutter/backgesture</c> and <c>flutter/status_bar</c>
+    /// handlers, and registers the persistent widget-build callback.
     /// </summary>
     public void InitInstances()
     {
+        if (Constants.KDebugMode)
+        {
+            DebugAddStackFilters();
+        }
+
         // Dart's `SemanticsBinding.initInstances` installs the dispatcher callback that calls the
         // virtual `handleAccessibilityFeaturesChanged`; this binding's override is the most derived.
         SemanticsBinding.Instance.AccessibilityFeaturesChangedOverride = HandleAccessibilityFeaturesChanged;
         EnsureFrameCallback();
+        PlatformDispatcher.Instance.OnLocaleChanged = HandleLocaleChanged;
         SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
         SystemChannels.BackGesture.SetMethodCallHandler(HandleBackGestureInvocation);
         SystemChannels.StatusBar.SetMethodCallHandler(HandleStatusBarActions);
@@ -475,27 +526,112 @@ public partial class WidgetsBinding
         InitServiceExtensions();
     }
 
-    private Task<object?> HandleNavigationInvocation(MethodCall call)
+    /// <summary>
+    /// Flutter's private <c>WidgetsBinding._debugAddStackFilters</c>: collapses the frames of normal element
+    /// mounting in <see cref="FlutterError.DefaultStackFilter"/> output.
+    /// </summary>
+    /// <remarks>
+    /// The six filters follow Dart's order and shape on Plumix's CLR frames. Dart's
+    /// <c>ComponentElement.mount</c> and <c>SingleChildRenderObjectElement.mount</c> are each two frames
+    /// here: the subclass's <c>OnMount</c> called by <see cref="Element.Mount"/>.
+    /// </remarks>
+    private static void DebugAddStackFilters()
+    {
+        const string package = "dotnet:Plumix/Widgets/";
+        var elementInflateWidget = new PartialStackFrame(package, "Element", "InflateWidget");
+        var elementUpdateChild = new PartialStackFrame(package, "Element", "UpdateChild");
+        var elementRebuild = new PartialStackFrame(package, "Element", "Rebuild");
+        var elementMount = new PartialStackFrame(package, "Element", "Mount");
+        var componentElementPerformRebuild = new PartialStackFrame(package, "ComponentElement", "PerformRebuild");
+        var componentElementFirstBuild = new PartialStackFrame(package, "ComponentElement", "FirstBuild");
+        var componentElementMount = new PartialStackFrame(package, "ComponentElement", "OnMount");
+        var statefulElementFirstBuild = new PartialStackFrame(package, "StatefulElement", "FirstBuild");
+        var singleChildMount = new PartialStackFrame(package, "SingleChildRenderObjectElement", "OnMount");
+        var statefulElementRebuild = new PartialStackFrame(package, "StatefulElement", "PerformRebuild");
+
+        const string replacementString = "...     Normal element mounting";
+
+        // ComponentElement variations
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [
+                elementInflateWidget,
+                elementUpdateChild,
+                componentElementPerformRebuild,
+                elementRebuild,
+                componentElementFirstBuild,
+                componentElementMount,
+                elementMount,
+            ],
+            replacementString));
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [
+                elementUpdateChild,
+                componentElementPerformRebuild,
+                elementRebuild,
+                componentElementFirstBuild,
+                componentElementMount,
+                elementMount,
+            ],
+            replacementString));
+
+        // StatefulElement variations
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [
+                elementInflateWidget,
+                elementUpdateChild,
+                componentElementPerformRebuild,
+                statefulElementRebuild,
+                elementRebuild,
+                componentElementFirstBuild,
+                statefulElementFirstBuild,
+                componentElementMount,
+                elementMount,
+            ],
+            replacementString));
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [
+                elementUpdateChild,
+                componentElementPerformRebuild,
+                statefulElementRebuild,
+                elementRebuild,
+                componentElementFirstBuild,
+                statefulElementFirstBuild,
+                componentElementMount,
+                elementMount,
+            ],
+            replacementString));
+
+        // SingleChildRenderObjectElement variations
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [elementInflateWidget, elementUpdateChild, singleChildMount, elementMount],
+            replacementString));
+        FlutterError.AddDefaultStackFilter(new RepetitiveStackFrameFilter(
+            [elementUpdateChild, singleChildMount, elementMount],
+            replacementString));
+    }
+
+    private async Task<object?> HandleNavigationInvocation(MethodCall call)
     {
         switch (call.Method)
         {
             case "popRoute":
-                return Task.FromResult<object?>(HandlePopRoute());
+                return await HandlePopRoute();
             case "pushRoute":
-                return Task.FromResult<object?>(HandlePushRoute((string)call.Arguments!));
+                return await HandlePushRoute((string)call.Arguments!);
             case "pushRouteInformation":
                 var arguments = (IDictionary<string, object?>)call.Arguments!;
-                return Task.FromResult<object?>(HandlePushRouteInformation(new RouteInformation(
+                return await HandlePushRouteInformation(new RouteInformation(
                     new Uri((string)arguments["location"]!, UriKind.RelativeOrAbsolute),
-                    arguments.TryGetValue("state", out object? state) ? state : null)));
+                    arguments.TryGetValue("state", out object? state) ? state : null));
             default:
-                return Task.FromResult<object?>(false);
+                // Return false for unhandled method.
+                return false;
         }
     }
 
     /// <summary>The <c>flutter/backgesture</c> handler.</summary>
     /// <remarks>Flutter's private <c>WidgetsBinding._handleBackGestureInvocation</c>.</remarks>
-    private Task<object?> HandleBackGestureInvocation(MethodCall call)
+    private async Task<object?> HandleBackGestureInvocation(MethodCall call)
     {
         IReadOnlyDictionary<string, object?>? arguments = call.Arguments switch
         {
@@ -508,29 +644,31 @@ public partial class WidgetsBinding
         switch (call.Method)
         {
             case "startBackGesture":
-                return Task.FromResult<object?>(HandleStartBackGesture(PredictiveBackEvent.FromMap(arguments!)));
+                return HandleStartBackGesture(PredictiveBackEvent.FromMap(arguments!));
             case "updateBackGestureProgress":
                 if (_backGestureObservers.Count > 0)
                 {
                     HandleUpdateBackGestureProgress(PredictiveBackEvent.FromMap(arguments!));
                 }
 
-                return Task.FromResult<object?>(null);
+                return null;
             case "commitBackGesture":
-                HandleCommitBackGesture();
-                return Task.FromResult<object?>(null);
+                _ = await HandleCommitBackGesture();
+                return null;
             case "cancelBackGesture":
                 HandleCancelBackGesture();
-                return Task.FromResult<object?>(null);
+                return null;
             default:
                 throw new MissingPluginException();
         }
     }
 
     /// <summary>
-    /// Flutter's <c>WidgetsBinding.handlePushRoute</c>: offers a deep-linked route name to the observers.
+    /// Flutter's <c>WidgetsBinding.handlePushRoute</c>: offers a deep-linked route name to the observers
+    /// through <see cref="WidgetsBindingObserver.DidPushRouteInformation"/>, awaiting each in registration
+    /// order and completing with <see langword="true"/> at the first one that handles it.
     /// </summary>
-    public bool HandlePushRoute(string route)
+    public Task<bool> HandlePushRoute(string route)
     {
         ArgumentNullException.ThrowIfNull(route);
         return HandlePushRouteInformation(
@@ -538,18 +676,21 @@ public partial class WidgetsBinding
     }
 
     /// <summary>
-    /// Flutter's <c>WidgetsBinding.handlePopRoute</c>: offers the pop to every observer in registration order
-    /// and stops at the first one that handles it. When no observer handles it, the platform is asked to pop
-    /// the application off its own navigation stack.
+    /// Flutter's <c>WidgetsBinding.handlePopRoute</c>: offers the pop to every observer in registration order,
+    /// awaiting each answer, and completes with <see langword="true"/> at the first one that handles it.
+    /// When no observer handles it, the platform is asked to pop the application off its own navigation
+    /// stack and the task completes with <see langword="false"/>.
     /// </summary>
-    public bool HandlePopRoute()
+    /// <remarks>
+    /// An observer that throws, synchronously or through its task, is reported and the next one is asked.
+    /// </remarks>
+    public async Task<bool> HandlePopRoute()
     {
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
             try
             {
-                Task<bool> handled = observer.DidPopRoute();
-                if (handled.IsCompletedSuccessfully && handled.Result)
+                if (await observer.DidPopRoute())
                 {
                     return true;
                 }
@@ -581,18 +722,18 @@ public partial class WidgetsBinding
     }
 
     /// <summary>
-    /// Flutter's <c>WidgetsBinding.handlePushRouteInformation</c>: offers the location to every observer in
-    /// registration order and stops at the first one that handles it.
+    /// Flutter's private <c>WidgetsBinding._handlePushRouteInformation</c>: offers the location to every
+    /// observer in registration order, awaiting each answer, and completes with <see langword="true"/> at
+    /// the first one that handles it.
     /// </summary>
-    public bool HandlePushRouteInformation(RouteInformation routeInformation)
+    public async Task<bool> HandlePushRouteInformation(RouteInformation routeInformation)
     {
         ArgumentNullException.ThrowIfNull(routeInformation);
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
             try
             {
-                Task<bool> handled = observer.DidPushRouteInformation(routeInformation);
-                if (handled.IsCompletedSuccessfully && handled.Result)
+                if (await observer.DidPushRouteInformation(routeInformation))
                 {
                     return true;
                 }
@@ -660,10 +801,11 @@ public partial class WidgetsBinding
     /// <remarks>
     /// Flutter's private <c>WidgetsBinding._handleCommitBackGesture</c>: without a tracking observer the
     /// commit is a pop (<see cref="HandlePopRoute"/>); otherwise every tracking observer commits. The
-    /// tracking list is kept until the next gesture starts. Returns whether the gesture was handled,
-    /// which a host that maps the system back button onto the gesture needs.
+    /// tracking list is kept until the next gesture starts. Dart's completes with nothing; this one
+    /// completes with whether the gesture was handled, which a host that maps the system back button
+    /// onto the gesture needs.
     /// </remarks>
-    public bool HandleCommitBackGesture()
+    public async Task<bool> HandleCommitBackGesture()
     {
         if (_backGestureObservers.Count == 0)
         {
@@ -672,7 +814,7 @@ public partial class WidgetsBinding
             // back gesture occurs but no predictive back route transition exists to
             // handle it. The back gesture should still cause normal pop even if it
             // doesn't cause a predictive transition.
-            return HandlePopRoute();
+            return await HandlePopRoute();
         }
 
         foreach (WidgetsBindingObserver observer in _backGestureObservers.ToArray())

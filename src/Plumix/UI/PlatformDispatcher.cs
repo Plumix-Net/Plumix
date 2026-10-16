@@ -6,7 +6,7 @@ namespace Plumix.UI;
 
 // Dart parity source (reference):
 // flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
-// (frame + view-focus + launch-route + semantics/accessibility subset, adapted)
+// (frame + view-focus + launch-route + locale + semantics/accessibility subset, adapted)
 
 /// <summary>
 /// The framework's side of the platform: the engine-level requests the framework can make of a
@@ -98,6 +98,79 @@ public sealed class PlatformDispatcher
     /// the composed binding's <c>handlePlatformBrightnessChanged</c> here.
     /// </remarks>
     public Action? OnPlatformBrightnessChanged { get; set; }
+
+    private IReadOnlyList<Locale> _locales = [];
+    private IReadOnlyList<Locale>? _localesTestValue;
+
+    /// <summary>The primary locale selected by the user, or <c>und</c> while <see cref="Locales"/> is empty.</summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.locale</c>: the first of <see cref="Locales"/>.</remarks>
+    public Locale Locale => Locales.Count == 0 ? new Locale("und") : Locales[0];
+
+    /// <summary>The full system-reported supported locales of the device, in the user's order of preference.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.locales</c>, empty until the platform reports any. The engine owns the
+    /// value; a Plumix host reports it through <see cref="UpdateLocales"/>.
+    /// </remarks>
+    public IReadOnlyList<Locale> Locales => _localesTestValue ?? _locales;
+
+    /// <summary>A callback invoked whenever <see cref="Locale"/> changes value.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onLocaleChanged</c>; <c>WidgetsBinding</c> installs its
+    /// <c>HandleLocaleChanged</c> here.
+    /// </remarks>
+    public Action? OnLocaleChanged { get; set; }
+
+    /// <summary>
+    /// The platform's own resolution of the supported locales against the user's preferences, which
+    /// <see cref="ComputePlatformResolvedLocale"/> asks.
+    /// </summary>
+    /// <remarks>
+    /// Stands in for the engine's native <c>ComputePlatformResolvedLocale</c>, which only Android and iOS
+    /// answer. A host whose platform resolves locales installs it; without one the result is
+    /// <see langword="null"/>, as the desktop and web engines answer.
+    /// </remarks>
+    public Func<IReadOnlyList<Locale>, Locale?>? PlatformLocaleResolver { get; set; }
+
+    /// <summary>
+    /// Performs the platform-native locale resolution, or returns <see langword="null"/> when the platform
+    /// does not resolve locales.
+    /// </summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.computePlatformResolvedLocale</c>.</remarks>
+    public Locale? ComputePlatformResolvedLocale(IReadOnlyList<Locale> supportedLocales)
+    {
+        ArgumentNullException.ThrowIfNull(supportedLocales);
+        return PlatformLocaleResolver?.Invoke(supportedLocales);
+    }
+
+    /// <summary>
+    /// Records the platform's preferred locales, as the engine does, and invokes
+    /// <see cref="OnLocaleChanged"/> when they changed.
+    /// </summary>
+    /// <remarks>
+    /// The engine-side <c>_updateLocales</c>; hosts call it. An unchanged list (same locales in the same
+    /// order) notifies nobody.
+    /// </remarks>
+    public void UpdateLocales(IReadOnlyList<Locale> locales)
+    {
+        ArgumentNullException.ThrowIfNull(locales);
+        if (locales.SequenceEqual(_locales))
+        {
+            return;
+        }
+
+        _locales = [.. locales];
+        OnLocaleChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// flutter_test's <c>TestPlatformDispatcher.localesTestValue</c> setter (a value) and
+    /// <c>clearLocalesTestValue</c> (<see langword="null"/>): both invoke <see cref="OnLocaleChanged"/>.
+    /// </summary>
+    internal void SetLocalesTestValue(IReadOnlyList<Locale>? value)
+    {
+        _localesTestValue = value is null ? null : [.. value];
+        OnLocaleChanged?.Invoke();
+    }
 
     /// <summary>The route requested by the platform when the application was launched, or <c>/</c>.</summary>
     /// <remarks>
