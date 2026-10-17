@@ -6,7 +6,7 @@ using Avalonia.Platform;
 
 namespace Plumix.Rendering;
 
-internal static class FilterLayerRasterizer
+internal static partial class FilterLayerRasterizer
 {
     private static readonly Vector Dpi = new(96.0, 96.0);
 

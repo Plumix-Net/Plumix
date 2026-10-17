@@ -99,7 +99,7 @@ public sealed class CanvasRecordingTests
     {
         var canvas = new Canvas(new PictureRecorder());
 
-        canvas.SaveLayer(new Rect(0, 0, 10, 10));
+        canvas.SaveLayer(new Rect(0, 0, 10, 10), new Paint());
 
         Assert.Equal(2, canvas.GetSaveCount());
     }

@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:material_ui/material_ui.dart';
 
 import '../../counter_widgets.dart';
+import 'image_demo_page.dart';
 
 class DecoratedBoxDemoPage extends StatefulWidget {
   const DecoratedBoxDemoPage({super.key});
@@ -15,6 +18,9 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
   bool _accentFill = true;
   BlurStyle _blurStyle = BlurStyle.normal;
   bool _multiply = false;
+  double _fade = 0.5;
+  bool _invert = false;
+  final MemoryImage _image = MemoryImage(base64Decode(demoSamplePng));
 
   @override
   Widget build(BuildContext context) {
@@ -136,8 +142,79 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
             ),
           ),
         ),
+        const Text(
+          'DecorationImage cross-fade',
+          style: TextStyle(fontSize: 16, color: Colors.black),
+        ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: 'Fade: ${(_fade * 100).toStringAsFixed(0)}%',
+              onTap: _cycleFade,
+              width: 128,
+              background: const Color(0xFFE0F0F5),
+            ),
+            _buildButton(
+              label: _invert ? 'Invert: on' : 'Invert: off',
+              onTap: _toggleInvert,
+              width: 128,
+              background: const Color(0xFFF0E8F5),
+            ),
+          ],
+        ),
+        Text(
+          'fade=${_fade.toStringAsFixed(2)}, invert=${_invert ? 'on' : 'off'}',
+          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+        ),
+        Container(
+          width: 220,
+          height: 140,
+          color: const Color(0xFFE7EDF6),
+          padding: const EdgeInsets.all(8),
+          child: Center(
+            child: SizedBox(
+              width: 140,
+              height: 90,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  image: DecorationImage.lerp(
+                    DecorationImage(
+                      image: _image,
+                      fit: BoxFit.cover,
+                      invertColors: _invert,
+                    ),
+                    DecorationImage(
+                      image: _image,
+                      repeat: ImageRepeat.repeat,
+                      scale: 2,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF2A9D8F),
+                        BlendMode.color,
+                      ),
+                    ),
+                    _fade,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
+  }
+
+  void _cycleFade() {
+    setState(() {
+      _fade = _fade >= 1.0 ? 0.0 : _fade + 0.25;
+    });
+  }
+
+  void _toggleInvert() {
+    setState(() {
+      _invert = !_invert;
+    });
   }
 
   Widget _buildButton({
@@ -197,6 +274,8 @@ class _DecoratedBoxDemoPageState extends State<DecoratedBoxDemoPage> {
       _accentFill = true;
       _blurStyle = BlurStyle.normal;
       _multiply = false;
+      _fade = 0.5;
+      _invert = false;
     });
   }
 }

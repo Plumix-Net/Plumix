@@ -7,7 +7,7 @@ using Plumix.Rendering;
 namespace Plumix.UI;
 
 // Dart parity source: dart:ui Canvas/Picture/PictureRecorder (recording surface over Avalonia's
-// DrawingContext; the paint arguments stay Avalonia brushes/pens, see docs/ai/DIVERGENCES.md)
+// DrawingContext; some paint arguments stay Avalonia brushes/pens, see docs/ai/DIVERGENCES.md)
 
 /// <summary>The kinds of entry a <see cref="Canvas"/> records into a <see cref="Picture"/>.</summary>
 internal enum CanvasCommandKind
@@ -23,13 +23,80 @@ internal enum CanvasCommandKind
 
     /// <summary>`Canvas.restore`: unwinds every push made since the matching save.</summary>
     Restore,
+
+    /// <summary>`Canvas.saveLayer`: a save that also opens an isolated group, composited on restore.</summary>
+    SaveLayer,
+}
+
+/// <summary>Defines how a new clip region should be merged with the existing clip region.</summary>
+/// <remarks>Dart's <c>ClipOp</c>; used by <see cref="Canvas.ClipRect"/>.</remarks>
+public enum ClipOp
+{
+    /// <summary>Subtract the new region from the existing region.</summary>
+    Difference,
+
+    /// <summary>Intersect the new region from the existing region.</summary>
+    Intersect,
+}
+
+/// <summary>
+/// What a recorded <c>Canvas.saveLayer</c> needs on playback: the layer's bounds and the parts of its paint
+/// that apply when the layer is composited back (Dart's <c>saveLayer(bounds, paint)</c>).
+/// </summary>
+internal sealed class CanvasLayer
+{
+    internal CanvasLayer(Rect? bounds, Paint paint, Matrix4 transform)
+    {
+        Bounds = bounds;
+        Alpha = (byte)paint.Color.Alpha;
+        BlendMode = paint.BlendMode;
+        ColorFilter = paint.ColorFilter;
+        ImageFilter = paint.ImageFilter;
+        InvertColors = paint.InvertColors;
+        Transform = transform;
+    }
+
+    /// <summary>The layer bounds in the canvas's local coordinates, or null for the current clip.</summary>
+    internal Rect? Bounds { get; }
+
+    /// <summary>The alpha of the paint's colour, applied to the whole group.</summary>
+    internal byte Alpha { get; }
+
+    internal BlendMode BlendMode { get; }
+
+    internal ColorFilter? ColorFilter { get; }
+
+    internal ImageFilter? ImageFilter { get; }
+
+    internal bool InvertColors { get; }
+
+    /// <summary>The canvas transform when the layer was saved (Dart's <c>getTransform</c>).</summary>
+    internal Matrix4 Transform { get; }
+
+    /// <summary>The index of the matching restore in the picture's commands; the end when never restored.</summary>
+    internal int RestoreIndex { get; set; } = -1;
+
+    /// <summary>
+    /// Whether compositing the layer needs more than an alpha: a blend mode other than source-over, a colour
+    /// or image filter, or inverted colours. Such a layer is rasterized; an alpha-only layer is a backend
+    /// isolated group.
+    /// </summary>
+    internal bool NeedsRaster =>
+        BlendMode != BlendMode.SourceOver || ColorFilter is not null || ImageFilter is not null || InvertColors;
+
+    /// <summary>The rasterized group and the scale it was rasterized at, reused across playbacks.</summary>
+    internal (WriteableBitmap? Bitmap, Rect Destination, double Scale)? Raster { get; set; }
+
+    /// <summary>Whether rasterizing failed once (no raster backend), so playback falls back for good.</summary>
+    internal bool RasterUnavailable { get; set; }
 }
 
 /// <summary>One recorded canvas entry.</summary>
 internal readonly record struct CanvasCommand(
     CanvasCommandKind Kind,
     Action<DrawingContext>? Draw,
-    Func<DrawingContext, DrawingContext.PushedState>? Push)
+    Func<DrawingContext, DrawingContext.PushedState>? Push,
+    CanvasLayer? Layer = null)
 {
     internal static CanvasCommand ForDraw(Action<DrawingContext> draw) =>
         new(CanvasCommandKind.Draw, draw, null);
@@ -38,6 +105,9 @@ internal readonly record struct CanvasCommand(
         new(CanvasCommandKind.Push, null, push);
 
     internal static CanvasCommand ForSave() => new(CanvasCommandKind.Save, null, null);
+
+    internal static CanvasCommand ForSaveLayer(CanvasLayer layer) =>
+        new(CanvasCommandKind.SaveLayer, null, null, layer);
 
     internal static CanvasCommand ForRestore() => new(CanvasCommandKind.Restore, null, null);
 }
@@ -65,7 +135,9 @@ internal readonly record struct CanvasCall(
     double? Dy = null,
     MaskFilter? MaskFilter = null,
     BlendMode? BlendMode = null,
-    Rect? SourceRect = null)
+    Rect? SourceRect = null,
+    Paint? Paint = null,
+    IImage? Image = null)
 {
     /// <summary>
     /// The paint colour (Dart's <c>Paint.color</c>): the shadow colour, else the fill brush's, else the
@@ -185,23 +257,45 @@ public sealed class Picture
     /// <summary>Replays the recorded operations, translated by <paramref name="offset"/>.</summary>
     public void Playback(DrawingContext context, Point offset)
     {
+        Playback(context, offset, PaintRasterizer.RasterScale);
+    }
+
+    /// <summary>
+    /// Replays the recorded operations, translated by <paramref name="offset"/>, rasterizing any layer that
+    /// needs it at <paramref name="deviceScale"/> device pixels per picture unit.
+    /// </summary>
+    internal void Playback(DrawingContext context, Point offset, double deviceScale)
+    {
         ArgumentNullException.ThrowIfNull(context);
         if (_commands.Count == 0)
         {
             return;
         }
 
-        var pushed = new List<DrawingContext.PushedState>();
-        var saves = new Stack<int>();
+        DrawingContext.PushedState? translation = null;
         try
         {
             if (offset.X != 0.0 || offset.Y != 0.0)
             {
-                pushed.Add(context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)));
+                translation = context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y));
             }
 
-            int floor = pushed.Count;
-            for (int index = 0; index < _commands.Count; index++)
+            PlayRange(context, 0, _commands.Count, deviceScale);
+        }
+        finally
+        {
+            translation?.Dispose();
+        }
+    }
+
+    // Replays commands [start, end): a balanced range, so every save in it is restored in it (or at its end).
+    private void PlayRange(DrawingContext context, int start, int end, double deviceScale)
+    {
+        var pushed = new List<DrawingContext.PushedState>();
+        var saves = new Stack<int>();
+        try
+        {
+            for (int index = start; index < end; index++)
             {
                 CanvasCommand command = _commands[index];
                 switch (command.Kind)
@@ -209,8 +303,22 @@ public sealed class Picture
                     case CanvasCommandKind.Save:
                         saves.Push(pushed.Count);
                         break;
+                    case CanvasCommandKind.SaveLayer:
+                        CanvasLayer layer = command.Layer!;
+                        int restore = Math.Min(layer.RestoreIndex < 0 ? end : layer.RestoreIndex, end);
+                        if (layer.NeedsRaster
+                            && TryDrawRasterizedLayer(context, layer, index + 1, restore, deviceScale))
+                        {
+                            // The group, and its restore, were composited as one image.
+                            index = restore;
+                            break;
+                        }
+
+                        saves.Push(pushed.Count);
+                        pushed.Add(PushIsolatedGroup(context, layer));
+                        break;
                     case CanvasCommandKind.Restore:
-                        Unwind(pushed, saves.Count > 0 ? saves.Pop() : floor);
+                        Unwind(pushed, saves.Count > 0 ? saves.Pop() : 0);
                         break;
                     case CanvasCommandKind.Push:
                         pushed.Add(command.Push!(context));
@@ -225,6 +333,77 @@ public sealed class Picture
         {
             Unwind(pushed, 0);
         }
+    }
+
+    // An alpha-only layer: an opacity mask of the paint's alpha opens an isolated offscreen group on the
+    // backend (Skia's saveLayer), which is composited with that alpha when the group is popped.
+    private static DrawingContext.PushedState PushIsolatedGroup(DrawingContext context, CanvasLayer layer)
+    {
+        var mask = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(
+            Avalonia.Media.Color.FromArgb(layer.Alpha, 0xFF, 0xFF, 0xFF));
+        return context.PushOpacityMask(mask, ClampLayerBounds(layer.Bounds));
+    }
+
+    // Avalonia needs finite group bounds; an unbounded layer is bounded by the largest finite rect instead.
+    private static Rect ClampLayerBounds(Rect? bounds)
+    {
+        Rect largest = Canvas.LargestRect;
+        if (bounds is not { } rect || !double.IsFinite(rect.Width) || !double.IsFinite(rect.Height))
+        {
+            return largest;
+        }
+
+        return rect.Intersect(largest);
+    }
+
+    private bool TryDrawRasterizedLayer(
+        DrawingContext context,
+        CanvasLayer layer,
+        int start,
+        int end,
+        double deviceScale)
+    {
+        if (layer.RasterUnavailable)
+        {
+            return false;
+        }
+
+        double scale = Math.Clamp(deviceScale * layer.Transform.GetMaxScaleOnAxis(), 0.25, 8.0);
+        if (layer.Raster is not { } raster || raster.Scale != scale)
+        {
+            if (layer.Bounds is not { } bounds || !PaintRasterizer.CanRasterize(bounds))
+            {
+                return false;
+            }
+
+            try
+            {
+                (WriteableBitmap? bitmap, Rect destination) = FilterLayerRasterizer.RasterizeSaveLayer(
+                    drawingContext => PlayRange(drawingContext, start, end, deviceScale),
+                    bounds,
+                    scale,
+                    layer);
+                raster = (bitmap, destination, scale);
+                layer.Raster = raster;
+            }
+            catch (InvalidOperationException)
+            {
+                layer.RasterUnavailable = true;
+                return false;
+            }
+            catch (NotSupportedException)
+            {
+                layer.RasterUnavailable = true;
+                return false;
+            }
+        }
+
+        if (raster.Bitmap is { } image)
+        {
+            FilterLayerRasterizer.DrawSaveLayer(context, image, raster.Destination, layer.BlendMode);
+        }
+
+        return true;
     }
 
     private static void Unwind(List<DrawingContext.PushedState> pushed, int target)
@@ -278,21 +457,34 @@ public sealed class PictureRecorder
 
 /// <summary>An interface for recording graphical operations.</summary>
 /// <remarks>
-/// Dart's <c>ui.Canvas</c>. The clip/transform/save stack is ported 1:1; the drawing calls take
-/// Avalonia brushes and pens where Dart takes a <c>Paint</c>.
+/// Dart's <c>ui.Canvas</c>. The clip/transform/save stack, its queries and <c>saveLayer</c> are ported 1:1;
+/// some drawing calls still take Avalonia brushes and pens where Dart takes a <c>Paint</c>.
 /// </remarks>
 public partial class Canvas
 {
+    // Dart's Rect.largest: the default cull rect of a recording canvas.
+    internal static readonly Rect LargestRect = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
+
     private readonly List<CanvasCommand> _commands;
     private readonly List<CanvasCall> _debugCalls;
+
+    // One entry per save/saveLayer: the transform and clip to restore, and the layer it opened (if any).
+    private readonly Stack<(Matrix4 Transform, Rect ClipBounds, CanvasLayer? Layer)> _saveStack = new();
+    private Matrix4 _transform = Matrix4.Identity();
+    private Rect _destinationClipBounds;
     private int _saveCount = 1;
 
     /// <summary>Creates a canvas for recording graphical operations into the given recorder.</summary>
-    public Canvas(PictureRecorder recorder)
+    /// <remarks>
+    /// Dart's <c>Canvas(recorder, [cullRect])</c>: <paramref name="cullRect"/> bounds what the picture can
+    /// draw; it defaults to the largest rect, so nothing is culled.
+    /// </remarks>
+    public Canvas(PictureRecorder recorder, Rect? cullRect = null)
     {
         ArgumentNullException.ThrowIfNull(recorder);
         _commands = recorder.BeginRecording();
         _debugCalls = recorder.DebugCallsForRecording;
+        _destinationClipBounds = cullRect ?? LargestRect;
     }
 
     /// <summary>
@@ -307,6 +499,7 @@ public partial class Canvas
     {
         _commands = [];
         _debugCalls = [];
+        _destinationClipBounds = LargestRect;
     }
 
     /// <summary>Plumix-only: the debug descriptions of the calls recorded so far, in order.</summary>
@@ -319,7 +512,7 @@ public partial class Canvas
         {
             // Avalonia brushes are thread-affine: read the paint colour while recording, on the
             // painting thread, so tests can inspect it from any thread.
-            _debugCalls.Add(call with { RecordedColor = call.ResolvePaintColor() });
+            _debugCalls.Add(call with { RecordedColor = call.RecordedColor ?? call.ResolvePaintColor() });
         }
     }
 
@@ -331,25 +524,35 @@ public partial class Canvas
     public virtual void Save()
     {
         DebugRecordCall(new CanvasCall("save"));
+        _saveStack.Push((Matrix4.Copy(_transform), _destinationClipBounds, null));
         _saveCount++;
         _commands.Add(CanvasCommand.ForSave());
     }
 
     /// <summary>
     /// Saves a copy of the current transform and clip on the save stack, and then creates a new group
-    /// which subsequent calls will become a part of.
+    /// which subsequent calls will become a part of. When the save stack is later popped, the group will be
+    /// flattened into a layer and have the given <paramref name="paint"/>'s <c>ColorFilter</c> and
+    /// <c>BlendMode</c> applied.
     /// </summary>
     /// <remarks>
-    /// Dart's <c>Canvas.saveLayer</c>. Avalonia's public <see cref="DrawingContext"/> exposes no
-    /// isolated offscreen surface, so the group is opened as a transparent-preserving opacity push:
-    /// the save/restore nesting matches Dart exactly, but blending inside the group is not isolated.
+    /// Dart's <c>Canvas.saveLayer(bounds, paint)</c>. A null <paramref name="bounds"/> bounds the layer by the
+    /// current clip. A layer whose paint only carries an alpha is an isolated backend group (Skia's
+    /// <c>saveLayer</c>, through an opacity mask); one with a blend mode, colour or image filter or inverted
+    /// colours is rasterized on playback and composited as an image (see <c>docs/ai/DIVERGENCES.md</c>).
     /// </remarks>
-    public virtual void SaveLayer(Rect bounds)
+    public virtual void SaveLayer(Rect? bounds, Paint paint)
     {
-        DebugRecordCall(new CanvasCall("saveLayer", Rect: bounds));
+        ArgumentNullException.ThrowIfNull(paint);
+        DebugRecordCall(new CanvasCall("saveLayer", Rect: bounds, BlendMode: paint.BlendMode, Paint: new Paint(paint))
+        {
+            RecordedColor = paint.Color,
+        });
+        Rect? layerBounds = bounds ?? FiniteOrNull(GetLocalClipBounds());
+        var layer = new CanvasLayer(layerBounds, paint, Matrix4.Copy(_transform));
+        _saveStack.Push((Matrix4.Copy(_transform), _destinationClipBounds, layer));
         _saveCount++;
-        _commands.Add(CanvasCommand.ForSave());
-        _commands.Add(CanvasCommand.ForPush(context => context.PushOpacity(1.0)));
+        _commands.Add(CanvasCommand.ForSaveLayer(layer));
     }
 
     /// <summary>Pops the current save stack, if there is anything to pop.</summary>
@@ -362,6 +565,14 @@ public partial class Canvas
         }
 
         _saveCount--;
+        (Matrix4 transform, Rect clipBounds, CanvasLayer? layer) = _saveStack.Pop();
+        _transform = transform;
+        _destinationClipBounds = clipBounds;
+        if (layer is not null)
+        {
+            layer.RestoreIndex = _commands.Count;
+        }
+
         _commands.Add(CanvasCommand.ForRestore());
     }
 
@@ -383,6 +594,7 @@ public partial class Canvas
             return;
         }
 
+        _transform.Multiply(Matrix4.TranslationValues(dx, dy, 0.0));
         _commands.Add(CanvasCommand.ForPush(context =>
             context.PushTransform(Matrix.CreateTranslation(dx, dy))));
     }
@@ -392,6 +604,7 @@ public partial class Canvas
     {
         double scaleY = sy ?? sx;
         DebugRecordCall(new CanvasCall("scale", Dx: sx, Dy: scaleY));
+        _transform.Multiply(Matrix4.Diagonal3Values(sx, scaleY, 1.0));
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateScale(sx, scaleY))));
     }
 
@@ -399,7 +612,25 @@ public partial class Canvas
     public virtual void Rotate(double radians)
     {
         DebugRecordCall(new CanvasCall("rotate", Radius: radians));
+        _transform.Multiply(Matrix4.RotationZ(radians));
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(Matrix.CreateRotation(radians))));
+    }
+
+    /// <summary>
+    /// Adds an axis-aligned skew to the current transform, with the first argument being the horizontal
+    /// skew in rise over run units clockwise around the origin, and the second argument being the vertical
+    /// skew in rise over run units clockwise around the origin.
+    /// </summary>
+    /// <remarks>Dart's <c>Canvas.skew</c>.</remarks>
+    public virtual void Skew(double sx, double sy)
+    {
+        DebugRecordCall(new CanvasCall("skew", Dx: sx, Dy: sy));
+        Matrix4 skew = Matrix4.Identity();
+        skew.SetEntry(0, 1, sx);
+        skew.SetEntry(1, 0, sy);
+        _transform.Multiply(skew);
+        Matrix avaloniaMatrix = skew.ToAvaloniaMatrix();
+        _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(avaloniaMatrix)));
     }
 
     /// <summary>Multiplies the current transform by the given matrix.</summary>
@@ -407,15 +638,60 @@ public partial class Canvas
     public virtual void Transform(Matrix4 matrix)
     {
         ArgumentNullException.ThrowIfNull(matrix);
+        _transform.Multiply(matrix);
         Matrix avaloniaMatrix = matrix.ToAvaloniaMatrix();
         _commands.Add(CanvasCommand.ForPush(context => context.PushTransform(avaloniaMatrix)));
     }
 
+    /// <summary>Returns the current transform including the combined result of all transform methods
+    /// executed since the creation of this canvas object, and respecting the save/restore history.</summary>
+    /// <remarks>Dart's <c>Canvas.getTransform</c>: the 16 values of the matrix, in column-major order.</remarks>
+    public virtual double[] GetTransform() => (double[])_transform.Storage.Clone();
+
+    /// <summary>
+    /// Returns the conservative bounds of the combined result of all clip methods executed within the
+    /// current save stack of this canvas, measured relative to the origin and coordinate space of the
+    /// current transform.
+    /// </summary>
+    /// <remarks>Dart's <c>Canvas.getLocalClipBounds</c>; empty when the transform cannot be inverted.</remarks>
+    public virtual Rect GetLocalClipBounds()
+    {
+        if (Matrix4.TryInvert(_transform) is not { } inverse)
+        {
+            return default;
+        }
+
+        return MatrixUtils.TransformRect(inverse, _destinationClipBounds);
+    }
+
+    /// <summary>
+    /// Returns the conservative bounds of the combined result of all clip methods executed within the
+    /// current save stack of this canvas, measured relative to the origin and coordinate space of the
+    /// recording surface (the picture).
+    /// </summary>
+    /// <remarks>Dart's <c>Canvas.getDestinationClipBounds</c>.</remarks>
+    public virtual Rect GetDestinationClipBounds() => _destinationClipBounds;
+
     /// <summary>Reduces the clip region to the intersection of the current clip and the given rectangle.</summary>
-    public virtual void ClipRect(Rect rect, bool doAntiAlias = true)
+    /// <remarks>
+    /// Dart's <c>Canvas.clipRect(rect, clipOp:, doAntiAlias:)</c>. A <see cref="ClipOp.Difference"/> clip
+    /// removes the rectangle from the clip and, as in the engine, leaves the clip bounds unchanged.
+    /// </remarks>
+    public virtual void ClipRect(Rect rect, bool doAntiAlias = true, ClipOp clipOp = ClipOp.Intersect)
     {
         DebugRecordCall(new CanvasCall("clipRect", Rect: rect));
-        PushEdgeMode(doAntiAlias);
+        if (clipOp == ClipOp.Difference)
+        {
+            Geometry? difference = null;
+            Geometry Difference() => difference ??= new CombinedGeometry(
+                GeometryCombineMode.Exclude,
+                new RectangleGeometry(LargestRect),
+                new RectangleGeometry(rect));
+            _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(Difference())));
+            return;
+        }
+
+        IntersectClipBounds(rect, doAntiAlias);
         _commands.Add(CanvasCommand.ForPush(context => context.PushClip(rect)));
     }
 
@@ -423,7 +699,7 @@ public partial class Canvas
     public virtual void ClipRRect(RRect rrect, bool doAntiAlias = true)
     {
         DebugRecordCall(new CanvasCall("clipRRect", RRect: rrect));
-        PushEdgeMode(doAntiAlias);
+        IntersectClipBounds(rrect.Rect, doAntiAlias);
         _commands.Add(CanvasCommand.ForPush(context => SceneRasterizer.PushRoundedRectClip(context, rrect)));
     }
 
@@ -438,7 +714,7 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("clipPath", Path: path));
-        PushEdgeMode(doAntiAlias);
+        IntersectClipBounds(path.GetBounds(), doAntiAlias);
 
         // The backend geometry is built on playback: recording must not need a render backend.
         Geometry? geometry = null;
@@ -453,7 +729,10 @@ public partial class Canvas
     public virtual void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
-        PushEdgeMode(doAntiAlias);
+        Rect geometryBounds = geometry.Bounds;
+        IntersectClipBounds(
+            new Rect(geometryBounds.Position + geometryOffset, geometryBounds.Size),
+            doAntiAlias);
         if (geometryOffset.X != 0.0 || geometryOffset.Y != 0.0)
         {
             _commands.Add(CanvasCommand.ForPush(context =>
@@ -466,6 +745,25 @@ public partial class Canvas
 
         _commands.Add(CanvasCommand.ForPush(context => context.PushGeometryClip(geometry)));
     }
+
+    // The engine's clip-coverage tracking: the clip's bounds in destination space, rounded out to whole
+    // pixels for an anti-aliased clip, intersected with the current coverage.
+    private void IntersectClipBounds(Rect localBounds, bool doAntiAlias)
+    {
+        Rect bounds = MatrixUtils.TransformRect(_transform, localBounds);
+        if (doAntiAlias)
+        {
+            double left = Math.Floor(bounds.Left);
+            double top = Math.Floor(bounds.Top);
+            bounds = new Rect(left, top, Math.Ceiling(bounds.Right) - left, Math.Ceiling(bounds.Bottom) - top);
+        }
+
+        Rect intersection = _destinationClipBounds.Intersect(bounds);
+        _destinationClipBounds = intersection.Width > 0.0 && intersection.Height > 0.0 ? intersection : default;
+    }
+
+    private static Rect? FiniteOrNull(Rect rect) =>
+        double.IsFinite(rect.Width) && double.IsFinite(rect.Height) ? rect : null;
 
     /// <summary>Draws the text in the given <see cref="Paragraph"/> into this canvas at the given offset.</summary>
     /// <remarks>
@@ -499,13 +797,5 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(draw);
         _commands.Add(CanvasCommand.ForDraw(draw));
-    }
-
-    private void PushEdgeMode(bool doAntiAlias)
-    {
-        _commands.Add(CanvasCommand.ForPush(context => context.PushRenderOptions(new RenderOptions
-        {
-            EdgeMode = doAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
-        })));
     }
 }

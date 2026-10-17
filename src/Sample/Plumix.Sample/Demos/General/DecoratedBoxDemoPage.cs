@@ -23,6 +23,9 @@ internal sealed class DecoratedBoxDemoPageState : State
     private bool _accentFill = true;
     private BlurStyle _blurStyle = BlurStyle.Normal;
     private bool _multiply;
+    private double _fade = 0.5;
+    private bool _invert;
+    private readonly MemoryImage _image = new(ImageDemoPageState.SampleBytes);
 
     public override Widget Build(BuildContext context)
     {
@@ -100,7 +103,54 @@ internal sealed class DecoratedBoxDemoPageState : State
                                         style: new TextStyle(
                                             FontSize: 14,
                                             Color: new Color(0xFF14213D)))))))),
+                new Text("DecorationImage cross-fade", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton($"Fade: {_fade * 100:0}%", CycleFade, width: 128, colorHex: "#FFE0F0F5"),
+                        BuildButton(
+                            _invert ? "Invert: on" : "Invert: off",
+                            ToggleInvert,
+                            width: 128,
+                            colorHex: "#FFF0E8F5"),
+                    ]),
+                new Text(
+                    $"fade={_fade:0.00}, invert={(_invert ? "on" : "off")}",
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                new Container(
+                    width: 220,
+                    height: 140,
+                    color: new Color(0xFFE7EDF6),
+                    padding: new Thickness(8),
+                    child: new Center(
+                        child: new SizedBox(
+                            width: 140,
+                            height: 90,
+                            child: new DecoratedBox(
+                                decoration: new BoxDecoration(
+                                    BorderRadius: BorderRadius.Circular(12),
+                                    Image: DecorationImage.Lerp(
+                                        new DecorationImage(_image, fit: BoxFit.Cover, invertColors: _invert),
+                                        new DecorationImage(
+                                            _image,
+                                            repeat: ImageRepeat.Repeat,
+                                            scale: 2,
+                                            colorFilter: new ColorFilter.Mode(
+                                                new Color(0xFF2A9D8F),
+                                                BlendMode.Color)),
+                                        _fade)))))),
             ]);
+    }
+
+    private void CycleFade()
+    {
+        SetState(() => _fade = _fade >= 1.0 ? 0.0 : _fade + 0.25);
+    }
+
+    private void ToggleInvert()
+    {
+        SetState(() => _invert = !_invert);
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)
@@ -158,6 +208,8 @@ internal sealed class DecoratedBoxDemoPageState : State
             _accentFill = true;
             _blurStyle = BlurStyle.Normal;
             _multiply = false;
+            _fade = 0.5;
+            _invert = false;
         });
     }
 }

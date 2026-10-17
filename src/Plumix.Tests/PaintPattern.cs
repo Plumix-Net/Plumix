@@ -162,6 +162,20 @@ internal sealed class PaintPattern
 
     public PaintPattern Save() => Add("save", _ => null);
 
+    /// <summary>mock_canvas.dart's <c>..saveLayer()</c>.</summary>
+    public PaintPattern SaveLayer(Rect? bounds = null) => Add(
+        "saveLayer",
+        call => bounds is { } expected && call.Rect != expected ? $"bounds {call.Rect} != {expected}" : null);
+
+    /// <summary>
+    /// mock_canvas.dart's <c>..drawImageRect(source:, destination:)</c> (its <c>..image()</c> step matches
+    /// <c>drawImage</c> only).
+    /// </summary>
+    public PaintPattern DrawImageRect(Rect? source = null, Rect? destination = null) => Add(
+        "drawImageRect",
+        call => (source is { } src && call.SourceRect != src ? $"source {call.SourceRect} != {src}" : null)
+                ?? (destination is { } dst && call.Rect != dst ? $"destination {call.Rect} != {dst}" : null));
+
     public PaintPattern Restore() => Add("restore", _ => null);
 
     public PaintPattern Translate(double? x = null, double? y = null) => Add(

@@ -254,151 +254,6 @@ public sealed class ImageProviderDecorationTests : IDisposable
     }
 
     [Fact]
-    public void DecorationImage_ValidatesAndExcludesOnErrorFromEquality()
-    {
-        var provider = new TestImageProvider("image", () => Task.FromResult(new ImageInfo(new FakeImage(new Size(10, 10)))));
-        var first = new DecorationImage(provider, onError: (_, _) => { }, opacity: 0.5);
-        var second = new DecorationImage(provider, onError: (_, _) => throw new Exception(), opacity: 0.5);
-
-        Assert.Equal(first, second);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DecorationImage(provider, scale: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DecorationImage(provider, opacity: 2));
-        Assert.Throws<ArgumentException>(() => new ColorFilter.Matrix(1, 2, 3));
-        Assert.Throws<ArgumentException>(() => new DecorationImage(
-            provider,
-            fit: BoxFit.Cover,
-            centerSlice: new Rect(2, 2, 4, 4)));
-    }
-
-    [Fact]
-    public void PaintPlan_CoverCropsSourceAndContainCentersDestination()
-    {
-        var cover = ImagePainting.CreatePaintPlan(
-            new Rect(0, 0, 100, 100),
-            new Size(100, 50),
-            scale: 1,
-            fit: BoxFit.Cover,
-            alignment: Alignment.Center,
-            centerSlice: null,
-            repeat: ImageRepeat.NoRepeat,
-            flipHorizontally: false);
-        var contain = ImagePainting.CreatePaintPlan(
-            new Rect(0, 0, 100, 100),
-            new Size(100, 50),
-            scale: 1,
-            fit: BoxFit.Contain,
-            alignment: Alignment.Center,
-            centerSlice: null,
-            repeat: ImageRepeat.NoRepeat,
-            flipHorizontally: false);
-
-        Assert.Equal(new Rect(25, 0, 50, 50), cover.SourceRect);
-        Assert.Equal(new Rect(0, 0, 100, 100), Assert.Single(cover.DestinationRects));
-        Assert.Equal(new Rect(0, 25, 100, 50), Assert.Single(contain.DestinationRects));
-    }
-
-    [Fact]
-    public void PaintPlan_RepeatAndHorizontalFlipMatchFlutterGeometry()
-    {
-        var repeated = ImagePainting.CreatePaintPlan(
-            new Rect(0, 0, 25, 25),
-            new Size(10, 10),
-            scale: 1,
-            fit: BoxFit.None,
-            alignment: Alignment.Center,
-            centerSlice: null,
-            repeat: ImageRepeat.Repeat,
-            flipHorizontally: false);
-        var flipped = ImagePainting.CreatePaintPlan(
-            new Rect(0, 0, 30, 20),
-            new Size(10, 10),
-            scale: 1,
-            fit: BoxFit.None,
-            alignment: Alignment.TopLeft,
-            centerSlice: null,
-            repeat: ImageRepeat.NoRepeat,
-            flipHorizontally: true);
-
-        Assert.Equal(9, repeated.DestinationRects.Count);
-        Assert.Equal(new Rect(20, 0, 10, 10), Assert.Single(flipped.DestinationRects));
-        Assert.Equal(15, flipped.FlipAxisX);
-        Assert.Null(flipped.ClipRect);
-    }
-
-    [Fact]
-    public void NinePatch_PreservesLogicalEdgeSizeWhenImageScaleIsTwo()
-    {
-        var patches = ImagePainting.GenerateNinePatchRects(
-            new Size(60, 60),
-            new Rect(20, 20, 20, 20),
-            new Rect(0, 0, 100, 100),
-            scale: 2);
-
-        Assert.Equal(9, patches.Count);
-        Assert.Equal(new Rect(0, 0, 10, 10), patches[0].Destination);
-        Assert.Equal(new Rect(10, 10, 80, 80), patches[4].Destination);
-        Assert.Equal(new Rect(90, 90, 10, 10), patches[8].Destination);
-    }
-
-    [Fact]
-    public void PaintImage_CenterSliceGeneratesNineDrawCommands()
-    {
-        var root = new ContainerLayer();
-        var context = new PaintingContext(root);
-
-        ImagePainting.PaintImage(
-            context,
-            new Rect(0, 0, 60, 60),
-            new FakeImage(new Size(30, 30)),
-            fit: BoxFit.Fill,
-            centerSlice: new Rect(10, 10, 10, 10));
-
-        context.DebugStopRecordingIfNeeded();
-        var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
-        Assert.Equal(9, CountPictureCommands(picture));
-    }
-
-    [Fact]
-    public void DecorationImage_LerpPaintsBothImagesDuringTransition()
-    {
-        var firstCompletion = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var secondCompletion = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var first = new TestImageProvider(
-            "lerp-first",
-            () => firstCompletion.Task);
-        var second = new TestImageProvider(
-            "lerp-second",
-            () => secondCompletion.Task);
-        int repaintCount = 0;
-        using var painter = DecorationImage.Lerp(
-                new DecorationImage(first, fit: BoxFit.Cover),
-                new DecorationImage(second, fit: BoxFit.Cover),
-                0.25)!
-            .CreatePainter(() => Interlocked.Increment(ref repaintCount));
-
-        painter.Paint(
-            new PaintingContext(new ContainerLayer()),
-            new Rect(0, 0, 20, 20),
-            ImageConfiguration.Empty,
-            shape: BoxShape.Circle);
-        firstCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
-        secondCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
-        Assert.True(EventLoopPump.SpinUntil(() => repaintCount >= 2));
-
-        var root = new ContainerLayer();
-        var lerpContext = new PaintingContext(root);
-        painter.Paint(
-            lerpContext,
-            new Rect(0, 0, 20, 20),
-            ImageConfiguration.Empty,
-            shape: BoxShape.Circle);
-
-        lerpContext.DebugStopRecordingIfNeeded();
-        var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
-        Assert.Equal(2, CountPictureCommands(picture));
-    }
-
-    [Fact]
     public async Task DecorationImagePainter_RequestsRepaintAfterAsyncImageAndUsesDirectionality()
     {
         var image = new FakeImage(new Size(20, 10));
@@ -409,28 +264,17 @@ public sealed class ImageProviderDecorationTests : IDisposable
             provider,
             fit: BoxFit.None,
             matchTextDirection: true).CreatePainter(() => repaint.TrySetResult(true));
-        var root = new ContainerLayer();
-        var context = new PaintingContext(root);
+        var canvas = new Canvas(new PictureRecorder());
 
-        painter.Paint(
-            context,
-            new Rect(0, 0, 40, 20),
-            new ImageConfiguration(TextDirection: TextDirection.Rtl));
-        Assert.Empty(root.Children);
+        painter.Paint(canvas, new Rect(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        Assert.Empty(canvas.DebugCalls);
 
         completion.SetResult(new ImageInfo(image));
         await EventLoopPump.WaitFor(repaint.Task);
-        painter.Paint(
-            context,
-            new Rect(0, 0, 40, 20),
-            new ImageConfiguration(TextDirection: TextDirection.Rtl));
+        painter.Paint(canvas, new Rect(0, 0, 40, 20), null, new ImageConfiguration(TextDirection: TextDirection.Rtl));
 
-        Assert.NotEmpty(root.Children);
-        Assert.Throws<InvalidOperationException>(() => new DecorationImage(
-                provider,
-                matchTextDirection: true)
-            .CreatePainter(() => { })
-            .Paint(new PaintingContext(new ContainerLayer()), new Rect(0, 0, 10, 10), ImageConfiguration.Empty));
+        Assert.Contains(canvas.DebugCalls, call => call.Method == "drawImageRect");
+        Assert.Contains(canvas.DebugCalls, call => call.Method == "scale" && call.Dx == -1.0);
     }
 
     [Fact]
@@ -453,11 +297,6 @@ public sealed class ImageProviderDecorationTests : IDisposable
     private static OneFrameImageStreamCompleter CompletedCompleter(FakeImage image)
     {
         return new OneFrameImageStreamCompleter(Task.FromResult(new ImageInfo(image)));
-    }
-
-    private static int CountPictureCommands(PictureLayer pictureLayer)
-    {
-        return pictureLayer.Picture?.DrawCommandCount ?? 0;
     }
 
     private sealed class FakeImage : IImage, IDisposable

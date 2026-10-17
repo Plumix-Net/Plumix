@@ -9,6 +9,17 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Canvas.saveLayer(Rect?, Paint) opens an isolated layer; blend/filter/invert layers rasterize (dart:ui).
+- Canvas.getTransform/getLocalClipBounds/getDestinationClipBounds, skew, cullRect, clipRect clipOp (dart:ui).
+- Breaking: Canvas.drawImage/drawImageRect/drawImageNine take a Paint; colour filters apply to images (dart:ui).
+- Breaking: Canvas clips no longer push an edge mode that overrode later draws' isAntiAlias (C#-only).
+- Breaking: Flow clip layers isolate antiAliasWithSaveLayer children and stop forcing their edge mode (C#-only).
+- Breaking: paintImage, DecorationImage and its painters are strict ports over Canvas (decoration_image.dart).
+- Breaking: DecorationImage.lerp cross-fades additively in a save layer, without clamping (decoration_image.dart).
+- ImageSizeInfo, debugOnPaintImage, debugInvertOversizedImages, debugAssertAllPaintingVarsUnset (painting/debug.dart).
+- invertOversizedImages service extension (rendering/binding.dart).
+- ColorFilter.matrix compares by value and prints like Dart (dart:ui painting.dart).
+- DecoratedBox demo cross-fades a DecorationImage with an inverted-colours toggle in both samples.
 - Text spacing overrides on PlatformDispatcher/MediaQueryData, applyTextStyleOverrides (widgets/media_query.dart).
 - MediaQueryData.applyDisplayCornerRadii and MediaQuery.*Of displayFeatures/systemGestureInsets (media_query.dart).
 - Breaking: MediaQuery accessors depend on their own _MediaQueryAspect; copyWith has no corner radii (media_query.dart).

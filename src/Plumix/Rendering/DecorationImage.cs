@@ -1,183 +1,57 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Media.Imaging;
+using Plumix.Developer;
+using Plumix.Foundation;
+using Plumix.Painting;
+using Plumix.UI;
+using Canvas = Plumix.UI.Canvas;
+using Path = Plumix.UI.Path;
 
 namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/decoration_image.dart
 
+/// <summary>How to paint any portions of a box not covered by an image.</summary>
 public enum ImageRepeat
 {
+    /// <summary>Repeat the image in both the x and y directions until the box is filled.</summary>
     Repeat,
+
+    /// <summary>Repeat the image in the x direction until the box is filled horizontally.</summary>
     RepeatX,
+
+    /// <summary>Repeat the image in the y direction until the box is filled vertically.</summary>
     RepeatY,
+
+    /// <summary>Leave uncovered portions of the box transparent.</summary>
     NoRepeat,
 }
 
-public enum FilterQuality
-{
-    None,
-    Low,
-    Medium,
-    High,
-}
-
-public enum BlendMode
-{
-    Clear,
-    Source,
-    Destination,
-    SourceOver,
-    DestinationOver,
-    SourceIn,
-    DestinationIn,
-    SourceOut,
-    DestinationOut,
-    SourceAtop,
-    DestinationAtop,
-    Xor,
-    Plus,
-    Modulate,
-    Screen,
-    Overlay,
-    Darken,
-    Lighten,
-    ColorDodge,
-    ColorBurn,
-    HardLight,
-    SoftLight,
-    Difference,
-    Exclusion,
-    Multiply,
-    Hue,
-    Saturation,
-    Color,
-    Luminosity,
-}
-
-public abstract record ColorFilter
-{
-    public sealed record Matrix : ColorFilter
-    {
-        public Matrix(IReadOnlyList<double> values)
-        {
-            ArgumentNullException.ThrowIfNull(values);
-            if (values.Count != 20)
-            {
-                throw new ArgumentException("A color-filter matrix must contain 20 values.", nameof(values));
-            }
-
-            Values = values.ToArray();
-        }
-
-        public Matrix(params double[] values) : this((IReadOnlyList<double>)values) { }
-
-        public IReadOnlyList<double> Values { get; }
-    }
-
-    public sealed record Mode : ColorFilter
-    {
-        public Mode(Color color, BlendMode blendMode)
-        {
-            Color = color;
-            FlutterBlendMode = blendMode;
-            BlendMode = ToBitmapBlendingMode(blendMode);
-        }
-
-        public Mode(Color color, Avalonia.Media.Imaging.BitmapBlendingMode blendMode)
-        {
-            Color = color;
-            BlendMode = blendMode;
-            FlutterBlendMode = FromBitmapBlendingMode(blendMode);
-        }
-
-        public Color Color { get; }
-
-        public BlendMode FlutterBlendMode { get; }
-
-        public Avalonia.Media.Imaging.BitmapBlendingMode BlendMode { get; }
-
-        private static Avalonia.Media.Imaging.BitmapBlendingMode ToBitmapBlendingMode(BlendMode blendMode)
-        {
-            return blendMode switch
-            {
-                Rendering.BlendMode.Clear => Avalonia.Media.Imaging.BitmapBlendingMode.Source,
-                Rendering.BlendMode.Source => Avalonia.Media.Imaging.BitmapBlendingMode.Source,
-                Rendering.BlendMode.Destination => Avalonia.Media.Imaging.BitmapBlendingMode.Destination,
-                Rendering.BlendMode.SourceOver => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOver,
-                Rendering.BlendMode.DestinationOver => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOver,
-                Rendering.BlendMode.SourceIn => Avalonia.Media.Imaging.BitmapBlendingMode.SourceIn,
-                Rendering.BlendMode.DestinationIn => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationIn,
-                Rendering.BlendMode.SourceOut => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOut,
-                Rendering.BlendMode.DestinationOut => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOut,
-                Rendering.BlendMode.SourceAtop => Avalonia.Media.Imaging.BitmapBlendingMode.SourceAtop,
-                Rendering.BlendMode.DestinationAtop => Avalonia.Media.Imaging.BitmapBlendingMode.DestinationAtop,
-                Rendering.BlendMode.Xor => Avalonia.Media.Imaging.BitmapBlendingMode.Xor,
-                Rendering.BlendMode.Plus => Avalonia.Media.Imaging.BitmapBlendingMode.Plus,
-                Rendering.BlendMode.Modulate => Avalonia.Media.Imaging.BitmapBlendingMode.Multiply,
-                Rendering.BlendMode.Screen => Avalonia.Media.Imaging.BitmapBlendingMode.Screen,
-                Rendering.BlendMode.Overlay => Avalonia.Media.Imaging.BitmapBlendingMode.Overlay,
-                Rendering.BlendMode.Darken => Avalonia.Media.Imaging.BitmapBlendingMode.Darken,
-                Rendering.BlendMode.Lighten => Avalonia.Media.Imaging.BitmapBlendingMode.Lighten,
-                Rendering.BlendMode.ColorDodge => Avalonia.Media.Imaging.BitmapBlendingMode.ColorDodge,
-                Rendering.BlendMode.ColorBurn => Avalonia.Media.Imaging.BitmapBlendingMode.ColorBurn,
-                Rendering.BlendMode.HardLight => Avalonia.Media.Imaging.BitmapBlendingMode.HardLight,
-                Rendering.BlendMode.SoftLight => Avalonia.Media.Imaging.BitmapBlendingMode.SoftLight,
-                Rendering.BlendMode.Difference => Avalonia.Media.Imaging.BitmapBlendingMode.Difference,
-                Rendering.BlendMode.Exclusion => Avalonia.Media.Imaging.BitmapBlendingMode.Exclusion,
-                Rendering.BlendMode.Multiply => Avalonia.Media.Imaging.BitmapBlendingMode.Multiply,
-                Rendering.BlendMode.Hue => Avalonia.Media.Imaging.BitmapBlendingMode.Hue,
-                Rendering.BlendMode.Saturation => Avalonia.Media.Imaging.BitmapBlendingMode.Saturation,
-                Rendering.BlendMode.Color => Avalonia.Media.Imaging.BitmapBlendingMode.Color,
-                Rendering.BlendMode.Luminosity => Avalonia.Media.Imaging.BitmapBlendingMode.Luminosity,
-                _ => Avalonia.Media.Imaging.BitmapBlendingMode.SourceOver,
-            };
-        }
-
-        private static BlendMode FromBitmapBlendingMode(Avalonia.Media.Imaging.BitmapBlendingMode blendMode)
-        {
-            return blendMode switch
-            {
-                Avalonia.Media.Imaging.BitmapBlendingMode.Source => Rendering.BlendMode.Source,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Destination => Rendering.BlendMode.Destination,
-                Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOver => Rendering.BlendMode.DestinationOver,
-                Avalonia.Media.Imaging.BitmapBlendingMode.SourceIn => Rendering.BlendMode.SourceIn,
-                Avalonia.Media.Imaging.BitmapBlendingMode.DestinationIn => Rendering.BlendMode.DestinationIn,
-                Avalonia.Media.Imaging.BitmapBlendingMode.SourceOut => Rendering.BlendMode.SourceOut,
-                Avalonia.Media.Imaging.BitmapBlendingMode.DestinationOut => Rendering.BlendMode.DestinationOut,
-                Avalonia.Media.Imaging.BitmapBlendingMode.SourceAtop => Rendering.BlendMode.SourceAtop,
-                Avalonia.Media.Imaging.BitmapBlendingMode.DestinationAtop => Rendering.BlendMode.DestinationAtop,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Xor => Rendering.BlendMode.Xor,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Plus => Rendering.BlendMode.Plus,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Screen => Rendering.BlendMode.Screen,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Overlay => Rendering.BlendMode.Overlay,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Darken => Rendering.BlendMode.Darken,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Lighten => Rendering.BlendMode.Lighten,
-                Avalonia.Media.Imaging.BitmapBlendingMode.ColorDodge => Rendering.BlendMode.ColorDodge,
-                Avalonia.Media.Imaging.BitmapBlendingMode.ColorBurn => Rendering.BlendMode.ColorBurn,
-                Avalonia.Media.Imaging.BitmapBlendingMode.HardLight => Rendering.BlendMode.HardLight,
-                Avalonia.Media.Imaging.BitmapBlendingMode.SoftLight => Rendering.BlendMode.SoftLight,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Difference => Rendering.BlendMode.Difference,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Exclusion => Rendering.BlendMode.Exclusion,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Multiply => Rendering.BlendMode.Multiply,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Hue => Rendering.BlendMode.Hue,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Saturation => Rendering.BlendMode.Saturation,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Color => Rendering.BlendMode.Color,
-                Avalonia.Media.Imaging.BitmapBlendingMode.Luminosity => Rendering.BlendMode.Luminosity,
-                _ => Rendering.BlendMode.SourceOver,
-            };
-        }
-    }
-}
-
+/// <summary>An image for a box decoration.</summary>
+/// <remarks>Dart's <c>DecorationImage</c>. The image is painted using <see cref="ImagePainting.PaintImage"/>.</remarks>
 public class DecorationImage : IEquatable<DecorationImage>
 {
+    private readonly ImageProvider _image;
+    private readonly ImageErrorListener? _onError;
+    private readonly ColorFilter? _colorFilter;
+    private readonly BoxFit? _fit;
+    private readonly AlignmentGeometry _alignment;
+    private readonly Rect? _centerSlice;
+    private readonly ImageRepeat _repeat;
+    private readonly bool _matchTextDirection;
+    private readonly double _scale;
+    private readonly double _opacity;
+    private readonly FilterQuality _filterQuality;
+    private readonly bool _invertColors;
+    private readonly bool _isAntiAlias;
+
+    /// <summary>Creates an image to show in a <see cref="BoxDecoration"/>.</summary>
     public DecorationImage(
         ImageProvider image,
         ImageErrorListener? onError = null,
         ColorFilter? colorFilter = null,
         BoxFit? fit = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         Rect? centerSlice = null,
         ImageRepeat repeat = ImageRepeat.NoRepeat,
         bool matchTextDirection = false,
@@ -187,66 +61,112 @@ public class DecorationImage : IEquatable<DecorationImage>
         bool invertColors = false,
         bool isAntiAlias = false)
     {
-        Image = image ?? throw new ArgumentNullException(nameof(image));
-        if (!double.IsFinite(scale) || scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale));
-        if (!double.IsFinite(opacity) || opacity < 0 || opacity > 1) throw new ArgumentOutOfRangeException(nameof(opacity));
-        if (centerSlice.HasValue && (fit is BoxFit.None or BoxFit.Cover))
-        {
-            throw new ArgumentException("centerSlice cannot be combined with BoxFit.None or BoxFit.Cover.", nameof(fit));
-        }
-
-        OnError = onError;
-        ColorFilter = colorFilter;
-        Fit = fit;
-        Alignment = alignment;
-        CenterSlice = centerSlice;
-        Repeat = repeat;
-        MatchTextDirection = matchTextDirection;
-        Scale = scale;
-        Opacity = opacity;
-        FilterQuality = filterQuality;
-        InvertColors = invertColors;
-        IsAntiAlias = isAntiAlias;
+        _image = image ?? throw new ArgumentNullException(nameof(image));
+        _onError = onError;
+        _colorFilter = colorFilter;
+        _fit = fit;
+        _alignment = alignment;
+        _centerSlice = centerSlice;
+        _repeat = repeat;
+        _matchTextDirection = matchTextDirection;
+        _scale = scale;
+        _opacity = opacity;
+        _filterQuality = filterQuality;
+        _invertColors = invertColors;
+        _isAntiAlias = isAntiAlias;
     }
 
-    public ImageProvider Image { get; }
-    public ImageErrorListener? OnError { get; }
-    public ColorFilter? ColorFilter { get; }
-    public BoxFit? Fit { get; }
-    public Alignment Alignment { get; }
-    public Rect? CenterSlice { get; }
-    public ImageRepeat Repeat { get; }
-    public bool MatchTextDirection { get; }
-    public double Scale { get; }
-    public double Opacity { get; }
-    public FilterQuality FilterQuality { get; }
-    public bool InvertColors { get; }
-    public bool IsAntiAlias { get; }
+    // Dart's `_BlendedDecorationImage implements DecorationImage`: a subclass that forwards every getter.
+    private protected DecorationImage(ImageProvider image)
+    {
+        _image = image;
+    }
 
+    /// <summary>The image to be painted into the decoration.</summary>
+    public virtual ImageProvider Image => _image;
+
+    /// <summary>An optional error callback for errors emitted when loading <see cref="Image"/>.</summary>
+    public virtual ImageErrorListener? OnError => _onError;
+
+    /// <summary>A color filter to apply to the image before painting it.</summary>
+    public virtual ColorFilter? ColorFilter => _colorFilter;
+
+    /// <summary>How the image should be inscribed into the box.</summary>
+    /// <remarks>Null means <see cref="BoxFit.ScaleDown"/> without a <see cref="CenterSlice"/> and
+    /// <see cref="BoxFit.Fill"/> with one.</remarks>
+    public virtual BoxFit? Fit => _fit;
+
+    /// <summary>How to align the image within its bounds.</summary>
+    public virtual AlignmentGeometry Alignment => _alignment;
+
+    /// <summary>The center slice for a nine-patch image.</summary>
+    public virtual Rect? CenterSlice => _centerSlice;
+
+    /// <summary>How to paint any portions of the box that would not otherwise be covered by the image.</summary>
+    public virtual ImageRepeat Repeat => _repeat;
+
+    /// <summary>Whether to paint the image in the direction of the <see cref="TextDirection"/>.</summary>
+    public virtual bool MatchTextDirection => _matchTextDirection;
+
+    /// <summary>Defines image pixels to be shown per logical pixels.</summary>
+    public virtual double Scale => _scale;
+
+    /// <summary>
+    /// If non-null, the value is multiplied with the opacity of each image pixel before painting onto the
+    /// canvas.
+    /// </summary>
+    public virtual double Opacity => _opacity;
+
+    /// <summary>Used to set the filterQuality of the image.</summary>
+    public virtual FilterQuality FilterQuality => _filterQuality;
+
+    /// <summary>Whether the colors of the image are inverted when drawn.</summary>
+    public virtual bool InvertColors => _invertColors;
+
+    /// <summary>Whether to paint the image with anti-aliasing.</summary>
+    public virtual bool IsAntiAlias => _isAntiAlias;
+
+    /// <summary>
+    /// Creates a <see cref="DecorationImagePainter"/> for this <see cref="DecorationImage"/>.
+    /// </summary>
+    /// <remarks>
+    /// The <paramref name="onChanged"/> argument will be called whenever the image needs to be repainted,
+    /// e.g. because it is loading incrementally or because it is animated.
+    /// </remarks>
     public virtual DecorationImagePainter CreatePainter(Action onChanged)
     {
-        return new DecorationImagePainter(this, onChanged ?? throw new ArgumentNullException(nameof(onChanged)));
+        ArgumentNullException.ThrowIfNull(onChanged);
+        return new DecorationImagePainterImpl(this, onChanged);
     }
 
+    /// <inheritdoc />
     public virtual bool Equals(DecorationImage? other)
     {
+        if (ReferenceEquals(this, other))
+        {
+            return true;
+        }
+
         return other is not null
-               && Equals(Image, other.Image)
-               && Equals(ColorFilter, other.ColorFilter)
-               && Fit == other.Fit
-               && Alignment == other.Alignment
-               && CenterSlice == other.CenterSlice
-               && Repeat == other.Repeat
-               && MatchTextDirection == other.MatchTextDirection
-               && Scale.Equals(other.Scale)
-               && Opacity.Equals(other.Opacity)
-               && FilterQuality == other.FilterQuality
-               && InvertColors == other.InvertColors
-               && IsAntiAlias == other.IsAntiAlias;
+               && other.GetType() == GetType()
+               && Equals(other.Image, Image)
+               && Equals(other.ColorFilter, ColorFilter)
+               && other.Fit == Fit
+               && other.Alignment == Alignment
+               && other.CenterSlice == CenterSlice
+               && other.Repeat == Repeat
+               && other.MatchTextDirection == MatchTextDirection
+               && other.Scale.Equals(Scale)
+               && other.Opacity.Equals(Opacity)
+               && other.FilterQuality == FilterQuality
+               && other.InvertColors == InvertColors
+               && other.IsAntiAlias == IsAntiAlias;
     }
 
+    /// <inheritdoc />
     public override bool Equals(object? obj) => Equals(obj as DecorationImage);
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         var hash = new HashCode();
@@ -265,81 +185,163 @@ public class DecorationImage : IEquatable<DecorationImage>
         return hash.ToHashCode();
     }
 
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var properties = new List<string> { $"{Image}" };
+        if (ColorFilter is not null)
+        {
+            properties.Add($"{ColorFilter}");
+        }
+
+        if (Fit is { } fit
+            && !(fit == BoxFit.Fill && CenterSlice is not null)
+            && !(fit == BoxFit.ScaleDown && CenterSlice is null))
+        {
+            properties.Add(DartFormat.Enum(fit));
+        }
+
+        properties.Add($"{Alignment}");
+        if (CenterSlice is { } centerSlice)
+        {
+            properties.Add($"centerSlice: {ImagePainting.RectToString(centerSlice)}");
+        }
+
+        if (Repeat != ImageRepeat.NoRepeat)
+        {
+            properties.Add(DartFormat.Enum(Repeat));
+        }
+
+        if (MatchTextDirection)
+        {
+            properties.Add("match text direction");
+        }
+
+        properties.Add($"scale {DartFormat.Fixed(Scale)}");
+        properties.Add($"opacity {DartFormat.Fixed(Opacity)}");
+        properties.Add(DartFormat.Enum(FilterQuality));
+        if (InvertColors)
+        {
+            properties.Add("invert colors");
+        }
+
+        if (IsAntiAlias)
+        {
+            properties.Add("use anti-aliasing");
+        }
+
+        return $"DecorationImage({string.Join(", ", properties)})";
+    }
+
+    /// <summary>Linearly interpolates between two <see cref="DecorationImage"/>s.</summary>
+    /// <remarks>
+    /// The <paramref name="t"/> argument represents position on the timeline, with 0.0 meaning that the
+    /// interpolation has not started, returning <paramref name="a"/>, and 1.0 meaning that it has finished,
+    /// returning <paramref name="b"/>. Values in between paint both images, cross-faded.
+    /// </remarks>
     public static DecorationImage? Lerp(DecorationImage? a, DecorationImage? b, double t)
     {
-        t = Math.Clamp(t, 0, 1);
-        if (ReferenceEquals(a, b) || Equals(a, b)) return a;
+        if (ReferenceEquals(a, b) || t == 0.0)
+        {
+            return a;
+        }
+
+        if (t == 1.0)
+        {
+            return b;
+        }
+
         return new BlendedDecorationImage(a, b, t);
     }
 }
 
-public class DecorationImagePainter : IDisposable
+/// <summary>The scheme for painting a <see cref="DecorationImage"/>.</summary>
+/// <remarks>
+/// Dart's <c>abstract interface class DecorationImagePainter</c>, created by
+/// <see cref="DecorationImage.CreatePainter"/>; it must be disposed when no longer needed.
+/// </remarks>
+public abstract class DecorationImagePainter : IDisposable
+{
+    /// <summary>Draw the image onto the given canvas.</summary>
+    /// <remarks>
+    /// The image is drawn at the position and size given by <paramref name="rect"/>. When
+    /// <paramref name="clipPath"/> is non-null the image is clipped to it. <paramref name="blend"/> scales
+    /// the image's opacity and <paramref name="blendMode"/> is the blend mode of the image draw.
+    /// </remarks>
+    public abstract void Paint(
+        Canvas canvas,
+        Rect rect,
+        Path? clipPath,
+        ImageConfiguration configuration,
+        double blend = 1.0,
+        BlendMode blendMode = BlendMode.SourceOver);
+
+    /// <summary>Releases the resources used by this painter.</summary>
+    public abstract void Dispose();
+}
+
+// Dart's `_DecorationImagePainter`.
+internal sealed class DecorationImagePainterImpl : DecorationImagePainter
 {
     private readonly DecorationImage _details;
     private readonly Action _onChanged;
-    private readonly ImageStreamListener _listener;
     private ImageStream? _imageStream;
     private ImageInfo? _image;
-    private bool _disposed;
 
-    protected internal DecorationImagePainter(DecorationImage details, Action onChanged)
+    internal DecorationImagePainterImpl(DecorationImage details, Action onChanged)
     {
         _details = details;
         _onChanged = onChanged;
-        _listener = new ImageStreamListener(HandleImage, OnError: details.OnError);
-    }
-
-    /// <summary>
-    /// Draw the image onto the given canvas, clipped to <paramref name="clipPath"/> when it is non-null.
-    /// </summary>
-    /// <remarks>
-    /// Dart's <c>DecorationImagePainter.paint(canvas, rect, clipPath, configuration, blend:, blendMode:)</c>:
-    /// the clip is a canvas <c>save</c>/<c>clipPath</c>/<c>restore</c> around the image paint.
-    /// </remarks>
-    public void Paint(
-        PaintingContext context,
-        Rect rect,
-        Plumix.UI.Path? clipPath,
-        ImageConfiguration configuration,
-        double blend = 1.0,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        if (clipPath is not null)
+        if (Constants.KDebugMode)
         {
-            context.Canvas.Save();
-            context.Canvas.ClipPath(clipPath);
-        }
-
-        Paint(context, rect, configuration, clipRadius: null, blend: blend, blendMode: blendMode);
-        if (clipPath is not null)
-        {
-            context.Canvas.Restore();
+            FoundationDebug.DebugMaybeDispatchCreated("painting", "_DecorationImagePainter", this);
         }
     }
 
-    public virtual void Paint(
-        PaintingContext context,
+    public override void Paint(
+        Canvas canvas,
         Rect rect,
+        Path? clipPath,
         ImageConfiguration configuration,
-        BorderRadius? clipRadius = null,
         double blend = 1.0,
-        BoxShape shape = BoxShape.Rectangle,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+        BlendMode blendMode = BlendMode.SourceOver)
     {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_details.MatchTextDirection && configuration.TextDirection is null)
+        bool flipHorizontally = false;
+        if (_details.MatchTextDirection)
         {
-            throw new InvalidOperationException(
-                "DecorationImage.matchTextDirection requires a TextDirection in ImageConfiguration.");
+            if (Constants.KDebugMode && configuration.TextDirection is null)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary(
+                        "DecorationImage.matchTextDirection can only be used when a TextDirection is available."),
+                    new ErrorDescription(
+                        "When DecorationImagePainter.paint() was called, there was no text direction provided "
+                        + "in the ImageConfiguration object to match."),
+                    new DiagnosticsProperty<DecorationImage>(
+                        "The DecorationImage was",
+                        _details,
+                        style: DiagnosticsTreeStyle.ErrorProperty),
+                    new DiagnosticsProperty<ImageConfiguration>(
+                        "The ImageConfiguration was",
+                        configuration,
+                        style: DiagnosticsTreeStyle.ErrorProperty),
+                ]);
+            }
+
+            if (configuration.TextDirection == TextDirection.Rtl)
+            {
+                flipHorizontally = true;
+            }
         }
 
-        var newStream = _details.Image.Resolve(configuration);
-        if (!Equals(newStream.Key, _imageStream?.Key))
+        ImageStream newImageStream = _details.Image.Resolve(configuration);
+        if (!Equals(newImageStream.Key, _imageStream?.Key))
         {
-            _imageStream?.RemoveListener(_listener);
-            _imageStream = newStream;
-            _imageStream.AddListener(_listener);
+            var listener = new ImageStreamListener(HandleImage, OnError: _details.OnError);
+            _imageStream?.RemoveListener(listener);
+            _imageStream = newImageStream;
+            _imageStream.AddListener(listener);
         }
 
         if (_image is null)
@@ -347,155 +349,118 @@ public class DecorationImagePainter : IDisposable
             return;
         }
 
+        if (clipPath is not null)
+        {
+            canvas.Save();
+            canvas.ClipPath(clipPath);
+        }
+
         ImagePainting.PaintImage(
-            context: context,
+            canvas: canvas,
             rect: rect,
             image: _image.Image,
+            debugImageLabel: _image.DebugLabel,
             scale: _details.Scale * _image.Scale,
-            opacity: _details.Opacity * blend,
+            colorFilter: _details.ColorFilter,
             fit: _details.Fit,
-            alignment: _details.Alignment,
+            alignment: _details.Alignment.Resolve(configuration.TextDirection),
             centerSlice: _details.CenterSlice,
             repeat: _details.Repeat,
-            flipHorizontally: _details.MatchTextDirection && configuration.TextDirection == Plumix.UI.TextDirection.Rtl,
-            clipRadius: clipRadius,
-            shape: shape,
-            colorFilter: _details.ColorFilter,
+            flipHorizontally: flipHorizontally,
+            opacity: _details.Opacity * blend,
             filterQuality: _details.FilterQuality,
             invertColors: _details.InvertColors,
             isAntiAlias: _details.IsAntiAlias,
             blendMode: blendMode);
-    }
 
-    public virtual void Dispose()
-    {
-        if (_disposed) return;
-        _disposed = true;
-        _imageStream?.RemoveListener(_listener);
-        _imageStream = null;
-        _image?.Dispose();
-        _image = null;
-    }
-
-    private void HandleImage(ImageInfo image, bool synchronousCall)
-    {
-        if (_image is not null && _image.IsCloneOf(image))
+        if (clipPath is not null)
         {
-            image.Dispose();
+            canvas.Restore();
+        }
+    }
+
+    private void HandleImage(ImageInfo value, bool synchronousCall)
+    {
+        // Dart's `_image == value` compares image handles, and every clone holds a handle of its own, so
+        // only the very same info is equal; Plumix clones share one image, so compare the infos themselves.
+        if (ReferenceEquals(_image, value))
+        {
+            return;
+        }
+
+        if (_image is not null && _image.IsCloneOf(value))
+        {
+            value.Dispose();
             return;
         }
 
         _image?.Dispose();
-        _image = image;
+        _image = value;
         if (!synchronousCall)
         {
             _onChanged();
         }
     }
-}
-
-internal sealed class BlendedDecorationImage : DecorationImage
-{
-    public BlendedDecorationImage(DecorationImage? a, DecorationImage? b, double t)
-        : base(
-            image: (b ?? a ?? throw new ArgumentException("At least one image is required.")).Image,
-            onError: b?.OnError ?? a?.OnError,
-            colorFilter: b?.ColorFilter ?? a?.ColorFilter,
-            fit: b?.Fit ?? a?.Fit,
-            alignment: b?.Alignment ?? a!.Alignment,
-            centerSlice: b?.CenterSlice ?? a?.CenterSlice,
-            repeat: b?.Repeat ?? a!.Repeat,
-            matchTextDirection: b?.MatchTextDirection ?? a!.MatchTextDirection,
-            scale: b?.Scale ?? a!.Scale,
-            opacity: b?.Opacity ?? a!.Opacity,
-            filterQuality: b?.FilterQuality ?? a!.FilterQuality,
-            invertColors: b?.InvertColors ?? a!.InvertColors,
-            isAntiAlias: b?.IsAntiAlias ?? a!.IsAntiAlias)
-    {
-        A = a;
-        B = b;
-        T = t;
-    }
-
-    public DecorationImage? A { get; }
-    public DecorationImage? B { get; }
-    public double T { get; }
-
-    public override DecorationImagePainter CreatePainter(Action onChanged)
-    {
-        return new BlendedDecorationImagePainter(this, onChanged);
-    }
-
-    public override bool Equals(DecorationImage? other)
-    {
-        return other is BlendedDecorationImage blended
-               && Equals(A, blended.A)
-               && Equals(B, blended.B)
-               && T.Equals(blended.T);
-    }
-
-    public override int GetHashCode() => HashCode.Combine(A, B, T);
-}
-
-internal sealed class BlendedDecorationImagePainter : DecorationImagePainter
-{
-    private readonly DecorationImagePainter? _a;
-    private readonly DecorationImagePainter? _b;
-    private readonly double _t;
-    private bool _disposed;
-
-    public BlendedDecorationImagePainter(BlendedDecorationImage details, Action onChanged)
-        : base(details, onChanged)
-    {
-        _a = details.A?.CreatePainter(onChanged);
-        _b = details.B?.CreatePainter(onChanged);
-        _t = details.T;
-    }
-
-    public override void Paint(
-        PaintingContext context,
-        Rect rect,
-        ImageConfiguration configuration,
-        BorderRadius? clipRadius = null,
-        double blend = 1.0,
-        BoxShape shape = BoxShape.Rectangle,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
-    {
-        ObjectDisposedException.ThrowIf(_disposed, this);
-        _a?.Paint(
-            context,
-            rect,
-            configuration,
-            clipRadius,
-            blend * (1 - _t),
-            shape,
-            blendMode);
-        _b?.Paint(
-            context,
-            rect,
-            configuration,
-            clipRadius,
-            blend * _t,
-            shape,
-            blendMode);
-    }
 
     public override void Dispose()
     {
-        if (_disposed) return;
-        _disposed = true;
-        _a?.Dispose();
-        _b?.Dispose();
-        base.Dispose();
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
+
+        _imageStream?.RemoveListener(new ImageStreamListener(HandleImage, OnError: _details.OnError));
+        _image?.Dispose();
+        _image = null;
     }
+
+    public override string ToString() =>
+        $"DecorationImagePainter(stream: {_imageStream?.ToString() ?? "null"}, "
+        + $"image: {_image?.ToString() ?? "null"}) for {_details}";
 }
 
+/// <summary>Paints an image into the given rectangle on the canvas.</summary>
+/// <remarks>Dart's top-level <c>paintImage</c> and the bookkeeping behind its debug image-size reports.</remarks>
 public static class ImagePainting
 {
+    private static Dictionary<string, ImageSizeInfo> s_pendingImageSizeInfo = new();
+    private static HashSet<ImageSizeInfo> s_lastFrameImageSizeInfo = new();
+
+    // The colour matrix debugInvertOversizedImages paints an oversized image through.
+    private static readonly double[] InvertedImageMatrix =
+    [
+        -1, 0, 0, 0, 255,
+        0, -1, 0, 0, 255,
+        0, 0, -1, 0, 255,
+        0, 0, 0, 1, 0,
+    ];
+
+    /// <summary>
+    /// Used by tests to reset any tracking of which images have been painted in the last frame.
+    /// </summary>
+    /// <remarks>Dart's <c>debugFlushLastFrameImageSizeInfo</c>; a no-op outside debug builds.</remarks>
+    public static void DebugFlushLastFrameImageSizeInfo()
+    {
+        if (Constants.KDebugMode)
+        {
+            s_lastFrameImageSizeInfo = new HashSet<ImageSizeInfo>();
+        }
+    }
+
+    /// <summary>Paints an image into the given rectangle on the canvas.</summary>
+    /// <remarks>
+    /// Dart's <c>paintImage</c>. The image is fitted into <paramref name="rect"/> by <paramref name="fit"/>
+    /// (default <see cref="BoxFit.ScaleDown"/>, or <see cref="BoxFit.Fill"/> with a
+    /// <paramref name="centerSlice"/>), placed by <paramref name="alignment"/>, repeated per
+    /// <paramref name="repeat"/> and drawn with a paint carrying <paramref name="opacity"/>,
+    /// <paramref name="colorFilter"/>, <paramref name="filterQuality"/>, <paramref name="invertColors"/>,
+    /// <paramref name="isAntiAlias"/> and <paramref name="blendMode"/>.
+    /// </remarks>
     public static void PaintImage(
-        PaintingContext context,
+        Canvas canvas,
         Rect rect,
         IImage image,
+        string? debugImageLabel = null,
         double scale = 1.0,
         double opacity = 1.0,
         ColorFilter? colorFilter = null,
@@ -507,308 +472,431 @@ public static class ImagePainting
         bool invertColors = false,
         FilterQuality filterQuality = FilterQuality.Medium,
         bool isAntiAlias = false,
-        BorderRadius? clipRadius = null,
-        BoxShape shape = BoxShape.Rectangle,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+        BlendMode blendMode = BlendMode.SourceOver)
     {
-        ArgumentNullException.ThrowIfNull(context);
+        ArgumentNullException.ThrowIfNull(canvas);
         ArgumentNullException.ThrowIfNull(image);
-        if (rect.Width <= 0 || rect.Height <= 0) return;
-        if (!double.IsFinite(scale) || scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale));
-
-        var plan = CreatePaintPlan(
-            rect,
-            image.Size,
-            scale,
-            fit,
-            alignment,
-            centerSlice,
-            repeat,
-            flipHorizontally);
-        foreach (var destination in plan.DestinationRects)
+        if (rect.Width <= 0.0 || rect.Height <= 0.0)
         {
-            var effectiveClipRect = plan.ClipRect ?? (clipRadius.HasValue ? rect : null);
-            var ovalClipRect = shape == BoxShape.Circle ? InscribedSquare(rect) : (Rect?)null;
-            if (plan.CenterSlicePixels.HasValue)
+            return;
+        }
+
+        Size imagePixels = Canvas.ImageSize(image);
+        double outputWidth = rect.Width;
+        double outputHeight = rect.Height;
+        double inputWidth = imagePixels.Width;
+        double inputHeight = imagePixels.Height;
+        double sliceBorderX = 0.0;
+        double sliceBorderY = 0.0;
+        if (centerSlice is { } slice)
+        {
+            sliceBorderX = (inputWidth / scale) - slice.Width;
+            sliceBorderY = (inputHeight / scale) - slice.Height;
+            outputWidth -= sliceBorderX;
+            outputHeight -= sliceBorderY;
+            inputWidth -= sliceBorderX * scale;
+            inputHeight -= sliceBorderY * scale;
+        }
+
+        fit ??= centerSlice is null ? BoxFit.ScaleDown : BoxFit.Fill;
+        if (Constants.KDebugMode && centerSlice is not null && fit is BoxFit.None or BoxFit.Cover)
+        {
+            throw new AssertionError("centerSlice == null || (fit != BoxFit.none && fit != BoxFit.cover)");
+        }
+
+        FittedSizes fittedSizes = ApplyBoxFit(
+            fit.Value,
+            inputWidth / scale,
+            inputHeight / scale,
+            outputWidth,
+            outputHeight);
+        double sourceWidth = fittedSizes.Source.Width * scale;
+        double sourceHeight = fittedSizes.Source.Height * scale;
+        double destinationWidth = fittedSizes.Destination.Width;
+        double destinationHeight = fittedSizes.Destination.Height;
+        if (centerSlice is not null)
+        {
+            outputWidth += sliceBorderX;
+            outputHeight += sliceBorderY;
+            destinationWidth += sliceBorderX;
+            destinationHeight += sliceBorderY;
+            if (Constants.KDebugMode && (sourceWidth != inputWidth || sourceHeight != inputHeight))
             {
-                DrawNinePatch(
-                    context,
-                    image,
-                    plan.SourceImageSize,
-                    plan.CenterSlicePixels.Value,
-                    destination,
-                    scale,
-                    opacity,
-                    effectiveClipRect,
-                    clipRadius,
-                    ovalClipRect,
-                    flipHorizontally,
-                    plan.FlipAxisX,
-                    filterQuality,
-                    isAntiAlias,
-                    blendMode);
-            }
-            else
-            {
-                context.Canvas.DrawImage(
-                    image: image,
-                    sourceRect: plan.SourceRect,
-                    destinationRect: destination,
-                    opacity: opacity,
-                    clipRect: effectiveClipRect,
-                    clipRadius: clipRadius,
-                    ovalClipRect: ovalClipRect,
-                    flipHorizontally: flipHorizontally,
-                    horizontalFlipAxisX: plan.FlipAxisX,
-                    filterQuality: filterQuality,
-                    isAntiAlias: isAntiAlias,
-                    blendMode: blendMode);
+                throw new AssertionError(
+                    "centerSlice was used with a BoxFit that does not guarantee that the image is fully visible.");
             }
         }
 
-        // Avalonia's public DrawingContext does not currently expose per-draw
-        // color-matrix effects. The parity fields are retained so the backend
-        // can adopt them without another public API change.
-        _ = colorFilter;
-        _ = invertColors;
-    }
-
-    internal static ImagePaintPlan CreatePaintPlan(
-        Rect rect,
-        Size rawImageSize,
-        double scale,
-        BoxFit? fit,
-        Alignment alignment,
-        Rect? centerSlice,
-        ImageRepeat repeat,
-        bool flipHorizontally)
-    {
-        if (rect.Width <= 0 || rect.Height <= 0 || rawImageSize.Width <= 0 || rawImageSize.Height <= 0)
+        if (repeat != ImageRepeat.NoRepeat && destinationWidth == outputWidth && destinationHeight == outputHeight)
         {
-            return ImagePaintPlan.Empty;
-        }
-
-        var outputSize = rect.Size;
-        var inputSize = rawImageSize;
-        Vector? sliceBorder = null;
-        if (centerSlice.HasValue)
-        {
-            sliceBorder = new Vector(
-                (inputSize.Width / scale) - centerSlice.Value.Width,
-                (inputSize.Height / scale) - centerSlice.Value.Height);
-            outputSize = new Size(
-                Math.Max(0, outputSize.Width - sliceBorder.Value.X),
-                Math.Max(0, outputSize.Height - sliceBorder.Value.Y));
-            inputSize = new Size(
-                Math.Max(0, inputSize.Width - sliceBorder.Value.X * scale),
-                Math.Max(0, inputSize.Height - sliceBorder.Value.Y * scale));
-        }
-
-        var effectiveFit = fit ?? (centerSlice.HasValue ? BoxFit.Fill : BoxFit.ScaleDown);
-        if (centerSlice.HasValue && effectiveFit is BoxFit.None or BoxFit.Cover)
-        {
-            throw new InvalidOperationException("centerSlice requires a fit that keeps the complete source image visible.");
-        }
-
-        var fitted = BoxFitUtils.ApplyBoxFit(
-            effectiveFit,
-            new Size(inputSize.Width / scale, inputSize.Height / scale),
-            outputSize);
-        var sourceSize = new Size(fitted.Source.Width * scale, fitted.Source.Height * scale);
-        var destinationSize = fitted.Destination;
-        if (sliceBorder.HasValue)
-        {
-            destinationSize = new Size(
-                destinationSize.Width + sliceBorder.Value.X,
-                destinationSize.Height + sliceBorder.Value.Y);
-            if (!SizesClose(sourceSize, inputSize))
-            {
-                throw new InvalidOperationException(
-                    "centerSlice requires a fit that keeps the complete source image visible.");
-            }
-        }
-
-        if (repeat != ImageRepeat.NoRepeat && destinationSize == rect.Size)
-        {
+            // There's no need to repeat the image because we're exactly filling the
+            // output rect with the image.
             repeat = ImageRepeat.NoRepeat;
         }
 
-        var effectiveDestinationAlignment = flipHorizontally
-            ? new Alignment(-alignment.X, alignment.Y)
-            : alignment;
-        var destinationOffset = effectiveDestinationAlignment.AlongOffset(rect.Size, destinationSize);
-        var destinationRect = new Rect(rect.Position + destinationOffset, destinationSize);
-        var sourceOffset = alignment.AlongOffset(rawImageSize, sourceSize);
-        var sourceRect = new Rect(sourceOffset, sourceSize);
-        var destinations = GenerateImageTileRects(rect, destinationRect, repeat);
-        Rect? centerSlicePixels = centerSlice.HasValue
-            ? ScaleRect(centerSlice.Value, scale)
-            : null;
-        return new ImagePaintPlan(
-            SourceImageSize: rawImageSize,
-            SourceRect: sourceRect,
-            DestinationRects: destinations,
-            ClipRect: repeat == ImageRepeat.NoRepeat ? null : rect,
-            CenterSlicePixels: centerSlicePixels,
-            FlipAxisX: flipHorizontally ? rect.Center.X : null);
+        var paint = new Paint { IsAntiAlias = isAntiAlias };
+        if (colorFilter is not null)
+        {
+            paint.ColorFilter = colorFilter;
+        }
+
+        paint.Color = Color.FromRGBO(0, 0, 0, Math.Clamp(opacity, 0.0, 1.0));
+        paint.FilterQuality = filterQuality;
+        paint.InvertColors = invertColors;
+        paint.BlendMode = blendMode;
+        double halfWidthDelta = (outputWidth - destinationWidth) / 2.0;
+        double halfHeightDelta = (outputHeight - destinationHeight) / 2.0;
+        double dx = halfWidthDelta + ((flipHorizontally ? -alignment.X : alignment.X) * halfWidthDelta);
+        double dy = halfHeightDelta + (alignment.Y * halfHeightDelta);
+        var destinationPosition = new Point(rect.Left + dx, rect.Top + dy);
+        var destinationRect = new Rect(
+            destinationPosition,
+            new Size(Math.Max(0.0, destinationWidth), Math.Max(0.0, destinationHeight)));
+
+        // Set to true if we added a saveLayer to the canvas to invert/flip the image.
+        bool invertedCanvas = false;
+
+        // Output size and destination rect are fully calculated.
+
+        // Implement debug-mode and profile-mode features:
+        //  - cacheWidth/cacheHeight warning
+        //  - debugInvertOversizedImages
+        //  - debugOnPaintImage
+        //  - Flutter.ImageSizesForFrame events in timeline
+        if (!Constants.KReleaseMode)
+        {
+            // We can use the devicePixelRatio of the views directly here (instead of going through a
+            // MediaQuery) because if it changes, whatever is aware of the MediaQuery will be repainting the
+            // image anyways. Furthermore, for the memory check below we just assume that all images are
+            // decoded for the view with the highest device pixel ratio and use that as an upper bound for
+            // the display size of the image.
+            double maxDevicePixelRatio = PlatformDispatcher.Instance.Views.Aggregate(
+                0.0,
+                static (previousValue, view) => Math.Max(previousValue, view.DevicePixelRatio));
+            int imageWidth = (int)imagePixels.Width;
+            int imageHeight = (int)imagePixels.Height;
+            var sizeInfo = new ImageSizeInfo(
+                // Some ImageProvider implementations may not have given this.
+                source: debugImageLabel ?? $"<Unknown Image({imageWidth}×{imageHeight})>",
+                imageSize: new Size(imagePixels.Width, imagePixels.Height),
+                displaySize: new Size(outputWidth * maxDevicePixelRatio, outputHeight * maxDevicePixelRatio));
+            if (Constants.KDebugMode
+                && PaintingDebug.DebugInvertOversizedImages
+                && sizeInfo.DecodedSizeInBytes
+                > sizeInfo.DisplaySizeInBytes + PaintingDebug.DebugImageOverheadAllowance)
+            {
+                int overheadInKilobytes = (sizeInfo.DecodedSizeInBytes - sizeInfo.DisplaySizeInBytes) / 1024;
+                int displayWidth = (int)sizeInfo.DisplaySize.Width;
+                int displayHeight = (int)sizeInfo.DisplaySize.Height;
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: $"Image {debugImageLabel ?? "null"} has a display size of "
+                               + $"{displayWidth}×{displayHeight} but a decode size of "
+                               + $"{imageWidth}×{imageHeight}, which uses an additional "
+                               + $"{overheadInKilobytes}KB (assuming a device pixel ratio of "
+                               + $"{DartFormat.Number(maxDevicePixelRatio)}).\n\n"
+                               + "Consider resizing the asset ahead of time, supplying a cacheWidth "
+                               + $"parameter of {displayWidth}, a cacheHeight parameter of "
+                               + $"{displayHeight}, or using a ResizeImage.",
+                    library: "painting library",
+                    context: new ErrorDescription("while painting an image")));
+
+                // Invert the colors of the canvas.
+                canvas.SaveLayer(
+                    destinationRect,
+                    new Paint { ColorFilter = new ColorFilter.Matrix(InvertedImageMatrix) });
+
+                // Flip the canvas vertically.
+                double flipDy = -(rect.Top + (rect.Height / 2.0));
+                canvas.Translate(0.0, -flipDy);
+                canvas.Scale(1.0, -1.0);
+                canvas.Translate(0.0, flipDy);
+                invertedCanvas = true;
+            }
+
+            // Avoid emitting events that are the same as those emitted in the last frame.
+            if (!s_lastFrameImageSizeInfo.Contains(sizeInfo))
+            {
+                s_pendingImageSizeInfo.TryGetValue(sizeInfo.Source!, out ImageSizeInfo? existingSizeInfo);
+                if (existingSizeInfo is null
+                    || existingSizeInfo.DisplaySizeInBytes < sizeInfo.DisplaySizeInBytes)
+                {
+                    s_pendingImageSizeInfo[sizeInfo.Source!] = sizeInfo;
+                }
+
+                PaintingDebug.DebugOnPaintImage?.Invoke(sizeInfo);
+                SchedulerBinding.Instance.AddPostFrameCallback(
+                    _ =>
+                    {
+                        s_lastFrameImageSizeInfo = s_pendingImageSizeInfo.Values.ToHashSet();
+                        if (s_pendingImageSizeInfo.Count == 0)
+                        {
+                            return;
+                        }
+
+                        var eventData = new Dictionary<string, object?>();
+                        foreach (ImageSizeInfo imageSizeInfo in s_pendingImageSizeInfo.Values)
+                        {
+                            eventData[imageSizeInfo.Source!] = imageSizeInfo.ToJson();
+                        }
+
+                        DeveloperService.PostEvent("Flutter.ImageSizesForFrame", eventData);
+                        s_pendingImageSizeInfo = new Dictionary<string, ImageSizeInfo>();
+                    },
+                    debugLabel: "paintImage.recordImageSizes");
+            }
+        }
+
+        bool needSave = centerSlice is not null || repeat != ImageRepeat.NoRepeat || flipHorizontally;
+        if (needSave)
+        {
+            canvas.Save();
+        }
+
+        if (repeat != ImageRepeat.NoRepeat)
+        {
+            canvas.ClipRect(rect);
+        }
+
+        if (flipHorizontally)
+        {
+            double flipDx = -(rect.Left + (rect.Width / 2.0));
+            canvas.Translate(-flipDx, 0.0);
+            canvas.Scale(-1.0, 1.0);
+            canvas.Translate(flipDx, 0.0);
+        }
+
+        if (centerSlice is null)
+        {
+            Rect sourceRect = alignment.Inscribe(
+                new Size(Math.Max(0.0, sourceWidth), Math.Max(0.0, sourceHeight)),
+                new Rect(0.0, 0.0, Math.Max(0.0, inputWidth), Math.Max(0.0, inputHeight)));
+            if (repeat == ImageRepeat.NoRepeat)
+            {
+                canvas.DrawImageRect(image, sourceRect, destinationRect, paint);
+            }
+            else
+            {
+                foreach (Rect tileRect in GenerateImageTileRects(rect, destinationRect, repeat))
+                {
+                    canvas.DrawImageRect(image, sourceRect, tileRect, paint);
+                }
+            }
+        }
+        else
+        {
+            canvas.Scale(1 / scale);
+            if (repeat == ImageRepeat.NoRepeat)
+            {
+                canvas.DrawImageNine(
+                    image,
+                    ScaleRect(centerSlice.Value, scale),
+                    ScaleRect(destinationRect, scale),
+                    paint);
+            }
+            else
+            {
+                foreach (Rect tileRect in GenerateImageTileRects(rect, destinationRect, repeat))
+                {
+                    canvas.DrawImageNine(
+                        image,
+                        ScaleRect(centerSlice.Value, scale),
+                        ScaleRect(tileRect, scale),
+                        paint);
+                }
+            }
+        }
+
+        if (needSave)
+        {
+            canvas.Restore();
+        }
+
+        if (invertedCanvas)
+        {
+            canvas.Restore();
+        }
     }
 
-    internal static IReadOnlyList<Rect> GenerateImageTileRects(
+    // Dart's `applyBoxFit`, over sizes that may be negative after a center slice is taken out (Dart's Size
+    // keeps them; a non-positive size fits to nothing either way).
+    private static FittedSizes ApplyBoxFit(
+        BoxFit fit,
+        double inputWidth,
+        double inputHeight,
+        double outputWidth,
+        double outputHeight)
+    {
+        if (inputWidth <= 0.0 || inputHeight <= 0.0 || outputWidth <= 0.0 || outputHeight <= 0.0)
+        {
+            return new FittedSizes(default, default);
+        }
+
+        return BoxFitUtils.ApplyBoxFit(fit, new Size(inputWidth, inputHeight), new Size(outputWidth, outputHeight));
+    }
+
+    internal static IEnumerable<Rect> GenerateImageTileRects(
         Rect outputRect,
         Rect fundamentalRect,
         ImageRepeat repeat)
     {
-        if (fundamentalRect.Width <= 0 || fundamentalRect.Height <= 0)
-        {
-            return [];
-        }
-
         int startX = 0;
-        int stopX = 0;
         int startY = 0;
+        int stopX = 0;
         int stopY = 0;
+        double strideX = fundamentalRect.Width;
+        double strideY = fundamentalRect.Height;
+
         if (repeat is ImageRepeat.Repeat or ImageRepeat.RepeatX)
         {
-            startX = (int)Math.Floor((outputRect.Left - fundamentalRect.Left) / fundamentalRect.Width);
-            stopX = (int)Math.Ceiling((outputRect.Right - fundamentalRect.Right) / fundamentalRect.Width);
+            startX = (int)Math.Floor((outputRect.Left - fundamentalRect.Left) / strideX);
+            stopX = (int)Math.Ceiling((outputRect.Right - fundamentalRect.Right) / strideX);
         }
+
         if (repeat is ImageRepeat.Repeat or ImageRepeat.RepeatY)
         {
-            startY = (int)Math.Floor((outputRect.Top - fundamentalRect.Top) / fundamentalRect.Height);
-            stopY = (int)Math.Ceiling((outputRect.Bottom - fundamentalRect.Bottom) / fundamentalRect.Height);
+            startY = (int)Math.Floor((outputRect.Top - fundamentalRect.Top) / strideY);
+            stopY = (int)Math.Ceiling((outputRect.Bottom - fundamentalRect.Bottom) / strideY);
         }
 
-        var result = new List<Rect>();
-        for (int x = startX; x <= stopX; x++)
+        for (int i = startX; i <= stopX; ++i)
         {
-            for (int y = startY; y <= stopY; y++)
+            for (int j = startY; j <= stopY; ++j)
             {
-                result.Add(fundamentalRect.Translate(x * fundamentalRect.Width, y * fundamentalRect.Height));
+                yield return fundamentalRect.Translate(new Vector(i * strideX, j * strideY));
             }
         }
-        return result;
     }
 
-    private static void DrawNinePatch(
-        PaintingContext context,
-        IImage image,
-        Size imageSize,
-        Rect centerSlice,
-        Rect destination,
-        double scale,
-        double opacity,
-        Rect? clipRect,
-        BorderRadius? clipRadius,
-        Rect? ovalClipRect,
-        bool flipHorizontally,
-        double? flipAxisX,
-        FilterQuality filterQuality,
-        bool isAntiAlias,
-        BitmapBlendingMode blendMode)
+    private static Rect ScaleRect(Rect rect, double scale) =>
+        new Rect(
+            new Point(rect.Left * scale, rect.Top * scale),
+            new Point(rect.Right * scale, rect.Bottom * scale));
+
+    /// <summary>dart:ui <c>Rect.toString</c>.</summary>
+    internal static string RectToString(Rect rect) =>
+        $"Rect.fromLTRB({DartFormat.Fixed(rect.Left)}, {DartFormat.Fixed(rect.Top)}, "
+        + $"{DartFormat.Fixed(rect.Right)}, {DartFormat.Fixed(rect.Bottom)})";
+}
+
+// Dart's `_BlendedDecorationImage implements DecorationImage`.
+internal sealed class BlendedDecorationImage : DecorationImage
+{
+    public BlendedDecorationImage(DecorationImage? a, DecorationImage? b, double t)
+        : base((b ?? a)?.Image ?? throw new ArgumentException("a or b must be non-null."))
     {
-        foreach (var patch in GenerateNinePatchRects(imageSize, centerSlice, destination, scale))
+        A = a;
+        B = b;
+        T = t;
+    }
+
+    public DecorationImage? A { get; }
+
+    public DecorationImage? B { get; }
+
+    public double T { get; }
+
+    public override ImageProvider Image => B?.Image ?? A!.Image;
+
+    public override ImageErrorListener? OnError => B?.OnError ?? A!.OnError;
+
+    public override ColorFilter? ColorFilter => B?.ColorFilter ?? A!.ColorFilter;
+
+    public override BoxFit? Fit => B?.Fit ?? A!.Fit;
+
+    public override AlignmentGeometry Alignment => B?.Alignment ?? A!.Alignment;
+
+    public override Rect? CenterSlice => B?.CenterSlice ?? A!.CenterSlice;
+
+    public override ImageRepeat Repeat => B?.Repeat ?? A!.Repeat;
+
+    public override bool MatchTextDirection => B?.MatchTextDirection ?? A!.MatchTextDirection;
+
+    public override double Scale => B?.Scale ?? A!.Scale;
+
+    public override double Opacity => B?.Opacity ?? A!.Opacity;
+
+    public override FilterQuality FilterQuality => B?.FilterQuality ?? A!.FilterQuality;
+
+    public override bool InvertColors => B?.InvertColors ?? A!.InvertColors;
+
+    public override bool IsAntiAlias => B?.IsAntiAlias ?? A!.IsAntiAlias;
+
+    public override DecorationImagePainter CreatePainter(Action onChanged)
+    {
+        return new BlendedDecorationImagePainter(A?.CreatePainter(onChanged), B?.CreatePainter(onChanged), T);
+    }
+
+    public override bool Equals(DecorationImage? other)
+    {
+        if (ReferenceEquals(this, other))
         {
-            context.Canvas.DrawImage(
-                image: image,
-                sourceRect: patch.Source,
-                destinationRect: patch.Destination,
-                opacity: opacity,
-                clipRect: clipRect,
-                clipRadius: clipRadius,
-                ovalClipRect: ovalClipRect,
-                flipHorizontally: flipHorizontally,
-                horizontalFlipAxisX: flipAxisX,
-                filterQuality: filterQuality,
-                isAntiAlias: isAntiAlias,
-                blendMode: blendMode);
+            return true;
+        }
+
+        return other is BlendedDecorationImage blended
+               && Equals(blended.A, A)
+               && Equals(blended.B, B)
+               && blended.T.Equals(T);
+    }
+
+    public override int GetHashCode() => HashCode.Combine(A, B, T);
+
+    public override string ToString() =>
+        $"_BlendedDecorationImage({A?.ToString() ?? "null"}, {B?.ToString() ?? "null"}, {DartFormat.Number(T)})";
+}
+
+// Dart's `_BlendedDecorationImagePainter`.
+internal sealed class BlendedDecorationImagePainter : DecorationImagePainter
+{
+    public BlendedDecorationImagePainter(DecorationImagePainter? a, DecorationImagePainter? b, double t)
+    {
+        A = a;
+        B = b;
+        T = t;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("painting", "_BlendedDecorationImagePainter", this);
         }
     }
 
-    internal static IReadOnlyList<ImagePatch> GenerateNinePatchRects(
-        Size imageSize,
-        Rect centerSlice,
-        Rect destination,
-        double scale)
-    {
-        if (!double.IsFinite(scale) || scale <= 0) throw new ArgumentOutOfRangeException(nameof(scale));
-        double[] sourceX = new[] { 0.0, centerSlice.Left, centerSlice.Right, imageSize.Width };
-        double[] sourceY = new[] { 0.0, centerSlice.Top, centerSlice.Bottom, imageSize.Height };
-        double left = centerSlice.Left / scale;
-        double right = (imageSize.Width - centerSlice.Right) / scale;
-        double top = centerSlice.Top / scale;
-        double bottom = (imageSize.Height - centerSlice.Bottom) / scale;
-        NormalizeBorders(destination.Width, ref left, ref right);
-        NormalizeBorders(destination.Height, ref top, ref bottom);
-        double[] destinationX = new[] { destination.Left, destination.Left + left, destination.Right - right, destination.Right };
-        double[] destinationY = new[] { destination.Top, destination.Top + top, destination.Bottom - bottom, destination.Bottom };
-        var result = new List<ImagePatch>(9);
+    public DecorationImagePainter? A { get; }
 
-        for (int x = 0; x < 3; x++)
+    public DecorationImagePainter? B { get; }
+
+    public double T { get; }
+
+    public override void Paint(
+        Canvas canvas,
+        Rect rect,
+        Path? clipPath,
+        ImageConfiguration configuration,
+        double blend = 1.0,
+        BlendMode blendMode = BlendMode.SourceOver)
+    {
+        canvas.SaveLayer(null, new Paint());
+        A?.Paint(canvas, rect, clipPath, configuration, blend: blend * (1.0 - T), blendMode: blendMode);
+        B?.Paint(
+            canvas,
+            rect,
+            clipPath,
+            configuration,
+            blend: blend * T,
+            blendMode: A is not null ? BlendMode.Plus : blendMode);
+        canvas.Restore();
+    }
+
+    public override void Dispose()
+    {
+        if (Constants.KDebugMode)
         {
-            for (int y = 0; y < 3; y++)
-            {
-                result.Add(new ImagePatch(
-                    Source: new Rect(
-                        sourceX[x], sourceY[y],
-                        sourceX[x + 1] - sourceX[x], sourceY[y + 1] - sourceY[y]),
-                    Destination: new Rect(
-                        destinationX[x], destinationY[y],
-                        destinationX[x + 1] - destinationX[x], destinationY[y + 1] - destinationY[y])));
-            }
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
 
-        return result;
+        A?.Dispose();
+        B?.Dispose();
     }
 
-    private static void NormalizeBorders(double extent, ref double leading, ref double trailing)
-    {
-        double sum = leading + trailing;
-        if (sum <= extent || sum <= 0) return;
-        double factor = extent / sum;
-        leading *= factor;
-        trailing *= factor;
-    }
-
-    private static Rect ScaleRect(Rect rect, double scale)
-    {
-        return new Rect(rect.X * scale, rect.Y * scale, rect.Width * scale, rect.Height * scale);
-    }
-
-    private static Rect InscribedSquare(Rect rect)
-    {
-        double side = Math.Min(rect.Width, rect.Height);
-        return new Rect(
-            rect.Center.X - (side / 2.0),
-            rect.Center.Y - (side / 2.0),
-            side,
-            side);
-    }
-
-    private static bool SizesClose(Size first, Size second)
-    {
-        const double epsilon = 1e-9;
-        return Math.Abs(first.Width - second.Width) <= epsilon
-               && Math.Abs(first.Height - second.Height) <= epsilon;
-    }
-}
-
-internal sealed record ImagePaintPlan(
-    Size SourceImageSize,
-    Rect SourceRect,
-    IReadOnlyList<Rect> DestinationRects,
-    Rect? ClipRect,
-    Rect? CenterSlicePixels,
-    double? FlipAxisX)
-{
-    public static ImagePaintPlan Empty { get; } = new(new Size(), new Rect(), [], null, null, null);
-}
-
-internal readonly record struct ImagePatch(Rect Source, Rect Destination);
-
-internal static class RectImageExtensions
-{
-    public static Rect Translate(this Rect rect, double x, double y)
-    {
-        return new Rect(rect.X + x, rect.Y + y, rect.Width, rect.Height);
-    }
+    public override string ToString() =>
+        $"_BlendedDecorationImagePainter({A?.ToString() ?? "null"}, {B?.ToString() ?? "null"}, "
+        + $"{DartFormat.Number(T)})";
 }

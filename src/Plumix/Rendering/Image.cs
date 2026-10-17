@@ -387,9 +387,10 @@ public sealed class RenderImage : RenderBox
             ? new ColorFilter.Mode(_color!, _colorBlendMode ?? BitmapBlendingMode.SourceIn)
             : null;
         ImagePainting.PaintImage(
-            context: context,
+            canvas: context.Canvas,
             rect: new Rect(offset, Size),
             image: _image,
+            debugImageLabel: DebugImageLabel,
             scale: _scale,
             opacity: _opacity?.Value ?? 1.0,
             colorFilter: colorFilter,

@@ -28,7 +28,7 @@ public abstract class ClipContext
                 break;
             case Clip.AntiAliasWithSaveLayer:
                 canvasClipCall(true);
-                Canvas.SaveLayer(bounds);
+                Canvas.SaveLayer(bounds, new Paint());
                 break;
         }
 

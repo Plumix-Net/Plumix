@@ -385,6 +385,27 @@ public sealed class RendererBindingDartParityTests : IDisposable
     }
 
     [Fact]
+    public async Task ServiceExtension_InvertOversizedImages_ReadsAndWritesTheFlag()
+    {
+        // service_extensions_test.dart 'Service extensions - invertOversizedImages'.
+        try
+        {
+            Assert.Equal("false", (await Extension("invertOversizedImages"))["enabled"]);
+            Assert.False(Painting.PaintingDebug.DebugInvertOversizedImages);
+
+            Assert.Equal("true", (await Extension("invertOversizedImages", ("enabled", "true")))["enabled"]);
+            Assert.True(Painting.PaintingDebug.DebugInvertOversizedImages);
+
+            Assert.Equal("false", (await Extension("invertOversizedImages", ("enabled", "false")))["enabled"]);
+            Assert.False(Painting.PaintingDebug.DebugInvertOversizedImages);
+        }
+        finally
+        {
+            Painting.PaintingDebug.DebugInvertOversizedImages = false;
+        }
+    }
+
+    [Fact]
     public async Task ServiceExtension_DebugPaint_ReadsWritesAndPostsStateChanges()
     {
         List<IReadOnlyDictionary<string, object?>> events = [];
@@ -560,6 +581,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         string[] expected =
         [
             "timeDilation",
+            "invertOversizedImages",
             "debugPaint",
             "debugPaintBaselinesEnabled",
             "repaintRainbow",

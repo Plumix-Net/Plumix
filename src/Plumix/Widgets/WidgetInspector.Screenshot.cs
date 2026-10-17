@@ -69,10 +69,10 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.ClipRRect(rrect, doAntiAlias);
     }
 
-    public override void ClipRect(Rect rect, bool doAntiAlias = true)
+    public override void ClipRect(Rect rect, bool doAntiAlias = true, ClipOp clipOp = ClipOp.Intersect)
     {
-        _main.ClipRect(rect, doAntiAlias);
-        _screenshot.ClipRect(rect, doAntiAlias);
+        _main.ClipRect(rect, doAntiAlias, clipOp);
+        _screenshot.ClipRect(rect, doAntiAlias, clipOp);
     }
 
     public override void ClipGeometry(Geometry geometry, bool doAntiAlias = true, Point geometryOffset = default)
@@ -116,46 +116,22 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.DrawDRRect(outer, inner, brush);
     }
 
-    public override void DrawImage(
-        IImage image,
-        Rect sourceRect,
-        Rect destinationRect,
-        double opacity = 1.0,
-        Rect? clipRect = null,
-        BorderRadius? clipRadius = null,
-        bool flipHorizontally = false,
-        double? horizontalFlipAxisX = null,
-        Rect? ovalClipRect = null,
-        FilterQuality filterQuality = FilterQuality.Medium,
-        bool isAntiAlias = false,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+    public override void DrawImage(IImage image, Point offset, Paint paint)
     {
-        _main.DrawImage(
-            image,
-            sourceRect,
-            destinationRect,
-            opacity,
-            clipRect,
-            clipRadius,
-            flipHorizontally,
-            horizontalFlipAxisX,
-            ovalClipRect,
-            filterQuality,
-            isAntiAlias,
-            blendMode);
-        _screenshot.DrawImage(
-            image,
-            sourceRect,
-            destinationRect,
-            opacity,
-            clipRect,
-            clipRadius,
-            flipHorizontally,
-            horizontalFlipAxisX,
-            ovalClipRect,
-            filterQuality,
-            isAntiAlias,
-            blendMode);
+        _main.DrawImage(image, offset, paint);
+        _screenshot.DrawImage(image, offset, paint);
+    }
+
+    public override void DrawImageNine(IImage image, Rect center, Rect dst, Paint paint)
+    {
+        _main.DrawImageNine(image, center, dst, paint);
+        _screenshot.DrawImageNine(image, center, dst, paint);
+    }
+
+    public override void DrawImageRect(IImage image, Rect src, Rect dst, Paint paint)
+    {
+        _main.DrawImageRect(image, src, dst, paint);
+        _screenshot.DrawImageRect(image, src, dst, paint);
     }
 
     public override void DrawLine(Point startPoint, Point endPoint, Paint paint)
@@ -331,16 +307,37 @@ internal sealed class InspectorMulticastCanvas : Canvas
         _screenshot.Save();
     }
 
-    public override void SaveLayer(Rect bounds)
+    public override void SaveLayer(Rect? bounds, Paint paint)
     {
-        _main.SaveLayer(bounds);
-        _screenshot.SaveLayer(bounds);
+        _main.SaveLayer(bounds, paint);
+        _screenshot.SaveLayer(bounds, paint);
     }
 
     public override void Scale(double sx, double? sy = null)
     {
         _main.Scale(sx, sy);
         _screenshot.Scale(sx, sy);
+    }
+
+    public override void Skew(double sx, double sy)
+    {
+        _main.Skew(sx, sy);
+        _screenshot.Skew(sx, sy);
+    }
+
+    public override double[] GetTransform()
+    {
+        throw NoSuchMethod(nameof(GetTransform));
+    }
+
+    public override Rect GetLocalClipBounds()
+    {
+        throw NoSuchMethod(nameof(GetLocalClipBounds));
+    }
+
+    public override Rect GetDestinationClipBounds()
+    {
+        throw NoSuchMethod(nameof(GetDestinationClipBounds));
     }
 
     public override void Transform(Matrix4 matrix)

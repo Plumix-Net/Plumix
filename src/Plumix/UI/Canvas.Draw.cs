@@ -595,85 +595,191 @@ public partial class Canvas
         });
     }
 
-    // Dart parity source: dart:ui Canvas.drawImageRect.
-    public virtual void DrawImage(
-        IImage image,
-        Rect sourceRect,
-        Rect destinationRect,
-        double opacity = 1.0,
-        Rect? clipRect = null,
-        BorderRadius? clipRadius = null,
-        bool flipHorizontally = false,
-        double? horizontalFlipAxisX = null,
-        Rect? ovalClipRect = null,
-        FilterQuality filterQuality = FilterQuality.Medium,
-        bool isAntiAlias = false,
-        BitmapBlendingMode blendMode = BitmapBlendingMode.SourceOver)
+    /// <summary>
+    /// Draws the given image into the canvas with its top-left corner at the given offset, composited
+    /// with the given <see cref="Paint"/>.
+    /// </summary>
+    /// <remarks>Dart's <c>Canvas.drawImage(image, offset, paint)</c>; the image is an Avalonia
+    /// <see cref="IImage"/> (see <c>docs/ai/DIVERGENCES.md</c>).</remarks>
+    public virtual void DrawImage(IImage image, Point offset, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(image);
-        if (sourceRect.Width <= 0 || sourceRect.Height <= 0
-            || destinationRect.Width <= 0 || destinationRect.Height <= 0)
+        ArgumentNullException.ThrowIfNull(paint);
+        Size size = ImageSize(image);
+        var destination = new Rect(offset, size);
+        RecordImageDraw(
+            new CanvasCall("drawImage", Offset: offset, Image: image),
+            image,
+            paint,
+            destination,
+            (context, source) => context.DrawImage(source, new Rect(source.Size), destination));
+    }
+
+    /// <summary>
+    /// Draws the subset of the given image described by <paramref name="src"/> into the canvas in the
+    /// axis-aligned rectangle given by <paramref name="dst"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawImageRect(image, src, dst, paint)</c>. The paint's alpha, blend mode, filter
+    /// quality and anti-alias flag apply to the draw; its colour filter and inverted colours filter the
+    /// image's pixels, and an image filter composites the draw through a rasterized layer.
+    /// </remarks>
+    public virtual void DrawImageRect(IImage image, Rect src, Rect dst, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        ArgumentNullException.ThrowIfNull(paint);
+        RecordImageDraw(
+            new CanvasCall("drawImageRect", Rect: dst, SourceRect: src, Image: image),
+            image,
+            paint,
+            dst,
+            (context, source) =>
+            {
+                if (src.Width <= 0.0 || src.Height <= 0.0 || dst.Width <= 0.0 || dst.Height <= 0.0)
+                {
+                    return;
+                }
+
+                context.DrawImage(source, src, dst);
+            });
+    }
+
+    /// <summary>
+    /// Draws the given image into the canvas using the given <see cref="Paint"/>, splitting it into a 3x3
+    /// grid by <paramref name="center"/>: the four corners keep their size, the four sides stretch along
+    /// one axis and the middle stretches along both, so the image fills <paramref name="dst"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawImageNine(image, center, dst, paint)</c>. As in Skia's lattice drawing, when
+    /// <paramref name="dst"/> is too small for the fixed corners they shrink proportionally and the middle
+    /// collapses.
+    /// </remarks>
+    public virtual void DrawImageNine(IImage image, Rect center, Rect dst, Paint paint)
+    {
+        ArgumentNullException.ThrowIfNull(image);
+        ArgumentNullException.ThrowIfNull(paint);
+        Size size = ImageSize(image);
+        RecordImageDraw(
+            new CanvasCall("drawImageNine", Rect: dst, SourceRect: center, Image: image),
+            image,
+            paint,
+            dst,
+            (context, source) =>
+            {
+                foreach ((Rect patchSource, Rect patchDestination) in NinePatches(size, center, dst))
+                {
+                    context.DrawImage(source, patchSource, patchDestination);
+                }
+            });
+    }
+
+    /// <summary>The source and destination rect of each visible patch of a nine-patch draw.</summary>
+    internal static IEnumerable<(Rect Source, Rect Destination)> NinePatches(Size imageSize, Rect center, Rect dst)
+    {
+        double[] sourceX = [0.0, center.Left, center.Right, imageSize.Width];
+        double[] sourceY = [0.0, center.Top, center.Bottom, imageSize.Height];
+        double[] destinationX = LatticeDivisions(dst.Left, dst.Width, center.Left, imageSize.Width - center.Right);
+        double[] destinationY = LatticeDivisions(dst.Top, dst.Height, center.Top, imageSize.Height - center.Bottom);
+        for (int row = 0; row < 3; row++)
         {
+            for (int column = 0; column < 3; column++)
+            {
+                Rect source = new Rect(
+                    new Point(sourceX[column], sourceY[row]),
+                    new Point(sourceX[column + 1], sourceY[row + 1]));
+                Rect destination = new Rect(
+                    new Point(destinationX[column], destinationY[row]),
+                    new Point(destinationX[column + 1], destinationY[row + 1]));
+                if (source.Width > 0.0 && source.Height > 0.0 && destination.Width > 0.0 && destination.Height > 0.0)
+                {
+                    yield return (source, destination);
+                }
+            }
+        }
+    }
+
+    // Skia's SkLatticeIter: the fixed start/end extents keep their size, scaled down together when the
+    // destination is narrower than both, and the middle takes what is left.
+    private static double[] LatticeDivisions(double start, double extent, double fixedStart, double fixedEnd)
+    {
+        double fixedTotal = fixedStart + fixedEnd;
+        double scale = fixedTotal > extent && fixedTotal > 0.0 ? extent / fixedTotal : 1.0;
+        double first = start + (fixedStart * scale);
+        double last = start + extent - (fixedEnd * scale);
+        return [start, first, Math.Max(first, last), start + extent];
+    }
+
+    // The image's size in dart:ui image pixels: the Avalonia image's own size (decoded bitmaps are 96 DPI,
+    // one unit per pixel), as RenderImage and ImageInfo measure it.
+    internal static Size ImageSize(IImage image) => image.Size;
+
+    // Records one image draw of a Paint-taking method. The paint is read now, as Dart's canvas does.
+    private void RecordImageDraw(
+        CanvasCall call,
+        IImage image,
+        Paint paint,
+        Rect bounds,
+        Action<DrawingContext, IImage> draw)
+    {
+        var snapshot = new Paint(paint);
+        DebugRecordCall(call with { Paint = snapshot, BlendMode = snapshot.BlendMode, RecordedColor = snapshot.Color });
+        double opacity = snapshot.Color.Opacity;
+        BitmapBlendingMode blendMode = FilterLayerRasterizer.ToBitmapBlendingMode(snapshot.BlendMode);
+        BitmapInterpolationMode interpolation = snapshot.FilterQuality switch
+        {
+            FilterQuality.None => BitmapInterpolationMode.None,
+            FilterQuality.Low => BitmapInterpolationMode.LowQuality,
+            FilterQuality.High => BitmapInterpolationMode.HighQuality,
+            _ => BitmapInterpolationMode.MediumQuality,
+        };
+        EdgeMode edgeMode = snapshot.IsAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased;
+        ColorFilter? colorFilter = snapshot.ColorFilter;
+        bool invertColors = snapshot.InvertColors;
+
+        // Skia applies a draw's image filter to the draw's output, as if the draw had its own layer.
+        bool filterLayer = snapshot.ImageFilter is not null;
+        if (filterLayer)
+        {
+            var layerPaint = new Paint { ImageFilter = snapshot.ImageFilter };
+            var layer = new CanvasLayer(bounds, layerPaint, Matrix4.Copy(_transform));
+            _commands.Add(CanvasCommand.ForSaveLayer(layer));
+            AddImageDraw();
+            layer.RestoreIndex = _commands.Count;
+            _commands.Add(CanvasCommand.ForRestore());
             return;
         }
 
-        DebugRecordCall(new CanvasCall("drawImageRect", Rect: destinationRect, SourceRect: sourceRect));
-        double effectiveOpacity = Math.Clamp(opacity, 0.0, 1.0);
-        AddDrawCommand(context =>
+        AddImageDraw();
+
+        void AddImageDraw()
         {
-            DrawingContext.PushedState? clip = null;
-            DrawingContext.PushedState? alpha = null;
-            DrawingContext.PushedState? transform = null;
-            DrawingContext.PushedState? renderOptions = null;
-            try
+            AddDrawCommand(context =>
             {
-                if (ovalClipRect.HasValue)
+                if (opacity <= 0.0 && blendMode == BitmapBlendingMode.SourceOver)
                 {
-                    clip = context.PushGeometryClip(new EllipseGeometry(ovalClipRect.Value));
-                }
-                else if (clipRect.HasValue)
-                {
-                    clip = clipRadius.HasValue && clipRadius.Value.Radius > 0
-                        ? SceneRasterizer.PushRoundedRectClip(context, clipRect.Value, clipRadius.Value.Radius)
-                        : context.PushClip(clipRect.Value);
+                    return;
                 }
 
-                if (effectiveOpacity < 1.0)
+                IImage source = colorFilter is null && !invertColors
+                    ? image
+                    : FilteredImages.Get(image, colorFilter, invertColors);
+                DrawingContext.PushedState? alpha = opacity < 1.0 ? context.PushOpacity(opacity) : null;
+                try
                 {
-                    alpha = context.PushOpacity(effectiveOpacity);
-                }
-
-                renderOptions = context.PushRenderOptions(new RenderOptions
-                {
-                    BitmapInterpolationMode = filterQuality switch
+                    using DrawingContext.PushedState options = context.PushRenderOptions(new RenderOptions
                     {
-                        FilterQuality.None => BitmapInterpolationMode.None,
-                        FilterQuality.Low => BitmapInterpolationMode.LowQuality,
-                        FilterQuality.High => BitmapInterpolationMode.HighQuality,
-                        _ => BitmapInterpolationMode.MediumQuality,
-                    },
-                    EdgeMode = isAntiAlias || ovalClipRect.HasValue || clipRadius?.Radius > 0
-                        ? EdgeMode.Antialias
-                        : EdgeMode.Aliased,
-                    BitmapBlendingMode = blendMode,
-                });
-
-                if (flipHorizontally)
-                {
-                    double centerX = horizontalFlipAxisX ?? destinationRect.Center.X;
-                    transform = context.PushTransform(new Matrix(-1, 0, 0, 1, centerX * 2, 0));
+                        BitmapInterpolationMode = interpolation,
+                        EdgeMode = edgeMode,
+                        BitmapBlendingMode = blendMode,
+                    });
+                    draw(context, source);
                 }
-
-                context.DrawImage(image, sourceRect, destinationRect);
-            }
-            finally
-            {
-                transform?.Dispose();
-                renderOptions?.Dispose();
-                alpha?.Dispose();
-                clip?.Dispose();
-            }
-        });
+                finally
+                {
+                    alpha?.Dispose();
+                }
+            });
+        }
     }
 
     private static Point PointOnEllipse(Rect rect, double angleRadians)

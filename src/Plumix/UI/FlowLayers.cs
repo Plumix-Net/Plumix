@@ -18,6 +18,20 @@ namespace Plumix.UI;
 /// <remarks>The engine's <c>flutter::Layer</c>.</remarks>
 internal abstract class FlowLayer
 {
+    // The engine's ClipShapeLayer: `Clip.antiAliasWithSaveLayer` paints the children into a save layer
+    // (an isolated backend group) bounded by the clip, so their edges blend once against the clip.
+    private static readonly IBrush SaveLayerMask = new Avalonia.Media.Immutable.ImmutableSolidColorBrush(Colors.White);
+
+    private protected static IDisposable? SaveLayerIfNeeded(FlowPaintContext context, Clip clipBehavior, Rect bounds)
+    {
+        if (clipBehavior != Clip.AntiAliasWithSaveLayer)
+        {
+            return null;
+        }
+
+        return context.Canvas.PushOpacityMask(SaveLayerMask, bounds);
+    }
+
     /// <summary>Paints this layer: the engine's <c>Layer::Paint</c>.</summary>
     public abstract void Paint(FlowPaintContext context);
 
@@ -149,11 +163,8 @@ internal sealed class ClipRectFlowLayer(Rect clipRect, Clip clipBehavior) : Cont
 
     public override void Paint(FlowPaintContext context)
     {
-        using IDisposable renderOptions = context.Canvas.PushRenderOptions(new RenderOptions
-        {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
         using (context.Canvas.PushClip(ClipRect))
+        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRect))
         {
             PaintChildren(context);
         }
@@ -170,6 +181,7 @@ internal sealed class ClipRRectFlowLayer(RRect clipRRect, Clip clipBehavior) : C
     public override void Paint(FlowPaintContext context)
     {
         using (SceneRasterizer.PushRoundedRectClip(context.Canvas, ClipRRect))
+        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRRect.Rect))
         {
             PaintChildren(context);
         }
@@ -186,11 +198,8 @@ internal sealed class ClipRSuperellipseFlowLayer(RSuperellipse clipRSuperellipse
 
     public override void Paint(FlowPaintContext context)
     {
-        using IDisposable renderOptions = context.Canvas.PushRenderOptions(new RenderOptions
-        {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
         using (context.Canvas.PushGeometryClip(ClipRSuperellipse.ToPath().ToGeometry()))
+        using (SaveLayerIfNeeded(context, ClipBehavior, ClipRSuperellipse.OuterRect))
         {
             PaintChildren(context);
         }
@@ -221,11 +230,8 @@ internal sealed class ClipPathFlowLayer(Path clipPath, Clip clipBehavior) : Cont
     public override void Paint(FlowPaintContext context)
     {
         _geometry ??= ClipPath.ToGeometry();
-        using IDisposable renderOptions = context.Canvas.PushRenderOptions(new RenderOptions
-        {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
         using (context.Canvas.PushGeometryClip(_geometry))
+        using (SaveLayerIfNeeded(context, ClipBehavior, ClipPath.GetBounds()))
         {
             PaintChildren(context);
         }
@@ -244,12 +250,9 @@ internal sealed class ClipGeometryFlowLayer(Geometry geometry, Point geometryOff
 
     public override void Paint(FlowPaintContext context)
     {
-        using IDisposable renderOptions = context.Canvas.PushRenderOptions(new RenderOptions
-        {
-            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
-        });
         using (context.Canvas.PushTransform(Matrix.CreateTranslation(GeometryOffset.X, GeometryOffset.Y)))
         using (context.Canvas.PushGeometryClip(Geometry))
+        using (SaveLayerIfNeeded(context, ClipBehavior, Geometry.Bounds))
         using (context.Canvas.PushTransform(Matrix.CreateTranslation(-GeometryOffset.X, -GeometryOffset.Y)))
         {
             PaintChildren(context);

@@ -98,13 +98,27 @@ public sealed class RendererBinding
     /// <summary>Registers the rendering library's service extensions.</summary>
     /// <remarks>
     /// Flutter's <c>RendererBinding.initServiceExtensions</c>, which <c>BindingBase</c> runs right after
-    /// <c>initInstances</c>. <c>invertOversizedImages</c> is not registered: Plumix's image painting has
-    /// no oversized-image check for the flag to drive (see <c>docs/ai/BACKLOG.md</c>).
+    /// <c>initInstances</c>.
     /// </remarks>
     private void InitServiceExtensions()
     {
         if (Constants.KDebugMode)
         {
+            BindingBase.RegisterBoolServiceExtension(
+                name: "invertOversizedImages",
+                getter: static () => Task.FromResult(Painting.PaintingDebug.DebugInvertOversizedImages),
+                setter: value =>
+                {
+                    if (Painting.PaintingDebug.DebugInvertOversizedImages != value)
+                    {
+                        Painting.PaintingDebug.DebugInvertOversizedImages = value;
+                        // We don't want to block the vm service response on the frame
+                        // actually rendering, just schedule it and return;
+                        _ = ForceRepaint();
+                    }
+
+                    return Task.CompletedTask;
+                });
             RegisterRepaintingBoolExtension(
                 "debugPaint",
                 static () => RenderingDebug.PaintSizeEnabled,

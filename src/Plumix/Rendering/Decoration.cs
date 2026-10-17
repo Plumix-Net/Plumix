@@ -1138,7 +1138,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         }
 
         _imagePainter ??= _decoration.Image.CreatePainter(HandleImageChanged);
-        _imagePainter.Paint(context, _lastRect!.Value, _innerPath, configuration);
+        _imagePainter.Paint(context.Canvas, _lastRect!.Value, _innerPath, configuration);
     }
 
     public override void Dispose()
@@ -1663,7 +1663,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
                 break;
         }
 
-        _imagePainter.Paint(context, rect, clipPath, configuration);
+        _imagePainter.Paint(context.Canvas, rect, clipPath, configuration);
     }
 
     public override void Dispose()

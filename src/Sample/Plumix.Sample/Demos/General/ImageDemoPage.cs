@@ -24,7 +24,7 @@ internal sealed class ImageDemoPageState : State
         "MrXJFDphJYQRGicJhhEU5ws7LUP0VRM8PhxJGhrCtT8NGEjbLhma8K2DjUIXoNGAX1NUhCz2+tAZPohAnXlQ5ka" +
         "b4KWpsEyRjWFTGF1lK6cWkEJTvK59vPnC14fYcoDfci8GWgAAAAASUVORK5CYII=";
 
-    private static readonly byte[] SampleBytes = Convert.FromBase64String(SamplePng);
+    internal static readonly byte[] SampleBytes = Convert.FromBase64String(SamplePng);
     private static readonly MemoryImage SampleProvider = new(SampleBytes);
     private ImageStream? _rawStream;
     private ImageStreamListener? _rawListener;
