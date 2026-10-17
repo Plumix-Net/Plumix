@@ -15,12 +15,16 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
     text: 'Read-only value',
   );
   final TextEditingController _formName = TextEditingController();
+  final TextEditingController _systemMenu = TextEditingController(
+    text: 'Select a word, then open the menu',
+  );
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _enabled = true;
   bool _obscure = true;
   bool _error = false;
   String _submitted = 'none';
   String _formStatus = 'not validated';
+  String _systemMenuAction = 'none';
 
   @override
   Widget build(BuildContext context) {
@@ -228,6 +232,27 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),
+          const Text('System context menu', style: TextStyle(fontSize: 18)),
+          Text(
+            'System menu supported here: ${SystemContextMenu.isSupported(context)} '
+            '(iOS 16+ only; elsewhere the Flutter-drawn toolbar shows)',
+            style: const TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          TextField(
+            controller: _systemMenu,
+            enabled: _enabled,
+            decoration: const InputDecoration(
+              labelText: 'Custom system menu items',
+              helperText: 'Copy, Paste and a custom "Shout" action',
+              border: OutlineInputBorder(),
+            ),
+            contextMenuBuilder: _buildSystemMenu,
+          ),
+          Text(
+            'Last system menu action: $_systemMenuAction',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
           const Text('TextFormField + Form', style: TextStyle(fontSize: 18)),
           Form(
             key: _formKey,
@@ -282,7 +307,34 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
     _notes.dispose();
     _readOnly.dispose();
     _formName.dispose();
+    _systemMenu.dispose();
     super.dispose();
+  }
+
+  Widget _buildSystemMenu(
+    BuildContext context,
+    EditableTextState editableTextState,
+  ) {
+    if (!SystemContextMenu.isSupportedByField(editableTextState)) {
+      return AdaptiveTextSelectionToolbar.editableText(
+        editableTextState: editableTextState,
+      );
+    }
+    return SystemContextMenu.editableText(
+      editableTextState: editableTextState,
+      items: <IOSSystemContextMenuItem>[
+        const IOSSystemContextMenuItemCopy(),
+        const IOSSystemContextMenuItemPaste(),
+        IOSSystemContextMenuItemCustom(title: 'Shout', onPressed: _shout),
+      ],
+    );
+  }
+
+  void _shout() {
+    setState(() {
+      _systemMenu.text = _systemMenu.text.toUpperCase();
+      _systemMenuAction = 'shout';
+    });
   }
 
   void _validateForm() {

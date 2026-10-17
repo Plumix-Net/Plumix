@@ -213,6 +213,11 @@ public sealed class TextField : StatefulWidget
         BuildContext context,
         EditableText.EditableTextState editableTextState)
     {
+        if (SystemContextMenu.IsSupportedByField(editableTextState))
+        {
+            return SystemContextMenu.EditableText(editableTextState);
+        }
+
         return AdaptiveTextSelectionToolbar.EditableText(editableTextState);
     }
 

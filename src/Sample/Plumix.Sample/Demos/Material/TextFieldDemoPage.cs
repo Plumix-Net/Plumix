@@ -21,12 +21,14 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private readonly TextEditingController _notes = new();
         private readonly TextEditingController _readOnly = new("Read-only value");
         private readonly TextEditingController _formName = new();
+        private readonly TextEditingController _systemMenu = new("Select a word, then open the menu");
         private readonly LabeledGlobalKey<FormState> _formKey = new("text-form");
         private bool _enabled = true;
         private bool _obscure = true;
         private bool _error;
         private string _submitted = "none";
         private string _formStatus = "not validated";
+        private string _systemMenuAction = "none";
 
         public override Widget Build(BuildContext context) => new SingleChildScrollView(
             child: new Column(
@@ -168,6 +170,21 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             ]))),
                     new Text($"Last submitted email: {_submitted}", fontSize: 13),
                     new Divider(),
+                    new Text("System context menu", fontSize: 18),
+                    new Text(
+                        $"System menu supported here: {SystemContextMenu.IsSupported(context)} "
+                        + "(iOS 16+ only; elsewhere the Flutter-drawn toolbar shows)",
+                        fontSize: 13, color: Colors.DimGray),
+                    new TextField(
+                        controller: _systemMenu,
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            labelText: "Custom system menu items",
+                            helperText: "Copy, Paste and a custom \"Shout\" action",
+                            border: new OutlineInputBorder()),
+                        contextMenuBuilder: BuildSystemMenu),
+                    new Text($"Last system menu action: {_systemMenuAction}", fontSize: 13),
+                    new Divider(),
                     new Text("TextFormField + Form", fontSize: 18),
                     new Form(
                         key: _formKey,
@@ -202,8 +219,35 @@ public sealed class TextFieldDemoPage : StatefulWidget
         public override void Dispose()
         {
             _email.Dispose(); _password.Dispose(); _notes.Dispose(); _readOnly.Dispose(); _formName.Dispose();
+            _systemMenu.Dispose();
 
             base.Dispose();
+        }
+
+        private Widget BuildSystemMenu(BuildContext context, EditableText.EditableTextState editableTextState)
+        {
+            if (!SystemContextMenu.IsSupportedByField(editableTextState))
+            {
+                return AdaptiveTextSelectionToolbar.EditableText(editableTextState);
+            }
+
+            return SystemContextMenu.EditableText(
+                editableTextState,
+                items:
+                [
+                    new IOSSystemContextMenuItemCopy(),
+                    new IOSSystemContextMenuItemPaste(),
+                    new IOSSystemContextMenuItemCustom(title: "Shout", onPressed: Shout),
+                ]);
+        }
+
+        private void Shout()
+        {
+            SetState(() =>
+            {
+                _systemMenu.Text = _systemMenu.Text.ToUpperInvariant();
+                _systemMenuAction = "shout";
+            });
         }
 
         private void ValidateForm()

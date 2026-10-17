@@ -72,7 +72,8 @@ public sealed record MediaQueryData
         IReadOnlyList<DisplayFeature>? DisplayFeatures = null,
         bool OnOffSwitchLabels = false,
         DeviceGestureSettings? GestureSettings = null,
-        bool BoldText = false)
+        bool BoldText = false,
+        bool SupportsShowingSystemContextMenu = false)
     {
         if (TextScaler is not null && TextScaleFactor != 1.0)
         {
@@ -102,6 +103,7 @@ public sealed record MediaQueryData
         this.DisplayFeatures = DisplayFeatures;
         this.GestureSettings = GestureSettings;
         this.BoldText = BoldText;
+        this.SupportsShowingSystemContextMenu = SupportsShowingSystemContextMenu;
     }
 
     public Size Size { get; init; }
@@ -156,6 +158,13 @@ public sealed record MediaQueryData
     /// </summary>
     public DeviceGestureSettings? GestureSettings { get; init; }
 
+    /// <summary>
+    /// Whether showing the system context menu is supported; for example, on iOS 16.0 and above the
+    /// system text selection context menu may be shown instead of the Flutter-drawn one to avoid the
+    /// clipboard access notification. Ports Dart's <c>MediaQueryData.supportsShowingSystemContextMenu</c>.
+    /// </summary>
+    public bool SupportsShowingSystemContextMenu { get; init; }
+
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
         : Orientation.Portrait;
@@ -189,7 +198,8 @@ public sealed record MediaQueryData
         IReadOnlyList<DisplayFeature>? displayFeatures = null,
         bool? onOffSwitchLabels = null,
         DeviceGestureSettings? gestureSettings = null,
-        bool? boldText = null)
+        bool? boldText = null,
+        bool? supportsShowingSystemContextMenu = null)
     {
         if (textScaleFactor is not null && textScaler is not null)
         {
@@ -220,7 +230,9 @@ public sealed record MediaQueryData
             DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
             DisplayFeatures: displayFeatures ?? DisplayFeatures,
             GestureSettings: gestureSettings ?? GestureSettings,
-            BoldText: boldText ?? BoldText);
+            BoldText: boldText ?? BoldText,
+            SupportsShowingSystemContextMenu: supportsShowingSystemContextMenu
+                                              ?? SupportsShowingSystemContextMenu);
     }
 
     public MediaQueryData RemovePadding(
@@ -397,7 +409,9 @@ public sealed record MediaQueryData
             DisplayFeatures: view.DisplayFeatures,
             OnOffSwitchLabels: platformData?.OnOffSwitchLabels ?? accessibilityFeatures.OnOffSwitchLabels,
             GestureSettings: view.GestureSettings,
-            BoldText: platformData?.BoldText ?? accessibilityFeatures.BoldText);
+            BoldText: platformData?.BoldText ?? accessibilityFeatures.BoldText,
+            SupportsShowingSystemContextMenu: platformData?.SupportsShowingSystemContextMenu
+                                              ?? platformDispatcher.SupportsShowingSystemContextMenu);
     }
 
     /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
@@ -454,6 +468,7 @@ public sealed class MediaQuery : InheritedModel<object>
         TextScaleFactor,
         TextScaler,
         SupportsAnnounce,
+        SupportsShowingSystemContextMenu,
     }
 
     public MediaQuery(
@@ -493,6 +508,8 @@ public sealed class MediaQuery : InheritedModel<object>
             Aspect.TextScaleFactor => oldData.TextScaleFactor != Data.TextScaleFactor,
             Aspect.TextScaler => oldData.TextScaler != Data.TextScaler,
             Aspect.SupportsAnnounce => oldData.SupportsAnnounce != Data.SupportsAnnounce,
+            Aspect.SupportsShowingSystemContextMenu =>
+                oldData.SupportsShowingSystemContextMenu != Data.SupportsShowingSystemContextMenu,
             _ => !Equals(oldData, Data),
         });
     }
@@ -601,6 +618,21 @@ public sealed class MediaQuery : InheritedModel<object>
     /// </summary>
     public static bool? MaybeSupportsAnnounceOf(BuildContext context) =>
         MaybeOf(context, Aspect.SupportsAnnounce)?.SupportsAnnounce;
+
+    /// <summary>
+    /// Dart's <c>MediaQuery.supportsShowingSystemContextMenu</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.SupportsShowingSystemContextMenu"/>; throws when there is no ancestor.
+    /// The calling context rebuilds only when that property changes.
+    /// </summary>
+    public static bool SupportsShowingSystemContextMenu(BuildContext context) =>
+        MaybeSupportsShowingSystemContextMenu(context) ?? Of(context).SupportsShowingSystemContextMenu;
+
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeSupportsShowingSystemContextMenu</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.SupportsShowingSystemContextMenu"/>, or null when there is no ancestor.
+    /// </summary>
+    public static bool? MaybeSupportsShowingSystemContextMenu(BuildContext context) =>
+        MaybeOf(context, Aspect.SupportsShowingSystemContextMenu)?.SupportsShowingSystemContextMenu;
 
     public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
 

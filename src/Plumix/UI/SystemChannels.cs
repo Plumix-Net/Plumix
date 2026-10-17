@@ -31,8 +31,10 @@ public static class SystemChannels
     /// <c>SystemChrome.setApplicationSwitcherDescription</c>,
     /// <c>SystemChrome.setEnabledSystemUIOverlays</c>, <c>SystemChrome.setEnabledSystemUIMode</c>,
     /// <c>SystemChrome.setSystemUIOverlayStyle</c>, <c>SystemNavigator.pop</c>,
-    /// <c>System.exitApplication</c>. Incoming: <c>SystemChrome.systemUIChange</c>,
-    /// <c>System.requestAppExit</c>, <c>System.initializationComplete</c>.
+    /// <c>System.exitApplication</c>, <c>ContextMenu.showSystemContextMenu</c>,
+    /// <c>ContextMenu.hideSystemContextMenu</c>. Incoming: <c>SystemChrome.systemUIChange</c>,
+    /// <c>System.requestAppExit</c>, <c>System.initializationComplete</c>,
+    /// <c>ContextMenu.onDismissSystemContextMenu</c>, <c>ContextMenu.onPerformCustomAction</c>.
     /// </remarks>
     public static MethodChannel Platform { get; } =
         new OptionalMethodChannel("flutter/platform", new JsonMethodCodec());

@@ -1,7 +1,8 @@
 using Plumix.UI;
 
 // C#-only test infrastructure: flutter_test's `TestPlatformDispatcher` and `FakeAccessibilityFeatures`
-// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features.
+// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features and
+// `supportsShowingSystemContextMenu`.
 
 namespace Plumix.Tests;
 
@@ -20,6 +21,8 @@ internal sealed partial class FrameworkDartTester
         {
             TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
         }
+
+        TestPlatformDispatcher.Instance.ResetSupportsShowingSystemContextMenu();
     }
 }
 
@@ -74,6 +77,20 @@ internal sealed class TestPlatformDispatcher
         get => Dispatcher.OnAccessibilityFeaturesChanged;
         set => Dispatcher.OnAccessibilityFeaturesChanged = value;
     }
+
+    /// <summary>
+    /// Dart's <c>supportsShowingSystemContextMenu</c>: the test value if one is set, otherwise the real
+    /// dispatcher's. Setting it notifies nobody, as in Dart.
+    /// </summary>
+    public bool SupportsShowingSystemContextMenu
+    {
+        get => Dispatcher.SupportsShowingSystemContextMenu;
+        set => Dispatcher.SetSupportsShowingSystemContextMenuTestValue(value);
+    }
+
+    /// <summary>Dart's <c>resetSupportsShowingSystemContextMenu</c>.</summary>
+    public void ResetSupportsShowingSystemContextMenu() =>
+        Dispatcher.SetSupportsShowingSystemContextMenuTestValue(null);
 
     /// <summary>Dart's <c>clearAllTestValues</c>, for the values this harness can fake.</summary>
     public void ClearAllTestValues() => ClearAccessibilityFeaturesTestValue();

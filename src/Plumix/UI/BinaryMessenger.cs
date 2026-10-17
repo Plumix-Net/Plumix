@@ -138,6 +138,7 @@ public class PlatformBinaryMessenger : BinaryMessenger
 public class ServicesBinding
 {
     private SystemUiChangeCallback? _systemUiChangeCallback;
+    private ISystemContextMenuClient? _systemContextMenuClient;
 
     /// <summary>
     /// Dart's <c>ServicesBinding.initInstances</c>: the framework side of <c>flutter/platform</c>.
@@ -232,12 +233,24 @@ public class ServicesBinding
         _systemUiChangeCallback = callback;
     }
 
+    /// <summary>
+    /// Registers a <see cref="ISystemContextMenuClient"/> that will receive system context menu
+    /// calls from the engine.
+    /// </summary>
+    /// <remarks>
+    /// Dart's static <c>ServicesBinding.systemContextMenuClient</c> setter; like Dart there is no
+    /// getter. This API is in place to receive the system's hide calls, so only one client can be
+    /// registered at a time.
+    /// </remarks>
+    public static ISystemContextMenuClient? SystemContextMenuClient
+    {
+        set => Instance._systemContextMenuClient = value;
+    }
+
     /// <summary>Dart's private <c>ServicesBinding._handlePlatformMessage</c>.</summary>
     /// <remarks>
-    /// The <c>ContextMenu.*</c> cases are not ported, because Plumix has no
-    /// <c>SystemContextMenuClient</c> (see <c>docs/ai/BACKLOG.md</c>). <c>System.requestAppExit</c>
-    /// is answered by <see cref="WidgetsBinding.HandleRequestAppExit"/>, which is Dart's override of
-    /// the services binding's method (the bindings are separate singletons in Plumix).
+    /// <c>System.requestAppExit</c> is answered by <see cref="WidgetsBinding.HandleRequestAppExit"/>, which is
+    /// Dart's override of the services binding's method (the bindings are separate singletons in Plumix).
     /// </remarks>
     private async Task<object?> HandlePlatformMessage(MethodCall methodCall)
     {
@@ -255,8 +268,43 @@ public class ServicesBinding
             case "System.requestAppExit":
                 AppExitResponse response = await WidgetsBinding.Instance.HandleRequestAppExit();
                 return new Dictionary<string, object?> { ["response"] = Diagnostics.EnumName(response) };
+            // Called when the system dismisses the system context menu, such as when the user taps
+            // outside the menu. Not called when Flutter shows a new system context menu while an
+            // old one is still visible.
+            case "ContextMenu.onDismissSystemContextMenu":
+                if (_systemContextMenuClient is null)
+                {
+                    AssertNoClient("onDismissSystemContextMenu", hint: null);
+                    return null;
+                }
+
+                _systemContextMenuClient.HandleSystemHide();
+                _systemContextMenuClient = null;
+                return null;
+            case "ContextMenu.onPerformCustomAction":
+                if (_systemContextMenuClient is null)
+                {
+                    AssertNoClient(
+                        "onPerformCustomAction",
+                        "ServicesBinding.systemContextMenuClient shouldn't be cleared unless the menu is hidden.");
+                    return null;
+                }
+
+                var actionArgs = (System.Collections.IList)methodCall.Arguments!;
+                string callbackId = (string)actionArgs[1]!;
+                _systemContextMenuClient.HandleCustomContextMenuAction(callbackId);
+                return null;
             default:
                 throw new AssertionError($"Method \"{method}\" not handled.");
+        }
+    }
+
+    private static void AssertNoClient(string method, string? hint)
+    {
+        if (Constants.KDebugMode)
+        {
+            string message = $"Platform sent {method} when no SystemContextMenuClient was registered.";
+            throw new AssertionError(hint is null ? message : $"{message} {hint}");
         }
     }
 

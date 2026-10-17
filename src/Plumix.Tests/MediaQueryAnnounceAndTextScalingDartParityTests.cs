@@ -196,6 +196,107 @@ public sealed class MediaQueryAnnounceAndTextScalingDartParityTests
         Assert.Contains("minScaleFactor >= 0", error.Message);
     }
 
+    // C#-only coverage of `MediaQueryData.supportsShowingSystemContextMenu` (media_query.dart): the
+    // default, copyWith, fromView's dispatcher fallback and the aspect-scoped dependency.
+    [Fact]
+    public void SupportsShowingSystemContextMenuDefaultsAndCopies()
+    {
+        var data = new MediaQueryData();
+        Assert.False(data.SupportsShowingSystemContextMenu);
+        MediaQueryData copied = data.CopyWith(supportsShowingSystemContextMenu: true);
+        Assert.True(copied.SupportsShowingSystemContextMenu);
+        Assert.True(copied.CopyWith().SupportsShowingSystemContextMenu);
+        Assert.True(copied.RemovePadding(removeTop: true).SupportsShowingSystemContextMenu);
+        Assert.NotEqual(data, copied);
+        Assert.Contains("SupportsShowingSystemContextMenu = True", copied.ToString(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SupportsShowingSystemContextMenuFromViewReadsTheDispatcherUnlessPlatformDataIsGiven()
+    {
+        TestPlatformDispatcher.Instance.SupportsShowingSystemContextMenu = true;
+        using var tester = new FrameworkDartTester();
+        Assert.True(MediaQueryData.FromView(tester.View).SupportsShowingSystemContextMenu);
+        Assert.False(MediaQueryData.FromView(tester.View, platformData: new MediaQueryData())
+            .SupportsShowingSystemContextMenu);
+
+        bool? observed = null;
+        tester.PumpWidget(new Builder(context =>
+        {
+            observed = MediaQuery.SupportsShowingSystemContextMenu(context);
+            return SizedBox.Shrink();
+        }));
+        Assert.True(observed);
+
+        UI.PlatformDispatcher.Instance.UpdateSupportsShowingSystemContextMenu(null);
+        tester.PlatformDispatcher.ResetSupportsShowingSystemContextMenu();
+        Assert.False(MediaQueryData.FromView(tester.View).SupportsShowingSystemContextMenu);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void MediaQueryPartialDependenciesSupportsShowingSystemContextMenu(bool maybe)
+    {
+        using var tester = new FrameworkDartTester();
+        var data = new MediaQueryData();
+        int buildCount = 0;
+        StateSetter? setPageState = null;
+
+        Widget builder = new Builder(context =>
+        {
+            if (maybe)
+            {
+                MediaQuery.MaybeSupportsShowingSystemContextMenu(context);
+            }
+            else
+            {
+                MediaQuery.SupportsShowingSystemContextMenu(context);
+            }
+
+            buildCount++;
+            return SizedBox.Shrink();
+        });
+
+        Widget page = new StatefulBuilder((_, setState) =>
+        {
+            setPageState = setState;
+            return new MediaQuery(data: data, child: builder);
+        });
+
+        tester.PumpWidget(page);
+        Assert.Equal(1, buildCount);
+
+        setPageState!(() => data = data.CopyWith(supportsAnnounce: true));
+        tester.PumpAndSettle();
+        Assert.Equal(1, buildCount);
+
+        setPageState!(() => data = data.CopyWith(supportsShowingSystemContextMenu: true));
+        tester.PumpAndSettle();
+        Assert.Equal(2, buildCount);
+    }
+
+    [Fact]
+    public void SupportsShowingSystemContextMenuThrowsWithoutAMediaQuery()
+    {
+        using var tester = new FrameworkDartTester();
+        bool? maybe = true;
+        Exception? error = null;
+        tester.PumpWidget(
+            new Builder(context =>
+            {
+                maybe = MediaQuery.MaybeSupportsShowingSystemContextMenu(context);
+                error = Record.Exception(() => MediaQuery.SupportsShowingSystemContextMenu(context));
+                return SizedBox.Shrink();
+            }),
+            wrapWithView: false);
+
+        // Without a View the shrink box has no render tree to attach to either (a debug-mode error).
+        _ = tester.TakeException();
+        Assert.Null(maybe);
+        Assert.IsType<FlutterError>(error);
+    }
+
     private static RichText FirstRichText(FrameworkDartTester tester) =>
         (RichText)tester.ElementsOfType<RichText>().First().Widget;
 }

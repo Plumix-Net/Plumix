@@ -606,6 +606,11 @@ public sealed class CupertinoTextField : StatefulWidget
         BuildContext context,
         EditableText.EditableTextState editableTextState)
     {
+        if (SystemContextMenu.IsSupportedByField(editableTextState))
+        {
+            return SystemContextMenu.EditableText(editableTextState);
+        }
+
         return CupertinoAdaptiveTextSelectionToolbar.EditableText(editableTextState);
     }
 

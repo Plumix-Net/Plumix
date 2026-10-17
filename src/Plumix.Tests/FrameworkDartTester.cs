@@ -333,6 +333,8 @@ internal sealed partial class FrameworkDartTester : IDisposable
             UninstallAnnouncementCapture();
             UninstallRestorationManager();
             ResetPlatformDispatcherTestValues();
+            SystemContextMenuController.ResetForTests();
+            ServicesBinding.SystemContextMenuClient = null;
             if (ReferenceEquals(Current, this))
             {
                 Current = _previousCurrent;

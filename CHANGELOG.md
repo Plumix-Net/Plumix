@@ -9,6 +9,10 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- SystemContextMenu, IOSSystemContextMenuItem*, iOS branch of the field menu builders (system_context_menu.dart).
+- SystemContextMenuController, IOSSystemContextMenuItemData*, ContextMenu.* binding cases (services/text_input.dart).
+- MediaQueryData/PlatformDispatcher.supportsShowingSystemContextMenu (widgets/media_query.dart, dart:ui).
+- TextField demo shows a system-context-menu field with custom items in both samples.
 - Accessibility evaluations and the accessibilityEvaluations extension (widgets/_accessibility_evaluations.dart).
 - ImageByteFormat and Image.toByteData over Avalonia bitmaps (dart:ui painting.dart).
 - SemanticsNode.VisitChildren (semantics/semantics.dart).

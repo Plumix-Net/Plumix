@@ -430,6 +430,41 @@ public sealed class PlatformDispatcher
         BrieflyShowPassword = brieflyShowPassword;
     }
 
+    private bool _supportsShowingSystemContextMenu;
+    private bool? _supportsShowingSystemContextMenuTestValue;
+
+    /// <summary>Whether the platform can show its own text-selection context menu.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.supportsShowingSystemContextMenu</c>, <see langword="false"/>
+    /// until the platform's user settings say otherwise (iOS 16 and above).
+    /// </remarks>
+    public bool SupportsShowingSystemContextMenu =>
+        _supportsShowingSystemContextMenuTestValue ?? _supportsShowingSystemContextMenu;
+
+    /// <summary>Records the <c>supportsShowingSystemContextMenu</c> user setting, as the engine's
+    /// <c>_updateUserSettingsData</c> does: a settings message without the key resets it to
+    /// <see langword="false"/>.</summary>
+    /// <remarks>The key is read with the rest of the user settings, so it notifies through the
+    /// platform-configuration change the settings message causes, not on its own. Hosts and tests
+    /// call it.</remarks>
+    public void UpdateSupportsShowingSystemContextMenu(bool? supportsShowingSystemContextMenu)
+    {
+        _supportsShowingSystemContextMenu = supportsShowingSystemContextMenu ?? false;
+    }
+
+    /// <summary>
+    /// flutter_test's <c>TestPlatformDispatcher.supportsShowingSystemContextMenu</c> setter (a value)
+    /// and <c>resetSupportsShowingSystemContextMenu</c> (<see langword="null"/>); neither notifies.
+    /// </summary>
+    internal void SetSupportsShowingSystemContextMenuTestValue(bool? value)
+    {
+        _supportsShowingSystemContextMenuTestValue = value;
+    }
+
+    /// <summary>Whether a test value currently replaces <see cref="SupportsShowingSystemContextMenu"/>.</summary>
+    internal bool HasSupportsShowingSystemContextMenuTestValue =>
+        _supportsShowingSystemContextMenuTestValue is not null;
+
     /// <summary>Delivers a platform semantics action to <see cref="OnSemanticsActionEvent"/>.</summary>
     /// <remarks>The engine-side dispatch of <c>onSemanticsActionEvent</c>; hosts and tests call it.</remarks>
     public void DispatchSemanticsActionEvent(SemanticsActionEvent action)
