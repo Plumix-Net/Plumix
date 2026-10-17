@@ -622,6 +622,13 @@ public sealed class PlatformDispatcher
     /// <summary>Engine-style query for whether a hit-test path contains a native platform view.</summary>
     public Func<HitTestRequest, HitTestResponse>? OnHitTest { get; set; }
 
+    /// <summary>A callback that is invoked when pointer data is available.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onPointerDataPacket</c>; <c>GestureBinding</c> installs its packet
+    /// handler here, and an embedder (or a test) reports physical-pixel pointer data by invoking it.
+    /// </remarks>
+    public Action<PointerDataPacket>? OnPointerDataPacket { get; set; }
+
     /// <summary>Raised by <see cref="ScheduleFrame"/>; whoever drives frames arms itself here.</summary>
     /// <remarks>
     /// Flutter asks the engine for a vsync signal. Plumix has no engine, so <see cref="FrameClock"/>

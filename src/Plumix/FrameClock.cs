@@ -17,6 +17,7 @@ namespace Plumix;
 public static class FrameClock
 {
     private static readonly Stopwatch _sw = Stopwatch.StartNew();
+    private static readonly DateTime _anchorUtc = DateTime.UtcNow;
 
     private static DispatcherTimer? _timer;
     private static bool _frameRequested;
@@ -27,6 +28,17 @@ public static class FrameClock
     /// passes the value to <see cref="SchedulerBinding.HandleBeginFrame"/>.
     /// </remarks>
     public static double CurrentSeconds => _sw.Elapsed.TotalSeconds;
+
+    /// <summary>
+    /// The monotonic engine timeline pointer events are stamped on, expressed as a UTC date: the wall
+    /// clock read once at start-up plus the elapsed time of the monotonic clock.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's engine stamps pointer data and vsync callbacks from one monotonic clock, so the
+    /// resampler can compare them. Hosts stamp their events with this value and
+    /// <see cref="Gestures.SamplingClock"/> reads it, so wall-clock adjustments never reorder input.
+    /// </remarks>
+    public static DateTime UtcNow => _anchorUtc + _sw.Elapsed;
 
     /// <summary>Arms the timer for one frame; called by <see cref="PlatformDispatcher.ScheduleFrame"/>.</summary>
     internal static void RequestFrame()

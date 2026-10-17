@@ -93,7 +93,7 @@ public sealed class TrackpadPanZoomSynthesizer
         _pan = default;
         _scale = 1.0;
         _rotation = 0.0;
-        _dispatch(new PointerPanZoomEndEvent(pointer, _position, timestampUtc ?? DateTime.UtcNow));
+        _dispatch(new PointerPanZoomEndEvent(pointer, _position, timestampUtc ?? FrameClock.UtcNow));
     }
 
     private void Update(

@@ -285,6 +285,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` | `src/Plumix.Tests/GestureBindingParityTests.cs` | — |
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
+| `gestures/converter.dart` | `src/Plumix/Gestures/PointerEventConverter.cs` | — | — |
 | `gestures/debug.dart` | `src/Plumix/Gestures/Debug.cs` | `src/Plumix.Tests/DebugOverflowIndicatorDartParityTests.cs`<br>`src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/MaterialDebugDartParityTests.cs`<br>`src/Plumix.Tests/MediaQueryDebugTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragGestureRecognizerParityTests.cs`<br>`src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
 | `gestures/eager.dart` | `src/Plumix/Gestures/Eager.cs` | — | — |
@@ -642,6 +643,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/GlobalUsings.cs`
 - `src/Plumix/HostKeyEventMessage.cs`
 - `src/Plumix/HostKeyboardMap.cs`
+- `src/Plumix/HostPointerPacketEncoder.cs`
 - `src/Plumix/HotReload.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PipelineOwner.Headless.cs`
@@ -685,6 +687,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/ParagraphBuilder.cs`
 - `src/Plumix/UI/Path.cs`
 - `src/Plumix/UI/PlatformDispatcher.cs`
+- `src/Plumix/UI/PointerData.cs`
 - `src/Plumix/UI/RRect.cs`
 - `src/Plumix/UI/RSuperellipse.cs`
 - `src/Plumix/UI/Text.cs`
@@ -705,9 +708,9 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 589
-- C# files carrying a marker: 773
-- C# files without a marker: 84
+- Flutter files mapped: 590
+- C# files carrying a marker: 774
+- C# files without a marker: 86
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 0
 

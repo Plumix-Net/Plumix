@@ -459,6 +459,9 @@ public sealed class SchedulerBinding
         {
             EnsureEventLoopCallback();
         }
+
+        // Dart's `GestureBinding.unlocked` delivers the pointer events that arrived while locked.
+        Gestures.GestureBinding.Instance.Unlocked();
     }
 
     /// <summary>Called by the system when there is time to run tasks.</summary>

@@ -9,6 +9,13 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- PointerData, PointerDataPacket, PointerChange, PointerSignalKind, OnPointerDataPacket (dart:ui pointer.dart).
+- PointerEventConverter.Expand turns physical pointer packets into logical events (gestures/converter.dart).
+- Hosts report pointer input as physical PointerDataPacket entries on FrameClock's monotonic timeline (C#-only).
+- FlutterHost.PlatformViewHitTested publishes the native hit-test query made on every pointer down (dart:ui).
+- Breaking: SamplingClock reads the monotonic FrameClock.UtcNow, not the wall clock (gestures/binding.dart).
+- Breaking: GestureBinding queues host and packet events while locked and flushes on unlock (gestures/binding.dart).
+- Breaking: Resampled touch events dispatch immediately, not through the pointer queue (gestures/binding.dart).
 - Breaking: Canvas.saveLayer(Rect?, Paint) opens an isolated layer; blend/filter/invert layers rasterize (dart:ui).
 - Canvas.getTransform/getLocalClipBounds/getDestinationClipBounds, skew, cullRect, clipRect clipOp (dart:ui).
 - Breaking: Canvas.drawImage/drawImageRect/drawImageNine take a Paint; colour filters apply to images (dart:ui).

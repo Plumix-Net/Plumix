@@ -49,7 +49,9 @@ public class PlumixHost : Control
     private readonly FlutterView _view = new(new Size(0, 0), 1.0, Interlocked.Increment(ref s_nextViewId));
     private readonly ReusableRenderView _root;
     private readonly PipelineOwner _pipeline;
+    // Instantiating the binding installs its packet handler on the platform dispatcher.
     private readonly GestureBinding _gestureBinding = GestureBinding.Instance;
+    private readonly HostPointerPacketEncoder _pointerEncoder = new();
     private readonly PlumixTextInputMethodClient _textInputClient;
     private readonly Thread _ownerThread;
     private readonly TrackpadPanZoomSynthesizer _panZoom;
@@ -209,6 +211,7 @@ public class PlumixHost : Control
         _panZoom.End();
         Focus();
         e.Pointer.Capture(this);
+        QueryNativeHitTest(e.GetPosition(this));
         DispatchPointerEvent(ToPointerDownEvent(e));
     }
 
@@ -318,7 +321,7 @@ public class PlumixHost : Control
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
-            timestampUtc: DateTime.UtcNow));
+            timestampUtc: FrameClock.UtcNow));
     }
 
     protected override void OnPointerExited(PointerEventArgs e)
@@ -329,7 +332,7 @@ public class PlumixHost : Control
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
-            timestampUtc: DateTime.UtcNow));
+            timestampUtc: FrameClock.UtcNow));
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -348,7 +351,7 @@ public class PlumixHost : Control
                 kind: kind,
                 position: position,
                 buttons: buttons,
-                timestampUtc: DateTime.UtcNow));
+                timestampUtc: FrameClock.UtcNow));
             return;
         }
 
@@ -357,7 +360,7 @@ public class PlumixHost : Control
             kind: kind,
             position: position,
             buttons: buttons,
-            timestampUtc: DateTime.UtcNow));
+            timestampUtc: FrameClock.UtcNow));
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -369,7 +372,7 @@ public class PlumixHost : Control
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
             buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
-            timestampUtc: DateTime.UtcNow));
+            timestampUtc: FrameClock.UtcNow));
 
         if (e.Pointer.Captured == this)
         {
@@ -384,7 +387,7 @@ public class PlumixHost : Control
     /// </summary>
     private void HandleTouchPadMagnify(object? sender, PointerDeltaEventArgs e)
     {
-        _panZoom.Zoom(e.GetPosition(this), 1.0 + e.Delta.Y, DateTime.UtcNow);
+        _panZoom.Zoom(e.GetPosition(this), 1.0 + e.Delta.Y, FrameClock.UtcNow);
     }
 
     /// <summary>
@@ -394,7 +397,7 @@ public class PlumixHost : Control
     /// </summary>
     private void HandleTouchPadRotate(object? sender, PointerDeltaEventArgs e)
     {
-        _panZoom.Rotate(e.GetPosition(this), -e.Delta.Y * Math.PI / 180.0, DateTime.UtcNow);
+        _panZoom.Rotate(e.GetPosition(this), -e.Delta.Y * Math.PI / 180.0, FrameClock.UtcNow);
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -407,7 +410,7 @@ public class PlumixHost : Control
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
             scrollDelta: new Point(-e.Delta.X * 40.0, -e.Delta.Y * 40.0),
-            timestampUtc: DateTime.UtcNow,
+            timestampUtc: FrameClock.UtcNow,
             onRespond: allow => allowPlatformDefault = allow));
         if (!allowPlatformDefault)
         {
@@ -424,7 +427,7 @@ public class PlumixHost : Control
         DispatchPointerEvent(new PointerCancelEvent(
             pointer: unchecked((int)e.Pointer.Id),
             kind: ToPointerKind(e.Pointer.Type),
-            timestampUtc: DateTime.UtcNow));
+            timestampUtc: FrameClock.UtcNow));
     }
 
     /// <summary>
@@ -1576,21 +1579,36 @@ public class PlumixHost : Control
         return new Thickness(0, 0, 0, bottomInset);
     }
 
+    /// <summary>
+    /// Reports a pointer event the way an engine embedder does: as physical-pixel pointer data in a
+    /// packet to <see cref="PlatformDispatcher.OnPointerDataPacket"/>, which the gesture binding converts
+    /// back and hit-tests in the view named by the entry's view id.
+    /// </summary>
     private void DispatchPointerEvent(PointerEvent @event)
     {
-        // Dart's `hitTestInView` looks the render view up by the event's view id: the host's own one for
-        // the implicit or a render-only view, the one a `View` widget created for any other view.
-        RenderView? root = _root.Attached
-            ? _root
-            : RendererBinding.Instance.RenderViews.FirstOrDefault(view => ReferenceEquals(view.FlutterView, _view));
-        if (root is null || !root.Attached)
-        {
-            // Dart's `hitTestInView` finds no `RenderView` for a view that has no render tree yet.
-            return;
-        }
-
-        _gestureBinding.HandlePointerEvent(root, @event);
+        _pointerEncoder.Report(@event, _view.ViewId, _view.DevicePixelRatio);
     }
+
+    /// <summary>
+    /// Asks the framework whether a platform view lies under <paramref name="position"/>, the query
+    /// the engine makes through <see cref="PlatformDispatcher.OnHitTest"/> before it hands a touch
+    /// sequence to a native view, and publishes the answer as <see cref="PlatformViewHitTested"/>.
+    /// </summary>
+    internal void QueryNativeHitTest(Point position)
+    {
+        HitTestResponse? response = PlatformDispatcher.Instance.OnHitTest?.Invoke(
+            new HitTestRequest(_view.ViewId, position));
+        if (response is { } answer)
+        {
+            PlatformViewHitTested?.Invoke(position, answer.HasPlatformView);
+        }
+    }
+
+    /// <summary>
+    /// Raised when a pointer goes down, with its position and whether the framework's hit-test path there
+    /// contains a native platform view (the engine's <c>HitTestResponse.hasPlatformView</c>).
+    /// </summary>
+    public event Action<Point, bool>? PlatformViewHitTested;
 
     /// <summary>
     /// Republishes every semantics update of this host's view, which <c>RendererBinding.DrawFrame</c>'s
@@ -1666,7 +1684,7 @@ public class PlumixHost : Control
             kind: ToPointerKind(e.Pointer.Type),
             position: e.GetPosition(this),
             buttons: ToPointerButtons(e.GetCurrentPoint(this).Properties),
-            timestampUtc: DateTime.UtcNow);
+            timestampUtc: FrameClock.UtcNow);
     }
 
     private static PointerButtons ToPointerButtons(PointerPointProperties properties)

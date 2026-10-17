@@ -5,7 +5,8 @@ using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/binding.dart
-// The host supplies logical pointer events directly; engine packet conversion remains platform glue.
+// Hosts that already work in logical pixels hand `HandlePointerEvent` events directly; an embedder
+// that reports physical `PointerDataPacket`s goes through `PlatformDispatcher.OnPointerDataPacket`.
 
 namespace Plumix.Gestures;
 
@@ -17,7 +18,7 @@ namespace Plumix.Gestures;
 public class SamplingClock
 {
     /// <summary>The current date and time.</summary>
-    public virtual DateTime Now() => DateTime.UtcNow;
+    public virtual DateTime Now() => FrameClock.UtcNow;
 
     /// <summary>A new stopwatch that uses the current time as reported by this clock.</summary>
     public virtual DartStopwatch Stopwatch() => new();
@@ -34,10 +35,10 @@ public sealed class GestureBinding : IHitTestTarget
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
     private readonly Dictionary<int, Point> _lastPositions = [];
-    private readonly Dictionary<int, RenderView> _pointerRoots = [];
-    private readonly LinkedList<(RenderView Root, PointerEvent Event)> _pendingPointerEvents = [];
+    private readonly Dictionary<int, (RenderView? Root, int ViewId)> _pointerRoots = [];
+    private readonly LinkedList<QueuedPointerEvent> _pendingPointerEvents = [];
     private readonly Dictionary<int, PointerEventResampler> _resamplers = [];
-    private readonly Dictionary<int, RenderView> _resamplerRoots = [];
+    private readonly Dictionary<int, RenderView?> _resamplerRoots = [];
     private Timer? _resamplingTimer;
     private DateTime _frameTime;
     private DartStopwatch? _frameTimeAge;
@@ -48,7 +49,63 @@ public sealed class GestureBinding : IHitTestTarget
 
     private GestureBinding()
     {
+        PlatformDispatcher.Instance.OnPointerDataPacket = HandlePointerDataPacket;
         PlatformDispatcher.Instance.OnHitTest = HandleHitTest;
+    }
+
+    /// <summary>One entry of the pending pointer event queue.</summary>
+    /// <param name="Root">
+    /// The render view a host named for the event, or <see langword="null"/> for an event the engine
+    /// reported, which Dart hit-tests in the view named by its <see cref="PointerEvent.ViewId"/>.
+    /// </param>
+    /// <param name="Event">The event.</param>
+    private readonly record struct QueuedPointerEvent(RenderView? Root, PointerEvent Event);
+
+    private static bool Locked => SchedulerBinding.Instance.Locked;
+
+    /// <summary>Flushes the events that arrived while the binding was locked.</summary>
+    /// <remarks>Dart's <c>GestureBinding.unlocked</c>, which <see cref="SchedulerBinding.Unlocked"/> calls.</remarks>
+    internal void Unlocked()
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        FlushPointerEventQueue();
+    }
+
+    /// <summary>
+    /// Converts a packet of physical pointer data into logical events and handles them. Dart's
+    /// <c>_handlePointerDataPacket</c>: the events wait in the queue while the binding is locked and
+    /// a failure is reported rather than thrown.
+    /// </summary>
+    private void HandlePointerDataPacket(PointerDataPacket packet)
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        try
+        {
+            // We convert pointer data to logical pixels so that e.g. the touch slop can be
+            // defined in a device-independent manner.
+            foreach (PointerEvent @event in PointerEventConverter.Expand(packet.Data, DevicePixelRatioForView))
+            {
+                _pendingPointerEvents.AddLast(new QueuedPointerEvent(null, @event));
+            }
+
+            if (!Locked)
+            {
+                FlushPointerEventQueue();
+            }
+        }
+        catch (Exception error)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: error,
+                stack: error.StackTrace,
+                library: "gestures library",
+                context: new ErrorDescription("while handling a pointer data packet")));
+        }
+    }
+
+    private static double? DevicePixelRatioForView(int viewId)
+    {
+        return PlatformDispatcher.Instance.View(viewId)?.DevicePixelRatio;
     }
 
     /// <summary>Compatibility forward to Dart's <c>RendererBinding.initMouseTracker</c>.</summary>
@@ -72,14 +129,26 @@ public sealed class GestureBinding : IHitTestTarget
     public SamplingClock SamplingClock { get; set; } = new();
 
     /// <summary>
-    /// Receives a logical pointer event from the host. A reentrant event waits in the same queue
-    /// as Dart's engine packet events, so a cancellation requested during a down event goes first.
+    /// Receives a logical pointer event from the host. The event waits in the same queue as Dart's
+    /// engine packet events, so a cancellation requested during a down event goes first and a locked
+    /// binding (<see cref="SchedulerBinding.LockEvents"/>) delivers it once it is unlocked.
     /// </summary>
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
         using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(root);
         ArgumentNullException.ThrowIfNull(@event);
+        _pendingPointerEvents.AddLast(new QueuedPointerEvent(root, @event));
+        FlushPointerEventQueue();
+    }
+
+    /// <summary>
+    /// Dart's <c>handlePointerEvent</c>: hands the event to the resampler when resampling is enabled
+    /// and dispatches it right away otherwise.
+    /// </summary>
+    private void HandleQueuedPointerEvent(QueuedPointerEvent queued)
+    {
+        (RenderView? root, PointerEvent @event) = queued;
         if (ResamplingEnabled)
         {
             if (@event.Kind == PointerDeviceKind.Touch)
@@ -95,8 +164,7 @@ public sealed class GestureBinding : IHitTestTarget
             }
             else
             {
-                _pendingPointerEvents.AddLast((root, @event));
-                FlushPointerEventQueue();
+                HandlePointerEventImmediately(root, @event);
             }
 
             SampleResampledEvents();
@@ -104,8 +172,7 @@ public sealed class GestureBinding : IHitTestTarget
         }
 
         StopResampling();
-        _pendingPointerEvents.AddLast((root, @event));
-        FlushPointerEventQueue();
+        HandlePointerEventImmediately(root, @event);
     }
 
     private void SampleResampledEvents()
@@ -158,8 +225,8 @@ public sealed class GestureBinding : IHitTestTarget
         DateTime nextSampleTime = sampleTime + SamplingInterval;
         foreach ((int device, PointerEventResampler resampler) in _resamplers.ToArray())
         {
-            RenderView root = _resamplerRoots[device];
-            resampler.Sample(sampleTime, nextSampleTime, @event => QueueResampledEvent(root, @event));
+            RenderView? root = _resamplerRoots[device];
+            resampler.Sample(sampleTime, nextSampleTime, @event => DispatchResampledEvent(root, @event));
             if (!resampler.HasPendingEvents && !resampler.IsDown)
             {
                 _resamplers.Remove(device);
@@ -200,6 +267,11 @@ public sealed class GestureBinding : IHitTestTarget
     private void HandleSampleTimeChanged()
     {
         using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        if (Locked)
+        {
+            return;
+        }
+
         if (ResamplingEnabled)
         {
             SampleResampledEvents();
@@ -210,10 +282,9 @@ public sealed class GestureBinding : IHitTestTarget
         }
     }
 
-    private void QueueResampledEvent(RenderView root, PointerEvent @event)
+    private void DispatchResampledEvent(RenderView? root, PointerEvent @event)
     {
-        _pendingPointerEvents.AddLast((root, @event));
-        FlushPointerEventQueue();
+        HandlePointerEventImmediately(root, @event);
     }
 
     private void StopResampling()
@@ -225,14 +296,14 @@ public sealed class GestureBinding : IHitTestTarget
 
         _resamplingGeneration++;
         _frameCallbackScheduled = false;
-        (RenderView Root, PointerEventResampler Resampler)[] pending = _resamplers
+        (RenderView? Root, PointerEventResampler Resampler)[] pending = _resamplers
             .Select(pair => (_resamplerRoots[pair.Key], pair.Value))
             .ToArray();
         _resamplers.Clear();
         _resamplerRoots.Clear();
-        foreach ((RenderView root, PointerEventResampler resampler) in pending)
+        foreach ((RenderView? root, PointerEventResampler resampler) in pending)
         {
-            resampler.Stop(@event => QueueResampledEvent(root, @event));
+            resampler.Stop(@event => DispatchResampledEvent(root, @event));
         }
 
         _frameTime = default;
@@ -252,7 +323,7 @@ public sealed class GestureBinding : IHitTestTarget
     /// </summary>
     public void CancelPointer(int pointer)
     {
-        if (!_pointerRoots.TryGetValue(pointer, out RenderView? root))
+        if (!_pointerRoots.TryGetValue(pointer, out (RenderView? Root, int ViewId) target))
         {
             return;
         }
@@ -260,10 +331,10 @@ public sealed class GestureBinding : IHitTestTarget
         var cancel = new PointerCancelEvent(
             pointer: pointer,
             timestampUtc: DateTime.UnixEpoch,
-            viewId: root.FlutterView.ViewId);
+            viewId: target.ViewId);
         bool wasEmpty = _pendingPointerEvents.Count == 0;
-        _pendingPointerEvents.AddFirst((root, cancel));
-        if (wasEmpty && !_flushingPointerEvents)
+        _pendingPointerEvents.AddFirst(new QueuedPointerEvent(target.Root, cancel));
+        if (wasEmpty && !Locked && !_flushingPointerEvents)
         {
             EventLoop.ScheduleMicrotask(FlushPointerEventQueue);
         }
@@ -271,7 +342,7 @@ public sealed class GestureBinding : IHitTestTarget
 
     private void FlushPointerEventQueue()
     {
-        if (_flushingPointerEvents)
+        if (_flushingPointerEvents || Locked)
         {
             return;
         }
@@ -282,7 +353,7 @@ public sealed class GestureBinding : IHitTestTarget
             while (_pendingPointerEvents.First is { } first)
             {
                 _pendingPointerEvents.RemoveFirst();
-                HandlePointerEventImmediately(first.Value.Root, first.Value.Event);
+                HandleQueuedPointerEvent(first.Value);
             }
         }
         finally
@@ -291,15 +362,19 @@ public sealed class GestureBinding : IHitTestTarget
         }
     }
 
-    private void HandlePointerEventImmediately(RenderView root, PointerEvent @event)
+    private void HandlePointerEventImmediately(RenderView? root, PointerEvent @event)
     {
         PointerEventReceived?.Invoke(@event);
-        PointerEvent eventWithDelta = AttachDelta(@event);
+
+        // The engine's own events already carry the delta its packet reported.
+        PointerEvent eventWithDelta = root is null ? @event : AttachDelta(@event);
         HitTestResult? result = null;
 
         if (@event is PointerDownEvent or PointerSignalEvent or PointerHoverEvent or PointerPanZoomStartEvent)
         {
-            result = HitTestInView(root, @event.Position);
+            result = root is null
+                ? HitTestInView(@event.Position, @event.ViewId)
+                : HitTestInView(root, @event.Position);
             if (@event is PointerDownEvent or PointerPanZoomStartEvent)
             {
                 if (_hitTests.ContainsKey(@event.Pointer))
@@ -308,7 +383,7 @@ public sealed class GestureBinding : IHitTestTarget
                 }
 
                 _hitTests[@event.Pointer] = result;
-                _pointerRoots[@event.Pointer] = root;
+                _pointerRoots[@event.Pointer] = (root, root?.FlutterView.ViewId ?? @event.ViewId);
             }
         }
         else if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
