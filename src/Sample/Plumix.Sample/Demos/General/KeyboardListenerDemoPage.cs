@@ -127,7 +127,8 @@ internal sealed class KeyboardListenerDemoPageState : State
                     onKey: keyEvent => SetState(() =>
                     {
                         string phase = keyEvent is RawKeyDownEvent ? "down" : "up";
-                        _rawEvent = $"{keyEvent.LogicalKey.DebugName} — {phase}";
+                        _rawEvent = $"{keyEvent.LogicalKey.DebugName} — {phase} — "
+                                    + $"{keyEvent.Data.GetType().Name} — {DescribeModifiers(keyEvent.Data)}";
                     }),
                     child: BuildPanel(
                         title: "RawKeyboardListener (deprecated compatibility)",
@@ -201,6 +202,26 @@ internal sealed class KeyboardListenerDemoPageState : State
 
         return $"{keyEvent.LogicalKey.DebugName} — {phase} — physical {keyEvent.PhysicalKey.DebugName}";
     }
+
+#pragma warning disable CS0618
+    private static string DescribeModifiers(RawKeyEventData data)
+    {
+        IReadOnlyDictionary<ModifierKey, KeyboardSide> modifiers = data.ModifiersPressed;
+        if (modifiers.Count == 0)
+        {
+            return "no modifiers";
+        }
+
+        var parts = new List<string>();
+        foreach (KeyValuePair<ModifierKey, KeyboardSide> entry in modifiers)
+        {
+            parts.Add($"{Plumix.Foundation.Diagnostics.EnumName(entry.Key)}: "
+                      + Plumix.Foundation.Diagnostics.EnumName(entry.Value));
+        }
+
+        return string.Join(", ", parts);
+    }
+#pragma warning restore CS0618
 
     private static string OnOff(bool value) => value ? "on" : "off";
 

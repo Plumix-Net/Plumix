@@ -122,7 +122,9 @@ defaults change between releases, so a port validated against a different checko
 When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and
 `python3 scripts/generate_keyboard_keys.py` (it regenerates the logical/physical key tables from
-Flutter's own generated `keyboard_key.g.dart`) and `python3 scripts/generate_material_colors.py`
+Flutter's own generated `keyboard_key.g.dart`) and
+`python3 scripts/generate_keyboard_maps.py` (it regenerates the platform key-code maps from
+Flutter's own generated `keyboard_maps.g.dart`) and `python3 scripts/generate_material_colors.py`
 (it regenerates the Material palette from `colors.dart`) and
 `python3 scripts/generate_material_icons.py` (it regenerates the Material icon catalog from `icons.dart`
 and re-vendors the matching `material_fonts` artifact) and `python3 scripts/generate_intl_data.py`
@@ -142,6 +144,7 @@ dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release  # ditto — see src
 scripts/check_line_length.sh                      # 120-char rule on new/edited lines
 python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
 python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs
+python3 scripts/generate_keyboard_maps.py         # regenerate src/Plumix/UI/KeyboardMaps.g.cs
 python3 scripts/generate_material_colors.py       # regenerate src/Plumix.Material/Colors.g.cs
 python3 scripts/generate_cupertino_icons.py       # regenerate Cupertino icon catalog + font asset
 python3 scripts/generate_material_icons.py        # regenerate Material icon catalog + font asset

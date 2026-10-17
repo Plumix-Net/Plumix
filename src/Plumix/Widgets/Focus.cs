@@ -39,6 +39,13 @@ public enum UnfocusDisposition
 }
 
 public delegate KeyEventResult FocusOnKeyEventCallback(FocusNode node, KeyEvent @event);
+
+/// <summary>
+/// Signature of a callback used by <c>Focus.OnKey</c> and <c>FocusScope.OnKey</c> to receive key
+/// events (focus_manager.dart's <c>FocusOnKeyCallback</c>).
+/// </summary>
+[Obsolete("Use FocusOnKeyEventCallback instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+public delegate KeyEventResult FocusOnKeyCallback(FocusNode node, RawKeyEvent @event);
 public delegate KeyEventResult OnKeyEventCallback(KeyEvent @event);
 
 /// <summary>Dart parity source: <c>combineKeyEventResults</c>.</summary>
@@ -152,17 +159,31 @@ public class FocusNode : ChangeNotifier
         bool skipTraversal = false,
         bool canRequestFocus = true,
         bool descendantsAreFocusable = true,
-        bool descendantsAreTraversable = true)
+        bool descendantsAreTraversable = true,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null)
+#pragma warning restore CS0618
     {
         _skipTraversal = skipTraversal;
         _canRequestFocus = canRequestFocus;
         _descendantsAreFocusable = descendantsAreFocusable;
         _descendantsAreTraversable = descendantsAreTraversable;
         OnKeyEvent = onKeyEvent;
+#pragma warning disable CS0618
+        OnKey = onKey;
+#pragma warning restore CS0618
         DebugLabel = debugLabel;
     }
 
     public string? DebugLabel { get; set; }
+
+    /// <summary>
+    /// Called if this focus node receives a key event while focused (i.e. when
+    /// <see cref="HasFocus"/> returns true).
+    /// </summary>
+    /// <remarks>This property is deprecated and will be removed. Use <see cref="OnKeyEvent"/> instead.</remarks>
+    [Obsolete("Use OnKeyEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+    public FocusOnKeyCallback? OnKey { get; set; }
 
     public FocusOnKeyEventCallback? OnKeyEvent { get; set; }
 
@@ -448,9 +469,15 @@ public class FocusNode : ChangeNotifier
         FocusTraversalGroup.PolicyForNode(this).InDirection(this, direction);
 
     /// <summary>Dart parity source: <c>FocusNode.attach</c>.</summary>
-    public FocusAttachment Attach(BuildContext? context, FocusOnKeyEventCallback? onKeyEvent = null)
+    public FocusAttachment Attach(
+        BuildContext? context,
+        FocusOnKeyEventCallback? onKeyEvent = null,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null)
     {
         Context = context;
+        OnKey = onKey ?? OnKey;
+#pragma warning restore CS0618
         OnKeyEvent = onKeyEvent ?? OnKeyEvent;
         Attachment = new FocusAttachment(this);
         return Attachment;
@@ -728,13 +755,17 @@ public sealed class FocusScopeNode : FocusNode
         bool skipTraversal = false,
         bool canRequestFocus = true,
         TraversalEdgeBehavior traversalEdgeBehavior = TraversalEdgeBehavior.ClosedLoop,
-        TraversalEdgeBehavior directionalTraversalEdgeBehavior = TraversalEdgeBehavior.Stop)
+        TraversalEdgeBehavior directionalTraversalEdgeBehavior = TraversalEdgeBehavior.Stop,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null)
+#pragma warning restore CS0618
         : base(
             debugLabel: debugLabel,
             onKeyEvent: onKeyEvent,
             skipTraversal: skipTraversal,
             canRequestFocus: canRequestFocus,
-            descendantsAreFocusable: true)
+            descendantsAreFocusable: true,
+            onKey: onKey)
     {
         TraversalEdgeBehavior = traversalEdgeBehavior;
         DirectionalTraversalEdgeBehavior = directionalTraversalEdgeBehavior;
@@ -875,7 +906,9 @@ public sealed class FocusManager : ChangeNotifier
     private bool? _lastInteractionRequiresTraditionalHighlights;
     private bool _haveScheduledUpdate;
     private FocusAppLifecycleListener? _appLifecycleListener;
-    private Func<KeyMessage, bool>? _keyMessageHandler;
+#pragma warning disable CS0618
+    private KeyMessageHandler? _keyMessageHandler;
+#pragma warning restore CS0618
     private bool _globalHandlersRegistered;
     private FocusNode? _suspendedNode;
 
@@ -1216,59 +1249,150 @@ public sealed class FocusManager : ChangeNotifier
         return RouteKeyEvent(@event);
     }
 
-    /// <summary>Dart parity source: <c>_HighlightModeManager.handleKeyMessage</c>.</summary>
-    internal bool RouteKeyEvent(KeyEvent @event)
+    /// <summary>
+    /// Routes a single regularized key event, as a <see cref="KeyMessage"/> without a raw event (the
+    /// form Dart's key event manager dispatches a solitary synthesized event in).
+    /// </summary>
+#pragma warning disable CS0618
+    internal bool RouteKeyEvent(KeyEvent @event) => HandleKeyMessage(new KeyMessage([@event], null));
+
+    // KeyEvent.FLAG_SOFT_KEYBOARD
+    private const int KAndroidSoftKeyboardFlag = 0x00000002;
+
+    // KeyCharacterMap.VIRTUAL_KEYBOARD
+    private const int KAndroidVirtualKeyboardDeviceId = -1;
+
+    private static bool IsKeyMessageFromAndroidIme(KeyMessage message)
     {
-        UpdateHighlightModeForKeyEvent();
-
-        if (_earlyKeyEventHandlers.Count > 0)
+        RawKeyEvent? rawEvent = message.RawEvent;
+        if (rawEvent == null)
         {
-            KeyEventResult early = KeyEventResults.Combine(
-                _earlyKeyEventHandlers.ToArray().Select(callback => callback(@event)).ToList());
-            if (early == KeyEventResult.Handled)
-            {
-                return true;
-            }
+            return false;
+        }
 
-            if (early == KeyEventResult.SkipRemainingHandlers)
+        RawKeyEventData data = rawEvent.Data;
+        if (data is not RawKeyEventDataAndroid android)
+        {
+            return false;
+        }
+
+        return (android.Flags & KAndroidSoftKeyboardFlag) != 0
+               || android.DeviceId == KAndroidVirtualKeyboardDeviceId;
+    }
+
+    /// <summary>Dart parity source: <c>_HighlightModeManager.handleKeyMessage</c>.</summary>
+    internal bool HandleKeyMessage(KeyMessage message)
+    {
+        // Update highlightMode first, since things responding to the keys might
+        // look at the highlight mode, and it should be accurate.
+        if (_lastInteractionRequiresTraditionalHighlights != false)
+        {
+            // Android sends raw key events for "Backspace" key events from virtual
+            // keyboards. These shouldn't switch the highlight mode to traditional.
+            // See: https://github.com/flutter/flutter/issues/180746
+            bool isFromVirtualKeyboard = IsKeyMessageFromAndroidIme(message);
+            if (!isFromVirtualKeyboard)
             {
-                return false;
+                _lastInteractionRequiresTraditionalHighlights = false;
+                UpdateHighlightMode();
             }
+        }
+
+        if (PrimaryFocus == null)
+        {
+            return false;
         }
 
         bool handled = false;
-        if (PrimaryFocus != null)
+        // Check to see if any of the early handlers handle the key. If so, then
+        // return early.
+        if (_earlyKeyEventHandlers.Count > 0)
         {
-            foreach (FocusNode node in Enumerable.Repeat(PrimaryFocus, 1).Concat(PrimaryFocus.Ancestors))
+            var results = new List<KeyEventResult>();
+            // Make a copy to prevent problems if the list is modified during iteration.
+            foreach (OnKeyEventCallback callback in _earlyKeyEventHandlers.ToArray())
             {
-                KeyEventResult result = node.HandleKeyEvent(@event);
-                if (result == KeyEventResult.Ignored)
+                foreach (KeyEvent keyEvent in message.Events)
                 {
-                    continue;
+                    results.Add(callback(keyEvent));
                 }
+            }
 
-                handled = result == KeyEventResult.Handled;
-                break;
+            switch (KeyEventResults.Combine(results))
+            {
+                case KeyEventResult.Ignored:
+                    break;
+                case KeyEventResult.Handled:
+                    handled = true;
+                    break;
+                case KeyEventResult.SkipRemainingHandlers:
+                    handled = false;
+                    break;
             }
         }
 
-        if (!handled && _lateKeyEventHandlers.Count > 0)
+        if (handled)
         {
-            KeyEventResult late = KeyEventResults.Combine(
-                _lateKeyEventHandlers.ToArray().Select(callback => callback(@event)).ToList());
-            if (late == KeyEventResult.Handled)
+            return true;
+        }
+
+        // Walk the current focus from the leaf to the root, calling each node's
+        // onKeyEvent on the way up, and if one responds that they handled it or
+        // want to stop propagation, stop.
+        foreach (FocusNode node in Enumerable.Repeat(PrimaryFocus, 1).Concat(PrimaryFocus.Ancestors))
+        {
+            var results = new List<KeyEventResult>();
+            foreach (KeyEvent keyEvent in message.Events)
             {
-                return true;
+                results.Add(node.HandleKeyEvent(keyEvent));
             }
 
-            if (late == KeyEventResult.SkipRemainingHandlers)
+            if (node.OnKey != null && message.RawEvent != null)
             {
-                return false;
+                results.Add(node.OnKey(node, message.RawEvent));
+            }
+
+            KeyEventResult result = KeyEventResults.Combine(results);
+            if (result == KeyEventResult.Ignored)
+            {
+                continue;
+            }
+
+            handled = result == KeyEventResult.Handled;
+            // Only KeyEventResult.ignored will continue the for loop. All other
+            // options will stop the event propagation.
+            break;
+        }
+
+        // Check to see if any late key event handlers want to handle the event.
+        if (!handled && _lateKeyEventHandlers.Count > 0)
+        {
+            var results = new List<KeyEventResult>();
+            // Make a copy to prevent problems if the list is modified during iteration.
+            foreach (OnKeyEventCallback callback in _lateKeyEventHandlers.ToArray())
+            {
+                foreach (KeyEvent keyEvent in message.Events)
+                {
+                    results.Add(callback(keyEvent));
+                }
+            }
+
+            switch (KeyEventResults.Combine(results))
+            {
+                case KeyEventResult.Ignored:
+                    break;
+                case KeyEventResult.Handled:
+                    handled = true;
+                    break;
+                case KeyEventResult.SkipRemainingHandlers:
+                    handled = false;
+                    break;
             }
         }
 
         return handled;
     }
+#pragma warning restore CS0618
 
     internal void ResetForTests()
     {
@@ -1295,8 +1419,8 @@ public sealed class FocusManager : ChangeNotifier
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
         RawKeyboard.Instance.ClearListeners();
-#pragma warning restore CS0618
         KeyEventManager.Instance.ClearState();
+#pragma warning restore CS0618
         if (_globalHandlersRegistered)
         {
             RegisterKeyMessageHandler();
@@ -1310,16 +1434,7 @@ public sealed class FocusManager : ChangeNotifier
     private void RegisterKeyMessageHandler()
     {
 #pragma warning disable CS0618
-        _keyMessageHandler ??= message =>
-        {
-            bool handled = false;
-            foreach (KeyEvent keyEvent in message.Events)
-            {
-                handled |= RouteKeyEvent(keyEvent);
-            }
-
-            return handled;
-        };
+        _keyMessageHandler ??= HandleKeyMessage;
         KeyEventManager.Instance.KeyMessageHandler = _keyMessageHandler;
 #pragma warning restore CS0618
     }

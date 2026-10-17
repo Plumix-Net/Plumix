@@ -1,30 +1,10 @@
 // Dart parity source: flutter/packages/flutter/lib/src/services/hardware_keyboard.dart
 
+using System.Globalization;
 using Plumix.Foundation;
+using Plumix.Widgets;
 
 namespace Plumix.UI;
-
-/// <summary>
-/// The type of device that a key event originated from.
-/// </summary>
-/// <remarks>Dart parity source: flutter/lib/ui/key.dart (`ui.KeyEventDeviceType`).</remarks>
-public enum KeyEventDeviceType
-{
-    /// <summary>The device is a keyboard.</summary>
-    Keyboard,
-
-    /// <summary>The device is a directional pad on something like a television remote control or similar.</summary>
-    DirectionalPad,
-
-    /// <summary>The device is a gamepad button.</summary>
-    Gamepad,
-
-    /// <summary>The device is a joystick button.</summary>
-    Joystick,
-
-    /// <summary>The device is a device connected to an HDMI bus.</summary>
-    Hdmi,
-}
 
 /// <summary>
 /// Represents a lock mode of a keyboard, such as <see cref="NumLock"/>.
@@ -202,6 +182,35 @@ public static class KeyboardDebug
     /// <summary>Setting to true will cause extensive logging to occur when key events are received.</summary>
     public static bool DebugPrintKeyboardEvents { get; set; }
 
+    /// <summary>
+    /// Override the transit mode with which key events are simulated (services/debug.dart's
+    /// <c>debugKeyEventSimulatorTransitModeOverride</c>).
+    /// </summary>
+    /// <remarks>
+    /// Setting this is a good way to make certain tests simulate the behavior of different type of
+    /// platforms in terms of their extent of support for keyboard API.
+    /// </remarks>
+#pragma warning disable CS0618
+    public static KeyDataTransitMode? DebugKeyEventSimulatorTransitModeOverride { get; set; }
+#pragma warning restore CS0618
+
+    /// <summary>
+    /// Returns true if none of the widget library debug variables have been changed (services/debug.dart's
+    /// <c>debugAssertAllServicesVarsUnset</c>).
+    /// </summary>
+    /// <remarks>Throws a <see cref="FlutterError"/> carrying <paramref name="reason"/> otherwise; checked
+    /// in debug builds only.</remarks>
+    public static bool DebugAssertAllServicesVarsUnset(string reason)
+    {
+        if (Constants.KDebugMode
+            && (DebugKeyEventSimulatorTransitModeOverride != null || DebugPrintKeyboardEvents))
+        {
+            throw new FlutterError(reason);
+        }
+
+        return true;
+    }
+
     internal static void Log(Func<string> messageFunc, Func<IEnumerable<string>>? detailsFunc = null)
     {
         if (!DebugPrintKeyboardEvents)
@@ -246,7 +255,7 @@ public static class KeyboardDebug
 /// </remarks>
 public sealed class HardwareKeyboard
 {
-    private readonly Dictionary<PhysicalKeyboardKey, LogicalKeyboardKey> _pressedKeys = [];
+    private readonly OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey> _pressedKeys = [];
     private readonly HashSet<KeyboardLockMode> _lockModes = [];
     private List<KeyEventCallback> _handlers = [];
     private List<KeyEventCallback>? _modifiedHandlers;
@@ -335,20 +344,38 @@ public sealed class HardwareKeyboard
     }
 
     /// <summary>
-    /// Query the engine and update key states, so that they are accurate. Flutter asks the platform
-    /// over the `flutter/keyboard` channel; Plumix has no channels, so the host supplies the map of
-    /// pressed physical usage codes to logical key ids directly.
+    /// The physical keys currently pressed, in the order they were recorded — the iteration order of
+    /// Dart's <c>physicalKeysPressed</c>, which <c>KeyEventManager</c> relies on.
     /// </summary>
-    public void SyncKeyboardState(IReadOnlyDictionary<long, long>? keyboardState)
-    {
-        if (keyboardState == null)
-        {
-            return;
-        }
+    internal IReadOnlyList<PhysicalKeyboardKey> PhysicalKeysPressedInOrder => [.. _pressedKeys.Keys];
 
-        foreach ((long physical, long logical) in keyboardState)
+    /// <summary>
+    /// Query the engine and update key states, so that they are accurate.
+    /// </summary>
+    /// <remarks>
+    /// Asks the platform over <see cref="SystemChannels.Keyboard"/> (<c>getKeyboardState</c>) for its
+    /// map of pressed physical usage codes to logical key ids.
+    /// </remarks>
+    public Task SyncKeyboardState() => SyncKeyboardState(SystemChannels.Keyboard);
+
+    /// <summary>
+    /// <see cref="SyncKeyboardState()"/> over a given channel: <see cref="ServicesBinding"/> runs it
+    /// over its own messenger while it is being constructed, before <see cref="ServicesBinding.Instance"/>
+    /// (which <see cref="SystemChannels.Keyboard"/> resolves) is assigned.
+    /// </summary>
+    internal async Task SyncKeyboardState(MethodChannel keyboardChannel)
+    {
+        // Dart's `invokeMapMethod<int, int>`: the standard codec decodes a Dart `int` as either an
+        // `int` or a `long`, so the entries are widened here.
+        Dictionary<object, object>? keyboardState =
+            await keyboardChannel.InvokeMapMethod<object, object>("getKeyboardState");
+        if (keyboardState != null)
         {
-            _pressedKeys[new PhysicalKeyboardKey(physical)] = new LogicalKeyboardKey(logical);
+            foreach ((object physical, object logical) in keyboardState)
+            {
+                _pressedKeys[new PhysicalKeyboardKey(Convert.ToInt64(physical, CultureInfo.InvariantCulture))] =
+                    new LogicalKeyboardKey(Convert.ToInt64(logical, CultureInfo.InvariantCulture));
+            }
         }
     }
 
@@ -395,7 +422,7 @@ public sealed class HardwareKeyboard
         _pressedKeys.Clear();
         _lockModes.Clear();
         _handlers.Clear();
-        _modifiedHandlers = null;
+        DebugAssertions.Assert(_modifiedHandlers == null);
     }
 
     private IEnumerable<string> DebugPressedKeysDetails()
@@ -438,6 +465,10 @@ public sealed class HardwareKeyboard
 
     private bool DispatchKeyEvent(KeyEvent keyEvent)
     {
+        // This dispatching could have used the same algorithm as [ChangeNotifier],
+        // but since 1) it shouldn't happen frequently and 2) since key events
+        // might happen in a high frequency, we should use a simpler algorithm.
+        DebugAssertions.Assert(!_duringDispatch, "Nested keyboard dispatching is not supported");
         _duringDispatch = true;
         bool handled = false;
         foreach (KeyEventCallback handler in _handlers)

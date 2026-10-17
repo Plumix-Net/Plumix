@@ -29,7 +29,10 @@ public class Focus : StatefulWidget
         Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
         string? debugLabel = null,
-        Key? key = null) : this(
+        Key? key = null,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null) : this(
+#pragma warning restore CS0618
             child: child,
             includeSemantics: true,
             focusNode: focusNode,
@@ -42,7 +45,8 @@ public class Focus : StatefulWidget
             onFocusChange: onFocusChange,
             onKeyEvent: onKeyEvent,
             debugLabel: debugLabel,
-            key: key)
+            key: key,
+            onKey: onKey)
     {
     }
 
@@ -59,7 +63,10 @@ public class Focus : StatefulWidget
         Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
         string? debugLabel = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null) : base(key)
+#pragma warning restore CS0618
     {
         Child = child;
         FocusNode = focusNode;
@@ -72,6 +79,7 @@ public class Focus : StatefulWidget
         OnFocusChange = onFocusChange;
         IncludeSemantics = includeSemantics;
         RawOnKeyEvent = onKeyEvent;
+        RawOnKey = onKey;
         RawDebugLabel = debugLabel;
     }
 
@@ -104,6 +112,15 @@ public class Focus : StatefulWidget
     private protected string? RawDebugLabel { get; }
 
     public virtual FocusOnKeyEventCallback? OnKeyEvent => RawOnKeyEvent ?? FocusNode?.OnKeyEvent;
+
+#pragma warning disable CS0618
+    private protected FocusOnKeyCallback? RawOnKey { get; }
+
+    /// <summary>A handler for keys that are pressed when this object or one of its children has focus.</summary>
+    /// <remarks>Dart's deprecated <c>Focus.onKey</c>; use <see cref="OnKeyEvent"/> instead.</remarks>
+    [Obsolete("Use OnKeyEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+    public virtual FocusOnKeyCallback? OnKey => RawOnKey ?? FocusNode?.OnKey;
+#pragma warning restore CS0618
 
     public virtual bool CanRequestFocus => RawCanRequestFocus ?? FocusNode?.CanRequestFocus ?? true;
 
@@ -191,6 +208,11 @@ internal sealed class FocusWithExternalFocusNode : Focus
 
     public override FocusOnKeyEventCallback? OnKeyEvent => FocusNode!.OnKeyEvent;
 
+#pragma warning disable CS0618
+    [Obsolete("Use OnKeyEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+    public override FocusOnKeyCallback? OnKey => FocusNode!.OnKey;
+#pragma warning restore CS0618
+
     public override bool CanRequestFocus => FocusNode!.CanRequestFocus;
 
     public override bool SkipTraversal => FocusNode!.SkipTraversal;
@@ -245,7 +267,9 @@ internal class FocusState : State<Focus>
         _descendantsWereFocusable = FocusNode.DescendantsAreFocusable;
         _descendantsWereTraversable = FocusNode.DescendantsAreTraversable;
         _hadPrimaryFocus = FocusNode.HasPrimaryFocus;
-        FocusAttachment = FocusNode.Attach(Context, onKeyEvent: Widget.OnKeyEvent);
+#pragma warning disable CS0618
+        FocusAttachment = FocusNode.Attach(Context, onKeyEvent: Widget.OnKeyEvent, onKey: Widget.OnKey);
+#pragma warning restore CS0618
         FocusNode.AddListener(HandleFocusChanged);
     }
 
@@ -295,6 +319,13 @@ internal class FocusState : State<Focus>
                 {
                     FocusNode.OnKeyEvent = Widget.OnKeyEvent;
                 }
+
+#pragma warning disable CS0618
+                if (Widget.OnKey != FocusNode.OnKey)
+                {
+                    FocusNode.OnKey = Widget.OnKey;
+                }
+#pragma warning restore CS0618
 
                 FocusNode.SkipTraversal = Widget.SkipTraversal;
                 FocusNode.CanRequestFocus = Widget.CanRequestFocus;
@@ -383,7 +414,10 @@ public class FocusScope : Focus
         FocusOnKeyEventCallback? onKeyEvent = null,
         bool includeSemantics = true,
         string? debugLabel = null,
-        Key? key = null) : base(
+        Key? key = null,
+#pragma warning disable CS0618
+        FocusOnKeyCallback? onKey = null) : base(
+#pragma warning restore CS0618
             child: child,
             includeSemantics: includeSemantics,
             focusNode: focusScopeNode,
@@ -396,7 +430,8 @@ public class FocusScope : Focus
             onFocusChange: onFocusChange,
             onKeyEvent: onKeyEvent,
             debugLabel: debugLabel,
-            key: key)
+            key: key,
+            onKey: onKey)
     {
     }
 
@@ -464,6 +499,11 @@ internal sealed class FocusScopeWithExternalFocusNode : FocusScope
     internal override bool UsingExternalFocus => true;
 
     public override FocusOnKeyEventCallback? OnKeyEvent => FocusNode!.OnKeyEvent;
+
+#pragma warning disable CS0618
+    [Obsolete("Use OnKeyEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+    public override FocusOnKeyCallback? OnKey => FocusNode!.OnKey;
+#pragma warning restore CS0618
 
     public override bool CanRequestFocus => FocusNode!.CanRequestFocus;
 

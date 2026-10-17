@@ -1371,7 +1371,7 @@ public sealed class FrameworkDartParityTests
         {
             int pointerRouterCount = GestureBinding.Instance.PointerRouter.DebugGlobalRouteCount;
 #pragma warning disable CS0618
-            Func<KeyMessage, bool>? rawKeyEventHandler = KeyEventManager.Instance.KeyMessageHandler;
+            KeyMessageHandler? rawKeyEventHandler = KeyEventManager.Instance.KeyMessageHandler;
             Assert.NotNull(rawKeyEventHandler);
             var focusManager = new FocusManager();
             try
@@ -1865,7 +1865,7 @@ public sealed class FrameworkDartParityTests
     private static void WithLocalWidgetsBinding(Action<WidgetsBinding> body)
     {
 #pragma warning disable CS0618
-        Func<KeyMessage, bool>? previousKeyMessageHandler = KeyEventManager.Instance.KeyMessageHandler;
+        KeyMessageHandler? previousKeyMessageHandler = KeyEventManager.Instance.KeyMessageHandler;
         var binding = new WidgetsBinding();
         try
         {

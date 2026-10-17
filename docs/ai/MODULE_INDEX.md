@@ -520,7 +520,11 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/KeyboardListener.cs`
   - `src/Plumix/Widgets/Actions.cs`
   - `src/Plumix/Widgets/Shortcuts.cs`
-  - `src/Plumix/UI/KeyboardEvents.cs`
+  - `src/Plumix/UI/KeyboardKey.cs` + `KeyboardKey.g.cs` (logical/physical key identities)
+  - `src/Plumix/UI/HardwareKeyboard.cs`, `KeyEventManager.cs` (`flutter/keyevent` and key data → `KeyEvent`s)
+  - `src/Plumix/UI/RawKeyboard.cs` + `RawKeyboard<Platform>.cs` (deprecated raw events, per-platform payloads),
+    `KeyboardMaps.g.cs` (`scripts/generate_keyboard_maps.py`)
+  - `src/Plumix/HostKeyEventMessage.cs` (host: Avalonia key event → the platform's raw key message)
 - Primary Tests:
   - `src/Plumix.Tests/FocusTests.cs`
   - `src/Plumix.Tests/FocusScopeTests.cs`

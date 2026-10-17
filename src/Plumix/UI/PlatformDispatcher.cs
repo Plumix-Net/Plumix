@@ -280,6 +280,25 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action<IReadOnlyList<FrameTiming>>? OnReportTimings { get; set; }
 
+    /// <summary>A callback that is invoked for each key data that is sent by the platform.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.onKeyData</c>; <c>ServicesBinding</c> installs
+    /// <c>KeyEventManager.HandleKeyData</c> here. The engine delivers key data over the
+    /// <c>flutter/keydata</c> channel buffer and answers the platform with the callback's result; a
+    /// Plumix host calls <see cref="DispatchKeyData"/>, which returns that result directly.
+    /// </remarks>
+    public KeyDataCallback? OnKeyData { get; set; }
+
+    /// <summary>
+    /// Delivers a <see cref="KeyData"/> packet to <see cref="OnKeyData"/>, as the engine's
+    /// <c>_keyDataListener</c> does; false when no callback is installed.
+    /// </summary>
+    public bool DispatchKeyData(KeyData data)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        return OnKeyData?.Invoke(data) ?? false;
+    }
+
     /// <summary>Whether the user has requested that semantics be enabled for the application.</summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.semanticsEnabled</c>: typically set while an assistive technology

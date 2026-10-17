@@ -1,10 +1,16 @@
 // Dart parity source: flutter/packages/flutter/lib/src/services/raw_keyboard.dart
 
 using Plumix.Foundation;
+using Plumix.Widgets;
 
 namespace Plumix.UI;
 
 /// <summary>An enum describing the side of the keyboard that a key is on.</summary>
+/// <remarks>
+/// Dart deprecates this enum after v3.18.0-2.0.pre with the rest of the raw keyboard API; it stays
+/// unmarked here because <see cref="RawKeyEventData"/>'s abstract members, which every platform data
+/// class overrides, take it as a parameter (see the raw-keyboard row in <c>docs/ai/DIVERGENCES.md</c>).
+/// </remarks>
 public enum KeyboardSide
 {
     /// <summary>Matches if either the left, right or both versions of the key are pressed.</summary>
@@ -21,6 +27,7 @@ public enum KeyboardSide
 }
 
 /// <summary>An enum describing the type of modifier key that is being pressed.</summary>
+/// <remarks>Deprecated in Dart with <see cref="KeyboardSide"/>; unmarked here for the same reason.</remarks>
 public enum ModifierKey
 {
     /// <summary>The CTRL modifier key.</summary>
@@ -54,9 +61,18 @@ public enum ModifierKey
 /// <summary>
 /// Base class for platform-specific key event data.
 /// </summary>
-[Obsolete("Use KeyEvent and HardwareKeyboard instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
-public abstract class RawKeyEventData
+/// <remarks>
+/// This base class exists to have a common type to use for each of the target platforms' key event
+/// data structures: <see cref="RawKeyEventDataAndroid"/>, <see cref="RawKeyEventDataFuchsia"/>,
+/// <see cref="RawKeyEventDataMacOs"/>, <see cref="RawKeyEventDataIos"/>,
+/// <see cref="RawKeyEventDataLinux"/>, <see cref="RawKeyEventDataWindows"/> and
+/// <see cref="RawKeyEventDataWeb"/>.
+/// </remarks>
+[Obsolete("Platform specific key event data is no longer available. See KeyEvent for what is available. "
+          + "Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+public abstract class RawKeyEventData : Diagnosticable
 {
+    /// <summary>Abstract const constructor for subclasses.</summary>
     protected RawKeyEventData()
     {
     }
@@ -64,17 +80,11 @@ public abstract class RawKeyEventData
     /// <summary>Returns true if the given <see cref="ModifierKey"/> was pressed at the time of this event.</summary>
     public abstract bool IsModifierPressed(ModifierKey key, KeyboardSide side = KeyboardSide.Any);
 
-    /// <summary>Returns the side of the given modifier key that was pressed, or null if it was not pressed.</summary>
+    /// <summary>
+    /// Returns a <see cref="KeyboardSide"/> enum value that describes which side or sides of the
+    /// given keyboard modifier key were pressed at the time of this event, or null if it was not pressed.
+    /// </summary>
     public abstract KeyboardSide? GetModifierSide(ModifierKey key);
-
-    /// <summary>An object representing the physical location of this key.</summary>
-    public abstract PhysicalKeyboardKey PhysicalKey { get; }
-
-    /// <summary>An object representing the logical key that was pressed.</summary>
-    public abstract LogicalKeyboardKey LogicalKey { get; }
-
-    /// <summary>Returns the Unicode string representing the label on this key, or an empty string.</summary>
-    public abstract string KeyLabel { get; }
 
     /// <summary>Returns true if a CTRL modifier key was pressed at the time of this event.</summary>
     public bool IsControlPressed => IsModifierPressed(ModifierKey.ControlModifier);
@@ -88,7 +98,8 @@ public abstract class RawKeyEventData
     /// <summary>Returns true if a META modifier key was pressed at the time of this event.</summary>
     public bool IsMetaPressed => IsModifierPressed(ModifierKey.MetaModifier);
 
-    /// <summary>Returns a map of modifier keys that were pressed at the time of this event.</summary>
+    /// <summary>Returns a map of modifier keys that were pressed at the time of this event, and the
+    /// keyboard side or sides that the key was on.</summary>
     public IReadOnlyDictionary<ModifierKey, KeyboardSide> ModifiersPressed
     {
         get
@@ -106,12 +117,19 @@ public abstract class RawKeyEventData
                 {
                     result[key] = side.Value;
                 }
-                else
+
+                if (Constants.KDebugMode && side == null)
                 {
-                    KeyboardDebug.Log(() =>
-                        "Raw key data is returning inconsistent information for pressed modifiers. "
-                        + $"IsModifierPressed returns true for {key} being pressed, but when "
-                        + "GetModifierSide is called, it says that no modifiers are pressed.");
+                    Print.DebugPrint(
+                        "Raw key data is returning inconsistent information for "
+                        + "pressed modifiers. isModifierPressed returns true for "
+                        + $"{RawKeyboard.DescribeModifierKey(key)} "
+                        + "being pressed, but when getModifierSide is called, it says "
+                        + "that no modifiers are pressed.");
+                    if (this is RawKeyEventDataAndroid android)
+                    {
+                        Print.DebugPrint($"Android raw key metaState: {android.MetaState}");
+                    }
                 }
             }
 
@@ -119,130 +137,27 @@ public abstract class RawKeyEventData
         }
     }
 
-    /// <summary>
-    /// The device type this event came from. Flutter derives it from the platform payload
-    /// (`KeyEventManager._convertDeviceType`); the Plumix host reports it directly.
-    /// </summary>
-    public virtual KeyEventDeviceType DeviceType => KeyEventDeviceType.Keyboard;
+    /// <summary>Returns an object representing the physical location of this key on a QWERTY keyboard.</summary>
+    public abstract PhysicalKeyboardKey PhysicalKey { get; }
 
-    /// <summary>Whether a key down event should be dispatched. Overridden by hosts that swallow keys.</summary>
+    /// <summary>Returns an object representing the logical key that was pressed.</summary>
+    public abstract LogicalKeyboardKey LogicalKey { get; }
+
+    /// <summary>
+    /// Returns the Unicode string representing the label on this key, or an empty string if there
+    /// is no label.
+    /// </summary>
+    public abstract string KeyLabel { get; }
+
+    /// <summary>Whether a key down event, and likewise its accompanying key up event, should be dispatched.</summary>
     public virtual bool ShouldDispatchEvent() => true;
 }
 
-/// <summary>
-/// Key event data produced by the Plumix host adapter.
-/// </summary>
-/// <remarks>
-/// Flutter ships one <c>RawKeyEventData</c> subclass per embedding (Android, macOS, Windows, ...),
-/// each decoding that platform's native modifier bitmask. Plumix has a single host bridge that has
-/// already normalized modifiers, so it has a single subclass carrying that normalized state.
-/// </remarks>
-[Obsolete("Use KeyEvent and HardwareKeyboard instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
-public sealed class HostRawKeyEventData : RawKeyEventData
-{
-    public HostRawKeyEventData(
-        PhysicalKeyboardKey physicalKey,
-        LogicalKeyboardKey logicalKey,
-        string keyLabel = "",
-        bool isControlPressed = false,
-        bool isShiftPressed = false,
-        bool isAltPressed = false,
-        bool isMetaPressed = false,
-        bool isCapsLockOn = false,
-        bool isNumLockOn = false,
-        bool isScrollLockOn = false,
-        KeyEventDeviceType deviceType = KeyEventDeviceType.Keyboard,
-        bool shouldDispatchEvent = true)
-    {
-        PhysicalKey = physicalKey ?? throw new ArgumentNullException(nameof(physicalKey));
-        LogicalKey = logicalKey ?? throw new ArgumentNullException(nameof(logicalKey));
-        KeyLabel = keyLabel ?? throw new ArgumentNullException(nameof(keyLabel));
-        IsControlDown = isControlPressed;
-        IsShiftDown = isShiftPressed;
-        IsAltDown = isAltPressed;
-        IsMetaDown = isMetaPressed;
-        IsCapsLockOn = isCapsLockOn;
-        IsNumLockOn = isNumLockOn;
-        IsScrollLockOn = isScrollLockOn;
-        HostDeviceType = deviceType;
-        HostShouldDispatchEvent = shouldDispatchEvent;
-    }
-
-    public override PhysicalKeyboardKey PhysicalKey { get; }
-
-    public override LogicalKeyboardKey LogicalKey { get; }
-
-    public override string KeyLabel { get; }
-
-    public bool IsControlDown { get; }
-
-    public bool IsShiftDown { get; }
-
-    public bool IsAltDown { get; }
-
-    public bool IsMetaDown { get; }
-
-    public bool IsCapsLockOn { get; }
-
-    public bool IsNumLockOn { get; }
-
-    public bool IsScrollLockOn { get; }
-
-    /// <summary>The device type reported by the host.</summary>
-    public KeyEventDeviceType HostDeviceType { get; }
-
-    /// <summary>Whether the host wants this key dispatched (false for keys the platform swallows).</summary>
-    public bool HostShouldDispatchEvent { get; }
-
-    public override KeyEventDeviceType DeviceType => HostDeviceType;
-
-    public override bool ShouldDispatchEvent() => HostShouldDispatchEvent;
-
-    public override bool IsModifierPressed(ModifierKey key, KeyboardSide side = KeyboardSide.Any)
-    {
-        bool pressed = key switch
-        {
-            ModifierKey.ControlModifier => IsControlDown,
-            ModifierKey.ShiftModifier => IsShiftDown,
-            ModifierKey.AltModifier => IsAltDown,
-            ModifierKey.MetaModifier => IsMetaDown,
-            ModifierKey.CapsLockModifier => IsCapsLockOn,
-            ModifierKey.NumLockModifier => IsNumLockOn,
-            ModifierKey.ScrollLockModifier => IsScrollLockOn,
-            _ => false,
-        };
-
-        if (!pressed)
-        {
-            return false;
-        }
-
-        // The host reports a single modifier bit per modifier, without a side, so only sideless
-        // queries and the lock modifiers' `all` can be satisfied.
-        return side == KeyboardSide.Any || side == GetModifierSide(key);
-    }
-
-    public override KeyboardSide? GetModifierSide(ModifierKey key)
-    {
-        if (!IsModifierPressed(key))
-        {
-            return null;
-        }
-
-        return key switch
-        {
-            ModifierKey.CapsLockModifier
-                or ModifierKey.NumLockModifier
-                or ModifierKey.ScrollLockModifier => KeyboardSide.All,
-            _ => KeyboardSide.Any,
-        };
-    }
-}
-
-/// <summary>Base class for raw key events.</summary>
-[Obsolete("Use KeyEvent and KeyboardListener instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+/// <summary>Defines the interface for raw key events.</summary>
+[Obsolete("Use KeyEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
 public abstract class RawKeyEvent : Diagnosticable
 {
+    /// <summary>Initializes fields for subclasses, and provides a const constructor for const subclasses.</summary>
     protected RawKeyEvent(RawKeyEventData data, string? character = null, bool repeat = false)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
@@ -250,14 +165,165 @@ public abstract class RawKeyEvent : Diagnosticable
         Repeat = repeat;
     }
 
-    /// <summary>Platform-specific information about the key event.</summary>
-    public RawKeyEventData Data { get; }
+    /// <summary>
+    /// Creates a concrete <see cref="RawKeyEvent"/> class from a message in the form received on
+    /// <see cref="SystemChannels.KeyEvent"/>.
+    /// </summary>
+    public static RawKeyEvent FromMessage(IReadOnlyDictionary<string, object?> message)
+    {
+        ArgumentNullException.ThrowIfNull(message);
+        string? character = null;
 
-    /// <summary>Returns the Unicode character (grapheme cluster) completed by this keystroke, if any.</summary>
-    public string? Character { get; }
+        RawKeyEventData DataFromWeb()
+        {
+            string? key = message.GetValueOrDefault("key") as string;
+            if (key != null && key.Length > 0 && key.Length == 1)
+            {
+                character = key;
+            }
 
-    /// <summary>Whether this is a repeated down event. Always false for <see cref="RawKeyUpEvent"/>.</summary>
-    public bool Repeat { get; }
+            return new RawKeyEventDataWeb(
+                code: message.GetValueOrDefault("code") as string ?? string.Empty,
+                key: key ?? string.Empty,
+                location: IntOf(message, "location") ?? 0,
+                metaState: IntOf(message, "metaState") ?? 0,
+                keyCode: IntOf(message, "keyCode") ?? 0);
+        }
+
+        RawKeyEventData data;
+        if (Constants.KIsWeb)
+        {
+            data = DataFromWeb();
+        }
+        else
+        {
+            string keymap = (string)message["keymap"]!;
+            switch (keymap)
+            {
+                case "android":
+                    data = new RawKeyEventDataAndroid(
+                        flags: IntOf(message, "flags") ?? 0,
+                        codePoint: IntOf(message, "codePoint") ?? 0,
+                        keyCode: IntOf(message, "keyCode") ?? 0,
+                        plainCodePoint: IntOf(message, "plainCodePoint") ?? 0,
+                        scanCode: IntOf(message, "scanCode") ?? 0,
+                        metaState: IntOf(message, "metaState") ?? 0,
+                        eventSource: IntOf(message, "source") ?? 0,
+                        vendorId: IntOf(message, "vendorId") ?? 0,
+                        productId: IntOf(message, "productId") ?? 0,
+                        deviceId: IntOf(message, "deviceId") ?? 0,
+                        repeatCount: IntOf(message, "repeatCount") ?? 0);
+                    if (message.ContainsKey("character"))
+                    {
+                        character = message["character"] as string;
+                    }
+
+                    break;
+                case "fuchsia":
+                    int fuchsiaCodePoint = IntOf(message, "codePoint") ?? 0;
+                    data = new RawKeyEventDataFuchsia(
+                        hidUsage: IntOf(message, "hidUsage") ?? 0,
+                        codePoint: fuchsiaCodePoint,
+                        modifiers: IntOf(message, "modifiers") ?? 0);
+                    if (fuchsiaCodePoint != 0)
+                    {
+                        character = FromCharCode(fuchsiaCodePoint);
+                    }
+
+                    break;
+                case "macos":
+                    data = new RawKeyEventDataMacOs(
+                        characters: message.GetValueOrDefault("characters") as string ?? string.Empty,
+                        charactersIgnoringModifiers:
+                            message.GetValueOrDefault("charactersIgnoringModifiers") as string ?? string.Empty,
+                        keyCode: IntOf(message, "keyCode") ?? 0,
+                        modifiers: IntOf(message, "modifiers") ?? 0,
+                        specifiedLogicalKey: LongOf(message, "specifiedLogicalKey"));
+                    character = message.GetValueOrDefault("characters") as string;
+                    break;
+                case "ios":
+                    data = new RawKeyEventDataIos(
+                        characters: message.GetValueOrDefault("characters") as string ?? string.Empty,
+                        charactersIgnoringModifiers:
+                            message.GetValueOrDefault("charactersIgnoringModifiers") as string ?? string.Empty,
+                        keyCode: IntOf(message, "keyCode") ?? 0,
+                        modifiers: IntOf(message, "modifiers") ?? 0);
+                    if (message.GetValueOrDefault("characters") is string { Length: > 0 } characters)
+                    {
+                        character = characters;
+                    }
+
+                    break;
+                case "linux":
+                    long unicodeScalarValues = LongOf(message, "unicodeScalarValues") ?? 0;
+                    data = new RawKeyEventDataLinux(
+                        keyHelper: KeyHelper.Create(message.GetValueOrDefault("toolkit") as string ?? string.Empty),
+                        unicodeScalarValues: unicodeScalarValues,
+                        keyCode: IntOf(message, "keyCode") ?? 0,
+                        scanCode: IntOf(message, "scanCode") ?? 0,
+                        modifiers: IntOf(message, "modifiers") ?? 0,
+                        isDown: Equals(message.GetValueOrDefault("type"), "keydown"),
+                        specifiedLogicalKey: LongOf(message, "specifiedLogicalKey"));
+                    if (unicodeScalarValues != 0)
+                    {
+                        character = FromCharCode(unchecked((int)unicodeScalarValues));
+                    }
+
+                    break;
+                case "windows":
+                    int characterCodePoint = IntOf(message, "characterCodePoint") ?? 0;
+                    data = new RawKeyEventDataWindows(
+                        keyCode: IntOf(message, "keyCode") ?? 0,
+                        scanCode: IntOf(message, "scanCode") ?? 0,
+                        characterCodePoint: characterCodePoint,
+                        modifiers: IntOf(message, "modifiers") ?? 0);
+                    if (characterCodePoint != 0)
+                    {
+                        character = FromCharCode(characterCodePoint);
+                    }
+
+                    break;
+                case "web":
+                    data = DataFromWeb();
+                    break;
+                default:
+                    // Raw key events are not yet implemented on this platform.
+                    throw new FlutterError($"Unknown keymap for key events: {keymap}");
+            }
+        }
+
+        bool repeat = RawKeyboard.Instance.PhysicalKeysPressed.Contains(data.PhysicalKey);
+        string type = (string)message["type"]!;
+        return type switch
+        {
+            "keydown" => new RawKeyDownEvent(data, character, repeat),
+            "keyup" => new RawKeyUpEvent(data),
+            _ => throw new FlutterError($"Unknown key event type: {type}"),
+        };
+    }
+
+    /// <summary>Returns true if the given <see cref="LogicalKeyboardKey"/> is pressed.</summary>
+    public bool IsKeyPressed(LogicalKeyboardKey key) => RawKeyboard.Instance.KeysPressed.Contains(key);
+
+    /// <summary>Returns true if a CTRL modifier key is pressed, regardless of which side of the
+    /// keyboard it is on.</summary>
+    public bool IsControlPressed => IsKeyPressed(LogicalKeyboardKey.ControlLeft)
+                                    || IsKeyPressed(LogicalKeyboardKey.ControlRight);
+
+    /// <summary>Returns true if a SHIFT modifier key is pressed, regardless of which side of the
+    /// keyboard it is on.</summary>
+    public bool IsShiftPressed => IsKeyPressed(LogicalKeyboardKey.ShiftLeft)
+                                  || IsKeyPressed(LogicalKeyboardKey.ShiftRight);
+
+    /// <summary>Returns true if an ALT modifier key is pressed, regardless of which side of the
+    /// keyboard it is on.</summary>
+    public bool IsAltPressed => IsKeyPressed(LogicalKeyboardKey.AltLeft)
+                                || IsKeyPressed(LogicalKeyboardKey.AltRight);
+
+    /// <summary>Returns true if a META modifier key is pressed, regardless of which side of the
+    /// keyboard it is on.</summary>
+    public bool IsMetaPressed => IsKeyPressed(LogicalKeyboardKey.MetaLeft)
+                                 || IsKeyPressed(LogicalKeyboardKey.MetaRight);
 
     /// <summary>Returns an object representing the physical location of this key.</summary>
     public PhysicalKeyboardKey PhysicalKey => Data.PhysicalKey;
@@ -265,44 +331,58 @@ public abstract class RawKeyEvent : Diagnosticable
     /// <summary>Returns an object representing the logical key that was pressed.</summary>
     public LogicalKeyboardKey LogicalKey => Data.LogicalKey;
 
-    /// <summary>Returns true if the given <see cref="LogicalKeyboardKey"/> is pressed.</summary>
-    public bool IsKeyPressed(LogicalKeyboardKey key) => RawKeyboard.Instance.KeysPressed.Contains(key);
+    /// <summary>Returns the Unicode character (grapheme cluster) completed by this keystroke, if any.</summary>
+    public string? Character { get; }
 
-    /// <summary>Returns true if a CTRL modifier key is pressed, regardless of which side.</summary>
-    public bool IsControlPressed => IsKeyPressed(LogicalKeyboardKey.ControlLeft)
-                                    || IsKeyPressed(LogicalKeyboardKey.ControlRight);
+    /// <summary>Whether this is a repeated down event. Always false for <see cref="RawKeyUpEvent"/>.</summary>
+    public bool Repeat { get; }
 
-    /// <summary>Returns true if a SHIFT modifier key is pressed, regardless of which side.</summary>
-    public bool IsShiftPressed => IsKeyPressed(LogicalKeyboardKey.ShiftLeft)
-                                 || IsKeyPressed(LogicalKeyboardKey.ShiftRight);
-
-    /// <summary>Returns true if an ALT modifier key is pressed, regardless of which side.</summary>
-    public bool IsAltPressed => IsKeyPressed(LogicalKeyboardKey.AltLeft)
-                                || IsKeyPressed(LogicalKeyboardKey.AltRight);
-
-    /// <summary>Returns true if a META modifier key is pressed, regardless of which side.</summary>
-    public bool IsMetaPressed => IsKeyPressed(LogicalKeyboardKey.MetaLeft)
-                                 || IsKeyPressed(LogicalKeyboardKey.MetaRight);
+    /// <summary>Platform-specific information about the key event.</summary>
+    public RawKeyEventData Data { get; }
 
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new StringProperty("logicalKey", LogicalKey.DebugName));
-        properties.Add(new StringProperty("physicalKey", PhysicalKey.DebugName));
+        properties.Add(new DiagnosticsProperty<LogicalKeyboardKey>("logicalKey", LogicalKey));
+        properties.Add(new DiagnosticsProperty<PhysicalKeyboardKey>("physicalKey", PhysicalKey));
         if (this is RawKeyDownEvent)
         {
             properties.Add(new DiagnosticsProperty<bool>("repeat", Repeat));
         }
     }
 
-    public override string ToString() =>
-        $"{GetType().Name}#{Diagnostics.ShortHash(this)}({LogicalKey.DebugName}, {PhysicalKey.DebugName})";
+    // Dart's `message['x'] as int?`: the JSON codec decodes small numbers as `int` and larger ones as
+    // `long`, both of which are Dart `int`s.
+    private static int? IntOf(IReadOnlyDictionary<string, object?> message, string key) =>
+        message.GetValueOrDefault(key) switch
+        {
+            null => null,
+            int value => value,
+            long value => unchecked((int)value),
+            object value => throw new InvalidCastException(
+                $"type '{value.GetType().Name}' is not a subtype of type 'int?' in type cast"),
+        };
+
+    private static long? LongOf(IReadOnlyDictionary<string, object?> message, string key) =>
+        message.GetValueOrDefault(key) switch
+        {
+            null => null,
+            int value => value,
+            long value => value,
+            object value => throw new InvalidCastException(
+                $"type '{value.GetType().Name}' is not a subtype of type 'int?' in type cast"),
+        };
+
+    // Dart's `String.fromCharCode`: a surrogate pair above the BMP, a lone code unit otherwise.
+    private static string FromCharCode(int charCode) =>
+        charCode is >= 0 and <= 0xFFFF ? ((char)charCode).ToString() : char.ConvertFromUtf32(charCode);
 }
 
 /// <summary>The user has pressed a key on the keyboard.</summary>
-[Obsolete("Use KeyEvent and KeyboardListener instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+[Obsolete("Use KeyDownEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
 public sealed class RawKeyDownEvent : RawKeyEvent
 {
+    /// <summary>Creates a key event that represents the user pressing a key.</summary>
     public RawKeyDownEvent(RawKeyEventData data, string? character = null, bool repeat = false)
         : base(data, character, repeat)
     {
@@ -310,14 +390,20 @@ public sealed class RawKeyDownEvent : RawKeyEvent
 }
 
 /// <summary>The user has released a key on the keyboard.</summary>
-[Obsolete("Use KeyEvent and KeyboardListener instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+[Obsolete("Use KeyUpEvent instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
 public sealed class RawKeyUpEvent : RawKeyEvent
 {
+    /// <summary>Creates a key event that represents the user releasing a key.</summary>
     public RawKeyUpEvent(RawKeyEventData data, string? character = null)
         : base(data, character, repeat: false)
     {
     }
 }
+
+/// <summary>A callback type used by <see cref="RawKeyboard.KeyEventHandler"/> to send key events to a handler
+/// that can determine if the key has been handled or not.</summary>
+[Obsolete("Use KeyEventCallback instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+public delegate bool RawKeyEventHandler(RawKeyEvent @event);
 
 /// <summary>
 /// An interface for listening to raw key events.
@@ -325,180 +411,180 @@ public sealed class RawKeyUpEvent : RawKeyEvent
 [Obsolete("Use HardwareKeyboard instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
 public sealed class RawKeyboard
 {
-    private readonly Dictionary<PhysicalKeyboardKey, LogicalKeyboardKey> _keysPressed = [];
     private readonly List<Action<RawKeyEvent>> _listeners = [];
+    private readonly OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey> _keysPressed = [];
+    private RawKeyEventHandler? _cachedKeyEventHandler;
+    private KeyMessageHandler? _cachedKeyMessageHandler;
 
     private RawKeyboard()
     {
     }
 
+    /// <summary>The <see cref="RawKeyboard"/> instance to which RawKeyboard events are sent.</summary>
     public static RawKeyboard Instance { get; } = new();
 
-    /// <summary>Returns the set of logical keys that are pressed.</summary>
-    public IReadOnlySet<LogicalKeyboardKey> KeysPressed => new HashSet<LogicalKeyboardKey>(_keysPressed.Values);
-
-    /// <summary>Returns the set of physical keys that are pressed.</summary>
-    public IReadOnlySet<PhysicalKeyboardKey> PhysicalKeysPressed => new HashSet<PhysicalKeyboardKey>(_keysPressed.Keys);
-
-    /// <summary>Returns the logical key that corresponds to the given pressed physical key.</summary>
-    public LogicalKeyboardKey? LookUpLayout(PhysicalKeyboardKey physicalKey)
-    {
-        ArgumentNullException.ThrowIfNull(physicalKey);
-        return _keysPressed.GetValueOrDefault(physicalKey);
-    }
-
-    /// <summary>Register a listener that is called every time the user presses or releases a key.</summary>
+    /// <summary>Register a listener that is called every time the user presses or releases a hardware
+    /// keyboard key.</summary>
+    /// <remarks>Since the listeners have no way to indicate what they did with the event, listeners are
+    /// assumed to not handle the key event.</remarks>
     public void AddListener(Action<RawKeyEvent> listener)
     {
-        ArgumentNullException.ThrowIfNull(listener);
         _listeners.Add(listener);
     }
 
-    /// <summary>Stop calling the given listener every time the user presses or releases a key.</summary>
+    /// <summary>Stop calling the given listener every time the user presses or releases a hardware
+    /// keyboard key.</summary>
     public void RemoveListener(Action<RawKeyEvent> listener)
     {
         _listeners.Remove(listener);
     }
 
-    /// <summary>Records the key state and dispatches to listeners. Always returns false.</summary>
-    public bool HandleRawKeyEvent(RawKeyEvent keyEvent)
+    /// <summary>A handler for raw hardware keyboard events that will stop propagation if the handler
+    /// returns true.</summary>
+    /// <remarks>
+    /// This property is only a wrapper over <c>KeyEventManager.KeyMessageHandler</c>, and is kept only
+    /// for backward compatibility.
+    /// </remarks>
+    public RawKeyEventHandler? KeyEventHandler
     {
-        ArgumentNullException.ThrowIfNull(keyEvent);
-        switch (keyEvent)
+        get
         {
-            case RawKeyDownEvent:
-                _keysPressed[keyEvent.PhysicalKey] = keyEvent.LogicalKey;
-                break;
-            case RawKeyUpEvent:
-                // Use the physical key in the key up event to find the physical key from the key
-                // down event, even if the logical keys don't match.
-                _keysPressed.Remove(keyEvent.PhysicalKey);
-                break;
-        }
-
-        SynchronizeModifiers(keyEvent);
-
-        foreach (Action<RawKeyEvent> listener in _listeners.ToArray())
-        {
-            if (!_listeners.Contains(listener))
+            KeyEventManager keyEventManager = ServicesBinding.Instance.KeyEventManager;
+            if (keyEventManager.KeyMessageHandler != _cachedKeyMessageHandler)
             {
-                continue;
+                _cachedKeyMessageHandler = keyEventManager.KeyMessageHandler;
+                _cachedKeyEventHandler = _cachedKeyMessageHandler == null
+                    ? null
+                    : _ =>
+                    {
+                        DebugAssertions.Assert(
+                            false,
+                            "The RawKeyboard.instance.keyEventHandler assigned by Flutter is a dummy "
+                            + "callback kept for compatibility and should not be directly called. Use "
+                            + "ServicesBinding.instance!.keyMessageHandler instead.");
+                        return true;
+                    };
             }
 
+            return _cachedKeyEventHandler;
+        }
+        set
+        {
+            _cachedKeyEventHandler = value;
+            _cachedKeyMessageHandler = value == null
+                ? null
+                : message => message.RawEvent != null && value(message.RawEvent);
+            ServicesBinding.Instance.KeyEventManager.KeyMessageHandler = _cachedKeyMessageHandler;
+        }
+    }
+
+    /// <summary>Process a new <see cref="RawKeyEvent"/> by recording the state changes and dispatching to
+    /// listeners.</summary>
+    public bool HandleRawKeyEvent(RawKeyEvent @event)
+    {
+        if (@event is RawKeyDownEvent)
+        {
+            _keysPressed[@event.PhysicalKey] = @event.LogicalKey;
+        }
+        else if (@event is RawKeyUpEvent)
+        {
+            // Use the physical key in the key up event to find the physical key from
+            // the corresponding key down event and remove it, even if the logical
+            // keys don't match.
+            _keysPressed.Remove(@event.PhysicalKey);
+        }
+
+        // Make sure that the modifiers reflect reality, in case a modifier key was
+        // pressed/released while the app didn't have focus.
+        SynchronizeModifiers(@event);
+        DebugAssertions.Assert(
+            @event is not RawKeyDownEvent || _keysPressed.Count > 0,
+            "Attempted to send a key down event when no keys are in keysPressed. "
+            + "This state can occur if the key event being sent doesn't properly "
+            + $"set its modifier flags. This was the event: {@event} and its data: {@event.Data}");
+        // Send the event to passive listeners.
+        foreach (Action<RawKeyEvent> listener in _listeners.ToList())
+        {
             try
             {
-                listener(keyEvent);
+                if (_listeners.Contains(listener))
+                {
+                    listener(@event);
+                }
             }
             catch (Exception exception)
             {
-                RawKeyEvent reported = keyEvent;
-                KeyboardDebug.ReportError(
-                    exception,
-                    "while processing a raw key listener",
-                    () => [new DiagnosticsProperty<RawKeyEvent>("Event", reported)]);
+                InformationCollector? collector = null;
+                if (Constants.KDebugMode)
+                {
+                    collector = () => [new DiagnosticsProperty<RawKeyEvent>("Event", @event)];
+                }
+
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    stack: exception.StackTrace,
+                    library: "services library",
+                    context: new ErrorDescription("while processing a raw key listener"),
+                    informationCollector: collector));
             }
         }
 
         return false;
     }
 
-    /// <summary>Clears the list of keys returned from <see cref="KeysPressed"/>. Test-only.</summary>
-    internal void ClearKeysPressed() => _keysPressed.Clear();
-
-    internal void ClearListeners() => _listeners.Clear();
-
-    /// <summary>
-    /// Synchronizes the key state with the modifier flags carried by the event, so that pressing a
-    /// key while a modifier was already held still records that modifier as pressed.
-    /// </summary>
-    private void SynchronizeModifiers(RawKeyEvent keyEvent)
-    {
-        IReadOnlyDictionary<ModifierKey, KeyboardSide> modifiersPressed = keyEvent.Data.ModifiersPressed;
-        var modifierKeys = new Dictionary<PhysicalKeyboardKey, LogicalKeyboardKey>();
-        var anySideKeys = new HashSet<PhysicalKeyboardKey>();
-        var keysPressedAfterEvent = new HashSet<PhysicalKeyboardKey>(_keysPressed.Keys);
-        if (keyEvent is RawKeyDownEvent)
+    private static readonly Dictionary<ModifierSidePair, IReadOnlySet<PhysicalKeyboardKey>> ModifierKeyMap =
+        new()
         {
-            keysPressedAfterEvent.Add(keyEvent.PhysicalKey);
-        }
-
-        ModifierKey? thisKeyModifier = null;
-        foreach (ModifierKey key in Enum.GetValues<ModifierKey>())
-        {
-            IReadOnlySet<PhysicalKeyboardKey>? thisModifierKeys =
-                ModifierKeyMap.GetValueOrDefault((key, KeyboardSide.All));
-            if (thisModifierKeys == null)
-            {
-                continue;
-            }
-
-            if (thisModifierKeys.Contains(keyEvent.PhysicalKey))
-            {
-                thisKeyModifier = key;
-            }
-
-            if (modifiersPressed.TryGetValue(key, out KeyboardSide anySide) && anySide == KeyboardSide.Any)
-            {
-                anySideKeys.UnionWith(thisModifierKeys);
-                if (thisModifierKeys.Any(keysPressedAfterEvent.Contains))
+            [new(ModifierKey.AltModifier, KeyboardSide.Left)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.AltLeft },
+            [new(ModifierKey.AltModifier, KeyboardSide.Right)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.AltRight },
+            [new(ModifierKey.AltModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.AltLeft, PhysicalKeyboardKey.AltRight },
+            [new(ModifierKey.AltModifier, KeyboardSide.Any)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.AltLeft },
+            [new(ModifierKey.ShiftModifier, KeyboardSide.Left)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ShiftLeft },
+            [new(ModifierKey.ShiftModifier, KeyboardSide.Right)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ShiftRight },
+            [new(ModifierKey.ShiftModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ShiftLeft, PhysicalKeyboardKey.ShiftRight },
+            [new(ModifierKey.ShiftModifier, KeyboardSide.Any)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ShiftLeft },
+            [new(ModifierKey.ControlModifier, KeyboardSide.Left)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ControlLeft },
+            [new(ModifierKey.ControlModifier, KeyboardSide.Right)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ControlRight },
+            [new(ModifierKey.ControlModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey>
                 {
-                    continue;
-                }
-            }
+                    PhysicalKeyboardKey.ControlLeft, PhysicalKeyboardKey.ControlRight,
+                },
+            [new(ModifierKey.ControlModifier, KeyboardSide.Any)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ControlLeft },
+            [new(ModifierKey.MetaModifier, KeyboardSide.Left)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.MetaLeft },
+            [new(ModifierKey.MetaModifier, KeyboardSide.Right)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.MetaRight },
+            [new(ModifierKey.MetaModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.MetaLeft, PhysicalKeyboardKey.MetaRight },
+            [new(ModifierKey.MetaModifier, KeyboardSide.Any)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.MetaLeft },
+            [new(ModifierKey.CapsLockModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.CapsLock },
+            [new(ModifierKey.NumLockModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.NumLock },
+            [new(ModifierKey.ScrollLockModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ScrollLock },
+            [new(ModifierKey.FunctionModifier, KeyboardSide.All)] =
+                new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.Fn },
+            // The symbolModifier doesn't have a key representation on any of the
+            // platforms, so don't map it here.
+        };
 
-            IReadOnlySet<PhysicalKeyboardKey>? mappedKeys = !modifiersPressed.TryGetValue(
-                key,
-                out KeyboardSide side)
-                ? new HashSet<PhysicalKeyboardKey>()
-                : ModifierKeyMap.GetValueOrDefault((key, side));
-            if (mappedKeys == null)
-            {
-                KeyboardDebug.Log(() =>
-                    $"Host key support is producing unsupported modifier combinations for modifier {key} "
-                    + $"on side {side}.");
-                continue;
-            }
-
-            foreach (PhysicalKeyboardKey physicalModifier in mappedKeys)
-            {
-                modifierKeys[physicalModifier] = AllModifiers[physicalModifier];
-            }
-        }
-
-        foreach (PhysicalKeyboardKey physicalKey in AllModifiersExceptFn.Keys)
-        {
-            if (!anySideKeys.Contains(physicalKey))
-            {
-                _keysPressed.Remove(physicalKey);
-            }
-        }
-
-        if (PlatformDefaults.TargetPlatform is not (TargetPlatform.Fuchsia or TargetPlatform.MacOS))
-        {
-            // On Fuchsia and macOS, the Fn key is not considered a modifier key.
-            _keysPressed.Remove(PhysicalKeyboardKey.Fn);
-        }
-
-        foreach ((PhysicalKeyboardKey physicalKey, LogicalKeyboardKey logicalKey) in modifierKeys)
-        {
-            _keysPressed[physicalKey] = logicalKey;
-        }
-
-        // A modifier key down whose own modifier flag was not reported still has to land in the
-        // pressed state, or the key would be missing from `keysPressed` for its whole tap sequence.
-        if (keyEvent is RawKeyDownEvent
-            && thisKeyModifier != null
-            && !_keysPressed.ContainsKey(keyEvent.PhysicalKey)
-            && AllModifiersExceptFn.TryGetValue(keyEvent.PhysicalKey, out LogicalKeyboardKey? recovered))
-        {
-            _keysPressed[keyEvent.PhysicalKey] = recovered;
-        }
-    }
-
-    private static readonly Dictionary<(ModifierKey Modifier, KeyboardSide Side),
-        IReadOnlySet<PhysicalKeyboardKey>> ModifierKeyMap = BuildModifierKeyMap();
-
-    private static readonly Dictionary<PhysicalKeyboardKey, LogicalKeyboardKey> AllModifiersExceptFn = new()
+    // The map of all modifier keys except Fn, since that is treated differently
+    // on some platforms.
+    private static readonly OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey> AllModifiersExceptFn = new()
     {
         [PhysicalKeyboardKey.AltLeft] = LogicalKeyboardKey.AltLeft,
         [PhysicalKeyboardKey.AltRight] = LogicalKeyboardKey.AltRight,
@@ -513,34 +599,197 @@ public sealed class RawKeyboard
         [PhysicalKeyboardKey.ScrollLock] = LogicalKeyboardKey.ScrollLock,
     };
 
-    private static readonly Dictionary<PhysicalKeyboardKey, LogicalKeyboardKey> AllModifiers =
-        new(AllModifiersExceptFn) { [PhysicalKeyboardKey.Fn] = LogicalKeyboardKey.Fn };
+    // The map of all modifier keys that are represented in modifier key bit
+    // masks on all platforms, so that they can be cleared out of pressedKeys when
+    // synchronizing.
+    private static readonly OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey> AllModifiers =
+        BuildAllModifiers();
 
-    private static Dictionary<(ModifierKey, KeyboardSide), IReadOnlySet<PhysicalKeyboardKey>> BuildModifierKeyMap()
+    private static OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey> BuildAllModifiers()
     {
-        var map = new Dictionary<(ModifierKey, KeyboardSide), IReadOnlySet<PhysicalKeyboardKey>>();
-
-        void AddSided(ModifierKey modifier, PhysicalKeyboardKey left, PhysicalKeyboardKey right)
+        var result = new OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey>
         {
-            map[(modifier, KeyboardSide.Left)] = new HashSet<PhysicalKeyboardKey> { left };
-            map[(modifier, KeyboardSide.Right)] = new HashSet<PhysicalKeyboardKey> { right };
-            map[(modifier, KeyboardSide.All)] = new HashSet<PhysicalKeyboardKey> { left, right };
-            map[(modifier, KeyboardSide.Any)] = new HashSet<PhysicalKeyboardKey> { left };
+            [PhysicalKeyboardKey.Fn] = LogicalKeyboardKey.Fn,
+        };
+        foreach ((PhysicalKeyboardKey physicalKey, LogicalKeyboardKey logicalKey) in AllModifiersExceptFn)
+        {
+            result[physicalKey] = logicalKey;
         }
 
-        AddSided(ModifierKey.AltModifier, PhysicalKeyboardKey.AltLeft, PhysicalKeyboardKey.AltRight);
-        AddSided(ModifierKey.ShiftModifier, PhysicalKeyboardKey.ShiftLeft, PhysicalKeyboardKey.ShiftRight);
-        AddSided(ModifierKey.ControlModifier, PhysicalKeyboardKey.ControlLeft, PhysicalKeyboardKey.ControlRight);
-        AddSided(ModifierKey.MetaModifier, PhysicalKeyboardKey.MetaLeft, PhysicalKeyboardKey.MetaRight);
-        map[(ModifierKey.CapsLockModifier, KeyboardSide.All)] =
-            new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.CapsLock };
-        map[(ModifierKey.NumLockModifier, KeyboardSide.All)] =
-            new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.NumLock };
-        map[(ModifierKey.ScrollLockModifier, KeyboardSide.All)] =
-            new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.ScrollLock };
-        map[(ModifierKey.FunctionModifier, KeyboardSide.All)] =
-            new HashSet<PhysicalKeyboardKey> { PhysicalKeyboardKey.Fn };
-        // `symbolModifier` is deliberately absent: it has no key representation on any platform.
-        return map;
+        return result;
     }
+
+    private void SynchronizeModifiers(RawKeyEvent @event)
+    {
+        // Compare modifier states to the ground truth as specified by
+        // [RawKeyEvent.data.modifiersPressed] and update unsynchronized ones.
+        //
+        // This function will update the state of modifier keys in `_keysPressed` so
+        // that they match the ones given by [RawKeyEvent.data.modifiersPressed].
+        // For a `modifiersPressed` result of anything but [KeyboardSide.any], the
+        // states in `_keysPressed` will be updated to exactly match the result,
+        // i.e. exactly one of "no down", "left down", "right down" or "both down".
+        //
+        // If `modifiersPressed` returns [KeyboardSide.any], the states in
+        // `_keysPressed` will be updated to a rough match, i.e. "either side down"
+        // or "no down". If `_keysPressed` has no modifier down, a
+        // [KeyboardSide.any] will synchronize by forcing the left modifier down. If
+        // `_keysPressed` has any modifier down, a [KeyboardSide.any] will not cause
+        // a state change.
+        IReadOnlyDictionary<ModifierKey, KeyboardSide> modifiersPressed = @event.Data.ModifiersPressed;
+        var modifierKeys = new OrderedDictionary<PhysicalKeyboardKey, LogicalKeyboardKey>();
+        // Physical keys that whose modifiers are pressed at any side.
+        var anySideKeys = new HashSet<PhysicalKeyboardKey>();
+        var keysPressedAfterEvent = new HashSet<PhysicalKeyboardKey>(_keysPressed.Keys);
+        if (@event is RawKeyDownEvent)
+        {
+            keysPressedAfterEvent.Add(@event.PhysicalKey);
+        }
+
+        ModifierKey? thisKeyModifier = null;
+        foreach (ModifierKey key in Enum.GetValues<ModifierKey>())
+        {
+            IReadOnlySet<PhysicalKeyboardKey>? thisModifierKeys =
+                ModifierKeyMap.GetValueOrDefault(new ModifierSidePair(key, KeyboardSide.All));
+            if (thisModifierKeys == null)
+            {
+                continue;
+            }
+
+            if (thisModifierKeys.Contains(@event.PhysicalKey))
+            {
+                thisKeyModifier = key;
+            }
+
+            bool hasSide = modifiersPressed.TryGetValue(key, out KeyboardSide side);
+            if (hasSide && side == KeyboardSide.Any)
+            {
+                anySideKeys.UnionWith(thisModifierKeys);
+                if (thisModifierKeys.Any(keysPressedAfterEvent.Contains))
+                {
+                    continue;
+                }
+            }
+
+            IReadOnlySet<PhysicalKeyboardKey>? mappedKeys = !hasSide
+                ? new HashSet<PhysicalKeyboardKey>()
+                : ModifierKeyMap.GetValueOrDefault(new ModifierSidePair(key, side));
+            if (Constants.KDebugMode && mappedKeys == null)
+            {
+                Print.DebugPrint(
+                    $"Platform key support for {Environment.OSVersion.Platform.ToString().ToLowerInvariant()} "
+                    + "is producing unsupported modifier combinations for "
+                    + $"modifier {DescribeModifierKey(key)} on side {DescribeKeyboardSide(side)}.");
+                if (@event.Data is RawKeyEventDataAndroid android)
+                {
+                    Print.DebugPrint($"Android raw key metaState: {android.MetaState}");
+                }
+            }
+
+            if (mappedKeys == null)
+            {
+                continue;
+            }
+
+            foreach (PhysicalKeyboardKey physicalModifier in mappedKeys)
+            {
+                modifierKeys[physicalModifier] = AllModifiers[physicalModifier];
+            }
+        }
+
+        // On Linux, CapsLock key can be mapped to a non-modifier logical key:
+        // https://github.com/flutter/flutter/issues/114591.
+        // This is also affecting Flutter Web on Linux.
+        bool nonModifierCapsLock = @event.Data is RawKeyEventDataLinux or RawKeyEventDataWeb
+                                   && _keysPressed.TryGetValue(
+                                       PhysicalKeyboardKey.CapsLock,
+                                       out LogicalKeyboardKey? capsLockLogical)
+                                   && !capsLockLogical.Equals(LogicalKeyboardKey.CapsLock);
+        foreach (PhysicalKeyboardKey physicalKey in AllModifiersExceptFn.Keys)
+        {
+            bool skipReleasingKey = nonModifierCapsLock && physicalKey.Equals(PhysicalKeyboardKey.CapsLock);
+            if (!anySideKeys.Contains(physicalKey) && !skipReleasingKey)
+            {
+                _keysPressed.Remove(physicalKey);
+            }
+        }
+
+        if (@event.Data is not RawKeyEventDataFuchsia && @event.Data is not RawKeyEventDataMacOs)
+        {
+            // On Fuchsia and macOS, the Fn key is not considered a modifier key.
+            _keysPressed.Remove(PhysicalKeyboardKey.Fn);
+        }
+
+        foreach ((PhysicalKeyboardKey physicalKey, LogicalKeyboardKey logicalKey) in modifierKeys)
+        {
+            _keysPressed[physicalKey] = logicalKey;
+        }
+
+        // In rare cases, the event presses a modifier key but the key does not
+        // exist in the modifier list. Enforce the pressing state.
+        if (@event is RawKeyDownEvent
+            && thisKeyModifier != null
+            && !_keysPressed.ContainsKey(@event.PhysicalKey))
+        {
+            // So far this inconsistency is only found on Linux GTK for AltRight in a
+            // rare case. (See https://github.com/flutter/flutter/issues/93278 .) In
+            // other cases, this inconsistency will be caught by an assertion later.
+            if ((@event.Data is RawKeyEventDataLinux && @event.PhysicalKey.Equals(PhysicalKeyboardKey.AltRight))
+                || @event.Data is RawKeyEventDataIos
+                || @event.Data is RawKeyEventDataAndroid)
+            {
+                // On iOS and Android, the CapsLock modifier flag could be missing on the
+                // key down event, so the CapsLock logical key needs to be added here.
+                // See https://github.com/flutter/flutter/issues/158962 .
+                if (AllModifiersExceptFn.TryGetValue(@event.PhysicalKey, out LogicalKeyboardKey? logicalKey))
+                {
+                    _keysPressed[@event.PhysicalKey] = logicalKey;
+                }
+            }
+
+            // On Web, PhysicalKeyboardKey.altRight can be mapped to
+            // LogicalKeyboardKey.altGraph or LogicalKeyboardKey.altRight:
+            // https://github.com/flutter/flutter/issues/113836.
+            // And the modifier flag might be missing:
+            // https://github.com/flutter/flutter/issues/113836.
+            if (@event.Data is RawKeyEventDataWeb && @event.PhysicalKey.Equals(PhysicalKeyboardKey.AltRight))
+            {
+                _keysPressed[@event.PhysicalKey] = @event.LogicalKey;
+            }
+        }
+    }
+
+    /// <summary>Returns the set of keys currently pressed.</summary>
+    public IReadOnlySet<LogicalKeyboardKey> KeysPressed => new HashSet<LogicalKeyboardKey>(_keysPressed.Values);
+
+    /// <summary>Returns the set of physical keys currently pressed.</summary>
+    public IReadOnlySet<PhysicalKeyboardKey> PhysicalKeysPressed =>
+        new HashSet<PhysicalKeyboardKey>(_keysPressed.Keys);
+
+    /// <summary>
+    /// The physical keys currently pressed, in the order they were recorded — the iteration order of
+    /// Dart's <c>physicalKeysPressed</c>, which <c>KeyEventManager</c> relies on.
+    /// </summary>
+    internal IReadOnlyList<PhysicalKeyboardKey> PhysicalKeysPressedInOrder => [.. _keysPressed.Keys];
+
+    /// <summary>Returns the logical key that corresponds to the given pressed physical key.</summary>
+    /// <returns>Null if the physical key is not currently pressed.</returns>
+    public LogicalKeyboardKey? LookUpLayout(PhysicalKeyboardKey physicalKey) =>
+        _keysPressed.GetValueOrDefault(physicalKey);
+
+    /// <summary>Clears the list of keys returned from <see cref="KeysPressed"/>.</summary>
+    /// <remarks>This is used by the testing framework to make sure tests are hermetic.</remarks>
+    public void ClearKeysPressed() => _keysPressed.Clear();
+
+    /// <summary>
+    /// C#-only: drops every listener. Plumix's test harness replaces the focus manager per test, and
+    /// <c>KeyboardListener</c> states that outlived their tree would otherwise keep receiving events.
+    /// </summary>
+    internal void ClearListeners() => _listeners.Clear();
+
+    internal static string DescribeModifierKey(ModifierKey key) => $"ModifierKey.{Diagnostics.EnumName(key)}";
+
+    private static string DescribeKeyboardSide(KeyboardSide side) => $"KeyboardSide.{Diagnostics.EnumName(side)}";
+
+    private readonly record struct ModifierSidePair(ModifierKey Modifier, KeyboardSide? Side);
 }

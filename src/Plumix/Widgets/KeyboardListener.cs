@@ -98,21 +98,16 @@ public sealed class RawKeyboardListener : StatefulWidget
         public override void InitState()
         {
             CurrentWidget.FocusNode.AddListener(HandleFocusChanged);
-            HandleFocusChanged();
         }
 
         public override void DidUpdateWidget(RawKeyboardListener oldWidget)
         {
             var oldListener = (RawKeyboardListener)oldWidget;
-            if (ReferenceEquals(oldListener.FocusNode, CurrentWidget.FocusNode))
+            if (!ReferenceEquals(CurrentWidget.FocusNode, oldListener.FocusNode))
             {
-                return;
+                oldListener.FocusNode.RemoveListener(HandleFocusChanged);
+                CurrentWidget.FocusNode.AddListener(HandleFocusChanged);
             }
-
-            oldListener.FocusNode.RemoveListener(HandleFocusChanged);
-            DetachKeyboardIfAttached();
-            CurrentWidget.FocusNode.AddListener(HandleFocusChanged);
-            HandleFocusChanged();
         }
 
         public override Widget Build(BuildContext context)
@@ -120,8 +115,6 @@ public sealed class RawKeyboardListener : StatefulWidget
             return new Focus(
                 focusNode: CurrentWidget.FocusNode,
                 autofocus: CurrentWidget.Autofocus,
-                canRequestFocus: CurrentWidget.FocusNode.CanRequestFocus,
-                skipTraversal: CurrentWidget.FocusNode.SkipTraversal,
                 includeSemantics: CurrentWidget.IncludeSemantics,
                 child: CurrentWidget.Child);
         }

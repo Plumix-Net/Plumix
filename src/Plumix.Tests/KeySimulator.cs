@@ -3,14 +3,13 @@ using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
-// C#-only test infrastructure, standing in for Flutter's
-// flutter_test/lib/src/event_simulation.dart (`KeyEventSimulator`, `simulateKeyDownEvent`).
+// C#-only test infrastructure: shortcuts over flutter_test's event_simulation.dart, whose faithful
+// port is KeyEventSimulator.cs.
 //
-// Flutter's simulator drives a real platform message with a modifier bitmask, which makes
-// `HardwareKeyboard` record the modifiers as pressed keys before the event is dispatched. Plumix has
-// no message channel, so this helper pushes the same modifier state into `HardwareKeyboard`
-// directly (as synthesized events, exactly as the raw-event converter would) and then returns the
-// event to dispatch.
+// `Down`/`Repeat`/`Up` build a `KeyEvent` for `FocusManager.HandleKeyEvent` after pushing the
+// requested modifier state into `HardwareKeyboard` directly (as synthesized events, as the raw-event
+// converter would). `DispatchRaw` instead sends a real platform message through
+// `KeyEventSimulator` in `rawKeyData` mode.
 internal static class KeySim
 {
     public static KeyDownEvent Down(
@@ -51,8 +50,10 @@ internal static class KeySim
     }
 
     /// <summary>
-    /// Runs a host key event through the full <see cref="KeyEventManager"/> pipeline: raw state and
-    /// raw listeners first, then the regularized <see cref="KeyEvent"/> stream.
+    /// Runs a raw platform key message through the full <c>KeyEventManager</c> pipeline in
+    /// <c>rawKeyData</c> mode (<see cref="KeyEventSimulator"/>): raw state and raw listeners first,
+    /// then the regularized <see cref="KeyEvent"/> stream. The requested modifiers are pressed (or
+    /// released) with their own left-side messages first, the way a user holds them.
     /// </summary>
     public static bool DispatchRaw(
         LogicalKeyboardKey key,
@@ -64,22 +65,54 @@ internal static class KeySim
         string? character = null)
     {
 #pragma warning disable CS0618
-        var data = new HostRawKeyEventData(
-            PhysicalFor(key),
-            key,
-            keyLabel: key.KeyLabel,
-            isControlPressed: control,
-            isShiftPressed: shift,
-            isAltPressed: alt,
-            isMetaPressed: meta);
-        RawKeyEvent rawEvent = down
-            ? new RawKeyDownEvent(
-                data,
-                character: character,
-                repeat: RawKeyboard.Instance.PhysicalKeysPressed.Contains(PhysicalFor(key)))
-            : new RawKeyUpEvent(data);
+        KeyDataTransitMode? previous = KeyboardDebug.DebugKeyEventSimulatorTransitModeOverride;
+        KeyboardDebug.DebugKeyEventSimulatorTransitModeOverride = KeyDataTransitMode.RawKeyData;
+        try
+        {
+            SyncRawModifier(control, LogicalKeyboardKey.ControlLeft, LogicalKeyboardKey.ControlRight, key);
+            SyncRawModifier(shift, LogicalKeyboardKey.ShiftLeft, LogicalKeyboardKey.ShiftRight, key);
+            SyncRawModifier(alt, LogicalKeyboardKey.AltLeft, LogicalKeyboardKey.AltRight, key);
+            SyncRawModifier(meta, LogicalKeyboardKey.MetaLeft, LogicalKeyboardKey.MetaRight, key);
+            return down
+                ? KeyEventSimulator.SimulateKeyDownEvent(key, character: character)
+                : KeyEventSimulator.SimulateKeyUpEvent(key);
+        }
+        finally
+        {
+            KeyboardDebug.DebugKeyEventSimulatorTransitModeOverride = previous;
+        }
+    }
+
+    private static void SyncRawModifier(
+        bool pressed,
+        LogicalKeyboardKey left,
+        LogicalKeyboardKey right,
+        LogicalKeyboardKey eventKey)
+    {
+        if (eventKey.Equals(left) || eventKey.Equals(right))
+        {
+            return;
+        }
+
+        IReadOnlySet<LogicalKeyboardKey> keysPressed = RawKeyboard.Instance.KeysPressed;
+        bool isPressed = keysPressed.Contains(left) || keysPressed.Contains(right);
+        if (pressed && !isPressed)
+        {
+            KeyEventSimulator.SimulateKeyDownEvent(left);
+        }
+        else if (!pressed && isPressed)
+        {
+            if (keysPressed.Contains(left))
+            {
+                KeyEventSimulator.SimulateKeyUpEvent(left);
+            }
+
+            if (keysPressed.Contains(right))
+            {
+                KeyEventSimulator.SimulateKeyUpEvent(right);
+            }
+        }
 #pragma warning restore CS0618
-        return KeyEventManager.Instance.HandleRawKeyEvent(rawEvent);
     }
 
     /// <summary>

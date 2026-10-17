@@ -158,7 +158,39 @@ public class ServicesBinding
                 await Painting.PaintingBinding.Instance.HandleSystemMessage(message!);
                 return null;
             });
+        _ = InitKeyboard();
     }
+
+    /// <summary>The global singleton instance of <see cref="HardwareKeyboard"/>.</summary>
+    /// <remarks>
+    /// Plumix's keyboards are process singletons, so this is <see cref="HardwareKeyboard.Instance"/>.
+    /// </remarks>
+    public HardwareKeyboard Keyboard => HardwareKeyboard.Instance;
+
+    /// <summary>The global singleton instance of <see cref="UI.KeyEventManager"/>, which is used
+    /// internally to dispatch key messages.</summary>
+#pragma warning disable CS0618
+    [Obsolete("No longer supported. Add a handler to HardwareKeyboard instead. "
+              + "Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
+    public KeyEventManager KeyEventManager => KeyEventManager.Instance;
+
+    // Dart's `_initKeyboard`: once the keyboard state is synchronized with the platform, key data and
+    // raw key messages are routed to the key event manager. The channels are bound to this binding's
+    // own messenger for the same reason as the constructor's.
+    private async Task InitKeyboard()
+    {
+        await Keyboard.SyncKeyboardState(new OptionalMethodChannel(
+            SystemChannels.Keyboard.Name,
+            SystemChannels.Keyboard.Codec,
+            DefaultBinaryMessenger));
+        PlatformDispatcher.Instance.OnKeyData = KeyEventManager.HandleKeyData;
+        new BasicMessageChannel<object?>(
+                SystemChannels.KeyEvent.Name,
+                SystemChannels.KeyEvent.Codec,
+                DefaultBinaryMessenger)
+            .SetMessageHandler(KeyEventManager.HandleRawKeyMessage);
+    }
+#pragma warning restore CS0618
 
     /// <summary>The ambient services binding.</summary>
     public static ServicesBinding Instance { get; set; } = new ServicesBinding();

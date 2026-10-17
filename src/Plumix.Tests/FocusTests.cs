@@ -28,7 +28,7 @@ public sealed class FocusTests : IDisposable
     public void BuildOwner_UsesProvidedFocusManagerWithoutReplacingGlobalKeyHandler()
     {
 #pragma warning disable CS0618
-        Func<KeyMessage, bool>? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
+        KeyMessageHandler? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
 #pragma warning restore CS0618
         using var manager = new FocusManager();
 
@@ -44,7 +44,7 @@ public sealed class FocusTests : IDisposable
     public void BuildOwner_CreatesAndRegistersAFocusManagerWhenNoneIsProvided()
     {
 #pragma warning disable CS0618
-        Func<KeyMessage, bool>? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
+        KeyMessageHandler? globalHandler = KeyEventManager.Instance.KeyMessageHandler;
 #pragma warning restore CS0618
         var owner = new BuildOwner(focusManager: null);
 
