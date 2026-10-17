@@ -29,11 +29,10 @@ internal sealed class ListViewReverseDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("ListView reverse=true", fontSize: 20, color: Colors.Black),
+                new Text("ListView reverse=true", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Direction is inverted; drag/pointer behavior follows Plumix.Sample axisDirection mapping.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -67,7 +66,11 @@ internal sealed class ListViewReverseDemoPageState : State
                             return new Container(
                                 color: id % 2 == 0 ? new Color(0xFFFFF3E0) : Colors.White,
                                 padding: new Thickness(12, 8),
-                                child: new Text($"message #{id}", fontSize: 13, color: Colors.Black));
+                                child: new Text(
+                                    $"message #{id}",
+                                    style: new TextStyle(
+                                        FontSize: 13,
+                                        Color: Colors.Black)));
                         },
                         addAutomaticKeepAlives: false)),
             ]);

@@ -537,7 +537,7 @@ internal sealed class ParagraphTextSource : ITextSource
 
     private static TextRunProperties CreateRunProperties(ResolvedTextStyle style)
     {
-        var typeface = new Typeface(style.FontFamily, style.FontStyle, style.FontWeight);
+        var typeface = new Typeface(ResolveFontFamily(style), style.FontStyle, style.FontWeight);
         return new GenericTextRunProperties(
             typeface,
             style.FontSize,
@@ -545,6 +545,20 @@ internal sealed class ParagraphTextSource : ITextSource
             style.Foreground is { } foreground ? PaintBrush(foreground) : new SolidColorBrush(style.Color),
             style.Background is { } background ? PaintBrush(background) : null,
             fontFeatures: ResolveFontFeatures(style.FontFeatures));
+    }
+
+    // The engine tries `fontFamilyFallback` after the family; Avalonia reads the same order from a
+    // comma-separated family name.
+    private static FontFamily ResolveFontFamily(ResolvedTextStyle style)
+    {
+        if (style.FontFamilyFallback is not { Count: > 0 } fallback)
+        {
+            return style.FontFamily;
+        }
+
+        var familyNames = new List<string> { style.FontFamily.Name };
+        familyNames.AddRange(fallback);
+        return new FontFamily(string.Join(',', familyNames));
     }
 
     // A `Paint` reaches Avalonia as its shader, or else as a solid brush of its color.

@@ -56,12 +56,11 @@ internal sealed class RangeSliderDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("RangeSlider baseline", fontSize: 20, color: Colors.Black),
+                    new Text("RangeSlider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Two-thumb range mapping, continuous/discrete updates, drag/tap plus Tab focus "
                         + "between the two thumbs, and M2/M3 theme/widget color precedence.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -119,8 +118,7 @@ internal sealed class RangeSliderDemoPageState : State
                             new Expanded(
                                 child: new Text(
                                     $"start={_values.Start:0.00}, end={_values.End:0.00}, status={_status}",
-                                    fontSize: 12,
-                                    color: new Color(0xFF607D8B))),
+                                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
                     new Row(
                         spacing: 8,
@@ -166,8 +164,8 @@ internal sealed class RangeSliderDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text(title, fontSize: 14, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                    new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                     new Directionality(
                         textDirection: textDirection,
                         child: new Builder(context => new MediaQuery(
@@ -235,7 +233,7 @@ internal sealed class RangeSliderDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

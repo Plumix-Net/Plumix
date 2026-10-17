@@ -18,11 +18,10 @@ public sealed class GridTileDemoPage : StatelessWidget
             spacing: 10,
             children:
             [
-                new Text("GridTile + GridTileBar", fontSize: 20, color: Colors.Black),
+                new Text("GridTile + GridTileBar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Header/footer overlays, one/two-line bars, slots, transparent background, and RTL.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 4,
@@ -49,7 +48,7 @@ public sealed class GridTileDemoPage : StatelessWidget
         var content = new Container(
             color: colors[index],
             alignment: Alignment.Center,
-            child: new Text($"Tile {index + 1}", fontSize: 18, color: Colors.Black));
+            child: new Text($"Tile {index + 1}", style: new TextStyle(FontSize: 18, Color: Colors.Black)));
 
         Widget tile = index switch
         {

@@ -49,7 +49,12 @@ internal sealed class CounterTapButton : StatelessWidget
             child: new Container(
                 color: OnTap == null ? DisabledColor(Background) : Background,
                 padding: Padding,
-                child: new Text(Label, fontSize: FontSize, color: Foreground, textAlign: TextAlign.Center)));
+                child: new Text(
+                    Label,
+                    style: new TextStyle(
+                        FontSize: FontSize,
+                        Color: Foreground),
+                    textAlign: TextAlign.Center)));
     }
 
     private static Color DisabledColor(Color color)

@@ -23,12 +23,11 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("IntrinsicWidth + IntrinsicHeight", fontSize: 20.0, color: Colors.Black),
+                new Text("IntrinsicWidth + IntrinsicHeight", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "IntrinsicWidth snaps the content width to an optional step. IntrinsicHeight gives the Row " +
                     "the tallest child's height before stretch layout.",
-                    fontSize: 14.0,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8.0,
                     children:
@@ -50,12 +49,10 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                                 padding: new Thickness(10.0, 8.0),
                                 child: new Text(
                                     _snapWidth ? "70 → 112" : "70 px",
-                                    fontSize: 13.0,
-                                    color: new Color(0xFF1D3557)))))),
+                                    style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF1D3557))))))),
                 new Text(
                     "All three tiles below receive the tallest tile's 64 px height.",
-                    fontSize: 14.0,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12.0),
@@ -93,6 +90,6 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
             width: 70.0,
             height: height,
             color: (Color)Avalonia.Media.Color.Parse(colorHex),
-            child: new Center(child: new Text(label, fontSize: 13.0, color: Colors.White)));
+            child: new Center(child: new Text(label, style: new TextStyle(FontSize: 13.0, Color: Colors.White))));
     }
 }

@@ -54,12 +54,15 @@ internal sealed class SceneCompositingDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("dart:ui SceneBuilder + Scene", fontSize: 20, color: new Color(0xFF000000)),
+                new Text(
+                    "dart:ui SceneBuilder + Scene",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: new Color(0xFF000000))),
                 new Text(
                     "Every frame is built into a retained scene: clean layers are re-added with addRetained. "
                     + "RepaintBoundary.toImage rasterizes one boundary at 2x.",
-                    fontSize: 14,
-                    color: new Color(0xFF696969)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0xFF696969))),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -84,7 +87,11 @@ internal sealed class SceneCompositingDemoPageState : State
                                 height: 96,
                                 color: Tints[_tint],
                                 alignment: Alignment.Center,
-                                child: new Text($"boundary #{_tint}", fontSize: 16, color: new Color(0xFF000000)))),
+                                child: new Text(
+                                    $"boundary #{_tint}",
+                                    style: new TextStyle(
+                                        FontSize: 16,
+                                        Color: new Color(0xFF000000))))),
                         _capture is { } capture
                             ? new Column(
                                 crossAxisAlignment: CrossAxisAlignment.Start,
@@ -94,10 +101,13 @@ internal sealed class SceneCompositingDemoPageState : State
                                     new RawImage(image: capture, width: 160, height: 96),
                                     new Text(
                                         $"{capture.PixelSize.Width} x {capture.PixelSize.Height} px",
-                                        fontSize: 12,
-                                        color: new Color(0xFF2F4F4F)),
+                                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF2F4F4F))),
                                 ])
-                            : new Text("no capture yet", fontSize: 12, color: new Color(0xFF2F4F4F)),
+                            : new Text(
+                                "no capture yet",
+                                style: new TextStyle(
+                                    FontSize: 12,
+                                    Color: new Color(0xFF2F4F4F))),
                     ]),
             ]);
         return new Stack(

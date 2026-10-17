@@ -37,18 +37,17 @@ internal sealed class StackDemoPageState : State
                 height: 30,
                 color: new Color(0xFFD1495B),
                 child: new Center(
-                    child: new Text("badge", fontSize: 11, color: Colors.White))));
+                    child: new Text("badge", style: new TextStyle(FontSize: 11, Color: Colors.White)))));
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
             [
-                new Text("Stack + PositionedDirectional", fontSize: 20, color: Colors.Black),
+                new Text("Stack + PositionedDirectional", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move with logical start/end insets, toggle pinned mode, and flip LTR/RTL direction.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -73,8 +72,7 @@ internal sealed class StackDemoPageState : State
                 new Text(
                     $"start={_left:0}, top={_top:0}, direction={(_rtl ? "RTL" : "LTR")}, "
                     + $"mode={(_pinBottomRight ? "bottomEnd" : "custom")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -95,15 +93,13 @@ internal sealed class StackDemoPageState : State
                                         child: new Center(
                                             child: new Text(
                                                 "base",
-                                                fontSize: 14,
-                                                color: new Color(0xFF1D3557)))),
+                                                style: new TextStyle(FontSize: 14, Color: new Color(0xFF1D3557))))),
                                     badge,
                                 ])))),
-                new Text("IndexedStack + Positioned", fontSize: 20, color: Colors.Black),
+                new Text("IndexedStack + Positioned", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch between retained children; the second child uses StackParentData offsets.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildButton(
                     _showPositionedIndexedChild ? "Show base child" : "Show positioned child",
                     () => SetState(() => _showPositionedIndexedChild = !_showPositionedIndexedChild),
@@ -124,8 +120,7 @@ internal sealed class StackDemoPageState : State
                                     child: new Center(
                                         child: new Text(
                                             "non-positioned child",
-                                            fontSize: 14,
-                                            color: new Color(0xFF1D3557)))),
+                                            style: new TextStyle(FontSize: 14, Color: new Color(0xFF1D3557))))),
                                 new Positioned(
                                     left: 18,
                                     top: 24,
@@ -136,8 +131,7 @@ internal sealed class StackDemoPageState : State
                                         child: new Center(
                                             child: new Text(
                                                 "positioned child",
-                                                fontSize: 14,
-                                                color: Colors.White)))),
+                                                style: new TextStyle(FontSize: 14, Color: Colors.White))))),
                             ]))),
             ]);
     }

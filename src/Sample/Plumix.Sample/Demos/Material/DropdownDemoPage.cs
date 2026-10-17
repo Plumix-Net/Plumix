@@ -99,12 +99,11 @@ public sealed class DropdownDemoPage : StatefulWidget
                     spacing: 14,
                     children:
                     [
-                        new Text("DropdownButton + DropdownMenuItem", fontSize: 20),
+                        new Text("DropdownButton + DropdownMenuItem", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "Controlled selection with nullable/disabled entries, logical end alignment, "
                             + "route geometry, keyboard focus, and underline policy.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             spacing: 8,
                             children:
@@ -139,14 +138,13 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     () => SetState(() => _variableRows = !_variableRows)),
                             ]),
                         new Align(alignment: Alignment.CenterLeft, child: dropdown),
-                        new Text($"Value: {_value ?? "none"}", fontSize: 13),
-                        new Text($"Status: {_status}", fontSize: 13),
+                        new Text($"Value: {_value ?? "none"}", style: new TextStyle(FontSize: 13)),
+                        new Text($"Status: {_status}", style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("DropdownMenu + DropdownMenuEntry", fontSize: 18),
+                        new Text("DropdownMenu + DropdownMenuEntry", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "Editable Material 3 menu with filtering, search highlighting, disabled-entry traversal, leading/trailing icons, and controller-backed route state.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new DropdownMenu<string>(
@@ -163,13 +161,12 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     _modernValue = value;
                                     _modernStatus = $"selected: {value ?? "none"}";
                                 }))),
-                        new Text($"Modern value: {_modernValue ?? "none"}", fontSize: 13),
-                        new Text($"Modern status: {_modernStatus}", fontSize: 13),
+                        new Text($"Modern value: {_modernValue ?? "none"}", style: new TextStyle(FontSize: 13)),
+                        new Text($"Modern status: {_modernStatus}", style: new TextStyle(FontSize: 13)),
                         new Text(
                             "Select-only variant: read-only field, no trailing icon, and a selection"
                             + " that keeps the menu open.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new DropdownMenu<string>(
@@ -181,14 +178,16 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 closeBehavior: DropdownMenuCloseBehavior.None,
                                 label: new Text("Select only"),
                                 onSelected: value => SetState(() => _selectOnlyValue = value))),
-                        new Text($"Select-only value: {_selectOnlyValue ?? "none"}", fontSize: 13),
+                        new Text(
+                            $"Select-only value: {_selectOnlyValue ?? "none"}",
+                            style: new TextStyle(
+                                FontSize: 13)),
                         new Divider(),
-                        new Text("MenuAnchor + MenuItemButton", fontSize: 18),
+                        new Text("MenuAnchor + MenuItemButton", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "Animated overlay menu with consumed outside taps, close-on-activate"
                             + " policy and display-only shortcut labels.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuAnchor(
@@ -236,17 +235,16 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     {
                                         if (controller.IsOpen) controller.Close(); else controller.Open();
                                     }))),
-                        new Text($"Anchor menu: {_anchorStatus}", fontSize: 13),
+                        new Text($"Anchor menu: {_anchorStatus}", style: new TextStyle(FontSize: 13)),
                         new Text(
                             $"Menu choices: pinned={_menuCheckbox}, layout={_menuRadio}",
-                            fontSize: 13),
+                            style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("MenuStyle alignment", fontSize: 18),
+                        new Text("MenuStyle alignment", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "MenuStyle.alignment places the panel within the anchor rect; menu items"
                             + " space their leading and trailing icons by visual density.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             spacing: 8,
                             children:
@@ -281,16 +279,15 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     {
                                         if (controller.IsOpen) controller.Close(); else controller.Open();
                                     }))),
-                        new Text($"Aligned menu: {_alignedMenuStatus}", fontSize: 13),
+                        new Text($"Aligned menu: {_alignedMenuStatus}", style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("MenuStyle surface tokens", fontSize: 18),
+                        new Text("MenuStyle surface tokens", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "The panel defaults come straight from the ColorScheme (surfaceContainer "
                             + "fill, shadow role, elevation 3, 4px corners). A MenuStyle.side is folded "
                             + "into the resolved shape, and a fixedSize is clamped by minimumSize and "
                             + "maximumSize before it tightens the panel.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             spacing: 8,
                             children:
@@ -322,12 +319,11 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         if (controller.IsOpen) controller.Close(); else controller.Open();
                                     }))),
                         new Divider(),
-                        new Text("MenuBar + SubmenuButton", fontSize: 18),
+                        new Text("MenuBar + SubmenuButton", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
                             + "local menu themes, Alt-key accelerators, and a focus-local Alt+N override.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuTheme(
@@ -386,9 +382,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         onClose: () => SetState(() => _menuBarStatus = "edit closed")),
                                     new SubmenuButton([], new MenuAcceleratorLabel("&Disabled")),
                                         ])))))),
-                        new Text($"Menu bar: {_menuBarStatus}", fontSize: 13),
+                        new Text($"Menu bar: {_menuBarStatus}", style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("Animated MenuAnchor", fontSize: 18),
+                        new Text("Animated MenuAnchor", style: new TextStyle(FontSize: 18)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuAnchor(
@@ -418,9 +414,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     }))),
                         new Text(
                             $"Animated menu: {_animatedMenuStatus} / {_animatedMenuPick}",
-                            fontSize: 13),
+                            style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("DropdownMenuFormField + Form", fontSize: 18),
+                        new Text("DropdownMenuFormField + Form", style: new TextStyle(FontSize: 18)),
                         new Form(
                             key: _modernFormKey,
                             child: new Column(
@@ -447,10 +443,13 @@ public sealed class DropdownDemoPage : StatefulWidget
                                             ControlButton("Validate", ValidateModernForm),
                                             ControlButton("Reset", ResetModernForm),
                                         ]),
-                                    new Text($"Modern form status: {_modernFormStatus}", fontSize: 13),
+                                    new Text(
+                                        $"Modern form status: {_modernFormStatus}",
+                                        style: new TextStyle(
+                                            FontSize: 13)),
                                 ])),
                         new Divider(),
-                        new Text("Disabled fallback", fontSize: 15),
+                        new Text("Disabled fallback", style: new TextStyle(FontSize: 15)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new DropdownButton<string>(
@@ -459,7 +458,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 hint: new Text("Fallback hint"),
                                 disabledHint: new Text("Disabled hint"))),
                         new Divider(),
-                        new Text("DropdownButtonFormField + Form", fontSize: 18),
+                        new Text("DropdownButtonFormField + Form", style: new TextStyle(FontSize: 18)),
                         new Form(
                             key: _formKey,
                             child: new Column(
@@ -487,7 +486,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                             ControlButton("Validate", ValidateForm),
                                             ControlButton("Reset", ResetForm),
                                         ]),
-                                    new Text($"Form status: {_formStatus}", fontSize: 13),
+                                    new Text($"Form status: {_formStatus}", style: new TextStyle(FontSize: 13)),
                                 ])),
                     ]));
         }
@@ -548,6 +547,6 @@ public sealed class DropdownDemoPage : StatefulWidget
             onPressed: () => SetState(() => _animatedMenuPick = label.ToLowerInvariant()));
 
         private static Widget ControlButton(string label, Action action) =>
-            new TextButton(new Text(label, fontSize: 12), action);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), action);
     }
 }

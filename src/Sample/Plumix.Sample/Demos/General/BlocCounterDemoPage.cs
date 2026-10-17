@@ -46,24 +46,28 @@ internal sealed class BlocCounterDemoPageState : State
                     spacing: 10,
                     children:
                     [
-                        new Text("Bloc counter demo", fontSize: 20, color: Colors.Black),
+                        new Text("Bloc counter demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                         new Text(
                             "BlocProvider + BlocBuilder + BlocListener + BlocSelector. Refresh event uses restartable transformer.",
-                            fontSize: 14,
-                            color: new Color(0x8A000000)),
-                        new Text(_milestoneMessage, fontSize: 12, color: new Color(0xFF607D8B)),
+                            style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                        new Text(_milestoneMessage, style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                         new BlocSelector<BlocCounterBloc, BlocCounterState, int>(
                             selector: static state => state.Count,
                             builder: static (_, count) =>
-                                new Text($"count={count}", fontSize: 18, color: Colors.DarkSlateBlue)),
+                                new Text(
+                                    $"count={count}",
+                                    style: new TextStyle(
+                                        FontSize: 18,
+                                        Color: Colors.DarkSlateBlue))),
                         new BlocBuilder<BlocCounterBloc, BlocCounterState>(
                             buildWhen: static (previous, next) => previous.IsLoading != next.IsLoading,
                             builder: static (_, state) => new Text(
                                 state.IsLoading
                                     ? "loading=true (refresh in-flight, restartable)"
                                     : "loading=false",
-                                fontSize: 12,
-                                color: state.IsLoading ? new Color(0xFF8E24AA) : new Color(0xFF2E7D32))),
+                                style: new TextStyle(
+                                    FontSize: 12,
+                                    Color: state.IsLoading ? new Color(0xFF8E24AA) : new Color(0xFF2E7D32)))),
                         new BlocCounterActionButtons(),
                     ])));
     }
@@ -73,7 +77,7 @@ internal sealed class BlocCounterDemoPageState : State
         return new Expanded(
             child: new TextButton(
                 onPressed: onPressed,
-                child: new Text(label, fontSize: 12, textAlign: TextAlign.Center),
+                child: new Text(label, style: new TextStyle(FontSize: 12), textAlign: TextAlign.Center),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

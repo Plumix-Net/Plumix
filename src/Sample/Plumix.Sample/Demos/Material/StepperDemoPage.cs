@@ -29,11 +29,10 @@ internal sealed class StepperDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("ExpandIcon + Stepper", fontSize: 20, color: Colors.Black),
+                new Text("ExpandIcon + Stepper", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Flutter-shaped disclosure animation plus vertical/horizontal step progress, states, connectors, and controls.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     mainAxisSize: MainAxisSize.Min,
                     spacing: 8,
@@ -43,14 +42,18 @@ internal sealed class StepperDemoPageState : State
                             isExpanded: _expanded,
                             onPressed: _ => SetState(() => _expanded = !_expanded),
                             expandedColor: new Color(0xFF6750A4)),
-                        new Text(_expanded ? "Expanded" : "Collapsed", fontSize: 14),
+                        new Text(_expanded ? "Expanded" : "Collapsed", style: new TextStyle(FontSize: 14)),
                         new ExpandIcon(onPressed: null),
-                        new Text("Disabled", fontSize: 14),
+                        new Text("Disabled", style: new TextStyle(FontSize: 14)),
                         new TextButton(
                             child: new Text(_horizontal ? "Use vertical" : "Use horizontal"),
                             onPressed: () => SetState(() => _horizontal = !_horizontal)),
                     ]),
-                new Text($"Current step: {_currentStep + 1} / 3", fontSize: 13, color: new Color(0xFF006C4C)),
+                new Text(
+                    $"Current step: {_currentStep + 1} / 3",
+                    style: new TextStyle(
+                        FontSize: 13,
+                        Color: new Color(0xFF006C4C))),
                 new Expanded(new Stepper(
                     type: _horizontal ? StepperType.Horizontal : StepperType.Vertical,
                     currentStep: _currentStep,
@@ -80,7 +83,7 @@ internal sealed class StepperDemoPageState : State
         content: new Container(
             padding: new Thickness(12),
             color: new Color(0xFFF3EDF7),
-            child: new Text(content, fontSize: 14)),
+            child: new Text(content, style: new TextStyle(FontSize: 14))),
         state: index < _currentStep
             ? StepState.Complete
             : index == _currentStep ? StepState.Editing : StepState.Indexed,

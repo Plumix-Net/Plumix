@@ -44,11 +44,10 @@ internal sealed class CircleAvatarDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("CircleAvatar", fontSize: 20, color: Colors.Black),
+                new Text("CircleAvatar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Initials, theme colors, animated radius, foreground/background images, and error fallback.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -105,7 +104,7 @@ internal sealed class CircleAvatarDemoPageState : State
                                 foregroundImage: foreground,
                                 onForegroundImageError: foreground is null ? null : HandleForegroundError)),
                         ])),
-                new Text(_status, fontSize: 13, color: new Color(0xFF49454F)),
+                new Text(_status, style: new TextStyle(FontSize: 13, Color: new Color(0xFF49454F))),
             ]);
     }
 
@@ -120,14 +119,14 @@ internal sealed class CircleAvatarDemoPageState : State
         return new Column(
             mainAxisSize: MainAxisSize.Min,
             spacing: 8,
-            children: [avatar, new Text(label, fontSize: 12, color: Colors.Black)]);
+            children: [avatar, new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))]);
     }
 
     private static Widget ControlButton(string label, Action onPressed)
     {
         return new TextButton(
             onPressed: onPressed,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),

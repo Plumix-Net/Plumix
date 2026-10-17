@@ -28,11 +28,10 @@ internal sealed class CupertinoTabBarDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("CupertinoTabScaffold", fontSize: 20.0, color: label),
+                new Text("CupertinoTabScaffold", style: new TextStyle(FontSize: 20.0, Color: label)),
                 new Text(
                     "Tap a destination to probe lazy tab bodies, retained state, active icons, and blur.",
-                    fontSize: 14.0,
-                    color: secondaryLabel),
+                    style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                 new ClipRRect(
                     BorderRadius.Circular(14.0),
                     child: new Container(
@@ -60,8 +59,7 @@ internal sealed class CupertinoTabBarDemoPageState : State
                             tabBuilder: (_, index) => new Center(
                                 child: new Text(
                                     $"Selected: {Titles[index]}",
-                                    fontSize: 18.0,
-                                    color: label))))),
+                                    style: new TextStyle(FontSize: 18.0, Color: label)))))),
             ]);
     }
 }

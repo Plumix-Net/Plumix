@@ -62,12 +62,11 @@ internal sealed class TreeSliverDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("TreeSliver", fontSize: 20, color: Colors.Black),
+                new Text("TreeSliver", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Tap an arrow to expand or collapse a node. Children slide out from under their "
                     + "parent while rows below it move with them.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -99,8 +98,7 @@ internal sealed class TreeSliverDemoPageState : State
                     ]),
                 new Text(
                     $"last toggled={_lastToggled}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Center(child: new Container(
                     width: 360,
                     height: 280,

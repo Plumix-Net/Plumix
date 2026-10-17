@@ -56,13 +56,12 @@ public sealed class InkResponseDemoPage : StatefulWidget
                     spacing: 14,
                     children:
                     [
-                        new Text("InkResponse + InkWell", fontSize: 20, color: Colors.Black),
+                        new Text("InkResponse + InkWell", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                         new Text(
                             "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash/"
                             + "no-splash factories, overlapping rapid-tap fades, timed hover/focus, and overlay "
                             + "states.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             mainAxisAlignment: MainAxisAlignment.SpaceAround,
                             crossAxisAlignment: CrossAxisAlignment.Center,
@@ -75,9 +74,12 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         new Text(
                             $"InkResponse taps: {_responseTaps}  |  InkWell taps: {_wellTaps}"
                             + $"  |  secondary: {_secondaryTaps}  |  double: {_doubleTaps}",
-                            fontSize: 14,
-                            color: Colors.Black),
-                        new Text($"Interaction: {_interaction}", fontSize: 13, color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                        new Text(
+                            $"Interaction: {_interaction}",
+                            style: new TextStyle(
+                                FontSize: 13,
+                                Color: Colors.DimGray)),
                         new OutlinedButton(
                             onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 4),
                             child: new Text($"Splash factory: {SplashName}")),
@@ -103,7 +105,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                 spacing: 8,
                 children:
                 [
-                    new Text("InkResponse", fontSize: 14, color: Colors.Black),
+                    new Text("InkResponse", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     new Ink(
                         width: 112,
                         height: 112,
@@ -128,7 +130,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                 spacing: 8,
                 children:
                 [
-                    new Text("InkWell", fontSize: 14, color: Colors.Black),
+                    new Text("InkWell", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     new Ink(
                         width: 150,
                         height: 96,
@@ -145,7 +147,11 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             splashFactory: SplashFactory,
                             hoverDuration: System.TimeSpan.FromMilliseconds(400),
                             borderRadius: BorderRadius.Circular(18),
-                            child: new Center(child: new Text("Tap / hold", fontSize: 15, color: Colors.Black)))),
+                            child: new Center(child: new Text(
+                                "Tap / hold",
+                                style: new TextStyle(
+                                    FontSize: 15,
+                                    Color: Colors.Black))))),
                 ]);
         }
 
@@ -165,7 +171,11 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         splashFactory: SplashFactory,
                         customBorder: new StadiumBorder(),
                         child: new Center(
-                            child: new Text("Stadium: double tap", fontSize: 15, color: Colors.Black)))));
+                            child: new Text(
+                                "Stadium: double tap",
+                                style: new TextStyle(
+                                    FontSize: 15,
+                                    Color: Colors.Black))))));
         }
 
         private void HandleSecondaryTap()

@@ -9,6 +9,18 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Text spacing overrides on PlatformDispatcher/MediaQueryData, applyTextStyleOverrides (widgets/media_query.dart).
+- MediaQueryData.applyDisplayCornerRadii and MediaQuery.*Of displayFeatures/systemGestureInsets (media_query.dart).
+- Breaking: MediaQuery accessors depend on their own _MediaQueryAspect; copyWith has no corner radii (media_query.dart).
+- Breaking: Text is a strict port: no flat style parameters, bold/spacing overrides, Locale? locale (widgets/text.dart).
+- Text.semanticsIdentifier/selectionColor, _SelectableTextContainer and its delegate (widgets/text.dart).
+- DefaultTextHeightBehavior (widgets/text.dart).
+- Breaking: RichText.locale is a Locale? that falls back to Localizations.maybeLocaleOf (widgets/basic.dart).
+- EditableText _style bold merge; spacing overrides in its span, strut and IME style (widgets/editable_text.dart).
+- RenderParagraph attributed semantics labels and placeholder child configurations (rendering/paragraph.dart).
+- SelectableText.strutStyle (selectable_text.dart).
+- Avalonia paragraph tries a style's fontFamilyFallback after its family (C#-only).
+- Rich text demo toggles bold text and text spacing overrides in both samples.
 - SystemContextMenu, IOSSystemContextMenuItem*, iOS branch of the field menu builders (system_context_menu.dart).
 - SystemContextMenuController, IOSSystemContextMenuItemData*, ContextMenu.* binding cases (services/text_input.dart).
 - MediaQueryData/PlatformDispatcher.supportsShowingSystemContextMenu (widgets/media_query.dart, dart:ui).

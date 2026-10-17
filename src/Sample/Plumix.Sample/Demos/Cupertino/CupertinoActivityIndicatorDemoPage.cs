@@ -24,11 +24,10 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino activity indicators", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino activity indicators", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Spinning ticks, partially revealed ticks and the linear progress bar.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(
                     spacing: 24.0,
                     runSpacing: 12.0,
@@ -51,7 +50,11 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
                                 progress: _progress,
                                 radius: 20.0)),
                     ]),
-                new Text("Progress for the partial spinner and the bars below:", fontSize: 14.0, color: Colors.Black),
+                new Text(
+                    "Progress for the partial spinner and the bars below:",
+                    style: new TextStyle(
+                        FontSize: 14.0,
+                        Color: Colors.Black)),
                 new CupertinoSlider(
                     value: _progress,
                     onChanged: value => SetState(() => _progress = value)),
@@ -74,7 +77,7 @@ internal sealed class CupertinoActivityIndicatorDemoPageState : State
                     width: 44.0,
                     height: 44.0,
                     child: new Center(child: indicator)),
-                new Text(label, fontSize: 12.0, color: Colors.Black),
+                new Text(label, style: new TextStyle(FontSize: 12.0, Color: Colors.Black)),
             ]);
     }
 }

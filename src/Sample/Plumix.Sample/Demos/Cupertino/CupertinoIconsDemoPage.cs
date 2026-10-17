@@ -35,11 +35,10 @@ public sealed class CupertinoIconsDemoPage : StatelessWidget
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino icons", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino icons", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Representative legacy, SF Symbols, directional, alias, and high-range glyphs.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -63,7 +62,12 @@ public sealed class CupertinoIconsDemoPage : StatelessWidget
                 children:
                 [
                     new Icon(icon, size: 34.0, color: new Color(0xFF007AFF)),
-                    new Text(name, fontSize: 11.0, color: Colors.Black, textAlign: TextAlign.Center),
+                    new Text(
+                        name,
+                        style: new TextStyle(
+                            FontSize: 11.0,
+                            Color: Colors.Black),
+                        textAlign: TextAlign.Center),
                 ]));
     }
 }

@@ -32,12 +32,15 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Dismissible + SizeChangedLayoutNotifier", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Dismissible + SizeChangedLayoutNotifier",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Swipe rows in either direction. The resize probe reports notifications only after its " +
                     "established layout size changes.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -78,7 +81,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
                                 alignment: Alignment.Center,
                                 child: new Text(
                                     $"layout notifications: {_sizeNotifications}",
-                                    color: new Color(0xFF174A72)))))),
+                                    style: new TextStyle(Color: new Color(0xFF174A72))))))),
                 new Expanded(
                     child: new Directionality(
                         textDirection,
@@ -112,7 +115,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
             color: color,
             padding: new Thickness(16, 0),
             alignment: Alignment.CenterLeft,
-            child: new Text(label, color: Colors.Black));
+            child: new Text(label, style: new TextStyle(Color: Colors.Black)));
     }
 
     private static Widget BuildRowBackground(string label, Alignment alignment, Color color)
@@ -122,7 +125,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
             color: color,
             padding: new Thickness(16, 0),
             alignment: alignment,
-            child: new Text(label, color: Colors.White));
+            child: new Text(label, style: new TextStyle(Color: Colors.White)));
     }
 
     private static Widget BuildButton(string label, Action onTap)

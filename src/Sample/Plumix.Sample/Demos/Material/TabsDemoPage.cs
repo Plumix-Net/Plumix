@@ -91,8 +91,7 @@ internal sealed class TabsDemoPageState : State
                                     () => SetState(() => _useClampedTextScaling = !_useClampedTextScaling)),
                             ]),
                         new Text("Tap tabs or swipe pages; the indicator and labels share one TabController.",
-                            fontSize: 13,
-                            color: new Color(0x8A000000)),
+                            style: new TextStyle(FontSize: 13, Color: new Color(0x8A000000))),
                         new Center(
                             child: new TabPageSelector(
                                 indicatorSize: _useThemeOverrides ? 16 : 12,
@@ -100,8 +99,7 @@ internal sealed class TabsDemoPageState : State
                                 selectedColor: _useThemeOverrides ? new Color(0xFF00695C) : null,
                                 borderStyle: _useThemeOverrides ? BorderStyle.None : null)),
                         new Text("Custom UnderlineTabIndicator: 6px inset, rounded, 5px weight.",
-                            fontSize: 13,
-                            color: new Color(0x8A000000)),
+                            style: new TextStyle(FontSize: 13, Color: new Color(0x8A000000))),
                         new TabBar(
                             indicator: new UnderlineTabIndicator(
                                 borderRadius: BorderRadius.Circular(5),
@@ -150,13 +148,13 @@ internal sealed class TabsDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text(title, fontSize: 22),
-                    new Text(subtitle, fontSize: 13, color: new Color(0x8A000000)),
+                    new Text(title, style: new TextStyle(FontSize: 22)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 13, Color: new Color(0x8A000000))),
                 ])));
 
     private static Widget ControlButton(string label, Action onPressed) => new TextButton(
         onPressed: onPressed,
-        child: new Text(label, fontSize: 12),
+        child: new Text(label, style: new TextStyle(FontSize: 12)),
         style: TextButton.StyleFrom(
             foregroundColor: new Color(0xFF21005D),
             backgroundColor: new Color(0xFFEADDFF),

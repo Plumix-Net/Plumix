@@ -25,11 +25,10 @@ internal sealed class CupertinoButtonDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino buttons", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino buttons", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Plain, tinted and filled styles across the three size styles.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -48,7 +47,7 @@ internal sealed class CupertinoButtonDemoPageState : State
                         new CupertinoButton(child: new Text("Disabled"), onPressed: null),
                         CupertinoButton.Filled(child: new Text("Disabled filled"), onPressed: null),
                     ]),
-                new Text("Size styles", fontSize: 14.0, color: Colors.Black),
+                new Text("Size styles", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -67,7 +66,7 @@ internal sealed class CupertinoButtonDemoPageState : State
                             child: new Text("Large"),
                             onPressed: () => SetState(() => _taps++)),
                     ]),
-                new Text("Customisation", fontSize: 14.0, color: Colors.Black),
+                new Text("Customisation", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -92,7 +91,11 @@ internal sealed class CupertinoButtonDemoPageState : State
                             onPressed: null,
                             onLongPress: () => SetState(() => _longPresses++)),
                     ]),
-                new Text($"Taps: {_taps}   Long presses: {_longPresses}", fontSize: 14.0, color: Colors.Black),
+                new Text(
+                    $"Taps: {_taps}   Long presses: {_longPresses}",
+                    style: new TextStyle(
+                        FontSize: 14.0,
+                        Color: Colors.Black)),
             ]);
     }
 }

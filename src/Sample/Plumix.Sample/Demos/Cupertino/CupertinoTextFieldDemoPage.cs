@@ -26,11 +26,10 @@ internal sealed class CupertinoTextFieldDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino text fields", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino text fields", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Rounded, borderless, form validation, multiline, disabled, attachment, and clear-button states.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new CupertinoTextField(
                     controller: _controller,
                     placeholder: "Search settings",
@@ -41,8 +40,7 @@ internal sealed class CupertinoTextFieldDemoPageState : State
                     onChanged: value => SetState(() => _value = value)),
                 new Text(
                     string.IsNullOrEmpty(_value) ? "No query" : $"Query: {_value}",
-                    fontSize: 12.0,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12.0, Color: new Color(0xFF607D8B))),
                 CupertinoTextField.Borderless(
                     placeholder: "Borderless multiline note",
                     minLines: 2,

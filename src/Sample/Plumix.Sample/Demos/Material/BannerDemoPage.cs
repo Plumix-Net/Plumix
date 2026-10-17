@@ -55,11 +55,10 @@ public sealed class BannerDemoPage : StatefulWidget
                     spacing: 14,
                     children:
                     [
-                        new Text("Banner + MaterialBanner", fontSize: 20),
+                        new Text("Banner + MaterialBanner", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "M2/M3 ColorScheme defaults, local theme precedence, and queued presentation.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -110,6 +109,6 @@ public sealed class BannerDemoPage : StatefulWidget
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, fontSize: 12), onPressed);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
     }
 }

@@ -42,12 +42,11 @@ internal sealed class CupertinoSliderDemoPageState : State
                         spacing: 12.0,
                         children:
                         [
-                            new Text("CupertinoSlider", fontSize: 20.0, color: TitleColor),
+                            new Text("CupertinoSlider", style: new TextStyle(FontSize: 20.0, Color: TitleColor)),
                             new Text(
                                 "Continuous and discrete values, min/max ranges, thumb and active "
                                 + "colors, disabled state, and LTR/RTL dragging.",
-                                fontSize: 14.0,
-                                color: SubtitleColor),
+                                style: new TextStyle(FontSize: 14.0, Color: SubtitleColor)),
                             new Wrap(
                                 spacing: 8.0,
                                 runSpacing: 8.0,
@@ -64,8 +63,7 @@ internal sealed class CupertinoSliderDemoPageState : State
                                 $"value={Format(_value)}, ranged={Format(_rangedValue)}, "
                                 + $"discrete={Format(_discreteValue)}, changes={_changes}, "
                                 + $"lifecycle={_lifecycle}",
-                                fontSize: 12.0,
-                                color: SubtitleColor),
+                                style: new TextStyle(FontSize: 12.0, Color: SubtitleColor)),
                             BuildRow(
                                 new CupertinoSlider(
                                     value: _value,
@@ -115,8 +113,8 @@ internal sealed class CupertinoSliderDemoPageState : State
                 spacing: 6.0,
                 children:
                 [
-                    new Text(title, fontSize: 13.0, color: TitleColor),
-                    new Text(subtitle, fontSize: 12.0, color: SubtitleColor),
+                    new Text(title, style: new TextStyle(FontSize: 13.0, Color: TitleColor)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 12.0, Color: SubtitleColor)),
                     new Align(alignment: Alignment.CenterLeft, child: slider),
                 ]));
     }
@@ -126,7 +124,7 @@ internal sealed class CupertinoSliderDemoPageState : State
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
             padding: new Thickness(12.0, 6.0),
-            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue));
+            child: new Text(label, style: new TextStyle(FontSize: 12.0, Color: CupertinoColors.ActiveBlue)));
     }
 
     private static string Format(double value)

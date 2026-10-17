@@ -52,11 +52,10 @@ internal sealed class MaterialSwitchDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Switch", fontSize: 20, color: Colors.Black),
+                    new Text("Switch", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "M2/M3 tokens, thumb icons, track outlines and Switch.adaptive per platform.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -75,8 +74,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, platform={platform}",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -143,7 +141,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                 [
                     new SizedBox(
                         width: 140,
-                        child: new Text(label, fontSize: 13, color: Colors.Black)),
+                        child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                     control,
                 ]));
     }
@@ -158,7 +156,7 @@ internal sealed class MaterialSwitchDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

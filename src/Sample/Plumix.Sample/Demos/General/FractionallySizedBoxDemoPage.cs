@@ -29,11 +29,10 @@ internal sealed class FractionallySizedBoxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("FractionallySizedBox", fontSize: 20, color: Colors.Black),
+                new Text("FractionallySizedBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Configure width/height factors and alignment; null factor means pass-through on that axis.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,8 +59,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"widthFactor={FormatFactor(_widthFactor)}, heightFactor={FormatFactor(_heightFactor)}, alignment={AlignmentLabel(_alignment)}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -78,7 +76,11 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                                     new BorderSide(new Color(0xFF1D3557), 2)),
                                 BorderRadius: BorderRadius.Circular(10)),
                             child: new Center(
-                                child: new Text("fraction child", fontSize: 14, color: Colors.Black))))),
+                                child: new Text(
+                                    "fraction child",
+                                    style: new TextStyle(
+                                        FontSize: 14,
+                                        Color: Colors.Black)))))),
             ]);
     }
 

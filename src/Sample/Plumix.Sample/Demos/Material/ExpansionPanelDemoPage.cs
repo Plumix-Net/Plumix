@@ -24,14 +24,21 @@ internal sealed class ExpansionPanelDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("ExpansionPanel + ExpansionPanelList", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "ExpansionPanel + ExpansionPanelList",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Controlled panels, header tap gating, animated material gaps, and mutually exclusive radio panels.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
-                new Text("Controlled list", fontSize: 14, color: new Color(0xFF6750A4)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                new Text("Controlled list", style: new TextStyle(FontSize: 14, Color: new Color(0xFF6750A4))),
                 BuildControlledList(),
-                new Text("Radio list · last callback: " + _lastRadioEvent, fontSize: 14, color: new Color(0xFF006C4C)),
+                new Text(
+                    "Radio list · last callback: " + _lastRadioEvent,
+                    style: new TextStyle(
+                        FontSize: 14,
+                        Color: new Color(0xFF006C4C))),
                 BuildRadioList(),
             ]);
     }
@@ -95,13 +102,17 @@ internal sealed class ExpansionPanelDemoPageState : State
     {
         return new Padding(
             new Avalonia.Thickness(16, 0),
-            new Text($"{label} · {(expanded ? "open" : "closed")}", fontSize: 14, color: Colors.Black));
+            new Text(
+                $"{label} · {(expanded ? "open" : "closed")}",
+                style: new TextStyle(
+                    FontSize: 14,
+                    Color: Colors.Black)));
     }
 
     private static Widget BuildBody(string label)
     {
         return new Padding(
             new Avalonia.Thickness(16, 0, 16, 16),
-            new Text(label, fontSize: 13, color: new Color(0xFF49454F)));
+            new Text(label, style: new TextStyle(FontSize: 13, Color: new Color(0xFF49454F))));
     }
 }

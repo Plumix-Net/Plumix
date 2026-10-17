@@ -70,11 +70,15 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                     spacing: 12,
                     children:
                     [
-                        new Text("Lifecycle listener controls", fontSize: 20, color: Colors.Black),
+                        new Text(
+                            "Lifecycle listener controls",
+                            style: new TextStyle(
+                                FontSize: 20,
+                                Color: Colors.Black)),
                         new Text(
                             "Change window focus or minimize/restore the app to exercise AppLifecycleListener. "
                             + "The animation probe rebuilds only when AnimationStatus changes.",
-                            color: Colors.DimGray),
+                            style: new TextStyle(Color: Colors.DimGray)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
                             padding: new Thickness(12),
@@ -96,11 +100,11 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                                     onPressed: () => _controller.Reverse(from: 1),
                                     child: new Text("Reverse")),
                             ]),
-                        new Text("Binding events", fontSize: 16, color: Colors.Black),
+                        new Text("Binding events", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                         new Text(
                             "Resize the window or switch the system theme: WidgetsBindingObserver hears "
                             + "didChangeMetrics and didChangePlatformBrightness from the platform.",
-                            color: Colors.DimGray),
+                            style: new TextStyle(Color: Colors.DimGray)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
                             padding: new Thickness(12),

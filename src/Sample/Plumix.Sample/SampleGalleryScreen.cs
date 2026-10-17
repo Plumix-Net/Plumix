@@ -860,12 +860,10 @@ internal sealed class SampleMenuPage : StatefulWidget
                         [
                             new Text(
                                 "Route-based sample menu. Open page and return via Back button or Esc.",
-                                fontSize: 14,
-                                color: new Color(0x8A000000)),
+                                style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                             new Text(
                                 selectedTab.Description,
-                                fontSize: 12,
-                                color: new Color(0x73000000)),
+                                style: new TextStyle(FontSize: 12, Color: new Color(0x73000000))),
                             new Expanded(
                                 child: ListView.Builder(
                                     itemCount: pages.Count,
@@ -908,7 +906,7 @@ internal sealed class SampleMenuPage : StatefulWidget
         {
             return new OutlinedButton(
                 onPressed: () => Navigator.Of(context).PushNamed(page.RouteName),
-                child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12),
+                child: new Text($"{page.Title}  |  {page.Subtitle}", style: new TextStyle(FontSize: 12)),
                 style: OutlinedButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: new Color(0xFFDCE3ED),
@@ -948,7 +946,7 @@ internal sealed class SampleDemoPage : StatelessWidget
                     spacing: 10,
                     children:
                     [
-                        new Text(_subtitle, fontSize: 14, color: new Color(0x8A000000)),
+                        new Text(_subtitle, style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                         new Expanded(
                             child: new Container(
                                 color: new Color(0xFFF7F9FC),

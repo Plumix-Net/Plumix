@@ -28,11 +28,10 @@ internal sealed class AspectRatioDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AspectRatio + Spacer", fontSize: 20, color: Colors.Black),
+                new Text("AspectRatio + Spacer", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "AspectRatio enforces a tight ratio box; Spacer reserves remaining Row space by flex.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -51,8 +50,7 @@ internal sealed class AspectRatioDemoPageState : State
                     ]),
                 new Text(
                     $"ratio={FormatRatio(_aspectRatio)}, spacerFlex={_spacerFlex} (second spacer fixed=1)",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -72,7 +70,11 @@ internal sealed class AspectRatioDemoPageState : State
                                             new BorderSide(new Color(0xFF1D3557), 2)),
                                         BorderRadius: BorderRadius.Circular(10)),
                                     child: new Center(
-                                        child: new Text("Aspect preview", fontSize: 14, color: Colors.Black)))),
+                                        child: new Text(
+                                            "Aspect preview",
+                                            style: new TextStyle(
+                                                FontSize: 14,
+                                                Color: Colors.Black))))),
                             new Container(
                                 height: 44,
                                 color: Colors.White,
@@ -85,21 +87,33 @@ internal sealed class AspectRatioDemoPageState : State
                                             height: 24,
                                             color: new Color(0xFF1D3557),
                                             child: new Center(
-                                                child: new Text("L", fontSize: 12, color: Colors.White))),
+                                                child: new Text(
+                                                    "L",
+                                                    style: new TextStyle(
+                                                        FontSize: 12,
+                                                        Color: Colors.White)))),
                                         new Spacer(flex: _spacerFlex),
                                         new Container(
                                             width: 28,
                                             height: 24,
                                             color: new Color(0xFF2A9D8F),
                                             child: new Center(
-                                                child: new Text("M", fontSize: 12, color: Colors.White))),
+                                                child: new Text(
+                                                    "M",
+                                                    style: new TextStyle(
+                                                        FontSize: 12,
+                                                        Color: Colors.White)))),
                                         new Spacer(),
                                         new Container(
                                             width: 54,
                                             height: 24,
                                             color: new Color(0xFF457B9D),
                                             child: new Center(
-                                                child: new Text("R", fontSize: 12, color: Colors.White))),
+                                                child: new Text(
+                                                    "R",
+                                                    style: new TextStyle(
+                                                        FontSize: 12,
+                                                        Color: Colors.White)))),
                                     ])),
                         ])),
             ]);

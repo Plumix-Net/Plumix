@@ -38,11 +38,10 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
             spacing: 14.0,
             children:
             [
-                new Text("Cupertino segmented control", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino segmented control", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Controlled selection, sliding thumb, disabled segments, custom colors, and arrow-key focus.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new CupertinoSlidingSegmentedControl<string>(
                     children: segments,
                     groupValue: _selected,
@@ -77,8 +76,7 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                     ]),
                 new Text(
                     $"selected={_selected ?? "none"}, changes={_changes}, weekDisabled={_disableWeek}",
-                    fontSize: 13.0,
-                    color: new Color(0xFF455A64)),
+                    style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF455A64))),
             ]);
     }
 
@@ -102,6 +100,6 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                 decoration: new BoxDecoration(
                     Color: new Color(0xFFE8F4F1),
                     BorderRadius: BorderRadius.Circular(8.0)),
-                child: new Center(child: new Text(label, color: new Color(0xFF00695C)))));
+                child: new Center(child: new Text(label, style: new TextStyle(Color: new Color(0xFF00695C))))));
     }
 }

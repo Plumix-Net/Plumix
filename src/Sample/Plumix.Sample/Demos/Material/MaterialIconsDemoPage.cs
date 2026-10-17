@@ -48,19 +48,22 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
             spacing: 12.0,
             children:
             [
-                new Text("Material icons", fontSize: 20.0, color: Colors.Black),
+                new Text("Material icons", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "The full material_ui catalog: base, outlined, rounded, and sharp variants, "
                     + "aliases, high-range glyphs, and directional mirroring.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
-                new Text("Style variants of one icon", fontSize: 14.0, color: Colors.Black),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
+                new Text("Style variants of one icon", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 BuildRow(Variants),
-                new Text("Catalog samples", fontSize: 14.0, color: Colors.Black),
+                new Text("Catalog samples", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 BuildRow(Samples),
-                new Text($"Icons.adaptive on {PlatformDefaults.TargetPlatform}", fontSize: 14.0, color: Colors.Black),
+                new Text(
+                    $"Icons.adaptive on {PlatformDefaults.TargetPlatform}",
+                    style: new TextStyle(
+                        FontSize: 14.0,
+                        Color: Colors.Black)),
                 BuildRow(Adaptive),
-                new Text("Icon theme and text scaling", fontSize: 14.0, color: Colors.Black),
+                new Text("Icon theme and text scaling", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 new MediaQuery(
                     MediaQuery.Of(context).CopyWith(textScaler: TextScaler.Linear(1.5)),
                     new IconTheme(
@@ -77,7 +80,11 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                                 new Icon(Icons.Favorite, blendMode: BlendMode.SourceOver,
                                     semanticLabel: "Blended favorite"),
                             ]))),
-                new Text("arrow_back mirrors with text direction", fontSize: 14.0, color: Colors.Black),
+                new Text(
+                    "arrow_back mirrors with text direction",
+                    style: new TextStyle(
+                        FontSize: 14.0,
+                        Color: Colors.Black)),
                 new Wrap(
                     spacing: 12.0,
                     runSpacing: 12.0,
@@ -114,7 +121,12 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                 children:
                 [
                     new Icon(icon, size: 34.0, color: new Color(0xFF6200EE)),
-                    new Text(name, fontSize: 11.0, color: Colors.Black, textAlign: TextAlign.Center),
+                    new Text(
+                        name,
+                        style: new TextStyle(
+                            FontSize: 11.0,
+                            Color: Colors.Black),
+                        textAlign: TextAlign.Center),
                 ]));
     }
 }

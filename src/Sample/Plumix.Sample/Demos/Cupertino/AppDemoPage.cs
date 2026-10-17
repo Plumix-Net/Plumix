@@ -32,19 +32,20 @@ public sealed class CupertinoAppDemoPage : StatelessWidget
         return BuildPage(
             children:
             [
-                new Text("CupertinoApp", fontSize: 22.0, color: label),
+                new Text("CupertinoApp", style: new TextStyle(FontSize: 22.0, Color: label)),
                 new Text(
                     "The nested shell supplies Cupertino theme, localization, selection, scroll, and route defaults.",
-                    fontSize: 14.0,
-                    color: secondaryLabel),
+                    style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                 new Text(
                     $"locale action: {CupertinoLocalizations.Of(context).SelectAllButtonLabel}",
-                    fontSize: 13.0,
-                    color: secondaryLabel),
+                    style: new TextStyle(FontSize: 13.0, Color: secondaryLabel)),
                 new CupertinoButton(
                     color: theme.PrimaryColor,
                     onPressed: () => Navigator.Of(context).PushNamed("/details"),
-                    child: new Text("Push Cupertino route", color: theme.PrimaryContrastingColor)),
+                    child: new Text(
+                        "Push Cupertino route",
+                        style: new TextStyle(
+                            Color: theme.PrimaryContrastingColor))),
             ]);
     }
 
@@ -55,11 +56,11 @@ public sealed class CupertinoAppDemoPage : StatelessWidget
         return BuildPage(
             children:
             [
-                new Text("Details route", fontSize: 22.0, color: label),
+                new Text("Details route", style: new TextStyle(FontSize: 22.0, Color: label)),
                 new CupertinoButton(
                     color: theme.PrimaryColor,
                     onPressed: () => Navigator.Of(context).Pop(),
-                    child: new Text("Pop route", color: theme.PrimaryContrastingColor)),
+                    child: new Text("Pop route", style: new TextStyle(Color: theme.PrimaryContrastingColor))),
             ]);
     }
 

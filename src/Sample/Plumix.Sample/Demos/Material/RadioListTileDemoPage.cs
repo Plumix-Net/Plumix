@@ -27,12 +27,11 @@ internal sealed class RadioListTileDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("RadioListTile", fontSize: 20, color: Colors.Black),
+                new Text("RadioListTile", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "RadioGroup selection, toggleable clearing, radio scaling, and the affinity rule "
                     + "that puts the radio first on 'platform' — unlike the checkbox and switch tiles.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -74,8 +73,7 @@ internal sealed class RadioListTileDemoPageState : State
                     $"radio={_radioValue ?? "null"}, affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"toggleable={ListTileControlDemos.Lower(_toggleable)}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new Container(
                         color: new Color(0xFFF7F9FC),

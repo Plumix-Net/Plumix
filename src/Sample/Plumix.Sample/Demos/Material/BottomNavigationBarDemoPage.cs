@@ -52,14 +52,13 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("BottomNavigationBar", fontSize: 20),
+                    new Text("BottomNavigationBar", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Fixed/shifting types with the animated flex and radial background splash, landscape "
                         + "spread/centered/linear layouts, selected and unselected label visibility, item and "
                         + "label-style colors under both color schemes, theme precedence, feedback, and "
                         + "per-state mouse cursors.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -101,7 +100,10 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                                 _enableFeedback ? "Feedback on" : "Feedback off",
                                 () => SetState(() => _enableFeedback = !_enableFeedback)),
                         ]),
-                    new Text($"Selected index: {_currentIndex}   |   taps: {_tapCount}", fontSize: 13),
+                    new Text(
+                        $"Selected index: {_currentIndex}   |   taps: {_tapCount}",
+                        style: new TextStyle(
+                            FontSize: 13)),
                     bar,
                 ]);
         }
@@ -195,7 +197,7 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
         {
             return new OutlinedButton(
                 onPressed: onPressed,
-                child: new Text(label, fontSize: 12));
+                child: new Text(label, style: new TextStyle(FontSize: 12)));
         }
     }
 }

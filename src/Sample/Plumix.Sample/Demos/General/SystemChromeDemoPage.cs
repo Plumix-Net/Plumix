@@ -44,18 +44,20 @@ internal sealed class SystemChromeDemoPageState : State
                 spacing: 16,
                 children:
                 [
-                    new Text("SystemChrome", fontSize: 20, color: Colors.Black),
+                    new Text("SystemChrome", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Requests go to the platform over flutter/platform; a platform that does not " +
                         "implement one ignores it. The window title follows the Title widget.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     BuildTitleSection(),
                     BuildRegionSection(),
                     BuildOrientationSection(),
                     BuildModeSection(),
-                    new Text($"Last request: {_lastRequest}", color: new Color(0xFF31506F)),
-                    new Text($"System overlays visible: {_overlaysVisible}", color: new Color(0xFF31506F)),
+                    new Text($"Last request: {_lastRequest}", style: new TextStyle(Color: new Color(0xFF31506F))),
+                    new Text(
+                        $"System overlays visible: {_overlaysVisible}",
+                        style: new TextStyle(
+                            Color: new Color(0xFF31506F))),
                 ]));
     }
 
@@ -68,7 +70,7 @@ internal sealed class SystemChromeDemoPageState : State
                 new Title(
                     title: label,
                     color: new Color(0xFF2A9D8F),
-                    child: new Text($"Title: {label}", color: new Color(0xFF31506F))),
+                    child: new Text($"Title: {label}", style: new TextStyle(Color: new Color(0xFF31506F)))),
                 BuildButton("Toggle title", () => SetState(() => _alternateTitle = !_alternateTitle)),
             ]);
     }
@@ -89,7 +91,7 @@ internal sealed class SystemChromeDemoPageState : State
                             _darkRegion
                                 ? "SystemUiOverlayStyle.light (applies under the status bar)"
                                 : "SystemUiOverlayStyle.dark (applies under the status bar)",
-                            color: _darkRegion ? Colors.White : Colors.Black))),
+                            style: new TextStyle(Color: _darkRegion ? Colors.White : Colors.Black)))),
                 BuildButton("Toggle region style", () => SetState(() => _darkRegion = !_darkRegion)),
             ]);
     }
@@ -152,7 +154,7 @@ internal sealed class SystemChromeDemoPageState : State
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,
-                children: [new Text(title, fontSize: 16, color: Colors.Black), .. children]));
+                children: [new Text(title, style: new TextStyle(FontSize: 16, Color: Colors.Black)), .. children]));
     }
 
     private static Widget BuildButton(string label, Action onPressed)

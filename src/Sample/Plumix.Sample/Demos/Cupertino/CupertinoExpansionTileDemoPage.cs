@@ -38,11 +38,10 @@ internal sealed class CupertinoExpansionTileDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino list + expansion tiles", fontSize: 20.0, color: label),
+                new Text("Cupertino list + expansion tiles", style: new TextStyle(FontSize: 20.0, Color: label)),
                 new Text(
                     "Compare base/notched rows, async activation, chevrons, and both expansion transitions.",
-                    fontSize: 14.0,
-                    color: secondaryLabel),
+                    style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                 new ClipRRect(
                     BorderRadius.Circular(14.0),
                     child: new Column(

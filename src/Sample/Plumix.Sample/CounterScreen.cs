@@ -31,8 +31,8 @@ public sealed class CounterScreen : StatelessWidget
                     spacing: 12,
                     children:
                     [
-                        new Text("Plumix.Sample Counter", fontSize: 24, color: Colors.Black),
-                        new Text($"Count: {model.Count}", fontSize: 18, color: Colors.Red),
+                        new Text("Plumix.Sample Counter", style: new TextStyle(FontSize: 24, Color: Colors.Black)),
+                        new Text($"Count: {model.Count}", style: new TextStyle(FontSize: 18, Color: Colors.Red)),
                         new Row(
                             spacing: 12,
                             children:
@@ -53,7 +53,7 @@ public sealed class CounterScreen : StatelessWidget
                                         fontSize: 20)),
                             ]),
                         new SizedBox(height: 12),
-                        new Text("Keyed List (ValueKey)", fontSize: 18, color: Colors.Black),
+                        new Text("Keyed List (ValueKey)", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                         new Row(
                             spacing: 8,
                             children:
@@ -84,7 +84,7 @@ public sealed class CounterScreen : StatelessWidget
                             spacing: 8,
                             children: [..model.Items.Select(id => new KeyedListItem(id, key: new ValueKey<int>(id)))]),
                         new SizedBox(height: 12),
-                        new Text("GlobalKey Reparent", fontSize: 18, color: Colors.Black),
+                        new Text("GlobalKey Reparent", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                         new Row(
                             spacing: 8,
                             children:
@@ -95,14 +95,14 @@ public sealed class CounterScreen : StatelessWidget
                                         padding: new Thickness(8),
                                         child: model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
-                                            : new Text("left slot", color: Colors.Gray))),
+                                            : new Text("left slot", style: new TextStyle(Color: Colors.Gray)))),
                                 new Expanded(
                                     child: new Container(
                                         color: new Color(0xFFE3F2FD),
                                         padding: new Thickness(8),
                                         child: !model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
-                                            : new Text("right slot", color: Colors.Gray))),
+                                            : new Text("right slot", style: new TextStyle(Color: Colors.Gray)))),
                             ]),
                         new CounterTapButton(
                             label: "Move Global Widget",
@@ -111,7 +111,11 @@ public sealed class CounterScreen : StatelessWidget
                             foreground: Colors.White,
                             fontSize: 14),
                         new SizedBox(height: 12),
-                        new Text("Scrollable ListView.builder (even rows keepAlive)", fontSize: 18, color: Colors.Black),
+                        new Text(
+                            "Scrollable ListView.builder (even rows keepAlive)",
+                            style: new TextStyle(
+                                FontSize: 18,
+                                Color: Colors.Black)),
                         new SizedBox(
                             height: 220,
                             child: new ColoredBox(

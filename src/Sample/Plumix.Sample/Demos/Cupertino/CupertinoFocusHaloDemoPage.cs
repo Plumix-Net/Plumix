@@ -29,11 +29,10 @@ internal sealed class CupertinoFocusHaloDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino focus halo", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino focus halo", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Press Tab or click a tile to move focus through the three halo shapes.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(
                     spacing: 16.0,
                     runSpacing: 16.0,
@@ -72,6 +71,11 @@ internal sealed class CupertinoFocusHaloDemoPageState : State
                     decoration: new BoxDecoration(
                         Color: new Color(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(12.0)),
-                    child: new Text(label, fontSize: 14.0, color: Colors.Black, textAlign: TextAlign.Center))));
+                    child: new Text(
+                        label,
+                        style: new TextStyle(
+                            FontSize: 14.0,
+                            Color: Colors.Black),
+                        textAlign: TextAlign.Center))));
     }
 }

@@ -44,12 +44,11 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("TwoDimensionalScrollView", fontSize: 20, color: Colors.Black),
+                new Text("TwoDimensionalScrollView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "One viewport scrolled by two positions at once. The diagonal drag behavior "
                     + "decides whether a drag locks to one axis or moves both.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -106,8 +105,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
             padding: new Thickness(10, 8),
             child: new Text(
                 $"R{vicinity.YIndex}:C{vicinity.XIndex}",
-                fontSize: 13,
-                color: Colors.Black));
+                style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }
 }
 

@@ -31,11 +31,10 @@ internal sealed class BadgeTooltipDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("Badge + Tooltip", fontSize: 20, color: Colors.Black),
+                new Text("Badge + Tooltip", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Badge geometry plus plain/rich tooltips with hover, directional theming, and custom positioning.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -106,7 +105,11 @@ internal sealed class BadgeTooltipDemoPageState : State
                                         isLabelVisible: _isLabelVisible,
                                         child: new Icon(Icons.InfoOutline, size: 32)))),
                         ])),
-                new Text("Hover or long-press these controls:", fontSize: 14, color: Colors.Black),
+                new Text(
+                    "Hover or long-press these controls:",
+                    style: new TextStyle(
+                        FontSize: 14,
+                        Color: Colors.Black)),
                 new TooltipVisibility(
                     visible: _tooltipsVisible,
                     child: new Directionality(
@@ -189,14 +192,14 @@ internal sealed class BadgeTooltipDemoPageState : State
         return new Column(
             mainAxisSize: MainAxisSize.Min,
             spacing: 8,
-            children: [child, new Text(label, fontSize: 12, color: Colors.Black)]);
+            children: [child, new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))]);
     }
 
     private static Widget ControlButton(string label, Action onPressed)
     {
         return new TextButton(
             onPressed: onPressed,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),

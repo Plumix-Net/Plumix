@@ -28,11 +28,14 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("ReorderableListView + DragBoundary", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "ReorderableListView + DragBoundary",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Text(
                         "An 8% anchor offsets the list; DragBoundary keeps its proxy inside the visible bounds.",
-                        fontSize: 12,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -41,7 +44,11 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                 onPressed: ToggleHandles,
                                 child: new Text(
                                     _buildDefaultDragHandles ? "Use custom handles" : "Use default handles")),
-                            new Expanded(new Text(_status, fontSize: 12, color: new Color(0x8A000000))),
+                            new Expanded(new Text(
+                                _status,
+                                style: new TextStyle(
+                                    FontSize: 12,
+                                    Color: new Color(0x8A000000)))),
                         ]),
                     new Expanded(
                         new DragBoundary(
@@ -53,10 +60,18 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                 buildDefaultDragHandles: _buildDefaultDragHandles,
                                 header: new Padding(
                                     new Thickness(12, 8),
-                                    new Text("Header (not reorderable)", fontSize: 13, color: Colors.Black)),
+                                    new Text(
+                                        "Header (not reorderable)",
+                                        style: new TextStyle(
+                                            FontSize: 13,
+                                            Color: Colors.Black))),
                                 footer: new Padding(
                                     new Thickness(12, 8),
-                                    new Text("Footer (not reorderable)", fontSize: 13, color: Colors.Black)),
+                                    new Text(
+                                        "Footer (not reorderable)",
+                                        style: new TextStyle(
+                                            FontSize: 13,
+                                            Color: Colors.Black))),
                                 padding: new Thickness(4),
                                 itemExtent: 58,
                                 anchor: 0.08,
@@ -84,7 +99,11 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                     leading: new CircleAvatar(
                         radius: 16,
                         backgroundColor: new Color(0xFFEADDFF),
-                        child: new Text((index + 1).ToString(), fontSize: 12, color: new Color(0xFF21005D))),
+                        child: new Text(
+                            (index + 1).ToString(),
+                            style: new TextStyle(
+                                FontSize: 12,
+                                Color: new Color(0xFF21005D)))),
                     title: new Text(label),
                     subtitle: new Text($"Stable key: {label.ToLowerInvariant()}"),
                     trailing: trailing,

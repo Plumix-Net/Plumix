@@ -30,11 +30,10 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AppBar theme actionsPadding", fontSize: 20, color: Colors.Black),
+                new Text("AppBar theme actionsPadding", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for actions row padding resolution: widget override beats appBarTheme, appBarTheme beats default zero padding.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,8 +59,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     ]),
                 new Text(
                     $"theme={FormatInsets(_themeActionsPadding)}, override={(_useWidgetOverride ? "on" : "off")}, widget={FormatInsets(_widgetActionsPadding)}, effective={FormatInsets(EffectiveActionsPadding())}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 300,
                     color: new Color(0xFFE7EDF6),
@@ -71,14 +69,21 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Themed app bar preview", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Themed app bar preview",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildThemedPreview(),
-                            new Text("Default app bar reference (actionsPadding = 0)", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Default app bar reference (actionsPadding = 0)",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildDefaultReferencePreview(),
                             new Text(
                                 "Scroll to resolve WidgetState.scrolledUnder",
-                                fontSize: 11,
-                                color: Colors.DimGray),
+                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                             BuildScrolledUnderPreview(),
                         ])),
             ]);
@@ -154,7 +159,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             height: 36,
             child: new Padding(
                 new Thickness(12, 8),
-                new Text(label, fontSize: 12, color: Colors.DarkSlateGray)));
+                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray))));
     }
 
     private static Widget BuildActionBadge(IconData icon)

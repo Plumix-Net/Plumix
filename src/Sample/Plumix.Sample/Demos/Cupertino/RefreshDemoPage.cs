@@ -29,15 +29,13 @@ internal sealed class CupertinoRefreshDemoPageState : State
             spacing: 10.0,
             children:
             [
-                new Text("Cupertino sliver refresh", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino sliver refresh", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Pull the list down past the indicator, then release. The sliver holds 60 px while refreshing.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Text(
                     $"{_status} · refreshCount={_refreshCount}",
-                    fontSize: 12.0,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12.0, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new CustomScrollView(
                         physics: new BouncingScrollPhysics(parent: new AlwaysScrollableScrollPhysics()),
@@ -53,8 +51,7 @@ internal sealed class CupertinoRefreshDemoPageState : State
                                     padding: new Thickness(12.0, 10.0),
                                     child: new Text(
                                         $"Cupertino refresh row #{index + 1}",
-                                        fontSize: 13.0,
-                                        color: Colors.Black))),
+                                        style: new TextStyle(FontSize: 13.0, Color: Colors.Black)))),
                         ])),
             ]);
     }

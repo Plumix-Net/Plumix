@@ -17,17 +17,15 @@ public sealed class BaselineDemoPage : StatelessWidget
             spacing: 12,
             children:
             [
-                new Text("Baseline + IgnoreBaseline", fontSize: 20, color: Colors.Black),
+                new Text("Baseline + IgnoreBaseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The guide is 48 px from the top. Text uses its real alphabetic baseline; the box falls back " +
                     "to its bottom edge.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildBaselinePreview(),
                 new Text(
                     "IgnoreBaseline keeps the tall middle child out of Row baseline calculations.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12),
@@ -37,13 +35,13 @@ public sealed class BaselineDemoPage : StatelessWidget
                         spacing: 12,
                         children:
                         [
-                            new Text("Aa", fontSize: 34, color: new Color(0xFF1D3557)),
+                            new Text("Aa", style: new TextStyle(FontSize: 34, Color: new Color(0xFF1D3557))),
                             new IgnoreBaseline(
                                 child: new Container(
                                     width: 32,
                                     height: 52,
                                     color: new Color(0xFFE9C46A))),
-                            new Text("baseline", fontSize: 16, color: new Color(0xFF2A9D8F)),
+                            new Text("baseline", style: new TextStyle(FontSize: 16, Color: new Color(0xFF2A9D8F))),
                         ])),
             ]);
     }
@@ -67,7 +65,7 @@ public sealed class BaselineDemoPage : StatelessWidget
                     new Baseline(
                         baseline: 48,
                         baselineType: TextBaseline.Alphabetic,
-                        child: new Text("Plumix", fontSize: 36, color: new Color(0xFF1D3557))),
+                        child: new Text("Plumix", style: new TextStyle(FontSize: 36, Color: new Color(0xFF1D3557)))),
                     new Positioned(
                         left: 150,
                         child: new Baseline(

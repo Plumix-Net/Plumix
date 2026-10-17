@@ -62,12 +62,11 @@ internal sealed class FocusTraversalDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("FocusTraversalGroup + policies", fontSize: 20, color: Colors.Black),
+                new Text("FocusTraversalGroup + policies", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Tab and Shift+Tab walk the sorted order; the arrow keys use the geometric "
                     + "directional policy. Tile E is excluded from traversal but stays focusable.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -104,7 +103,7 @@ internal sealed class FocusTraversalDemoPageState : State
                             new Row(spacing: 8, children: [Tile(0), Tile(1), Tile(2)]),
                             new Row(spacing: 8, children: [Tile(3), Tile(4), Tile(5)]),
                         ])),
-                new Text($"Focused tile: {_focused}", fontSize: 14, color: Colors.Black),
+                new Text($"Focused tile: {_focused}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
             ]);
     }
 
@@ -151,8 +150,9 @@ internal sealed class FocusTraversalDemoPageState : State
                         padding: new Thickness(14, 18),
                         child: new Text(
                             label,
-                            fontSize: 16,
-                            color: node.HasPrimaryFocus ? Colors.White : Colors.Black,
+                            style: new TextStyle(
+                                FontSize: 16,
+                                Color: node.HasPrimaryFocus ? Colors.White : Colors.Black),
                             textAlign: TextAlign.Center)))));
 
         // Tile E stays focusable by tap or by the arrow keys, but Tab skips it.

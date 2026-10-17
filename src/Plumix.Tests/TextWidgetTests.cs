@@ -167,12 +167,13 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(
             new Text(
                 "alpha",
-                fontSize: 16,
-                color: Colors.Red,
-                fontWeight: FontWeight.Bold,
-                fontStyle: FontStyle.Italic,
-                height: 1.4,
-                letterSpacing: 1.5,
+                style: new TextStyle(
+                    FontSize: 16,
+                    Color: Colors.Red,
+                    FontWeight: FontWeight.Bold,
+                    FontStyle: FontStyle.Italic,
+                    Height: 1.4,
+                    LetterSpacing: 1.5),
                 textAlign: TextAlign.Center,
                 softWrap: false,
                 maxLines: 1,
@@ -198,12 +199,13 @@ public sealed class TextWidgetTests
 
         root.Update(new Text(
             "beta",
-            fontSize: 12,
-            color: Colors.Blue,
-            fontWeight: FontWeight.Normal,
-            fontStyle: FontStyle.Normal,
-            height: 1.1,
-            letterSpacing: 0.25,
+            style: new TextStyle(
+                FontSize: 12,
+                Color: Colors.Blue,
+                FontWeight: FontWeight.Normal,
+                FontStyle: FontStyle.Normal,
+                Height: 1.1,
+                LetterSpacing: 0.25),
             textAlign: TextAlign.End,
             softWrap: true,
             maxLines: 3,
@@ -318,8 +320,7 @@ public sealed class TextWidgetTests
                 style: style2,
                 child: new Text(
                     "alpha",
-                    color: Colors.Blue,
-                    letterSpacing: 0,
+                    style: new TextStyle(Color: Colors.Blue, LetterSpacing: 0),
                     textAlign: TextAlign.Right,
                     softWrap: true,
                     maxLines: 4,
@@ -407,7 +408,7 @@ public sealed class TextWidgetTests
         var scaler = new SquareTextScaler();
         var root = new TestRootElement(new MediaQuery(
             data: new MediaQueryData(TextScaler: scaler),
-            child: new Text("scaled", fontSize: 12)));
+            child: new Text("scaled", style: new TextStyle(FontSize: 12))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -423,7 +424,7 @@ public sealed class TextWidgetTests
     public void TextAndRichText_KeepLegacyScaleFactorCompatibility()
     {
         var owner = TestBuildOwner.Create();
-        var root = new TestRootElement(new Text("scaled", fontSize: 12, textScaleFactor: 1.5));
+        var root = new TestRootElement(new Text("scaled", style: new TextStyle(FontSize: 12), textScaleFactor: 1.5));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));

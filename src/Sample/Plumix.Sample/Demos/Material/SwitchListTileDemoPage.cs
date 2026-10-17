@@ -27,12 +27,11 @@ internal sealed class SwitchListTileDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("SwitchListTile", fontSize: 20, color: Colors.Black),
+                new Text("SwitchListTile", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Whole-tile interaction, affinity, density/alignment, selected styling, "
                     + "disabled state, and the adaptive branch (which paints the Cupertino switch).",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -64,8 +63,7 @@ internal sealed class SwitchListTileDemoPageState : State
                     $"switch={ListTileControlDemos.Lower(_switchValue)}, "
                     + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new Container(
                         color: new Color(0xFFF7F9FC),

@@ -60,11 +60,10 @@ internal sealed class FloatingActionButtonDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("FloatingActionButton baseline", fontSize: 20, color: Colors.Black),
+                    new Text("FloatingActionButton baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Regular/small/large/extended FAB defaults, elevation states, and theme overrides.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -102,8 +101,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
                         + $"small={_smallTaps}, large={_largeTaps}, extendedTaps={_extendedTaps}, "
                         + $"themed={_themedTaps}, "
                         + $"location={(_dockedLocation ? "centerDocked" : "centerFloat")}",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new SizedBox(
                         height: 160,
                         child: new Scaffold(
@@ -180,8 +178,8 @@ internal sealed class FloatingActionButtonDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text(title, fontSize: 13, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                    new Text(title, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                     new SizedBox(
                         height: 112,
                         child: new Center(child: fab)),
@@ -200,7 +198,7 @@ internal sealed class FloatingActionButtonDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

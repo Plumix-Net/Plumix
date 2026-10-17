@@ -48,12 +48,11 @@ internal sealed class AutocompleteDemoPageState : State
                 spacing: 12,
                 children:
                 [
-                    new Text("Autocomplete + RawAutocomplete", fontSize: 20, color: Colors.Black),
+                    new Text("Autocomplete + RawAutocomplete", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Material defaults and a route-free raw options portal with shared filtering, keyboard " +
                         "highlighting, M2/M3 surfaces, inherited theme, and anchored direction probes.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new Row(
@@ -68,7 +67,7 @@ internal sealed class AutocompleteDemoPageState : State
                                     new Text(_useMaterial3 ? "Theme: M3" : "Theme: M2"),
                                     () => SetState(() => _useMaterial3 = !_useMaterial3)),
                             ])),
-                    new Text("Material Autocomplete", fontSize: 18, color: Colors.Black),
+                    new Text("Material Autocomplete", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new Theme(
                         new ThemeData(useMaterial3: _useMaterial3),
                         new Autocomplete<string>(
@@ -78,9 +77,9 @@ internal sealed class AutocompleteDemoPageState : State
                             optionsViewOpenDirection: _openDirection,
                             optionsMaxHeight: 160,
                             onSelected: value => SetState(() => _materialSelection = value))),
-                    new Text($"Selected: {_materialSelection}", fontSize: 13),
+                    new Text($"Selected: {_materialSelection}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
-                    new Text("RawAutocomplete", fontSize: 18, color: Colors.Black),
+                    new Text("RawAutocomplete", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new Theme(
                         Theme.Of(context) with { FocusColor = new Color(0x243F51B5) },
                         new RawAutocomplete<string>(
@@ -98,7 +97,7 @@ internal sealed class AutocompleteDemoPageState : State
                                 onSubmitted: value => onSubmitted()),
                             optionsViewBuilder: BuildRawOptions,
                             onSelected: value => SetState(() => _rawSelection = value))),
-                    new Text($"Selected: {_rawSelection}", fontSize: 13),
+                    new Text($"Selected: {_rawSelection}", style: new TextStyle(FontSize: 13)),
                 ]));
     }
 

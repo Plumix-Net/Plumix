@@ -36,12 +36,11 @@ internal sealed class CupertinoRadioDemoPageState : State
                     spacing: 12.0,
                     children:
                     [
-                        new Text("CupertinoRadio", fontSize: 20.0, color: TitleColor),
+                        new Text("CupertinoRadio", style: new TextStyle(FontSize: 20.0, Color: TitleColor)),
                         new Text(
                             "RadioGroup selection, toggleable deselection, checkmark style, "
                             + "disabled and dark-mode painting.",
-                            fontSize: 14.0,
-                            color: SubtitleColor),
+                            style: new TextStyle(FontSize: 14.0, Color: SubtitleColor)),
                         new Wrap(
                             spacing: 8.0,
                             runSpacing: 8.0,
@@ -58,8 +57,7 @@ internal sealed class CupertinoRadioDemoPageState : State
                             ]),
                         new Text(
                             $"value={_groupValue ?? "null"}, changes={_changes}",
-                            fontSize: 12.0,
-                            color: SubtitleColor),
+                            style: new TextStyle(FontSize: 12.0, Color: SubtitleColor)),
                         new RadioGroup<string>(
                             groupValue: _groupValue,
                             onChanged: OnChanged,
@@ -118,8 +116,8 @@ internal sealed class CupertinoRadioDemoPageState : State
                             spacing: 2.0,
                             children:
                             [
-                                new Text(title, fontSize: 13.0, color: TitleColor),
-                                new Text(subtitle, fontSize: 12.0, color: SubtitleColor),
+                                new Text(title, style: new TextStyle(FontSize: 13.0, Color: TitleColor)),
+                                new Text(subtitle, style: new TextStyle(FontSize: 12.0, Color: SubtitleColor)),
                             ])),
                 ]));
     }
@@ -129,7 +127,7 @@ internal sealed class CupertinoRadioDemoPageState : State
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
             padding: new Thickness(12.0, 6.0),
-            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue));
+            child: new Text(label, style: new TextStyle(FontSize: 12.0, Color: CupertinoColors.ActiveBlue)));
     }
 
     private void OnChanged(string? value)

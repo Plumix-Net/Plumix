@@ -49,11 +49,10 @@ internal sealed class CheckboxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Checkbox baseline", fontSize: 20, color: Colors.Black),
+                new Text("Checkbox baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material Checkbox with M2/M3 defaults, tristate values, theme precedence, and tap-target policy.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -81,8 +80,7 @@ internal sealed class CheckboxDemoPageState : State
                     ]),
                 new Text(
                     status,
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Theme(
                     data: checkboxTheme,
                     child: new Column(
@@ -148,11 +146,10 @@ internal sealed class CheckboxDemoPageState : State
                                 title: "CheckboxTheme",
                                 subtitle: "fill/check/shape/stateful side precedence"),
                         ])),
-                new Text("CupertinoCheckbox", fontSize: 20, color: Colors.Black),
+                new Text("CupertinoCheckbox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "macOS-style checkbox: dynamic colors, focus ring, press overlay, and the dark-mode gradient.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 BuildCheckboxRow(
                     checkbox: new CupertinoCheckbox(
                         value: _checked,
@@ -198,8 +195,7 @@ internal sealed class CheckboxDemoPageState : State
                                 new Expanded(
                                     child: new Text(
                                         "Dark brightness: gradient fill and dark dynamic colors",
-                                        fontSize: 12,
-                                        color: Colors.White)),
+                                        style: new TextStyle(FontSize: 12, Color: Colors.White))),
                             ]))),
             ]);
     }
@@ -223,8 +219,8 @@ internal sealed class CheckboxDemoPageState : State
                             spacing: 2,
                             children:
                             [
-                                new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                                new Text(title, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
+                                new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                             ])),
                 ]));
     }
@@ -241,7 +237,7 @@ internal sealed class CheckboxDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

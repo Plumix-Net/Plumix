@@ -64,11 +64,10 @@ internal sealed class AnimatedIconDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("AnimatedIcon + AnimatedIcons", fontSize: 20, color: Colors.Black),
+                    new Text("AnimatedIcon + AnimatedIcons", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Complete Flutter catalog with frame interpolation, IconTheme defaults, and RTL mirroring.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -90,8 +89,7 @@ internal sealed class AnimatedIconDemoPageState : State
                     new Text(
                         $"direction={(_forward ? "forward" : "reverse")}, "
                         + $"textDirection={(_rightToLeft ? "rtl" : "ltr")}",
-                        fontSize: 12,
-                        color: Colors.DarkSlateGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     new Directionality(
                         _rightToLeft ? TextDirection.Rtl : TextDirection.Ltr,
                         new IconTheme(
@@ -124,7 +122,7 @@ internal sealed class AnimatedIconDemoPageState : State
                         entry.Icon,
                         _controller,
                         semanticLabel: entry.Label),
-                    new Text(entry.Label, fontSize: 11, color: Colors.Black),
+                    new Text(entry.Label, style: new TextStyle(FontSize: 11, Color: Colors.Black)),
                 ]));
     }
 

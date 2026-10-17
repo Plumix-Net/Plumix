@@ -11,6 +11,8 @@ class RichTextDemoPage extends StatefulWidget {
 class _RichTextDemoPageState extends State<RichTextDemoPage> {
   late final TapGestureRecognizer _tapRecognizer;
   int _taps = 0;
+  bool _boldText = false;
+  bool _spacingOverrides = false;
 
   @override
   void initState() {
@@ -50,7 +52,92 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
         _buildAlignmentRow(),
         _buildDefaultTextStyleParagraph(),
         _buildOverflowAndStrut(),
+        _buildAccessibilityOverrides(context),
       ],
+    );
+  }
+
+  // MediaQuery.boldText and the text spacing overrides: Text and Text.rich apply them, RichText does not.
+  Widget _buildAccessibilityOverrides(BuildContext context) {
+    const bodyStyle = TextStyle(fontSize: 15, color: Color(0xFF1D3557));
+    return Container(
+      color: const Color(0xFFFFF7ED),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: <Widget>[
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildToggle(
+                'Bold text',
+                _boldText,
+                () => setState(() => _boldText = !_boldText),
+              ),
+              _buildToggle(
+                'Spacing overrides',
+                _spacingOverrides,
+                () => setState(() => _spacingOverrides = !_spacingOverrides),
+              ),
+            ],
+          ),
+          MediaQuery(
+            data: MediaQuery.of(context).copyWith(boldText: _boldText),
+            child: MediaQuery.applyTextStyleOverrides(
+              lineHeightScaleFactorOverride: _spacingOverrides ? 1.8 : null,
+              letterSpacingOverride: _spacingOverrides ? 1.5 : null,
+              wordSpacingOverride: _spacingOverrides ? 6.0 : null,
+              paragraphSpacingOverride: null,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: 4,
+                children: <Widget>[
+                  const Text(
+                    "Text follows the platform's bold and spacing settings.",
+                    style: bodyStyle,
+                  ),
+                  const Text.rich(
+                    TextSpan(
+                      text: 'Text.rich applies them ',
+                      style: bodyStyle,
+                      children: <InlineSpan>[
+                        TextSpan(
+                          text: 'to every span.',
+                          style: TextStyle(color: Color(0xFFE76F51)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  RichText(
+                    text: const TextSpan(
+                      text: 'RichText ignores the overrides.',
+                      style: bodyStyle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static Widget _buildToggle(String label, bool selected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        color: selected ? const Color(0xFF2A9D8F) : const Color(0xFFE2E8F0),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            color: selected ? Colors.white : const Color(0xFF1D3557),
+          ),
+        ),
+      ),
     );
   }
 

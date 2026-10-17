@@ -51,13 +51,16 @@ public sealed class GestureRecognizerDemoPageState : State
             spacing: 16,
             children:
             [
-                new Text("Drag, long-press and scale recognizers", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Drag, long-press and scale recognizers",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "A drag accepts once the pointer travels past the device hit slop (18 logical pixels for "
                     + "touch, 1 for a mouse). DragStartBehavior decides whether that travelled distance is "
                     + "reported from the down position or from where the gesture won the arena.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildSwitchRow(
                     "DragStartBehavior.Down (replay the pending offset)",
                     _dragStartBehavior == DragStartBehavior.Down,
@@ -70,8 +73,7 @@ public sealed class GestureRecognizerDemoPageState : State
                 new Text(
                     "Drag with several fingers to compare the strategies. The default follows the latest finger; "
                     + "boundary mode uses the furthest movement in each direction within a frame.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildSwitchRow(
                     "Sum all finger movements",
                     _multitouchDragStrategy == MultitouchDragStrategy.SumAllPointers,
@@ -89,8 +91,7 @@ public sealed class GestureRecognizerDemoPageState : State
                 new Text(
                     "The long press deadline is 500 ms. Each mouse button dispatches its own callback set; "
                     + "moving more than the touch slop before the deadline cancels it.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildLongPressSurface(),
                 BuildLog("Long-press events", _longPressLog),
                 new Text(
@@ -98,8 +99,7 @@ public sealed class GestureRecognizerDemoPageState : State
                     + "finger pans, and a trackpad pan/zoom gesture counts as two pointers. It wins the arena "
                     + "once the span moves past the scale slop, the focal point past the pan slop, or the "
                     + "pan/zoom scale differs by more than 5%.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildSwitchRow(
                     "TrackpadScrollCausesScale (a trackpad scroll zooms instead of panning)",
                     _trackpadScrollCausesScale,
@@ -109,14 +109,12 @@ public sealed class GestureRecognizerDemoPageState : State
                 new Text(
                     "Tap with several fingers at once. Each finger completes or cancels its own tap; "
                     + "holding for 250 ms also logs a long tap.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildMultiTapSurface(),
                 BuildLog("Independent tap events", _multiTapLog),
                 new Text(
                     "Tap or long-press to send the platform's sound or haptic feedback before the handler runs.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildFeedbackSurface(),
                 BuildLog("Feedback callbacks", _feedbackLog),
             ]));
@@ -129,7 +127,7 @@ public sealed class GestureRecognizerDemoPageState : State
             children:
             [
                 new Switch(value, onChanged),
-                new Expanded(child: new Text(label, fontSize: 14, color: Colors.Black)),
+                new Expanded(child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.Black))),
             ]);
     }
 
@@ -203,8 +201,7 @@ public sealed class GestureRecognizerDemoPageState : State
                 child: new Center(
                     child: new Text(
                         "Press and hold with any mouse button",
-                        fontSize: 14,
-                        color: new Color(0xFF31506F)))));
+                        style: new TextStyle(FontSize: 14, Color: new Color(0xFF31506F))))));
     }
 
     private Widget BuildScaleSurface()
@@ -273,8 +270,7 @@ public sealed class GestureRecognizerDemoPageState : State
                 color: new Color(0xFFE7EDF6),
                 child: new Center(child: new Text(
                     "Tap or hold with several fingers",
-                    fontSize: 14,
-                    color: new Color(0xFF31506F)))));
+                    style: new TextStyle(FontSize: 14, Color: new Color(0xFF31506F))))));
     }
 
     private Widget BuildFeedbackSurface()
@@ -288,22 +284,21 @@ public sealed class GestureRecognizerDemoPageState : State
                 color: new Color(0xFFF4F7FA),
                 child: new Center(child: new Text(
                     "Tap or hold for feedback",
-                    fontSize: 14,
-                    color: new Color(0xFF31506F))))));
+                    style: new TextStyle(FontSize: 14, Color: new Color(0xFF31506F)))))));
     }
 
     private static Widget BuildLog(string title, List<string> lines)
     {
-        var children = new List<Widget> { new Text(title, fontSize: 14, color: Colors.Black) };
+        var children = new List<Widget> { new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)) };
         if (lines.Count == 0)
         {
-            children.Add(new Text("(no events yet)", fontSize: 13, color: Colors.DimGray));
+            children.Add(new Text("(no events yet)", style: new TextStyle(FontSize: 13, Color: Colors.DimGray)));
         }
         else
         {
             foreach (string line in lines)
             {
-                children.Add(new Text(line, fontSize: 13, color: Colors.DimGray));
+                children.Add(new Text(line, style: new TextStyle(FontSize: 13, Color: Colors.DimGray)));
             }
         }
 

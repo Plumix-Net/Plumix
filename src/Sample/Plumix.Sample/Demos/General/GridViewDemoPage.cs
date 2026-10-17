@@ -19,12 +19,11 @@ public sealed class GridViewDemoPage : StatelessWidget
             spacing: 10,
             children:
             [
-                new Text("GridView + SliverGrid", fontSize: 20, color: Colors.Black),
+                new Text("GridView + SliverGrid", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "GridView uses SliverGrid with fixed-cross-axis delegate. "
                     + "The sliver strip below is right-to-left, so its tiles start at the right edge.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 60,
@@ -57,8 +56,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                                             padding: new Thickness(8, 6),
                                             child: new Text(
                                                 $"sliver tile #{index}",
-                                                fontSize: 12,
-                                                color: Colors.Black)))),
+                                                style: new TextStyle(FontSize: 12, Color: Colors.Black))))),
                             ]))),
             ]);
     }

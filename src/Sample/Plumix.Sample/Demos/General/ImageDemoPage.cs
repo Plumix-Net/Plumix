@@ -72,11 +72,10 @@ internal sealed class ImageDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Image controls", fontSize: 20, color: Colors.Black),
+                new Text("Image controls", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -278,8 +277,7 @@ internal sealed class ImageDemoPageState : State
                         ? "Raw image: decoding..."
                         : $"Raw image: {_rawInfo.Image.Size.Width:0} × {_rawInfo.Image.Size.Height:0} px; "
                           + $"cache: {ImageCache.Shared.CurrentSize}; live: {ImageCache.Shared.LiveImageCount}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
             ]);
         return new Directionality(_rtl ? Plumix.UI.TextDirection.Rtl : Plumix.UI.TextDirection.Ltr, content);
     }
@@ -339,7 +337,7 @@ internal sealed class ImageDemoPageState : State
             spacing: 8,
             children:
             [
-                new Text(label, fontSize: 13, color: Colors.Black),
+                new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
                 new Container(
                     width: 132,
                     height: 112,

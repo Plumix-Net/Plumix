@@ -34,11 +34,10 @@ internal sealed class DecoratedBoxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("DecoratedBox + Border + Radius", fontSize: 20, color: Colors.Black),
+                new Text("DecoratedBox + Border + Radius", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Adjust border width and corner radius; toggle fill theme, shadow blur style and blend mode.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -69,8 +68,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                     $"radius={_radius:0}, border={_borderWidth:0}, "
                     + $"fill={(_accentFill ? "accent" : "neutral")}, shadow={BlurStyleName(_blurStyle)}, "
                     + $"blend={(_multiply ? "multiply" : "none")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -97,7 +95,11 @@ internal sealed class DecoratedBoxDemoPageState : State
                                     ],
                                     BackgroundBlendMode: _multiply ? BlendMode.Multiply : null),
                                 child: new Center(
-                                    child: new Text("Decorated", fontSize: 14, color: new Color(0xFF14213D))))))),
+                                    child: new Text(
+                                        "Decorated",
+                                        style: new TextStyle(
+                                            FontSize: 14,
+                                            Color: new Color(0xFF14213D)))))))),
             ]);
     }
 

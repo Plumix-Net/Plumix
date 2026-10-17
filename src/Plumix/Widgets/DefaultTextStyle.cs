@@ -151,3 +151,69 @@ public sealed class DefaultTextStyle : InheritedTheme
         }
     }
 }
+
+/// The [TextHeightBehavior] that will apply to descendant [Text] and [EditableText]
+/// widgets which have not explicitly set [Text.TextHeightBehavior].
+///
+/// If there is a [DefaultTextStyle] with a non-null [DefaultTextStyle.TextHeightBehavior]
+/// below this widget, the [DefaultTextStyle.TextHeightBehavior] will be used
+/// over this widget's [TextHeightBehavior].
+/// Dart's <c>DefaultTextHeightBehavior</c>.
+public sealed class DefaultTextHeightBehavior : InheritedTheme
+{
+    /// Creates a default text height behavior for the given subtree.
+    public DefaultTextHeightBehavior(TextHeightBehavior textHeightBehavior, Widget child, Key? key = null)
+        : base(child, key)
+    {
+        ArgumentNullException.ThrowIfNull(textHeightBehavior);
+        TextHeightBehavior = textHeightBehavior;
+    }
+
+    /// {@macro dart.ui.textHeightBehavior}
+    public TextHeightBehavior TextHeightBehavior { get; }
+
+    /// The closest instance of [DefaultTextHeightBehavior] that encloses the
+    /// given context, or null if none is found.
+    public static TextHeightBehavior? MaybeOf(BuildContext context)
+    {
+        return context.DependOnInheritedWidgetOfExactType<DefaultTextHeightBehavior>()?.TextHeightBehavior;
+    }
+
+    /// The closest instance of [DefaultTextHeightBehavior] that encloses the
+    /// given context; throws when none is found.
+    public static TextHeightBehavior Of(BuildContext context)
+    {
+        if (MaybeOf(context) is { } behavior)
+        {
+            return behavior;
+        }
+
+        throw new FlutterError(
+            "DefaultTextHeightBehavior.of() was called with a context that does not contain a "
+            + "DefaultTextHeightBehavior widget.\n"
+            + "No DefaultTextHeightBehavior widget ancestor could be found starting from the context "
+            + "that was passed to DefaultTextHeightBehavior.of(). This can happen because you are using "
+            + "a widget that looks for a DefaultTextHeightBehavior ancestor, but no such ancestor "
+            + "exists.\n"
+            + $"The context used was:\n  {context}");
+    }
+
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !Equals(TextHeightBehavior, ((DefaultTextHeightBehavior)oldWidget).TextHeightBehavior);
+    }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new DefaultTextHeightBehavior(textHeightBehavior: TextHeightBehavior, child: child);
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<TextHeightBehavior>(
+            "textHeightBehavior",
+            TextHeightBehavior,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
+}

@@ -30,11 +30,10 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AppBar theme leadingWidth", fontSize: 20, color: Colors.Black),
+                new Text("AppBar theme leadingWidth", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for AppBar leading slot width resolution: widget override beats appBarTheme, appBarTheme beats default 56.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,8 +59,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                     ]),
                 new Text(
                     $"themeLeadingWidth={_themeLeadingWidth:0}, override={(_useWidgetOverride ? "on" : "off")}, widgetLeadingWidth={_widgetLeadingWidth:0}, effective={EffectiveLeadingWidthLabel()}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 300,
                     color: new Color(0xFFE7EDF6),
@@ -71,9 +69,17 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Themed app bar preview", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Themed app bar preview",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildThemedPreview(),
-                            new Text("Default app bar reference (leadingWidth = 56)", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Default app bar reference (leadingWidth = 56)",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);

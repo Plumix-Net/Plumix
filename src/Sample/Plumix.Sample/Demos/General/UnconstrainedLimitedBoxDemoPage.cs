@@ -33,13 +33,11 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
             [
                 new Text(
                     "ConstraintsTransformBox + UnconstrainedBox",
-                    fontSize: 20,
-                    color: Colors.Black),
+                    style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "UnconstrainedBox delegates axis removal to ConstraintsTransformBox; "
                     + "the direct probe removes maxWidth and toggles clipping.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -67,8 +65,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                 new Text(
                     $"axis={AxisLabel(_constrainedAxis)}, maxWidth={_maxWidth:0}, "
                     + $"maxHeight={_maxHeight:0}, transformClip={_clipTransformOverflow}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 BuildButton(
                     _clipTransformOverflow ? "Transform clip: antiAlias" : "Transform clip: none",
                     () => SetState(() => _clipTransformOverflow = !_clipTransformOverflow),
@@ -84,7 +81,11 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Bounded parent: LimitedBox ignores maxWidth/maxHeight.", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Bounded parent: LimitedBox ignores maxWidth/maxHeight.",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             new Container(
                                 height: 60,
                                 color: Colors.White,
@@ -94,7 +95,11 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                         maxWidth: _maxWidth,
                                         maxHeight: _maxHeight,
                                         child: BuildProbeCard()))),
-                            new Text("Inside UnconstrainedBox: unbounded axes use LimitedBox max values.", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Inside UnconstrainedBox: unbounded axes use LimitedBox max values.",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             new Container(
                                 height: 92,
                                 color: Colors.White,
@@ -109,8 +114,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                             child: BuildProbeCard())))),
                             new Text(
                                 "Direct ConstraintsTransformBox: maxWidth removed.",
-                                fontSize: 11,
-                                color: Colors.DimGray),
+                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                             new Container(
                                 height: 58,
                                 color: Colors.White,
@@ -129,8 +133,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                         child: new Center(
                                             child: new Text(
                                                 "natural width 280",
-                                                fontSize: 11,
-                                                color: Colors.Black))))),
+                                                style: new TextStyle(FontSize: 11, Color: Colors.Black)))))),
                         ])),
             ]);
     }
@@ -147,8 +150,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
             child: new Center(
                 child: new Text(
                     $"child 190x86\nlimited to {_maxWidth:0}x{_maxHeight:0}",
-                    fontSize: 11,
-                    color: Colors.Black,
+                    style: new TextStyle(FontSize: 11, Color: Colors.Black),
                     textAlign: TextAlign.Center)));
     }
 

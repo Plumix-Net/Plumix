@@ -39,14 +39,13 @@ internal sealed class NavigationPopDemoPageState : State
                 spacing: 12,
                 children:
                 [
-                    new Text("PopScope + NavigatorPopHandler", fontSize: 20, color: Colors.Black),
+                    new Text("PopScope + NavigatorPopHandler", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Push a nested page, then simulate a parent Back. The handler consumes it in the nested " +
                         "navigator. Nested routes use PageTransitionsTheme, including Android predictive-back " +
                         "peek/commit/cancel and iOS/macOS leading-edge swipe. Disable route pop to probe PopScope " +
                         "veto behavior.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -61,7 +60,7 @@ internal sealed class NavigationPopDemoPageState : State
                                 onPressed: () => Navigator.Of(Context).MaybePop("demo-result"),
                                 child: new Text("Simulate parent Back")),
                         ]),
-                    new Text($"Status: {_status}", color: new Color(0xFF31506F)),
+                    new Text($"Status: {_status}", style: new TextStyle(Color: new Color(0xFF31506F))),
                     new Expanded(
                         child: new NavigatorPopHandler<object?>(
                             onPopWithResult: result =>
@@ -109,7 +108,6 @@ internal sealed class NavigationPopDemoPageState : State
             alignment: Alignment.Center,
             child: new Text(
                 page == 0 ? "Nested root" : $"Nested page {page}",
-                fontSize: 18,
-                color: Colors.Black));
+                style: new TextStyle(FontSize: 18, Color: Colors.Black)));
     }
 }

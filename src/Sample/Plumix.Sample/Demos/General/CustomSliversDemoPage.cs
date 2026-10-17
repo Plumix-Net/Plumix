@@ -32,12 +32,10 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                     [
                                         new Text(
                                             "SliverResizingHeader",
-                                            fontSize: 20,
-                                            color: Colors.Black),
+                                            style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                                         new Text(
                                             "140px → 64px prototype extents",
-                                            fontSize: 13,
-                                            color: Colors.DimGray),
+                                            style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                                     ]))),
                         SliverFixedExtentList.Builder(
                             itemCount: 5,
@@ -60,11 +58,14 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             spacing: 2,
                             children:
                             [
-                                new Text("SliverFloatingHeader", fontSize: 18, color: Colors.Black),
+                                new Text(
+                                    "SliverFloatingHeader",
+                                    style: new TextStyle(
+                                        FontSize: 18,
+                                        Color: Colors.Black)),
                                 new Text(
                                     "Reverse the scroll direction to reveal and snap it.",
-                                    fontSize: 12,
-                                    color: Colors.DimGray),
+                                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                             ]))),
                 new SliverMainAxisGroup(
                     slivers:
@@ -101,12 +102,10 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                     [
                                         new Text(
                                             "SliverLayoutBuilder + SliverSafeArea",
-                                            fontSize: 20,
-                                            color: Colors.Black),
+                                            style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                                         new Text(
                                             $"{width}px safe cross-axis — {(compact ? "compact" : "wide")} header",
-                                            fontSize: 14,
-                                            color: Colors.DimGray),
+                                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                                     ])));
                     })),
                 new SliverFillRemaining(
@@ -120,11 +119,14 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             spacing: 8,
                             children:
                             [
-                                new Text("SliverFillRemaining", fontSize: 22, color: Colors.Black),
+                                new Text(
+                                    "SliverFillRemaining",
+                                    style: new TextStyle(
+                                        FontSize: 22,
+                                        Color: Colors.Black)),
                                 new Text(
                                     "Non-scrollable child fills the first viewport below the pinned header.",
-                                    fontSize: 13,
-                                    color: Colors.DimGray,
+                                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray),
                                     textAlign: TextAlign.Center),
                             ]))),
                 new SliverFillViewport(
@@ -155,8 +157,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 padding: new Thickness(10, 8),
                                 child: new Text(
                                     $"decorated sliver row #{index}",
-                                    fontSize: 13,
-                                    color: Colors.Black)),
+                                    style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                             addAutomaticKeepAlives: false))),
                 new SliverMainAxisGroup(
                     slivers:
@@ -171,11 +172,14 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                     spacing: 2,
                                     children:
                                     [
-                                        new Text("SliverMainAxisGroup", fontSize: 17, color: Colors.Black),
+                                        new Text(
+                                            "SliverMainAxisGroup",
+                                            style: new TextStyle(
+                                                FontSize: 17,
+                                                Color: Colors.Black)),
                                         new Text(
                                             "This header stops pinning at the end of its group.",
-                                            fontSize: 12,
-                                            color: Colors.DimGray),
+                                            style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                                     ]))),
                         new SliverCrossAxisGroup(
                             slivers:
@@ -243,8 +247,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             padding: new Thickness(10, 10),
                             child: new Text(
                                 $"regular sliver row #{index}",
-                                fontSize: 13,
-                                color: Colors.Black)),
+                                style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                         addAutomaticKeepAlives: false)),
                 new SliverPadding(
                     padding: new Thickness(12, 4, 12, 16),
@@ -255,8 +258,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             padding: new Thickness(10, 10),
                             child: new Text(
                                 $"separated sliver row #{index}",
-                                fontSize: 13,
-                                color: Colors.Black)),
+                                style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                         separatorBuilder: (_, _) => new Container(
                             color: new Color(0xFFFFB74D),
                             height: 2),
@@ -286,12 +288,11 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                         spacing: 2,
                         children:
                         [
-                            new Text("SliverPersistentHeader", fontSize: 18, color: Colors.Black),
+                            new Text("SliverPersistentHeader", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                             new Text(
                                 $"shrinkOffset {shrinkOffset:0} px · "
                                 + $"overlapsContent {(overlapsContent ? "true" : "false")}",
-                                fontSize: 12,
-                                color: Colors.DimGray),
+                                style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                         ])));
         }
 
@@ -303,7 +304,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new Container(
             color: color,
             padding: new Thickness(6, 8),
-            child: new Text(label, fontSize: 12, color: Colors.Black));
+            child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black)));
     }
 
     private static Widget BuildViewportPage(string label, Color color)
@@ -317,11 +318,10 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                 spacing: 6,
                 children:
                 [
-                    new Text(label, fontSize: 20, color: Colors.Black),
+                    new Text(label, style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "55% of the viewport · padded ends",
-                        fontSize: 13,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 ]));
     }
 
@@ -331,6 +331,6 @@ public sealed class CustomSliversDemoPage : StatelessWidget
             color: color,
             padding: new Thickness(10, 8),
             alignment: Alignment.CenterLeft,
-            child: new Text(label, fontSize: 13, color: Colors.Black));
+            child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }
 }

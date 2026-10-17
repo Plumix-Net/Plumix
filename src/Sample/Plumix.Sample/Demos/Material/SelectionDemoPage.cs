@@ -70,7 +70,7 @@ internal sealed class SelectionDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text($"Menu value: {_menuValue}", fontSize: 18),
+                            new Text($"Menu value: {_menuValue}", style: new TextStyle(FontSize: 18)),
                             new Text("The page stays interactive while this menu is open."),
                             new TextButton(new Text("Close menu"), _menuController.Remove),
                         ]))));
@@ -84,20 +84,19 @@ internal sealed class SelectionDemoPageState : State
                 spacing: 12,
                 children:
                 [
-                    new Text("SelectableText + SelectionArea", fontSize: 20, color: Colors.Black),
+                    new Text("SelectableText + SelectionArea", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Drag across text, then right-click or long-press for the adaptive context menu. "
                         + "Double-tap selects a word and triple-tap a paragraph; long press raises the "
                         + "drag handles and the magnifier. Ctrl/Cmd+A and Ctrl/Cmd+C also work. "
                         + "The second probe spans several Text widgets.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TextButton(
                             new Text($"Interactive: {_interactive}"),
                             () => SetState(() => _interactive = !_interactive))),
-                    new Text("ContextMenuController", fontSize: 18, color: Colors.Black),
+                    new Text("ContextMenuController", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new Text("Show a menu, update its value, and click the page while it stays open."),
                     new Wrap(
                         spacing: 8,
@@ -113,7 +112,7 @@ internal sealed class SelectionDemoPageState : State
                             new TextButton(new Text($"Page clicks: {_pageClicks}"),
                                 () => SetState(() => _pageClicks++)),
                         ]),
-                    new Text("Single selectable run", fontSize: 18, color: Colors.Black),
+                    new Text("Single selectable run", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new DecoratedBox(
                         decoration: new BoxDecoration(
                             Color: new Color(0xFFF7F2FA),
@@ -130,9 +129,9 @@ internal sealed class SelectionDemoPageState : State
                                     _singleSelection = selection.IsCollapsed
                                         ? "none"
                                         : $"{selection.Start}..{selection.End} ({cause})")))),
-                    new Text($"Single selection: {_singleSelection}", fontSize: 13),
+                    new Text($"Single selection: {_singleSelection}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
-                    new Text("SelectionArea subtree", fontSize: 18, color: Colors.Black),
+                    new Text("SelectionArea subtree", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new TextSelectionTheme(
                         data: new TextSelectionThemeData(
                             CursorColor: Colors.DarkGreen,
@@ -165,16 +164,15 @@ internal sealed class SelectionDemoPageState : State
                                                     new Text("across a Row."),
                                                 ]),
                                         ])))))),
-                    new Text($"Area selection: {_areaSelection}", fontSize: 13, maxLines: 3),
-                    new Text($"SelectionListener: {_listenerDetails}", fontSize: 13),
+                    new Text($"Area selection: {_areaSelection}", style: new TextStyle(FontSize: 13), maxLines: 3),
+                    new Text($"SelectionListener: {_listenerDetails}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
-                    new Text("Selection inside a scrollable", fontSize: 18, color: Colors.Black),
+                    new Text("Selection inside a scrollable", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new Text(
                         "Drag a selection past the top or bottom edge of the list: the scrollable auto "
                         + "scrolls while the drag continues, keeps the selection anchored to the content, "
                         + "and restores it for rows that scroll back into view.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new SelectionArea(
                         onSelectionChanged: content => SetState(() =>
                             _scrollableSelection = content?.PlainText ?? "none"),
@@ -193,9 +191,13 @@ internal sealed class SelectionDemoPageState : State
                                         insets: new Thickness(12, 4),
                                         child: new Text(
                                             $"Row {index} of the scrollable selection probe")))))),
-                    new Text($"Scrollable selection: {_scrollableSelection}", fontSize: 13, maxLines: 3),
+                    new Text(
+                        $"Scrollable selection: {_scrollableSelection}",
+                        style: new TextStyle(
+                            FontSize: 13),
+                        maxLines: 3),
                     new Divider(),
-                    new Text("DefaultSelectionStyle scope", fontSize: 18, color: Colors.Black),
+                    new Text("DefaultSelectionStyle scope", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new DefaultSelectionStyle(
                         cursorColor: new Color(0xFFFF5722),
                         selectionColor: Color.FromARGB(0x66, 0xFF, 0x57, 0x22),
@@ -203,7 +205,11 @@ internal sealed class SelectionDemoPageState : State
                         child: new SelectableText(
                             "Cursor, selection, and mouse cursor inherit from the core selection style.")),
                     new Divider(),
-                    new Text("TextSelectionTheme on TextField", fontSize: 18, color: Colors.Black),
+                    new Text(
+                        "TextSelectionTheme on TextField",
+                        style: new TextStyle(
+                            FontSize: 18,
+                            Color: Colors.Black)),
                     new TextSelectionTheme(
                         data: new TextSelectionThemeData(
                             CursorColor: new Color(0xFF7B1FA2),

@@ -51,11 +51,10 @@ public sealed class DialogDemoPage : StatefulWidget
                 spacing: 14,
                 children:
                 [
-                    new Text("Dialog family", fontSize: 20),
+                    new Text("Dialog family", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Dialog, AlertDialog, SimpleDialog, typed results, intrinsic width, actions overflow, and scrollable choices.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -76,7 +75,7 @@ public sealed class DialogDemoPage : StatefulWidget
                             new FilledButton(new Text("SHOW SIMPLE"), () => ShowSimpleDialog(context)),
                             new TextButton(new Text("SHOW ADAPTIVE"), () => ShowAdaptive(context)),
                         ]),
-                    new Text($"Last result: {_lastResult}", fontSize: 13),
+                    new Text($"Last result: {_lastResult}", style: new TextStyle(FontSize: 13)),
                 ]);
         }
 
@@ -117,7 +116,7 @@ public sealed class DialogDemoPage : StatefulWidget
                             spacing: 16,
                             children:
                             [
-                                new Text("Base Dialog", fontSize: 20),
+                                new Text("Base Dialog", style: new TextStyle(FontSize: 20)),
                                 new Text("This uses the same themed Material surface and route barrier."),
                                 new TextButton(new Text("CLOSE"), () => Navigator.Pop(routeContext, "closed")),
                             ]))),
@@ -176,6 +175,6 @@ public sealed class DialogDemoPage : StatefulWidget
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, fontSize: 12), onPressed);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
     }
 }

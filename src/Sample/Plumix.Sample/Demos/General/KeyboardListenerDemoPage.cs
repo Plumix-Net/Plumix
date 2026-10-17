@@ -63,11 +63,10 @@ internal sealed class KeyboardListenerDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Keyboard + focus action detectors", fontSize: 20, color: Colors.Black),
+                new Text("Keyboard + focus action detectors", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Click a panel or use its button, then press and release keyboard keys.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildKeyboardListenerProbe(),
                 BuildRawKeyboardListenerProbe(),
                 BuildActionsShortcutsProbe(),
@@ -186,8 +185,8 @@ internal sealed class KeyboardListenerDemoPageState : State
                 spacing: 6,
                 children:
                 [
-                    new Text(title, fontSize: 15, color: Colors.Black),
-                    new Text($"Last event: {detail}", fontSize: 13, color: Colors.DimGray),
+                    new Text(title, style: new TextStyle(FontSize: 15, Color: Colors.Black)),
+                    new Text($"Last event: {detail}", style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 ]));
     }
 

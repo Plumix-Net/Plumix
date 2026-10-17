@@ -18,7 +18,7 @@ internal static class ListTileControlDemos
             width: width,
             child: new TextButton(
                 onPressed: onPressed,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

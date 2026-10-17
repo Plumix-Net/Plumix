@@ -54,12 +54,11 @@ internal sealed class VisualDensityDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("VisualDensity + platform defaults", fontSize: 20, color: Colors.Black),
+                new Text("VisualDensity + platform defaults", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Density is unitless: one unit is four logical pixels per axis. ThemeData takes "
                     + "its default from the theme's platform, not the host.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -136,13 +135,14 @@ internal sealed class VisualDensityDemoPageState : State
                             width: 110,
                             child: new Text(
                                 name,
-                                fontSize: 12,
-                                color: selected ? Colors.Black : new Color(0xFF607D8B))),
+                                style: new TextStyle(
+                                    FontSize: 12,
+                                    Color: selected ? Colors.Black : new Color(0xFF607D8B)))),
                         new Theme(
                             data: ThemeData.Light with { VisualDensity = profile },
                             child: new ElevatedButton(
                                 onPressed: () => { },
-                                child: new Text("Button", fontSize: 12))),
+                                child: new Text("Button", style: new TextStyle(FontSize: 12)))),
                     ])));
         }
 
@@ -151,7 +151,7 @@ internal sealed class VisualDensityDemoPageState : State
 
     private Widget BuildCard(string title, IReadOnlyList<Widget> children)
     {
-        List<Widget> rows = [new Text(title, fontSize: 14, color: Colors.Black)];
+        List<Widget> rows = [new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black))];
         foreach (Widget child in children)
         {
             rows.Add(child);
@@ -172,8 +172,8 @@ internal sealed class VisualDensityDemoPageState : State
             spacing: 10,
             children:
             [
-                new Expanded(child: new Text(label, fontSize: 12, color: Colors.Black)),
-                new Text(value, fontSize: 12, color: new Color(0xFF607D8B)),
+                new Expanded(child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))),
+                new Text(value, style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
             ]);
     }
 
@@ -187,7 +187,7 @@ internal sealed class VisualDensityDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

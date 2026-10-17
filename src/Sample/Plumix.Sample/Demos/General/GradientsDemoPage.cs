@@ -44,11 +44,10 @@ internal sealed class GradientsDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Gradients + BoxShadow lerp", fontSize: 20, color: Colors.Black),
+                new Text("Gradients + BoxShadow lerp", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Linear, radial and sweep gradients share stops, tile modes and a rotation transform.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,8 +59,7 @@ internal sealed class GradientsDemoPageState : State
                     ]),
                 new Text(
                     $"rotation={_rotation:0.00} rad, tileMode={CurrentTileMode}, target={(_blended ? "B" : "A")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Row(
                     spacing: 12,
                     children:
@@ -72,8 +70,7 @@ internal sealed class GradientsDemoPageState : State
                     ]),
                 new Text(
                     "The card below animates its gradient colors and its shadow list at the same time.",
-                    fontSize: 12,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                 new Center(
                     child: new AnimatedContainer(
                         duration: TimeSpan.FromMilliseconds(450),
@@ -81,7 +78,11 @@ internal sealed class GradientsDemoPageState : State
                         height: 96,
                         decoration: BuildAnimatedDecoration(),
                         child: new Center(
-                            child: new Text("AnimatedContainer", fontSize: 14, color: Colors.White)))),
+                            child: new Text(
+                                "AnimatedContainer",
+                                style: new TextStyle(
+                                    FontSize: 14,
+                                    Color: Colors.White))))),
             ]);
     }
 
@@ -95,7 +96,7 @@ internal sealed class GradientsDemoPageState : State
                     width: 96,
                     height: 96,
                     child: new DecoratedBox(decoration: new BoxDecoration(Gradient: gradient))),
-                new Text(label, fontSize: 12, color: Colors.DarkSlateGray),
+                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
             ]);
     }
 

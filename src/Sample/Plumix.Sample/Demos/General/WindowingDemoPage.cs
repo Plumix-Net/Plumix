@@ -73,21 +73,21 @@ internal sealed class WindowingDemoPageState : State<WindowingDemoPage>
             spacing: 16,
             children:
             [
-                new Text("Windowing", fontSize: 20, color: Colors.Black),
+                new Text("Windowing", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Regular windows and dialog windows through WindowRegistry, "
                     + "RegularWindowController and showDialog. "
                     + "Run with FLUTTER_ENABLED_FEATURE_FLAGS=windowing on a desktop host.",
-                    color: Colors.DimGray),
-                new Text($"Windowing: {(enabled ? "enabled" : "disabled")}", color: Colors.Black),
+                    style: new TextStyle(Color: Colors.DimGray)),
+                new Text($"Windowing: {(enabled ? "enabled" : "disabled")}", style: new TextStyle(Color: Colors.Black)),
                 new TextButton(
                     onPressed: enabled ? () => OpenRegularWindow(context) : null,
                     child: new Text("Open regular window")),
                 new TextButton(
                     onPressed: () => ShowDemoDialog(context),
                     child: new Text("Show dialog")),
-                new Text($"Open windows: {_openWindows}", color: Colors.Black),
-                new Text($"Last event: {_lastEvent}", color: new Color(0xFF31506F)),
+                new Text($"Open windows: {_openWindows}", style: new TextStyle(Color: Colors.Black)),
+                new Text($"Last event: {_lastEvent}", style: new TextStyle(Color: new Color(0xFF31506F))),
             ]);
     }
 }
@@ -114,11 +114,14 @@ internal sealed class DemoWindowContent(RegularWindowController controller) : St
                 spacing: 8,
                 children:
                 [
-                    new Text(WindowScope.TitleOf(context), fontSize: 18, color: Colors.Black),
-                    new Text($"Content size: {size.Width:0} x {size.Height:0}", color: Colors.Black),
+                    new Text(WindowScope.TitleOf(context), style: new TextStyle(FontSize: 18, Color: Colors.Black)),
+                    new Text(
+                        $"Content size: {size.Width:0} x {size.Height:0}",
+                        style: new TextStyle(
+                            Color: Colors.Black)),
                     new Text(
                         $"Activated: {(WindowScope.IsActivatedOf(context) ? "true" : "false")}",
-                        color: Colors.Black),
+                        style: new TextStyle(Color: Colors.Black)),
                     new Row(
                         spacing: 8,
                         children:

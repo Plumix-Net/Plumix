@@ -51,11 +51,10 @@ internal sealed class DividerDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Divider baseline", fontSize: 20, color: Colors.Black),
+                    new Text("Divider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "M2/M3 tokens, directional indents, asymmetric theme radii, and widget overrides.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -78,8 +77,7 @@ internal sealed class DividerDemoPageState : State
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -119,16 +117,24 @@ internal sealed class DividerDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text("Horizontal Divider", fontSize: 14, color: Colors.Black),
+                    new Text("Horizontal Divider", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     new Container(
                         color: new Color(0xFFE3F2FD),
                         padding: new Thickness(10, 6),
-                        child: new Text("Before divider", fontSize: 12, color: new Color(0xFF0D47A1))),
+                        child: new Text(
+                            "Before divider",
+                            style: new TextStyle(
+                                FontSize: 12,
+                                Color: new Color(0xFF0D47A1)))),
                     dividerWidget,
                     new Container(
                         color: new Color(0xFFE8F5E9),
                         padding: new Thickness(10, 6),
-                        child: new Text("After divider", fontSize: 12, color: new Color(0xFF1B5E20))),
+                        child: new Text(
+                            "After divider",
+                            style: new TextStyle(
+                                FontSize: 12,
+                                Color: new Color(0xFF1B5E20)))),
                 ]));
     }
 
@@ -158,7 +164,7 @@ internal sealed class DividerDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text("Vertical Divider", fontSize: 14, color: Colors.Black),
+                    new Text("Vertical Divider", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     new SizedBox(
                         height: 96,
                         child: new Row(
@@ -169,13 +175,21 @@ internal sealed class DividerDemoPageState : State
                                     child: new Container(
                                         color: new Color(0xFFFFF8E1),
                                         alignment: Alignment.Center,
-                                        child: new Text("Start", fontSize: 12, color: new Color(0xFF5D4037)))),
+                                        child: new Text(
+                                            "Start",
+                                            style: new TextStyle(
+                                                FontSize: 12,
+                                                Color: new Color(0xFF5D4037))))),
                                 dividerWidget,
                                 new Expanded(
                                     child: new Container(
                                         color: new Color(0xFFFCE4EC),
                                         alignment: Alignment.Center,
-                                        child: new Text("End", fontSize: 12, color: new Color(0xFF880E4F)))),
+                                        child: new Text(
+                                            "End",
+                                            style: new TextStyle(
+                                                FontSize: 12,
+                                                Color: new Color(0xFF880E4F))))),
                             ])),
                 ]));
     }
@@ -190,7 +204,7 @@ internal sealed class DividerDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

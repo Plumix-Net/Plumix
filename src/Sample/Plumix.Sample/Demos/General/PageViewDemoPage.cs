@@ -45,11 +45,10 @@ public sealed class PageViewDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("PageView.Builder", fontSize: 20, color: Colors.Black),
+                    new Text("PageView.Builder", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Pages are built lazily by a sliver fill viewport; viewportFraction 0.85 pads both ends.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Expanded(
                         child: PageView.Builder(
                             itemCount: PageColors.Length,
@@ -63,8 +62,7 @@ public sealed class PageViewDemoPage : StatefulWidget
                                     child: new Center(
                                         child: new Text(
                                             $"page #{index}",
-                                            fontSize: 24,
-                                            color: Colors.Black)))))),
+                                            style: new TextStyle(FontSize: 24, Color: Colors.Black))))))),
                     new Row(
                         mainAxisAlignment: MainAxisAlignment.Center,
                         spacing: 12,
@@ -75,7 +73,11 @@ public sealed class PageViewDemoPage : StatefulWidget
                                     TimeSpan.FromMilliseconds(300),
                                     Curves.Ease),
                                 child: new Text("Previous")),
-                            new Text($"page {_page + 1} of {PageColors.Length}", fontSize: 14, color: Colors.Black),
+                            new Text(
+                                $"page {_page + 1} of {PageColors.Length}",
+                                style: new TextStyle(
+                                    FontSize: 14,
+                                    Color: Colors.Black)),
                             new TextButton(
                                 onPressed: () => _controller?.NextPage(
                                     TimeSpan.FromMilliseconds(300),

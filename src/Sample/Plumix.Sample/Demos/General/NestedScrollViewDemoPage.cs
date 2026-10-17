@@ -29,11 +29,14 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                             spacing: 4,
                             children:
                             [
-                                new Text("Outer header sliver", fontSize: 18, color: Colors.Black),
+                                new Text(
+                                    "Outer header sliver",
+                                    style: new TextStyle(
+                                        FontSize: 18,
+                                        Color: Colors.Black)),
                                 new Text(
                                     "This scrolls away completely before the body starts scrolling.",
-                                    fontSize: 13,
-                                    color: Colors.DimGray),
+                                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                             ]))),
             ],
             body: new Builder(bodyContext => new CustomScrollView(
@@ -48,7 +51,7 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                             ? new Color(0xFFF5F5F5)
                             : new Color(0xFFFFFFFF),
                         padding: new Thickness(16, 12),
-                        child: new Text($"body row #{index}", fontSize: 14, color: Colors.Black)),
+                        child: new Text($"body row #{index}", style: new TextStyle(FontSize: 14, Color: Colors.Black))),
                     addAutomaticKeepAlives: false),
             ])));
     }
@@ -75,11 +78,10 @@ internal sealed class NestedScrollViewHeaderDelegate(bool innerBoxIsScrolled) : 
                 spacing: 2,
                 children:
                 [
-                    new Text("NestedScrollView", fontSize: 20, color: Colors.Black),
+                    new Text("NestedScrollView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         innerBoxIsScrolled ? "innerBoxIsScrolled: true" : "innerBoxIsScrolled: false",
-                        fontSize: 13,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 ]));
     }
 

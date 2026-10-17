@@ -58,11 +58,10 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                 spacing: 14,
                 children:
                 [
-                    new Text("Popup menu entries", fontSize: 20),
+                    new Text("Popup menu entries", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "PopupMenuItem, CheckedPopupMenuItem, and PopupMenuDivider with selection, keyboard navigation, and theme precedence.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -107,9 +106,9 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 icon: new Icon(Icons.MoreVert),
                                 tooltip: "Show commands"),
                         ]),
-                    new Text($"Selected: {_selected}", fontSize: 13),
-                    new Text($"Keep favorite: {_keepFavorite}", fontSize: 13),
-                    new Text($"Status: {_status}", fontSize: 13),
+                    new Text($"Selected: {_selected}", style: new TextStyle(FontSize: 13)),
+                    new Text($"Keep favorite: {_keepFavorite}", style: new TextStyle(FontSize: 13)),
+                    new Text($"Status: {_status}", style: new TextStyle(FontSize: 13)),
                 ]);
         }
 
@@ -127,6 +126,6 @@ public sealed class PopupMenuDemoPage : StatefulWidget
         ];
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, fontSize: 12), onPressed);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
     }
 }

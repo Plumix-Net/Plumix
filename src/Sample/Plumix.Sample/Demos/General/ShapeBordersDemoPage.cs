@@ -50,11 +50,10 @@ internal sealed class ShapeBordersDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("ShapeBorder hierarchy", fontSize: 20, color: Colors.Black),
+                new Text("ShapeBorder hierarchy", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Every shape paints its own outline and clips its own path.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -77,8 +76,7 @@ internal sealed class ShapeBordersDemoPageState : State
                     ]),
                 new Text(
                     $"shape={ShapeNames[_shapeIndex]}, side={_sideWidth:0}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 160,
@@ -97,8 +95,7 @@ internal sealed class ShapeBordersDemoPageState : State
                                     child: new Center(
                                         child: new Text(
                                             "Shaped",
-                                            fontSize: 14,
-                                            color: new Color(0xFF14213D)))))))),
+                                            style: new TextStyle(FontSize: 14, Color: new Color(0xFF14213D))))))))),
             ]);
     }
 

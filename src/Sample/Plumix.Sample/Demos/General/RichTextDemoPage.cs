@@ -19,6 +19,8 @@ public sealed class RichTextDemoPageState : State
 {
     private readonly TapGestureRecognizer _tapRecognizer = new();
     private int _taps;
+    private bool _boldText;
+    private bool _spacingOverrides;
 
     public override void InitState()
     {
@@ -39,20 +41,91 @@ public sealed class RichTextDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("RichText + TextSpan + WidgetSpan", fontSize: 20, color: Colors.Black),
+                new Text("RichText + TextSpan + WidgetSpan", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "One paragraph, many styles. Spans share a single line layout, carry their own gesture "
                     + "recognizers, and can embed inline widgets.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildStyledParagraph(),
-                new Text("Tapped the link span " + _taps + " times", fontSize: 14, color: Colors.DimGray),
+                new Text(
+                    "Tapped the link span " + _taps + " times",
+                    style: new TextStyle(
+                        FontSize: 14,
+                        Color: Colors.DimGray)),
                 BuildPaintedParagraph(),
                 BuildInlineWidgetParagraph(),
                 BuildAlignmentRow(),
                 BuildDefaultTextStyleParagraph(),
                 BuildOverflowAndStrut(),
+                BuildAccessibilityOverrides(context),
             ]);
+    }
+
+    // MediaQuery.boldText and the text spacing overrides: Text and Text.rich apply them, RichText does not.
+    private Widget BuildAccessibilityOverrides(BuildContext context)
+    {
+        var bodyStyle = new TextStyle(FontSize: 15, Color: new Color(0xFF1D3557));
+        return new Container(
+            color: new Color(0xFFFFF7ED),
+            padding: new Thickness(12),
+            child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                spacing: 8,
+                children:
+                [
+                    new Row(
+                        spacing: 8,
+                        children:
+                        [
+                            BuildToggle("Bold text", _boldText, () => SetState(() => _boldText = !_boldText)),
+                            BuildToggle(
+                                "Spacing overrides",
+                                _spacingOverrides,
+                                () => SetState(() => _spacingOverrides = !_spacingOverrides)),
+                        ]),
+                    new MediaQuery(
+                        data: MediaQuery.Of(context).CopyWith(boldText: _boldText),
+                        child: MediaQuery.ApplyTextStyleOverrides(
+                            lineHeightScaleFactorOverride: _spacingOverrides ? 1.8 : null,
+                            letterSpacingOverride: _spacingOverrides ? 1.5 : null,
+                            wordSpacingOverride: _spacingOverrides ? 6.0 : null,
+                            paragraphSpacingOverride: null,
+                            child: new Column(
+                                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                                spacing: 4,
+                                children:
+                                [
+                                    new Text(
+                                        "Text follows the platform's bold and spacing settings.",
+                                        style: bodyStyle),
+                                    Text.Rich(new TextSpan(
+                                        text: "Text.rich applies them ",
+                                        style: bodyStyle,
+                                        children:
+                                        [
+                                            new TextSpan(
+                                                text: "to every span.",
+                                                style: new TextStyle(Color: new Color(0xFFE76F51))),
+                                        ])),
+                                    new RichText(text: new TextSpan(
+                                        text: "RichText ignores the overrides.",
+                                        style: bodyStyle)),
+                                ]))),
+                ]));
+    }
+
+    private static Widget BuildToggle(string label, bool selected, System.Action onTap)
+    {
+        return new GestureDetector(
+            onTap: onTap,
+            child: new Container(
+                color: selected ? new Color(0xFF2A9D8F) : new Color(0xFFE2E8F0),
+                padding: new Thickness(10, 6),
+                child: new Text(
+                    label,
+                    style: new TextStyle(
+                        FontSize: 13,
+                        Color: selected ? Colors.White : new Color(0xFF1D3557)))));
     }
 
     private Widget BuildStyledParagraph()
@@ -159,13 +232,17 @@ public sealed class RichTextDemoPageState : State
                         maxLines: 1,
                         softWrap: false,
                         overflow: TextOverflow.Fade,
-                        fontSize: 16,
-                        color: textColor),
-                    new Text(longText, maxLines: 1, overflow: TextOverflow.Ellipsis, fontSize: 16, color: textColor),
+                        style: new TextStyle(FontSize: 16, Color: textColor)),
+                    new Text(
+                        longText,
+                        maxLines: 1,
+                        overflow: TextOverflow.Ellipsis,
+                        style: new TextStyle(
+                            FontSize: 16,
+                            Color: textColor)),
                     new Text(
                         "A forced strut keeps\nboth lines 32 px apart.",
-                        fontSize: 16,
-                        color: textColor,
+                        style: new TextStyle(FontSize: 16, Color: textColor),
                         strutStyle: new StrutStyle(FontSize: 16, Height: 2, ForceStrutHeight: true)),
                 ]));
     }

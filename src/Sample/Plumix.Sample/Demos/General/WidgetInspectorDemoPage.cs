@@ -55,13 +55,12 @@ internal sealed class WidgetInspectorDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("WidgetInspector", fontSize: 20, color: Colors.Black),
+                new Text("WidgetInspector", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Select mode wraps the app in the root inspector: tap a widget to outline it, drag to "
                     + "browse candidates, and use the buttons at the bottom to exit, move them or let taps "
                     + "reach the app.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -74,7 +73,7 @@ internal sealed class WidgetInspectorDemoPageState : State
                             "Clear selection",
                             () => WidgetInspectorService.Instance.Selection.Clear()),
                     ]),
-                new Text("Selected: " + _selection, fontSize: 14, color: Colors.Black),
+                new Text("Selected: " + _selection, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Expanded(
                     child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -109,7 +108,7 @@ internal sealed class WidgetInspectorDemoPageState : State
                     spacing: 8,
                     children:
                     [
-                        new Text(label, fontSize: 16, color: Colors.Black),
+                        new Text(label, style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                         new Container(width: 48, height: 24, color: new Color(0x99000000)),
                     ])));
     }

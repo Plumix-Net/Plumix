@@ -17,11 +17,10 @@ public sealed class ListViewSeparatedDemoPage : StatelessWidget
             spacing: 10,
             children:
             [
-                new Text("ListView.Separated", fontSize: 20, color: Colors.Black),
+                new Text("ListView.Separated", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Uses separate builders for rows and separators.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Expanded(
                     child: ListView.Separated(
                         itemCount: 30,

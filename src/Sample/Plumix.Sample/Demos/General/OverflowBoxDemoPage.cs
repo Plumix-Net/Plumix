@@ -31,11 +31,10 @@ internal sealed class OverflowBoxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("OverflowBox + SizedOverflowBox", fontSize: 20, color: Colors.Black),
+                new Text("OverflowBox + SizedOverflowBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "OverflowBox overrides child constraints and can stay parent-sized; SizedOverflowBox keeps fixed own size while child may overflow.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -69,8 +68,7 @@ internal sealed class OverflowBoxDemoPageState : State
                     ]),
                 new Text(
                     $"fit={FitLabel(_fit)}, alignment={AlignmentLabel(_alignment)}, max={MaxLabel(_maxWidth, _maxHeight)}, requested={_requestedSize.Width:0}x{_requestedSize.Height:0}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 230,
@@ -81,7 +79,7 @@ internal sealed class OverflowBoxDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("OverflowBox preview", fontSize: 11, color: Colors.DimGray),
+                            new Text("OverflowBox preview", style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                             new Container(
                                 height: 72,
                                 color: Colors.White,
@@ -93,7 +91,11 @@ internal sealed class OverflowBoxDemoPageState : State
                                         maxHeight: _maxHeight,
                                         fit: _fit,
                                         child: BuildProbeCard()))),
-                            new Text("SizedOverflowBox preview", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "SizedOverflowBox preview",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             new Container(
                                 height: 86,
                                 color: Colors.White,
@@ -117,7 +119,7 @@ internal sealed class OverflowBoxDemoPageState : State
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0xFF1D3557), 2)),
                 BorderRadius: BorderRadius.Circular(10)),
             child: new Center(
-                child: new Text("child 190x86", fontSize: 12, color: Colors.Black)));
+                child: new Text("child 190x86", style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

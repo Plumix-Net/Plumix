@@ -41,11 +41,10 @@ internal sealed class MaterialButtonsDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Material buttons baseline", fontSize: 20, color: Colors.Black),
+                new Text("Material buttons baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "TextButton / ElevatedButton / OutlinedButton / FilledButton (+ tonal) / IconButton with enabled/disabled and theme-aware defaults.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -74,8 +73,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                     + $"filledIcon={_filledIconButtonTaps}, tonalIcon={_filledTonalIconButtonTaps}, "
                     + $"outlinedIcon={_outlinedIconButtonTaps}, "
                     + $"iconSelected={(_iconButtonSelected ? "true" : "false")}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new SizedBox(
                     width: 240,
                     child: new TextButton(
@@ -307,7 +305,7 @@ internal sealed class MaterialButtonsDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

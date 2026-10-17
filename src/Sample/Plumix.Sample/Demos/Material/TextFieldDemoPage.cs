@@ -37,12 +37,12 @@ public sealed class TextFieldDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("InputDecorator + TextField", fontSize: 20),
+                    new Text("InputDecorator + TextField", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, "
                         + "prefix/suffix icons, pointer selection, adaptive context menus, read-only and "
                         + "multiline input.",
-                        fontSize: 14, color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -95,7 +95,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         controller: _readOnly,
                         readOnly: true,
                         decoration: InputDecoration.Collapsed("Read only")),
-                    new Text("Decorator geometry probes", fontSize: 18),
+                    new Text("Decorator geometry probes", style: new TextStyle(FontSize: 18)),
                     new TextField(
                         enabled: _enabled,
                         decoration: new InputDecoration(
@@ -131,11 +131,11 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             decoration: new InputDecoration(
                                 labelText: "Expanded, bottom aligned",
                                 filled: true))),
-                    new Text("Ambient InputDecorationTheme probes", fontSize: 18),
+                    new Text("Ambient InputDecorationTheme probes", style: new TextStyle(FontSize: 18)),
                     new Text(
                         "The theme's fill, floating label and active indicator resolve per state, and "
                         + "an ambient IconButtonTheme colors the affix icons.",
-                        fontSize: 13, color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                     new InputDecorationTheme(
                         data: new InputDecorationThemeData(
                             filled: true,
@@ -168,13 +168,13 @@ public sealed class TextFieldDemoPage : StatefulWidget
                                 new(WidgetState.Focused, new TextStyle(Color: Colors.DodgerBlue)),
                                 new(WidgetStatesConstraint.Any, new TextStyle(Color: Colors.SlateGray)),
                             ]))),
-                    new Text($"Last submitted email: {_submitted}", fontSize: 13),
+                    new Text($"Last submitted email: {_submitted}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
-                    new Text("System context menu", fontSize: 18),
+                    new Text("System context menu", style: new TextStyle(FontSize: 18)),
                     new Text(
                         $"System menu supported here: {SystemContextMenu.IsSupported(context)} "
                         + "(iOS 16+ only; elsewhere the Flutter-drawn toolbar shows)",
-                        fontSize: 13, color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                     new TextField(
                         controller: _systemMenu,
                         enabled: _enabled,
@@ -183,9 +183,9 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             helperText: "Copy, Paste and a custom \"Shout\" action",
                             border: new OutlineInputBorder()),
                         contextMenuBuilder: BuildSystemMenu),
-                    new Text($"Last system menu action: {_systemMenuAction}", fontSize: 13),
+                    new Text($"Last system menu action: {_systemMenuAction}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
-                    new Text("TextFormField + Form", fontSize: 18),
+                    new Text("TextFormField + Form", style: new TextStyle(FontSize: 18)),
                     new Form(
                         key: _formKey,
                         autovalidateMode: AutovalidateMode.OnUserInteraction,
@@ -212,7 +212,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                                         Control("Save", SaveForm),
                                         Control("Reset", ResetForm),
                                     ]),
-                                new Text($"Form status: {_formStatus}", fontSize: 13),
+                                new Text($"Form status: {_formStatus}", style: new TextStyle(FontSize: 13)),
                             ])),
                 ]));
 
@@ -312,7 +312,10 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private static Color? ResolveAffixColor(IReadOnlySet<WidgetState> states) =>
             states.Contains(WidgetState.Error) ? Colors.Crimson : Colors.Indigo;
 
-        private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);
+        private static Widget Control(string label, Action action) => new TextButton(new Text(
+            label,
+            style: new TextStyle(
+                FontSize: 12)), action);
     }
     private sealed class DemoInputTextStyle : WidgetStateTextStyle
     {

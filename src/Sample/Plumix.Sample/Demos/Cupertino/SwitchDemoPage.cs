@@ -60,11 +60,10 @@ internal sealed class SwitchDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Switch baseline", fontSize: 20, color: Colors.Black),
+                new Text("Switch baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material Switch with value control, drag/tap interaction, thumb icons, and theme/widget color precedence.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -103,8 +102,7 @@ internal sealed class SwitchDemoPageState : State
                     $"material={(_useMaterial3 ? "M3" : "M2")}, enabled={(_enabled ? "true" : "false")}, "
                     + $"value={(_value ? "true" : "false")}, thumbIcons={(_showThumbIcons ? "true" : "false")}, "
                     + $"changes={_changes}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Theme(
                     data: switchTheme,
                     child: new Column(
@@ -160,7 +158,7 @@ internal sealed class SwitchDemoPageState : State
                                 title: "Custom colors",
                                 subtitle: "thumb/track/outline overrides"),
                         ])),
-                new Text("CupertinoSwitch direct port", fontSize: 16, color: Colors.Black),
+                new Text("CupertinoSwitch direct port", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                 BuildSwitchRow(
                     toggle: new CupertinoSwitch(
                         value: _value,
@@ -210,8 +208,8 @@ internal sealed class SwitchDemoPageState : State
                             spacing: 2,
                             children:
                             [
-                                new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                                new Text(title, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
+                                new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                             ])),
                 ]));
     }
@@ -228,7 +226,7 @@ internal sealed class SwitchDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

@@ -172,11 +172,14 @@ public sealed class DatePickerDemoPage : StatefulWidget
                         spacing: 12,
                         children:
                         [
-                            new Text("CalendarDatePicker + YearPicker", fontSize: 20, color: Colors.Black),
+                            new Text(
+                                "CalendarDatePicker + YearPicker",
+                                style: new TextStyle(
+                                    FontSize: 20,
+                                    Color: Colors.Black)),
                             new Text(
                                 "Month paging, day/year modes, weekday predicate, M2/M3 defaults, and DatePickerTheme state overrides.",
-                                fontSize: 14,
-                                color: new Color(0x8A000000)),
+                                style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                             new Row(
                                 spacing: 8,
                                 children:
@@ -188,11 +191,10 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                 ]),
                             new Text(
                                 $"Selected: {_selectedDate:yyyy-MM-dd}  |  Displayed: {_displayedMonth:yyyy-MM}",
-                                fontSize: 13,
-                                color: new Color(0xFF455A64)),
+                                style: new TextStyle(FontSize: 13, Color: new Color(0xFF455A64))),
                             picker,
                             new Divider(),
-                            new Text("InputDatePickerFormField + DatePickerDialog", fontSize: 18),
+                            new Text("InputDatePickerFormField + DatePickerDialog", style: new TextStyle(FontSize: 18)),
                             new Form(
                                 key: _dateFormKey,
                                 child: new InputDatePickerFormField(
@@ -232,13 +234,16 @@ public sealed class DatePickerDemoPage : StatefulWidget
                                         () => _ = OpenDatePicker(context, DatePickerEntryMode.InputOnly)),
                                     BuildToggle("Restorable", () => RestorableDatePickerRoute.Present()),
                                 ]),
-                            new Text($"Form/dialog status: {_formStatus}", fontSize: 13, color: new Color(0xFF455A64)),
+                            new Text(
+                                $"Form/dialog status: {_formStatus}",
+                                style: new TextStyle(
+                                    FontSize: 13,
+                                    Color: new Color(0xFF455A64))),
                             new Divider(),
-                            new Text("TimePickerDialog + DateRangePickerDialog", fontSize: 18),
+                            new Text("TimePickerDialog + DateRangePickerDialog", style: new TextStyle(FontSize: 18)),
                             new Text(
                                 $"Time: {_selectedTime.Hour:00}:{_selectedTime.Minute:00}  |  Range: {_selectedRange.Start:yyyy-MM-dd} – {_selectedRange.End:yyyy-MM-dd}",
-                                fontSize: 13,
-                                color: new Color(0xFF455A64)),
+                                style: new TextStyle(FontSize: 13, Color: new Color(0xFF455A64))),
                             new Row(
                                 spacing: 8,
                                 children:

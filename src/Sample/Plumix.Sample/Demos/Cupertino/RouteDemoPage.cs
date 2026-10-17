@@ -27,12 +27,15 @@ internal sealed class CupertinoRouteDemoPageState : State
             spacing: 10.0,
             children:
             [
-                new Text("Cupertino routes", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino routes", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Page transitions, modal popups, and a CupertinoTabView with independent history.",
-                    fontSize: 14.0,
-                    color: Colors.DimGray),
-                new Text($"last result: {_lastResult}", fontSize: 12.0, color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                new Text(
+                    $"last result: {_lastResult}",
+                    style: new TextStyle(
+                        FontSize: 12.0,
+                        Color: new Color(0xFF607D8B))),
                 BuildAction(
                     "Push standard CupertinoPageRoute",
                     () => PushPage(context, fullscreenDialog: false),
@@ -73,8 +76,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                                 fullscreenDialog
                                     ? "Bottom-up fullscreen transition"
                                     : "Swipe from the leading edge to go back",
-                                fontSize: 16.0,
-                                color: Colors.Black),
+                                style: new TextStyle(FontSize: 16.0, Color: Colors.Black)),
                             BuildAction(
                                 "Pop with result",
                                 () => Complete(routeContext, $"{routeKind} page"),
@@ -115,7 +117,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                     spacing: 12.0,
                     children:
                     [
-                        new Text(title, fontSize: 16.0, color: Colors.Black),
+                        new Text(title, style: new TextStyle(FontSize: 16.0, Color: Colors.Black)),
                         BuildAction(actionLabel, onTap, new Color(0xFFE8F0FE)),
                     ])));
     }
@@ -132,7 +134,11 @@ internal sealed class CupertinoRouteDemoPageState : State
                     spacing: 12.0,
                     children:
                     [
-                        new Text("Spring-driven bottom popup", fontSize: 16.0, color: Colors.Black),
+                        new Text(
+                            "Spring-driven bottom popup",
+                            style: new TextStyle(
+                                FontSize: 16.0,
+                                Color: Colors.Black)),
                         BuildAction(
                             "Close popup",
                             () => Complete(popupContext, "modal popup"),
@@ -154,13 +160,18 @@ internal sealed class CupertinoRouteDemoPageState : State
                         padding: new Thickness(16.0, 20.0),
                         children:
                         [
-                            new Text("Drag down to dismiss · drag up to stretch", fontSize: 15.0),
+                            new Text(
+                                "Drag down to dismiss · drag up to stretch",
+                                style: new TextStyle(FontSize: 15.0)),
                             BuildAction(
                                 "Close with CupertinoSheetRoute.PopSheet",
                                 () => CupertinoSheetRoute<object?>.PopSheet(sheetContext),
                                 new Color(0xFFFFF3E0)),
                             .. Enumerable.Range(1, 12)
-                                .Select(index => (Widget)new Text($"Scrollable sheet row {index}", fontSize: 14.0)),
+                                .Select(index => (Widget)new Text(
+                                    $"Scrollable sheet row {index}",
+                                    style: new TextStyle(
+                                        FontSize: 14.0))),
                         ])))));
     }
 

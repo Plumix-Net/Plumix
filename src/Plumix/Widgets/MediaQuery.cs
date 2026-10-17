@@ -73,7 +73,11 @@ public sealed record MediaQueryData
         bool OnOffSwitchLabels = false,
         DeviceGestureSettings? GestureSettings = null,
         bool BoldText = false,
-        bool SupportsShowingSystemContextMenu = false)
+        bool SupportsShowingSystemContextMenu = false,
+        double? LineHeightScaleFactorOverride = null,
+        double? LetterSpacingOverride = null,
+        double? WordSpacingOverride = null,
+        double? ParagraphSpacingOverride = null)
     {
         if (TextScaler is not null && TextScaleFactor != 1.0)
         {
@@ -104,6 +108,10 @@ public sealed record MediaQueryData
         this.GestureSettings = GestureSettings;
         this.BoldText = BoldText;
         this.SupportsShowingSystemContextMenu = SupportsShowingSystemContextMenu;
+        this.LineHeightScaleFactorOverride = LineHeightScaleFactorOverride;
+        this.LetterSpacingOverride = LetterSpacingOverride;
+        this.WordSpacingOverride = WordSpacingOverride;
+        this.ParagraphSpacingOverride = ParagraphSpacingOverride;
     }
 
     public Size Size { get; init; }
@@ -165,6 +173,34 @@ public sealed record MediaQueryData
     /// </summary>
     public bool SupportsShowingSystemContextMenu { get; init; }
 
+    /// <summary>
+    /// The text height, as a multiple of the font size, that overrides <c>TextStyle.Height</c> and
+    /// <c>StrutStyle.Height</c>; <see langword="null"/> when the platform has not set an override.
+    /// Ports Dart's <c>MediaQueryData.lineHeightScaleFactorOverride</c>.
+    /// </summary>
+    public double? LineHeightScaleFactorOverride { get; init; }
+
+    /// <summary>
+    /// The space (in logical pixels) between each letter that overrides <c>TextStyle.LetterSpacing</c>;
+    /// <see langword="null"/> when the platform has not set an override. Ports Dart's
+    /// <c>MediaQueryData.letterSpacingOverride</c>.
+    /// </summary>
+    public double? LetterSpacingOverride { get; init; }
+
+    /// <summary>
+    /// The space (in logical pixels) between each word that overrides <c>TextStyle.WordSpacing</c>;
+    /// <see langword="null"/> when the platform has not set an override. Ports Dart's
+    /// <c>MediaQueryData.wordSpacingOverride</c>.
+    /// </summary>
+    public double? WordSpacingOverride { get; init; }
+
+    /// <summary>
+    /// The amount of space (in logical pixels) to add following each paragraph in a piece of text;
+    /// <see langword="null"/> when the platform has not set an override for text paragraph spacing.
+    /// Ports Dart's <c>MediaQueryData.paragraphSpacingOverride</c>.
+    /// </summary>
+    public double? ParagraphSpacingOverride { get; init; }
+
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
         : Orientation.Portrait;
@@ -193,8 +229,6 @@ public sealed record MediaQueryData
         bool? highContrast = null,
         bool? supportsAnnounce = null,
         int? viewId = null,
-        BorderRadius? displayCornerRadii = null,
-        bool clearDisplayCornerRadii = false,
         IReadOnlyList<DisplayFeature>? displayFeatures = null,
         bool? onOffSwitchLabels = null,
         DeviceGestureSettings? gestureSettings = null,
@@ -227,12 +261,94 @@ public sealed record MediaQueryData
             OnOffSwitchLabels: onOffSwitchLabels ?? OnOffSwitchLabels,
             SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
             ViewId: viewId ?? ViewId,
-            DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
+            DisplayCornerRadii: DisplayCornerRadii,
             DisplayFeatures: displayFeatures ?? DisplayFeatures,
             GestureSettings: gestureSettings ?? GestureSettings,
             BoldText: boldText ?? BoldText,
             SupportsShowingSystemContextMenu: supportsShowingSystemContextMenu
-                                              ?? SupportsShowingSystemContextMenu);
+                                              ?? SupportsShowingSystemContextMenu,
+            LineHeightScaleFactorOverride: LineHeightScaleFactorOverride,
+            LetterSpacingOverride: LetterSpacingOverride,
+            WordSpacingOverride: WordSpacingOverride,
+            ParagraphSpacingOverride: ParagraphSpacingOverride);
+    }
+
+    /// <summary>
+    /// Creates a copy of this media query data but with the <c>lineHeightScaleFactorOverride</c>,
+    /// <c>letterSpacingOverride</c>, <c>wordSpacingOverride</c>, and <c>paragraphSpacingOverride</c>
+    /// replaced with the given values. If an argument is <see langword="null"/>, the corresponding
+    /// override is set to <see langword="null"/>.
+    /// </summary>
+    /// <remarks>Dart's <c>MediaQueryData.applyTextStyleOverrides</c>.</remarks>
+    public MediaQueryData ApplyTextStyleOverrides(
+        double? lineHeightScaleFactorOverride,
+        double? letterSpacingOverride,
+        double? wordSpacingOverride,
+        double? paragraphSpacingOverride)
+    {
+        return new MediaQueryData(
+            Size: Size,
+            DevicePixelRatio: DevicePixelRatio,
+            TextScaler: TextScaler,
+            PlatformBrightness: PlatformBrightness,
+            Padding: Padding,
+            ViewPadding: ViewPadding,
+            ViewInsets: ViewInsets,
+            SystemGestureInsets: SystemGestureInsets,
+            AlwaysUse24HourFormat: AlwaysUse24HourFormat,
+            InvertColors: InvertColors,
+            HighContrast: HighContrast,
+            OnOffSwitchLabels: OnOffSwitchLabels,
+            DisableAnimations: DisableAnimations,
+            AccessibleNavigation: AccessibleNavigation,
+            BoldText: BoldText,
+            SupportsAnnounce: SupportsAnnounce,
+            NavigationMode: NavigationMode,
+            ViewId: ViewId,
+            GestureSettings: GestureSettings,
+            DisplayFeatures: DisplayFeatures,
+            SupportsShowingSystemContextMenu: SupportsShowingSystemContextMenu,
+            LineHeightScaleFactorOverride: lineHeightScaleFactorOverride,
+            LetterSpacingOverride: letterSpacingOverride,
+            WordSpacingOverride: wordSpacingOverride,
+            ParagraphSpacingOverride: paragraphSpacingOverride,
+            DisplayCornerRadii: DisplayCornerRadii);
+    }
+
+    /// <summary>
+    /// Creates a copy of this media query data but with <see cref="DisplayCornerRadii"/> replaced
+    /// with <paramref name="displayCornerRadii"/>; a <see langword="null"/> argument clears it.
+    /// </summary>
+    /// <remarks>Dart's <c>MediaQueryData.applyDisplayCornerRadii</c>.</remarks>
+    public MediaQueryData ApplyDisplayCornerRadii(BorderRadius? displayCornerRadii)
+    {
+        return new MediaQueryData(
+            Size: Size,
+            DevicePixelRatio: DevicePixelRatio,
+            TextScaler: TextScaler,
+            PlatformBrightness: PlatformBrightness,
+            Padding: Padding,
+            ViewPadding: ViewPadding,
+            ViewInsets: ViewInsets,
+            SystemGestureInsets: SystemGestureInsets,
+            AlwaysUse24HourFormat: AlwaysUse24HourFormat,
+            InvertColors: InvertColors,
+            HighContrast: HighContrast,
+            OnOffSwitchLabels: OnOffSwitchLabels,
+            DisableAnimations: DisableAnimations,
+            AccessibleNavigation: AccessibleNavigation,
+            BoldText: BoldText,
+            SupportsAnnounce: SupportsAnnounce,
+            NavigationMode: NavigationMode,
+            ViewId: ViewId,
+            GestureSettings: GestureSettings,
+            DisplayFeatures: DisplayFeatures,
+            SupportsShowingSystemContextMenu: SupportsShowingSystemContextMenu,
+            LineHeightScaleFactorOverride: LineHeightScaleFactorOverride,
+            LetterSpacingOverride: LetterSpacingOverride,
+            WordSpacingOverride: WordSpacingOverride,
+            ParagraphSpacingOverride: ParagraphSpacingOverride,
+            DisplayCornerRadii: displayCornerRadii);
     }
 
     public MediaQueryData RemovePadding(
@@ -411,7 +527,14 @@ public sealed record MediaQueryData
             GestureSettings: view.GestureSettings,
             BoldText: platformData?.BoldText ?? accessibilityFeatures.BoldText,
             SupportsShowingSystemContextMenu: platformData?.SupportsShowingSystemContextMenu
-                                              ?? platformDispatcher.SupportsShowingSystemContextMenu);
+                                              ?? platformDispatcher.SupportsShowingSystemContextMenu,
+            LineHeightScaleFactorOverride: platformData?.LineHeightScaleFactorOverride
+                                           ?? platformDispatcher.LineHeightScaleFactorOverride,
+            LetterSpacingOverride: platformData?.LetterSpacingOverride
+                                   ?? platformDispatcher.LetterSpacingOverride,
+            WordSpacingOverride: platformData?.WordSpacingOverride ?? platformDispatcher.WordSpacingOverride,
+            ParagraphSpacingOverride: platformData?.ParagraphSpacingOverride
+                                      ?? platformDispatcher.ParagraphSpacingOverride);
     }
 
     /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
@@ -463,12 +586,38 @@ public sealed record MediaQueryData
 
 public sealed class MediaQuery : InheritedModel<object>
 {
+    /// <summary>Dart's <c>_MediaQueryAspect</c>: the properties a dependent can depend on alone.</summary>
     private enum Aspect
     {
+        Size,
+        Width,
+        Height,
+        Orientation,
+        DevicePixelRatio,
         TextScaleFactor,
         TextScaler,
+        PlatformBrightness,
+        Padding,
+        ViewInsets,
+        SystemGestureInsets,
+        ViewPadding,
+        AlwaysUse24HourFormat,
+        AccessibleNavigation,
+        InvertColors,
+        HighContrast,
+        OnOffSwitchLabels,
+        DisableAnimations,
+        BoldText,
         SupportsAnnounce,
+        NavigationMode,
+        GestureSettings,
+        DisplayFeatures,
         SupportsShowingSystemContextMenu,
+        LineHeightScaleFactorOverride,
+        LetterSpacingOverride,
+        WordSpacingOverride,
+        ParagraphSpacingOverride,
+        DisplayCornerRadii,
     }
 
     public MediaQuery(
@@ -503,14 +652,42 @@ public sealed class MediaQuery : InheritedModel<object>
         IReadOnlySet<object> dependencies)
     {
         MediaQueryData oldData = ((MediaQuery)oldWidget).Data;
+        MediaQueryData data = Data;
         return dependencies.Any(aspect => aspect switch
         {
-            Aspect.TextScaleFactor => oldData.TextScaleFactor != Data.TextScaleFactor,
-            Aspect.TextScaler => oldData.TextScaler != Data.TextScaler,
-            Aspect.SupportsAnnounce => oldData.SupportsAnnounce != Data.SupportsAnnounce,
+            Aspect.Size => data.Size != oldData.Size,
+            Aspect.Width => data.Size.Width != oldData.Size.Width,
+            Aspect.Height => data.Size.Height != oldData.Size.Height,
+            Aspect.Orientation => data.Orientation != oldData.Orientation,
+            Aspect.DevicePixelRatio => data.DevicePixelRatio != oldData.DevicePixelRatio,
+            Aspect.TextScaleFactor => data.TextScaleFactor != oldData.TextScaleFactor,
+            Aspect.TextScaler => !Equals(data.TextScaler, oldData.TextScaler),
+            Aspect.PlatformBrightness => data.PlatformBrightness != oldData.PlatformBrightness,
+            Aspect.Padding => data.Padding != oldData.Padding,
+            Aspect.ViewInsets => data.ViewInsets != oldData.ViewInsets,
+            Aspect.ViewPadding => data.ViewPadding != oldData.ViewPadding,
+            Aspect.InvertColors => data.InvertColors != oldData.InvertColors,
+            Aspect.HighContrast => data.HighContrast != oldData.HighContrast,
+            Aspect.OnOffSwitchLabels => data.OnOffSwitchLabels != oldData.OnOffSwitchLabels,
+            Aspect.DisableAnimations => data.DisableAnimations != oldData.DisableAnimations,
+            Aspect.BoldText => data.BoldText != oldData.BoldText,
+            Aspect.SupportsAnnounce => data.SupportsAnnounce != oldData.SupportsAnnounce,
+            Aspect.NavigationMode => data.NavigationMode != oldData.NavigationMode,
+            Aspect.GestureSettings => !Equals(data.GestureSettings, oldData.GestureSettings),
+            Aspect.DisplayFeatures => !Equals(data.DisplayFeatures, oldData.DisplayFeatures),
+            Aspect.SystemGestureInsets => data.SystemGestureInsets != oldData.SystemGestureInsets,
+            Aspect.AccessibleNavigation => data.AccessibleNavigation != oldData.AccessibleNavigation,
+            Aspect.AlwaysUse24HourFormat => data.AlwaysUse24HourFormat != oldData.AlwaysUse24HourFormat,
             Aspect.SupportsShowingSystemContextMenu =>
-                oldData.SupportsShowingSystemContextMenu != Data.SupportsShowingSystemContextMenu,
-            _ => !Equals(oldData, Data),
+                data.SupportsShowingSystemContextMenu != oldData.SupportsShowingSystemContextMenu,
+            Aspect.LineHeightScaleFactorOverride =>
+                data.LineHeightScaleFactorOverride != oldData.LineHeightScaleFactorOverride,
+            Aspect.LetterSpacingOverride => data.LetterSpacingOverride != oldData.LetterSpacingOverride,
+            Aspect.WordSpacingOverride => data.WordSpacingOverride != oldData.WordSpacingOverride,
+            Aspect.ParagraphSpacingOverride => data.ParagraphSpacingOverride != oldData.ParagraphSpacingOverride,
+            Aspect.DisplayCornerRadii => !Equals(data.DisplayCornerRadii, oldData.DisplayCornerRadii),
+            // C#-only: a dependency without an aspect follows the whole data.
+            _ => !Equals(oldData, data),
         });
     }
 
@@ -550,30 +727,46 @@ public sealed class MediaQuery : InheritedModel<object>
         return InheritedModel<object>.InheritFrom<MediaQuery>(context, aspect)?.Data;
     }
 
-    public static Thickness PaddingOf(BuildContext context) => Of(context).Padding;
+    // Dart's `_of(context, aspect)`: the aspect-scoped dependency, reporting a missing ancestor like Of.
+    private static MediaQueryData Of(BuildContext context, Aspect aspect)
+    {
+        return MaybeOf(context, aspect) ?? Of(context);
+    }
 
-    public static Thickness? MaybePaddingOf(BuildContext context) => MaybeOf(context)?.Padding;
+    public static Size SizeOf(BuildContext context) => Of(context, Aspect.Size).Size;
 
-    public static Thickness ViewInsetsOf(BuildContext context) => Of(context).ViewInsets;
+    public static Size? MaybeSizeOf(BuildContext context) => MaybeOf(context, Aspect.Size)?.Size;
 
-    public static Thickness? MaybeViewInsetsOf(BuildContext context) => MaybeOf(context)?.ViewInsets;
+    public static double WidthOf(BuildContext context) => Of(context, Aspect.Width).Size.Width;
 
-    public static Thickness ViewPaddingOf(BuildContext context) => Of(context).ViewPadding;
+    public static double? MaybeWidthOf(BuildContext context) => MaybeOf(context, Aspect.Width)?.Size.Width;
 
-    public static Thickness? MaybeViewPaddingOf(BuildContext context) => MaybeOf(context)?.ViewPadding;
+    public static double HeightOf(BuildContext context) => Of(context, Aspect.Height).Size.Height;
 
-    public static double DevicePixelRatioOf(BuildContext context) => Of(context).DevicePixelRatio;
+    public static double? MaybeHeightOf(BuildContext context) => MaybeOf(context, Aspect.Height)?.Size.Height;
+
+    public static Orientation OrientationOf(BuildContext context) => Of(context, Aspect.Orientation).Orientation;
+
+    public static Orientation? MaybeOrientationOf(BuildContext context) =>
+        MaybeOf(context, Aspect.Orientation)?.Orientation;
+
+    public static double DevicePixelRatioOf(BuildContext context) =>
+        Of(context, Aspect.DevicePixelRatio).DevicePixelRatio;
 
     public static double? MaybeDevicePixelRatioOf(BuildContext context) =>
-        MaybeOf(context)?.DevicePixelRatio;
+        MaybeOf(context, Aspect.DevicePixelRatio)?.DevicePixelRatio;
 
-    public static Size SizeOf(BuildContext context) => Of(context).Size;
+    public static double TextScaleFactorOf(BuildContext context) =>
+        MaybeTextScaleFactorOf(context) ?? 1.0;
 
-    public static Size? MaybeSizeOf(BuildContext context) => MaybeOf(context)?.Size;
+    public static double? MaybeTextScaleFactorOf(BuildContext context) =>
+        MaybeOf(context, Aspect.TextScaleFactor)?.TextScaleFactor;
 
-    public static double WidthOf(BuildContext context) => SizeOf(context).Width;
+    public static TextScaler TextScalerOf(BuildContext context) =>
+        MaybeTextScalerOf(context) ?? Painting.TextScaler.NoScaling;
 
-    public static double HeightOf(BuildContext context) => SizeOf(context).Height;
+    public static TextScaler? MaybeTextScalerOf(BuildContext context) =>
+        MaybeOf(context, Aspect.TextScaler)?.TextScaler;
 
     /// <summary>
     /// Dart's <c>MediaQuery.platformBrightnessOf</c>: unlike the other <c>...Of</c> accessors this
@@ -584,26 +777,69 @@ public sealed class MediaQuery : InheritedModel<object>
         MaybePlatformBrightnessOf(context) ?? PlatformBrightness.Light;
 
     public static PlatformBrightness? MaybePlatformBrightnessOf(BuildContext context) =>
-        MaybeOf(context)?.PlatformBrightness;
+        MaybeOf(context, Aspect.PlatformBrightness)?.PlatformBrightness;
 
-    public static DeviceGestureSettings? GestureSettingsOf(BuildContext context) =>
-        Of(context).GestureSettings;
+    public static Thickness PaddingOf(BuildContext context) => Of(context, Aspect.Padding).Padding;
 
-    public static DeviceGestureSettings? MaybeGestureSettingsOf(BuildContext context) =>
-        MaybeOf(context)?.GestureSettings;
+    public static Thickness? MaybePaddingOf(BuildContext context) => MaybeOf(context, Aspect.Padding)?.Padding;
 
-    public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
+    public static Thickness ViewInsetsOf(BuildContext context) => Of(context, Aspect.ViewInsets).ViewInsets;
 
-    public static bool? MaybeHighContrastOf(BuildContext context) => MaybeOf(context)?.HighContrast;
+    public static Thickness? MaybeViewInsetsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.ViewInsets)?.ViewInsets;
+
+    public static Thickness SystemGestureInsetsOf(BuildContext context) =>
+        Of(context, Aspect.SystemGestureInsets).SystemGestureInsets;
+
+    public static Thickness? MaybeSystemGestureInsetsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.SystemGestureInsets)?.SystemGestureInsets;
+
+    public static Thickness ViewPaddingOf(BuildContext context) => Of(context, Aspect.ViewPadding).ViewPadding;
+
+    public static Thickness? MaybeViewPaddingOf(BuildContext context) =>
+        MaybeOf(context, Aspect.ViewPadding)?.ViewPadding;
+
+    public static bool AlwaysUse24HourFormatOf(BuildContext context) =>
+        Of(context, Aspect.AlwaysUse24HourFormat).AlwaysUse24HourFormat;
+
+    public static bool? MaybeAlwaysUse24HourFormatOf(BuildContext context) =>
+        MaybeOf(context, Aspect.AlwaysUse24HourFormat)?.AlwaysUse24HourFormat;
+
+    public static bool AccessibleNavigationOf(BuildContext context) =>
+        Of(context, Aspect.AccessibleNavigation).AccessibleNavigation;
+
+    public static bool? MaybeAccessibleNavigationOf(BuildContext context) =>
+        MaybeOf(context, Aspect.AccessibleNavigation)?.AccessibleNavigation;
+
+    public static bool InvertColorsOf(BuildContext context) => Of(context, Aspect.InvertColors).InvertColors;
+
+    public static bool? MaybeInvertColorsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.InvertColors)?.InvertColors;
+
+    public static bool HighContrastOf(BuildContext context) => MaybeHighContrastOf(context) ?? false;
+
+    public static bool? MaybeHighContrastOf(BuildContext context) =>
+        MaybeOf(context, Aspect.HighContrast)?.HighContrast;
+
+    public static bool OnOffSwitchLabelsOf(BuildContext context) => MaybeOnOffSwitchLabelsOf(context) ?? false;
+
+    public static bool? MaybeOnOffSwitchLabelsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.OnOffSwitchLabels)?.OnOffSwitchLabels;
+
+    public static bool DisableAnimationsOf(BuildContext context) =>
+        Of(context, Aspect.DisableAnimations).DisableAnimations;
+
+    public static bool? MaybeDisableAnimationsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.DisableAnimations)?.DisableAnimations;
 
     /// <summary>Dart's <c>MediaQuery.boldTextOf</c>: false when there is no ancestor.</summary>
     public static bool BoldTextOf(BuildContext context) => MaybeBoldTextOf(context) ?? false;
 
-    public static bool? MaybeBoldTextOf(BuildContext context) => MaybeOf(context)?.BoldText;
-
-    public static bool OnOffSwitchLabelsOf(BuildContext context) => Of(context).OnOffSwitchLabels;
-
-    public static bool? MaybeOnOffSwitchLabelsOf(BuildContext context) => MaybeOf(context)?.OnOffSwitchLabels;
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeBoldTextOf</c>: the calling context rebuilds only when
+    /// <see cref="MediaQueryData.BoldText"/> changes.
+    /// </summary>
+    public static bool? MaybeBoldTextOf(BuildContext context) => MaybeOf(context, Aspect.BoldText)?.BoldText;
 
     /// <summary>
     /// Dart's <c>MediaQuery.supportsAnnounceOf</c>: the nearest ancestor's
@@ -619,13 +855,31 @@ public sealed class MediaQuery : InheritedModel<object>
     public static bool? MaybeSupportsAnnounceOf(BuildContext context) =>
         MaybeOf(context, Aspect.SupportsAnnounce)?.SupportsAnnounce;
 
+    public static NavigationMode NavigationModeOf(BuildContext context) =>
+        Of(context, Aspect.NavigationMode).NavigationMode;
+
+    public static NavigationMode? MaybeNavigationModeOf(BuildContext context) =>
+        MaybeOf(context, Aspect.NavigationMode)?.NavigationMode;
+
+    public static DeviceGestureSettings? GestureSettingsOf(BuildContext context) =>
+        Of(context, Aspect.GestureSettings).GestureSettings;
+
+    public static DeviceGestureSettings? MaybeGestureSettingsOf(BuildContext context) =>
+        MaybeOf(context, Aspect.GestureSettings)?.GestureSettings;
+
+    public static IReadOnlyList<DisplayFeature> DisplayFeaturesOf(BuildContext context) =>
+        Of(context, Aspect.DisplayFeatures).DisplayFeatures ?? [];
+
+    public static IReadOnlyList<DisplayFeature>? MaybeDisplayFeaturesOf(BuildContext context) =>
+        MaybeOf(context, Aspect.DisplayFeatures)?.DisplayFeatures;
+
     /// <summary>
     /// Dart's <c>MediaQuery.supportsShowingSystemContextMenu</c>: the nearest ancestor's
     /// <see cref="MediaQueryData.SupportsShowingSystemContextMenu"/>; throws when there is no ancestor.
     /// The calling context rebuilds only when that property changes.
     /// </summary>
     public static bool SupportsShowingSystemContextMenu(BuildContext context) =>
-        MaybeSupportsShowingSystemContextMenu(context) ?? Of(context).SupportsShowingSystemContextMenu;
+        Of(context, Aspect.SupportsShowingSystemContextMenu).SupportsShowingSystemContextMenu;
 
     /// <summary>
     /// Dart's <c>MediaQuery.maybeSupportsShowingSystemContextMenu</c>: the nearest ancestor's
@@ -634,46 +888,47 @@ public sealed class MediaQuery : InheritedModel<object>
     public static bool? MaybeSupportsShowingSystemContextMenu(BuildContext context) =>
         MaybeOf(context, Aspect.SupportsShowingSystemContextMenu)?.SupportsShowingSystemContextMenu;
 
-    public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeLineHeightScaleFactorOverrideOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.LineHeightScaleFactorOverride"/>, or null when there is no ancestor or
+    /// the platform has not specified an override. The calling context rebuilds only when that
+    /// property changes.
+    /// </summary>
+    public static double? MaybeLineHeightScaleFactorOverrideOf(BuildContext context) =>
+        MaybeOf(context, Aspect.LineHeightScaleFactorOverride)?.LineHeightScaleFactorOverride;
 
-    public static BorderRadius? DisplayCornerRadiiOf(BuildContext context) => Of(context).DisplayCornerRadii;
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeLetterSpacingOverrideOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.LetterSpacingOverride"/>, or null when there is no ancestor or the
+    /// platform has not specified an override.
+    /// </summary>
+    public static double? MaybeLetterSpacingOverrideOf(BuildContext context) =>
+        MaybeOf(context, Aspect.LetterSpacingOverride)?.LetterSpacingOverride;
+
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeWordSpacingOverrideOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.WordSpacingOverride"/>, or null when there is no ancestor or the
+    /// platform has not specified an override.
+    /// </summary>
+    public static double? MaybeWordSpacingOverrideOf(BuildContext context) =>
+        MaybeOf(context, Aspect.WordSpacingOverride)?.WordSpacingOverride;
+
+    /// <summary>
+    /// Dart's <c>MediaQuery.maybeParagraphSpacingOverrideOf</c>: the nearest ancestor's
+    /// <see cref="MediaQueryData.ParagraphSpacingOverride"/>, or null when there is no ancestor or the
+    /// platform has not specified an override. As in Flutter, no framework text widget applies it.
+    /// </summary>
+    public static double? MaybeParagraphSpacingOverrideOf(BuildContext context) =>
+        MaybeOf(context, Aspect.ParagraphSpacingOverride)?.ParagraphSpacingOverride;
+
+    public static BorderRadius? DisplayCornerRadiiOf(BuildContext context) =>
+        Of(context, Aspect.DisplayCornerRadii).DisplayCornerRadii;
 
     public static BorderRadius? MaybeDisplayCornerRadiiOf(BuildContext context) =>
-        MaybeOf(context)?.DisplayCornerRadii;
+        MaybeOf(context, Aspect.DisplayCornerRadii)?.DisplayCornerRadii;
 
-    public static double TextScaleFactorOf(BuildContext context) =>
-        MaybeTextScaleFactorOf(context) ?? 1.0;
-
-    public static double? MaybeTextScaleFactorOf(BuildContext context) =>
-        MaybeOf(context, Aspect.TextScaleFactor)?.TextScaleFactor;
-
-    public static TextScaler TextScalerOf(BuildContext context) =>
-        MaybeTextScalerOf(context) ?? Painting.TextScaler.NoScaling;
-
-    public static TextScaler? MaybeTextScalerOf(BuildContext context) =>
-        MaybeOf(context, Aspect.TextScaler)?.TextScaler;
-
-    public static bool AccessibleNavigationOf(BuildContext context) => Of(context).AccessibleNavigation;
-
-    public static bool AlwaysUse24HourFormatOf(BuildContext context) => Of(context).AlwaysUse24HourFormat;
-
-    public static bool? MaybeAlwaysUse24HourFormatOf(BuildContext context) => MaybeOf(context)?.AlwaysUse24HourFormat;
-
-    public static bool DisableAnimationsOf(BuildContext context) => Of(context).DisableAnimations;
-
-    public static bool? MaybeDisableAnimationsOf(BuildContext context) => MaybeOf(context)?.DisableAnimations;
-
-    public static bool InvertColorsOf(BuildContext context) => Of(context).InvertColors;
-
-    public static bool? MaybeInvertColorsOf(BuildContext context) => MaybeOf(context)?.InvertColors;
-
-    public static NavigationMode NavigationModeOf(BuildContext context) => Of(context).NavigationMode;
-
-    public static NavigationMode? MaybeNavigationModeOf(BuildContext context) => MaybeOf(context)?.NavigationMode;
-
-    public static Orientation OrientationOf(BuildContext context) => Of(context).Orientation;
-
-    public static Orientation? MaybeOrientationOf(BuildContext context) => MaybeOf(context)?.Orientation;
+    /// <summary>C#-only: the nearest ancestor's <see cref="MediaQueryData.ViewId"/>.</summary>
+    public static int ViewIdOf(BuildContext context) => Of(context).ViewId;
 
     /// <summary>
     /// Dart's <c>MediaQuery.withClampedTextScaling</c>: wraps <paramref name="child"/> in a
@@ -724,6 +979,38 @@ public sealed class MediaQuery : InheritedModel<object>
                         textScaler: data.TextScaler.Clamp(
                             minScaleFactor: minScaleFactor,
                             maxScaleFactor: maxScaleFactor)),
+                    child: child);
+            });
+    }
+
+    /// <summary>
+    /// Wraps <paramref name="child"/> in a <see cref="MediaQuery"/> whose
+    /// <see cref="MediaQueryData.LineHeightScaleFactorOverride"/>,
+    /// <see cref="MediaQueryData.LetterSpacingOverride"/>, <see cref="MediaQueryData.WordSpacingOverride"/>
+    /// and <see cref="MediaQueryData.ParagraphSpacingOverride"/> are set to the specified values; a
+    /// <see langword="null"/> argument sets the corresponding override to <see langword="null"/>. The
+    /// returned widget must be inserted in a widget tree below an existing <see cref="MediaQuery"/>.
+    /// </summary>
+    /// <remarks>Dart's <c>MediaQuery.applyTextStyleOverrides</c>.</remarks>
+    public static Widget ApplyTextStyleOverrides(
+        double? lineHeightScaleFactorOverride,
+        double? letterSpacingOverride,
+        double? wordSpacingOverride,
+        double? paragraphSpacingOverride,
+        Widget child,
+        Key? key = null)
+    {
+        return new Builder(
+            key: key,
+            builder: context =>
+            {
+                // Dart's `assert(debugCheckHasMediaQuery(context))`: Of reports the same error.
+                return new MediaQuery(
+                    data: Of(context).ApplyTextStyleOverrides(
+                        lineHeightScaleFactorOverride: lineHeightScaleFactorOverride,
+                        letterSpacingOverride: letterSpacingOverride,
+                        wordSpacingOverride: wordSpacingOverride,
+                        paragraphSpacingOverride: paragraphSpacingOverride),
                     child: child);
             });
     }

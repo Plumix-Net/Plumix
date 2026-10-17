@@ -32,18 +32,16 @@ internal sealed class TrackpadPanZoomDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Trackpad pan / zoom", fontSize: 20, color: Colors.Black),
+                new Text("Trackpad pan / zoom", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Pinch or rotate on a trackpad over the panel. The platform reports the gesture "
                     + "as PointerPanZoom events, which Listener surfaces directly.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildProbe(),
                 new Text(
                     $"phase {_phase} — pan {Format(_pan.X)}, {Format(_pan.Y)} — "
                     + $"scale {Format(_scale)} — rotation {Format(_rotation)} rad — {_updates} updates",
-                    fontSize: 13,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
             ]);
     }
 
@@ -95,7 +93,7 @@ internal sealed class TrackpadPanZoomDemoPageState : State
                 decoration: new BoxDecoration(
                     Color: new Color(0xFF00796B),
                     BorderRadius: BorderRadius.Circular(12)),
-                child: new Text("pinch me", fontSize: 13, color: Colors.White)));
+                child: new Text("pinch me", style: new TextStyle(FontSize: 13, Color: Colors.White))));
     }
 
     private static string Format(double value)

@@ -28,14 +28,17 @@ internal sealed class CupertinoActionSheetDemoPageState : State
             spacing: 10.0,
             children:
             [
-                new Text("Cupertino action sheet", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino action sheet", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Blurred bottom sheet with a title/message section, hairline-separated actions, "
                     + "a detached cancel button, and slide-to-select. Use the mouse wheel to scroll "
                     + "the long list; touch scrolling does not select a folder.",
-                    fontSize: 14.0,
-                    color: Colors.DimGray),
-                new Text($"last result: {_lastResult}", fontSize: 12.0, color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                new Text(
+                    $"last result: {_lastResult}",
+                    style: new TextStyle(
+                        FontSize: 12.0,
+                        Color: new Color(0xFF607D8B))),
                 BuildAction(
                     "Title + message + actions + cancel",
                     () => ShowFullSheet(context),

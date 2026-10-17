@@ -30,11 +30,14 @@ internal sealed class OffstageDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Visibility + SliverVisibility + Offstage", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "Visibility + SliverVisibility + Offstage",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Text(
                         "Compare replacement, maintained layout space, and layout-without-paint behavior.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -48,13 +51,11 @@ internal sealed class OffstageDemoPageState : State
                         ]),
                     new Text(
                         $"state: visible={(_visible ? "true" : "false")}",
-                        fontSize: 12,
-                        color: Colors.DarkSlateGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     new Text(
                         "maintainState=true keeps the indicator mounted; TickerMode pauses its frame callbacks "
                         + "while hidden.",
-                        fontSize: 11,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                     new Visibility(
                         visible: _visible,
                         maintainState: true,
@@ -78,7 +79,11 @@ internal sealed class OffstageDemoPageState : State
                                         height: 42,
                                         color: new Color(0xFFA8DADC),
                                         child: new Center(
-                                            child: new Text("keeps size", fontSize: 11, color: Colors.Black)))),
+                                            child: new Text(
+                                                "keeps size",
+                                                style: new TextStyle(
+                                                    FontSize: 11,
+                                                    Color: Colors.Black))))),
                                 BuildMarker("R", "#FF457B9D"),
                             ])),
                     new Visibility(
@@ -87,12 +92,20 @@ internal sealed class OffstageDemoPageState : State
                             height: 42,
                             color: new Color(0xFFFFE8CC),
                             child: new Center(
-                                child: new Text("Visibility replacement", fontSize: 11, color: Colors.Black))),
+                                child: new Text(
+                                    "Visibility replacement",
+                                    style: new TextStyle(
+                                        FontSize: 11,
+                                        Color: Colors.Black)))),
                         child: new Container(
                             height: 42,
                             color: new Color(0xFFD8F3DC),
                             child: new Center(
-                                child: new Text("Visibility child", fontSize: 11, color: Colors.Black)))),
+                                child: new Text(
+                                    "Visibility child",
+                                    style: new TextStyle(
+                                        FontSize: 11,
+                                        Color: Colors.Black))))),
                     new SizedBox(
                         height: 150,
                         child: new CustomScrollView(
@@ -103,7 +116,11 @@ internal sealed class OffstageDemoPageState : State
                                         height: 42,
                                         color: new Color(0xFFE9ECEF),
                                         child: new Center(
-                                            child: new Text("sliver before", fontSize: 11, color: Colors.Black)))),
+                                            child: new Text(
+                                                "sliver before",
+                                                style: new TextStyle(
+                                                    FontSize: 11,
+                                                    Color: Colors.Black))))),
                                 new SliverVisibility(
                                     visible: _visible,
                                     replacementSliver: new SliverToBoxAdapter(
@@ -113,8 +130,7 @@ internal sealed class OffstageDemoPageState : State
                                             child: new Center(
                                                 child: new Text(
                                                     "replacement sliver",
-                                                    fontSize: 11,
-                                                    color: Colors.Black)))),
+                                                    style: new TextStyle(FontSize: 11, Color: Colors.Black))))),
                                     sliver: new SliverToBoxAdapter(
                                         new Container(
                                             height: 42,
@@ -122,20 +138,22 @@ internal sealed class OffstageDemoPageState : State
                                             child: new Center(
                                                 child: new Text(
                                                     "SliverVisibility child",
-                                                    fontSize: 11,
-                                                    color: Colors.Black))))),
+                                                    style: new TextStyle(FontSize: 11, Color: Colors.Black)))))),
                                 new SliverToBoxAdapter(
                                     new Container(
                                         height: 42,
                                         color: new Color(0xFFE9ECEF),
                                         child: new Center(
-                                            child: new Text("sliver after", fontSize: 11, color: Colors.Black)))),
+                                            child: new Text(
+                                                "sliver after",
+                                                style: new TextStyle(
+                                                    FontSize: 11,
+                                                    Color: Colors.Black))))),
                             ])),
                 new Text(
                     "When offstage=true, child is laid out but not painted/hit-tested and takes no room in parent "
                     + "layout.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -145,8 +163,7 @@ internal sealed class OffstageDemoPageState : State
                     ]),
                 new Text(
                     $"state: offstage={(_offstage ? "true" : "false")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -159,8 +176,7 @@ internal sealed class OffstageDemoPageState : State
                         [
                             new Text(
                                 "Row layout (middle child disappears from layout when offstage=true)",
-                                fontSize: 11,
-                                color: Colors.DimGray),
+                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                             new Container(
                                 height: 72,
                                 color: Colors.White,
@@ -184,14 +200,12 @@ internal sealed class OffstageDemoPageState : State
                                                 child: new Center(
                                                     child: new Text(
                                                         "Offstage child",
-                                                        fontSize: 11,
-                                                        color: Colors.Black)))),
+                                                        style: new TextStyle(FontSize: 11, Color: Colors.Black))))),
                                         BuildMarker("R", "#FF457B9D"),
                                     ])),
                             new Text(
                                 "Tip: switch state and watch L/R gap change.",
-                                fontSize: 11,
-                                color: Colors.DimGray),
+                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                         ])),
                 ]));
     }
@@ -216,7 +230,7 @@ internal sealed class OffstageDemoPageState : State
             height: 34,
             color: (Color)Avalonia.Media.Color.Parse(colorHex),
             child: new Center(
-                child: new Text(label, fontSize: 12, color: Colors.White)));
+                child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }
 
     private void SetOffstage(bool value)

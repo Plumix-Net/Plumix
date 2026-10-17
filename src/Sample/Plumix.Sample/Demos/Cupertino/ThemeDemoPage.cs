@@ -47,11 +47,10 @@ internal sealed class CupertinoThemeDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("CupertinoTheme + dynamic colors", fontSize: 20, color: Colors.Black),
+                new Text("CupertinoTheme + dynamic colors", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "CupertinoDynamicColor resolves against brightness, accessibility contrast and interface elevation.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -74,15 +73,13 @@ internal sealed class CupertinoThemeDemoPageState : State
                     ]),
                 new Text(
                     $"brightness={(_dark ? "dark" : "light")}, highContrast={(_highContrast ? "true" : "false")}, level={(_elevated ? "elevated" : "base")}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 BuildProbe(context),
-                new Text("MaterialBasedCupertinoThemeData", fontSize: 20, color: Colors.Black),
+                new Text("MaterialBasedCupertinoThemeData", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "A Material Theme installs a CupertinoTheme that defers to the Material ThemeData; "
                     + "ThemeData.cupertinoOverrideTheme preempts individual attributes.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 BuildControlButton(
                     label: _cupertinoOverride ? "Override: systemPink" : "Override: none (cascaded)",
                     onTap: ToggleCupertinoOverride,
@@ -214,7 +211,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                             Color: CupertinoDynamicColor.Resolve(color, context),
                             BorderRadius: BorderRadius.Circular(6),
                             Border: Border.FromBorderSide(new BorderSide(separator, 1)))),
-                    new Text(name, fontSize: 11, color: labelColor),
+                    new Text(name, style: new TextStyle(FontSize: 11, Color: labelColor)),
                 ]));
     }
 
@@ -230,7 +227,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

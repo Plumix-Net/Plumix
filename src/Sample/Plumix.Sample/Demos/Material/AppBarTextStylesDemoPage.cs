@@ -52,11 +52,10 @@ internal sealed class AppBarTextStylesDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AppBar title/toolbar text styles", fontSize: 20, color: Colors.Black),
+                new Text("AppBar title/toolbar text styles", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for titleTextStyle and toolbarTextStyle precedence: widget override > appBarTheme > foreground fallback.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -94,8 +93,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                     ]),
                 new Text(
                     $"fg={ColorLabel(_foregroundColor)}, themeTitle={OnOff(_themeTitleStyleEnabled)}, themeToolbar={OnOff(_themeToolbarStyleEnabled)}, widgetTitle={OnOff(_widgetTitleOverrideEnabled)}, widgetToolbar={OnOff(_widgetToolbarOverrideEnabled)}, expectedTitle={DescribeStyle(ResolveExpectedTitleStyle(), _foregroundColor)}, expectedActions={DescribeStyle(ResolveExpectedToolbarStyle(), _foregroundColor)}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 320,
                     color: new Color(0xFFE7EDF6),
@@ -105,9 +103,17 @@ internal sealed class AppBarTextStylesDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Themed app bar preview", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Themed app bar preview",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildThemedPreview(),
-                            new Text("Default app bar reference (no text style overrides)", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Default app bar reference (no text style overrides)",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);

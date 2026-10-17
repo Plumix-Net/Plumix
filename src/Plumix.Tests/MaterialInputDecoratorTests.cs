@@ -258,7 +258,7 @@ public sealed class MaterialInputDecoratorTests
         using var harness = new DecoratorHarness(Decorator(
             new InputDecoration(hintText: "Hint", labelText: "Label", filled: true),
             isEmpty: true,
-            child: new Text("value", fontSize: 16)));
+            child: new Text("value", style: new TextStyle(FontSize: 16))));
         harness.Pump();
         RenderDecoration decorator = harness.Decorator;
         Rect hint = DecoratorHarness.RectOf(decorator.HintBox);

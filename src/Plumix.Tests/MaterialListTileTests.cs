@@ -503,7 +503,7 @@ public sealed class MaterialListTileTests
                                         title: new Text("Two-line tile"),
                                         subtitle: new Text("Subtitle text demonstrates two-line default height."),
                                         leading: new Icon(Icons.Add),
-                                        trailing: new Text("meta", fontSize: 12),
+                                        trailing: new Text("meta", style: new TextStyle(FontSize: 12)),
                                         enabled: false),
                                     new ListTile(
                                         title: new Text("Three-line probe"),

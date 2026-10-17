@@ -27,12 +27,15 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("CustomMultiChildLayout + NavigationToolbar", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "CustomMultiChildLayout + NavigationToolbar",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "LayoutId slots drive dependent child constraints; NavigationToolbar applies the same " +
                     "delegate pipeline to leading, middle, and trailing content.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -86,7 +89,7 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
             child: new Container(
                 color: color,
                 alignment: Alignment.Center,
-                child: new Text(label, fontSize: 12, color: Colors.White)));
+                child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }
 
     private static Widget BuildButton(string label, Action onTap)

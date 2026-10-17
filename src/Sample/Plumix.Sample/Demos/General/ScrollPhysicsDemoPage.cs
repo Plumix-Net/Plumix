@@ -17,13 +17,12 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
             spacing: 10,
             children:
             [
-                new Text("Scroll physics", fontSize: 20, color: Colors.Black),
+                new Text("Scroll physics", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Drag past either end: bouncing physics rubber-band and spring back, "
                     + "clamping physics stop at the edge, never-scrollable ignores the drag.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
-                new Text("Single child: horizontal strip with directional padding", fontSize: 14),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                new Text("Single child: horizontal strip with directional padding", style: new TextStyle(FontSize: 14)),
                 new SizedBox(
                     height: 64,
                     child: new SingleChildScrollView(
@@ -37,7 +36,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                                 height: 56,
                                 color: new Color(0xFFE3F2FD),
                                 alignment: Alignment.Center,
-                                child: new Text($"item #{index}", fontSize: 14))).ToArray()))),
+                                child: new Text($"item #{index}", style: new TextStyle(FontSize: 14)))).ToArray()))),
                 new Expanded(
                     child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -79,7 +78,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
             spacing: 6,
             children:
             [
-                new Text(title, fontSize: 14, color: Colors.Black),
+                new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Expanded(
                     child: ListView.Builder(
                         itemCount: 24,
@@ -88,7 +87,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                         itemBuilder: (_, index) => new Container(
                             color: index % 2 == 0 ? color : Colors.White,
                             padding: new Thickness(10, 8),
-                            child: new Text($"row #{index}", fontSize: 13, color: Colors.Black)),
+                            child: new Text($"row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                         addAutomaticKeepAlives: false)),
             ]);
     }

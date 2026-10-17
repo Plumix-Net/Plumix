@@ -17,6 +17,7 @@ public sealed class SelectableText : StatefulWidget
         string data,
         FocusNode? focusNode = null,
         TextStyle? style = null,
+        StrutStyle? strutStyle = null,
         TextAlign? textAlign = null,
         TextDirection? textDirection = null,
         bool showCursor = false,
@@ -40,6 +41,7 @@ public sealed class SelectableText : StatefulWidget
         Data = data ?? throw new ArgumentNullException(nameof(data));
         FocusNode = focusNode;
         Style = style;
+        StrutStyle = strutStyle;
         TextAlign = textAlign;
         TextDirection = textDirection;
         ShowCursor = showCursor;
@@ -84,6 +86,10 @@ public sealed class SelectableText : StatefulWidget
     public string Data { get; }
     public FocusNode? FocusNode { get; }
     public TextStyle? Style { get; }
+
+    /// The strut style used for the vertical layout; Dart's <c>SelectableText.strutStyle</c>, passed to
+    /// the <see cref="EditableText"/> unresolved.
+    public StrutStyle? StrutStyle { get; }
     public TextAlign? TextAlign { get; }
     public TextDirection? TextDirection { get; }
     public bool ShowCursor { get; }
@@ -259,8 +265,9 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
             focusedBackgroundColor: Colors.Transparent,
             padding: new Thickness(0),
             style: style,
+            strutStyle: Current.StrutStyle,
             readOnly: true,
-showCursor: Current.ShowCursor,
+            showCursor: Current.ShowCursor,
             textAlign: Current.TextAlign ?? TextAlign.Start,
             textDirection: Current.TextDirection,
             enableInteractiveSelection: Current.EnableInteractiveSelection,

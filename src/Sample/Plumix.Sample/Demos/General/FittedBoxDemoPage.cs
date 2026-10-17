@@ -28,11 +28,10 @@ internal sealed class FittedBoxDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("FittedBox", fontSize: 20, color: Colors.Black),
+                new Text("FittedBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Change fit/alignment to inspect scaling behavior inside a fixed preview box.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -53,8 +52,7 @@ internal sealed class FittedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"fit={FitLabel(_fit)}, alignment={AlignmentLabel(_alignment)}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -78,7 +76,7 @@ internal sealed class FittedBoxDemoPageState : State
                                     spacing: 8,
                                     children:
                                     [
-                                        new Text("WIDE", fontSize: 14, color: Colors.Black),
+                                        new Text("WIDE", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                                         new Container(width: 14, height: 14, color: new Color(0xFF1D3557)),
                                     ]))))),
             ]);

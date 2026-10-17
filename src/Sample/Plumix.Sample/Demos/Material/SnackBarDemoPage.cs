@@ -29,11 +29,10 @@ public sealed class SnackBarDemoPage : StatefulWidget
                 spacing: 14,
                 children:
                 [
-                    new Text("SnackBar + SnackBarAction", fontSize: 20),
+                    new Text("SnackBar + SnackBarAction", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "ScaffoldMessenger queue, fixed/floating placement, one-shot action, close icon, overflow, and theme/widget precedence.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -62,13 +61,12 @@ public sealed class SnackBarDemoPage : StatefulWidget
                         [
                             new ElevatedButton(new Text("SHOW SNACKBAR"), () => ShowSnackBar(context)),
                         ]),
-                    new Text($"Action presses: {_actionCount}", fontSize: 13),
+                    new Text($"Action presses: {_actionCount}", style: new TextStyle(FontSize: 13)),
                     new Text(
                         "Narrow the window to move a wide action below the message; repeated SHOW calls "
                         + "show queue order. Drag the bar in the swipe direction to dismiss it; the width "
                         + "probe needs floating behavior.",
-                        fontSize: 13,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 ]);
         }
 
@@ -92,6 +90,6 @@ public sealed class SnackBarDemoPage : StatefulWidget
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, fontSize: 12), onPressed);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
     }
 }

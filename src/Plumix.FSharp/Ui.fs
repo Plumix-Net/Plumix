@@ -64,9 +64,7 @@ type Ui private () =
         ) : Widget =
         Text(
             data,
-            fontSize = nul fontSize,
-            color = obj' color,
-            fontWeight = nul fontWeight,
+            style = TextStyle(FontSize = nul fontSize, Color = obj' color, FontWeight = nul fontWeight),
             textAlign = defaultArg textAlign TextAlign.Start,
             maxLines = nul maxLines,
             overflow = defaultArg overflow TextOverflow.Clip,

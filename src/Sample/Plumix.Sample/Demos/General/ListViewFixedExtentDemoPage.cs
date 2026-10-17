@@ -16,11 +16,10 @@ public sealed class ListViewFixedExtentDemoPage : StatelessWidget
             spacing: 10,
             children:
             [
-                new Text("ListView with itemExtent", fontSize: 20, color: Colors.Black),
+                new Text("ListView with itemExtent", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Each row has fixed paint/layout extent and list has sliver padding.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Expanded(
                     child: ListView.Builder(
                         itemCount: 50,
@@ -31,8 +30,7 @@ public sealed class ListViewFixedExtentDemoPage : StatelessWidget
                             padding: new Thickness(12, 8),
                             child: new Text(
                                 $"fixed row #{index} (itemExtent=52)",
-                                fontSize: 13,
-                                color: Colors.Black)),
+                                style: new TextStyle(FontSize: 13, Color: Colors.Black))),
                         addAutomaticKeepAlives: false)),
             ]);
     }

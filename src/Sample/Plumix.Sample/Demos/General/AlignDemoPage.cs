@@ -129,11 +129,10 @@ internal sealed class AlignDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AnimationStyle", fontSize: 20, color: Colors.Black),
+                new Text("AnimationStyle", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch styles, then swap the card to compare forward and reverse timing and curves.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -157,8 +156,7 @@ internal sealed class AlignDemoPageState : State
                 new Text(
                     $"enter={animationStyle.Duration!.Value.TotalMilliseconds:0} ms, "
                     + $"exit={animationStyle.ReverseDuration!.Value.TotalMilliseconds:0} ms",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new SizedBox(
                     height: 72,
                     child: new Center(
@@ -174,12 +172,12 @@ internal sealed class AlignDemoPageState : State
                                 color: new Color(_alternateStyledChild ? 0xFF9C4F63u : 0xFF315A7Du),
                                 child: new Center(
                                     child: new Text(
-                                        _alternateStyledChild ? "B" : "A", fontSize: 16, color: Colors.White)))))),
-                new Text("AnimatedAlign + AnimatedPadding", fontSize: 20, color: Colors.Black),
+                                        _alternateStyledChild ? "B" : "A",
+                                        style: new TextStyle(FontSize: 16, Color: Colors.White))))))),
+                new Text("AnimatedAlign + AnimatedPadding", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move the card and change its inset; both values transition implicitly with easeInOut.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -210,8 +208,7 @@ internal sealed class AlignDemoPageState : State
                 new Text(
                     $"alignment={AlignmentLabel(_alignment)}, shrink={(_shrinkWrap ? "on" : "off")}, "
                     + $"padding={(_expandedPadding ? 24 : 8)}, completed={_completedAnimations}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -235,12 +232,11 @@ internal sealed class AlignDemoPageState : State
                                 height: 40,
                                 color: new Color(0xFF1D3557),
                                 child: new Center(
-                                    child: new Text("A", fontSize: 16, color: Colors.White))))))),
-                new Text("AnimatedOpacity + AnimatedSlide", fontSize: 20, color: Colors.Black),
+                                    child: new Text("A", style: new TextStyle(FontSize: 16, Color: Colors.White)))))))),
+                new Text("AnimatedOpacity + AnimatedSlide", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Fade and move the same child by a size-relative offset; hit testing follows the slide.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -276,12 +272,15 @@ internal sealed class AlignDemoPageState : State
                                     height: 44,
                                     color: new Color(0xFF7B2CBF),
                                     child: new Center(
-                                        child: new Text("move", fontSize: 14, color: Colors.White))))))),
-                new Text("AnimatedScale + AnimatedRotation", fontSize: 20, color: Colors.Black),
+                                        child: new Text(
+                                            "move",
+                                            style: new TextStyle(
+                                                FontSize: 14,
+                                                Color: Colors.White)))))))),
+                new Text("AnimatedScale + AnimatedRotation", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -321,12 +320,19 @@ internal sealed class AlignDemoPageState : State
                                     height: 44,
                                     color: new Color(0xFFB85C38),
                                     child: new Center(
-                                        child: new Text("turn", fontSize: 14, color: Colors.White))))))),
-                new Text("ScaleTransition + RotationTransition", fontSize: 20, color: Colors.Black),
+                                        child: new Text(
+                                            "turn",
+                                            style: new TextStyle(
+                                                FontSize: 14,
+                                                Color: Colors.White)))))))),
+                new Text(
+                    "ScaleTransition + RotationTransition",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Drive explicit scale and turn animations from one controller; filtering is active only in motion.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildButton(
                     _explicitTransitionsForward ? "Reverse transitions" : "Forward transitions",
                     ToggleExplicitTransitions,
@@ -350,12 +356,15 @@ internal sealed class AlignDemoPageState : State
                                     height: 44,
                                     color: new Color(0xFF356A82),
                                     child: new Center(
-                                        child: new Text("explicit", fontSize: 13, color: Colors.White))))))),
-                new Text("DecoratedBoxTransition", fontSize: 20, color: Colors.Black),
+                                        child: new Text(
+                                            "explicit",
+                                            style: new TextStyle(
+                                                FontSize: 13,
+                                                Color: Colors.White)))))))),
+                new Text("DecoratedBoxTransition", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Interpolate fill, border width/color, and radius through DecorationTween.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     width: 220,
                     height: 100,
@@ -370,13 +379,11 @@ internal sealed class AlignDemoPageState : State
                                 child: new Center(
                                     child: new Text(
                                         "decoration",
-                                        fontSize: 13,
-                                        color: Colors.White)))))),
-                new Text("SlideTransition + SizeTransition", fontSize: 20, color: Colors.Black),
+                                        style: new TextStyle(FontSize: 13, Color: Colors.White))))))),
+                new Text("SlideTransition + SizeTransition", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move in reading direction and reveal clipped size from the bottom-right alignment.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -388,8 +395,7 @@ internal sealed class AlignDemoPageState : State
                             colorHex: "#FFF4E6C8"),
                         new Text(
                             "factor follows the explicit controller",
-                            fontSize: 12,
-                            color: Colors.DarkSlateGray),
+                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     ]),
                 new Row(
                     spacing: 12,
@@ -410,7 +416,11 @@ internal sealed class AlignDemoPageState : State
                                         height: 40,
                                         color: new Color(0xFF2A6F97),
                                         child: new Center(
-                                            child: new Text("slide", fontSize: 12, color: Colors.White)))))),
+                                            child: new Text(
+                                                "slide",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.White))))))),
                         new Container(
                             width: 110,
                             height: 90,
@@ -426,16 +436,18 @@ internal sealed class AlignDemoPageState : State
                                         height: 60,
                                         color: new Color(0xFF9C4F63),
                                         child: new Center(
-                                            child: new Text("size", fontSize: 12, color: Colors.White)))))),
+                                            child: new Text(
+                                                "size",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.White))))))),
                     ]),
                 new Text(
                     "PositionedTransition + RelativePositionedTransition",
-                    fontSize: 20,
-                    color: Colors.Black),
+                    style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The same explicit controller drives Stack insets and a Rect relative to a declared box size.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     width: 240,
                     height: 130,
@@ -448,20 +460,31 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     color: new Color(0xFF315A7D),
                                     child: new Center(
-                                        child: new Text("insets", fontSize: 12, color: Colors.White)))),
+                                        child: new Text(
+                                            "insets",
+                                            style: new TextStyle(
+                                                FontSize: 12,
+                                                Color: Colors.White))))),
                             new RelativePositionedTransition(
                                 rect: _explicitRelativePositionAnimation,
                                 size: new Size(240, 130),
                                 child: new Container(
                                     color: new Color(0xFF9C4F63),
                                     child: new Center(
-                                        child: new Text("rect", fontSize: 12, color: Colors.White)))),
+                                        child: new Text(
+                                            "rect",
+                                            style: new TextStyle(
+                                                FontSize: 12,
+                                                Color: Colors.White))))),
                         ])),
-                new Text("AlignTransition + DefaultTextStyleTransition", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "AlignTransition + DefaultTextStyleTransition",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Animate alignment geometry and inherited text style from the same explicit controller.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 12,
                     children:
@@ -489,11 +512,14 @@ internal sealed class AlignDemoPageState : State
                                     maxLines: 1,
                                     child: new Text("animated text")))),
                     ]),
-                new Text("AnimatedPositioned + AnimatedPositionedDirectional", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "AnimatedPositioned + AnimatedPositionedDirectional",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -527,7 +553,11 @@ internal sealed class AlignDemoPageState : State
                                 child: new Container(
                                     color: new Color(0xFF2A6F97),
                                     child: new Center(
-                                        child: new Text("left", fontSize: 12, color: Colors.White)))),
+                                        child: new Text(
+                                            "left",
+                                            style: new TextStyle(
+                                                FontSize: 12,
+                                                Color: Colors.White))))),
                             new Directionality(
                                 textDirection: _rightToLeft
                                     ? Plumix.UI.TextDirection.Rtl
@@ -543,13 +573,20 @@ internal sealed class AlignDemoPageState : State
                                     child: new Container(
                                         color: new Color(0xFF6A4C93),
                                         child: new Center(
-                                            child: new Text("start", fontSize: 12, color: Colors.White))))),
+                                            child: new Text(
+                                                "start",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.White)))))),
                         ])),
-                new Text("AnimatedDefaultTextStyle + AnimatedPhysicalModel", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "AnimatedDefaultTextStyle + AnimatedPhysicalModel",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Animate inherited typography and physical surface radius, elevation, fill, and shadow.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -590,7 +627,11 @@ internal sealed class AlignDemoPageState : State
                                 width: 110,
                                 height: 64,
                                 child: new Center(
-                                    child: new Text("surface", fontSize: 13, color: Colors.White))),
+                                    child: new Text(
+                                        "surface",
+                                        style: new TextStyle(
+                                            FontSize: 13,
+                                            Color: Colors.White)))),
                             color: _raisedSurface
                                 ? new Color(0xFF2A9D8F)
                                 : new Color(0xFF457B9D),
@@ -602,12 +643,15 @@ internal sealed class AlignDemoPageState : State
                             curve: Curves.EaseInOut,
                             onEnd: HandleAnimationEnd),
                     ]),
-                new Text("AnimatedSwitcher + AnimatedCrossFade", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "AnimatedSwitcher + AnimatedCrossFade",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Rapid keyed replacements keep outgoing switcher children while cross-fade animates height "
                     + "from the logical bottom-end edge.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -643,8 +687,7 @@ internal sealed class AlignDemoPageState : State
                                 child: new Center(
                                     child: new Text(
                                         $"child {_switcherValue}",
-                                        fontSize: 13,
-                                        color: Colors.White)))))),
+                                        style: new TextStyle(FontSize: 13, Color: Colors.White))))))),
                 new Directionality(
                     textDirection: _rightToLeft
                         ? Plumix.UI.TextDirection.Rtl
@@ -655,13 +698,21 @@ internal sealed class AlignDemoPageState : State
                             height: 54,
                             color: new Color(0xFFDCEBF2),
                             child: new Center(
-                                child: new Text("first / 54", fontSize: 13, color: Colors.Black))),
+                                child: new Text(
+                                    "first / 54",
+                                    style: new TextStyle(
+                                        FontSize: 13,
+                                        Color: Colors.Black)))),
                         secondChild: new Container(
                             width: 240,
                             height: 92,
                             color: new Color(0xFFF2D9DF),
                             child: new Center(
-                                child: new Text("second / 92", fontSize: 13, color: Colors.Black))),
+                                child: new Text(
+                                    "second / 92",
+                                    style: new TextStyle(
+                                        FontSize: 13,
+                                        Color: Colors.Black)))),
                         crossFadeState: _showSecondCrossFade
                             ? CrossFadeState.ShowSecond
                             : CrossFadeState.ShowFirst,
@@ -674,12 +725,10 @@ internal sealed class AlignDemoPageState : State
                         onEnd: HandleAnimationEnd)),
                 new Text(
                     "AnimatedFractionallySizedBox + SliverAnimatedOpacity",
-                    fontSize: 20,
-                    color: Colors.Black),
+                    style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Animate fractional layout and a sliver paint layer while preserving their child geometry.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -709,7 +758,11 @@ internal sealed class AlignDemoPageState : State
                         child: new Container(
                             color: new Color(0xFF3F7D6B),
                             child: new Center(
-                                child: new Text("fraction", fontSize: 13, color: Colors.White))))),
+                                child: new Text(
+                                    "fraction",
+                                    style: new TextStyle(
+                                        FontSize: 13,
+                                        Color: Colors.White)))))),
                 new Container(
                     width: 240,
                     height: 100,
@@ -729,14 +782,16 @@ internal sealed class AlignDemoPageState : State
                                         child: new Center(
                                             child: new Text(
                                                 "sliver opacity",
-                                                fontSize: 13,
-                                                color: Colors.White))))),
+                                                style: new TextStyle(FontSize: 13, Color: Colors.White)))))),
                         ])),
-                new Text("ValueListenableBuilder + TweenAnimationBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "ValueListenableBuilder + TweenAnimationBuilder",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "The notifier rebuilds only its builder; the tween owns and retargets its animation.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -759,12 +814,20 @@ internal sealed class AlignDemoPageState : State
                         height: 28,
                         color: new Color(0xFFE4E8EE),
                         child: new Center(
-                            child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
+                            child: new Text(
+                                "stable child",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DarkSlateGray)))),
                     builder: (_, value, child) => new Row(
                         spacing: 8,
                         children:
                         [
-                            new Text($"notifier value={value}", fontSize: 13, color: Colors.Black),
+                            new Text(
+                                $"notifier value={value}",
+                                style: new TextStyle(
+                                    FontSize: 13,
+                                    Color: Colors.Black)),
                             child ?? new SizedBox(),
                         ])),
                 new Container(
@@ -779,17 +842,24 @@ internal sealed class AlignDemoPageState : State
                             curve: Curves.EaseInOut,
                             onEnd: HandleAnimationEnd,
                             child: new Center(
-                                child: new Text("tween child", fontSize: 12, color: Colors.White)),
+                                child: new Text(
+                                    "tween child",
+                                    style: new TextStyle(
+                                        FontSize: 12,
+                                        Color: Colors.White))),
                             builder: (_, value, child) => new Container(
                                 width: value,
                                 height: 36,
                                 color: new Color(0xFF356A82),
                                 child: child)))),
-                new Text("ListenableBuilder + AnimatedBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "ListenableBuilder + AnimatedBuilder",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "The generic listenable and animation aliases share listener lifecycle and stable-child reuse.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -812,15 +882,18 @@ internal sealed class AlignDemoPageState : State
                         height: 28,
                         color: new Color(0xFFE4E8EE),
                         child: new Center(
-                            child: new Text("stable child", fontSize: 11, color: Colors.DarkSlateGray))),
+                            child: new Text(
+                                "stable child",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DarkSlateGray)))),
                     builder: (_, child) => new Row(
                         spacing: 8,
                         children:
                         [
                             new Text(
                                 $"listenable notifications={_builderCounter.Value}",
-                                fontSize: 13,
-                                color: Colors.Black),
+                                style: new TextStyle(FontSize: 13, Color: Colors.Black)),
                             child ?? new SizedBox(),
                         ])),
                 new Container(
@@ -832,17 +905,24 @@ internal sealed class AlignDemoPageState : State
                         child: new AnimatedBuilder(
                             animation: _explicitTransitionsController,
                             child: new Center(
-                                child: new Text("animated child", fontSize: 12, color: Colors.White)),
+                                child: new Text(
+                                    "animated child",
+                                    style: new TextStyle(
+                                        FontSize: 12,
+                                        Color: Colors.White))),
                             builder: (_, child) => new Container(
                                 width: 72 + (_explicitTransitionsController.Value * 108),
                                 height: 36,
                                 color: new Color(0xFF6B5B95),
                                 child: child)))),
-                new Text("DualTransitionBuilder + RepeatingAnimationBuilder", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "DualTransitionBuilder + RepeatingAnimationBuilder",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Enter/exit builders stay nested while a reusable animatable loops, reverses, and pauses.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -881,7 +961,11 @@ internal sealed class AlignDemoPageState : State
                                 height: 40,
                                 color: new Color(0xFF356A82),
                                 child: new Center(
-                                    child: new Text("dual", fontSize: 12, color: Colors.White)))))),
+                                    child: new Text(
+                                        "dual",
+                                        style: new TextStyle(
+                                            FontSize: 12,
+                                            Color: Colors.White))))))),
                 new Container(
                     width: 240,
                     height: 56,
@@ -895,7 +979,11 @@ internal sealed class AlignDemoPageState : State
                             repeatMode: _repeatingReverse ? RepeatMode.Reverse : RepeatMode.Restart,
                             paused: _repeatingPaused,
                             child: new Center(
-                                child: new Text("repeat child", fontSize: 12, color: Colors.White)),
+                                child: new Text(
+                                    "repeat child",
+                                    style: new TextStyle(
+                                        FontSize: 12,
+                                        Color: Colors.White))),
                             builder: (_, value, child) => new Container(
                                 width: value,
                                 height: 36,

@@ -49,12 +49,15 @@ internal sealed class SelectionHandlesDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("SelectionOverlay + Material handles", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "SelectionOverlay + Material handles",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Long-press the field and drag through the touch lens: handles stay above it. "
                     + "The direct probe below also covers ranged and collapsed handles.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new TextField(
                     controller: _fieldController,
                     maxLines: 2,
@@ -82,8 +85,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                                     right: 24,
                                     child: new Text(
                                         "Drag the handles across this line",
-                                        fontSize: 18,
-                                        color: new Color(0xFF1D192B))),
+                                        style: new TextStyle(FontSize: 18, Color: new Color(0xFF1D192B)))),
                                 new Positioned(
                                     left: EffectiveStartX,
                                     top: LineTop,
@@ -108,8 +110,7 @@ internal sealed class SelectionHandlesDemoPageState : State
                                     child: new Text(
                                         $"startX={EffectiveStartX:0}, endX={_endX:0}, "
                                         + $"handles={(_handlesVisible ? "on" : "off")}",
-                                        fontSize: 12,
-                                        color: new Color(0xFF6750A4))),
+                                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF6750A4)))),
                             ]))),
             ]);
     }
@@ -215,7 +216,7 @@ internal sealed class SelectionHandlesDemoPageState : State
     {
         return new TextButton(
             onPressed: onPressed,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),

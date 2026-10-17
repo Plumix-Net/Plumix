@@ -45,12 +45,11 @@ internal sealed class RouterDemoPageState : State
             spacing: 8,
             children:
             [
-                new Text("Router demo", fontSize: 20, color: Colors.Black),
+                new Text("Router demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The provider publishes a location, the parser turns it into a configuration and the "
                     + "delegate builds the page. Popping goes through the back-button dispatcher.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -60,7 +59,7 @@ internal sealed class RouterDemoPageState : State
                         BuildAction("Settings", () => Go("/settings"), new Color(0xFFFFF3E0)),
                         BuildAction("Back", HandleBack, new Color(0xFFFCE4EC)),
                     ]),
-                new Text($"reported: {string.Join(", ", _reports)}", fontSize: 12),
+                new Text($"reported: {string.Join(", ", _reports)}", style: new TextStyle(FontSize: 12)),
                 new SizedBox(
                     height: 180,
                     child: new ColoredBox(
@@ -146,11 +145,10 @@ internal sealed class DemoRouterDelegate : RouterDelegate<DemoRouteConfiguration
                     spacing: 8,
                     children:
                     [
-                        new Text(_configuration.Path, fontSize: 18, color: Colors.Black),
+                        new Text(_configuration.Path, style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                         new Text(
                             _configuration.ShowDetail ? "detail page" : "top level page",
-                            fontSize: 12,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     ])));
     }
 }

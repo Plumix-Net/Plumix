@@ -27,12 +27,11 @@ internal sealed class HeroDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Hero", fontSize: 20, color: Colors.Black),
+                    new Text("Hero", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Tap a tile to push a detail route. The tile flies between the two routes along the "
                         + "MaterialRectArcTween MaterialApp installs on its HeroController.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -50,13 +49,11 @@ internal sealed class HeroDemoPageState : State
                         ]),
                     new Text(
                         $"state: heroMode={(_heroModeEnabled ? "enabled" : "disabled")}",
-                        fontSize: 12,
-                        color: Colors.DarkSlateGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     new Text(
                         "A disabled HeroMode hides the subtree from Hero._allHeroesFor, so the route "
                         + "transition runs without a flight.",
-                        fontSize: 11,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                     BuildTile(
                         context,
                         tag: "hero-demo-plain",
@@ -80,8 +77,7 @@ internal sealed class HeroDemoPageState : State
                     new Text(
                         "The second tile supplies a flightShuttleBuilder (what the overlay paints while the "
                         + "hero is in the air) and a placeholderBuilder (what each route shows in its place).",
-                        fontSize: 11,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
                 ]));
     }
 
@@ -139,8 +135,7 @@ internal sealed class HeroDemoPageState : State
             child: new Center(
                 child: new Text(
                     flightDirection == HeroFlightDirection.Push ? "flying →" : "flying ←",
-                    fontSize: 12,
-                    color: Colors.White)));
+                    style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }
 
     private static Widget BuildPlaceholder(BuildContext context, Size heroSize, Widget child)
@@ -154,7 +149,7 @@ internal sealed class HeroDemoPageState : State
                     Border: Border.FromBorderSide(new BorderSide(new Color(0xFFBDBDBD), 1)),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
-                    child: new Text("placeholder", fontSize: 11, color: Colors.DimGray))));
+                    child: new Text("placeholder", style: new TextStyle(FontSize: 11, Color: Colors.DimGray)))));
     }
 
     internal static Widget BuildCard(string label, string colorHex, double width, double height, double fontSize)
@@ -167,7 +162,7 @@ internal sealed class HeroDemoPageState : State
                     Color: (Color)Avalonia.Media.Color.Parse(colorHex),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
-                    child: new Text(label, fontSize: fontSize, color: Colors.White))));
+                    child: new Text(label, style: new TextStyle(FontSize: fontSize, Color: Colors.White)))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)
@@ -230,7 +225,7 @@ internal sealed class HeroDetailPage : StatelessWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("Hero detail", fontSize: 20, color: Colors.Black),
+                    new Text("Hero detail", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Hero(
                         tag: Tag,
                         curve: Curve,
@@ -240,8 +235,7 @@ internal sealed class HeroDetailPage : StatelessWidget
                     new Text(
                         "The destination hero owns the flight: its createRectTween, curve and "
                         + "flightShuttleBuilder win over the source hero's.",
-                        fontSize: 12,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new CounterTapButton(
                         label: "Pop",
                         onTap: () => Navigator.Of(context).Pop(),

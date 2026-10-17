@@ -44,13 +44,12 @@ internal sealed class CustomElementDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Custom Element", fontSize: 20, color: Colors.Black),
+                new Text("Custom Element", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "ElementLifecycleProbe is a widget declared in the sample assembly that returns its own "
                     + "Element from CreateElement. The element drives the child through UpdateChild and counts "
                     + "every lifecycle call the framework makes on it.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
@@ -85,7 +84,7 @@ internal sealed class CustomElementDemoPageState : State
             return new Container(
                 color: new Color(0xFFF1F1F1),
                 padding: new Thickness(12),
-                child: new Text("probe detached", fontSize: 14, color: Colors.DimGray));
+                child: new Text("probe detached", style: new TextStyle(FontSize: 14, Color: Colors.DimGray)));
         }
 
         return new ElementLifecycleProbe(
@@ -93,13 +92,17 @@ internal sealed class CustomElementDemoPageState : State
             child: new Container(
                 color: new Color(0xFFE1F5FE),
                 padding: new Thickness(12),
-                child: new Text($"probe child revision {_revision}", fontSize: 14, color: Colors.Black)),
+                child: new Text(
+                    $"probe child revision {_revision}",
+                    style: new TextStyle(
+                        FontSize: 14,
+                        Color: Colors.Black))),
             key: new ValueKey<int>(_generation));
     }
 
     private static Widget CountLine(string label, int value)
     {
-        return new Text($"{label}: {value}", fontSize: 14, color: new Color(0xFF31506F));
+        return new Text($"{label}: {value}", style: new TextStyle(FontSize: 14, Color: new Color(0xFF31506F)));
     }
 
     private Widget ActionButton(string label, Action onTap)

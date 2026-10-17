@@ -55,11 +55,10 @@ internal sealed class CardDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Card baseline", fontSize: 20, color: Colors.Black),
+                    new Text("Card baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Card variants plus Material surfaces and mergeable slices with theme, mode, and clip probes.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -116,8 +115,7 @@ internal sealed class CardDemoPageState : State
                         + $"clip={(_clip ? "true" : "false")}, dense={(_dense ? "true" : "false")}, "
                         + $"borderOnForeground={(_borderOnForeground ? "true" : "false")}, "
                         + $"separated={(_mergeableSeparated ? "true" : "false")}",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new Expanded(
                         child: new Container(
                             color: new Color(0xFFF7F9FC),
@@ -220,8 +218,8 @@ internal sealed class CardDemoPageState : State
                 spacing: 6,
                 children:
                 [
-                    new Text(title, fontSize: 16, color: Colors.Black),
-                    new Text(body, fontSize: 13, color: new Color(0xFF607D8B)),
+                    new Text(title, style: new TextStyle(FontSize: 16, Color: Colors.Black)),
+                    new Text(body, style: new TextStyle(FontSize: 13, Color: new Color(0xFF607D8B))),
                 ]));
     }
 
@@ -235,7 +233,7 @@ internal sealed class CardDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

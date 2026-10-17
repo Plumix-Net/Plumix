@@ -42,11 +42,10 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("Material action buttons", fontSize: 20, color: Colors.Black),
+                    new Text("Material action buttons", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Back/close/drawer/end-drawer icons, themes, callbacks, tooltips, and style precedence.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -81,8 +80,8 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                                 ]))),
                     new Text(
                         "back=$_backCount, close=$_closeCount, drawer=$_drawerCount, end=$_endDrawerCount",
-                        color: Colors.Black),
-                    new Text("style.iconColor overrides color", color: Colors.DimGray),
+                        style: new TextStyle(Color: Colors.Black)),
+                    new Text("style.iconColor overrides color", style: new TextStyle(Color: Colors.DimGray)),
                     new Theme(
                         data: localTheme,
                         child: new BackButton(

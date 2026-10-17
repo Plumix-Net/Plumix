@@ -31,12 +31,11 @@ internal sealed class AsyncBuilderDemoPageState : State
                 spacing: 16,
                 children:
                 [
-                    new Text("FutureBuilder + StreamBuilder", fontSize: 20, color: Colors.Black),
+                    new Text("FutureBuilder + StreamBuilder", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Restart either source, then complete it with data or an error. Snapshots retain the " +
                         "previous value while a replacement source enters waiting.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     BuildFutureSection(),
                     BuildStreamSection(),
                 ]));
@@ -58,7 +57,7 @@ internal sealed class AsyncBuilderDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("FutureBuilder", fontSize: 16, color: Colors.Black),
+                    new Text("FutureBuilder", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                     new FutureBuilder<string>(
                         future: _future,
                         initialData: "No result yet",
@@ -85,7 +84,7 @@ internal sealed class AsyncBuilderDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("StreamBuilder", fontSize: 16, color: Colors.Black),
+                    new Text("StreamBuilder", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                     new StreamBuilder<int>(
                         stream: _stream,
                         initialData: 0,
@@ -108,7 +107,10 @@ internal sealed class AsyncBuilderDemoPageState : State
         string value = snapshot.HasError
             ? $"error: {snapshot.Error!.Message}"
             : $"data: {snapshot.Data ?? "null"}";
-        return new Text($"state: {snapshot.ConnectionState} · {value}", color: new Color(0xFF31506F));
+        return new Text(
+            $"state: {snapshot.ConnectionState} · {value}",
+            style: new TextStyle(
+                Color: new Color(0xFF31506F)));
     }
 
     private static Widget BuildStreamSnapshot(BuildContext context, AsyncSnapshot<int> snapshot)
@@ -118,7 +120,10 @@ internal sealed class AsyncBuilderDemoPageState : State
             : snapshot.HasData
                 ? $"data: {snapshot.Data}"
                 : "data: null";
-        return new Text($"state: {snapshot.ConnectionState} · {value}", color: new Color(0xFF31506F));
+        return new Text(
+            $"state: {snapshot.ConnectionState} · {value}",
+            style: new TextStyle(
+                Color: new Color(0xFF31506F)));
     }
 
     private static Widget BuildButton(string label, Action onPressed)

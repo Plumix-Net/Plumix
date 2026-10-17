@@ -46,11 +46,10 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Scaffold slots", fontSize: 20, color: Colors.Black),
+                new Text("Scaffold slots", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "persistentFooterButtons, the extendBody padding restoration, and drawer paint order.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -120,8 +119,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                     + $"bottomSheet={BottomSheetLabels[_bottomSheetIndex]}, "
                     + $"keyboard={(_showKeyboard ? "true" : "false")}, "
                     + $"resize={(_resizeForKeyboard ? "true" : "false")}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new SizedBox(
                     height: 420,
                     child: new Container(
@@ -158,8 +156,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                                     child: new Center(
                                         child: new Text(
                                             "bottomNavigationBar (48pt)",
-                                            fontSize: 12,
-                                            color: new Color(0xFF30404D)))),
+                                            style: new TextStyle(FontSize: 12, Color: new Color(0xFF30404D))))),
                                 body: new ContextBuilder(previewBodyContext =>
                                     new SingleChildScrollView(child: BuildPreviewBody(previewBodyContext)))))))),
             ]));
@@ -182,8 +179,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             child: new Center(
                 child: new Text(
                     $"Scaffold.bottomSheet {BottomSheetLabels[_bottomSheetIndex]}",
-                    fontSize: 12,
-                    color: new Color(0xFF30404D))));
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF30404D)))));
     }
 
     private Widget BuildPreviewBody(BuildContext context)
@@ -200,12 +196,10 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                 [
                     new Text(
                         "The body reports the padding _BodyBuilder restores for the slots it extends behind.",
-                        fontSize: 12,
-                        color: new Color(0xFF30404D)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF30404D))),
                     new Text(
                         $"body MediaQuery padding: top={padding.Top:0.#}, bottom={padding.Bottom:0.#}",
-                        fontSize: 12,
-                        color: new Color(0xFF0D47A1)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF0D47A1))),
                     new Row(
                         spacing: 8,
                         children:
@@ -239,11 +233,10 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text(title, fontSize: 16, color: accent),
+                            new Text(title, style: new TextStyle(FontSize: 16, Color: accent)),
                             new Text(
                                 "The opened end drawer is appended last, so it paints over the start drawer.",
-                                fontSize: 12,
-                                color: new Color(0x8A000000)),
+                                style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                             BuildControlButton(
                                 label: "Close",
                                 onTap: isStartDrawer
@@ -258,7 +251,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
     {
         return new TextButton(
             onPressed: onTap,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF0D47A1),
                 padding: new Thickness(12, 8),
@@ -277,7 +270,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

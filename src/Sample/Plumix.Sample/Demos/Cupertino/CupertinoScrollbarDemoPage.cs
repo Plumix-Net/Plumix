@@ -54,12 +54,11 @@ internal sealed class CupertinoScrollbarDemoPageState : State
                         spacing: 12.0,
                         children:
                         [
-                            new Text("CupertinoScrollbar", fontSize: 20.0, color: TitleColor),
+                            new Text("CupertinoScrollbar", style: new TextStyle(FontSize: 20.0, Color: TitleColor)),
                             new Text(
                                 "Touching the thumb grows it from 3 to 8 logical pixels over 100 ms and "
                                 + "starts the drag. Tapping the track never pages on iOS.",
-                                fontSize: 14.0,
-                                color: SubtitleColor),
+                                style: new TextStyle(FontSize: 14.0, Color: SubtitleColor)),
                             new Wrap(
                                 spacing: 8.0,
                                 runSpacing: 8.0,
@@ -126,8 +125,8 @@ internal sealed class CupertinoScrollbarDemoPageState : State
                 spacing: 6.0,
                 children:
                 [
-                    new Text(title, fontSize: 13.0, color: TitleColor),
-                    new Text(subtitle, fontSize: 12.0, color: SubtitleColor),
+                    new Text(title, style: new TextStyle(FontSize: 13.0, Color: TitleColor)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 12.0, Color: SubtitleColor)),
                     new Expanded(child: scrollbar),
                 ]));
     }
@@ -140,7 +139,7 @@ internal sealed class CupertinoScrollbarDemoPageState : State
             itemExtent: 34.0,
             itemBuilder: (_, index) => new Align(
                 alignment: Alignment.CenterLeft,
-                child: new Text($"row {index}", fontSize: 13.0, color: TitleColor)));
+                child: new Text($"row {index}", style: new TextStyle(FontSize: 13.0, Color: TitleColor))));
     }
 
     private Widget BuildControl(string label, Action onPressed)
@@ -148,6 +147,6 @@ internal sealed class CupertinoScrollbarDemoPageState : State
         return new CupertinoButton(
             onPressed: () => SetState(onPressed),
             padding: new Thickness(12.0, 6.0),
-            child: new Text(label, fontSize: 12.0, color: CupertinoColors.ActiveBlue));
+            child: new Text(label, style: new TextStyle(FontSize: 12.0, Color: CupertinoColors.ActiveBlue)));
     }
 }

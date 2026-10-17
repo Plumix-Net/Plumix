@@ -96,10 +96,11 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
             onPressed: onPressed,
             child: new Text(
                 text,
-                fontSize: 14.0,
-                color: color,
-                fontWeight: FontWeight.Normal,
-                letterSpacing: -0.15,
+                style: new TextStyle(
+                    FontSize: 14.0,
+                    Color: color,
+                    FontWeight: FontWeight.Normal,
+                    LetterSpacing: -0.15),
                 overflow: TextOverflow.Ellipsis),
             key: key);
     }

@@ -20,11 +20,10 @@ public sealed class CupertinoListSectionDemoPage : StatelessWidget
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino list + form sections", fontSize: 20.0, color: label),
+                new Text("Cupertino list + form sections", style: new TextStyle(FontSize: 20.0, Color: label)),
                 new Text(
                     "Compare list rows with split form rows, helper/error content, and inset-grouped decoration.",
-                    fontSize: 14.0,
-                    color: secondaryLabel),
+                    style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                 new CupertinoListSection(
                     header: new Text("CONNECTIVITY"),
                     footer: new Text("The base section draws full-width borders above and below its rows."),

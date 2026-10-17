@@ -49,11 +49,14 @@ internal sealed class RefreshIndicatorDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("RefreshIndicator + RefreshProgressIndicator", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "RefreshIndicator + RefreshProgressIndicator",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Text(
                         "Pull the list down from its top edge. Cycle Material/adaptive/no-spinner paths and theme the refresh surface.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -71,13 +74,11 @@ internal sealed class RefreshIndicatorDemoPageState : State
                                 126),
                             new Text(
                                 "scheme teal; legacy primary orange",
-                                fontSize: 12,
-                                color: new Color(0xFF607D8B)),
+                                style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                         ]),
                     new Text(
                         $"status={_status}, refreshCount={_refreshCount}; drag past the armed threshold, then release",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new Expanded(child: BuildRefreshWrapper(BuildList())),
                 ]));
     }
@@ -115,7 +116,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             itemBuilder: (_, index) => new Container(
                 color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
                 padding: new Thickness(12, 10),
-                child: new Text($"refresh row #{index + 1}", fontSize: 13, color: Colors.Black)));
+                child: new Text($"refresh row #{index + 1}", style: new TextStyle(FontSize: 13, Color: Colors.Black))));
     }
 
     private async Task HandleRefresh()
@@ -144,7 +145,7 @@ internal sealed class RefreshIndicatorDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: new Color(0xFFE9F0FF),

@@ -54,8 +54,7 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                             ? "Search is active — Cancel restores the collapsed bar."
                             : "Scroll to collapse the large title, overscroll to stretch it, "
                               + "or tap the field to search.",
-                        fontSize: 14.0,
-                        color: secondaryLabel),
+                        style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                     BuildAction(
                         "Push detail page (auto middle + back label)",
                         () => PushDetail(context),
@@ -65,7 +64,11 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                         () => PushLongTitle(context),
                         new Color(0xFFEAE4FF)),
                     .. Enumerable.Range(1, 20)
-                        .Select(index => (Widget)new Text($"Row {index}", fontSize: 14.0, color: label)),
+                        .Select(index => (Widget)new Text(
+                            $"Row {index}",
+                            style: new TextStyle(
+                                FontSize: 14.0,
+                                Color: label))),
                 ]));
     }
 
@@ -79,9 +82,10 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                     child: new Builder(routeContext => new Text(
                         "The static bar implies its middle title and the back label "
                         + "from the route titles.",
-                        fontSize: 14.0,
-                        textAlign: TextAlign.Center,
-                        color: CupertinoDynamicColor.Resolve(CupertinoColors.Label, routeContext)))))));
+                        style: new TextStyle(
+                            FontSize: 14.0,
+                            Color: CupertinoDynamicColor.Resolve(CupertinoColors.Label, routeContext)),
+                        textAlign: TextAlign.Center))))));
     }
 
     private static void PushLongTitle(BuildContext context)
@@ -103,10 +107,11 @@ internal sealed class CupertinoNavigationBarDemoPageState : State
                                     new Text(
                                         "This title is over 12 characters, so the next page's "
                                         + "back label falls back to 'Back'.",
-                                        fontSize: 14.0,
-                                        color: CupertinoDynamicColor.Resolve(
-                                            CupertinoColors.Label,
-                                            routeContext)),
+                                        style: new TextStyle(
+                                            FontSize: 14.0,
+                                            Color: CupertinoDynamicColor.Resolve(
+                                                CupertinoColors.Label,
+                                                routeContext))),
                                     BuildAction(
                                         "Push detail from here (shows 'Back')",
                                         () => PushDetail(routeContext),

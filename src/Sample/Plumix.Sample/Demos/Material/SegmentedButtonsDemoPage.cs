@@ -66,11 +66,10 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                     spacing: 12,
                     children:
                     [
-                        new Text("ToggleButtons + SegmentedButton", fontSize: 20),
+                        new Text("ToggleButtons + SegmentedButton", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "Legacy bool-list toggles and Material 3 value-set segments with selection, orientation, themes, and widget styles.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             spacing: 8,
                             children:
@@ -162,7 +161,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
         private static Widget ControlButton(string label, Action onPressed)
         {
             return new TextButton(
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 onPressed: onPressed);
         }
     }

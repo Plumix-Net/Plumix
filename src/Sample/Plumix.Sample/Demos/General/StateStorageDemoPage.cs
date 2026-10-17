@@ -39,7 +39,7 @@ internal sealed class StateStorageDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("PageStorage + SharedAppData", fontSize: 20, color: Colors.Black),
+                new Text("PageStorage + SharedAppData", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Jump the list, unmount it, then restore it. The same PageStorageKey restores the offset; " +
                     "the shared counter rebuilds only its keyed dependent. The list inherits its controller " +
@@ -48,8 +48,7 @@ internal sealed class StateStorageDemoPageState : State
                     "receives scroll and dimension notifications across sibling subtrees. The readout is also " +
                     "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout; " +
                     "its identified semantics node merges the readout label while optional text stays empty.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -69,7 +68,7 @@ internal sealed class StateStorageDemoPageState : State
                             alignment: Alignment.Center,
                             child: new Text(
                                 "List is unmounted. Restore it to verify the saved offset.",
-                                color: new Color(0xFF31506F)))),
+                                style: new TextStyle(Color: new Color(0xFF31506F))))),
             ]);
     }
 
@@ -179,7 +178,7 @@ internal sealed class RestorableStorageListState : State
             color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
             padding: new Thickness(12, 0),
             alignment: Alignment.CenterLeft,
-            child: new Text($"Stored row {index + 1}", color: Colors.Black));
+            child: new Text($"Stored row {index + 1}", style: new TextStyle(Color: Colors.Black)));
     }
 
     private static Widget BuildButton(string label, Action onTap)
@@ -222,7 +221,7 @@ internal sealed class ScrollObserverReadoutState : State
 
     public override Widget Build(BuildContext context)
     {
-        return new Text(_summary, fontSize: 12, color: new Color(0xFF31506F));
+        return new Text(_summary, style: new TextStyle(FontSize: 12, Color: new Color(0xFF31506F)));
     }
 
     public override void Dispose()

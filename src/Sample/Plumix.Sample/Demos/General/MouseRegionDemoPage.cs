@@ -31,13 +31,12 @@ internal sealed class MouseRegionDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("MouseRegion + MouseTracker", fontSize: 20, color: Colors.Black),
+                new Text("MouseRegion + MouseTracker", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Enter and exit come from the mouse tracker's per-device annotation diff, so "
                     + "they also fire when a region appears, moves or disappears under a still "
                     + "pointer. The cursor is the first non-deferring region in hit-test order.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildCursorRow(),
                 BuildStackedRegions(),
                 BuildToggle(),
@@ -45,12 +44,10 @@ internal sealed class MouseRegionDemoPageState : State
                     _hoverPosition is null
                         ? "hover — outside"
                         : $"hover — {Format(_hoverPosition.Value.X)}, {Format(_hoverPosition.Value.Y)}",
-                    fontSize: 13,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
                 new Text(
                     _log.Count == 0 ? "no enter/exit yet" : string.Join("  ", _log),
-                    fontSize: 13,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
             ]);
     }
 
@@ -80,7 +77,7 @@ internal sealed class MouseRegionDemoPageState : State
                     decoration: new BoxDecoration(
                         Color: color,
                         BorderRadius: BorderRadius.Circular(10)),
-                    child: new Text(label, fontSize: 13, color: Colors.White))));
+                    child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.White)))));
     }
 
     private Widget BuildStackedRegions()
@@ -121,8 +118,7 @@ internal sealed class MouseRegionDemoPageState : State
                                     BorderRadius: BorderRadius.Circular(8)),
                                 child: new Text(
                                     _opaque ? "opaque: true" : "opaque: false",
-                                    fontSize: 13,
-                                    color: Colors.Black)))),
+                                    style: new TextStyle(FontSize: 13, Color: Colors.Black))))),
                 ]));
     }
 
@@ -141,8 +137,7 @@ internal sealed class MouseRegionDemoPageState : State
                         BorderRadius: BorderRadius.Circular(8)),
                     child: new Text(
                         "toggle the inner region's opaque flag",
-                        fontSize: 13,
-                        color: Colors.White))));
+                        style: new TextStyle(FontSize: 13, Color: Colors.White)))));
     }
 
     private void Record(string entry)

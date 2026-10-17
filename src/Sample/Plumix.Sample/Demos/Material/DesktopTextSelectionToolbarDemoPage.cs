@@ -41,11 +41,10 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Material text selection toolbars", fontSize: 20, color: Colors.Black),
+                new Text("Material text selection toolbars", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material and Cupertino mobile, desktop, adaptive, and spell-check toolbars.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:

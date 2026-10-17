@@ -52,11 +52,10 @@ internal sealed class ListTileDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("ListTile baseline", fontSize: 20, color: Colors.Black),
+                new Text("ListTile baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Exact M2/M3 padding, typography, slot geometry, states, and theme precedence.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -108,8 +107,7 @@ internal sealed class ListTileDemoPageState : State
                     + $"threeLine={(_threeLine ? "true" : "false")}, "
                     + $"theme={(_useThemeOverrides ? "true" : "false")}, taps={_tapCount}, "
                     + $"longPress={_longPressCount}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new Container(
                         color: new Color(0xFFF7F9FC),
@@ -138,7 +136,7 @@ internal sealed class ListTileDemoPageState : State
                     title: new Text("Two-line tile"),
                     subtitle: new Text("Subtitle text demonstrates two-line default height."),
                     leading: new Icon(Icons.Add),
-                    trailing: new Text("meta", fontSize: 12),
+                    trailing: new Text("meta", style: new TextStyle(FontSize: 12)),
                     selected: _selected,
                     enabled: _enabled,
                     dense: _dense,
@@ -172,7 +170,7 @@ internal sealed class ListTileDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

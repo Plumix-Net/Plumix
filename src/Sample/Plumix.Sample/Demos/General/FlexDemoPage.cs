@@ -56,12 +56,11 @@ internal sealed class FlexDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Flex / Row / Column", fontSize: 20, color: Colors.Black),
+                new Text("Flex / Row / Column", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "RenderFlex distributes free space by mainAxisAlignment, inserts `spacing` between "
                     + "children, and flips both axes from textDirection/verticalDirection.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -83,12 +82,10 @@ internal sealed class FlexDemoPageState : State
                     $"main={alignment}, cross={crossAlignment}, spacing={_spacing:0}, "
                     + $"textDirection={(_rightToLeft ? "Rtl" : "Ltr")}, "
                     + $"verticalDirection={(_bottomToTop ? "Up" : "Down")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Text(
                     $"overflow={(_overflow ? "on" : "off")}, clipBehavior={_clipBehavior}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     height: 120,
                     color: new Color(0xFFE7EDF6),
@@ -120,9 +117,9 @@ internal sealed class FlexDemoPageState : State
                             spacing: 12,
                             children:
                             [
-                                new Text("Baseline", fontSize: 12, color: Colors.Black),
-                                new Text("aligned", fontSize: 22, color: Colors.Black),
-                                new Text("row", fontSize: 32, color: Colors.Black),
+                                new Text("Baseline", style: new TextStyle(FontSize: 12, Color: Colors.Black)),
+                                new Text("aligned", style: new TextStyle(FontSize: 22, Color: Colors.Black)),
+                                new Text("row", style: new TextStyle(FontSize: 32, Color: Colors.Black)),
                             ]))),
             ]);
     }
@@ -133,7 +130,7 @@ internal sealed class FlexDemoPageState : State
             width: width,
             height: height,
             color: (Color)Avalonia.Media.Color.Parse(colorHex),
-            child: new Center(child: new Text(label, fontSize: 12, color: Colors.White)));
+            child: new Center(child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

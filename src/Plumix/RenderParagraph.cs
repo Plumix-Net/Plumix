@@ -28,6 +28,7 @@ public sealed partial class RenderParagraph : RenderBox,
     private OverflowShader? _overflowShader;
     private List<PlaceholderDimensions>? _placeholderDimensions;
     private List<InlineSpanSemanticsInformation>? _semanticsInfo;
+    private List<AttributedString>? _cachedAttributedLabels;
     private List<InlineSpanSemanticsInformation>? _cachedCombinedSemanticsInfos;
     private Color? _selectionColor;
 
@@ -118,6 +119,7 @@ public sealed partial class RenderParagraph : RenderBox,
                     break;
                 case RenderComparison.Paint:
                     _textPainter.Text = value;
+                    _cachedAttributedLabels = null;
                     _cachedCombinedSemanticsInfos = null;
                     MarkNeedsPaint();
                     MarkNeedsSemanticsUpdate();
@@ -125,6 +127,7 @@ public sealed partial class RenderParagraph : RenderBox,
                 case RenderComparison.Layout:
                     _textPainter.Text = value;
                     _overflowShader = null;
+                    _cachedAttributedLabels = null;
                     _cachedCombinedSemanticsInfos = null;
                     MarkNeedsLayout();
                     RemoveSelectionRegistrarSubscription();
@@ -752,6 +755,7 @@ public sealed partial class RenderParagraph : RenderBox,
         base.DescribeSemanticsConfiguration(configuration);
         _semanticsInfo = Text.GetSemanticsInformation();
         bool needsAssembleSemanticsNode = false;
+        bool needsChildConfigurationsDelegate = false;
         foreach (InlineSpanSemanticsInformation info in _semanticsInfo)
         {
             if (info.Recognizer is not null || info.SemanticsIdentifier is not null)
@@ -759,23 +763,135 @@ public sealed partial class RenderParagraph : RenderBox,
                 needsAssembleSemanticsNode = true;
                 break;
             }
+
+            needsChildConfigurationsDelegate = needsChildConfigurationsDelegate || info.IsPlaceholder;
         }
 
         if (needsAssembleSemanticsNode)
         {
             configuration.ExplicitChildNodes = true;
             configuration.IsSemanticBoundary = true;
-            return;
         }
-
-        var buffer = new System.Text.StringBuilder();
-        foreach (InlineSpanSemanticsInformation info in _semanticsInfo)
+        else if (needsChildConfigurationsDelegate)
         {
-            buffer.Append(info.SemanticsLabel ?? info.Text);
+            configuration.ChildConfigurationsDelegate = ChildSemanticsConfigurationsDelegate;
+        }
+        else
+        {
+            if (_cachedAttributedLabels is null)
+            {
+                var buffer = new System.Text.StringBuilder();
+                int offset = 0;
+                var attributes = new List<StringAttribute>();
+                foreach (InlineSpanSemanticsInformation info in _semanticsInfo)
+                {
+                    string label = info.SemanticsLabel ?? info.Text;
+                    foreach (StringAttribute infoAttribute in info.StringAttributes)
+                    {
+                        TextRange originalRange = infoAttribute.Range;
+                        attributes.Add(infoAttribute.Copy(
+                            new TextRange(offset + originalRange.Start, offset + originalRange.End)));
+                    }
+
+                    buffer.Append(label);
+                    offset += label.Length;
+                }
+
+                _cachedAttributedLabels = [new AttributedString(buffer.ToString(), attributes)];
+            }
+
+            configuration.AttributedLabel = _cachedAttributedLabels[0];
+            configuration.TextDirection = TextDirection;
+        }
+    }
+
+    // Dart's `_childSemanticsConfigurationsDelegate`.
+    private ChildSemanticsConfigurationsResult ChildSemanticsConfigurationsDelegate(
+        List<SemanticsConfiguration> childConfigs)
+    {
+        var builder = new ChildSemanticsConfigurationsResultBuilder();
+        int placeholderIndex = 0;
+        int childConfigsIndex = 0;
+        int attributedLabelCacheIndex = 0;
+        _cachedCombinedSemanticsInfos ??= InlineSpan.CombineSemanticsInfo(_semanticsInfo!);
+        foreach (InlineSpanSemanticsInformation info in _cachedCombinedSemanticsInfos)
+        {
+            if (info.IsPlaceholder)
+            {
+                // Mark every childConfig belongs to this placeholder to merge up group.
+                while (childConfigsIndex < childConfigs.Count
+                       && ChildConfigBelongsToPlaceholder(childConfigs[childConfigsIndex], placeholderIndex))
+                {
+                    builder.MarkAsMergeUp(childConfigs[childConfigsIndex]);
+                    childConfigsIndex += 1;
+                }
+
+                placeholderIndex += 1;
+            }
+            else
+            {
+                builder.MarkAsMergeUp(CreateSemanticsConfigForTextInfo(info, attributedLabelCacheIndex));
+                attributedLabelCacheIndex += 1;
+            }
         }
 
-        configuration.Label = buffer.ToString();
-        configuration.TextDirection = TextDirection;
+        return builder.Build();
+    }
+
+    /// Returns whether [childConfig] belongs to the placeholder at
+    /// [placeholderIndex] in this paragraph.
+    ///
+    /// Nested paragraphs may inherit [PlaceholderSpanIndexSemanticsTag]s from
+    /// ancestors with colliding indexes. The first placeholder tag is the one
+    /// added by this paragraph, so later inherited tags must not decide ownership
+    /// here.
+    private static bool ChildConfigBelongsToPlaceholder(SemanticsConfiguration childConfig, int placeholderIndex)
+    {
+        IReadOnlyCollection<SemanticsTag>? tags = childConfig.TagsForChildren;
+        if (tags is null)
+        {
+            return false;
+        }
+
+        foreach (SemanticsTag tag in tags)
+        {
+            if (tag is PlaceholderSpanIndexSemanticsTag placeholderTag)
+            {
+                return placeholderTag.Index == placeholderIndex;
+            }
+        }
+
+        return false;
+    }
+
+    // Dart's `_createSemanticsConfigForTextInfo`.
+    private SemanticsConfiguration CreateSemanticsConfigForTextInfo(
+        InlineSpanSemanticsInformation textInfo,
+        int cacheIndex)
+    {
+        List<AttributedString> cachedStrings = _cachedAttributedLabels ??= [];
+        System.Diagnostics.Debug.Assert(cacheIndex <= cachedStrings.Count);
+        bool hasCache = cacheIndex < cachedStrings.Count;
+
+        AttributedString attributedLabel;
+        if (hasCache)
+        {
+            attributedLabel = cachedStrings[cacheIndex];
+        }
+        else
+        {
+            System.Diagnostics.Debug.Assert(cachedStrings.Count == cacheIndex);
+            attributedLabel = new AttributedString(
+                textInfo.SemanticsLabel ?? textInfo.Text,
+                textInfo.StringAttributes);
+            cachedStrings.Add(attributedLabel);
+        }
+
+        return new SemanticsConfiguration
+        {
+            TextDirection = TextDirection,
+            AttributedLabel = attributedLabel,
+        };
     }
 
     protected override void AssembleSemanticsNode(

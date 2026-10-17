@@ -28,19 +28,17 @@ internal sealed class CupertinoContextMenuDemoPageState : State
             alignment: Alignment.Center,
             child: new Text(
                 "Press and hold",
-                color: Colors.White,
-                fontSize: 18.0));
+                style: new TextStyle(Color: Colors.White, FontSize: 18.0)));
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 18.0,
             children:
             [
-                new Text("Cupertino context menu", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino context menu", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Hold the preview, choose an action, or drag the open preview down to dismiss.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Center(
                     child: new CupertinoContextMenu(
                         actions:
@@ -58,8 +56,7 @@ internal sealed class CupertinoContextMenuDemoPageState : State
                         enableHapticFeedback: true)),
                 new Text(
                     $"last action: {_lastAction}",
-                    fontSize: 13.0,
-                    color: new Color(0xFF455A64)),
+                    style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF455A64))),
             ]);
     }
 

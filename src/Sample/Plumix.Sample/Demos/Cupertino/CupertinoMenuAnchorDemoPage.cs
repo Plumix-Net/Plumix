@@ -24,12 +24,11 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
             spacing: 16.0,
             children:
             [
-                new Text("Cupertino menu anchor", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino menu anchor", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Open the anchored menu by button, keyboard, long press, or swipe. " +
                     "Items demonstrate leading, subtitle, trailing, disabled, and destructive states.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new CupertinoMenuAnchor(
                     enableLongPressToOpen: true,
                     menuChildren:
@@ -61,7 +60,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                             spacing: 8.0,
                             children:
                             [
-                                new Text("Document actions", color: Colors.White),
+                                new Text("Document actions", style: new TextStyle(Color: Colors.White)),
                                 new Icon(CupertinoIcons.ChevronDown, color: Colors.White, size: 18.0),
                             ]),
                         color: new Color(0xFF007AFF),
@@ -76,7 +75,7 @@ internal sealed class CupertinoMenuAnchorDemoPageState : State
                                 controller.Open();
                             }
                         })),
-                new Text(_lastAction, fontSize: 13.0, color: new Color(0xFF455A64)),
+                new Text(_lastAction, style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF455A64))),
             ]);
     }
 

@@ -465,6 +465,152 @@ public sealed class PlatformDispatcher
     internal bool HasSupportsShowingSystemContextMenuTestValue =>
         _supportsShowingSystemContextMenuTestValue is not null;
 
+    private readonly TextSpacingOverride _lineHeightScaleFactorOverride = new();
+    private readonly TextSpacingOverride _letterSpacingOverride = new();
+    private readonly TextSpacingOverride _wordSpacingOverride = new();
+    private readonly TextSpacingOverride _paragraphSpacingOverride = new();
+
+    /// <summary>
+    /// The system-suggested height of the text, as a multiple of the font size; it overrides the
+    /// existing value of <c>TextStyle.Height</c> and <c>StrutStyle.Height</c>. <see langword="null"/>
+    /// when no override has been set by the system. If this value changes,
+    /// <see cref="OnMetricsChanged"/> will be called.
+    /// </summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.lineHeightScaleFactorOverride</c>.</remarks>
+    public double? LineHeightScaleFactorOverride => _lineHeightScaleFactorOverride.Value;
+
+    /// <summary>
+    /// The system-suggested additional space (in logical pixels) to add between each letter; a
+    /// negative value brings the letters closer. It overrides <c>TextStyle.LetterSpacing</c>.
+    /// <see langword="null"/> when no override has been set by the system. If this value changes,
+    /// <see cref="OnMetricsChanged"/> will be called.
+    /// </summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.letterSpacingOverride</c>.</remarks>
+    public double? LetterSpacingOverride => _letterSpacingOverride.Value;
+
+    /// <summary>
+    /// The system-suggested additional space (in logical pixels) to add between each sequence of
+    /// white-space (i.e. between each word). It overrides <c>TextStyle.WordSpacing</c>.
+    /// <see langword="null"/> when no override has been set by the system. If this value changes,
+    /// <see cref="OnMetricsChanged"/> will be called.
+    /// </summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.wordSpacingOverride</c>.</remarks>
+    public double? WordSpacingOverride => _wordSpacingOverride.Value;
+
+    /// <summary>
+    /// The system-suggested additional space (in logical pixels) to add following each paragraph in
+    /// text. <see langword="null"/> when no override has been set by the system. If this value
+    /// changes, <see cref="OnMetricsChanged"/> will be called.
+    /// </summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.paragraphSpacingOverride</c>.</remarks>
+    public double? ParagraphSpacingOverride => _paragraphSpacingOverride.Value;
+
+    /// <summary>
+    /// Records the platform's text spacing overrides and invokes <see cref="OnMetricsChanged"/> when
+    /// any of them changed.
+    /// </summary>
+    /// <remarks>
+    /// The web engine's typography observer (<c>_addTypographySettingsObserver</c>), the only engine
+    /// that sets these values: it calls <c>_updateLineHeightScaleFactorOverride</c> and its three
+    /// siblings, then <c>invokeOnMetricsChanged</c> when one of them changed. The native engines never
+    /// set them, so the values stay <see langword="null"/> unless a host calls this.
+    /// </remarks>
+    public void UpdateTextSpacingOverrides(
+        double? lineHeightScaleFactorOverride,
+        double? letterSpacingOverride,
+        double? wordSpacingOverride,
+        double? paragraphSpacingOverride)
+    {
+        bool lineHeightChanged = _lineHeightScaleFactorOverride.Update(lineHeightScaleFactorOverride);
+        bool letterSpacingChanged = _letterSpacingOverride.Update(letterSpacingOverride);
+        bool wordSpacingChanged = _wordSpacingOverride.Update(wordSpacingOverride);
+        bool paragraphSpacingChanged = _paragraphSpacingOverride.Update(paragraphSpacingOverride);
+        if (lineHeightChanged || letterSpacingChanged || wordSpacingChanged || paragraphSpacingChanged)
+        {
+            OnMetricsChanged?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// flutter_test's <c>TestPlatformDispatcher.lineHeightScaleFactorOverrideTestValue</c> setter: a
+    /// <see langword="null"/> value forces the override to read <see langword="null"/>. Invokes
+    /// <see cref="OnMetricsChanged"/>.
+    /// </summary>
+    internal void SetLineHeightScaleFactorOverrideTestValue(double? value) =>
+        SetTestValue(_lineHeightScaleFactorOverride, value);
+
+    /// <summary>flutter_test's <c>clearLineHeightScaleFactorOverrideTestValue</c>.</summary>
+    internal void ClearLineHeightScaleFactorOverrideTestValue() => ClearTestValue(_lineHeightScaleFactorOverride);
+
+    /// <summary>flutter_test's <c>TestPlatformDispatcher.letterSpacingOverrideTestValue</c> setter.</summary>
+    internal void SetLetterSpacingOverrideTestValue(double? value) => SetTestValue(_letterSpacingOverride, value);
+
+    /// <summary>flutter_test's <c>clearLetterSpacingOverrideTestValue</c>.</summary>
+    internal void ClearLetterSpacingOverrideTestValue() => ClearTestValue(_letterSpacingOverride);
+
+    /// <summary>flutter_test's <c>TestPlatformDispatcher.wordSpacingOverrideTestValue</c> setter.</summary>
+    internal void SetWordSpacingOverrideTestValue(double? value) => SetTestValue(_wordSpacingOverride, value);
+
+    /// <summary>flutter_test's <c>clearWordSpacingOverrideTestValue</c>.</summary>
+    internal void ClearWordSpacingOverrideTestValue() => ClearTestValue(_wordSpacingOverride);
+
+    /// <summary>flutter_test's <c>TestPlatformDispatcher.paragraphSpacingOverrideTestValue</c> setter.</summary>
+    internal void SetParagraphSpacingOverrideTestValue(double? value) =>
+        SetTestValue(_paragraphSpacingOverride, value);
+
+    /// <summary>flutter_test's <c>clearParagraphSpacingOverrideTestValue</c>.</summary>
+    internal void ClearParagraphSpacingOverrideTestValue() => ClearTestValue(_paragraphSpacingOverride);
+
+    /// <summary>Whether any text spacing override currently carries a test value.</summary>
+    internal bool HasTextSpacingOverrideTestValues =>
+        _lineHeightScaleFactorOverride.HasTestValue
+        || _letterSpacingOverride.HasTestValue
+        || _wordSpacingOverride.HasTestValue
+        || _paragraphSpacingOverride.HasTestValue;
+
+    private void SetTestValue(TextSpacingOverride spacingOverride, double? value)
+    {
+        spacingOverride.TestValue = value;
+        if (value is null)
+        {
+            spacingOverride.ForceNull = true;
+        }
+
+        OnMetricsChanged?.Invoke();
+    }
+
+    private void ClearTestValue(TextSpacingOverride spacingOverride)
+    {
+        spacingOverride.TestValue = null;
+        spacingOverride.ForceNull = false;
+        OnMetricsChanged?.Invoke();
+    }
+
+    /// <summary>One text spacing override: the platform's value and flutter_test's test value over it.</summary>
+    private sealed class TextSpacingOverride
+    {
+        private double? _platformValue;
+
+        public double? TestValue { get; set; }
+
+        public bool ForceNull { get; set; }
+
+        public bool HasTestValue => TestValue is not null || ForceNull;
+
+        public double? Value => ForceNull ? null : TestValue ?? _platformValue;
+
+        public bool Update(double? value)
+        {
+            if (_platformValue == value)
+            {
+                return false;
+            }
+
+            _platformValue = value;
+            return true;
+        }
+    }
+
     /// <summary>Delivers a platform semantics action to <see cref="OnSemanticsActionEvent"/>.</summary>
     /// <remarks>The engine-side dispatch of <c>onSemanticsActionEvent</c>; hosts and tests call it.</remarks>
     public void DispatchSemanticsActionEvent(SemanticsActionEvent action)

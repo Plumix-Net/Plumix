@@ -27,13 +27,15 @@ internal sealed class NavigatorPagesDemoPageState : State
             spacing: 8,
             children:
             [
-                new Text("Navigator.Pages demo", fontSize: 20, color: Colors.Black),
+                new Text("Navigator.Pages demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The page list owns the history: pushing appends a page, popping asks OnDidRemovePage "
                     + "to drop it.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
-                new Text($"pages: {string.Join(", ", _pages.Select(page => page.Name))}", fontSize: 12),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                new Text(
+                    $"pages: {string.Join(", ", _pages.Select(page => page.Name))}",
+                    style: new TextStyle(
+                        FontSize: 12)),
                 new Row(
                     spacing: 8,
                     children:
@@ -120,8 +122,16 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                     spacing: 8,
                     children:
                     [
-                        new Text(Settings.Name ?? string.Empty, fontSize: 18, color: Colors.Black),
-                        new Text($"canPop: {ModalRoute.CanPopOf(context)}", fontSize: 12, color: Colors.DimGray),
+                        new Text(
+                            Settings.Name ?? string.Empty,
+                            style: new TextStyle(
+                                FontSize: 18,
+                                Color: Colors.Black)),
+                        new Text(
+                            $"canPop: {ModalRoute.CanPopOf(context)}",
+                            style: new TextStyle(
+                                FontSize: 12,
+                                Color: Colors.DimGray)),
                         new CounterTapButton(
                             label: "Pop this page",
                             // Qualified: `Route.Navigator` shadows the widget type inside a Route.

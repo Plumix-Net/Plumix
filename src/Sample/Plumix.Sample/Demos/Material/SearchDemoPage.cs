@@ -94,12 +94,15 @@ internal sealed class SearchDemoPageState : State
                     spacing: 12,
                     children:
                     [
-                        new Text("SearchBar + SearchAnchor + SearchDelegate", fontSize: 20, color: Colors.Black),
+                        new Text(
+                            "SearchBar + SearchAnchor + SearchDelegate",
+                            style: new TextStyle(
+                                FontSize: 20,
+                                Color: Colors.Black)),
                         new Text(
                             "Controller-backed search plus a legacy route with search-keyboard metadata "
                             + "and fade animation.",
-                            fontSize: 14,
-                            color: new Color(0x8A000000)),
+                            style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                         new Row(
                             spacing: 8,
                             children:
@@ -150,11 +153,14 @@ internal sealed class SearchDemoPageState : State
                                 onChanged: value => SetState(() => _status = $"changed: {FormatEmpty(value)}"),
                                 onSubmitted: value => SetState(() => _status = $"submitted: {FormatEmpty(value)}"),
                                 suggestionsBuilder: BuildSuggestions)),
-                        new Text($"Selected: {_selected}", fontSize: 13),
-                        new Text($"Controller text: {FormatEmpty(_controller.Text)}", fontSize: 13),
-                        new Text($"Status: {_status}", fontSize: 13),
+                        new Text($"Selected: {_selected}", style: new TextStyle(FontSize: 13)),
+                        new Text(
+                            $"Controller text: {FormatEmpty(_controller.Text)}",
+                            style: new TextStyle(
+                                FontSize: 13)),
+                        new Text($"Status: {_status}", style: new TextStyle(FontSize: 13)),
                         new Divider(),
-                        new Text("Standalone SearchBar", fontSize: 18, color: Colors.Black),
+                        new Text("Standalone SearchBar", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                         new SearchBar(
                             controller: _standaloneController,
                             hintText: "Filter inside a page",
@@ -212,7 +218,7 @@ internal sealed class SearchDemoPageState : State
         {
             suggestions.Add(new Padding(
                 new Thickness(16),
-                new Text($"No results for {query}", fontSize: 13, color: Colors.DimGray)));
+                new Text($"No results for {query}", style: new TextStyle(FontSize: 13, Color: Colors.DimGray))));
         }
 
         return suggestions;
@@ -220,7 +226,7 @@ internal sealed class SearchDemoPageState : State
 
     private static Widget ControlButton(string label, Action action)
     {
-        return new TextButton(new Text(label, fontSize: 12), action);
+        return new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), action);
     }
 
     private static string FormatEmpty(string value)
@@ -284,7 +290,10 @@ internal sealed class SearchDemoPageState : State
         private Widget BuildTerms(BuildContext context, string label)
         {
             string query = Query.Trim();
-            var children = new List<Widget> { new Text($"{label} for {FormatEmpty(query)}", fontSize: 13) };
+            var children = new List<Widget> { new Text(
+                $"{label} for {FormatEmpty(query)}",
+                style: new TextStyle(
+                    FontSize: 13)) };
             foreach (string term in _terms)
             {
                 if (query.Length > 0 && !term.Contains(query, StringComparison.OrdinalIgnoreCase))

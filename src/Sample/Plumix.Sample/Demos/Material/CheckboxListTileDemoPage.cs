@@ -29,12 +29,11 @@ internal sealed class CheckboxListTileDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("CheckboxListTile", fontSize: 20, color: Colors.Black),
+                new Text("CheckboxListTile", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Whole-tile interaction, tristate cycle, affinity, checkbox scaling, "
                     + "density/alignment, selected styling, disabled state, and the adaptive branch.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -77,8 +76,7 @@ internal sealed class CheckboxListTileDemoPageState : State
                     + $"tristate={ListTileControlDemos.FormatNullable(_tristateValue)}, "
                     + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"adaptive={ListTileControlDemos.Lower(_adaptive)}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new Container(
                         color: new Color(0xFFF7F9FC),

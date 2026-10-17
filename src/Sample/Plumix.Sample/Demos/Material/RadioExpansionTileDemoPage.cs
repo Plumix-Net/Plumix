@@ -38,11 +38,10 @@ internal sealed class RadioExpansionTileDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("RadioListTile + ExpansionTile", fontSize: 20, color: Colors.Black),
+                new Text("RadioListTile + ExpansionTile", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "RadioGroup selection and controller-driven expansion with animated arrow/body/theme transitions.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -90,8 +89,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
                     + $"affinity={_affinity.ToString().ToLowerInvariant()}, "
                     + $"adaptive={_adaptive.ToString().ToLowerInvariant()}, "
                     + $"material3={_useMaterial3.ToString().ToLowerInvariant()}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Expanded(
                     child: new Container(
                         color: new Color(0xFFF7F9FC),
@@ -119,8 +117,8 @@ internal sealed class RadioExpansionTileDemoPageState : State
                                         childrenPadding: EdgeInsetsGeometry.FromLTRB(20, 8, 20, 12),
                                         children:
                                         [
-                                            new Text("Sync only while charging", fontSize: 13),
-                                            new Text("Retry window: 15 minutes", fontSize: 13),
+                                            new Text("Sync only while charging", style: new TextStyle(FontSize: 13)),
+                                            new Text("Retry window: 15 minutes", style: new TextStyle(FontSize: 13)),
                                         ])),
                             ]))),
             ]);
@@ -190,7 +188,7 @@ internal sealed class RadioExpansionTileDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onPressed,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

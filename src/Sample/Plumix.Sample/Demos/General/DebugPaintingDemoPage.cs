@@ -26,11 +26,14 @@ internal sealed class DebugPaintingDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Placeholder + GridPaper + ErrorWidget", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Placeholder + GridPaper + ErrorWidget",
+                    style: new TextStyle(
+                        FontSize: 20,
+                        Color: Colors.Black)),
                 new Text(
                     "Placeholder uses fallback dimensions only in unbounded space; GridPaper paints over its child.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -90,7 +93,11 @@ internal sealed class DebugPaintingDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text("Unbounded fallback: 160 × 120", fontSize: 12, color: Colors.DarkSlateGray),
+                    new Text(
+                        "Unbounded fallback: 160 × 120",
+                        style: new TextStyle(
+                            FontSize: 12,
+                            Color: Colors.DarkSlateGray)),
                     new Expanded(
                         child: new Align(
                             alignment: Alignment.TopLeft,
@@ -107,7 +114,11 @@ internal sealed class DebugPaintingDemoPageState : State
                                             height: 56,
                                             color: new Color(0xFFFFE8A3),
                                             alignment: Alignment.Center,
-                                            child: new Text("child", fontSize: 14, color: Colors.Black))
+                                            child: new Text(
+                                                "child",
+                                                style: new TextStyle(
+                                                    FontSize: 14,
+                                                    Color: Colors.Black)))
                                         : null)))),
                 ]));
     }
@@ -124,8 +135,7 @@ internal sealed class DebugPaintingDemoPageState : State
                 [
                     new Text(
                         _customGrid ? "interval=60, divisions=3, subdivisions=2" : "Flutter defaults",
-                        fontSize: 12,
-                        color: Colors.DarkSlateGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     new Expanded(
                         child: new GridPaper(
                             color: _customGrid ? new Color(0x7FFF8A65) : null,
@@ -135,7 +145,11 @@ internal sealed class DebugPaintingDemoPageState : State
                             child: new Container(
                                 color: new Color(0xFFF2F7FA),
                                 alignment: Alignment.Center,
-                                child: new Text("foreground grid", fontSize: 14, color: Colors.Black)))),
+                                child: new Text(
+                                    "foreground grid",
+                                    style: new TextStyle(
+                                        FontSize: 14,
+                                        Color: Colors.Black))))),
                 ]));
     }
 

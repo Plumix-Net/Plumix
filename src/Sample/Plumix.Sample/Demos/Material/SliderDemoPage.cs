@@ -60,11 +60,10 @@ internal sealed class SliderDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Slider baseline", fontSize: 20, color: Colors.Black),
+                    new Text("Slider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Continuous/discrete value mapping, drag/tap/keyboard updates, M2/M3 defaults, and theme/widget color precedence.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -117,8 +116,7 @@ internal sealed class SliderDemoPageState : State
                             new Expanded(
                                 child: new Text(
                                     $"value={_value:0.00}, secondary={ResolveSecondaryLabel()}, status={_status}",
-                                    fontSize: 12,
-                                    color: new Color(0xFF607D8B))),
+                                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
                     new Row(
                         spacing: 8,
@@ -194,8 +192,8 @@ internal sealed class SliderDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text(title, fontSize: 14, color: Colors.Black),
-                    new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                    new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                     new Directionality(
                         textDirection: textDirection,
                         child: new Builder(context => new MediaQuery(
@@ -251,7 +249,7 @@ internal sealed class SliderDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

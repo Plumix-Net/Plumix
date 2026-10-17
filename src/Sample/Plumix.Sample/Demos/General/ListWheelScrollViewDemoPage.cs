@@ -39,11 +39,10 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("ListWheelScrollView", fontSize: 20, color: Colors.Black),
+                    new Text("ListWheelScrollView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Children are laid out lazily on a cylinder; FixedExtentScrollPhysics snaps to whole items.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Expanded(
                         child: new Row(
                             children:
@@ -59,7 +58,11 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                                         onSelectedItemChanged: item => SetState(() => _selectedItem = item),
                                         children: Enumerable.Range(0, ItemCount)
                                             .Select(index => (Widget)new Center(
-                                                child: new Text($"item #{index}", fontSize: 18, color: Colors.Black)))
+                                                child: new Text(
+                                                    $"item #{index}",
+                                                    style: new TextStyle(
+                                                        FontSize: 18,
+                                                        Color: Colors.Black))))
                                             .ToArray())),
                                 new Expanded(
                                     child: new ListWheelScrollView(
@@ -72,8 +75,7 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                                                 .Select(index => (Widget)new Center(
                                                     child: new Text(
                                                         $"loop {index}",
-                                                        fontSize: 16,
-                                                        color: Colors.DimGray)))
+                                                        style: new TextStyle(FontSize: 16, Color: Colors.DimGray))))
                                                 .ToArray()))),
                             ])),
                     new Row(
@@ -87,7 +89,11 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                                     TimeSpan.FromMilliseconds(300),
                                     Curves.Ease),
                                 child: new Text("Previous")),
-                            new Text($"selected item {_selectedItem}", fontSize: 14, color: Colors.Black),
+                            new Text(
+                                $"selected item {_selectedItem}",
+                                style: new TextStyle(
+                                    FontSize: 14,
+                                    Color: Colors.Black)),
                             new TextButton(
                                 onPressed: () => _controller?.AnimateToItem(
                                     Math.Min(ItemCount - 1, _selectedItem + 1),

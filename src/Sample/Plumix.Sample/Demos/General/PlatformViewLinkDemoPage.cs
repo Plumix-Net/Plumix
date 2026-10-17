@@ -57,12 +57,11 @@ internal sealed class PlatformViewLinkDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("PlatformViewLink", fontSize: 20, color: new Color(0xFF000000)),
+                new Text("PlatformViewLink", style: new TextStyle(FontSize: 20, Color: new Color(0xFF000000))),
                 new Text(
                     "The link lays out a placeholder, creates the controller with the placeholder's size and "
                     + "position, then shows the surface factory's widget. Focus moves both ways.",
-                    fontSize: 14,
-                    color: new Color(0xFF696969)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0xFF696969))),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -89,17 +88,20 @@ internal sealed class PlatformViewLinkDemoPageState : State
                             child: new Builder(builder: context => new Text(
                                 $"platform view #{controller.ViewId}: "
                                 + (Focus.Of(context).HasFocus ? "focused" : "not focused"),
-                                fontSize: 16,
-                                color: new Color(0xFF000000)))))),
+                                style: new TextStyle(FontSize: 16, Color: new Color(0xFF000000))))))),
                 new Focus(
                     focusNode: _otherNode,
                     child: new Builder(builder: context => new Container(
                         height: 32,
                         color: Focus.Of(context).HasFocus ? new Color(0xFFFFE082) : new Color(0xFFDCE3ED),
                         alignment: Alignment.Center,
-                        child: new Text("outside focus target", fontSize: 12, color: new Color(0xFF000000))))),
+                        child: new Text(
+                            "outside focus target",
+                            style: new TextStyle(
+                                FontSize: 12,
+                                Color: new Color(0xFF000000)))))),
                 .. _log.ConvertAll(Widget (entry) =>
-                    new Text(entry, fontSize: 12, color: new Color(0xFF2F4F4F))),
+                    new Text(entry, style: new TextStyle(FontSize: 12, Color: new Color(0xFF2F4F4F)))),
             ]);
     }
 

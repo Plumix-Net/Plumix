@@ -60,11 +60,10 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                     spacing: 10.0,
                     children:
                     [
-                        new Text("CupertinoPageScaffold", fontSize: 20.0, color: label),
+                        new Text("CupertinoPageScaffold", style: new TextStyle(FontSize: 20.0, Color: label)),
                         new Text(
                             "The probe bar switches between translucent overlap guidance and opaque content offset.",
-                            fontSize: 14.0,
-                            color: secondaryLabel),
+                            style: new TextStyle(FontSize: 14.0, Color: secondaryLabel)),
                         new Container(
                             padding: new Thickness(12.0),
                             decoration: new BoxDecoration(
@@ -77,16 +76,13 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                                 [
                                     new Text(
                                         $"bar mode: {(_opaqueBar ? "opaque" : "translucent")}",
-                                        fontSize: 13.0,
-                                        color: label),
+                                        style: new TextStyle(FontSize: 13.0, Color: label)),
                                     new Text(
                                         $"child MediaQuery.padding.top: {mediaQuery.Padding.Top:0}",
-                                        fontSize: 12.0,
-                                        color: secondaryLabel),
+                                        style: new TextStyle(FontSize: 12.0, Color: secondaryLabel)),
                                     new Text(
                                         $"child MediaQuery.viewInsets.bottom: {mediaQuery.ViewInsets.Bottom:0}",
-                                        fontSize: 12.0,
-                                        color: secondaryLabel),
+                                        style: new TextStyle(FontSize: 12.0, Color: secondaryLabel)),
                                 ])),
                         BuildAction(
                             _opaqueBar ? "Use translucent bar" : "Use opaque bar",
@@ -105,7 +101,11 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                             child: new Container(
                                 color: new Color(0xFFFFF3E0),
                                 alignment: Alignment.Center,
-                                child: new Text("Bottom inset probe", fontSize: 13.0, color: Colors.Black))),
+                                child: new Text(
+                                    "Bottom inset probe",
+                                    style: new TextStyle(
+                                        FontSize: 13.0,
+                                        Color: Colors.Black)))),
                     ])));
     }
 
@@ -148,7 +148,10 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
                 height: 52.0,
                 color: background,
                 alignment: Alignment.Center,
-                child: new Text(Opaque ? "Opaque probe bar" : "Translucent probe bar", color: label));
+                child: new Text(
+                    Opaque ? "Opaque probe bar" : "Translucent probe bar",
+                    style: new TextStyle(
+                        Color: label)));
         }
     }
 }

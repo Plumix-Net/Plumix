@@ -18,11 +18,10 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino text selection", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino text selection", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Line-height-aware iOS handles and handle-free macOS selection controls.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Container(
                     padding: new Thickness(12.0),
                     decoration: new BoxDecoration(
@@ -38,18 +37,16 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                                 spacing: 6.0,
                                 children:
                                 [
-                                    new Text("macOS", fontSize: 13.0, color: Colors.Black),
+                                    new Text("macOS", style: new TextStyle(FontSize: 13.0, Color: Colors.Black)),
                                     new Text(
                                         "no handles",
-                                        fontSize: 12.0,
-                                        color: new Color(0x8A000000)),
+                                        style: new TextStyle(FontSize: 12.0, Color: new Color(0x8A000000))),
                                 ]),
                         ])),
                 new Text(
                     "Selection toolbars use the existing Cupertino mobile and desktop surfaces; "
                     + "Material TextField and SelectableText now choose these handle controls on Apple platforms.",
-                    fontSize: 13.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 13.0, Color: new Color(0x8A000000))),
             ]));
     }
 
@@ -59,7 +56,7 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
             spacing: 6.0,
             children:
             [
-                new Text(label, fontSize: 13.0, color: Colors.Black),
+                new Text(label, style: new TextStyle(FontSize: 13.0, Color: Colors.Black)),
                 new Row(
                     spacing: 12.0,
                     children:

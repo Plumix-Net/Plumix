@@ -59,11 +59,10 @@ internal sealed class BarControlsDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("BottomAppBar + ButtonBar", fontSize: 20, color: Colors.Black),
+                    new Text("BottomAppBar + ButtonBar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "M2/M3 bottom-surface defaults, FAB notch geometry, SafeArea, theme precedence, and legacy ButtonBar row-to-column overflow.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -75,7 +74,11 @@ internal sealed class BarControlsDemoPageState : State
                             BuildToggle(_overflowUp ? "overflow=up" : "overflow=down", () => _overflowUp = !_overflowUp, 118),
                             BuildToggle(_useRtl ? "RTL" : "LTR", () => _useRtl = !_useRtl, 68),
                         ]),
-                    new Text($"actionCount={_actionCount}", fontSize: 12, color: new Color(0xFF607D8B)),
+                    new Text(
+                        $"actionCount={_actionCount}",
+                        style: new TextStyle(
+                            FontSize: 12,
+                            Color: new Color(0xFF607D8B))),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new SizedBox(
@@ -98,8 +101,7 @@ internal sealed class BarControlsDemoPageState : State
                             body: new Center(
                                 child: new Text(
                                     "The FAB and notch share Scaffold geometry",
-                                    fontSize: 14,
-                                    color: Colors.DimGray)),
+                                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray))),
                             floatingActionButton: new FloatingActionButton(
                                 child: new Icon(Icons.Add),
                                 onPressed: () => SetState(() => _actionCount += 1)),
@@ -119,13 +121,13 @@ internal sealed class BarControlsDemoPageState : State
 
     private Widget BuildAction(string label) => new TextButton(
         onPressed: () => SetState(() => _actionCount += 1),
-        child: new Text(label, fontSize: 12));
+        child: new Text(label, style: new TextStyle(FontSize: 12)));
 
     private Widget BuildToggle(string label, Action update, double width) => new SizedBox(
         width: width,
         child: new TextButton(
             onPressed: () => SetState(update),
-            child: new Text(label, fontSize: 11),
+            child: new Text(label, style: new TextStyle(FontSize: 11)),
             style: TextButton.StyleFrom(
                 foregroundColor: Colors.Black,
                 backgroundColor: new Color(0xFFE9F0FF),

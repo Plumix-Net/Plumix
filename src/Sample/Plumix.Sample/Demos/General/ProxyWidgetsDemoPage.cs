@@ -39,12 +39,10 @@ internal sealed class ProxyWidgetsDemoPageState : State
             [
                 new Text(
                     "Proxy widgets: transforms + clips",
-                    fontSize: 20,
-                    color: Colors.Black),
+                    style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Use controls to fade a high-contrast black card over white canvas.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -70,8 +68,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     ]),
                 new Text(
                     $"opacity={_opacity:0.00}, shiftX={_shiftX:0}, clip={(_tightClip ? "tight" : "wide")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -88,8 +85,12 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     height: 90,
                                     color: new Color(0xFF111111),
                                     padding: new Thickness(8),
-                                    child: new Text("Layer", fontSize: 14, color: Colors.White)))))),
-                new Text("FractionalTranslation + RotatedBox", fontSize: 14, color: Colors.Black),
+                                    child: new Text(
+                                        "Layer",
+                                        style: new TextStyle(
+                                            FontSize: 14,
+                                            Color: Colors.White))))))),
+                new Text("FractionalTranslation + RotatedBox", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Row(
                     spacing: 8,
                     children:
@@ -98,8 +99,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         BuildButton("Rotate", RotateQuarterTurn, width: 88, colorHex: "#FFF3E8D8"),
                         new Text(
                             $"fraction={_fractionalShift:0.0}, turns={_quarterTurns}",
-                            fontSize: 12,
-                            color: Colors.DarkSlateGray),
+                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     ]),
                 new Row(
                     spacing: 16,
@@ -117,7 +117,11 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                         height: 32,
                                         color: new Color(0xFF6750A4),
                                         child: new Center(
-                                            new Text("Shift", fontSize: 12, color: Colors.White)))))),
+                                            new Text(
+                                                "Shift",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.White))))))),
                         new Container(
                             width: 120,
                             height: 80,
@@ -130,9 +134,17 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                         height: 28,
                                         color: new Color(0xFF386A20),
                                         child: new Center(
-                                            new Text("Rotate", fontSize: 12, color: Colors.White)))))),
+                                            new Text(
+                                                "Rotate",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.White))))))),
                     ]),
-                new Text("ClipOval + ClipPath + PhysicalShape", fontSize: 14, color: Colors.Black),
+                new Text(
+                    "ClipOval + ClipPath + PhysicalShape",
+                    style: new TextStyle(
+                        FontSize: 14,
+                        Color: Colors.Black)),
                 new Row(
                     spacing: 16,
                     children:
@@ -143,7 +155,11 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             child: new ClipOval(
                                 child: new ColoredBox(
                                     new Color(0xFF6750A4),
-                                    child: new Center(new Text("Oval", fontSize: 13, color: Colors.White))))),
+                                    child: new Center(new Text(
+                                        "Oval",
+                                        style: new TextStyle(
+                                            FontSize: 13,
+                                            Color: Colors.White)))))),
                         new SizedBox(
                             width: 96,
                             height: 72,
@@ -151,7 +167,11 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     clipper: new TrianglePathClipper(),
                                     child: new ColoredBox(
                                         new Color(0xFF386A20),
-                                        child: new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
+                                        child: new Center(new Text(
+                                            "Path",
+                                            style: new TextStyle(
+                                                FontSize: 13,
+                                                Color: Colors.White)))))),
                         new SizedBox(
                             width: 96,
                             height: 72,
@@ -162,9 +182,9 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                 elevation: 6,
                                 shadowColor: Colors.Black,
                                 child: new Center(
-                                    new Text("Physical", fontSize: 13, color: Colors.White)))),
+                                    new Text("Physical", style: new TextStyle(FontSize: 13, Color: Colors.White))))),
                     ]),
-                new Text("ColoredBox edge anti-aliasing", fontSize: 14, color: Colors.Black),
+                new Text("ColoredBox edge anti-aliasing", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Row(
                     spacing: 24,
                     children:
@@ -190,7 +210,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             color: new Color(0xFF6750A4),
                             isAntiAlias: isAntiAlias,
                             child: new Center(
-                                new Text(label, fontSize: 12, color: Colors.White)))))));
+                                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.White))))))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

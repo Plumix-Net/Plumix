@@ -57,12 +57,11 @@ internal sealed class NavigationSurfacesDemoPageState : State
                 spacing: 14,
                 children:
                 [
-                    new Text("NavigationBar + NavigationRail", fontSize: 20),
+                    new Text("NavigationBar + NavigationRail", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Seed-generated ColorScheme, Material 2021 typography, navigation defaults, "
                         + "theme precedence, and icon-scoped hover/press ripples.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -87,7 +86,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             ControlButton($"Bar: {Format(_barLabelBehavior)}", CycleBarLabels),
                             ControlButton($"Rail: {Format(_railLabelType)}", CycleRailLabels),
                         ]),
-                    new Text($"Selected destination: {_selectedIndex + 1}", fontSize: 13),
+                    new Text($"Selected destination: {_selectedIndex + 1}", style: new TextStyle(FontSize: 13)),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -136,7 +135,10 @@ internal sealed class NavigationSurfacesDemoPageState : State
                                     child: new Container(
                                         color: new Color(0xFFF7F2FA),
                                         alignment: Alignment.Center,
-                                        child: new Text("Rail content area", color: new Color(0x8A000000))))
+                                        child: new Text(
+                                            "Rail content area",
+                                            style: new TextStyle(
+                                                Color: new Color(0x8A000000)))))
                             ]))
                 ]));
     }
@@ -170,14 +172,14 @@ internal sealed class NavigationSurfacesDemoPageState : State
             height: 48,
             color: color,
             alignment: Alignment.Center,
-            child: new Text(label, fontSize: 11, color: onColor));
+            child: new Text(label, style: new TextStyle(FontSize: 11, Color: onColor)));
     }
 
     private static Widget ControlButton(string label, Action onPressed)
     {
         return new TextButton(
             onPressed: onPressed,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),

@@ -59,12 +59,10 @@ internal sealed class DragTargetDemoContentState : State
                 [
                     new Text(
                         "Draggable + LongPressDraggable + DragTarget",
-                        fontSize: 20,
-                        color: Colors.Black),
+                        style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Long-press the plum to drag it; the immediate stone exercises rejectedData and onLeave.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Wrap(
                         spacing: 16,
                         runSpacing: 16,
@@ -79,8 +77,7 @@ internal sealed class DragTargetDemoContentState : State
                         padding: new Thickness(12),
                         child: new Text(
                             $"accepted={_acceptedCount}; {_status}",
-                            fontSize: 13,
-                            color: new Color(0xFF332D41))),
+                            style: new TextStyle(FontSize: 13, Color: new Color(0xFF332D41)))),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TextButton(
@@ -88,12 +85,10 @@ internal sealed class DragTargetDemoContentState : State
                             child: new Text("Reset"))),
                     new Text(
                         "OverlayPortal + TapRegion",
-                        fontSize: 20,
-                        color: Colors.Black),
+                        style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Open the portal, interact with it as one grouped region, then tap elsewhere to dismiss.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     BuildPortalProbe(),
                 ]));
     }
@@ -124,8 +119,7 @@ internal sealed class DragTargetDemoContentState : State
                             alignment: Alignment.Center,
                             child: new Text(
                                 "Portal inherits page context.\nTap here, then outside.",
-                                fontSize: 13,
-                                color: new Color(0xFF332D41)))));
+                                style: new TextStyle(FontSize: 13, Color: new Color(0xFF332D41))))));
             },
             child: new TapRegion(
                 groupId: _portalGroup,
@@ -206,7 +200,7 @@ internal sealed class DragTargetDemoContentState : State
                     height: 96,
                     color: (Color)Avalonia.Media.Color.Parse(colorHex),
                     alignment: Alignment.Center,
-                    child: new Text(label, fontSize: 14, color: Colors.Black));
+                    child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.Black)));
             });
     }
 
@@ -222,7 +216,7 @@ internal sealed class DragTargetDemoContentState : State
                 height: 64,
                 color: (Color)Avalonia.Media.Color.Parse(colorHex),
                 alignment: Alignment.Center,
-                child: new Text(label, fontSize: 14, color: Colors.White)));
+                child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.White))));
     }
 
     private void SetStatus(string status)

@@ -33,7 +33,7 @@ public sealed class ScrollableMiscDartParityTests
                 color: new Color(0xFF111111),
                 child: ListView.Builder(
                     dragStartBehavior: DragStartBehavior.Down,
-                    itemBuilder: (_, index) => new Text($"{index}", color: TestFontColor)))));
+                    itemBuilder: (_, index) => new Text($"{index}", style: new TextStyle(Color: TestFontColor))))));
     }
 
     private static double CurrentOffset(FrameworkDartTester tester) =>
@@ -118,7 +118,7 @@ public sealed class ScrollableMiscDartParityTests
                 children: Enumerable.Range(0, 250)
                     .Select(i => (Widget)new GestureDetector(
                         onTap: () => log.Add($"tap {i}"),
-                        child: new Text($"{i}", color: TestFontColor)))
+                        child: new Text($"{i}", style: new TextStyle(Color: TestFontColor))))
                     .ToList()));
     }
 

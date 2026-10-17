@@ -33,12 +33,11 @@ internal sealed class TransformDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Transform + Matrix4", fontSize: 20, color: Colors.Black),
+                new Text("Transform + Matrix4", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Transform carries a full 4x4 matrix, so rotations about the X/Y axes and a "
                     + "perspective row render and hit-test like Flutter's.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -58,8 +57,7 @@ internal sealed class TransformDemoPageState : State
                     ]),
                 new Text(
                     $"turns={_turns:0.000}, scale={_scale:0.00}, perspective={_perspectiveTurns:0.00}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Row(
                     spacing: 16,
                     children:
@@ -109,7 +107,7 @@ internal sealed class TransformDemoPageState : State
             spacing: 6,
             children:
             [
-                new Text(label, fontSize: 12, color: Colors.DarkSlateGray),
+                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 150,
                     height: 120,
@@ -126,7 +124,7 @@ internal sealed class TransformDemoPageState : State
             height: 56,
             color: color,
             alignment: Alignment.Center,
-            child: new Text(label, fontSize: 14, color: Colors.White));
+            child: new Text(label, style: new TextStyle(FontSize: 14, Color: Colors.White)));
     }
 
     private static Widget BuildButton(string label, Action onTap)

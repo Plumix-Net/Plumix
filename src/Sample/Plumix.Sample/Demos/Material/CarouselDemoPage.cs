@@ -19,25 +19,24 @@ public sealed class CarouselDemoPage : StatelessWidget
             spacing: 12,
             children:
             [
-                new Text("CarouselView", fontSize: 20, color: Colors.Black),
+                new Text("CarouselView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Fixed and weighted Material 3 carousels with item snapping and CarouselViewTheme.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
-                new Text("Fixed extent", fontSize: 14, color: Colors.Black),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                new Text("Fixed extent", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new SizedBox(height: 132, child: new CarouselView(
                     itemExtent: 176,
                     itemSnapping: true,
                     elevation: 2,
                     children: BuildItems())),
-                new Text("Hero [1, 7, 1] with shrinkExtent", fontSize: 14, color: Colors.Black),
+                new Text("Hero [1, 7, 1] with shrinkExtent", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new SizedBox(height: 132, child: CarouselView.Weighted(
                     flexWeights: [1, 7, 1],
                     itemSnapping: true,
                     consumeMaxWeight: false,
                     shrinkExtent: 40,
                     children: BuildItems())),
-                new Text("Weighted [1, 6, 1]", fontSize: 14, color: Colors.Black),
+                new Text("Weighted [1, 6, 1]", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new SizedBox(height: 132, child: new CarouselViewTheme(
                     new CarouselViewThemeData(
                         Padding: new Thickness(6),
@@ -64,7 +63,11 @@ public sealed class CarouselDemoPage : StatelessWidget
         {
             items.Add(new ColoredBox(
                 colors[index],
-                child: new Center(new Text($"Item {index + 1}", fontSize: 18, color: Colors.White))));
+                child: new Center(new Text(
+                    $"Item {index + 1}",
+                    style: new TextStyle(
+                        FontSize: 18,
+                        Color: Colors.White)))));
         }
 
         return items;

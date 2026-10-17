@@ -48,11 +48,10 @@ internal sealed class RadioDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Radio baseline + adaptive", fontSize: 20, color: Colors.Black),
+                new Text("Radio baseline + adaptive", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "RadioGroup keyboard navigation plus adaptive Cupertino platform/checkmark probes.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -95,8 +94,7 @@ internal sealed class RadioDemoPageState : State
                     ]),
                 new Text(
                     $"enabled={(_enabled ? "true" : "false")}, toggleable={(_toggleable ? "true" : "false")}, materialValue={FormatValue(_materialGroupValue)}, materialChanges={_materialChanges}, adaptiveValue={FormatValue(_adaptiveGroupValue)}, adaptiveChanges={_adaptiveChanges}, adaptivePlatform={FormatPlatform(_adaptivePlatform)}, adaptiveStyle={(_adaptiveUseCheckmarkStyle ? "checkmark" : "dot")}, tapTarget={(_shrinkWrapTapTarget ? "shrinkWrap" : "padded")}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                 new Theme(
                     data: radioTheme,
                     child: new Column(
@@ -106,8 +104,7 @@ internal sealed class RadioDemoPageState : State
                         [
                             new Text(
                                 "Material path",
-                                fontSize: 13,
-                                color: new Color(0xFF37474F)),
+                                style: new TextStyle(FontSize: 13, Color: new Color(0xFF37474F))),
                             new RadioGroup<string>(
                                 groupValue: _materialGroupValue,
                                 onChanged: OnMaterialChanged,
@@ -182,8 +179,7 @@ internal sealed class RadioDemoPageState : State
                                     ])),
                             new Text(
                                 "Adaptive path",
-                                fontSize: 13,
-                                color: new Color(0xFF37474F)),
+                                style: new TextStyle(FontSize: 13, Color: new Color(0xFF37474F))),
                             new Theme(
                                 data: adaptiveTheme,
                                 child: new RadioGroup<string>(
@@ -236,8 +232,8 @@ internal sealed class RadioDemoPageState : State
                             spacing: 2,
                             children:
                             [
-                                new Text(title, fontSize: 13, color: Colors.Black),
-                                new Text(subtitle, fontSize: 12, color: new Color(0x8A000000)),
+                                new Text(title, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
+                                new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                             ])),
                 ]));
     }
@@ -254,7 +250,7 @@ internal sealed class RadioDemoPageState : State
                 onPressed: onTap,
                 child: new Text(
                     label,
-                    fontSize: 12),
+                    style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

@@ -38,12 +38,11 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino magnifier", fontSize: 20.0, color: Colors.Black),
+                new Text("Cupertino magnifier", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Drag over the stripes: the text magnifier follows the gesture, stays inside the "
                     + "10pt screen padding and resists downward drag.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8.0,
                     children: Scales
@@ -87,8 +86,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                             child: new Center(
                                 child: new Text(
                                     "MAGNIFY 0123456789",
-                                    fontSize: 24.0,
-                                    color: new Color(0xFF1C1C1E)))),
+                                    style: new TextStyle(FontSize: 24.0, Color: new Color(0xFF1C1C1E))))),
                         new Positioned(
                             left: 16.0,
                             top: 148.0,
@@ -99,8 +97,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
                             child: new Text(
                                 $"gesture=({_lastGesturePosition.X:0}, {_lastGesturePosition.Y:0}), "
                                 + $"scale={_magnificationScale:0.0}",
-                                fontSize: 12.0,
-                                color: new Color(0xFF007AFF))),
+                                style: new TextStyle(FontSize: 12.0, Color: new Color(0xFF007AFF)))),
                     ])));
     }
 
@@ -113,8 +110,7 @@ internal sealed class CupertinoMagnifierDemoPageState : State
             onPressed: () => SetState(() => _magnificationScale = scale),
             child: new Text(
                 $"x{scale:0.0}",
-                fontSize: 13.0,
-                color: selected ? Colors.White : new Color(0xFF1C1C1E)));
+                style: new TextStyle(FontSize: 13.0, Color: selected ? Colors.White : new Color(0xFF1C1C1E))));
     }
 
     private static Widget StripeRow()

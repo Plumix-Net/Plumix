@@ -40,6 +40,7 @@ public sealed partial class EditableText
             RenderEditable renderEditable = RenderEditableObject;
             InlineSpan inlineSpan = renderEditable.Text!;
             TextScaler effectiveTextScaler = MediaQuery.TextScalerOf(Context);
+            double? lineHeightScaleFactor = MediaQuery.MaybeLineHeightScaleFactorOverrideOf(Context);
 
             var newCacheKey = new ScribbleCacheKey(
                 inlineSpan: inlineSpan,
@@ -48,7 +49,7 @@ public sealed partial class EditableText
                 textScaler: effectiveTextScaler,
                 textHeightBehavior: null,
                 locale: null,
-                structStyle: Widget.StrutStyle ?? new StrutStyle(),
+                structStyle: EditableStrutStyle().Merge(new StrutStyle(Height: lineHeightScaleFactor)),
                 placeholder: _placeholderLocation,
                 size: renderEditable.Size);
 

@@ -19,12 +19,11 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
             spacing: 16,
             children:
             [
-                new Text("StatefulBuilder + LookupBoundary", fontSize: 20, color: Colors.Black),
+                new Text("StatefulBuilder + LookupBoundary", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "StatefulBuilder owns a local rebuild. LookupBoundary hides ancestors only from its bounded " +
                     "static lookup helpers.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
@@ -34,7 +33,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                             spacing: 8,
                             children:
                             [
-                                new Text($"local count: {count}", color: new Color(0xFF31506F)),
+                                new Text($"local count: {count}", style: new TextStyle(Color: new Color(0xFF31506F))),
                                 new TextButton(
                                     onPressed: () => setState(() => count += 1),
                                     child: new Text("Increment local state")),
@@ -58,8 +57,14 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                                     spacing: 6,
                                     children:
                                     [
-                                        new Text($"bounded lookup: {bounded}", color: Colors.Black),
-                                        new Text($"regular context lookup: {regular}", color: Colors.Black),
+                                        new Text(
+                                            $"bounded lookup: {bounded}",
+                                            style: new TextStyle(
+                                                Color: Colors.Black)),
+                                        new Text(
+                                            $"regular context lookup: {regular}",
+                                            style: new TextStyle(
+                                                Color: Colors.Black)),
                                     ]));
                         }))),
             ]);

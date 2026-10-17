@@ -30,11 +30,10 @@ internal sealed class MagnifierDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("RawMagnifier + Material Magnifier", fontSize: 20, color: Colors.Black),
+                new Text("RawMagnifier + Material Magnifier", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move both lenses across high-contrast text and stripes to compare source geometry and styling.",
-                    fontSize: 14,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                 new Row(
                     spacing: 8,
                     children:
@@ -65,8 +64,7 @@ internal sealed class MagnifierDemoPageState : State
                                     child: new Center(
                                         child: new Text(
                                             "MAGNIFY 0123456789",
-                                            fontSize: 24,
-                                            color: new Color(0xFF1D192B)))),
+                                            style: new TextStyle(FontSize: 24, Color: new Color(0xFF1D192B))))),
                                 new Positioned(
                                     left: _focusX - 50,
                                     top: 82,
@@ -96,8 +94,7 @@ internal sealed class MagnifierDemoPageState : State
                                     bottom: 18,
                                     child: new Text(
                                         $"focusX={_focusX:0}, raw scale=1.8, material scale=1.25",
-                                        fontSize: 12,
-                                        color: new Color(0xFF6750A4))),
+                                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF6750A4)))),
                             ]))),
             ]);
     }
@@ -134,7 +131,7 @@ internal sealed class MagnifierDemoPageState : State
     {
         return new TextButton(
             onPressed: onPressed,
-            child: new Text(label, fontSize: 12),
+            child: new Text(label, style: new TextStyle(FontSize: 12)),
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),

@@ -40,12 +40,11 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("DraggableScrollableSheet", fontSize: 20),
+                    new Text("DraggableScrollableSheet", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Drag the sheet to resize it, keep dragging to scroll its list, and release to snap. "
                         + "The controller reports and drives the extent; the actuator resets it.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -55,7 +54,7 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
                             ControlButton("Animate to 1.0", AnimateToTop),
                             ControlButton("Reset", () => DraggableScrollableActuator.Reset(Context)),
                         ]),
-                    new Text($"extent: {_extent:0.00}", fontSize: 13),
+                    new Text($"extent: {_extent:0.00}", style: new TextStyle(FontSize: 13)),
                     new SizedBox(height: 320, child: BuildSheet()),
                 ]);
         }
@@ -99,7 +98,7 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
             {
                 items.Add(new Align(
                     alignment: Alignment.CenterLeft,
-                    child: new Text($"Item {index}", fontSize: 15)));
+                    child: new Text($"Item {index}", style: new TextStyle(FontSize: 15))));
             }
 
             return items;

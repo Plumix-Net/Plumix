@@ -1957,19 +1957,22 @@ public sealed partial class EditableText : StatefulWidget
             _lastKnownRemoteTextEditingValue = localValue;
         }
 
-        /// Dart's `_getTextInputStyle`. The style is the one the editable lays its text out with;
-        /// `MediaQuery` carries no letter/word spacing overrides yet (see docs/ai/BACKLOG.md).
+        /// Dart's `_getTextInputStyle`: `_style` with the ambient letter and word spacing overrides.
         private TextInputStyle GetTextInputStyle()
         {
-            TextStyle style = EffectiveTextStyle(showPlaceholder: false);
+            double? letterSpacingOverride = MediaQuery.MaybeLetterSpacingOverrideOf(Context);
+            double? wordSpacingOverride = MediaQuery.MaybeWordSpacingOverrideOf(Context);
+
             return new TextInputStyle(
-                fontFamily: style.FontFamily?.Name,
-                fontSize: style.FontSize,
-                fontWeight: style.FontWeight,
+                fontFamily: _style.FontFamily?.Name,
+                fontSize: _style.FontSize,
+                fontWeight: _style.FontWeight,
                 textDirection: Widget.TextDirection ?? Directionality.Of(Context),
                 textAlign: Widget.TextAlign,
-                letterSpacing: style.LetterSpacing,
-                wordSpacing: style.WordSpacing,
+                letterSpacing: letterSpacingOverride ?? _style.LetterSpacing,
+                wordSpacing: wordSpacingOverride ?? _style.WordSpacing,
+                // preferredLineHeight already includes lineHeightScaleFactor from
+                // _OverridingTextStyleTextSpanUtils.applyTextSpacingOverrides.
                 lineHeight: RenderEditable?.PreferredLineHeight);
         }
 
@@ -2034,6 +2037,8 @@ public sealed partial class EditableText : StatefulWidget
         public override void DidChangeDependencies()
         {
             base.DidChangeDependencies();
+
+            _style = ResolveStyle();
             UpdateAutofillRegistration();
 
             if (!_didAutoFocus && Widget.Autofocus)
@@ -2081,11 +2086,19 @@ public sealed partial class EditableText : StatefulWidget
             }
 
             DidUpdateWidgetForSelectionOverlay(oldEditableText);
-            if (!Equals(Widget.Style, oldEditableText.Style) && HasInputConnection)
+            if (!Equals(Widget.Style, oldEditableText.Style)
+                || Widget.FontSize != oldEditableText.FontSize
+                || !Equals(Widget.TextColor, oldEditableText.TextColor))
             {
-                // Schedule the style update after layout to ensure preferredLineHeight is computed
-                // with the new style.
-                ScheduleStyleUpdate();
+                // The _textInputConnection will pick up the new style when it attaches in
+                // _openInputConnection.
+                _style = ResolveStyle();
+                if (HasInputConnection)
+                {
+                    // Schedule the style update after layout to ensure preferredLineHeight is computed
+                    // with the new style.
+                    ScheduleStyleUpdate();
+                }
             }
 
             if (oldEditableText.ShowCursor != Widget.ShowCursor)
@@ -2180,14 +2193,51 @@ public sealed partial class EditableText : StatefulWidget
         private bool ShowPlaceholder =>
             string.IsNullOrEmpty(_controller!.Text) && !string.IsNullOrEmpty(Widget.Placeholder);
 
-        /// The style the text is laid out with: <see cref="EditableText.Style"/> over the widget's
-        /// C#-only font size and text color.
-        private TextStyle EffectiveTextStyle(bool showPlaceholder)
+        /// Dart's `_style`: <see cref="EditableText.Style"/> (over the widget's C#-only font size and
+        /// text color) merged with a bold font weight when <see cref="MediaQuery.BoldTextOf"/> asks
+        /// for it. Set in `didChangeDependencies` and when the style changes in `didUpdateWidget`.
+        private TextStyle _style = new();
+
+        private TextStyle ResolveStyle()
         {
             TextStyle style = Widget.Style ?? new TextStyle();
-            return style.CopyWith(
-                fontSize: style.FontSize ?? Widget.FontSize,
-                color: showPlaceholder ? Widget.PlaceholderColor : style.Color ?? Widget.TextColor);
+            style = style.CopyWith(fontSize: style.FontSize ?? Widget.FontSize, color: style.Color ?? Widget.TextColor);
+            return MediaQuery.BoldTextOf(Context)
+                ? style.Merge(new TextStyle(FontWeight: FontWeight.Bold))
+                : style;
+        }
+
+        /// Dart's `EditableText.strutStyle` getter: built from the widget's style (before the bold
+        /// merge) with a forced strut height unless the widget carries its own strut.
+        private StrutStyle EditableStrutStyle()
+        {
+            TextStyle style = Widget.Style ?? new TextStyle();
+            style = style.CopyWith(fontSize: style.FontSize ?? Widget.FontSize);
+            return Widget.StrutStyle?.InheritFromTextStyle(style)
+                   ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true);
+        }
+
+        /// The style the text is laid out with: `_style`, recolored for the C#-only placeholder.
+        private TextStyle EffectiveTextStyle(bool showPlaceholder)
+        {
+            return showPlaceholder ? _style.CopyWith(color: Widget.PlaceholderColor) : _style;
+        }
+
+        // The text spacing overrides the last build read, so a value pushed ahead of the rebuild
+        // (`PushValueToRenderEditable`) lays the text out as the build will.
+        private double? _lineHeightScaleFactor;
+        private double? _letterSpacing;
+        private double? _wordSpacing;
+
+        /// Dart's `_OverridingTextStyleTextSpanUtils.applyTextSpacingOverrides(textSpan: buildTextSpan())`,
+        /// the span `build` hands to `_Editable`.
+        private TextSpan BuildEditableTextSpan(bool showPlaceholder)
+        {
+            return OverridingTextStyleTextSpanUtils.ApplyTextSpacingOverrides(
+                lineHeightScaleFactor: _lineHeightScaleFactor,
+                letterSpacing: _letterSpacing,
+                wordSpacing: _wordSpacing,
+                textSpan: BuildTextSpan(showPlaceholder));
         }
 
         /// Builds the text span the editable displays. Dart's `EditableTextState.buildTextSpan`:
@@ -2243,6 +2293,9 @@ public sealed partial class EditableText : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+            _lineHeightScaleFactor = MediaQuery.MaybeLineHeightScaleFactorOverrideOf(context);
+            _letterSpacing = MediaQuery.MaybeLetterSpacingOverrideOf(context);
+            _wordSpacing = MediaQuery.MaybeWordSpacingOverrideOf(context);
             bool showPlaceholder = ShowPlaceholder;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
             TextStyle style = EffectiveTextStyle(showPlaceholder);
@@ -2267,7 +2320,7 @@ public sealed partial class EditableText : StatefulWidget
 
             Widget BuildEditable(ViewportOffset offset) => new EditableRenderObjectWidget(
                 key: _editableRenderKey,
-                inlineSpan: BuildTextSpan(showPlaceholder),
+                inlineSpan: BuildEditableTextSpan(showPlaceholder),
                 value: showPlaceholder
                     ? new TextEditingValue(selection: TextSelection.Collapsed(0))
                     : _controller!.Value,
@@ -2281,8 +2334,7 @@ public sealed partial class EditableText : StatefulWidget
                 maxLines: Widget.MaxLines,
                 minLines: Widget.MinLines,
                 expands: Widget.Expands,
-                strutStyle: Widget.StrutStyle?.InheritFromTextStyle(style)
-                            ?? StrutStyle.FromTextStyle(style, forceStrutHeight: true),
+                strutStyle: EditableStrutStyle().Merge(new StrutStyle(Height: _lineHeightScaleFactor)),
                 selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor,
                 textScaler: MediaQuery.TextScalerOf(context),
                 textAlign: Widget.TextAlign,

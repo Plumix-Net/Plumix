@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
@@ -38,11 +38,10 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("rendering/debug.dart flags", fontSize: 20, color: Colors.Black),
+                new Text("rendering/debug.dart flags", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Each toggle flips the matching library-level debug variable and rebuilds the probe below.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -96,8 +95,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                     [
                         new Text(
                             "Padding draws its construction lines, clips get a scissors marker.",
-                            fontSize: 12,
-                            color: Colors.DarkSlateGray),
+                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                         new Padding(
                             insets: new Thickness(20, 12),
                             child: new ClipRRect(
@@ -107,7 +105,11 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                                     height: 64,
                                     color: new Color(0xFFB3E5FC),
                                     alignment: Alignment.Center,
-                                    child: new Text("clipped", fontSize: 16, color: Colors.Black)))),
+                                    child: new Text(
+                                        "clipped",
+                                        style: new TextStyle(
+                                            FontSize: 16,
+                                            Color: Colors.Black))))),
                         new Opacity(
                             opacity: 0.45,
                             child: new PhysicalModel(
@@ -120,8 +122,7 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                                     child: new Center(
                                         child: new Text(
                                             "elevated + 45% opacity",
-                                            fontSize: 14,
-                                            color: Colors.Black))))),
+                                            style: new TextStyle(FontSize: 14, Color: Colors.Black)))))),
                         new Listener(
                             behavior: HitTestBehavior.Opaque,
                             child: new Container(
@@ -129,7 +130,11 @@ internal sealed class RenderingDebugFlagsDemoPageState : State
                                 height: 44,
                                 color: new Color(0xFFDCE3ED),
                                 alignment: Alignment.Center,
-                                child: new Text("press and hold me", fontSize: 14, color: Colors.Black))),
+                                child: new Text(
+                                    "press and hold me",
+                                    style: new TextStyle(
+                                        FontSize: 14,
+                                        Color: Colors.Black)))),
                     ])));
     }
 

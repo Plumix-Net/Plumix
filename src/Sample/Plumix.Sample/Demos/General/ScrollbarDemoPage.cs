@@ -56,11 +56,10 @@ internal sealed class ScrollbarDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Scrollbar + RawScrollbar", fontSize: 20, color: Colors.Black),
+                new Text("Scrollbar + RawScrollbar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material state theming/fade beside an always-visible raw track; both thumbs are draggable.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 4,
                     children:
@@ -126,7 +125,7 @@ internal sealed class ScrollbarDemoPageState : State
         spacing: 6,
         children:
         [
-            new Text(label, fontSize: 13, color: Colors.DimGray),
+            new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
             new Expanded(child: child),
         ]);
 
@@ -138,6 +137,6 @@ internal sealed class ScrollbarDemoPageState : State
         itemBuilder: (_, index) => new Container(
             color: index % 2 == 0 ? Colors.White : new Color(0xFFF4F7FA),
             padding: new Thickness(10, 8),
-            child: new Text($"{prefix} row #{index}", fontSize: 13, color: Colors.Black)),
+            child: new Text($"{prefix} row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
         addAutomaticKeepAlives: false);
 }

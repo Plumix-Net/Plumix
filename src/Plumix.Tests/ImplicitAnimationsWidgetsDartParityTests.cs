@@ -608,15 +608,13 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         var s1 = new TextStyle(FontSize: 10.0, FontWeight: (FontWeight)800, Height: 123.0);
         var s2 = new TextStyle(FontSize: 20.0, FontWeight: (FontWeight)200, Height: 1.0);
         RichText FirstRichText() => (RichText)tester.ElementsOfType<RichText>().First().Widget;
-        // Plumix's Text fills a missing color with black (DIVERGENCES.md, Text row); Dart passes s1 through.
-        TextStyle Resolved(TextStyle style) => style.CopyWith(color: new Color(0xFF000000));
 
         tester.PumpWidget(new AnimatedDefaultTextStyle(
             style: s1,
             duration: TimeSpan.FromMilliseconds(1000),
             child: textWidget));
         RichText text1 = FirstRichText();
-        Assert.Equal(Resolved(s1), text1.Text.Style);
+        Assert.Equal(s1, text1.Text.Style);
         Assert.Equal(TextAlign.Start, text1.TextAlign);
         Assert.True(text1.SoftWrap);
         Assert.Equal(TextOverflow.Clip, text1.Overflow);
@@ -635,7 +633,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
             duration: TimeSpan.FromMilliseconds(1000),
             child: textWidget));
         RichText text2 = FirstRichText();
-        Assert.Equal(Resolved(s1), text2.Text.Style); // animation hasn't started yet
+        Assert.Equal(s1, text2.Text.Style); // animation hasn't started yet
         Assert.Equal(TextAlign.Justify, text2.TextAlign);
         Assert.False(text2.SoftWrap);
         Assert.Equal(TextOverflow.Fade, text2.Overflow);
@@ -645,7 +643,7 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
 
         tester.Pump(TimeSpan.FromMilliseconds(1000));
         RichText text3 = FirstRichText();
-        Assert.Equal(Resolved(s2), text3.Text.Style);
+        Assert.Equal(s2, text3.Text.Style);
         Assert.Equal(TextAlign.Justify, text3.TextAlign);
         Assert.False(text3.SoftWrap);
         Assert.Equal(TextOverflow.Fade, text3.Overflow);

@@ -17,11 +17,10 @@ public sealed class NavigatorDemoPage : StatelessWidget
             spacing: 8,
             children:
             [
-                new Text("Navigator API demo", fontSize: 20, color: Colors.Black),
+                new Text("Navigator API demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Uses static Navigator methods and RouteData query parsing.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new NavigatorRouteAwareProbe(),
                 new NavigatorOverlayProbe(),
                 BuildAction(
@@ -87,8 +86,7 @@ internal sealed class NavigatorOverlayProbe : StatelessWidget
             padding: new Thickness(10, 8),
             child: new Text(
                 $"Overlay: entries={entries} maintainState={maintainState} opaque={opaque} canPop={canPop}",
-                fontSize: 12,
-                color: Colors.Black));
+                style: new TextStyle(FontSize: 12, Color: Colors.Black)));
     }
 }
 
@@ -115,8 +113,7 @@ internal sealed class SampleBlurredPopupRoute : PopupRoute
                 padding: new Thickness(20, 16),
                 child: new Text(
                     "Blurred popup — tap outside to dismiss",
-                    fontSize: 14,
-                    color: Colors.Black)));
+                    style: new TextStyle(FontSize: 14, Color: Colors.Black))));
     }
 }
 
@@ -170,8 +167,7 @@ internal sealed class NavigatorRouteAwareProbeState : State, RouteAware
             padding: new Thickness(10, 8),
             child: new Text(
                 $"RouteAware: name={routeName} didPush={_didPushCount} didPushNext={_didPushNextCount} didPopNext={_didPopNextCount} didPop={_didPopCount}",
-                fontSize: 12,
-                color: Colors.Black));
+                style: new TextStyle(FontSize: 12, Color: Colors.Black)));
     }
 
     public void DidPush()
@@ -221,10 +217,10 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
             spacing: 8,
             children:
             [
-                new Text($"route: {_routeData.Name}", fontSize: 14, color: Colors.Black),
-                new Text($"query.id: {id}", fontSize: 14, color: Colors.Black),
-                new Text($"query.mode: {mode}", fontSize: 14, color: Colors.Black),
-                new Text($"arguments: {payload}", fontSize: 14, color: Colors.Black),
+                new Text($"route: {_routeData.Name}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text($"query.id: {id}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text($"query.mode: {mode}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text($"arguments: {payload}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new SizedBox(height: 6),
                 new CounterTapButton(
                     label: $"Push next details (id={nextId})",

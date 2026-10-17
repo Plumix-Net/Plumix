@@ -45,11 +45,10 @@ internal sealed class ContainerDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Container alignment + margin", fontSize: 20, color: Colors.Black),
+                new Text("Container alignment + margin", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch alignment and margin to verify Container composition behavior.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -93,8 +92,7 @@ internal sealed class ContainerDemoPageState : State
                     + $"clamp={(_clampConstraints ? "on" : "off")}, shiftX={_shiftX:0}, "
                     + $"clip={(_clipContent ? "antiAlias" : "none")}, "
                     + $"transformAlignment={(_rotateAroundTopLeft ? "topLeft" : "none")}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 240,
                     height: 160,
@@ -118,7 +116,7 @@ internal sealed class ContainerDemoPageState : State
                             height: 20,
                             color: new Color(0xFF1D3557),
                             child: new Center(
-                                child: new Text("C", fontSize: 12, color: Colors.White))))),
+                                child: new Text("C", style: new TextStyle(FontSize: 12, Color: Colors.White)))))),
             ]);
     }
 

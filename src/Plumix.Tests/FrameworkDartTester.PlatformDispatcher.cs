@@ -1,8 +1,8 @@
 using Plumix.UI;
 
 // C#-only test infrastructure: flutter_test's `TestPlatformDispatcher` and `FakeAccessibilityFeatures`
-// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features and
-// `supportsShowingSystemContextMenu`.
+// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features,
+// `supportsShowingSystemContextMenu` and the text spacing overrides.
 
 namespace Plumix.Tests;
 
@@ -23,6 +23,10 @@ internal sealed partial class FrameworkDartTester
         }
 
         TestPlatformDispatcher.Instance.ResetSupportsShowingSystemContextMenu();
+        if (UI.PlatformDispatcher.Instance.HasTextSpacingOverrideTestValues)
+        {
+            TestPlatformDispatcher.Instance.ClearTextSpacingOverrideTestValues();
+        }
     }
 }
 
@@ -92,8 +96,80 @@ internal sealed class TestPlatformDispatcher
     public void ResetSupportsShowingSystemContextMenu() =>
         Dispatcher.SetSupportsShowingSystemContextMenuTestValue(null);
 
+    /// <summary>Dart's <c>onMetricsChanged</c>, forwarded to the real dispatcher.</summary>
+    public Action? OnMetricsChanged
+    {
+        get => Dispatcher.OnMetricsChanged;
+        set => Dispatcher.OnMetricsChanged = value;
+    }
+
+    /// <summary>Dart's <c>lineHeightScaleFactorOverride</c>: the test value over the real one.</summary>
+    public double? LineHeightScaleFactorOverride => Dispatcher.LineHeightScaleFactorOverride;
+
+    /// <summary>
+    /// Dart's <c>lineHeightScaleFactorOverrideTestValue</c> setter: a <see langword="null"/> value forces
+    /// the override to read <see langword="null"/>; invokes <see cref="OnMetricsChanged"/>.
+    /// </summary>
+    public double? LineHeightScaleFactorOverrideTestValue
+    {
+        set => Dispatcher.SetLineHeightScaleFactorOverrideTestValue(value);
+    }
+
+    /// <summary>Dart's <c>clearLineHeightScaleFactorOverrideTestValue</c>.</summary>
+    public void ClearLineHeightScaleFactorOverrideTestValue() =>
+        Dispatcher.ClearLineHeightScaleFactorOverrideTestValue();
+
+    /// <summary>Dart's <c>letterSpacingOverride</c>: the test value over the real one.</summary>
+    public double? LetterSpacingOverride => Dispatcher.LetterSpacingOverride;
+
+    /// <summary>Dart's <c>letterSpacingOverrideTestValue</c> setter.</summary>
+    public double? LetterSpacingOverrideTestValue
+    {
+        set => Dispatcher.SetLetterSpacingOverrideTestValue(value);
+    }
+
+    /// <summary>Dart's <c>clearLetterSpacingOverrideTestValue</c>.</summary>
+    public void ClearLetterSpacingOverrideTestValue() => Dispatcher.ClearLetterSpacingOverrideTestValue();
+
+    /// <summary>Dart's <c>wordSpacingOverride</c>: the test value over the real one.</summary>
+    public double? WordSpacingOverride => Dispatcher.WordSpacingOverride;
+
+    /// <summary>Dart's <c>wordSpacingOverrideTestValue</c> setter.</summary>
+    public double? WordSpacingOverrideTestValue
+    {
+        set => Dispatcher.SetWordSpacingOverrideTestValue(value);
+    }
+
+    /// <summary>Dart's <c>clearWordSpacingOverrideTestValue</c>.</summary>
+    public void ClearWordSpacingOverrideTestValue() => Dispatcher.ClearWordSpacingOverrideTestValue();
+
+    /// <summary>Dart's <c>paragraphSpacingOverride</c>: the test value over the real one.</summary>
+    public double? ParagraphSpacingOverride => Dispatcher.ParagraphSpacingOverride;
+
+    /// <summary>Dart's <c>paragraphSpacingOverrideTestValue</c> setter.</summary>
+    public double? ParagraphSpacingOverrideTestValue
+    {
+        set => Dispatcher.SetParagraphSpacingOverrideTestValue(value);
+    }
+
+    /// <summary>Dart's <c>clearParagraphSpacingOverrideTestValue</c>.</summary>
+    public void ClearParagraphSpacingOverrideTestValue() => Dispatcher.ClearParagraphSpacingOverrideTestValue();
+
+    /// <summary>The four text spacing clears <c>clearAllTestValues</c> runs.</summary>
+    public void ClearTextSpacingOverrideTestValues()
+    {
+        ClearLineHeightScaleFactorOverrideTestValue();
+        ClearLetterSpacingOverrideTestValue();
+        ClearWordSpacingOverrideTestValue();
+        ClearParagraphSpacingOverrideTestValue();
+    }
+
     /// <summary>Dart's <c>clearAllTestValues</c>, for the values this harness can fake.</summary>
-    public void ClearAllTestValues() => ClearAccessibilityFeaturesTestValue();
+    public void ClearAllTestValues()
+    {
+        ClearAccessibilityFeaturesTestValue();
+        ClearTextSpacingOverrideTestValues();
+    }
 }
 
 /// <summary>

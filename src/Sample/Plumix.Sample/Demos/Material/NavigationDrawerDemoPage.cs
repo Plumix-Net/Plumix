@@ -45,11 +45,10 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                     spacing: 10,
                     children:
                     [
-                        new Text("NavigationDrawer + NavigationDrawerDestination", fontSize: 20),
+                        new Text("NavigationDrawer + NavigationDrawerDestination", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "Header/footer slots, custom children, destination indexing, selection, disabled state, and theme precedence.",
-                            fontSize: 14,
-                            color: Colors.DimGray),
+                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                         new Row(
                             spacing: 8,
                             children:
@@ -71,7 +70,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                             _selectedIndex.HasValue
                                 ? $"Selected destination: {_selectedIndex.Value + 1}"
                                 : "Selected destination: none",
-                            fontSize: 13),
+                            style: new TextStyle(FontSize: 13)),
                         new Expanded(
                             child: new Row(
                                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -86,15 +85,23 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                         tilePadding: _useWidgetOverrides ? new Thickness(18, 0) : null,
                                         header: new Padding(
                                             new Thickness(28, 20, 16, 12),
-                                            new Text("Destinations", fontSize: 16)),
+                                            new Text("Destinations", style: new TextStyle(FontSize: 16))),
                                         footer: new Padding(
                                             new Thickness(28, 12, 16, 20),
-                                            new Text("Navigation footer", fontSize: 12, color: Colors.DimGray)),
+                                            new Text(
+                                                "Navigation footer",
+                                                style: new TextStyle(
+                                                    FontSize: 12,
+                                                    Color: Colors.DimGray))),
                                         children:
                                         [
                                             new Padding(
                                                 new Thickness(28, 8),
-                                                new Text("Primary", fontSize: 12, color: Colors.DimGray)),
+                                                new Text(
+                                                    "Primary",
+                                                    style: new TextStyle(
+                                                        FontSize: 12,
+                                                        Color: Colors.DimGray))),
                                             new NavigationDrawerDestination(
                                                 icon: new Icon(Icons.StarOutline),
                                                 selectedIcon: new Icon(Icons.Star),
@@ -116,7 +123,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                                 BorderRadius: BorderRadius.Circular(12)),
                                             child: new Text(
                                                 "The drawer keeps destination indices independent from custom children.",
-                                                color: Colors.DimGray,
+                                                style: new TextStyle(Color: Colors.DimGray),
                                                 textAlign: TextAlign.Center)))
                                 ]))
                     ]));
@@ -125,7 +132,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
         private static Widget ControlButton(string label, Action onPressed)
         {
             return new TextButton(
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 onPressed: onPressed);
         }
     }

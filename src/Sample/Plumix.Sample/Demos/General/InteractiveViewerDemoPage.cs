@@ -65,12 +65,11 @@ internal sealed class InteractiveViewerDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("InteractiveViewer", fontSize: 20, color: Colors.Black),
+                new Text("InteractiveViewer", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Drag to pan, pinch, scroll the mouse wheel or use a trackpad to zoom. Flings keep "
                     + "moving with inertia and slide along the boundary.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -93,8 +92,7 @@ internal sealed class InteractiveViewerDemoPageState : State
                 new Text(
                     $"scale={matrix.GetMaxScaleOnAxis():0.00}, "
                     + $"translation=({translation.X:0.0}, {translation.Y:0.0}), last={_lastEvent}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Center(child: new Container(
                     width: 360,
                     height: 240,
@@ -116,7 +114,7 @@ internal sealed class InteractiveViewerDemoPageState : State
                     height: TileSize,
                     color: TileColors[(row + column) % TileColors.Length],
                     alignment: Alignment.Center,
-                    child: new Text($"{row},{column}", fontSize: 14, color: Colors.White)));
+                    child: new Text($"{row},{column}", style: new TextStyle(FontSize: 14, Color: Colors.White))));
             }
 
             rows.Add(new Row(mainAxisSize: MainAxisSize.Min, children: tiles));
@@ -164,8 +162,7 @@ internal sealed class InteractiveViewerDemoPageState : State
                         alignment: Alignment.Center,
                         child: new Text(
                             visible ? $"row {i} (built visible)" : $"row {i} (built hidden)",
-                            fontSize: 12,
-                            color: Colors.White)));
+                            style: new TextStyle(FontSize: 12, Color: Colors.White))));
                 }
 
                 return new Column(mainAxisSize: MainAxisSize.Min, children: children);

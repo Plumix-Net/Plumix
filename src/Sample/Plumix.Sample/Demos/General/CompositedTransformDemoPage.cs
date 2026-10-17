@@ -29,12 +29,15 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                 spacing: 12,
                 children:
                 [
-                    new Text("CompositedTransformTarget + Follower", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "CompositedTransformTarget + Follower",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Text(
                         "The blue follower is painted in a separate composited layer. Its top-center stays 12 px " +
                         "below the orange target's bottom-center. Both labels also expose typed layer annotations.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     BuildPreview(),
                     new Wrap(
                         spacing: 8,
@@ -58,8 +61,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     new Text(
                         $"target={(_showTarget ? $"x={_targetLeft:0}" : "removed")}; " +
                         $"showWhenUnlinked={_showWhenUnlinked.ToString().ToLowerInvariant()}",
-                        fontSize: 13,
-                        color: new Color(0xFF334155)),
+                        style: new TextStyle(FontSize: 13, Color: new Color(0xFF334155))),
                 ]);
         }
 
@@ -106,7 +108,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
             return new Container(
                 color: color,
                 alignment: Alignment.Center,
-                child: new Text(label, fontSize: 13, color: textColor ?? Colors.Black));
+                child: new Text(label, style: new TextStyle(FontSize: 13, Color: textColor ?? Colors.Black)));
         }
     }
 }

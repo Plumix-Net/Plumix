@@ -24,12 +24,15 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("DrawerHeader + UserAccountsDrawerHeader", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "DrawerHeader + UserAccountsDrawerHeader",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Text(
                         "Status-bar padding, animated decoration, ColorScheme primary, pictures, "
                         + "details, and semantics.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -37,7 +40,7 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                             new TextButton(
                                 child: new Text(_alternateDecoration ? "Decoration B" : "Decoration A"),
                                 onPressed: () => SetState(() => _alternateDecoration = !_alternateDecoration)),
-                            new Text("details=$_detailsPressed", color: Colors.Black),
+                            new Text("details=$_detailsPressed", style: new TextStyle(Color: Colors.Black)),
                         ]),
                     new Expanded(
                         child: new Row(
@@ -50,7 +53,10 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                                         decoration: new BoxDecoration(Color: plainColor),
                                         child: new Align(
                                             alignment: Alignment.BottomLeft,
-                                            child: new Text("Plain header", color: Colors.White)))),
+                                            child: new Text(
+                                                "Plain header",
+                                                style: new TextStyle(
+                                                    Color: Colors.White))))),
                                 new Expanded(
                                     child: new UserAccountsDrawerHeader(
                                         accountName: new Text("Ada Lovelace"),

@@ -305,10 +305,13 @@ public sealed class ScrollableSelectionTests
         TextDirection.Ltr,
         new SelectionContainer(registrar, child));
 
-    /// Builds, lays out, then drains the microtask queue the selection registry schedules its
-    /// selectable updates on, and lays out again.
+    /// Builds, lays out, then drains the post-frame callbacks the selection registry schedules its
+    /// selectable updates on, and lays out again. Two rounds: each `Text` registers through its own
+    /// `_SelectableTextContainer`, whose container joins the scrollable's one frame later.
     private static void PumpFully(RestorationHarness harness)
     {
+        harness.Pump(Surface);
+        SchedulerBinding.PumpFrameForTests();
         harness.Pump(Surface);
         SchedulerBinding.PumpFrameForTests();
         harness.Pump(Surface);

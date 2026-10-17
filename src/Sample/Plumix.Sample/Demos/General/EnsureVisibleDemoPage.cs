@@ -43,11 +43,10 @@ internal sealed class EnsureVisibleDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Scrollable.EnsureVisible", fontSize: 20, color: Colors.Black),
+                new Text("Scrollable.EnsureVisible", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The inner list is nested in an outer scroller, so a reveal walks both viewports.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -86,7 +85,7 @@ internal sealed class EnsureVisibleDemoPageState : State
                                 foreground: Colors.White,
                                 fontSize: 13)),
                     ]),
-                new Text(_status, fontSize: 13, color: Colors.Black),
+                new Text(_status, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
                 new Expanded(
                     child: ListView.Builder(
                         controller: _outerController,
@@ -154,8 +153,7 @@ internal sealed class EnsureVisibleDemoPageState : State
                 alignment: Alignment.Center,
                 child: new Text(
                     index == 0 ? "Outer header" : "Outer footer",
-                    fontSize: 15,
-                    color: Colors.DimGray));
+                    style: new TextStyle(FontSize: 15, Color: Colors.DimGray)));
         }
 
         return new Container(
@@ -175,6 +173,6 @@ internal sealed class EnsureVisibleDemoPageState : State
             color: index % 2 == 0 ? Colors.White : Colors.AliceBlue,
             alignment: Alignment.CenterLeft,
             padding: new Thickness(12, 0, 12, 0),
-            child: new Text($"Row {index}", fontSize: 14, color: Colors.Black));
+            child: new Text($"Row {index}", style: new TextStyle(FontSize: 14, Color: Colors.Black)));
     }
 }

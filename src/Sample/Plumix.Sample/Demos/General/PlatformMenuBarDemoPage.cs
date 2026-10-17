@@ -63,23 +63,26 @@ internal sealed class PlatformMenuBarDemoPageState : State<PlatformMenuBarDemoPa
                 spacing: 16,
                 children:
                 [
-                    new Text("PlatformMenuBar", fontSize: 20, color: Colors.Black),
+                    new Text("PlatformMenuBar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Open the system menu to try grouped actions, a Messages submenu and Ctrl+H. "
                         + "Native menus require a host with system-menu support.",
-                        color: Colors.DimGray),
+                        style: new TextStyle(Color: Colors.DimGray)),
                     new Container(
                         padding: new Thickness(12),
                         color: new Color(0xFFF4F7FA),
                         child: new Text(
                             "Plumix demo\n  Say hello (Ctrl+H)\n  Unavailable action (disabled)\n"
                             + "  ──────────\n  Messages → Welcome / Goodbye",
-                            color: Colors.Black)),
-                    new Text($"Say hello: {(_enabled ? "enabled" : "disabled")}", color: Colors.Black),
+                            style: new TextStyle(Color: Colors.Black))),
+                    new Text(
+                        $"Say hello: {(_enabled ? "enabled" : "disabled")}",
+                        style: new TextStyle(
+                            Color: Colors.Black)),
                     new TextButton(
                         onPressed: () => SetState(() => _enabled = !_enabled),
                         child: new Text("Toggle Say hello")),
-                    new Text($"Last event: {_lastEvent}", color: new Color(0xFF31506F)),
+                    new Text($"Last event: {_lastEvent}", style: new TextStyle(Color: new Color(0xFF31506F))),
                 ]));
     }
 

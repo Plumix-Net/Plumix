@@ -33,11 +33,10 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                             spacing: 8,
                             children:
                             [
-                                new Text("SliverAppBar + FlexibleSpaceBar", fontSize: 20),
+                                new Text("SliverAppBar + FlexibleSpaceBar", style: new TextStyle(FontSize: 20)),
                                 new Text(
                                     "Collapse, parallax, floating reveal, pinned extent, snap contract, and Material 3 medium/large variants.",
-                                    fontSize: 14,
-                                    color: Colors.DimGray),
+                                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                                 new Row(
                                     spacing: 6,
                                     children:
@@ -75,7 +74,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                     new BoxDecoration(Color: new Color(0xFF6750A4)),
                     child: new Align(
                         alignment: Alignment.Center,
-                        child: new Text("PARALLAX", fontSize: 30, color: Colors.White))),
+                        child: new Text("PARALLAX", style: new TextStyle(FontSize: 30, Color: Colors.White)))),
                 stretchModes:
                 [
                     StretchMode.ZoomBackground,
@@ -127,6 +126,6 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
         });
 
         private static Widget ToggleButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, fontSize: 12), onPressed);
+            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
     }
 }

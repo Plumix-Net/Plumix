@@ -51,11 +51,10 @@ internal sealed class DrawerDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Drawer baseline", fontSize: 20, color: Colors.Black),
+                    new Text("Drawer baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "M2/M3 defaults, direct surfaceContainerLow, inner-edge shape, and overrides.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -93,8 +92,7 @@ internal sealed class DrawerDemoPageState : State
                         ]),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, endDrawer={(_showEndDrawer ? "true" : "false")}, startOpens={_startOpens}, endOpens={_endOpens}",
-                        fontSize: 12,
-                        color: new Color(0xFF607D8B)),
+                        style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                     new Expanded(
                         child: new Container(
                             decoration: new BoxDecoration(
@@ -126,8 +124,7 @@ internal sealed class DrawerDemoPageState : State
                             BorderRadius: BorderRadius.Circular(8)),
                         child: new Text(
                             "Use open/close controls to validate start/end drawer choreography and scrim behavior.",
-                            fontSize: 12,
-                            color: new Color(0xFF30404D))),
+                            style: new TextStyle(FontSize: 12, Color: new Color(0xFF30404D)))),
                     new Row(
                         spacing: 8,
                         children:
@@ -154,8 +151,7 @@ internal sealed class DrawerDemoPageState : State
                         child: new Center(
                             child: new Text(
                                 "Drawer preview area",
-                                fontSize: 13,
-                                color: new Color(0x99000000)))),
+                                style: new TextStyle(FontSize: 13, Color: new Color(0x99000000))))),
                 ]));
     }
 
@@ -180,15 +176,13 @@ internal sealed class DrawerDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text(title, fontSize: 16, color: accent),
+                            new Text(title, style: new TextStyle(FontSize: 16, Color: accent)),
                             new Text(
                                 "Color, shape, elevation, and width show widget/theme/default precedence.",
-                                fontSize: 12,
-                                color: new Color(0x8A000000)),
+                                style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                             new Text(
                                 BuildControllerAlignmentLabel(context),
-                                fontSize: 11,
-                                color: new Color(0xFF607D8B)),
+                                style: new TextStyle(FontSize: 11, Color: new Color(0xFF607D8B))),
                             new Row(
                                 spacing: 8,
                                 children:
@@ -227,7 +221,7 @@ internal sealed class DrawerDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

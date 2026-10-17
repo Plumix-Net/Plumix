@@ -24,12 +24,11 @@ public sealed class AboutDemoPage : StatelessWidget
             spacing: 12,
             children:
             [
-                new Text("AboutDialog + LicensePage", fontSize: 20),
+                new Text("AboutDialog + LicensePage", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Dialog metadata, adaptive actions, AboutListTile entry, lazy license registry, and the "
                     + "master-detail license page: nested routes below 840px, side-by-side above it.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:

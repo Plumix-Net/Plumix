@@ -395,7 +395,7 @@ public sealed partial class EditableText
                 return;
             }
 
-            renderEditable.Text = BuildTextSpan(ShowPlaceholder);
+            renderEditable.Text = BuildEditableTextSpan(ShowPlaceholder);
             renderEditable.Selection = ShowPlaceholder ? TextSelection.Collapsed(0) : EditingValue.Selection;
             if (renderEditable.Attached)
             {

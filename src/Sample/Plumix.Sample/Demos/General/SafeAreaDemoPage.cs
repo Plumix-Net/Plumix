@@ -17,17 +17,15 @@ public sealed class SafeAreaDemoPage : StatelessWidget
             spacing: 12,
             children:
             [
-                new Text("SafeArea", fontSize: 20, color: Colors.Black),
+                new Text("SafeArea", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The rose surface is the simulated system intrusion. The blue child keeps a minimum " +
                     "8 px inset and preserves the 28 px bottom view padding consumed by a keyboard.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 BuildBoxPreview(),
                 new Text(
                     "SliverSafeArea applies the same edge policy in sliver geometry.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Expanded(child: BuildSliverPreview()),
             ]);
     }
@@ -49,8 +47,7 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                         color: new Color(0xFFBBDEFB),
                         child: new Text(
                             "Safe content\n24 left · 18 top · 32 right · 28 bottom",
-                            fontSize: 15,
-                            color: Colors.Black,
+                            style: new TextStyle(FontSize: 15, Color: Colors.Black),
                             textAlign: TextAlign.Center)))));
     }
 
@@ -78,8 +75,7 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                                     padding: new Thickness(12, 8),
                                     child: new Text(
                                         $"safe sliver row #{index}",
-                                        fontSize: 14,
-                                        color: Colors.Black)),
+                                        style: new TextStyle(FontSize: 14, Color: Colors.Black))),
                                 addAutomaticKeepAlives: false)),
                     ])));
     }

@@ -40,7 +40,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         TextScaler? textScaler = null,
         double textScaleFactor = 1.0,
         int? maxLines = null,
-        string? locale = null,
+        Locale? locale = null,
         StrutStyle? strutStyle = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
@@ -77,41 +77,6 @@ public sealed class RichText : MultiChildRenderObjectWidget
         SelectionColor = selectionColor;
     }
 
-    internal RichText(
-        InlineSpan text,
-        ISelectionRegistrar? selectionConfiguration,
-        TextAlign textAlign = TextAlign.Start,
-        TextDirection? textDirection = null,
-        bool softWrap = true,
-        TextOverflow overflow = TextOverflow.Clip,
-        TextScaler? textScaler = null,
-        double textScaleFactor = 1.0,
-        int? maxLines = null,
-        string? locale = null,
-        StrutStyle? strutStyle = null,
-        TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
-        TextHeightBehavior? textHeightBehavior = null,
-        Color? selectionColor = null,
-        Key? key = null)
-        : this(
-            text,
-            textAlign,
-            textDirection,
-            softWrap,
-            overflow,
-            textScaler,
-            textScaleFactor,
-            maxLines,
-            locale,
-            strutStyle,
-            textWidthBasis,
-            textHeightBehavior,
-            selectionConfiguration,
-            selectionColor,
-            key)
-    {
-    }
-
     /// The text to display in this widget.
     public InlineSpan Text { get; }
 
@@ -141,7 +106,10 @@ public sealed class RichText : MultiChildRenderObjectWidget
 
     /// Used to select a font when the same Unicode character can be rendered
     /// differently, depending on the locale.
-    public string? Locale { get; }
+    ///
+    /// It's rarely necessary to set this property. By default its value
+    /// is inherited from the enclosing app with `Localizations.maybeLocaleOf(context)`.
+    public Locale? Locale { get; }
 
     /// The strut style to use. Strut style defines the strut, which sets minimum vertical layout metrics.
     public StrutStyle? StrutStyle { get; }
@@ -168,7 +136,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
             Overflow = Overflow,
             TextScaler = TextScaler,
             MaxLines = MaxLines,
-            Locale = Locale,
+            Locale = ResolveLocale(context),
             StrutStyle = StrutStyle,
             TextWidthBasis = TextWidthBasis,
             TextHeightBehavior = TextHeightBehavior,
@@ -190,13 +158,58 @@ public sealed class RichText : MultiChildRenderObjectWidget
         paragraph.Overflow = Overflow;
         paragraph.TextScaler = TextScaler;
         paragraph.MaxLines = MaxLines;
-        paragraph.Locale = Locale;
+        paragraph.Locale = ResolveLocale(context);
         paragraph.StrutStyle = StrutStyle;
         paragraph.TextWidthBasis = TextWidthBasis;
         paragraph.TextHeightBehavior = TextHeightBehavior;
         paragraph.SelectionColor = SelectionColor;
         paragraph.Registrar = SelectionRegistrar;
         paragraph.DevicePixelRatio = GetDevicePixelRatio(context);
+    }
+
+    // Dart's `locale ?? Localizations.maybeLocaleOf(context)`; the paragraph carries the locale as a
+    // BCP-47 tag (see docs/ai/DIVERGENCES.md, TextStyle row).
+    private string? ResolveLocale(BuildContext context)
+    {
+        return (Locale ?? Localizations.MaybeLocaleOf(context))?.ToLanguageTag();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RichText.debugFillProperties</c>.</remarks>
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<TextAlign>("textAlign", TextAlign, defaultValue: UI.TextAlign.Start));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new FlagProperty(
+            "softWrap",
+            value: SoftWrap,
+            ifTrue: "wrapping at box width",
+            ifFalse: "no wrapping except at line break characters",
+            showName: true));
+        properties.Add(new EnumProperty<TextOverflow>("overflow", Overflow, defaultValue: TextOverflow.Clip));
+        properties.Add(new DiagnosticsProperty<TextScaler>(
+            "textScaler",
+            TextScaler,
+            defaultValue: Painting.TextScaler.NoScaling));
+        properties.Add(new IntProperty("maxLines", MaxLines, ifNull: "unlimited"));
+        properties.Add(new EnumProperty<TextWidthBasis>(
+            "textWidthBasis",
+            TextWidthBasis,
+            defaultValue: UI.TextWidthBasis.Parent));
+        properties.Add(new StringProperty("text", Text.ToPlainText()));
+        properties.Add(new DiagnosticsProperty<Locale>("locale", Locale, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<StrutStyle>(
+            "strutStyle",
+            StrutStyle,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TextHeightBehavior?>(
+            "textHeightBehavior",
+            TextHeightBehavior,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 
     private static double GetDevicePixelRatio(BuildContext context)

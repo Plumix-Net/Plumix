@@ -49,12 +49,11 @@ internal sealed class AutofillGroupDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AutofillGroup", fontSize: 20, color: Colors.Black),
+                new Text("AutofillGroup", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Fields sharing the closest AutofillGroup are cross-referenced by the platform. "
                     + "Disposing the topmost group finishes the autofill context.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -97,7 +96,11 @@ internal sealed class AutofillGroupDemoPageState : State
                         foreground: Colors.Black,
                         fontSize: 12,
                         padding: new Thickness(10, 8))),
-                new Text($"last action: {_lastAction}", fontSize: 12, color: Colors.DarkSlateGray),
+                new Text(
+                    $"last action: {_lastAction}",
+                    style: new TextStyle(
+                        FontSize: 12,
+                        Color: Colors.DarkSlateGray)),
                 new AutofillGroup(
                     onDisposeAction: _onDisposeAction,
                     child: new Column(
@@ -105,18 +108,18 @@ internal sealed class AutofillGroupDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Username", fontSize: 12, color: Colors.DimGray),
+                            new Text("Username", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                             new EditableText(
                                 controller: _usernameController,
                                 placeholder: "username",
                                 autofillHints: [AutofillHints.Username]),
-                            new Text("Password", fontSize: 12, color: Colors.DimGray),
+                            new Text("Password", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                             new EditableText(
                                 controller: _passwordController,
                                 placeholder: "password",
                                 obscureText: true,
                                 autofillHints: [AutofillHints.Password]),
-                            new Text("Email", fontSize: 12, color: Colors.DimGray),
+                            new Text("Email", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                             new EditableText(
                                 controller: _emailController,
                                 placeholder: "email",
@@ -125,14 +128,12 @@ internal sealed class AutofillGroupDemoPageState : State
                                     : EditableText.AutofillDisabled),
                             new Builder(inner => new Text(
                                 $"clients in group: {AutofillGroup.Of(inner).AutofillClients.Count()}",
-                                fontSize: 12,
-                                color: Colors.Black)),
+                                style: new TextStyle(FontSize: 12, Color: Colors.Black))),
                         ])),
                 new Text(
                     "Keyboard type and autocorrect are inferred from the first hint when they are "
                     + "not given explicitly.",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
             ]);
     }
 }

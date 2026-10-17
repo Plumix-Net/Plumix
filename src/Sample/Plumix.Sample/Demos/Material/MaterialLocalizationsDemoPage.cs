@@ -38,12 +38,11 @@ internal sealed class MaterialLocalizationsDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("Material localizations", fontSize: 20.0, color: Colors.Black),
+                new Text("Material localizations", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "GlobalMaterialLocalizations.Delegates translates every Material string and "
                     + "formats dates, times and numbers with the locale's own CLDR data.",
-                    fontSize: 14.0,
-                    color: new Color(0x8A000000)),
+                    style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(spacing: 8.0, runSpacing: 8.0, children: BuildLocaleButtons()),
                 new Localizations(
                     locale: Locales[_selected].Locale,
@@ -70,8 +69,7 @@ internal sealed class MaterialLocalizationsDemoPageState : State
                             BorderRadius: BorderRadius.Circular(10.0)),
                         child: new Text(
                             Locales[target].Label,
-                            fontSize: 14.0,
-                            color: selected ? Colors.White : Colors.Black))));
+                            style: new TextStyle(FontSize: 14.0, Color: selected ? Colors.White : Colors.Black)))));
         }
 
         return buttons;
@@ -139,8 +137,8 @@ internal sealed class MaterialLocalizationsDemoPageState : State
             [
                 new SizedBox(
                     width: 220.0,
-                    child: new Text(label, fontSize: 13.0, color: new Color(0x8A000000))),
-                new Expanded(child: new Text(value, fontSize: 13.0, color: Colors.Black)),
+                    child: new Text(label, style: new TextStyle(FontSize: 13.0, Color: new Color(0x8A000000)))),
+                new Expanded(child: new Text(value, style: new TextStyle(FontSize: 13.0, Color: Colors.Black))),
             ]);
     }
 }

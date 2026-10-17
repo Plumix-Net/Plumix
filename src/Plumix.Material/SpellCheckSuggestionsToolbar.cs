@@ -119,9 +119,10 @@ public sealed class SpellCheckSuggestionsToolbar : StatelessWidget
             alignment: Alignment.CenterLeft,
             child: new Text(
                 AdaptiveTextSelectionToolbar.GetButtonLabel(context, item),
-                color: item.Type == ContextMenuButtonType.Delete
-                    ? new Color(0xFF2196F3)
-                    : null));
+                style: new TextStyle(
+                    Color: item.Type == ContextMenuButtonType.Delete
+                        ? new Color(0xFF2196F3)
+                        : null)));
 
         if (item.Type != ContextMenuButtonType.Delete)
         {

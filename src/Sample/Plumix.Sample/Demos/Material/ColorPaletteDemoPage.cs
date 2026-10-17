@@ -47,11 +47,10 @@ internal sealed class ColorPaletteDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Colors + primarySwatch", fontSize: 20, color: Colors.Black),
+                    new Text("Colors + primarySwatch", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "MaterialColor shades, ColorScheme.fromSwatch and the primarySwatch-derived theme colors.",
-                        fontSize: 14,
-                        color: new Color(0x8A000000)),
+                        style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
                     new Row(
                         spacing: 8,
                         children:
@@ -94,10 +93,11 @@ internal sealed class ColorPaletteDemoPageState : State
                     alignment: Alignment.Center,
                     child: new Text(
                         shade.ToString(),
-                        fontSize: 11,
-                        color: ThemeData.EstimateBrightnessForColor(color) == Brightness.Dark
-                            ? MaterialColors.White
-                            : MaterialColors.Black))));
+                        style: new TextStyle(
+                            FontSize: 11,
+                            Color: ThemeData.EstimateBrightnessForColor(color) == Brightness.Dark
+                                ? MaterialColors.White
+                                : MaterialColors.Black)))));
         }
 
         return new Container(
@@ -108,7 +108,7 @@ internal sealed class ColorPaletteDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text($"Colors.{name} shades", fontSize: 14, color: Colors.Black),
+                    new Text($"Colors.{name} shades", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     new Row(children: tiles),
                 ]));
     }
@@ -123,7 +123,7 @@ internal sealed class ColorPaletteDemoPageState : State
                 spacing: 8,
                 children:
                 [
-                    new Text("Theme colors", fontSize: 14, color: Colors.Black),
+                    new Text("Theme colors", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                     BuildSwatchRow("colorScheme.primary", theme.ColorScheme.Primary),
                     BuildSwatchRow("colorScheme.secondary", theme.ColorScheme.Secondary),
                     BuildSwatchRow("primaryColor", theme.PrimaryColor),
@@ -141,11 +141,10 @@ internal sealed class ColorPaletteDemoPageState : State
             children:
             [
                 new Container(width: 28, height: 20, color: color),
-                new Expanded(child: new Text(label, fontSize: 12, color: Colors.Black)),
+                new Expanded(child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))),
                 new Text(
                     $"#{color.ToARGB32():X8}",
-                    fontSize: 12,
-                    color: new Color(0xFF607D8B)),
+                    style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
             ]);
     }
 
@@ -159,7 +158,7 @@ internal sealed class ColorPaletteDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, fontSize: 12),
+                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
                     foregroundColor: Colors.Black,
                     backgroundColor: background,

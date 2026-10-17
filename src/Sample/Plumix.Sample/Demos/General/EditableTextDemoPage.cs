@@ -72,12 +72,11 @@ internal sealed class EditableTextDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("EditableText + Focus/IME", fontSize: 20, color: Colors.Black),
+                    new Text("EditableText + Focus/IME", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Baseline input + multiline: Enter adds new line in Notes; "
                         + "ArrowUp/ArrowDown moves caret between lines.",
-                        fontSize: 14,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                     new Row(
                         spacing: 8,
                         children:
@@ -119,14 +118,18 @@ internal sealed class EditableTextDemoPageState : State
                             foreground: Colors.Black,
                             fontSize: 12,
                             padding: new Thickness(10, 8))),
-                    new Text($"last change: {_lastChange}", fontSize: 12, color: Colors.DarkSlateGray),
-                    new Text("Name", fontSize: 12, color: Colors.DimGray),
+                    new Text(
+                        $"last change: {_lastChange}",
+                        style: new TextStyle(
+                            FontSize: 12,
+                            Color: Colors.DarkSlateGray)),
+                    new Text("Name", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _nameController,
                         enabled: _enabled,
                         placeholder: "Type your name",
                         onChanged: value => SetState(() => _lastChange = $"name = {value}")),
-                    new Text("Notes (multiline)", fontSize: 12, color: Colors.DimGray),
+                    new Text("Notes (multiline)", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _notesController,
                         enabled: _enabled,
@@ -135,19 +138,17 @@ internal sealed class EditableTextDemoPageState : State
                         onChanged: value => SetState(() => _lastChange = $"notes = {EscapeMultiline(value)}")),
                     new Text(
                         $"notes lines: {notesLineCount}",
-                        fontSize: 12,
-                        color: Colors.DarkSlateGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                     new Text(
                         "PIN (obscured; mobile shows the last typed character briefly)",
-                        fontSize: 12,
-                        color: Colors.DimGray),
+                        style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _pinController,
                         enabled: _enabled,
                         obscureText: true,
                         placeholder: "Type a PIN",
                         onChanged: value => SetState(() => _lastChange = $"pin length = {value.Length}")),
-                    new Text("Caret (width 3, radius 2)", fontSize: 12, color: Colors.DimGray),
+                    new Text("Caret (width 3, radius 2)", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _caretController,
                         enabled: _enabled,
@@ -155,13 +156,17 @@ internal sealed class EditableTextDemoPageState : State
                         cursorRadius: Radius.Circular(2),
                         cursorColor: new Color(0xFFD81B60),
                         onChanged: value => SetState(() => _lastChange = $"caret = {value}")),
-                    new Text("Caret (opacity animates)", fontSize: 12, color: Colors.DimGray),
+                    new Text("Caret (opacity animates)", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _animatedCaretController,
                         enabled: _enabled,
                         cursorOpacityAnimates: true,
                         onChanged: value => SetState(() => _lastChange = $"animated caret = {value}")),
-                    new Text("Long line (scrolls to the caret)", fontSize: 12, color: Colors.DimGray),
+                    new Text(
+                        "Long line (scrolls to the caret)",
+                        style: new TextStyle(
+                            FontSize: 12,
+                            Color: Colors.DimGray)),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new SizedBox(
@@ -170,7 +175,7 @@ internal sealed class EditableTextDemoPageState : State
                                 controller: _longLineController,
                                 enabled: _enabled,
                                 onChanged: value => SetState(() => _lastChange = $"long line = {value}")))),
-                    new Text("Notes (3 lines, scrolls)", fontSize: 12, color: Colors.DimGray),
+                    new Text("Notes (3 lines, scrolls)", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _scrollingNotesController,
                         enabled: _enabled,
@@ -178,7 +183,11 @@ internal sealed class EditableTextDemoPageState : State
                         maxLines: 3,
                         onChanged: value => SetState(() =>
                             _lastChange = $"scrolling notes = {EscapeMultiline(value)}")),
-                    new Text("Undo history (a formatter upper-cases input)", fontSize: 12, color: Colors.DimGray),
+                    new Text(
+                        "Undo history (a formatter upper-cases input)",
+                        style: new TextStyle(
+                            FontSize: 12,
+                            Color: Colors.DimGray)),
                     new SizedBox(
                         width: 170,
                         child: new CounterTapButton(
@@ -207,8 +216,7 @@ internal sealed class EditableTextDemoPageState : State
                             $"history value: '{value.Text}', "
                             + $"selection: {value.Selection.BaseOffset}/{value.Selection.ExtentOffset}, "
                             + $"composing: {value.Composing.Start}/{value.Composing.End}",
-                            fontSize: 12,
-                            color: Colors.DarkSlateGray)),
+                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray))),
                     new ValueListenableBuilder<UndoHistoryValue>(
                         valueListenable: _undoController,
                         builder: (_, value, _) => new Row(
@@ -243,8 +251,7 @@ internal sealed class EditableTextDemoPageState : State
                         onChanged: value => SetState(() => _lastChange = $"undoable = {value}")),
                     new Text(
                         $"current: name='{_nameController.Text}', notes='{EscapeMultiline(_notesController.Text)}'",
-                        fontSize: 12,
-                        color: Colors.Black),
+                        style: new TextStyle(FontSize: 12, Color: Colors.Black)),
                 ]));
     }
 

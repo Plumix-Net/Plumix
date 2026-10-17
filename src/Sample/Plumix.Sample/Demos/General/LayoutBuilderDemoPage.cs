@@ -16,12 +16,11 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
             spacing: 12,
             children:
             [
-                new Text("LayoutBuilder + OrientationBuilder", fontSize: 20, color: Colors.Black),
+                new Text("LayoutBuilder + OrientationBuilder", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "LayoutBuilder receives its parent's live constraints. OrientationBuilder reduces those " +
                     "constraints to landscape or portrait.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Container(
                     height: 96,
                     color: new Color(0xFFE7EDF6),
@@ -36,8 +35,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                             alignment: Alignment.Center,
                             child: new Text(
                                 $"{width} × {height} — {(isWide ? "wide" : "compact")}",
-                                fontSize: 16,
-                                color: Colors.White));
+                                style: new TextStyle(FontSize: 16, Color: Colors.White)));
                     })),
                 new Row(
                     mainAxisAlignment: MainAxisAlignment.Center,
@@ -64,8 +62,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                     alignment: Alignment.Center,
                     child: new Text(
                         isLandscape ? "landscape" : "portrait",
-                        fontSize: 14,
-                        color: Colors.White));
+                        style: new TextStyle(FontSize: 14, Color: Colors.White)));
             }));
     }
 }

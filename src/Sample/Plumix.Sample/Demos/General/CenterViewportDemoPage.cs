@@ -39,12 +39,11 @@ internal sealed class CenterViewportDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("CustomScrollView center", fontSize: 20, color: Colors.Black),
+                new Text("CustomScrollView center", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Slivers before the center key grow in the reverse direction and live at "
                     + "negative scroll offsets.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -87,7 +86,11 @@ internal sealed class CenterViewportDemoPageState : State
                                 child: new Container(
                                     color: new Color(0xFF263238),
                                     padding: new Thickness(12, 10),
-                                    child: new Text("center (offset 0)", fontSize: 14, color: Colors.White))),
+                                    child: new Text(
+                                        "center (offset 0)",
+                                        style: new TextStyle(
+                                            FontSize: 14,
+                                            Color: Colors.White)))),
                             new SliverList(
                                 new SliverChildListDelegate(
                                     Enumerable.Range(1, _after)
@@ -103,6 +106,6 @@ internal sealed class CenterViewportDemoPageState : State
             height: 44,
             color: background,
             padding: new Thickness(12, 8),
-            child: new Text($"item {index}", fontSize: 13, color: Colors.Black));
+            child: new Text($"item {index}", style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }
 }

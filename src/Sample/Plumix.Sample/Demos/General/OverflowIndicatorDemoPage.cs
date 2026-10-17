@@ -29,11 +29,10 @@ internal sealed class OverflowIndicatorDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("RenderFlex overflow indicator", fontSize: 20, color: Colors.Black),
+                new Text("RenderFlex overflow indicator", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Intentionally overflows a Flex container to show Plumix.Sample-like yellow/black debug stripes and overflow labels.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -45,8 +44,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                     ]),
                 new Text(
                     $"axis={(_horizontal ? "horizontal" : "vertical")}, itemCount={_itemCount} (overflow expected)",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 280,
                     height: 220,
@@ -95,7 +93,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
             height: 86,
             color: index % 2 == 0 ? new Color(0xFFBBDEFB) : new Color(0xFFC8E6C9),
             child: new Center(
-                child: new Text($"tile {index}", fontSize: 12, color: Colors.Black)));
+                child: new Text($"tile {index}", style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
 
     private Widget BuildVerticalTile(int index)
@@ -104,7 +102,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
             height: 34,
             color: index % 2 == 0 ? new Color(0xFFBBDEFB) : new Color(0xFFC8E6C9),
             child: new Center(
-                child: new Text($"row {index}", fontSize: 12, color: Colors.Black)));
+                child: new Text($"row {index}", style: new TextStyle(FontSize: 12, Color: Colors.Black))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

@@ -32,7 +32,11 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("AnimatedList + SliverAnimatedList", fontSize: 20, color: Colors.Black),
+                    new Text(
+                        "AnimatedList + SliverAnimatedList",
+                        style: new TextStyle(
+                            FontSize: 20,
+                            Color: Colors.Black)),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -47,7 +51,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                                 onPressed: _sliverItems.Count == 0 ? null : RemoveSliverItem,
                                 child: new Text("Remove sliver item")),
                         ]),
-                    new Text(_status, fontSize: 12, color: new Color(0x8A000000)),
+                    new Text(_status, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
                     new Expanded(
                         new Row(
                             spacing: 12,
@@ -58,7 +62,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                                         children:
                                         [
-                                            new Text("AnimatedList.separated", fontSize: 14),
+                                            new Text("AnimatedList.separated", style: new TextStyle(FontSize: 14)),
                                             new Expanded(BuildAnimatedList()),
                                         ])),
                                 new Expanded(
@@ -66,7 +70,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                                         crossAxisAlignment: CrossAxisAlignment.Stretch,
                                         children:
                                         [
-                                            new Text("SliverAnimatedList", fontSize: 14),
+                                            new Text("SliverAnimatedList", style: new TextStyle(FontSize: 14)),
                                             new Expanded(BuildSliverAnimatedList()),
                                         ])),
                             ])),
@@ -117,7 +121,7 @@ public sealed class AnimatedListDemoPage : StatefulWidget
                     decoration: new BoxDecoration(
                         Color: value < 10 ? new Color(0xFFEADDFF) : new Color(0xFFD7E3FF),
                         BorderRadius: BorderRadius.Circular(10)),
-                    child: new Text($"Item {value}", color: Colors.Black)));
+                    child: new Text($"Item {value}", style: new TextStyle(Color: Colors.Black))));
         }
 
         private int? FindSliverItemIndex(Key key)

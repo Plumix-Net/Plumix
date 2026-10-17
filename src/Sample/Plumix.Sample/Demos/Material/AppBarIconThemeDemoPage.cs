@@ -40,11 +40,10 @@ internal sealed class AppBarIconThemeDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AppBar iconTheme/actionsIconTheme", fontSize: 20, color: Colors.Black),
+                new Text("AppBar iconTheme/actionsIconTheme", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for icon-theme precedence: widget override > appBarTheme > iconTheme fallback > foreground fallback.",
-                    fontSize: 14,
-                    color: Colors.DimGray),
+                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
                     children:
@@ -82,8 +81,7 @@ internal sealed class AppBarIconThemeDemoPageState : State
                     ]),
                 new Text(
                     $"fg={ColorLabel(_foregroundColor)}, themeIcon={OnOff(_themeIconEnabled)}, themeActions={OnOff(_themeActionsIconEnabled)}, widgetIcon={OnOff(_widgetIconOverrideEnabled)}, widgetActions={OnOff(_widgetActionsIconOverrideEnabled)}, expectedLeading={ColorLabel(ResolveExpectedLeadingColor())}, expectedActions={ColorLabel(ResolveExpectedActionsColor())}",
-                    fontSize: 12,
-                    color: Colors.DarkSlateGray),
+                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
                 new Container(
                     width: 320,
                     color: new Color(0xFFE7EDF6),
@@ -93,9 +91,17 @@ internal sealed class AppBarIconThemeDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Themed app bar preview", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Themed app bar preview",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildThemedPreview(),
-                            new Text("Default app bar reference (no icon theme overrides)", fontSize: 11, color: Colors.DimGray),
+                            new Text(
+                                "Default app bar reference (no icon theme overrides)",
+                                style: new TextStyle(
+                                    FontSize: 11,
+                                    Color: Colors.DimGray)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);
