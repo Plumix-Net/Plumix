@@ -106,7 +106,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         foreach (string name in new[]
                  {
                      "debugDumpApp", "showPerformanceOverlay", "didSendFirstFrameEvent", "profileWidgetBuilds",
-                     "profileUserWidgetBuilds", "debugAllowBanner",
+                     "profileUserWidgetBuilds", "debugAllowBanner", "accessibilityEvaluations",
                  })
         {
             Assert.Contains($"ext.flutter.{name}", BindingBase.ServiceExtensionMethods);

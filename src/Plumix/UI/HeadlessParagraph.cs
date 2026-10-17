@@ -7,7 +7,8 @@ using Plumix.Widgets;
 
 // C#-only infrastructure: the paragraph engine Plumix uses when no Avalonia font manager exists.
 // It reproduces the metrics of Flutter's `FlutterTest` font (every glyph one em wide, ascent 0.75 em,
-// descent 0.25 em), so Flutter's own text layout tests port with their expected values. Line breaking
+// descent 0.25 em, visible glyphs painted as solid em boxes), so Flutter's own text layout and
+// pixel-reading tests port with their expected values. Line breaking
 // is a UAX #14 subset (spaces, hard breaks, placeholders, ideographs), bidi a simplified UAX #9 without
 // explicit embeddings. No Dart source maps to this file.
 
@@ -1183,10 +1184,55 @@ internal sealed class HeadlessParagraph : Paragraph
         return null;
     }
 
+    /// <remarks>
+    /// The `FlutterTest` font draws every visible glyph as a solid box one em wide, from 0.75 em above
+    /// the baseline to 0.25 em below it, and whitespace as nothing; the boxes are painted with the
+    /// run's foreground paint, or its color.
+    /// </remarks>
     internal override Action<DrawingContext>? CreateDrawAction(Point offset)
     {
-        // No font manager: there are no glyphs to draw.
-        return null;
+        if (!_laidOut)
+        {
+            return null;
+        }
+
+        var glyphs = new List<(Rect Box, ResolvedTextStyle Style)>();
+        foreach (Line line in _lines)
+        {
+            foreach (Placed item in line.Visual)
+            {
+                if (item.Cluster is { } cluster
+                    && (cluster.Placeholder is not null
+                        || cluster.HardBreak
+                        || System.Text.Rune.IsWhiteSpace(new System.Text.Rune(cluster.FirstCodePoint))))
+                {
+                    continue;
+                }
+
+                double fontSize = item.Style.FontSize;
+                double top = line.Baseline - (fontSize * AscentRatio);
+                double bottom = line.Baseline + (fontSize * DescentRatio);
+                glyphs.Add((
+                    new Rect(offset.X + item.X, offset.Y + top, Math.Max(item.Width, 0.0), bottom - top),
+                    item.Style));
+            }
+        }
+
+        if (glyphs.Count == 0)
+        {
+            return null;
+        }
+
+        return context =>
+        {
+            foreach ((Rect box, ResolvedTextStyle style) in glyphs)
+            {
+                IBrush brush = style.Foreground is { } foreground
+                    ? foreground.Shader ?? new SolidColorBrush(foreground.Color)
+                    : new SolidColorBrush(style.Color);
+                context.FillRectangle(brush, box);
+            }
+        };
     }
 
     // -- Model -----------------------------------------------------------------------

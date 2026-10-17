@@ -2264,6 +2264,23 @@ public sealed partial class SemanticsNode
     /// <remarks>Flutter's <c>SemanticsNode.isPartOfNodeMerging</c>.</remarks>
     public bool IsPartOfNodeMerging => MergeAllDescendantsIntoThisNode || IsMergedIntoParent;
 
+    /// <summary>Visits the immediate children of this node.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsNode.visitChildren</c>: calls <paramref name="visitor"/> for each immediate
+    /// child, in paint order, until it returns <c>false</c>.
+    /// </remarks>
+    public void VisitChildren(Func<SemanticsNode, bool> visitor)
+    {
+        ArgumentNullException.ThrowIfNull(visitor);
+        foreach (SemanticsNode child in _children)
+        {
+            if (!visitor(child))
+            {
+                return;
+            }
+        }
+    }
+
     /// <summary>
     /// Walks the descendants in pre-order paint order, stopping as soon as
     /// <paramref name="visitor"/> returns <c>false</c>.

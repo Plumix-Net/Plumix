@@ -113,9 +113,8 @@ public partial class WidgetsBinding
     /// <summary>Registers the widgets library's service extensions.</summary>
     /// <remarks>
     /// Flutter's <c>WidgetsBinding.initServiceExtensions</c>, which <c>BindingBase</c> runs right after
-    /// <c>initInstances</c>. <c>debugDumpFocusTree</c> (the focus manager has no diagnostics tree) and
-    /// <c>accessibilityEvaluations</c> (<c>_accessibility_evaluations.dart</c> is not ported) are not
-    /// registered; see <c>docs/ai/BACKLOG.md</c>.
+    /// <c>initInstances</c>. <c>debugDumpFocusTree</c> is not registered (the focus manager has no
+    /// diagnostics tree); see <c>docs/ai/BACKLOG.md</c>.
     /// </remarks>
     private void InitServiceExtensions()
     {
@@ -179,6 +178,51 @@ public partial class WidgetsBinding
                     WidgetsDebug.DebugProfileBuildsEnabledUserWidgets = value;
                     return Task.CompletedTask;
                 });
+
+            BindingBase.RegisterServiceExtension(
+                WidgetsServiceExtensions.AccessibilityEvaluations.DartName(),
+                async parameters =>
+                {
+                    if (!parameters.TryGetValue("type", out string? type))
+                    {
+                        throw new Exception("type parameter is required");
+                    }
+
+                    switch (type)
+                    {
+                        case "MinimumTextContrastEvaluation":
+                            if (parameters.TryGetValue("minNormalTextContrastRatio", out string? minNormal)
+                                && parameters.TryGetValue("minLargeTextContrastRatio", out string? minLarge))
+                            {
+                                EvaluationResult result = await new MinimumTextContrastEvaluation(
+                                        minNormalTextContrastRatio: ParseDartDouble(minNormal),
+                                        minLargeTextContrastRatio: ParseDartDouble(minLarge))
+                                    .Evaluate(this);
+                                return FormatEvaluationResult(result.Violations);
+                            }
+
+                            throw new Exception("Invalid arguments");
+                        case "MinimumTapTargetEvaluation":
+                            if (parameters.TryGetValue("targetSize", out string? targetSize))
+                            {
+                                double dimension = ParseDartDouble(targetSize);
+                                EvaluationResult result =
+                                    await new MinimumTapTargetEvaluation(size: new Avalonia.Size(dimension, dimension))
+                                        .Evaluate(this);
+                                return FormatEvaluationResult(result.Violations);
+                            }
+
+                            throw new Exception("Invalid arguments");
+                        case "LabeledTapTargetEvaluation":
+                        {
+                            EvaluationResult result = await new LabeledTapTargetEvaluation().Evaluate(this);
+                            return FormatEvaluationResult(result.Violations);
+                        }
+
+                        default:
+                            throw new Exception($"unknown type: {type}");
+                    }
+                });
         }
 
         if (Constants.KDebugMode)
@@ -200,6 +244,25 @@ public partial class WidgetsBinding
             WidgetInspectorService.Instance.InitServiceExtensions(BindingBase.RegisterServiceExtension);
         }
     }
+
+    /// <remarks>Flutter's private <c>WidgetsBinding._formatEvaluationResult</c>.</remarks>
+    private static Dictionary<string, object?> FormatEvaluationResult(List<Violation> violations) => new()
+    {
+        ["result"] = violations
+            .Select(violation => new Dictionary<string, string>
+            {
+                ["nodeId"] = violation.Node.Id.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                ["message"] = violation.Reason,
+            })
+            .ToList(),
+    };
+
+    /// <remarks>Dart's <c>double.parse</c>, which throws a <see cref="FormatException"/>.</remarks>
+    private static double ParseDartDouble(string source) =>
+        double.Parse(
+            source,
+            System.Globalization.NumberStyles.Float,
+            System.Globalization.CultureInfo.InvariantCulture);
 
     /// <remarks>Flutter's private <c>WidgetsBinding._forceRebuild</c>.</remarks>
     private Task ForceRebuild()
