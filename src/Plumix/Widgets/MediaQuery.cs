@@ -360,17 +360,15 @@ public sealed record MediaQueryData
     /// Flutter's <c>MediaQueryData.fromView</c>. The accessibility flags come from
     /// <c>view.platformDispatcher.accessibilityFeatures</c> exactly as in Dart. Plumix's dispatcher
     /// does not carry the text scale factor, the platform brightness or the 24-hour setting itself:
-    /// for the implicit view they come from the platform data its host installed
-    /// (<see cref="PlatformDispatcher.ImplicitViewPlatformData"/>), and any other view falls back to
-    /// the defaults.
+    /// they come from the platform data the implicit view's host installed
+    /// (<see cref="PlatformDispatcher.ImplicitViewPlatformData"/>) for every view, as Dart reads them from
+    /// the one process-wide dispatcher, and fall back to the defaults before a host reported any.
     /// </remarks>
     public static MediaQueryData FromView(FlutterView view, MediaQueryData? platformData = null)
     {
         ArgumentNullException.ThrowIfNull(view);
         PlatformDispatcher platformDispatcher = view.PlatformDispatcher;
-        MediaQueryData? dispatcherData = ReferenceEquals(platformDispatcher.ImplicitView, view)
-            ? platformDispatcher.ImplicitViewPlatformData
-            : null;
+        MediaQueryData? dispatcherData = platformDispatcher.ImplicitViewPlatformData;
         AccessibilityFeatures accessibilityFeatures = platformDispatcher.AccessibilityFeatures;
 
         double devicePixelRatio = view.DevicePixelRatio;

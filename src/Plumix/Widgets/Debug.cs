@@ -121,6 +121,36 @@ public static class WidgetsDebug
         throw new FlutterError(information);
     }
 
+    /// <summary>
+    /// Dart's <c>debugCheckHasWidgetsLocalizations</c>: asserts that <paramref name="context"/> has a
+    /// <see cref="Localizations"/> ancestor that contains a <see cref="WidgetsLocalizations"/> delegate.
+    /// </summary>
+    public static bool DebugCheckHasWidgetsLocalizations(BuildContext context)
+    {
+        if (!Constants.KDebugMode || Localizations.MaybeOf<WidgetsLocalizations>(context) is not null)
+        {
+            return true;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("No WidgetsLocalizations found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require WidgetsLocalizations "
+                + "to be provided by a Localizations widget ancestor."),
+            new ErrorDescription(
+                "The widgets library uses Localizations to generate messages, "
+                + "labels, and abbreviations."),
+            new ErrorHint(
+                "To introduce a WidgetsLocalizations, either use a "
+                + "WidgetsApp at the root of your application to include them "
+                + "automatically, or add a Localization widget with a "
+                + "WidgetsLocalizations delegate."),
+        };
+        information.AddRange(context.DescribeMissingAncestor(typeof(WidgetsLocalizations)));
+        throw new FlutterError(information);
+    }
+
     /// <summary>Dart's <c>debugPrintRebuildDirtyWidgets</c>: log every widget as it rebuilds.</summary>
     public static bool DebugPrintRebuildDirtyWidgets { get; set; }
 

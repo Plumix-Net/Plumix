@@ -128,10 +128,15 @@ internal sealed partial class FrameworkDartTester : IDisposable
         RendererBinding.Instance.RenderViews.First(view => ReferenceEquals(view.FlutterView, _flutterView));
 
     /// <summary>Dart's <c>WidgetTester.pumpWidget</c>.</summary>
-    public void PumpWidget(Widget widget, TimeSpan? duration = null)
+    /// <param name="wrapWithView">
+    /// Dart's <c>wrapWithView</c>: <see langword="false"/> attaches <paramref name="widget"/> as the root
+    /// itself, for a tree that brings its own views.
+    /// </param>
+    public void PumpWidget(Widget widget, TimeSpan? duration = null, bool wrapWithView = true)
     {
         _lastWidget = widget;
-        _root = new RootWidget(child: Wrap(widget), debugShortDescription: "[root]").Attach(_owner, _root);
+        _root = new RootWidget(child: wrapWithView ? Wrap(widget) : widget, debugShortDescription: "[root]")
+            .Attach(_owner, _root);
         Pump(duration);
     }
 

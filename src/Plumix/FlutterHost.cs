@@ -36,6 +36,13 @@ public class PlumixHost : Control
 
     private static int s_nextViewId = -1;
 
+    // The engine is one per process while every Plumix host is a view of its own: the hosts attached to
+    // a visual tree, in attach order, and the ones answering the process-wide `flutter/platform` and
+    // `flutter/mousecursor` channels. When a holder detaches, the next attached host takes over.
+    private static readonly List<PlumixHost> s_attachedHosts = [];
+    private static PlumixHost? s_platformChannelHost;
+    private static bool s_isMouseCursorHandlerInstalled;
+
     // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
     // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
     // by them).
@@ -498,9 +505,21 @@ public class PlumixHost : Control
         }
     }
 
+    /// <summary>
+    /// Whether a windowing owner manages this host's window: its controller owns the window's title, close
+    /// requests and destruction, so the host neither answers them itself nor reports the app detached.
+    /// </summary>
+    private protected virtual bool IsWindowingView => false;
+
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        if (!s_attachedHosts.Contains(this))
+        {
+            s_attachedHosts.Add(this);
+        }
+
+        PlatformDispatcher.Instance.AddView(_view);
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
         AttachMouseCursorListener();
         AttachFeedbackListener();
@@ -528,7 +547,17 @@ public class PlumixHost : Control
         DetachFeedbackListener();
         DetachTextInputPlugin();
         DetachMouseCursorListener();
-        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
+        s_attachedHosts.Remove(this);
+        if (!WidgetsBinding.IsImplicitView(_view))
+        {
+            PlatformDispatcher.Instance.RemoveView(_view);
+        }
+
+        if (s_attachedHosts.Count == 0)
+        {
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
+        }
+
         base.OnDetachedFromVisualTree(e);
     }
 
@@ -545,6 +574,7 @@ public class PlumixHost : Control
         _view.UpdateMetrics(
             physicalSize: data.PhysicalSize,
             devicePixelRatio: scale,
+            physicalConstraints: GetViewPhysicalConstraints(data),
             padding: ToViewPadding(data.Padding, scale),
             viewInsets: ToViewPadding(data.ViewInsets, scale),
             viewPadding: ToViewPadding(data.ViewPadding, scale),
@@ -555,6 +585,19 @@ public class PlumixHost : Control
         PlatformDispatcher.Instance.UpdateImplicitViewPlatformData(_view, data);
         PlatformDispatcher.Instance.OnMetricsChanged?.Invoke();
         ReportAccessibilityFeatures();
+    }
+
+    /// <summary>
+    /// The physical constraints the view reports with new metrics; <see langword="null"/>, a tight
+    /// constraint to the host's size, unless the host sizes itself to the view's content.
+    /// </summary>
+    private protected virtual BoxConstraints? GetViewPhysicalConstraints(MediaQueryData data) => null;
+
+    /// <summary>
+    /// Called after <see cref="FlutterView.Render"/> handed this host a scene of the given physical size.
+    /// </summary>
+    private protected virtual void OnViewRendered(Size physicalSize)
+    {
     }
 
     /// <summary>
@@ -937,10 +980,17 @@ public class PlumixHost : Control
         if (_attachedTopLevel is Window window)
         {
             window.PropertyChanged += HandleWindowPropertyChanged;
-            window.Closing += HandleWindowClosing;
+            if (!IsWindowingView)
+            {
+                window.Closing += HandleWindowClosing;
+            }
         }
 
-        ApplyApplicationSwitcherDescription();
+        if (!IsWindowingView)
+        {
+            ApplyApplicationSwitcherDescription();
+        }
+
         _attachedTopLevel.ActualThemeVariantChanged += HandleActualThemeVariantChanged;
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
@@ -1108,7 +1158,19 @@ public class PlumixHost : Control
             return;
         }
 
-        SystemChannels.MouseCursor.SetPlatformMethodCallHandler(HandleMouseCursorMethodCall);
+        // The engine's cursor is process-wide; every attached host shows the cursor last activated.
+        if (!s_isMouseCursorHandlerInstalled)
+        {
+            SystemChannels.MouseCursor.SetPlatformMethodCallHandler(HandleMouseCursorMethodCall);
+            s_isMouseCursorHandlerInstalled = true;
+        }
+
+        PlumixHost? current = s_attachedHosts.Find(host => host != this && host._isSubscribedToMouseCursor);
+        if (current is not null)
+        {
+            _currentMouseCursorKind = current._currentMouseCursorKind;
+        }
+
         _isSubscribedToMouseCursor = true;
         ApplyMouseCursor();
     }
@@ -1120,12 +1182,16 @@ public class PlumixHost : Control
             return;
         }
 
-        SystemChannels.MouseCursor.SetPlatformMethodCallHandler(null);
         _isSubscribedToMouseCursor = false;
         Cursor = null;
+        if (!s_attachedHosts.Exists(host => host != this && host._isSubscribedToMouseCursor))
+        {
+            SystemChannels.MouseCursor.SetPlatformMethodCallHandler(null);
+            s_isMouseCursorHandlerInstalled = false;
+        }
     }
 
-    private Task<object?> HandleMouseCursorMethodCall(MethodCall call)
+    private static Task<object?> HandleMouseCursorMethodCall(MethodCall call)
     {
         if (call.Method != "activateSystemCursor")
         {
@@ -1138,8 +1204,15 @@ public class PlumixHost : Control
             ? arguments["kind"] as string ?? SystemMouseCursors.Basic.Kind
             : SystemMouseCursors.Basic.Kind;
 
-        _currentMouseCursorKind = kind;
-        ApplyMouseCursor();
+        foreach (PlumixHost host in s_attachedHosts)
+        {
+            if (host._isSubscribedToMouseCursor)
+            {
+                host._currentMouseCursorKind = kind;
+                host.ApplyMouseCursor();
+            }
+        }
+
         return Task.FromResult<object?>(null);
     }
 
@@ -1220,7 +1293,19 @@ public class PlumixHost : Control
             return;
         }
 
+        // A windowing view never takes the channel from a host that answers it already.
+        if (IsWindowingView && s_platformChannelHost is not null)
+        {
+            return;
+        }
+
+        if (s_platformChannelHost is { } previous && previous != this)
+        {
+            previous._isSubscribedToPlatformChannel = false;
+        }
+
         SystemChannels.Platform.SetPlatformMethodCallHandler(HandlePlatformMethodCall);
+        s_platformChannelHost = this;
         _isSubscribedToPlatformChannel = true;
     }
 
@@ -1233,6 +1318,9 @@ public class PlumixHost : Control
 
         SystemChannels.Platform.SetPlatformMethodCallHandler(null);
         _isSubscribedToPlatformChannel = false;
+        s_platformChannelHost = null;
+        // The next attached host answers the channel from here on.
+        s_attachedHosts.Find(host => host != this)?.AttachPlatformChannelHandler();
     }
 
     private Task<object?> HandlePlatformMethodCall(MethodCall call)
@@ -1514,13 +1602,18 @@ public class PlumixHost : Control
 
     private void DispatchPointerEvent(PointerEvent @event)
     {
-        if (!_root.Attached)
+        // Dart's `hitTestInView` looks the render view up by the event's view id: the host's own one for
+        // the implicit or a render-only view, the one a `View` widget created for any other view.
+        RenderView? root = _root.Attached
+            ? _root
+            : RendererBinding.Instance.RenderViews.FirstOrDefault(view => ReferenceEquals(view.FlutterView, _view));
+        if (root is null || !root.Attached)
         {
             // Dart's `hitTestInView` finds no `RenderView` for a view that has no render tree yet.
             return;
         }
 
-        _gestureBinding.HandlePointerEvent(_root, @event);
+        _gestureBinding.HandlePointerEvent(root, @event);
     }
 
     /// <summary>
@@ -1557,6 +1650,7 @@ public class PlumixHost : Control
             ? new Size(physical.Width / devicePixelRatio, physical.Height / devicePixelRatio)
             : Bounds.Size;
         _pendingFrameTimings = FrameTimingsRecorder.ForRender();
+        OnViewRendered(physical);
 
         // The scheduler is process-wide and a frame can be pumped from any thread, while an Avalonia
         // control may only be touched from the thread that created it.

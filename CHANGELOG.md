@@ -9,6 +9,16 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Windowing API: window controllers, owner, WindowScope/Registry/Manager, five window widgets (widgets/_window.dart).
+- WindowPositioner placement with flip/slide/resize adjustments (widgets/_window_positioner.dart).
+- AvaloniaWindowingOwner: regular/dialog/tooltip/popup windows as Avalonia windows of their own views (C#-only).
+- showRawDialog opens dialog windows through the WindowRegistry, falling back to a route (widgets/dialog.dart).
+- Breaking: Material showDialog goes through showRawDialog with the full-window dialog wrappers (dialog.dart).
+- isWindowingEnabled/debugEnabledFeatureFlags read FLUTTER_ENABLED_FEATURE_FLAGS (foundation/_features.dart).
+- PlatformDispatcher.views/view(id:); MediaQuery.fromView reads platform settings for every view (dart:ui).
+- Breaking: Hosts share process-wide channels/lifecycle across windows; input hit-tests the view's RenderView (C#-only).
+- Navigator.onPopPage (deprecated in Dart) and Navigator.of resolving a navigator's own context (navigator.dart).
+- debugCheckHasWidgetsLocalizations (widgets/debug.dart); windowing demo in both samples.
 - Breaking: Pop/push route handlers return Task<bool> and await each observer; hosts follow (widgets/binding.dart).
 - PlatformDispatcher locales/onLocaleChanged reach didChangeLocales; computePlatformResolvedLocale (binding.dart).
 - Breaking: WidgetsApp resolves locales via LocalizationsResolver from the platform locales (localizations.dart).

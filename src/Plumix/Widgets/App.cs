@@ -726,6 +726,11 @@ public sealed class WidgetsApp : StatefulWidget
                              "WidgetsApp requires routing when builder is not specified.");
             }
 
+            if (Features.IsWindowingEnabled)
+            {
+                result = new WindowManager(child: result);
+            }
+
             if (CurrentWidget.TextStyle != null)
             {
                 result = new DefaultTextStyle(CurrentWidget.TextStyle, result);

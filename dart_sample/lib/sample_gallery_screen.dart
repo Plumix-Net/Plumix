@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 
 import 'demos/general/align_demo_page.dart';
 import 'demos/general/platform_menu_bar_demo_page.dart';
+import 'demos/general/windowing_demo_page.dart';
 import 'demos/general/async_builder_demo_page.dart';
 import 'demos/general/animated_list_demo_page.dart';
 import 'demos/general/animated_grid_demo_page.dart';
@@ -782,6 +783,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'PlatformMenuBar',
       subtitle: 'native menu hierarchy + groups + shortcuts + callbacks',
       builder: () => const PlatformMenuBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.windowing,
+      title: 'Windowing',
+      subtitle: 'regular + dialog windows through WindowRegistry',
+      builder: () => const WindowingDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.listViewSeparated,

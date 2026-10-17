@@ -27,6 +27,7 @@ internal static class SampleRoutes
     public const string NavigatorPages = "/navigator-pages";
     public const string Router = "/router";
     public const string PlatformMenuBar = "/platform-menu-bar";
+    public const string Windowing = "/windowing";
     public const string NavigatorDetails = "/navigator/details";
     public const string ListViewSeparated = "/list-separated";
     public const string ListViewFixedExtent = "/list-fixed-extent";
@@ -490,6 +491,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "PlatformMenuBar",
             "native menu hierarchy + groups + shortcuts + callbacks",
             () => new PlatformMenuBarDemoPage()),
+        new(
+            SampleRoutes.Windowing,
+            "Windowing",
+            "regular + dialog windows through WindowRegistry",
+            () => new WindowingDemoPage()),
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
         new(SampleRoutes.ListViewReverse, "ListView reverse", "reverse=true behavior", () => new ListViewReverseDemoPage()),

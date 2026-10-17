@@ -829,8 +829,155 @@ public sealed class DialogRoute<T> : RawDialogRoute<T>
     }
 }
 
+/// <summary>
+/// Dart's private <c>_FullWindowDialogWrapper</c>: inside a dialog window the dialog fills the window, so
+/// it loses its inset padding, rounded corners, alignment and size constraints, and the window's insets.
+/// </summary>
+internal sealed class FullWindowDialogWrapper : StatelessWidget
+{
+    public FullWindowDialogWrapper(Widget child)
+    {
+        Child = child;
+    }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        DialogThemeData windowDialogTheme = DialogTheme.Of(context) with
+        {
+            InsetPadding = new Thickness(0),
+            // No rounded corners.
+            Shape = new RoundedRectangleBorder(),
+            // Align to top-left so it fills from corner.
+            Alignment = Alignment.TopLeft,
+            // Remove default constraints so dialog can expand to fill available space.
+            Constraints = BoxConstraints.Expand(),
+        };
+
+        return new DialogTheme(
+            data: windowDialogTheme,
+            child: MediaQuery.RemoveViewInsets(
+                removeLeft: true,
+                removeTop: true,
+                removeRight: true,
+                removeBottom: true,
+                context: context,
+                child: MediaQuery.RemoveViewPadding(
+                    removeLeft: true,
+                    removeTop: true,
+                    removeRight: true,
+                    removeBottom: true,
+                    context: context,
+                    child: Child)));
+    }
+}
+
+/// <summary>
+/// Dart's private <c>_DialogPopScope</c>: provides a pop callback that dialog content can use, so a
+/// dialog rendered in its own window (outside the app's navigator) still closes through
+/// <c>Navigator.Pop</c> and the back button.
+/// </summary>
+internal sealed class DialogPopScope : StatelessWidget
+{
+    public DialogPopScope(Widget child, Action<object?>? onPop = null)
+    {
+        Child = child;
+        OnPop = onPop;
+    }
+
+    public Widget Child { get; }
+
+    public Action<object?>? OnPop { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        // Wrap with PopupScope to handle back button and provide popNavigator function.
+        return new PopScope<object>(
+            canPop: false,
+            onPopInvokedWithResult: (didPop, result) =>
+            {
+                if (!didPop)
+                {
+                    OnPop?.Invoke(result);
+                }
+            },
+            child: new Builder(
+                builder: _ =>
+                    // Provide a way for child widgets to pop using Navigator.maybePop(context)
+                    // by wrapping in a minimal Navigator.
+                    new NavigatorShim(onPop: OnPop, child: Child)));
+    }
+}
+
+/// <summary>Dart's private <c>_NavigatorShim</c>: a minimal navigator that intercepts pop calls.</summary>
+internal sealed class NavigatorShim : StatelessWidget
+{
+    public NavigatorShim(Widget child, Action<object?>? onPop = null)
+    {
+        Child = child;
+        OnPop = onPop;
+    }
+
+    public Action<object?>? OnPop { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        // Create a Navigator with a single page that contains the child
+        // This allows Navigator.pop(context) calls from within the dialog to work.
+        // Wrap in HeroControllerScope.none() to prevent this Navigator from
+        // inheriting the outer HeroController, which would cause a "HeroController
+        // can not be shared by multiple Navigators" assertion.
+#pragma warning disable CS0618 // material_ui still uses Dart's deprecated `onPopPage` here.
+        return HeroControllerScope.None(
+            child: new Navigator(
+                pages: [new DialogContentPage(Child)],
+                onPopPage: (_, result) =>
+                {
+                    // When the page is popped, call our onPop callback
+                    OnPop?.Invoke(result);
+                    // Return false to prevent the route from being removed from the Navigator
+                    // (since we're handling the pop externally by closing the dialog window).
+                    return false;
+                }));
+#pragma warning restore CS0618
+    }
+}
+
+/// <summary>Dart's private <c>_DialogContentPage</c>: a simple page for the dialog content.</summary>
+internal sealed record DialogContentPage : Page
+{
+    public DialogContentPage(Widget child)
+    {
+        Child = child;
+    }
+
+    public Widget Child { get; }
+
+    public override Route CreateRoute(BuildContext context)
+    {
+        return new PageRouteBuilder(
+            settings: this,
+            pageBuilder: (_, _, _) => Child,
+            transitionDuration: TimeSpan.Zero,
+            reverseTransitionDuration: TimeSpan.Zero);
+    }
+}
+
 public static class MaterialDialogs
 {
+    /// <summary>
+    /// Displays a Material dialog above the current contents of the app, with Material entrance and exit
+    /// animations, modal barrier color, and modal barrier behavior.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>showDialog</c>, which goes through <see cref="RawDialogs.ShowRawDialog{T}"/>: with the
+    /// windowing API enabled the dialog opens in its own dialog window, wrapped in the caller's
+    /// <see cref="Directionality"/>, <see cref="Theme"/> and <see cref="MediaQuery"/>; otherwise it is a
+    /// <see cref="DialogRoute{T}"/>.
+    /// </remarks>
     public static Task<T?> ShowDialog<T>(
         BuildContext context,
         WidgetBuilder builder,
@@ -846,26 +993,73 @@ public static class MaterialDialogs
         bool? requestFocus = null,
         AnimationStyle? animationStyle = null)
     {
+        DebugIsActive(context);
+        MaterialDebug.DebugCheckHasMaterialLocalizations(context);
+
+        CapturedThemes themes = InheritedTheme.Capture(
+            from: context,
+            to: Navigator.Of(context, rootNavigator: useRootNavigator).Context);
         NavigatorState navigator = Navigator.Of(context, rootNavigator: useRootNavigator);
-        CapturedThemes themes = InheritedTheme.Capture(from: context, to: navigator.Context);
-        var route = new DialogRoute<T>(
-            context,
-            builder,
-            themes: themes,
-            barrierColor: barrierColor
-                          ?? DialogTheme.Of(context).BarrierColor
-                          ?? Color.FromARGB(0x8A, 0, 0, 0),
-            barrierDismissible: barrierDismissible,
-            barrierLabel: barrierLabel,
-            useSafeArea: useSafeArea,
-            settings: routeSettings,
-            requestFocus: requestFocus,
-            anchorPoint: anchorPoint,
-            traversalEdgeBehavior: traversalEdgeBehavior ?? TraversalEdgeBehavior.ClosedLoop,
+
+        return RawDialogs.ShowRawDialog<T>(
+            context: context,
+            useRootNavigator: useRootNavigator,
+            routeSettings: routeSettings,
             fullscreenDialog: fullscreenDialog,
-            animationStyle: animationStyle);
-        navigator.Push(route);
-        return route.Completed;
+            routeBuilder: (routeContext, _) => new DialogRoute<T>(
+                routeContext,
+                builder,
+                themes: themes,
+                barrierColor: barrierColor
+                              ?? DialogTheme.Of(context).BarrierColor
+                              ?? Theme.Of(context).DialogTheme.BarrierColor
+                              ?? Color.FromARGB(0x8A, 0, 0, 0),
+                barrierDismissible: barrierDismissible,
+                barrierLabel: barrierLabel,
+                useSafeArea: useSafeArea,
+                settings: routeSettings,
+                requestFocus: requestFocus,
+                anchorPoint: anchorPoint,
+                traversalEdgeBehavior: traversalEdgeBehavior ?? TraversalEdgeBehavior.ClosedLoop,
+                fullscreenDialog: fullscreenDialog,
+                animationStyle: animationStyle),
+            builder: _ =>
+            {
+                // Wrap the build dialog with the theme, text direction, and media
+                // query data from the caller's context (not the navigator's context,
+                // which would resolve to the root app theme and override captured themes).
+                TextDirection textDirection = Directionality.Of(context);
+                ThemeData themeData = Theme.Of(context);
+                MediaQueryData mediaQuery = MediaQuery.Of(context);
+                Widget dialogContent = new DialogPopScope(
+                    onPop: result => Navigator.Of(navigator.Context).Pop(result),
+                    child: new Builder(
+                        builder: innerContext => new FullWindowDialogWrapper(child: builder(innerContext))));
+
+                return new Directionality(
+                    textDirection,
+                    new Theme(
+                        data: themeData,
+                        child: new MediaQuery(data: mediaQuery, child: dialogContent)));
+            });
+    }
+
+    /// <summary>Dart's private <c>_debugIsActive</c>.</summary>
+    private static void DebugIsActive(BuildContext context)
+    {
+        if (Constants.KDebugMode && context is Element { DebugIsActive: false })
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("This BuildContext is no longer valid."),
+                new ErrorDescription(
+                    "The showDialog function context parameter is a BuildContext that is no longer valid."),
+                new ErrorHint(
+                    "This can commonly occur when the showDialog function is called after awaiting a Future. "
+                    + "In this situation the BuildContext might refer to a widget that has already been "
+                    + "disposed during the await. Consider using a parent context instead."),
+            ]);
+        }
     }
 
     /// <summary>Dart's `showAdaptiveDialog`: Cupertino presentation on iOS/macOS.</summary>

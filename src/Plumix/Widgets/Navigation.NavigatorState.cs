@@ -517,14 +517,33 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     {
         RouteEntry entry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate)
                            ?? throw new InvalidOperationException("Navigator cannot pop without a current route.");
-        if (!CanPop)
+#pragma warning disable CS0618 // Dart's deprecated `onPopPage` is still honored.
+        if (entry.PageBased && CurrentWidget.OnPopPage is { } onPopPage)
+#pragma warning restore CS0618
         {
-            throw new InvalidOperationException("Navigator cannot pop the current route.");
-        }
+            // The callback decides; a `false` answer leaves the route, even the only one, in place.
+            if (onPopPage(entry.Route, result))
+            {
+                if (entry.CurrentState <= RouteLifecycle.Idle)
+                {
+                    // The entry may have been disposed if the pop finishes synchronously.
+                    entry.CurrentState = RouteLifecycle.Pop;
+                }
 
-        // A page-based route runs its own pop so the transition plays; `HandlePop` then asks the owner to drop
-        // the page through `OnDidRemovePage`.
-        entry.Pop(result, imperativeRemoval: true);
+                entry.Route.OnPopInvokedWithResult(true, result);
+            }
+        }
+        else
+        {
+            if (!CanPop)
+            {
+                throw new InvalidOperationException("Navigator cannot pop the current route.");
+            }
+
+            // A page-based route runs its own pop so the transition plays; `HandlePop` then asks the owner to
+            // drop the page through `OnDidRemovePage`.
+            entry.Pop(result, imperativeRemoval: true);
+        }
 
         if (entry.CurrentState == RouteLifecycle.Pop)
         {
@@ -960,10 +979,13 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
                 "The Navigator.Pages must not be empty to use the Navigator.Pages API.");
         }
 
-        if (CurrentWidget.OnDidRemovePage is null)
+#pragma warning disable CS0618 // Dart's deprecated `onPopPage` is still honored.
+        if ((CurrentWidget.OnDidRemovePage is null) == (CurrentWidget.OnPopPage is null))
+#pragma warning restore CS0618
         {
             throw new InvalidOperationException(
-                "OnDidRemovePage must be provided to use the Navigator.Pages API.");
+                "Either onDidRemovePage or onPopPage must be provided to use the "
+                + "Navigator.pages API but not both.");
         }
     }
 

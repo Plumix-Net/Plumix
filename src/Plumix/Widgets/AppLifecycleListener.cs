@@ -518,6 +518,7 @@ public partial class WidgetsBinding
         SystemChannels.BackGesture.SetMethodCallHandler(HandleBackGestureInvocation);
         SystemChannels.StatusBar.SetMethodCallHandler(HandleStatusBarActions);
         PlatformMenuDelegate = new DefaultPlatformMenuDelegate();
+        _windowingOwner = Windowing.CreateDefaultWindowingOwner();
         if (Constants.KDebugMode)
         {
             FlutterErrorDetails.PropertiesTransformers.Add(WidgetInspectorDebug.DebugTransformDebugCreator);

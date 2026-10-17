@@ -20,6 +20,14 @@ public delegate IReadOnlyList<Route> NavigatorInitialRouteListFactory(
     string initialRouteName);
 public delegate bool RoutePredicate(Route route);
 public delegate void DidRemovePageCallback(Page page);
+
+/// <summary>Signature for the <see cref="Navigator.OnPopPage"/> callback.</summary>
+/// <remarks>
+/// Dart's <c>PopPageCallback</c>: the callback must call <see cref="Route.DidPop"/> on the route and must
+/// update the pages list the next time it is passed into <see cref="Navigator.Pages"/> so that it no
+/// longer includes the corresponding page. Returning <see langword="false"/> leaves the route in place.
+/// </remarks>
+public delegate bool PopPageCallback(Route route, object? result);
 public delegate Widget RoutePageBuilder(
     BuildContext context,
     Animation<double> animation,
@@ -1912,6 +1920,34 @@ public sealed class Navigator : StatefulWidget
     }
 
     /// <summary>
+    /// Flutter's declarative <c>Navigator.pages</c> constructor with the deprecated <c>onPopPage</c>
+    /// callback in place of <c>onDidRemovePage</c>.
+    /// </summary>
+    [Obsolete("Use onDidRemovePage instead. This feature was deprecated after v3.16.0-17.0.pre.")]
+    public Navigator(
+        IReadOnlyList<Page> pages,
+        PopPageCallback onPopPage,
+        IReadOnlyList<NavigatorObserver>? observers = null,
+        Key? key = null,
+        TransitionDelegate? transitionDelegate = null,
+        bool requestFocus = true,
+        Clip clipBehavior = Clip.HardEdge,
+        string? restorationScopeId = null) : base(key)
+    {
+        Pages = pages ?? throw new ArgumentNullException(nameof(pages));
+        OnPopPage = onPopPage ?? throw new ArgumentNullException(nameof(onPopPage));
+        Observers = observers ?? [];
+        ApplyOptions(
+            transitionDelegate,
+            requestFocus,
+            clipBehavior,
+            restorationScopeId,
+            DefaultRouteTraversalEdgeBehavior,
+            DefaultRouteDirectionalTraversalEdgeBehavior,
+            reportsRouteUpdateToEngine: false);
+    }
+
+    /// <summary>
     /// Flutter's declarative <c>Navigator.pages</c> constructor: the page list owns the history, and
     /// <paramref name="onDidRemovePage"/> tells the owner to drop a page whose route left the navigator.
     /// </summary>
@@ -1964,6 +2000,14 @@ public sealed class Navigator : StatefulWidget
 
     /// <summary>Called when a page-based route left the navigator and its page must be dropped.</summary>
     public DidRemovePageCallback? OnDidRemovePage { get; }
+
+    /// <summary>Called when <see cref="NavigatorState.Pop"/> is invoked on a page-based route.</summary>
+    /// <remarks>
+    /// Dart's deprecated <c>Navigator.onPopPage</c> (deprecated after v3.16.0-17.0.pre; use
+    /// <see cref="OnDidRemovePage"/> instead). Only one of the two may be provided.
+    /// </remarks>
+    [Obsolete("Use onDidRemovePage instead. This feature was deprecated after v3.16.0-17.0.pre.")]
+    public PopPageCallback? OnPopPage { get; }
 
     /// <summary>Decides how routes enter and leave when <see cref="Pages"/> changes.</summary>
     public TransitionDelegate TransitionDelegate { get; private set; } = new DefaultTransitionDelegate();
@@ -2022,9 +2066,12 @@ public sealed class Navigator : StatefulWidget
 
     public static NavigatorState? MaybeOf(BuildContext context, bool rootNavigator = false)
     {
+        // Dart's `context case StatefulElement(:final NavigatorState state)`: a navigator's own context
+        // resolves to that navigator.
+        NavigatorState? navigator = context is StatefulElement { State: NavigatorState state } ? state : null;
         if (!rootNavigator)
         {
-            return context.DependOnInheritedWidgetOfExactType<NavigatorScope>()?.Navigator;
+            return navigator ?? context.DependOnInheritedWidgetOfExactType<NavigatorScope>()?.Navigator;
         }
 
         NavigatorState? result = null;
@@ -2033,7 +2080,7 @@ public sealed class Navigator : StatefulWidget
             if (ancestor.Widget is NavigatorScope scope) result = scope.Navigator;
         }
 
-        return result;
+        return result ?? navigator;
     }
 
     public static bool CanPop(BuildContext context)

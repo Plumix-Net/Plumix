@@ -138,6 +138,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Row-wide data-table ink enters through `TableRowInkWell` in `InkWell.cs`; its source rectangle comes from
   core `RenderTable.GetRowBox`, with geometry/composition coverage in `MaterialDataTableTests.cs`.
 - Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; the painter, the `RawScrollbarState` interaction API and its thumb/track recognizers live in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
+- Windowing (experimental, gated by `Foundation/Features.cs`) enters through core `Widgets/Windowing.cs` (controllers,
+  owner) + `WindowingWidgets.cs` (window widgets, `WindowScope`, `WindowRegistry`/`WindowManager`) +
+  `WindowPositioner.cs` and `Widgets/RawDialog.cs` (`showRawDialog`); the desktop owner is `src/Plumix/AvaloniaWindowing.cs`,
+  with coverage in `WindowingTests.cs` and `WindowPositionerTests.cs`.
 - Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; inherited
   and explicit proxy bounds come from core `Widgets/DragBoundary.cs`. Gesture-arena drag ownership, keyed sliver
   items, gap animation, variable extents, boundary clamping, and callback normalization are covered by

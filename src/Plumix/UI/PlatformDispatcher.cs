@@ -6,7 +6,7 @@ namespace Plumix.UI;
 
 // Dart parity source (reference):
 // flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
-// (frame + view-focus + launch-route + locale + semantics/accessibility subset, adapted)
+// (views + frame + view-focus + launch-route + locale + semantics/accessibility subset, adapted)
 
 /// <summary>
 /// The framework's side of the platform: the engine-level requests the framework can make of a
@@ -40,6 +40,52 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public FlutterView? ImplicitView { get; private set; }
 
+    private readonly OrderedDictionary<int, FlutterView> _views = [];
+
+    /// <summary>The current list of views, including top level platform windows used by the application.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.views</c>. The engine adds a view when the embedder creates one
+    /// (the implicit view, a window of the windowing API) and removes it when the embedder disposes of
+    /// it; a Plumix host reports both through <see cref="AddView"/> and <see cref="RemoveView"/>.
+    /// </remarks>
+    public IEnumerable<FlutterView> Views => _views.Values;
+
+    /// <summary>The <see cref="FlutterView"/> with the given id, if one exists, or <see langword="null"/>.</summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.view(id:)</c>.</remarks>
+    public FlutterView? View(int id) => _views.GetValueOrDefault(id);
+
+    /// <summary>
+    /// The engine's <c>_addView</c>: registers a view the embedder created and invokes
+    /// <see cref="OnMetricsChanged"/>. Adding a registered view again does nothing.
+    /// </summary>
+    internal void AddView(FlutterView view)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        if (_views.TryGetValue(view.ViewId, out FlutterView? registered) && ReferenceEquals(registered, view))
+        {
+            return;
+        }
+
+        _views[view.ViewId] = view;
+        OnMetricsChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// The engine's <c>_removeView</c>: unregisters a view the embedder disposed of and invokes
+    /// <see cref="OnMetricsChanged"/>. Removing an unregistered view does nothing.
+    /// </summary>
+    internal void RemoveView(FlutterView view)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        if (!_views.TryGetValue(view.ViewId, out FlutterView? registered) || !ReferenceEquals(registered, view))
+        {
+            return;
+        }
+
+        _views.Remove(view.ViewId);
+        OnMetricsChanged?.Invoke();
+    }
+
     /// <summary>Platform-wide media data associated with <see cref="ImplicitView"/>.</summary>
     internal MediaQueryData? ImplicitViewPlatformData { get; private set; }
 
@@ -47,8 +93,14 @@ public sealed class PlatformDispatcher
     internal void SetImplicitView(FlutterView view, MediaQueryData platformData)
     {
         ArgumentNullException.ThrowIfNull(view);
+        if (ImplicitView is { } previous && !ReferenceEquals(previous, view))
+        {
+            _views.Remove(previous.ViewId);
+        }
+
         ImplicitView = view;
         ImplicitViewPlatformData = platformData;
+        _views[view.ViewId] = view;
     }
 
     /// <summary>Refreshes platform data for the current implicit view.</summary>
@@ -63,6 +115,11 @@ public sealed class PlatformDispatcher
     /// <summary>Clears the implicit-view contract for an isolated test binding.</summary>
     internal void ClearImplicitViewForTests()
     {
+        if (ImplicitView is { } implicitView)
+        {
+            _views.Remove(implicitView.ViewId);
+        }
+
         ImplicitView = null;
         ImplicitViewPlatformData = null;
     }
