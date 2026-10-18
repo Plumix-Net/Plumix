@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Animated GIF/WebP/APNG playback, resize and stream lifecycle match Flutter (painting/image_stream.dart).
+
 - Breaking: Navigator async pops, route futures, pointer cancellation and transitions (navigator.dart; routes.dart).
 - Breaking: Desktop selection handles and SelectableRegion actions/lifecycle match Dart (selectable_region.dart).
 - DesktopTextSelectionControls and native browser selection menus (desktop_text_selection.dart; selectable_region).

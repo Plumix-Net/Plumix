@@ -3,9 +3,10 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using SkiaSharp;
 
 // C#-only engine adapter for dart:ui/painting.dart's immutable buffers and image codecs.
-// Avalonia exposes static Bitmap decoding; animated codecs are tracked in docs/ai/DIVERGENCES.md.
+// SKCodec supplies the same frame dependencies, disposal and repetition metadata as Flutter's engine.
 
 namespace Plumix.UI;
 
@@ -42,6 +43,8 @@ public sealed class ImmutableBuffer : IDisposable
 
     internal Stream OpenRead() => new MemoryStream(
         _bytes ?? throw new ObjectDisposedException(nameof(ImmutableBuffer)), writable: false);
+
+    internal ReadOnlySpan<byte> Bytes => _bytes ?? throw new ObjectDisposedException(nameof(ImmutableBuffer));
 
     public void Dispose()
     {
@@ -115,11 +118,17 @@ public static class ImageDecoding
     {
         // Dart creates its encoded descriptor before the buffer-disposal try/finally.
         using Stream stream = buffer.OpenRead();
-        using var intrinsic = new Bitmap(stream);
+        using SKData encoded = SKData.Create(stream);
+        ApngImageCodec? animatedPng = ApngImageCodec.TryCreate(buffer.Bytes);
+        SKCodec? descriptor = animatedPng is null ? SKCodec.Create(encoded) : null;
+        stream.Position = 0;
+        using Bitmap? intrinsic = animatedPng is null && (descriptor is null || descriptor.FrameCount <= 1)
+            ? new Bitmap(stream)
+            : null;
         try
         {
-            int width = intrinsic.PixelSize.Width;
-            int height = intrinsic.PixelSize.Height;
+            int width = animatedPng?.Width ?? intrinsic?.PixelSize.Width ?? descriptor!.Info.Width;
+            int height = animatedPng?.Height ?? intrinsic?.PixelSize.Height ?? descriptor!.Info.Height;
             TargetImageSize target = getTargetSize?.Invoke(width, height) ?? new TargetImageSize();
             if (Constants.KDebugMode && (target.Width <= 0 || target.Height <= 0))
             {
@@ -143,12 +152,28 @@ public static class ImageDecoding
                 targetHeight = (int)(targetWidth.Value / aspectRatio);
             }
 
-            var image = intrinsic.CreateScaledBitmap(
-                new PixelSize(targetWidth.Value, targetHeight.Value), BitmapInterpolationMode.HighQuality);
-            return await Task.FromResult<Codec>(new BitmapCodec(image));
+            var targetSize = new PixelSize(targetWidth.Value, targetHeight.Value);
+            if (animatedPng is not null)
+            {
+                animatedPng.TargetSize = targetSize;
+                ApngImageCodec result = animatedPng;
+                animatedPng = null;
+                return result;
+            }
+
+            if (intrinsic is not null)
+            {
+                return new BitmapCodec(intrinsic.CreateScaledBitmap(targetSize, BitmapInterpolationMode.HighQuality));
+            }
+
+            var codec = new SkiaImageCodec(descriptor!, targetSize);
+            descriptor = null; // Ownership moves to the codec; frame decoding outlives the buffer.
+            return await Task.FromResult<Codec>(codec);
         }
         finally
         {
+            descriptor?.Dispose();
+            animatedPng?.Dispose();
             buffer.Dispose();
         }
     }
@@ -156,16 +181,14 @@ public static class ImageDecoding
     private sealed class BitmapCodec(Bitmap image) : Codec
     {
         private Bitmap? _image = image;
-
         public override int FrameCount => 1;
         public override int RepetitionCount => 0;
 
         public override Task<FrameInfo> GetNextFrame()
         {
             Bitmap source = _image ?? throw new ObjectDisposedException(nameof(Codec));
-            // Avalonia has no public clone handle: each returned frame owns a separate bitmap.
-            return Task.FromResult(new FrameInfo(
-                TimeSpan.Zero, source.CreateScaledBitmap(source.PixelSize, BitmapInterpolationMode.HighQuality)));
+            return Task.FromResult(new FrameInfo(TimeSpan.Zero,
+                source.CreateScaledBitmap(source.PixelSize, BitmapInterpolationMode.HighQuality)));
         }
 
         public override void Dispose()

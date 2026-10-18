@@ -26,6 +26,10 @@ internal sealed class ImageDemoPageState : State
 
     internal static readonly byte[] SampleBytes = Convert.FromBase64String(SamplePng);
     private static readonly MemoryImage SampleProvider = new(SampleBytes);
+    // Two original 1x1 GIF frames (red/blue), 350 ms each, infinite repetition.
+    private static readonly byte[] AnimatedBytes = Convert.FromBase64String(
+        "R0lGODlhAQABAIAAAP88PChk/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQEIwAAACwAAAAAAQABAAACAkQB" +
+        "ACH5BAQjAAAALAAAAAABAAEAAAICTAEAOw==");
     private ImageStream? _rawStream;
     private ImageStreamListener? _rawListener;
     private ImageInfo? _rawInfo;
@@ -34,6 +38,7 @@ internal sealed class ImageDemoPageState : State
     private bool _dimmed;
     private bool _filtersEnabled = true;
     private bool _smallDecode;
+    private bool _animationPaused;
     private int _decodeGeneration;
     private int _fadeGeneration;
     private byte[] _fadeTargetBytes = (byte[])SampleBytes.Clone();
@@ -92,6 +97,8 @@ internal sealed class ImageDemoPageState : State
                             _fadeGeneration++;
                             _fadeTargetBytes = (byte[])SampleBytes.Clone();
                         }),
+                        ControlButton(_animationPaused ? "animation: paused" : "animation: playing",
+                            () => _animationPaused = !_animationPaused),
                     ]),
                 new Expanded(
                     child: new SingleChildScrollView(new Column(
@@ -99,6 +106,20 @@ internal sealed class ImageDemoPageState : State
                         spacing: 10,
                         children:
                         [
+                            new Row(
+                                mainAxisAlignment: MainAxisAlignment.SpaceAround,
+                                children:
+                                [
+                                    Probe("Animated GIF", new TickerMode(
+                                        enabled: !_animationPaused,
+                                        child: Plumix.Widgets.Image.Memory(
+                                            AnimatedBytes, width: 96, height: 96, fit: BoxFit.Fill))),
+                                    Probe("Animated resize: 24px", new TickerMode(
+                                        enabled: !_animationPaused,
+                                        child: Plumix.Widgets.Image.Memory(
+                                            AnimatedBytes, width: 96, height: 96, fit: BoxFit.Fill,
+                                            cacheWidth: 24))),
+                                ]),
                             new Row(
                                 mainAxisAlignment: MainAxisAlignment.SpaceAround,
                                 children:

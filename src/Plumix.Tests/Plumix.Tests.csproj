@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Fixtures/AnimatedImages/*" CopyToOutputDirectory="PreserveNewest" />
     <ProjectReference Include="../Plumix/Plumix.csproj" />
     <ProjectReference Include="../Plumix.Cupertino/Plumix.Cupertino.csproj" />
     <ProjectReference Include="../Plumix.Material/Plumix.Material.csproj" />

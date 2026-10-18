@@ -59,6 +59,7 @@ public sealed class ImageInfo : IDisposable
         _sharedImage = sharedImage;
         Scale = scale;
         DebugLabel = debugLabel;
+        FoundationDebug.DebugMaybeDispatchCreated("painting", "ImageInfo", this);
     }
 
     public IImage Image => _sharedImage.Image;
@@ -86,6 +87,7 @@ public sealed class ImageInfo : IDisposable
         if (Interlocked.Exchange(ref _disposed, 1) == 0)
         {
             _sharedImage.Release();
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
     }
 
@@ -143,9 +145,17 @@ public sealed class ImageStream
 
         var initialListeners = _listeners;
         _listeners = null;
-        foreach (var listener in initialListeners)
+        _completer.AddingInitialListeners = true;
+        try
         {
-            _completer.AddListener(listener);
+            foreach (var listener in initialListeners)
+            {
+                _completer.AddListener(listener);
+            }
+        }
+        finally
+        {
+            _completer.AddingInitialListeners = false;
         }
     }
 
@@ -183,11 +193,16 @@ public sealed class ImageStreamCompleterHandle : IDisposable
     {
         _completer = completer;
         completer.AddKeepAliveHandle();
+        FoundationDebug.DebugMaybeDispatchCreated("painting", "ImageStreamCompleterHandle", this);
     }
 
     public void Dispose()
     {
-        Interlocked.Exchange(ref _completer, null)?.RemoveKeepAliveHandle();
+        if (Interlocked.Exchange(ref _completer, null) is { } completer)
+        {
+            completer.RemoveKeepAliveHandle();
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
     }
 }
 
@@ -197,18 +212,21 @@ public abstract class ImageStreamCompleter
     private readonly List<ImageErrorListener> _ephemeralErrorListeners = [];
     private readonly List<Action> _lastListenerRemovedCallbacks = [];
     private ImageInfo? _currentImage;
-    private (Exception Exception, StackTrace? Stack)? _currentError;
+    private FlutterErrorDetails? _currentError;
+    private StackTrace? _currentErrorStack;
     private int _keepAliveHandles;
     private bool _disposed;
     private bool _hadErrorListener;
 
     public static event ImageErrorListener? UnhandledError;
 
-    public string? DebugLabel { get; protected set; }
+    public string? DebugLabel { get; set; }
     public bool HasListeners => _listeners.Count > 0;
     public bool IsDisposed => _disposed;
+    internal bool AddingInitialListeners { get; set; }
+    protected ImageInfo? CurrentImage => _currentImage;
 
-    public void AddListener(ImageStreamListener listener)
+    public virtual void AddListener(ImageStreamListener listener)
     {
         CheckNotDisposed();
 
@@ -221,16 +239,24 @@ public abstract class ImageStreamCompleter
         _listeners.Add(listener);
         if (_currentImage is not null)
         {
-            listener.OnImage(_currentImage.Clone(), synchronousCall: true);
+            try
+            {
+                listener.OnImage(_currentImage.Clone(), synchronousCall: !AddingInitialListeners);
+            }
+            catch (Exception exception)
+            {
+                ReportError(exception, new StackTrace(exception, true),
+                    context: new ErrorDescription("by a synchronously-called image listener"));
+            }
         }
 
         if (_currentError is { } error && listener.OnError is not null)
         {
-            listener.OnError(error.Exception, error.Stack);
+            CallErrorListener(listener.OnError, error);
         }
     }
 
-    public void RemoveListener(ImageStreamListener listener)
+    public virtual void RemoveListener(ImageStreamListener listener)
     {
         CheckNotDisposed();
         _listeners.Remove(listener);
@@ -240,12 +266,12 @@ public abstract class ImageStreamCompleter
         }
 
         var callbacks = _lastListenerRemovedCallbacks.ToArray();
-        _lastListenerRemovedCallbacks.Clear();
         foreach (var callback in callbacks)
         {
             callback();
         }
 
+        _lastListenerRemovedCallbacks.Clear();
         MaybeDispose();
     }
 
@@ -254,7 +280,7 @@ public abstract class ImageStreamCompleter
         CheckNotDisposed();
         if (_currentError is { } error)
         {
-            listener(error.Exception, error.Stack);
+            CallErrorListener(listener, error);
         }
         else if (_currentImage is null)
         {
@@ -303,19 +329,34 @@ public abstract class ImageStreamCompleter
         CheckNotDisposed();
         _currentImage?.Dispose();
         _currentImage = image;
-        _currentError = null;
         _ephemeralErrorListeners.Clear();
 
         foreach (var listener in _listeners.ToArray())
         {
-            listener.OnImage(image.Clone(), synchronousCall: false);
+            try
+            {
+                listener.OnImage(image.Clone(), synchronousCall: false);
+            }
+            catch (Exception exception)
+            {
+                ReportError(exception, new StackTrace(exception, true),
+                    context: new ErrorDescription("by an image listener"));
+            }
         }
     }
 
-    public void ReportError(Exception exception, StackTrace? stackTrace = null)
+    public void ReportError(
+        Exception exception,
+        StackTrace? stackTrace = null,
+        DiagnosticsNode? context = null,
+        InformationCollector? informationCollector = null,
+        bool silent = false)
     {
         ArgumentNullException.ThrowIfNull(exception);
-        _currentError = (exception, stackTrace);
+        _currentError = new FlutterErrorDetails(exception, library: "image resource service",
+            stack: stackTrace?.ToString(), context: context,
+            informationCollector: informationCollector, silent: silent);
+        _currentErrorStack = stackTrace;
         var errorListeners = _listeners
             .Select(listener => listener.OnError)
             .Where(listener => listener is not null)
@@ -332,13 +373,16 @@ public abstract class ImageStreamCompleter
                 listener(exception, stackTrace);
                 handled = true;
             }
-            catch (Exception newException) when (!ReferenceEquals(newException, exception))
+            catch (Exception newException)
             {
-                FlutterError.ReportError(new FlutterErrorDetails(
-                    exception: newException,
-                    library: "image resource service",
-                    context: new ErrorDescription("when reporting an error to an image listener"),
-                    stack: newException.StackTrace));
+                if (!ReferenceEquals(newException, exception))
+                {
+                    FlutterError.ReportError(new FlutterErrorDetails(
+                        exception: newException,
+                        library: "image resource service",
+                        context: new ErrorDescription("when reporting an error to an image listener"),
+                        stack: newException.StackTrace));
+                }
             }
         }
 
@@ -352,6 +396,24 @@ public abstract class ImageStreamCompleter
             }
 
             UnhandledError?.Invoke(exception, stackTrace);
+            FlutterError.ReportError(_currentError);
+        }
+    }
+
+    private void CallErrorListener(ImageErrorListener listener, FlutterErrorDetails error)
+    {
+        try
+        {
+            listener((Exception)error.Exception, _currentErrorStack);
+        }
+        catch (Exception exception)
+        {
+            if (!ReferenceEquals(exception, error.Exception))
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(exception, library: "image resource service",
+                    context: new ErrorDescription("by a synchronously-called image error listener"),
+                    stack: exception.StackTrace));
+            }
         }
     }
 

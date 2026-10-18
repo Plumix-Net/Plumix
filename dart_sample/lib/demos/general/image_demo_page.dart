@@ -19,12 +19,17 @@ class ImageDemoPage extends StatefulWidget {
 
 class _ImageDemoPageState extends State<ImageDemoPage> {
   late final Uint8List _sampleBytes = base64Decode(demoSamplePng);
+  // Two original 1x1 GIF frames (red/blue), 350 ms each, infinite repetition.
+  late final Uint8List _animatedBytes = base64Decode(
+    'R0lGODlhAQABAIAAAP88PChk/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQEIwAAACwAAAAAAQABAAACAkQBACH5BAQjAAAALAAAAAABAAEAAAICTAEAOw==',
+  );
   ui.Image? _rawImage;
   bool _cover = false;
   bool _rtl = false;
   bool _dimmed = false;
   bool _filtersEnabled = true;
   bool _smallDecode = false;
+  bool _animationPaused = false;
   int _decodeGeneration = 0;
   int _fadeGeneration = 0;
   late Uint8List _fadeTargetBytes = Uint8List.fromList(_sampleBytes);
@@ -104,6 +109,10 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                 _fadeGeneration++;
                 _fadeTargetBytes = Uint8List.fromList(_sampleBytes);
               }),
+              _controlButton(
+                _animationPaused ? 'animation: paused' : 'animation: playing',
+                () => _animationPaused = !_animationPaused,
+              ),
             ],
           ),
           Expanded(
@@ -112,6 +121,36 @@ class _ImageDemoPageState extends State<ImageDemoPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 spacing: 10,
                 children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      _probe(
+                        'Animated GIF',
+                        TickerMode(
+                          enabled: !_animationPaused,
+                          child: Image.memory(
+                            _animatedBytes,
+                            width: 96,
+                            height: 96,
+                            fit: BoxFit.fill,
+                          ),
+                        ),
+                      ),
+                      _probe(
+                        'Animated resize: 24px',
+                        TickerMode(
+                          enabled: !_animationPaused,
+                          child: Image.memory(
+                            _animatedBytes,
+                            width: 96,
+                            height: 96,
+                            fit: BoxFit.fill,
+                            cacheWidth: 24,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: <Widget>[

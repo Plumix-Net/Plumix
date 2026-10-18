@@ -14,6 +14,9 @@ namespace Plumix.Rendering;
 // flutter/packages/flutter/lib/src/painting/image_provider.dart
 // flutter/packages/flutter/lib/src/painting/image_resolution.dart
 
+public delegate Task<Codec> ImageDecoderCallback(
+    ImmutableBuffer buffer, TargetImageSizeCallback? getTargetSize = null);
+
 public enum ImageTargetPlatform
 {
     Android,
@@ -157,6 +160,9 @@ public sealed class PlatformAssetBundle : AssetBundle
 
 public abstract class ImageProvider
 {
+    internal virtual ImageStreamCompleter LoadImageWithDecoder(object key, ImageDecoderCallback decode) =>
+        throw new NotSupportedException("This image provider does not support decoder callbacks.");
+
     public abstract ImageStream Resolve(ImageConfiguration configuration);
     public abstract ValueTask<object> ObtainKeyObject(ImageConfiguration configuration);
     public abstract Task<bool> Evict(
@@ -241,7 +247,7 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
 
         var completer = ImageCache.Shared.PutIfAbsent(
             key,
-            () => LoadImage(key),
+            () => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize),
             handleError);
         if (completer is not null)
         {
@@ -250,7 +256,14 @@ public abstract class ImageProvider<T> : ImageProvider where T : notnull
     }
 
     public abstract ValueTask<T> ObtainKey(ImageConfiguration configuration);
-    protected abstract ImageStreamCompleter LoadImage(T key);
+    // Retain the published one-argument override for existing providers. New providers override the
+    // decoder-taking overload, which also lets ResizeImage configure every frame's decode size.
+    protected virtual ImageStreamCompleter LoadImage(T key) =>
+        throw new NotSupportedException("Implement LoadImage to load this provider's image.");
+    protected virtual ImageStreamCompleter LoadImage(T key, ImageDecoderCallback decode) => LoadImage(key);
+
+    internal sealed override ImageStreamCompleter LoadImageWithDecoder(object key, ImageDecoderCallback decode) =>
+        LoadImage((T)key, decode);
 
     private async Task ResolveKeyAsync(
         ImageConfiguration configuration,
@@ -325,9 +338,12 @@ public sealed class MemoryImage : ImageProvider<MemoryImage>, IEquatable<MemoryI
     public override ValueTask<MemoryImage> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(this);
 
     protected override ImageStreamCompleter LoadImage(MemoryImage key)
+        => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize);
+
+    protected override ImageStreamCompleter LoadImage(MemoryImage key, ImageDecoderCallback decode)
     {
-        return new OneFrameImageStreamCompleter(
-            DecodeBytesAsync(key.Bytes, key.Scale, $"MemoryImage({key.Bytes.Length} bytes)"),
+        return new MultiFrameImageStreamCompleter(
+            DecodeCodecAsync(key.Bytes, decode), key.Scale,
             debugLabel: $"MemoryImage({key.Bytes.Length} bytes)");
     }
 
@@ -340,7 +356,7 @@ public sealed class MemoryImage : ImageProvider<MemoryImage>, IEquatable<MemoryI
     public override int GetHashCode() => HashCode.Combine(System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(Bytes), Scale);
     public override string ToString() => $"MemoryImage({Bytes.Length} bytes, scale: {Scale:0.0})";
 
-    internal static async Task<ImageInfo> DecodeBytesAsync(byte[] bytes, double scale, string? debugLabel)
+    internal static async Task<Codec> DecodeCodecAsync(byte[] bytes, ImageDecoderCallback decode)
     {
         await Task.Yield();
         if (bytes.Length == 0)
@@ -349,9 +365,7 @@ public sealed class MemoryImage : ImageProvider<MemoryImage>, IEquatable<MemoryI
         }
 
         ImmutableBuffer buffer = await ImmutableBuffer.FromUint8List(bytes);
-        using Codec codec = await Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize(buffer);
-        FrameInfo frame = await codec.GetNextFrame();
-        return new ImageInfo(frame.Image, scale, debugLabel);
+        return await decode(buffer);
     }
 
     internal static double ValidateScale(double scale)
@@ -380,20 +394,23 @@ public sealed class FileImage : ImageProvider<FileImage>, IEquatable<FileImage>
     public override ValueTask<FileImage> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(this);
 
     protected override ImageStreamCompleter LoadImage(FileImage key)
+        => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize);
+
+    protected override ImageStreamCompleter LoadImage(FileImage key, ImageDecoderCallback decode)
     {
-        return new OneFrameImageStreamCompleter(LoadAsync(key), debugLabel: key.FilePath);
+        return new MultiFrameImageStreamCompleter(LoadAsync(key, decode), key.Scale, debugLabel: key.FilePath);
     }
 
-    private static async Task<ImageInfo> LoadAsync(FileImage key)
+    private static async Task<Codec> LoadAsync(FileImage key, ImageDecoderCallback decode)
     {
         byte[] bytes = await File.ReadAllBytesAsync(key.FilePath).ConfigureAwait(false);
         if (bytes.Length == 0)
         {
-            ImageCache.Shared.Evict(key);
+            EventLoop.ScheduleMicrotask(() => ImageCache.Shared.Evict(key));
             throw new InvalidOperationException($"{key.FilePath} is empty and cannot be loaded as an image.");
         }
 
-        return await MemoryImage.DecodeBytesAsync(bytes, key.Scale, key.FilePath).ConfigureAwait(false);
+        return await MemoryImage.DecodeCodecAsync(bytes, decode).ConfigureAwait(false);
     }
 
     public bool Equals(FileImage? other)
@@ -432,14 +449,21 @@ public sealed class NetworkImage : ImageProvider<NetworkImage>, IEquatable<Netwo
     public override ValueTask<NetworkImage> ObtainKey(ImageConfiguration configuration) => ValueTask.FromResult(this);
 
     protected override ImageStreamCompleter LoadImage(NetworkImage key)
+        => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize);
+
+    protected override ImageStreamCompleter LoadImage(NetworkImage key, ImageDecoderCallback decode)
     {
-        OneFrameImageStreamCompleter? completer = null;
-        var task = LoadAsync(key, @event => completer?.ReportImageChunkEvent(@event));
-        completer = new OneFrameImageStreamCompleter(task, debugLabel: key.Url);
+        MultiFrameImageStreamCompleter? completer = null;
+        Task<Codec> task = LoadAsync(key, decode, @event => EventLoop.ScheduleMicrotask(() =>
+        {
+            if (completer is { IsDisposed: false }) completer.ReportImageChunkEvent(@event);
+        }));
+        completer = new MultiFrameImageStreamCompleter(task, key.Scale, debugLabel: key.Url);
         return completer;
     }
 
-    private static async Task<ImageInfo> LoadAsync(NetworkImage key, Action<ImageChunkEvent> onChunk)
+    private static async Task<Codec> LoadAsync(
+        NetworkImage key, ImageDecoderCallback decode, Action<ImageChunkEvent> onChunk)
     {
         try
         {
@@ -474,11 +498,11 @@ public sealed class NetworkImage : ImageProvider<NetworkImage>, IEquatable<Netwo
                 onChunk(new ImageChunkEvent(loaded, expected));
             }
 
-            return await MemoryImage.DecodeBytesAsync(bytes.ToArray(), key.Scale, key.Url).ConfigureAwait(false);
+            return await MemoryImage.DecodeCodecAsync(bytes.ToArray(), decode).ConfigureAwait(false);
         }
         catch
         {
-            ImageCache.Shared.Evict(key);
+            EventLoop.ScheduleMicrotask(() => ImageCache.Shared.Evict(key));
             throw;
         }
     }
@@ -529,16 +553,27 @@ public sealed record AssetBundleImageKey(AssetBundle Bundle, string Name, double
 public abstract class AssetBundleImageProvider : ImageProvider<AssetBundleImageKey>
 {
     protected override ImageStreamCompleter LoadImage(AssetBundleImageKey key)
+        => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize);
+
+    protected override ImageStreamCompleter LoadImage(AssetBundleImageKey key, ImageDecoderCallback decode)
     {
-        return new OneFrameImageStreamCompleter(LoadAsync(key), debugLabel: key.Name);
+        return new MultiFrameImageStreamCompleter(LoadAsync(key, decode), key.Scale, debugLabel: key.Name);
     }
 
-    private static async Task<ImageInfo> LoadAsync(AssetBundleImageKey key)
+    private static async Task<Codec> LoadAsync(AssetBundleImageKey key, ImageDecoderCallback decode)
     {
-        await using var stream = await key.Bundle.LoadAsync(key.Name).ConfigureAwait(false);
-        using var bytes = new MemoryStream();
-        await stream.CopyToAsync(bytes).ConfigureAwait(false);
-        return await MemoryImage.DecodeBytesAsync(bytes.ToArray(), key.Scale, key.Name).ConfigureAwait(false);
+        try
+        {
+            await using var stream = await key.Bundle.LoadAsync(key.Name).ConfigureAwait(false);
+            using var bytes = new MemoryStream();
+            await stream.CopyToAsync(bytes).ConfigureAwait(false);
+            return await MemoryImage.DecodeCodecAsync(bytes.ToArray(), decode).ConfigureAwait(false);
+        }
+        catch
+        {
+            EventLoop.ScheduleMicrotask(() => ImageCache.Shared.Evict(key));
+            throw;
+        }
     }
 }
 
@@ -741,62 +776,41 @@ public sealed class ResizeImage : ImageProvider<ResizeImageKey>, IEquatable<Resi
     }
 
     protected override ImageStreamCompleter LoadImage(ResizeImageKey key)
+        => LoadImage(key, Painting.PaintingBinding.Instance.InstantiateImageCodecWithSize);
+
+    protected override ImageStreamCompleter LoadImage(ResizeImageKey key, ImageDecoderCallback decode)
     {
-        var result = new TaskCompletionSource<ImageInfo>(TaskCreationOptions.RunContinuationsAsynchronously);
-        var stream = key.Provider.Resolve(key.Configuration);
-        ImageStreamListener? listener = null;
-        listener = new ImageStreamListener(
-            OnImage: (image, _) =>
+        Task<Codec> DecodeResize(ImmutableBuffer buffer, TargetImageSizeCallback? getTargetSize = null)
+        {
+            if (Foundation.Constants.KDebugMode && getTargetSize is not null)
             {
-                try
-                {
-                    result.TrySetResult(Resize(image, key));
-                }
-                catch (Exception exception)
-                {
-                    result.TrySetException(exception);
-                }
-                finally
-                {
-                    image.Dispose();
-                    stream.RemoveListener(listener!);
-                }
-            },
-            OnError: (exception, _) =>
+                throw new Foundation.AssertionError(
+                    "ResizeImage cannot be composed with another ImageProvider that applies getTargetSize.");
+            }
+
+            return decode(buffer, (intrinsicWidth, intrinsicHeight) =>
             {
-                result.TrySetException(exception);
-                stream.RemoveListener(listener!);
+                int? targetWidth = Width;
+                int? targetHeight = Height;
+                if (!AllowUpscaling)
+                {
+                    if (targetWidth > intrinsicWidth) targetWidth = intrinsicWidth;
+                    if (targetHeight > intrinsicHeight) targetHeight = intrinsicHeight;
+                }
+
+                return new TargetImageSize(targetWidth, targetHeight);
             });
-        stream.AddListener(listener);
-        return new OneFrameImageStreamCompleter(result.Task, debugLabel: key.ProviderCacheKey.ToString());
-    }
-
-    private static ImageInfo Resize(ImageInfo image, ResizeImageKey key)
-    {
-        if (image.Image is not Bitmap bitmap)
-        {
-            return image.Clone();
         }
 
-        var source = bitmap.PixelSize;
-        int targetWidth = key.Width ?? Math.Max(1, (int)Math.Round(source.Width * (key.Height!.Value / (double)source.Height)));
-        int targetHeight = key.Height ?? Math.Max(1, (int)Math.Round(source.Height * (key.Width!.Value / (double)source.Width)));
-        if (!key.AllowUpscaling)
+        ImageStreamCompleter completer = key.Provider.LoadImageWithDecoder(key.ProviderCacheKey, DecodeResize);
+        if (!Foundation.Constants.KReleaseMode)
         {
-            double factor = Math.Min(1.0, Math.Min(targetWidth / (double)source.Width, targetHeight / (double)source.Height));
-            targetWidth = Math.Max(1, (int)Math.Round(source.Width * factor));
-            targetHeight = Math.Max(1, (int)Math.Round(source.Height * factor));
+            completer.DebugLabel = $"{completer.DebugLabel} - Resized({key.Width}×{key.Height})";
         }
 
-        if (targetWidth == source.Width && targetHeight == source.Height)
-        {
-            return image.Clone();
-        }
-
-        var resized = bitmap.CreateScaledBitmap(
-            new PixelSize(targetWidth, targetHeight),
-            Avalonia.Media.Imaging.BitmapInterpolationMode.HighQuality);
-        return new ImageInfo(resized, image.Scale, image.DebugLabel);
+        completer.AddEphemeralErrorListener((_, _) =>
+            EventLoop.ScheduleMicrotask(() => ImageCache.Shared.Evict(key)));
+        return completer;
     }
 
     public bool Equals(ResizeImage? other)
