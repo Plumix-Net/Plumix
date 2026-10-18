@@ -621,6 +621,23 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`
   - `src/Plumix.Tests/ModalBarrierTests.cs`
 
+### Platform Accessibility Bridges
+
+- Goal: expose a host's semantics tree to the platform's assistive technologies (the engine's
+  accessibility bridges).
+- Read First:
+  - `src/Plumix/Accessibility/AccessibilityBridge.cs` (tree mirror, events, actions, `flutter/accessibility`)
+  - `src/Plumix/Accessibility/AccessibilityNode.cs` (desktop role ladder, states, bounds)
+  - `src/Plumix/Accessibility/SemanticsAutomationPeers.cs` (Avalonia peers: Windows, macOS, Linux, Android)
+  - `src/Plumix/Accessibility/IOSAccessibility.cs` + `src/Sample/Plumix.iOS/IOSAccessibilityBridge.cs`
+  - `src/Plumix/Accessibility/WebSemantics.cs` + `src/Sample/Plumix.Browser/BrowserAccessibilityBridge.cs`,
+    `wwwroot/plumix-semantics.js`
+- Primary Tests:
+  - `src/Plumix.Tests/AccessibilityBridgeTests.cs`
+  - `src/Plumix.Tests/SemanticsAutomationPeerTests.cs`
+  - `src/Plumix.Tests/IOSAccessibilityTests.cs`
+  - `src/Plumix.Tests/WebSemanticsTests.cs`
+
 ### Sample and Dart Parity
 
 - Goal: keep sample feature/route/module parity between C# and Dart samples.

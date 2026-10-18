@@ -6,25 +6,112 @@ using Plumix.UI;
 
 namespace Plumix.Widgets;
 
+/// <summary>An enum to describe the role for a semantics node.</summary>
+/// <remarks>
+/// dart:ui's <c>SemanticsRole</c>, in Dart's declaration order. The role describes the purpose of
+/// the node for assistive technologies; the engine's accessibility bridges map it onto a platform
+/// role.
+/// </remarks>
 public enum SemanticsRole
 {
+    /// <summary>Does not represent any role.</summary>
     None,
-    Dialog,
-    AlertDialog,
-    Menu,
-    MenuItem,
-    MenuItemCheckbox,
-    TabBar,
+
+    /// <summary>A tab button.</summary>
     Tab,
+
+    /// <summary>Contains tab buttons.</summary>
+    TabBar,
+
+    /// <summary>The main display for a tab.</summary>
     TabPanel,
-    Form,
-    Cell,
-    RadioGroup,
-    ProgressBar,
-    LoadingSpinner,
+
+    /// <summary>A pop up dialog.</summary>
+    Dialog,
+
+    /// <summary>An alert dialog.</summary>
+    AlertDialog,
+
+    /// <summary>A table structure containing data arranged in rows and columns.</summary>
     Table,
+
+    /// <summary>A cell in a table that does not contain column or row header information.</summary>
+    Cell,
+
+    /// <summary>A row of cells or column headers in a table.</summary>
     Row,
+
+    /// <summary>A cell in a table that contains header information for a column.</summary>
     ColumnHeader,
+
+    /// <summary>A control used for dragging across content.</summary>
+    DragHandle,
+
+    /// <summary>A control to cycle through content on tap.</summary>
+    SpinButton,
+
+    /// <summary>An input field with a dropdown list box attached.</summary>
+    ComboBox,
+
+    /// <summary>A presentation of a menu that usually remains visible, usually horizontally.</summary>
+    MenuBar,
+
+    /// <summary>A permanently visible list of controls or a widget that can be opened and closed.</summary>
+    Menu,
+
+    /// <summary>An item in a dropdown created by a menu or a menu bar.</summary>
+    MenuItem,
+
+    /// <summary>An item with a checkbox in a dropdown created by a menu or a menu bar.</summary>
+    MenuItemCheckbox,
+
+    /// <summary>An item with a radio button in a dropdown created by a menu or a menu bar.</summary>
+    MenuItemRadio,
+
+    /// <summary>A container that displays multiple list items in a vertical or horizontal layout.</summary>
+    List,
+
+    /// <summary>An item in a list.</summary>
+    ListItem,
+
+    /// <summary>An area that represents a form.</summary>
+    Form,
+
+    /// <summary>A pop up displayed when hovering over a component to explain it.</summary>
+    Tooltip,
+
+    /// <summary>A graphic object that spins to indicate the application is busy.</summary>
+    LoadingSpinner,
+
+    /// <summary>A graphic object that shows progress with a numeric value.</summary>
+    ProgressBar,
+
+    /// <summary>A keyboard shortcut field that accepts a combination or sequence of keystrokes.</summary>
+    HotKey,
+
+    /// <summary>A group of radio buttons.</summary>
+    RadioGroup,
+
+    /// <summary>A component that provides advisory information not important enough for an alert.</summary>
+    Status,
+
+    /// <summary>A component that provides important and usually time-sensitive information.</summary>
+    Alert,
+
+    /// <summary>A supporting section of the document, meaningful even when separated from the main content.</summary>
+    Complementary,
+
+    /// <summary>A region with information about the parent document, such as copyrights.</summary>
+    ContentInfo,
+
+    /// <summary>The main content of the document.</summary>
+    Main,
+
+    /// <summary>A region with a collection of items and objects for navigating the document.</summary>
+    Navigation,
+
+    /// <summary>A section with content that is relevant enough to be listed in a summary.</summary>
+    Region,
 }
 
 /// <summary>

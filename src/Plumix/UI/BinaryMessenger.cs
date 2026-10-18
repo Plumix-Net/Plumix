@@ -159,7 +159,36 @@ public class ServicesBinding
                 await Painting.PaintingBinding.Instance.HandleSystemMessage(message!);
                 return null;
             });
+        new BasicMessageChannel<object?>(
+                SystemChannels.Accessibility.Name, SystemChannels.Accessibility.Codec, DefaultBinaryMessenger)
+            .SetMessageHandler(async message =>
+            {
+                await HandleAccessibilityMessage(message!);
+                return null;
+            });
         _ = InitKeyboard();
+    }
+
+    /// <summary>Notifies when the accessibility focus on the system has changed.</summary>
+    /// <remarks>
+    /// Flutter's <c>ServicesBinding.accessibilityFocus</c>: the id of the semantics node the platform
+    /// last reported focused through a <c>didGainFocus</c> message on <c>flutter/accessibility</c>.
+    /// </remarks>
+    public ValueNotifier<int?> AccessibilityFocus { get; } = new(null);
+
+    // Dart's `_handleAccessibilityMessage`.
+    private Task HandleAccessibilityMessage(object accessibilityMessage)
+    {
+        var message = (System.Collections.IDictionary)accessibilityMessage;
+        string type = (string)message["type"]!;
+        switch (type)
+        {
+            case "didGainFocus":
+                AccessibilityFocus.Value = Convert.ToInt32(message["nodeId"]);
+                break;
+        }
+
+        return Task.CompletedTask;
     }
 
     /// <summary>The global singleton instance of <see cref="HardwareKeyboard"/>.</summary>

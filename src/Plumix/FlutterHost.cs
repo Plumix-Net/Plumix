@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Platform;
 using Avalonia.Input;
@@ -9,6 +10,7 @@ using Avalonia.Styling;
 using Avalonia.Threading;
 using System.Collections;
 using System.Reflection;
+using Plumix.Accessibility;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -125,7 +127,12 @@ public class PlumixHost : Control
         _pipeline = new PipelineOwner(
             onSemanticsOwnerCreated: () => (_pipeline!.RootNode as RenderView)?.ScheduleInitialSemantics(),
             onSemanticsUpdate: update => (_pipeline!.RootNode as RenderView)?.UpdateSemantics(update),
-            onSemanticsOwnerDisposed: () => (_pipeline!.RootNode as RenderView)?.ClearSemantics());
+            onSemanticsOwnerDisposed: () =>
+            {
+                (_pipeline!.RootNode as RenderView)?.ClearSemantics();
+                AccessibilityBridge!.Clear();
+            });
+        AccessibilityBridge = new AccessibilityBridge(_view.ViewId, () => _view.DevicePixelRatio);
         _view.SemanticsUpdated += HandleViewSemanticsUpdated;
         _view.RenderRequested += HandleViewRenderRequested;
         _textInputClient = new PlumixTextInputMethodClient(this);
@@ -158,6 +165,18 @@ public class PlumixHost : Control
     protected PipelineOwner Pipeline => _pipeline;
 
     public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner?.RootNode;
+
+    /// <summary>
+    /// The host-side mirror of this view's semantics tree, which the platform accessibility bridges
+    /// read: the engine's per-view <c>AccessibilityBridge</c>.
+    /// </summary>
+    public AccessibilityBridge AccessibilityBridge { get; }
+
+    /// <summary>
+    /// Exposes this view's semantics tree to the platform's automation API (UI Automation, the macOS
+    /// accessibility API, AT-SPI and Android's accessibility services, through Avalonia).
+    /// </summary>
+    protected override AutomationPeer OnCreateAutomationPeer() => new PlumixHostAutomationPeer(this);
 
     /// <summary>
     /// Renders a bare render tree, without a widget layer.
@@ -1616,6 +1635,7 @@ public class PlumixHost : Control
     /// </summary>
     private void HandleViewSemanticsUpdated(SemanticsUpdate update)
     {
+        AccessibilityBridge.AddSemanticsUpdate(update);
         SemanticsUpdateProduced?.Invoke(update);
         SemanticsUpdated?.Invoke(_pipeline.SemanticsOwner?.RootNode);
     }

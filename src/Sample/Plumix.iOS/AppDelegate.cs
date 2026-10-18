@@ -2,8 +2,10 @@ using Foundation;
 using UIKit;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.iOS;
 using Avalonia.Media;
+using Avalonia.Threading;
 using System.Collections.Generic;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -48,7 +50,20 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
     {
         return base.CustomizeAppBuilder(builder)
-            .WithInterFont();
+            .WithInterFont()
+            // The shared App creates its host in OnFrameworkInitializationCompleted, after this callback.
+            .AfterSetup(_ => Dispatcher.UIThread.Post(AttachAccessibilityBridge));
+    }
+
+    private static void AttachAccessibilityBridge()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime
+            {
+                MainView: PlumixHost host,
+            })
+        {
+            IOSAccessibilityBridge.Attach(host);
+        }
     }
 
     private static void DispatchLifecycleState(AppLifecycleState state)

@@ -92,7 +92,18 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             as HeroControllerScope;
         UpdateHeroController(scope?.Controller);
         ValidatePagesApi();
+        ServicesBinding.Instance.AccessibilityFocus.AddListener(RecordLastFocus);
         _history.AddListener(HandleHistoryChanged);
+    }
+
+    // Record the last focused node in route entry.
+    private void RecordLastFocus()
+    {
+        RouteEntry? entry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
+        if (entry is not null)
+        {
+            entry.LastFocusNode = ServicesBinding.Instance.AccessibilityFocus.Value;
+        }
     }
 
     public override void DidUpdateWidget(Navigator oldWidget)
@@ -154,6 +165,7 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
 
     public override void Dispose()
     {
+        ServicesBinding.Instance.AccessibilityFocus.RemoveListener(RecordLastFocus);
         _history.RemoveListener(HandleHistoryChanged);
         StopUserGesture();
         UpdateHeroController(null);

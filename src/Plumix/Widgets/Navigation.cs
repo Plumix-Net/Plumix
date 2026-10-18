@@ -242,6 +242,8 @@ public abstract class Route
 {
     private readonly TaskCompletionSource<object?> _popCompleter =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<object?> _disposeCompleter =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     private readonly ValueNotifier<string?> _restorationScopeId = new(null);
     private readonly bool? _requestFocus;
     private List<LocalHistoryEntry>? _localHistoryEntries;
@@ -276,6 +278,9 @@ public abstract class Route
     public bool RequestFocus => _requestFocus ?? Navigator?.NavigatorWidget.RequestFocus ?? false;
 
     internal bool PopCompleted => _popCompleter.Task.IsCompleted;
+
+    /// <summary>Completes when <see cref="Dispose"/> runs: Flutter's private <c>_disposeCompleter</c>.</summary>
+    internal Task DisposeCompleted => _disposeCompleter.Task;
 
     internal bool Installed => Navigator is not null;
 
@@ -480,6 +485,7 @@ public abstract class Route
     {
         _restorationScopeId.Dispose();
         _popCompleter.TrySetResult(CurrentResult);
+        _disposeCompleter.TrySetResult(null);
         if (_localHistoryEntries is not { Count: > 0 })
         {
             return;

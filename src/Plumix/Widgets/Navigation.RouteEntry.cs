@@ -5,6 +5,7 @@
 #pragma warning disable CS8714
 
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -376,6 +377,9 @@ internal sealed class RouteEntry : RouteTransitionRecord
 
     public object? LastAnnouncedNextRoute { get; set; } = RoutePlaceholder.NotAnnounced;
 
+    /// <summary>The last focused semantic node for the route entry.</summary>
+    public int? LastFocusNode { get; set; }
+
     /// <summary>True when the route was removed imperatively rather than through the pages API.</summary>
     public bool ImperativeRemoval { get; set; }
 
@@ -494,6 +498,53 @@ internal sealed class RouteEntry : RouteTransitionRecord
     {
         Route.DidPopNext(poppedRoute);
         LastAnnouncedPoppedNextRoute = poppedRoute;
+        if (LastFocusNode is not null)
+        {
+            // Move focus back to the last focused node.
+            EventLoop.RunAsync(() => RestoreFocusAfterDispose(poppedRoute));
+        }
+    }
+
+    // Dart's `poppedRoute._disposeCompleter.future.then(...).catchError(...)` in `handleDidPopNext`.
+    private async Task RestoreFocusAfterDispose(Route poppedRoute)
+    {
+        try
+        {
+            await poppedRoute.DisposeCompleted;
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.Android:
+                    // In the Android platform, we have to wait for the system refocus to complete before
+                    // sending the refocus message. Otherwise, the refocus message will be ignored.
+                    // TODO(hangyujin): update this logic if Android provide a better way to do so.
+                    int? reFocusNode = LastFocusNode;
+                    await Delayed(AndroidRefocusingDelayDuration);
+                    await SystemChannels.Accessibility.Send(new FocusSemanticEvent(reFocusNode).ToMap());
+                    break;
+                case TargetPlatform.IOS:
+                    await SystemChannels.Accessibility.Send(new FocusSemanticEvent(LastFocusNode).ToMap());
+                    break;
+            }
+        }
+        catch (Exception error)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: error,
+                stack: error.StackTrace,
+                library: "widgets library",
+                context: new ErrorDescription("while restoring focus in the navigator")));
+        }
+    }
+
+    // Dart's `_kAndroidRefocusingDelayDuration`.
+    private static readonly TimeSpan AndroidRefocusingDelayDuration = TimeSpan.FromMilliseconds(300);
+
+    // Dart's `Future<void>.delayed`, over the timer seam the framework's other dart:async timers use.
+    private static Task Delayed(TimeSpan duration)
+    {
+        var completer = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        _ = Gestures.GestureTimer.Start(duration, () => completer.TrySetResult());
+        return completer.Task;
     }
 
     public bool HandlePop(NavigatorState navigator, Route? previousPresent)

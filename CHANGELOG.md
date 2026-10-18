@@ -9,6 +9,14 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: SemanticsRole has all 33 dart:ui values, in Dart's order (dart:ui semantics.dart).
+- ServicesBinding.AccessibilityFocus and its flutter/accessibility didGainFocus handler (services/binding.dart).
+- FocusSemanticEvent (semantics/semantics_event.dart).
+- Navigator moves accessibility focus back after a pop on Android and iOS (widgets/navigator.dart).
+- AccessibilityBridge mirrors a host's semantics tree for the platform bridges (engine accessibility_bridge.cc).
+- PlumixHost exposes semantics to UI Automation, macOS, AT-SPI and Android via Avalonia automation peers (C#-only).
+- iOS host exposes semantics to VoiceOver and reports iOS accessibility features (engine SemanticsObject.mm).
+- Browser host renders semantics as an ARIA overlay behind an Enable accessibility placeholder (web engine semantics).
 - PointerData, PointerDataPacket, PointerChange, PointerSignalKind, OnPointerDataPacket (dart:ui pointer.dart).
 - PointerEventConverter.Expand turns physical pointer packets into logical events (gestures/converter.dart).
 - Hosts report pointer input as physical PointerDataPacket entries on FrameClock's monotonic timeline (C#-only).

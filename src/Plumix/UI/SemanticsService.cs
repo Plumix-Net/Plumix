@@ -72,6 +72,13 @@ public sealed record TapSemanticEvent(int? NodeId = null) : SemanticsEvent("tap"
 
 public sealed record LongPressSemanticsEvent(int? NodeId = null) : SemanticsEvent("longPress", NodeId);
 
+/// <summary>An event that asks the platform to move accessibility focus to the node.</summary>
+/// <remarks>
+/// Flutter's <c>FocusSemanticEvent</c>. Dart passes the node id to <c>toMap</c>; Plumix's events carry
+/// it as <see cref="SemanticsEvent.NodeId"/>. Only the Android and iOS embedders act on it.
+/// </remarks>
+public sealed record FocusSemanticEvent(int? NodeId = null) : SemanticsEvent("focus", NodeId);
+
 public sealed record TooltipSemanticEvent(string Message) : SemanticsEvent("tooltip", NodeId: null)
 {
     public override IReadOnlyDictionary<string, object?> GetDataMap() =>

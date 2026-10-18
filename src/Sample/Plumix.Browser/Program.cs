@@ -6,6 +6,7 @@ using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using Plumix;
 using Plumix.UI;
@@ -23,6 +24,10 @@ internal sealed partial class Program
             .StartBrowserAppAsync("out");
         await JSHost.ImportAsync(LifecycleModule, "./plumix-lifecycle.js");
         SubscribeToLifecycle(LifecycleCallback);
+        if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime { MainView: PlumixHost host })
+        {
+            await BrowserAccessibilityBridge.AttachAsync(host, "out");
+        }
     }
 
     public static AppBuilder BuildAvaloniaApp()
