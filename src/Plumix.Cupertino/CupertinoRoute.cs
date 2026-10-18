@@ -155,8 +155,6 @@ public abstract class CupertinoRouteTransitionMixin<T> : PageRoute, ICupertinoRo
 public sealed class CupertinoPageRoute<T> : CupertinoRouteTransitionMixin<T>
 {
     private readonly WidgetBuilder _builder;
-    private readonly TaskCompletionSource<T?> _completed =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public CupertinoPageRoute(
         WidgetBuilder builder,
@@ -183,39 +181,14 @@ public sealed class CupertinoPageRoute<T> : CupertinoRouteTransitionMixin<T>
     public override DelegatedTransitionBuilder DelegatedTransition =>
         CupertinoPageTransition.DelegatedTransition;
 
-    /// <summary>Completes with the typed result supplied when this route is popped.</summary>
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     protected override Widget BuildContent(BuildContext context) => _builder(context);
-
-    public override void DidComplete(object? result)
-    {
-        base.DidComplete(result);
-        CompleteResult(result);
-    }
-
-    public override void Dispose()
-    {
-        _completed.TrySetResult(default);
-        base.Dispose();
-    }
-
-    private void CompleteResult(object? result)
-    {
-        if (result is null)
-        {
-            _completed.TrySetResult(default);
-        }
-        else if (result is T typedResult)
-        {
-            _completed.TrySetResult(typedResult);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Route result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
-    }
 }
 
 /// <summary>An immutable Navigator page that creates a <see cref="CupertinoPageRoute{T}"/>.</summary>
@@ -608,8 +581,6 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
     private readonly bool _usesDefaultBarrierColor;
     private readonly bool _semanticsDismissible;
     private readonly string _barrierLabel;
-    private readonly TaskCompletionSource<T?> _completed =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public CupertinoModalPopupRoute(
         WidgetBuilder builder,
@@ -647,7 +618,12 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
 
     public Point? AnchorPoint { get; }
 
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     protected internal override Simulation? CreateSimulation(bool forward)
     {
@@ -685,29 +661,6 @@ public sealed class CupertinoModalPopupRoute<T> : PopupRoute
                 child: child));
     }
 
-    public override void DidComplete(object? result)
-    {
-        base.DidComplete(result);
-        if (result is null)
-        {
-            _completed.TrySetResult(default);
-        }
-        else if (result is T typedResult)
-        {
-            _completed.TrySetResult(typedResult);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Popup result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
-    }
-
-    public override void Dispose()
-    {
-        _completed.TrySetResult(default);
-        base.Dispose();
-    }
 }
 
 internal static class CupertinoRouteTweens

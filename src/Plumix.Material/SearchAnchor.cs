@@ -585,14 +585,14 @@ public class SearchAnchor : StatefulWidget
 
         public override TimeSpan TransitionDuration => SearchViewChoreography.OpenViewDuration;
 
-        public override void DidPush()
+        public override TickerFuture DidPush()
         {
             BuildContext anchorContext = _anchorKey.CurrentContext!;
             UpdateViewConfig(anchorContext);
             UpdateTweens(anchorContext);
             _toggleVisibility?.Invoke();
             _viewOnOpen?.Invoke();
-            base.DidPush();
+            return base.DidPush();
         }
 
         public override bool DidPop(object? result)

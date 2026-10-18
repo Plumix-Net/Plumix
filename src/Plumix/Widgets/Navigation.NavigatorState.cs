@@ -1,6 +1,10 @@
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/navigator.dart
 
+using System.Collections;
+using System.Text.Json;
+using System.Text.Encodings.Web;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 
 #pragma warning disable CS8714
@@ -25,6 +29,8 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     private string? _lastAnnouncedRouteName;
     private bool _flushingHistory;
     private bool _updatingPage;
+    private bool _debugLocked;
+    private readonly HashSet<int> _activePointers = [];
 
     public NavigatorState()
     {
@@ -92,6 +98,11 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             as HeroControllerScope;
         UpdateHeroController(scope?.Controller);
         ValidatePagesApi();
+        if (CurrentWidget.ReportsRouteUpdateToEngine)
+        {
+            _ = SystemNavigator.SelectSingleEntryHistory();
+        }
+
         ServicesBinding.Instance.AccessibilityFocus.AddListener(RecordLastFocus);
         _history.AddListener(HandleHistoryChanged);
     }
@@ -127,16 +138,16 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             }
         }
 
-        if (_history.Count == 0)
-        {
-            PushInitialRoutes();
-        }
     }
 
     public override void DidChangeDependencies()
     {
         base.DidChangeDependencies();
         UpdateHeroController(HeroControllerScope.MaybeOf(Context));
+        foreach (RouteEntry entry in _history)
+        {
+            entry.Route.ChangedExternalState();
+        }
     }
 
     public override void Activate()
@@ -196,19 +207,117 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             onNotification: HandleNavigationNotification,
             child: new NavigatorScope(
                 this,
-                new FocusTraversalGroup(
-                    policy: FocusTraversalGroup.MaybeOf(context),
-                    child: new Focus(
-                        focusNode: FocusNode,
-                        autofocus: true,
-                        skipTraversal: true,
-                        includeSemantics: false,
-                        child: new UnmanagedRestorationScope(
-                            bucket: Bucket,
-                            child: new Overlay(
-                                initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
-                                clipBehavior: CurrentWidget.ClipBehavior,
-                                key: _overlayKey)))))));
+                new Listener(
+                    onPointerDown: HandlePointerDown,
+                    onPointerUp: HandlePointerUpOrCancel,
+                    onPointerCancel: HandlePointerUpOrCancel,
+                    child: new AbsorbPointer(
+                        absorbing: false,
+                        child: new FocusTraversalGroup(
+                            policy: FocusTraversalGroup.MaybeOf(context),
+                            child: new Focus(
+                                focusNode: FocusNode,
+                                autofocus: true,
+                                skipTraversal: true,
+                                includeSemantics: false,
+                                child: new UnmanagedRestorationScope(
+                                    bucket: Bucket,
+                                    child: new Overlay(
+                                        initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
+                                        clipBehavior: CurrentWidget.ClipBehavior,
+                                        key: _overlayKey)))))))));
+    }
+
+    private void HandlePointerDown(PointerDownEvent pointer) => _activePointers.Add(pointer.Pointer);
+
+    private void HandlePointerUpOrCancel(PointerEvent pointer) => _activePointers.Remove(pointer.Pointer);
+
+    private void AfterNavigation(Route? route)
+    {
+        if (!Constants.KReleaseMode)
+        {
+            Dictionary<string, object?>? routeData = null;
+            if (route is not null)
+            {
+                var settings = new Dictionary<string, object?> { ["name"] = route.Settings.Name };
+                if (route.Settings.Arguments is { } arguments)
+                {
+                    settings["arguments"] = JsonSerializer.Serialize(
+                        JsonArgument(arguments),
+                        new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
+                }
+
+                routeData = new Dictionary<string, object?>
+                {
+                    ["description"] = route is TransitionRoute transition ? transition.DebugLabel : route.ToString(),
+                    ["settings"] = settings,
+                };
+            }
+
+            BindingBase.PostEvent("Flutter.Navigation", new Dictionary<string, object?> { ["route"] = routeData });
+        }
+
+        // Explicit C# root teardown can remove routes at idle after the overlay was deactivated.
+        if (SchedulerBinding.Instance.SchedulerPhase == SchedulerPhase.Idle
+            && _overlayKey.CurrentContext is Element { LifecycleState: ElementLifecycleState.Active } overlayContext)
+        {
+            RenderAbsorbPointer? absorber = overlayContext.FindAncestorRenderObjectOfType<RenderAbsorbPointer>();
+            SetState(() =>
+            {
+                if (absorber is not null)
+                {
+                    absorber.Absorbing = true;
+                }
+            });
+        }
+
+        foreach (int pointer in _activePointers.ToArray())
+        {
+            WidgetsBinding.Instance.CancelPointer(pointer);
+        }
+    }
+
+    private static object? JsonArgument(object? value) => JsonArgument(value, new HashSet<object>(
+        ReferenceEqualityComparer.Instance));
+
+    private static object? JsonArgument(object? value, HashSet<object> ancestors)
+    {
+        if (value is null or string or bool or byte or sbyte or short or ushort
+            or int or uint or long or ulong or float or double or decimal)
+        {
+            return value;
+        }
+
+        if (value is not IEnumerable)
+        {
+            return value.ToString();
+        }
+
+        if (!ancestors.Add(value))
+        {
+            throw new ArgumentException("Cyclic route arguments cannot be JSON encoded.");
+        }
+
+        try
+        {
+            if (value is IDictionary map)
+            {
+                var result = new Dictionary<string, object?>();
+                foreach (DictionaryEntry entry in map)
+                {
+                    string key = entry.Key as string ?? throw new ArgumentException("JSON map keys must be strings.");
+                    result[key] = JsonArgument(entry.Value, ancestors);
+                }
+
+                return result;
+            }
+
+            return ((IEnumerable)value).Cast<object?>().Select(item => JsonArgument(item, ancestors)).ToArray();
+        }
+        finally
+        {
+            ancestors.Remove(value);
+        }
     }
 
     /// <summary>
@@ -297,7 +406,8 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
             _history.AddRange(_serializableHistory.RestoreEntriesForPage(entry, this));
         }
 
-        if (!_serializableHistory.HasData && !CurrentWidget.UsingPagesApi)
+        if (!_serializableHistory.HasData
+            && (!CurrentWidget.UsingPagesApi || CurrentWidget.InitialRouteName is not null))
         {
             _history.AddRange(CreateInitialRouteEntries());
         }
@@ -328,6 +438,12 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     /// <summary>Flutter's <c>NavigatorState._getRouteById</c>.</summary>
     public Route? GetRouteById(string id) =>
         FirstRouteEntryWhereOrNull(entry => string.Equals(entry.RestorationId, id, StringComparison.Ordinal))?.Route;
+
+    public string RestorablePopAndPushNamed(string routeName, object? result = null, object? arguments = null)
+    {
+        Pop(result);
+        return RestorablePushNamed(routeName, arguments);
+    }
 
     public string RestorablePushNamed(string routeName, object? arguments = null)
     {
@@ -418,56 +534,65 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     // Imperative history operations
     // -------------------------------------------------------------------------------------------------
 
-    public void Push(Route route)
+    public Task<object?> PopAndPushNamed(string routeName, object? result = null, object? arguments = null)
+    {
+        Pop(result);
+        return PushNamed(routeName, arguments);
+    }
+
+    public Task<object?> Push(Route route)
     {
         ArgumentNullException.ThrowIfNull(route);
         PushEntry(new RouteEntry(route, RouteLifecycle.Push, pageBased: false));
+        return route.Popped;
     }
 
-    public void PushAndRemoveUntil(Route newRoute, RoutePredicate predicate)
+    public Task<object?> PushAndRemoveUntil(Route newRoute, RoutePredicate predicate)
     {
         ArgumentNullException.ThrowIfNull(newRoute);
         ArgumentNullException.ThrowIfNull(predicate);
         PushEntryAndRemoveUntil(new RouteEntry(newRoute, RouteLifecycle.Push, pageBased: false), predicate);
+        return newRoute.Popped;
     }
 
-    public void PushNamed(string routeName, object? arguments = null)
+    public Task<object?> PushNamed(string routeName, object? arguments = null)
     {
-        Push(ResolveRouteLocation(routeName, arguments));
+        return Push(ResolveRouteLocation(routeName, arguments));
     }
 
-    public void PushNamed(RouteData routeData)
-    {
-        ArgumentNullException.ThrowIfNull(routeData);
-        Push(ResolveRouteData(routeData));
-    }
-
-    public void PushNamedAndRemoveUntil(string routeName, RoutePredicate predicate, object? arguments = null)
-    {
-        PushAndRemoveUntil(ResolveRouteLocation(routeName, arguments), predicate);
-    }
-
-    public void PushNamedAndRemoveUntil(RouteData routeData, RoutePredicate predicate)
+    public Task<object?> PushNamed(RouteData routeData)
     {
         ArgumentNullException.ThrowIfNull(routeData);
-        PushAndRemoveUntil(ResolveRouteData(routeData), predicate);
+        return Push(ResolveRouteData(routeData));
     }
 
-    public void PushReplacement(Route newRoute, object? result = null)
+    public Task<object?> PushNamedAndRemoveUntil(string routeName, RoutePredicate predicate, object? arguments = null)
+    {
+        return PushAndRemoveUntil(ResolveRouteLocation(routeName, arguments), predicate);
+    }
+
+    public Task<object?> PushNamedAndRemoveUntil(RouteData routeData, RoutePredicate predicate)
+    {
+        ArgumentNullException.ThrowIfNull(routeData);
+        return PushAndRemoveUntil(ResolveRouteData(routeData), predicate);
+    }
+
+    public Task<object?> PushReplacement(Route newRoute, object? result = null)
     {
         ArgumentNullException.ThrowIfNull(newRoute);
         PushReplacementEntry(new RouteEntry(newRoute, RouteLifecycle.PushReplace, pageBased: false), result);
+        return newRoute.Popped;
     }
 
-    public void PushReplacementNamed(string routeName, object? arguments = null, object? result = null)
+    public Task<object?> PushReplacementNamed(string routeName, object? arguments = null, object? result = null)
     {
-        PushReplacement(ResolveRouteLocation(routeName, arguments), result);
+        return PushReplacement(ResolveRouteLocation(routeName, arguments), result);
     }
 
-    public void PushReplacementNamed(RouteData routeData, object? result = null)
+    public Task<object?> PushReplacementNamed(RouteData routeData, object? result = null)
     {
         ArgumentNullException.ThrowIfNull(routeData);
-        PushReplacement(ResolveRouteData(routeData), result);
+        return PushReplacement(ResolveRouteData(routeData), result);
     }
 
     /// <summary>Flutter's <c>Navigator.replace</c>: swaps <paramref name="oldRoute"/> without a transition.</summary>
@@ -491,7 +616,13 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
         ReplaceEntryBelow(new RouteEntry(newRoute, RouteLifecycle.Replace, pageBased: false), anchorRoute);
     }
 
-    public bool MaybePop(object? result = null)
+    public Task<bool> MaybePop(object? result = null)
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        return MaybePopCore(result);
+    }
+
+    private async Task<bool> MaybePopCore(object? result)
     {
         RouteEntry? lastEntry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
         if (lastEntry is null)
@@ -500,12 +631,14 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
         }
 
         Route route = lastEntry.Route;
-        if (!route.WillPop(result))
+        Task<RoutePopDisposition> decision = route.WillPop();
+        await Task.Yield();
+        if (await decision == RoutePopDisposition.DoNotPop)
         {
             return true;
         }
 
-        if (!ReferenceEquals(lastEntry, LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate)))
+        if (!Mounted || !ReferenceEquals(lastEntry, LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate)))
         {
             return true;
         }
@@ -527,48 +660,54 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
 
     public void Pop(object? result = null)
     {
+        CheckNotLocked();
         RouteEntry entry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate)
                            ?? throw new InvalidOperationException("Navigator cannot pop without a current route.");
+        RunHistoryOperation(() =>
+        {
 #pragma warning disable CS0618 // Dart's deprecated `onPopPage` is still honored.
-        if (entry.PageBased && CurrentWidget.OnPopPage is { } onPopPage)
+            if (entry.PageBased && CurrentWidget.OnPopPage is { } onPopPage)
 #pragma warning restore CS0618
-        {
-            // The callback decides; a `false` answer leaves the route, even the only one, in place.
-            if (onPopPage(entry.Route, result))
             {
-                if (entry.CurrentState <= RouteLifecycle.Idle)
+                // The callback decides; a `false` answer leaves the route, even the only one, in place.
+                if (onPopPage(entry.Route, result))
                 {
-                    // The entry may have been disposed if the pop finishes synchronously.
-                    entry.CurrentState = RouteLifecycle.Pop;
+                    if (entry.CurrentState <= RouteLifecycle.Idle)
+                    {
+                        // The entry may have been disposed if the pop finishes synchronously.
+                        entry.CurrentState = RouteLifecycle.Pop;
+                    }
+
+                    entry.Route.OnPopInvokedWithResult(true, result);
                 }
-
-                entry.Route.OnPopInvokedWithResult(true, result);
             }
-        }
-        else
-        {
-            if (!CanPop)
+            else
             {
-                throw new InvalidOperationException("Navigator cannot pop the current route.");
+                // A page-based route runs its own pop so the transition plays; `HandlePop` then asks the owner to
+                // drop the page through `OnDidRemovePage`.
+                entry.Pop(result, imperativeRemoval: true);
             }
 
-            // A page-based route runs its own pop so the transition plays; `HandlePop` then asks the owner to
-            // drop the page through `OnDidRemovePage`.
-            entry.Pop(result, imperativeRemoval: true);
-        }
-
-        if (entry.CurrentState == RouteLifecycle.Pop)
-        {
-            FlushWithLock(rearrangeOverlay: false);
-        }
+            if (entry.CurrentState == RouteLifecycle.Pop)
+            {
+                FlushHistoryUpdates(rearrangeOverlay: false);
+            }
+        });
+        AfterNavigation(entry.Route);
     }
 
-    public bool MaybePopFromUserGesture(object? result = null)
+    public Task<bool> MaybePopFromUserGesture(object? result = null)
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        return PopFromUserGestureCore(result);
+    }
+
+    private async Task<bool> PopFromUserGestureCore(object? result)
     {
         StartUserGesture();
         try
         {
-            return MaybePop(result);
+            return await MaybePop(result);
         }
         finally
         {
@@ -582,47 +721,61 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
         RouteEntry? candidate = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
         while (candidate is not null && !predicate(candidate.Route))
         {
-            if (!CanPop || !candidate.Route.WillPop(result: null))
-            {
-                return;
-            }
-
             Pop();
+            candidate = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
+        }
+    }
+
+    public void PopUntilWithResult(RoutePredicate predicate, object? result)
+    {
+        ArgumentNullException.ThrowIfNull(predicate);
+        RouteEntry? candidate = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
+        while (candidate is not null && !predicate(candidate.Route))
+        {
+            RouteEntry? next = LastRouteEntryWhereOrNull(entry => entry.IsPresent && entry != candidate);
+            Pop(next is not null && !next.Route.WillHandlePopInternally && predicate(next.Route) ? result : null);
             candidate = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
         }
     }
 
     public void RemoveRoute(Route route, object? result = null)
     {
-        ArgumentNullException.ThrowIfNull(route);
-        RouteEntry entry = _history.FirstOrDefault(candidate => ReferenceEquals(candidate.Route, route))
-                           ?? throw new InvalidOperationException("Route is not present in Navigator history.");
-        if (_history.Count(candidate => candidate.IsPresent) <= 1)
+        bool wasCurrent = false;
+        RunHistoryOperation(() =>
         {
-            throw new InvalidOperationException("Navigator cannot remove the last route.");
+            ArgumentNullException.ThrowIfNull(route);
+            RouteEntry entry = _history.FirstOrDefault(candidate => ReferenceEquals(candidate.Route, route))
+                               ?? throw new InvalidOperationException("Route is not present in Navigator history.");
+            wasCurrent = entry.Route.IsCurrent;
+            entry.Complete(result, isReplaced: false, imperativeRemoval: true);
+            FlushHistoryUpdates(rearrangeOverlay: false);
+        });
+        if (wasCurrent)
+        {
+            AfterNavigation(CurrentRoute);
         }
-
-        entry.Complete(result, isReplaced: false, imperativeRemoval: true);
-        FlushWithLock(rearrangeOverlay: false);
     }
 
     public void RemoveRouteBelow(Route anchorRoute, object? result = null)
     {
-        ArgumentNullException.ThrowIfNull(anchorRoute);
-        int anchorIndex = _history.FindIndex(entry => ReferenceEquals(entry.Route, anchorRoute) && entry.IsPresent);
-        if (anchorIndex < 0)
+        RunHistoryOperation(() =>
         {
-            throw new InvalidOperationException("Anchor route is not present in Navigator history.");
-        }
+            ArgumentNullException.ThrowIfNull(anchorRoute);
+            int anchorIndex = _history.FindIndex(entry => ReferenceEquals(entry.Route, anchorRoute) && entry.IsPresent);
+            if (anchorIndex < 0)
+            {
+                throw new InvalidOperationException("Anchor route is not present in Navigator history.");
+            }
 
-        int index = GetIndexBefore(anchorIndex - 1, RouteEntry.IsPresentPredicate);
-        if (index < 0)
-        {
-            throw new InvalidOperationException("Anchor route does not have a route below it.");
-        }
+            int index = GetIndexBefore(anchorIndex - 1, RouteEntry.IsPresentPredicate);
+            if (index < 0)
+            {
+                throw new InvalidOperationException("Anchor route does not have a route below it.");
+            }
 
-        _history[index].Complete(result, isReplaced: false, imperativeRemoval: true);
-        FlushWithLock(rearrangeOverlay: false);
+            _history[index].Complete(result, isReplaced: false, imperativeRemoval: true);
+            FlushHistoryUpdates(rearrangeOverlay: false);
+        });
     }
 
     public void StartUserGesture()
@@ -665,67 +818,89 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
 
     private void PushEntry(RouteEntry entry)
     {
-        _history.Add(entry);
-        FlushWithLock();
+        RunHistoryOperation(() =>
+        {
+            _history.Add(entry);
+            FlushHistoryUpdates();
+        });
+        AfterNavigation(entry.Route);
     }
 
     private void PushReplacementEntry(RouteEntry entry, object? result)
     {
-        RouteEntry? oldEntry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
-        oldEntry?.Complete(result, isReplaced: true, imperativeRemoval: true);
-        _history.Add(entry);
-        FlushWithLock();
+        RunHistoryOperation(() =>
+        {
+            RouteEntry? oldEntry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
+            oldEntry?.Complete(result, isReplaced: true, imperativeRemoval: true);
+            _history.Add(entry);
+            FlushHistoryUpdates();
+        });
+        AfterNavigation(entry.Route);
     }
 
     private void PushEntryAndRemoveUntil(RouteEntry entry, RoutePredicate predicate)
     {
-        int index = _history.Count - 1;
-        _history.Add(entry);
-        while (index >= 0 && !predicate(_history[index].Route))
+        RunHistoryOperation(() =>
         {
-            if (_history[index].IsPresent)
+            int index = _history.Count - 1;
+            _history.Add(entry);
+            while (index >= 0 && !predicate(_history[index].Route))
             {
-                _history[index].Complete(null, isReplaced: false, imperativeRemoval: true);
+                if (_history[index].IsPresent)
+                {
+                    _history[index].Complete(null, isReplaced: false, imperativeRemoval: true);
+                }
+
+                index -= 1;
             }
 
-            index -= 1;
-        }
-
-        FlushWithLock();
+            FlushHistoryUpdates();
+        });
+        AfterNavigation(entry.Route);
     }
 
     private void ReplaceEntry(RouteEntry entry, Route oldRoute)
     {
-        int index = _history.FindIndex(candidate =>
-            ReferenceEquals(candidate.Route, oldRoute) && candidate.IsPresent);
-        if (index < 0)
+        RunHistoryOperation(() =>
         {
-            throw new InvalidOperationException("The old route is not present in Navigator history.");
-        }
+            int index = _history.FindIndex(candidate =>
+                ReferenceEquals(candidate.Route, oldRoute) && candidate.IsPresent);
+            if (index < 0)
+            {
+                throw new InvalidOperationException("The old route is not present in Navigator history.");
+            }
 
-        _history.Insert(index + 1, entry);
-        _history[index].Complete(null, isReplaced: true, imperativeRemoval: true);
-        FlushWithLock();
+            _history.Insert(index + 1, entry);
+            _history[index].Complete(null, isReplaced: true, imperativeRemoval: true);
+            FlushHistoryUpdates();
+        });
+        if (entry.Route.IsCurrent)
+        {
+            AfterNavigation(entry.Route);
+        }
     }
 
     private void ReplaceEntryBelow(RouteEntry entry, Route anchorRoute)
     {
-        int anchorIndex = _history.FindIndex(candidate =>
-            ReferenceEquals(candidate.Route, anchorRoute) && candidate.IsPresent);
-        if (anchorIndex < 0)
+        RunHistoryOperation(() =>
         {
-            throw new InvalidOperationException("The anchor route is not present in Navigator history.");
-        }
+            int anchorIndex = _history.FindIndex(candidate =>
+                ReferenceEquals(candidate.Route, anchorRoute) && candidate.IsPresent);
+            if (anchorIndex < 0)
+            {
+                throw new InvalidOperationException("The anchor route is not present in Navigator history.");
+            }
 
-        int index = GetIndexBefore(anchorIndex - 1, RouteEntry.IsPresentPredicate);
-        if (index < 0)
-        {
-            throw new InvalidOperationException("Anchor route does not have a route below it.");
-        }
+            int index = GetIndexBefore(anchorIndex - 1, RouteEntry.IsPresentPredicate);
+            if (index < 0)
+            {
+                throw new InvalidOperationException("Anchor route does not have a route below it.");
+            }
 
-        _history.Insert(index + 1, entry);
-        _history[index].Complete(null, isReplaced: true, imperativeRemoval: true);
-        FlushWithLock();
+            _history.Insert(index + 1, entry);
+            _history[index].Complete(null, isReplaced: true, imperativeRemoval: true);
+            FlushHistoryUpdates();
+        });
     }
 
     // -------------------------------------------------------------------------------------------------
@@ -1005,9 +1180,25 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     // The flush
     // -------------------------------------------------------------------------------------------------
 
-    private void FlushWithLock(bool rearrangeOverlay = true)
+    private void CheckNotLocked() => DebugAssertions.Assert(
+        !_debugLocked,
+        "Navigator history is locked while a route operation is in progress.");
+
+    internal void FlushWithLock(bool rearrangeOverlay = true) =>
+        RunHistoryOperation(() => FlushHistoryUpdates(rearrangeOverlay));
+
+    private void RunHistoryOperation(Action mutation)
     {
-        FlushHistoryUpdates(rearrangeOverlay);
+        CheckNotLocked();
+        _debugLocked = true;
+        try
+        {
+            mutation();
+        }
+        finally
+        {
+            _debugLocked = false;
+        }
     }
 
     /// <summary>Flutter's <c>NavigatorState._flushHistoryUpdates</c>.</summary>
@@ -1287,34 +1478,6 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     internal bool RemoveEntryWaitingForSubtreeDisposal(RouteEntry entry) =>
         _entriesWaitingForSubtreeDisposal.Remove(entry);
 
-    /// <summary>Moves a route out of <c>pushing</c> once its entering transition settled.</summary>
-    internal void WhenPushSettles(RouteEntry entry)
-    {
-        if (entry.Route.PushSettlesImmediately)
-        {
-            entry.CurrentState = RouteLifecycle.Idle;
-            return;
-        }
-
-        Action? handler = null;
-        handler = () =>
-        {
-            entry.Route.PushSettled -= handler!;
-            if (entry.CurrentState != RouteLifecycle.Pushing)
-            {
-                return;
-            }
-
-            entry.CurrentState = RouteLifecycle.Idle;
-            if (Mounted)
-            {
-                FlushWithLock();
-            }
-        };
-
-        entry.Route.PushSettled += handler;
-    }
-
     internal RouteEntry? FirstRouteEntryWhereOrNull(Func<RouteEntry, bool> test)
     {
         foreach (RouteEntry entry in _history)
@@ -1464,33 +1627,6 @@ public sealed partial class NavigatorState : RestorationState<Navigator>
     // -------------------------------------------------------------------------------------------------
     // Initial routes and named-route resolution
     // -------------------------------------------------------------------------------------------------
-
-    private void PushInitialRoutes()
-    {
-        if (_history.Count > 0)
-        {
-            return;
-        }
-
-        if (CurrentWidget.UsingPagesApi)
-        {
-            foreach (Page page in CurrentWidget.Pages!)
-            {
-                _history.Add(new RouteEntry(page.CreateRoute(Context), RouteLifecycle.Add, pageBased: true));
-            }
-        }
-        else
-        {
-            _history.AddRange(CreateInitialRouteEntries());
-        }
-
-        if (_history.Count == 0)
-        {
-            throw new InvalidOperationException("The Navigator could not generate any initial route.");
-        }
-
-        FlushWithLock();
-    }
 
     /// <summary>
     /// Flutter's <c>onGenerateInitialRoutes</c> result, wrapped in entries that carry named restoration

@@ -252,7 +252,7 @@ public static class MaterialSearch
 
         var route = new SearchPageRoute<T>(context, searchDelegate, maintainState);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 }
 
@@ -265,7 +265,6 @@ internal enum SearchBody
 internal sealed class SearchPageRoute<T> : PageRoute
 {
     private readonly SearchDelegate<T> _delegate;
-    private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public SearchPageRoute(BuildContext context, SearchDelegate<T> searchDelegate, bool maintainState)
     {
@@ -279,7 +278,12 @@ internal sealed class SearchPageRoute<T> : PageRoute
 
     public override TimeSpan TransitionDuration => TimeSpan.FromMilliseconds(300);
 
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     protected override void Install()
     {
@@ -292,19 +296,6 @@ internal sealed class SearchPageRoute<T> : PageRoute
         base.DidComplete(result);
         _delegate.DetachRoute(this);
         _delegate.CurrentBody = null;
-        if (result is null)
-        {
-            _completed.TrySetResult(default);
-        }
-        else if (result is T typed)
-        {
-            _completed.TrySetResult(typed);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Search result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
     }
 
     public override Widget BuildPage(BuildContext context)
@@ -327,10 +318,6 @@ internal sealed class SearchPageRoute<T> : PageRoute
     public override void Dispose()
     {
         _delegate.DetachRoute(this);
-        if (!_completed.Task.IsCompleted)
-        {
-            _completed.TrySetResult(default);
-        }
 
         base.Dispose();
     }

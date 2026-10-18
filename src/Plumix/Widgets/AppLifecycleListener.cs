@@ -218,6 +218,9 @@ internal static class DidPushRouteLocation
 
 public partial class WidgetsBinding
 {
+    /// <summary>Schedules cancellation before the next queued pointer event.</summary>
+    public void CancelPointer(int pointer) => Gestures.GestureBinding.Instance.CancelPointer(pointer);
+
     private static readonly WidgetsBinding SharedInstance;
     private readonly List<WidgetsBindingObserver> _observers = [];
     private readonly List<WidgetsBindingObserver> _backGestureObservers = [];
@@ -685,7 +688,13 @@ public partial class WidgetsBinding
     /// <remarks>
     /// An observer that throws, synchronously or through its task, is reported and the next one is asked.
     /// </remarks>
-    public async Task<bool> HandlePopRoute()
+    public Task<bool> HandlePopRoute()
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        return HandlePopRouteCore();
+    }
+
+    private async Task<bool> HandlePopRouteCore()
     {
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {

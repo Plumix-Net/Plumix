@@ -656,6 +656,7 @@ public abstract class BackButtonDispatcher : CallbackHookProvider<Task<bool>>
     /// </summary>
     public override Task<bool> InvokeCallback(Task<bool> defaultValue)
     {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(defaultValue);
         if (_children.Count == 0)
         {
@@ -924,7 +925,7 @@ public abstract class PopNavigatorRouterDelegateMixin<T> : RouterDelegate<T>
     public override Task<bool> PopRoute()
     {
         NavigatorState? navigator = NavigatorKey?.CurrentState;
-        return Task.FromResult(navigator?.MaybePop() ?? false);
+        return navigator?.MaybePop() ?? Task.FromResult(false);
     }
 }
 

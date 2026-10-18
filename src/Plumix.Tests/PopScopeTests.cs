@@ -74,14 +74,14 @@ public sealed class PopScopeTests : IDisposable
                     (didPop, result) => invocations.Add((didPop, result))))));
         owner.FlushBuild();
 
-        Assert.True(navigator.MaybePop("blocked"));
+        Assert.True(TestBuildOwner.Complete(navigator.MaybePop("blocked")));
         Assert.Equal("details", navigator.CurrentRoute?.Settings.Name);
         Assert.Equal([(false, "blocked")], invocations);
 
         probe!.SetCanPop(true);
         owner.FlushBuild();
 
-        Assert.True(navigator.MaybePop("accepted"));
+        Assert.True(TestBuildOwner.Complete(navigator.MaybePop("accepted")));
         owner.FlushBuild();
 
         Assert.Equal("root", navigator.CurrentRoute?.Settings.Name);
@@ -169,7 +169,7 @@ public sealed class PopScopeTests : IDisposable
         owner.FlushBuild();
         PumpNavigationNotifications(owner);
 
-        Assert.True(outerNavigator.MaybePop("nested-result"));
+        Assert.True(TestBuildOwner.Complete(outerNavigator.MaybePop("nested-result")));
         owner.FlushBuild();
 
         Assert.Equal(1, callbackCount);
@@ -178,7 +178,7 @@ public sealed class PopScopeTests : IDisposable
         Assert.Equal("outer-details", outerNavigator.CurrentRoute?.Settings.Name);
 
         PumpNavigationNotifications(owner);
-        Assert.True(outerNavigator.MaybePop("outer-result"));
+        Assert.True(TestBuildOwner.Complete(outerNavigator.MaybePop("outer-result")));
         owner.FlushBuild();
         Assert.Equal("outer-root", outerNavigator.CurrentRoute?.Settings.Name);
         Assert.Equal(1, callbackCount);
@@ -215,7 +215,7 @@ public sealed class PopScopeTests : IDisposable
                 child: new SizedBox())));
         owner.FlushBuild();
 
-        Assert.True(navigator.MaybePop("unsaved"));
+        Assert.True(TestBuildOwner.Complete(navigator.MaybePop("unsaved")));
         Assert.False(didPop);
         Assert.Equal("unsaved", callbackResult);
         Assert.Equal("form", navigator.CurrentRoute?.Settings.Name);

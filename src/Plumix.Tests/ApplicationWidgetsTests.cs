@@ -609,7 +609,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     /// binding falls through to <c>SystemNavigator.pop</c>, exactly as <c>handlePopRoute</c> does.
     /// </summary>
     [Fact]
-    public async Task WidgetsApp_SystemBack_PopsTheRootNavigator_ThenAsksThePlatformToPopTheApp()
+    public void WidgetsApp_SystemBack_PopsTheRootNavigator_ThenAsksThePlatformToPopTheApp()
     {
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         var owner = TestBuildOwner.Create();
@@ -631,13 +631,13 @@ public sealed class ApplicationWidgetsTests : IDisposable
         PumpNotifications(owner);
         Assert.Equal("second", navigator.CurrentRoute?.Settings.Name);
 
-        Assert.True(await WidgetsBinding.Instance.HandlePopRoute());
+        Assert.True(TestBuildOwner.Complete(WidgetsBinding.Instance.HandlePopRoute()));
         PumpNotifications(owner);
         Assert.Equal("/", navigator.CurrentRoute?.Settings.Name);
         Assert.DoesNotContain("SystemNavigator.pop", platform.Methods);
 
         // The root route bubbles, so no observer handles the pop and the platform is asked to pop the app.
-        Assert.False(await WidgetsBinding.Instance.HandlePopRoute());
+        Assert.False(TestBuildOwner.Complete(WidgetsBinding.Instance.HandlePopRoute()));
         Assert.Contains("SystemNavigator.pop", platform.Methods);
         root.UnmountRoot();
     }
@@ -650,7 +650,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     /// disposition <c>doNotPop</c> and hands the pop to the callback.
     /// </summary>
     [Fact]
-    public async Task WidgetsApp_SystemBack_PopsTheNestedNavigatorFirst_ThroughNavigatorPopHandler()
+    public void WidgetsApp_SystemBack_PopsTheNestedNavigatorFirst_ThroughNavigatorPopHandler()
     {
         var owner = TestBuildOwner.Create();
         NavigatorState? outerNavigator = null;
@@ -684,13 +684,13 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal("inner-second", innerNavigator.CurrentRoute?.Settings.Name);
 
         // The inner navigator can pop, so the outer route refuses the pop and the handler pops the inner one.
-        Assert.True(await WidgetsBinding.Instance.HandlePopRoute());
+        Assert.True(TestBuildOwner.Complete(WidgetsBinding.Instance.HandlePopRoute()));
         PumpNotifications(owner);
         Assert.Equal("inner-root", innerNavigator.CurrentRoute?.Settings.Name);
         Assert.Equal("/", outerNavigator!.CurrentRoute?.Settings.Name);
 
         // With the inner stack back at its root the outer route bubbles again.
-        Assert.False(await WidgetsBinding.Instance.HandlePopRoute());
+        Assert.False(TestBuildOwner.Complete(WidgetsBinding.Instance.HandlePopRoute()));
         root.UnmountRoot();
     }
 

@@ -679,7 +679,6 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     private readonly BottomSheetThemeData _capturedBottomSheetTheme;
     private readonly AnimationController? _transitionAnimationController;
     private readonly AnimationStyle? _sheetAnimationStyle;
-    private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private AnimationController? _animationController;
 
     public ModalBottomSheetRoute(
@@ -748,7 +747,12 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     public Point? AnchorPoint { get; }
     public override string? BarrierLabel { get; }
     public string BarrierOnTapHint { get; }
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     public override bool BarrierDismissible => IsDismissible;
 
@@ -768,21 +772,16 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     internal AnimationController SheetAnimationController => _animationController
         ?? throw new InvalidOperationException("The bottom sheet animation is unavailable before it is installed.");
 
-    protected override bool WillDisposeAnimationController => _transitionAnimationController is null;
-
     protected override AnimationController CreateAnimationController()
     {
+        if (_transitionAnimationController is not null)
+        {
+            WillDisposeAnimationController = false;
+        }
+
         _animationController = _transitionAnimationController
                                ?? BottomSheet.CreateAnimationController(Navigator, _sheetAnimationStyle);
         return _animationController;
-    }
-
-    public override void DidComplete(object? result)
-    {
-        if (result is null) _completed.TrySetResult(default);
-        else if (result is T typed) _completed.TrySetResult(typed);
-        else _completed.TrySetException(new InvalidCastException(
-            $"Bottom sheet result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
     }
 
     public override Widget BuildPage(BuildContext context)
@@ -826,7 +825,6 @@ public sealed class ModalBottomSheetRoute<T> : PopupRoute
     public override void Dispose()
     {
         _clipDetailsNotifier.Dispose();
-        if (!_completed.Task.IsCompleted) _completed.TrySetResult(default);
         base.Dispose();
     }
 
@@ -904,7 +902,7 @@ public static class MaterialBottomSheets
             transitionAnimationController,
             sheetAnimationStyle);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 
     public static PersistentBottomSheetController ShowBottomSheet(

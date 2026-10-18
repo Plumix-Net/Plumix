@@ -55,13 +55,11 @@ public enum RoutePopDisposition
 /// Signature of a callback that vetoes an attempt to pop the enclosing <see cref="ModalRoute"/>.
 /// </summary>
 /// <remarks>
-/// Flutter's <c>WillPopCallback</c>, whose result is a <c>Future&lt;bool&gt;</c>. Plumix's route pop
-/// path is synchronous throughout (see <see cref="Route.WillPop()"/>), so the callback returns the
-/// veto directly.
+/// Flutter's <c>WillPopCallback</c>: an asynchronous decision that can keep the route in place.
 /// </remarks>
 [Obsolete(
     "Use PopEntry/PopScope instead. Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
-public delegate bool WillPopCallback();
+public delegate Task<bool> WillPopCallback();
 
 /// <summary>
 /// Flutter's <c>_ModalRouteAspect</c>: the piece of route status a <see cref="ModalRoute"/> dependent reads.
@@ -240,10 +238,8 @@ public sealed class LocalHistoryEntry
 
 public abstract class Route
 {
-    private readonly TaskCompletionSource<object?> _popCompleter =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
-    private readonly TaskCompletionSource<object?> _disposeCompleter =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private readonly TaskCompletionSource<object?> _popCompleter = new();
+    private readonly TaskCompletionSource<object?> _disposeCompleter = new();
     private readonly ValueNotifier<string?> _restorationScopeId = new(null);
     private readonly bool? _requestFocus;
     private List<LocalHistoryEntry>? _localHistoryEntries;
@@ -315,6 +311,11 @@ public abstract class Route
     {
         get
         {
+            if (WillHandlePopInternally)
+            {
+                return RoutePopDisposition.Pop;
+            }
+
             if (Settings is Page { CanPop: false })
             {
                 return RoutePopDisposition.DoNotPop;
@@ -333,13 +334,13 @@ public abstract class Route
     /// <summary>Whether there is at least one active route below this one in the navigator's history.</summary>
     public bool HasActiveRouteBelow => Navigator?.HasActiveRouteBelow(this) == true;
 
-    public bool WillHandlePopInternally => _localHistoryEntries is { Count: > 0 };
+    public virtual bool WillHandlePopInternally => _localHistoryEntries is { Count: > 0 };
 
     public virtual bool PopGestureEnabled => false;
 
     public virtual bool PopGestureInProgress => false;
 
-    internal NavigatorState? Navigator { get; private set; }
+    public NavigatorState? Navigator { get; private set; }
 
     public virtual bool ImpliesAppBarDismissal
     {
@@ -380,33 +381,22 @@ public abstract class Route
     {
     }
 
-    public virtual bool WillPop()
+    /// <summary>Asynchronously reports whether a user-requested pop can be handled by this route.</summary>
+    public virtual Task<RoutePopDisposition> WillPop() => Task.FromResult(
+        WillHandlePopInternally || !IsFirst ? RoutePopDisposition.Pop : RoutePopDisposition.Bubble);
+
+    /// <summary>Returns the future that completes when the entering transition finishes.</summary>
+    public virtual TickerFuture DidPush()
     {
-        if (_localHistoryEntries is { Count: > 0 })
+        TickerFuture future = TickerFuture.Completed();
+        future.WhenComplete(() =>
         {
-            var entry = _localHistoryEntries[^1];
-            _localHistoryEntries.RemoveAt(_localHistoryEntries.Count - 1);
-            entry.MarkRemoved();
-            OnLocalHistoryChanged();
-            return false;
-        }
-
-        return true;
-    }
-
-    public virtual bool WillPop(object? result) => WillPop();
-
-    /// <summary>
-    /// Called when the route is pushed. Flutter returns the entering transition's <c>TickerFuture</c> and hands
-    /// focus to the navigator's enclosing scope once it resolves; Plumix reports settling through
-    /// <see cref="NotifyPushSettled"/> instead, because the framework has no ticker futures.
-    /// </summary>
-    public virtual void DidPush()
-    {
-        if (RequestFocus)
-        {
-            Navigator?.FocusNode.Scope?.RequestFirstFocus();
-        }
+            if (RequestFocus)
+            {
+                Navigator?.FocusNode.Scope?.RequestFirstFocus();
+            }
+        });
+        return future;
     }
 
     /// <summary>Called when the route is inserted without an entering transition.</summary>
@@ -434,6 +424,11 @@ public abstract class Route
     /// </summary>
     public virtual bool DidPop(object? result)
     {
+        if (PopLocalHistory())
+        {
+            return false;
+        }
+
         DidComplete(result);
         return true;
     }
@@ -457,18 +452,6 @@ public abstract class Route
         OnPopInvoked(didPop);
     }
 
-    /// <summary>
-    /// Raised when the entering transition settled, mirroring Flutter's <c>didPush</c> ticker future. The
-    /// navigator uses it to move the route from <c>pushing</c> to <c>idle</c>.
-    /// </summary>
-    internal event Action? PushSettled;
-
-    /// <summary>Whether the entering transition settles in the same turn, as it does for non-animated routes.</summary>
-    internal virtual bool PushSettlesImmediately => true;
-
-    /// <summary>Reports that the entering transition settled or was cancelled.</summary>
-    protected void NotifyPushSettled() => PushSettled?.Invoke();
-
     public virtual void DidPopNext(Route nextRoute)
     {
     }
@@ -484,20 +467,22 @@ public abstract class Route
     public virtual void Dispose()
     {
         _restorationScopeId.Dispose();
-        _popCompleter.TrySetResult(CurrentResult);
         _disposeCompleter.TrySetResult(null);
+    }
+
+    /// <summary>Consumes a local entry before starting the route's reverse transition.</summary>
+    protected bool PopLocalHistory()
+    {
         if (_localHistoryEntries is not { Count: > 0 })
         {
-            return;
+            return false;
         }
 
-        foreach (var entry in _localHistoryEntries.ToArray())
-        {
-            _localHistoryEntries.Remove(entry);
-            entry.MarkRemoved();
-        }
-
+        LocalHistoryEntry entry = _localHistoryEntries[^1];
+        _localHistoryEntries.RemoveAt(_localHistoryEntries.Count - 1);
+        entry.MarkRemoved();
         OnLocalHistoryChanged();
+        return true;
     }
 
     public void AddLocalHistoryEntry(LocalHistoryEntry entry)
@@ -631,7 +616,7 @@ public abstract class OverlayRoute : Route
     }
 }
 
-public abstract class TransitionRoute : OverlayRoute
+public abstract partial class TransitionRoute : OverlayRoute
 {
     private protected static readonly Animation<double> AlwaysDismissedAnimation =
         new ConstantAnimation<double>(0.0, AnimationStatus.Dismissed);
@@ -639,6 +624,8 @@ public abstract class TransitionRoute : OverlayRoute
         new ConstantAnimation<double>(1.0, AnimationStatus.Completed);
     private readonly ProxyAnimation _secondaryAnimation = new(AlwaysDismissedAnimation);
     private AnimationController? _controller;
+    private Animation<double>? _animation;
+    private PerformanceModeRequestHandle? _performanceModeRequestHandle;
     private object? _result;
     private bool _isPopped;
     private bool _popFinalized;
@@ -653,7 +640,9 @@ public abstract class TransitionRoute : OverlayRoute
 
     public virtual TimeSpan ReverseTransitionDuration => TransitionDuration;
 
-    public override object? CurrentResult => _result;
+    public Task<object?> Completed => _transitionCompleter.Task;
+
+    public virtual string DebugLabel => Diagnostics.ObjectRuntimeType(this, "TransitionRoute");
 
     public virtual bool AllowSnapshotting => true;
 
@@ -661,9 +650,9 @@ public abstract class TransitionRoute : OverlayRoute
     /// Whether the route disposes the controller returned by <see cref="CreateAnimationController"/> when it is
     /// uninstalled. Routes that adopt a caller-supplied controller must return <see langword="false"/>.
     /// </summary>
-    protected virtual bool WillDisposeAnimationController => true;
+    public virtual bool WillDisposeAnimationController { get; set; } = true;
 
-    public virtual Animation<double> Animation => _controller
+    public virtual Animation<double> Animation => _animation
         ?? throw new InvalidOperationException("The route animation is unavailable before the route is installed.");
 
     public virtual Animation<double> SecondaryAnimation => _secondaryAnimation;
@@ -684,17 +673,17 @@ public abstract class TransitionRoute : OverlayRoute
         _isPopped = false;
         _popFinalized = false;
         _controller = CreateAnimationController();
-        _controller.Changed += HandleAnimationChanged;
-        _controller.AddStatusListener(HandleStatusChanged);
+        _animation = CreateAnimation();
+        _animation.AddStatusListener(HandleStatusChanged);
         base.Install();
-        if (_controller.Status == AnimationStatus.Completed)
+        if (_animation.Status == AnimationStatus.Completed)
         {
             SetPrimaryEntryOpaque(Opaque);
         }
     }
 
     /// <summary>The raw controller-backed animations, before <see cref="ModalRoute.Offstage"/> proxies them.</summary>
-    private protected Animation<double> RawAnimation => _controller ?? AlwaysDismissedAnimation;
+    private protected Animation<double> RawAnimation => _animation ?? AlwaysDismissedAnimation;
 
     private protected bool HasController => _controller is not null;
 
@@ -707,14 +696,16 @@ public abstract class TransitionRoute : OverlayRoute
     {
         if (_controller is not null)
         {
-            _controller.Changed -= HandleAnimationChanged;
-            _controller.RemoveStatusListener(HandleStatusChanged);
+            _animation?.RemoveStatusListener(HandleStatusChanged);
+            _performanceModeRequestHandle?.Dispose();
+            _performanceModeRequestHandle = null;
             if (WillDisposeAnimationController)
             {
                 _controller.Dispose();
             }
 
             _controller = null;
+            _animation = null;
         }
 
         _secondaryAnimation.Parent = AlwaysDismissedAnimation;
@@ -724,11 +715,15 @@ public abstract class TransitionRoute : OverlayRoute
 
     protected virtual AnimationController CreateAnimationController()
     {
-        return new AnimationController(duration: NormalizeDuration(TransitionDuration))
-        {
-            ReverseDuration = NormalizeDuration(ReverseTransitionDuration),
-        };
+        return new AnimationController(
+            duration: TransitionDuration,
+            reverseDuration: ReverseTransitionDuration,
+            debugLabel: DebugLabel,
+            vsync: Navigator);
+
     }
+
+    protected virtual Animation<double> CreateAnimation() => Controller.View;
 
     public virtual bool CanTransitionTo(TransitionRoute nextRoute) => true;
 
@@ -749,34 +744,20 @@ public abstract class TransitionRoute : OverlayRoute
     /// </summary>
     protected internal virtual Simulation? CreateSimulation(bool forward) => null;
 
-    internal override bool PushSettlesImmediately => false;
-
-    public override void DidPush()
+    public override TickerFuture DidPush()
     {
         base.DidPush();
         _isPopped = false;
-        if (CreateSimulation(forward: true) is { } simulation)
-        {
-            Controller.AnimateWith(simulation);
-            return;
-        }
-
-        if (TransitionDuration == TimeSpan.Zero)
-        {
-            Controller.SetValue(1.0);
-            NotifyPushSettled();
-            return;
-        }
-
-        Controller.Duration = TransitionDuration;
-        Controller.Forward(from: 0.0);
+        return CreateSimulation(forward: true) is { } simulation
+            ? Controller.AnimateWith(simulation)
+            : Controller.Forward();
     }
 
     public override void DidAdd()
     {
         base.DidAdd();
         _isPopped = false;
-        Controller.SetValue(1.0);
+        Controller.SetValue(Controller.UpperBound);
     }
 
     public override void DidReplace(Route? oldRoute)
@@ -792,20 +773,19 @@ public abstract class TransitionRoute : OverlayRoute
 
     public override bool DidPop(object? result)
     {
+        if (PopLocalHistory())
+        {
+            return false;
+        }
+
         _isPopped = true;
         _result = result;
         if (CreateSimulation(forward: false) is { } simulation)
         {
             Controller.AnimateBackWith(simulation);
         }
-        else if (ReverseTransitionDuration == TimeSpan.Zero)
-        {
-            Controller.Stop();
-            Controller.SetValue(0.0);
-        }
         else
         {
-            Controller.ReverseDuration = ReverseTransitionDuration;
             Controller.Reverse();
         }
 
@@ -827,21 +807,10 @@ public abstract class TransitionRoute : OverlayRoute
     public override void Dispose()
     {
         _secondaryAnimation.Parent = AlwaysDismissedAnimation;
+        _trainHoppingListenerRemover?.Invoke();
+        _trainHoppingListenerRemover = null;
+        _transitionCompleter.TrySetResult(_result);
         base.Dispose();
-    }
-
-    private void UpdateSecondaryAnimation(Route? nextRoute)
-    {
-        _secondaryAnimation.Parent = nextRoute is TransitionRoute transitionRoute
-                                     && CanTransitionTo(transitionRoute)
-                                     && transitionRoute.CanTransitionFrom(this)
-            ? transitionRoute.RawAnimation
-            : AlwaysDismissedAnimation;
-    }
-
-    private void HandleAnimationChanged()
-    {
-        NotifyRouteChanged();
     }
 
     private void HandleStatusChanged(AnimationStatus status)
@@ -849,11 +818,15 @@ public abstract class TransitionRoute : OverlayRoute
         // The bottom-most entry carries the route's opacity: while the route animates it must let the route
         // below build, and once the transition completed an opaque route hides everything under it.
         SetPrimaryEntryOpaque(status == AnimationStatus.Completed && Opaque);
-
-        // Flutter's `didPush` future resolves on completion and on cancellation alike (`whenCompleteOrCancel`).
-        if (status is AnimationStatus.Completed or AnimationStatus.Dismissed)
+        if (status is AnimationStatus.Forward or AnimationStatus.Reverse)
         {
-            NotifyPushSettled();
+            _performanceModeRequestHandle ??= SchedulerBinding.Instance
+                .RequestPerformanceMode(DartPerformanceMode.Latency);
+        }
+        else if (status == AnimationStatus.Completed || !IsActive)
+        {
+            _performanceModeRequestHandle?.Dispose();
+            _performanceModeRequestHandle = null;
         }
 
         if (_handlingPopGesture && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
@@ -931,11 +904,6 @@ public abstract class TransitionRoute : OverlayRoute
         _handlingPopGesture = false;
         Navigator?.StopUserGesture();
         NotifyRouteChanged();
-    }
-
-    private static TimeSpan NormalizeDuration(TimeSpan duration)
-    {
-        return duration == TimeSpan.Zero ? TimeSpan.FromMilliseconds(1) : duration;
     }
 
     private static void ValidateDuration(TimeSpan duration, string propertyName)
@@ -1070,10 +1038,10 @@ public abstract class ModalRoute : TransitionRoute
         mutation();
     }
 
-    public override void DidPush()
+    public override TickerFuture DidPush()
     {
         HandOverFocusToScope();
-        base.DidPush();
+        return base.DidPush();
     }
 
     public override void DidAdd()
@@ -1231,21 +1199,26 @@ public abstract class ModalRoute : TransitionRoute
     protected internal bool HasScopedWillPopCallback => _willPopCallbacks.Count > 0;
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>ModalRoute.willPop</c>: the scoped callbacks run first, and any veto stops the
-    /// pop before the base route consumes a local history entry.
-    /// </remarks>
-    public override bool WillPop()
+    public override Task<RoutePopDisposition> WillPop()
+    {
+        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
+        return RunWillPopCallbacks();
+    }
+
+    private async Task<RoutePopDisposition> RunWillPopCallbacks()
     {
         foreach (WillPopCallback callback in _willPopCallbacks.ToArray())
         {
-            if (!callback())
+            Task<bool> decision = callback();
+            // Dart awaits even an already-completed Future in a later microtask.
+            await Task.Yield();
+            if (!await decision)
             {
-                return false;
+                return RoutePopDisposition.DoNotPop;
             }
         }
 
-        return base.WillPop();
+        return await base.WillPop();
     }
 #pragma warning restore CS0618
 
@@ -1752,7 +1725,7 @@ public class RouteObserver<TRoute> : NavigatorObserver where TRoute : Route
 
     public override void DidPush(Route route, Route? previousRoute)
     {
-        if (previousRoute is not TRoute previousTypedRoute)
+        if (route is not TRoute || previousRoute is not TRoute previousTypedRoute)
         {
             return;
         }
@@ -1770,64 +1743,31 @@ public class RouteObserver<TRoute> : NavigatorObserver where TRoute : Route
 
     public override void DidPop(Route route, Route? previousRoute)
     {
-        if (previousRoute is TRoute previousTypedRoute
-            && _listeners.TryGetValue(previousTypedRoute, out var previousSubscribers))
+        if (route is not TRoute typedRoute || previousRoute is not TRoute previousTypedRoute)
         {
-            foreach (var subscriber in previousSubscribers.ToArray())
+            return;
+        }
+
+        if (_listeners.TryGetValue(previousTypedRoute, out var previousSubscribers))
+        {
+            foreach (RouteAware subscriber in previousSubscribers.ToArray())
             {
                 subscriber.DidPopNext();
             }
         }
 
-        if (route is not TRoute typedRoute)
+        if (_listeners.TryGetValue(typedRoute, out var subscribers))
         {
-            return;
-        }
-
-        if (!_listeners.TryGetValue(typedRoute, out var subscribers))
-        {
-            return;
-        }
-
-        foreach (var subscriber in subscribers.ToArray())
-        {
-            subscriber.DidPop();
+            foreach (RouteAware subscriber in subscribers.ToArray())
+            {
+                subscriber.DidPop();
+            }
         }
     }
 
-    public override void DidReplace(Route newRoute, Route? oldRoute)
-    {
-        if (oldRoute is not TRoute oldTypedRoute)
-        {
-            return;
-        }
-
-        if (!_listeners.TryGetValue(oldTypedRoute, out var oldSubscribers))
-        {
-            return;
-        }
-
-        _listeners.Remove(oldTypedRoute);
-
-        if (newRoute is not TRoute newTypedRoute)
-        {
-            return;
-        }
-
-        if (!_listeners.TryGetValue(newTypedRoute, out var newSubscribers))
-        {
-            _listeners[newTypedRoute] = oldSubscribers;
-            return;
-        }
-
-        foreach (var subscriber in oldSubscribers)
-        {
-            newSubscribers.Add(subscriber);
-        }
-    }
 }
 
-public sealed class Navigator : StatefulWidget
+public sealed partial class Navigator : StatefulWidget
 {
     /// <summary>Flutter's <c>kDefaultRouteTraversalEdgeBehavior</c>.</summary>
     public const TraversalEdgeBehavior DefaultRouteTraversalEdgeBehavior = TraversalEdgeBehavior.ParentScope;
@@ -1938,9 +1878,20 @@ public sealed class Navigator : StatefulWidget
         TransitionDelegate? transitionDelegate = null,
         bool requestFocus = true,
         Clip clipBehavior = Clip.HardEdge,
-        string? restorationScopeId = null) : base(key)
+        string? restorationScopeId = null,
+        RouteFactory? onGenerateRoute = null,
+        RouteFactory? onUnknownRoute = null,
+        TraversalEdgeBehavior routeTraversalEdgeBehavior = DefaultRouteTraversalEdgeBehavior,
+        TraversalEdgeBehavior routeDirectionalTraversalEdgeBehavior = DefaultRouteDirectionalTraversalEdgeBehavior,
+        bool reportsRouteUpdateToEngine = false,
+        string? initialRouteName = null,
+        NavigatorInitialRouteListFactory? onGenerateInitialRoutes = null) : base(key)
     {
         Pages = pages ?? throw new ArgumentNullException(nameof(pages));
+        InitialRouteName = initialRouteName;
+        OnGenerateInitialRoutes = onGenerateInitialRoutes;
+        OnGenerateRoute = onGenerateRoute;
+        OnUnknownRoute = onUnknownRoute;
         OnPopPage = onPopPage ?? throw new ArgumentNullException(nameof(onPopPage));
         Observers = observers ?? [];
         ApplyOptions(
@@ -1948,9 +1899,9 @@ public sealed class Navigator : StatefulWidget
             requestFocus,
             clipBehavior,
             restorationScopeId,
-            DefaultRouteTraversalEdgeBehavior,
-            DefaultRouteDirectionalTraversalEdgeBehavior,
-            reportsRouteUpdateToEngine: false);
+            routeTraversalEdgeBehavior,
+            routeDirectionalTraversalEdgeBehavior,
+            reportsRouteUpdateToEngine);
     }
 
     /// <summary>
@@ -1970,9 +1921,15 @@ public sealed class Navigator : StatefulWidget
         string? restorationScopeId = null,
         TraversalEdgeBehavior routeTraversalEdgeBehavior = DefaultRouteTraversalEdgeBehavior,
         TraversalEdgeBehavior routeDirectionalTraversalEdgeBehavior = DefaultRouteDirectionalTraversalEdgeBehavior,
-        bool reportsRouteUpdateToEngine = false) : base(key)
+        bool reportsRouteUpdateToEngine = false,
+        string? initialRouteName = null,
+        NavigatorInitialRouteListFactory? onGenerateInitialRoutes = null) : base(key)
     {
         Pages = pages ?? throw new ArgumentNullException(nameof(pages));
+        InitialRouteName = initialRouteName;
+        OnGenerateInitialRoutes = onGenerateInitialRoutes;
+        OnGenerateRoute = onGenerateRoute;
+        OnUnknownRoute = onUnknownRoute;
         OnDidRemovePage = onDidRemovePage ?? throw new ArgumentNullException(nameof(onDidRemovePage));
         Observers = observers ?? [];
         OnGenerateRoute = onGenerateRoute;
@@ -2094,16 +2051,8 @@ public sealed class Navigator : StatefulWidget
         return MaybeOf(context)?.CanPop ?? false;
     }
 
-    public static bool MaybePop(BuildContext context, object? result = null)
-    {
-        var navigator = MaybeOf(context);
-        if (navigator == null)
-        {
-            return false;
-        }
-
-        return navigator.MaybePop(result);
-    }
+    public static Task<bool> MaybePop(BuildContext context, object? result = null) =>
+        Of(context).MaybePop(result);
 
     public static void Pop(BuildContext context, object? result = null)
     {
@@ -2115,57 +2064,69 @@ public sealed class Navigator : StatefulWidget
         Of(context).PopUntil(predicate);
     }
 
-    public static void Push(BuildContext context, Route route)
+    public static void PopUntilWithResult(BuildContext context, RoutePredicate predicate, object? result) =>
+        Of(context).PopUntilWithResult(predicate, result);
+
+    public static Task<object?> PopAndPushNamed(
+        BuildContext context,
+        string routeName,
+        object? result = null,
+        object? arguments = null) => Of(context).PopAndPushNamed(routeName, result, arguments);
+
+    public static Task<object?> Push(BuildContext context, Route route)
     {
-        Of(context).Push(route);
+        return Of(context).Push(route);
     }
 
-    public static void PushAndRemoveUntil(BuildContext context, Route newRoute, RoutePredicate predicate)
+    public static Task<object?> PushAndRemoveUntil(BuildContext context, Route newRoute, RoutePredicate predicate)
     {
-        Of(context).PushAndRemoveUntil(newRoute, predicate);
+        return Of(context).PushAndRemoveUntil(newRoute, predicate);
     }
 
-    public static void PushNamed(BuildContext context, string routeName, object? arguments = null)
+    public static Task<object?> PushNamed(BuildContext context, string routeName, object? arguments = null)
     {
-        Of(context).PushNamed(routeName, arguments);
+        return Of(context).PushNamed(routeName, arguments);
     }
 
-    public static void PushNamed(BuildContext context, RouteData routeData)
+    public static Task<object?> PushNamed(BuildContext context, RouteData routeData)
     {
-        Of(context).PushNamed(routeData);
+        return Of(context).PushNamed(routeData);
     }
 
-    public static void PushNamedAndRemoveUntil(
+    public static Task<object?> PushNamedAndRemoveUntil(
         BuildContext context,
         string routeName,
         RoutePredicate predicate,
         object? arguments = null)
     {
-        Of(context).PushNamedAndRemoveUntil(routeName, predicate, arguments);
+        return Of(context).PushNamedAndRemoveUntil(routeName, predicate, arguments);
     }
 
-    public static void PushNamedAndRemoveUntil(BuildContext context, RouteData routeData, RoutePredicate predicate)
+    public static Task<object?> PushNamedAndRemoveUntil(
+        BuildContext context,
+        RouteData routeData,
+        RoutePredicate predicate)
     {
-        Of(context).PushNamedAndRemoveUntil(routeData, predicate);
+        return Of(context).PushNamedAndRemoveUntil(routeData, predicate);
     }
 
-    public static void PushReplacement(BuildContext context, Route newRoute, object? result = null)
+    public static Task<object?> PushReplacement(BuildContext context, Route newRoute, object? result = null)
     {
-        Of(context).PushReplacement(newRoute, result);
+        return Of(context).PushReplacement(newRoute, result);
     }
 
-    public static void PushReplacementNamed(
+    public static Task<object?> PushReplacementNamed(
         BuildContext context,
         string routeName,
         object? arguments = null,
         object? result = null)
     {
-        Of(context).PushReplacementNamed(routeName, arguments, result);
+        return Of(context).PushReplacementNamed(routeName, arguments, result);
     }
 
-    public static void PushReplacementNamed(BuildContext context, RouteData routeData, object? result = null)
+    public static Task<object?> PushReplacementNamed(BuildContext context, RouteData routeData, object? result = null)
     {
-        Of(context).PushReplacementNamed(routeData, result);
+        return Of(context).PushReplacementNamed(routeData, result);
     }
 
     public static void RemoveRoute(BuildContext context, Route route, object? result = null)
@@ -2188,7 +2149,7 @@ public sealed class Navigator : StatefulWidget
         Of(context).StopUserGesture();
     }
 
-    public static bool MaybePopFromUserGesture(BuildContext context, object? result = null)
+    public static Task<bool> MaybePopFromUserGesture(BuildContext context, object? result = null)
     {
         return Of(context).MaybePopFromUserGesture(result);
     }

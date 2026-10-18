@@ -4,71 +4,76 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../counter_widgets.dart';
 import '../../sample_routes.dart';
+import 'navigator_lifecycle_probe.dart';
 
 class NavigatorDemoPage extends StatelessWidget {
   const NavigatorDemoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 8,
-      children: <Widget>[
-        const Text(
-          'Navigator API demo',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Uses static Navigator methods and RouteData query parsing.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        const NavigatorRouteAwareProbe(),
-        const NavigatorOverlayProbe(),
-        _buildAction(
-          label: 'Push blurred popup (ModalRoute.filter)',
-          onTap: () =>
-              Navigator.of(context).push<void>(SampleBlurredPopupRoute()),
-          background: const Color(0xFFE0F2F1),
-        ),
-        _buildAction(
-          label: "PushNamed('/navigator/details?id=42&mode=string')",
-          onTap: () => Navigator.of(context).pushNamed(
-            '${SampleRoutes.navigatorDetails}?id=42&mode=string',
-            arguments: 'payload:string',
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 8,
+        children: <Widget>[
+          const Text(
+            'Navigator API demo',
+            style: TextStyle(fontSize: 20, color: Colors.black),
           ),
-          background: const Color(0xFFE8F5E9),
-        ),
-        _buildAction(
-          label: 'PushNamed(RouteData.fromLocation(...))',
-          onTap: () {
-            final RouteData routeData = RouteData.fromLocation(
-              '${SampleRoutes.navigatorDetails}?id=7&mode=route-data',
-              arguments: 'payload:route-data',
-            );
-            Navigator.of(
-              context,
-            ).pushNamed(routeData.location, arguments: routeData);
-          },
-          background: const Color(0xFFEAF4FF),
-        ),
-        _buildAction(
-          label: 'PushReplacementNamed(details)',
-          onTap: () => Navigator.of(context).pushReplacementNamed(
-            '${SampleRoutes.navigatorDetails}?id=99&mode=replacement',
-            arguments: 'payload:replacement',
+          const Text(
+            'Uses static Navigator methods and RouteData query parsing.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
           ),
-          background: const Color(0xFFFFF3E0),
-        ),
-        _buildAction(
-          label: 'PushNamedAndRemoveUntil(details, menu)',
-          onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
-            '${SampleRoutes.navigatorDetails}?id=5&mode=remove-until',
-            (Route<dynamic> route) => route.settings.name == SampleRoutes.menu,
-            arguments: 'payload:remove-until',
+          const NavigatorRouteAwareProbe(),
+          const NavigatorOverlayProbe(),
+          const NavigatorLifecycleProbe(),
+          _buildAction(
+            label: 'Push blurred popup (ModalRoute.filter)',
+            onTap: () =>
+                Navigator.of(context).push<void>(SampleBlurredPopupRoute()),
+            background: const Color(0xFFE0F2F1),
           ),
-          background: const Color(0xFFF3E5F5),
-        ),
-      ],
+          _buildAction(
+            label: "PushNamed('/navigator/details?id=42&mode=string')",
+            onTap: () => Navigator.of(context).pushNamed(
+              '${SampleRoutes.navigatorDetails}?id=42&mode=string',
+              arguments: 'payload:string',
+            ),
+            background: const Color(0xFFE8F5E9),
+          ),
+          _buildAction(
+            label: 'PushNamed(RouteData.fromLocation(...))',
+            onTap: () {
+              final RouteData routeData = RouteData.fromLocation(
+                '${SampleRoutes.navigatorDetails}?id=7&mode=route-data',
+                arguments: 'payload:route-data',
+              );
+              Navigator.of(
+                context,
+              ).pushNamed(routeData.location, arguments: routeData);
+            },
+            background: const Color(0xFFEAF4FF),
+          ),
+          _buildAction(
+            label: 'PushReplacementNamed(details)',
+            onTap: () => Navigator.of(context).pushReplacementNamed(
+              '${SampleRoutes.navigatorDetails}?id=99&mode=replacement',
+              arguments: 'payload:replacement',
+            ),
+            background: const Color(0xFFFFF3E0),
+          ),
+          _buildAction(
+            label: 'PushNamedAndRemoveUntil(details, menu)',
+            onTap: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              '${SampleRoutes.navigatorDetails}?id=5&mode=remove-until',
+              (Route<dynamic> route) =>
+                  route.settings.name == SampleRoutes.menu,
+              arguments: 'payload:remove-until',
+            ),
+            background: const Color(0xFFF3E5F5),
+          ),
+        ],
+      ),
     );
   }
 

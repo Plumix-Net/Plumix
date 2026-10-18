@@ -2007,7 +2007,7 @@ public sealed class MaterialScaffoldTests
         Assert.False(rootRoute!.ImpliesAppBarDismissal);
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
 
-        Assert.True(Navigator.MaybePop(scaffoldContext));
+        Assert.True(TestBuildOwner.Complete(Navigator.MaybePop(scaffoldContext)));
         owner.FlushBuild();
 
         Assert.False(scaffoldState.IsDrawerOpen);
@@ -4122,7 +4122,7 @@ public sealed class MaterialScaffoldTests
         Route? initialRoute = navigatorKey.CurrentState!.CurrentRoute;
         drawerKey.CurrentState!.Open();
         owner.FlushBuild();
-        Assert.True(navigatorKey.CurrentState.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigatorKey.CurrentState.MaybePop()));
         owner.FlushBuild();
 
         Assert.Same(initialRoute, navigatorKey.CurrentState.CurrentRoute);

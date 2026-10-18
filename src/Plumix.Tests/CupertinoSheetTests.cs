@@ -247,7 +247,7 @@ public sealed class CupertinoSheetTests : IDisposable
     {
         var route = new CupertinoSheetRoute<string>(builder: _ => new SizedBox());
         route.DidComplete("done");
-        Assert.Equal("done", await route.Completed);
+        Assert.Equal("done", await route.Popped);
     }
 
     private static SheetHarness MountSheet(CupertinoSheetRoute<object?> sheetRoute)

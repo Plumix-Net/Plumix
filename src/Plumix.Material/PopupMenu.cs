@@ -702,7 +702,7 @@ public static class PopupMenus
             popUpAnimationStyle,
             requestFocus);
         navigator.Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 }
 
@@ -713,7 +713,6 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     private readonly RelativeRect? _position;
     private readonly PopupMenuPositionBuilder? _positionBuilder;
     private readonly T? _initialValue;
-    private readonly TaskCompletionSource<T?> _completed = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private int _focusIndex;
 
     public PopupMenuRoute(
@@ -776,14 +775,12 @@ internal sealed class PopupMenuRoute<T> : PageRoute
     public override bool BarrierDismissible => true;
     public override string? BarrierLabel { get; }
     public AnimationStyle? AnimationStyle { get; }
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
 
-    public override void DidComplete(object? result)
-    {
-        if (result is null) _completed.TrySetResult(default);
-        else if (result is T typed) _completed.TrySetResult(typed);
-        else _completed.TrySetException(new InvalidCastException());
-    }
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     public override Widget BuildPage(BuildContext context)
     {
@@ -812,12 +809,6 @@ internal sealed class PopupMenuRoute<T> : PageRoute
             child: page);
         page = MediaQuery.RemovePadding(context, page, true, true, true, true);
         return page;
-    }
-
-    public override void Dispose()
-    {
-        if (!_completed.Task.IsCompleted) _completed.TrySetResult(default);
-        base.Dispose();
     }
 
     internal double Progress

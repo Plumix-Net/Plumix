@@ -21,8 +21,6 @@ public class RawDialogRoute<T> : PopupRoute
     private readonly Color? _barrierColor;
     private readonly TimeSpan _transitionDuration;
     private readonly RouteTransitionsBuilder? _transitionBuilder;
-    private readonly TaskCompletionSource<T?> _completed =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public RawDialogRoute(
         RoutePageBuilder pageBuilder,
@@ -65,8 +63,12 @@ public class RawDialogRoute<T> : PopupRoute
 
     public override bool FullscreenDialog { get; }
 
-    /// <summary>Completes with the result passed to the pop that removed this route.</summary>
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     public override Widget BuildPage(BuildContext context)
     {
@@ -92,33 +94,6 @@ public class RawDialogRoute<T> : PopupRoute
         return _transitionBuilder(context, animation, secondaryAnimation, child);
     }
 
-    public override void DidComplete(object? result)
-    {
-        base.DidComplete(result);
-        if (result is null)
-        {
-            _completed.TrySetResult(default);
-        }
-        else if (result is T typed)
-        {
-            _completed.TrySetResult(typed);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Dialog result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
-    }
-
-    public override void Dispose()
-    {
-        if (!_completed.Task.IsCompleted)
-        {
-            _completed.TrySetResult(default);
-        }
-
-        base.Dispose();
-    }
 }
 
 /// <summary>Dart's free function `showGeneralDialog`.</summary>
@@ -156,6 +131,6 @@ public static class GeneralDialogs
             anchorPoint: anchorPoint,
             fullscreenDialog: fullscreenDialog);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 }

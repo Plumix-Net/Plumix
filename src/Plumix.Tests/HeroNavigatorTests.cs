@@ -431,7 +431,7 @@ public sealed partial class HeroNavigatorTests
             harness.Pump(viewportSize);
             AdvanceHeroTransition(harness, viewportSize);
 
-            Assert.True(navigatorState.MaybePopFromUserGesture());
+            Assert.True(TestBuildOwner.Complete(navigatorState.MaybePopFromUserGesture()));
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 
@@ -485,7 +485,7 @@ public sealed partial class HeroNavigatorTests
             harness.Pump(viewportSize);
             AdvanceHeroTransition(harness, viewportSize);
 
-            Assert.True(navigatorState.MaybePopFromUserGesture());
+            Assert.True(TestBuildOwner.Complete(navigatorState.MaybePopFromUserGesture()));
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 

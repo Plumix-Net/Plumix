@@ -689,7 +689,7 @@ public sealed class WidgetsApp : StatefulWidget
                 return Task.FromResult(false);
             }
 
-            return Task.FromResult(navigator.MaybePop());
+            return navigator.MaybePop();
         }
 
         public Task<bool> DidPushRouteInformation(RouteInformation routeInformation)

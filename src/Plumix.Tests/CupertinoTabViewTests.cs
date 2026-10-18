@@ -279,7 +279,7 @@ public sealed class CupertinoTabViewTests : IDisposable
         var popHandler = Assert.Single(harness.FindWidgets<NavigatorPopHandler<object?>>());
         Assert.False(popHandler.Enabled);
         Assert.Equal(zeroSize, harness.RenderView.Size);
-        Assert.Throws<InvalidOperationException>(() => navigatorKey.CurrentState!.PushNamed("/missing"));
+        Assert.Throws<InvalidOperationException>(() => { _ = navigatorKey.CurrentState!.PushNamed("/missing"); });
 
         using var missingHandlerHarness = new CupertinoThemeTestHarness(Wrap(new CupertinoTabView(
             navigatorKey: new LabeledGlobalKey<NavigatorState>("missing handler"),

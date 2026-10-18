@@ -373,7 +373,13 @@ internal sealed class RouteEntry : RouteTransitionRecord
 
     public object? LastAnnouncedPreviousRoute { get; set; } = RoutePlaceholder.NotAnnounced;
 
-    public object? LastAnnouncedPoppedNextRoute { get; set; } = RoutePlaceholder.NotAnnounced;
+    private WeakReference<object>? _lastAnnouncedPoppedNextRoute = new(RoutePlaceholder.NotAnnounced);
+
+    public object? LastAnnouncedPoppedNextRoute
+    {
+        get => _lastAnnouncedPoppedNextRoute is { } weak && weak.TryGetTarget(out object? route) ? route : null;
+        set => _lastAnnouncedPoppedNextRoute = value is null ? null : new WeakReference<object>(value);
+    }
 
     public object? LastAnnouncedNextRoute { get; set; } = RoutePlaceholder.NotAnnounced;
 
@@ -465,9 +471,19 @@ internal sealed class RouteEntry : RouteTransitionRecord
         Route.Attach(navigator);
         if (CurrentState is RouteLifecycle.Push or RouteLifecycle.PushReplace)
         {
-            Route.DidPush();
+            TickerFuture routeFuture = Route.DidPush();
             CurrentState = RouteLifecycle.Pushing;
-            navigator.WhenPushSettles(this);
+            routeFuture.WhenCompleteOrCancel(() =>
+            {
+                if (CurrentState == RouteLifecycle.Pushing)
+                {
+                    CurrentState = RouteLifecycle.Idle;
+                    if (navigator.Mounted)
+                    {
+                        navigator.FlushWithLock();
+                    }
+                }
+            });
         }
         else
         {
@@ -511,6 +527,7 @@ internal sealed class RouteEntry : RouteTransitionRecord
         try
         {
             await poppedRoute.DisposeCompleted;
+            await Task.Yield();
             switch (PlatformDefaults.TargetPlatform)
             {
                 case TargetPlatform.Android:

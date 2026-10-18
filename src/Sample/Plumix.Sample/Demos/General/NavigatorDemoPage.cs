@@ -12,7 +12,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
 {
     public override Widget Build(BuildContext context)
     {
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 8,
             children:
@@ -23,6 +23,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
                     style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new NavigatorRouteAwareProbe(),
                 new NavigatorOverlayProbe(),
+                new NavigatorLifecycleProbe(),
                 BuildAction(
                     "Push blurred popup (ModalRoute.filter)",
                     () => Navigator.Of(context).Push(new SampleBlurredPopupRoute()),
@@ -57,7 +58,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
                         route => route.Settings.Name == SampleRoutes.Menu,
                         arguments: "payload:remove-until"),
                     new Color(0xFFF3E5F5)),
-            ]);
+            ]));
     }
 
     private static Widget BuildAction(string label, Action onTap, Color background)

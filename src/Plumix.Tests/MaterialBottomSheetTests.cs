@@ -1281,6 +1281,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
     private static void PumpAnimation()
     {
+        EventLoop.FlushMicrotasks();
         double now = FrameClock.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));

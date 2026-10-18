@@ -267,8 +267,6 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
     private readonly ScrollableWidgetBuilder _effectiveBuilder;
     private readonly WidgetBuilder? _builder;
     private readonly double? _topGap;
-    private readonly TaskCompletionSource<T?> _completed =
-        new(TaskCreationOptions.RunContinuationsAsynchronously);
 
     public CupertinoSheetRoute(
         WidgetBuilder? builder = null,
@@ -306,7 +304,12 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
 
     public double TopGap => _topGap ?? CupertinoSheetTransition.DefaultTopGap;
 
-    public Task<T?> Completed => _completed.Task;
+    private Task<T?>? _typedCompleted;
+    private Task<T?>? _typedPopped;
+
+    /// <summary>Completes after the reverse transition and overlay disposal.</summary>
+    public new Task<T?> Completed => _typedCompleted ??= ResultAs<T>(base.Completed);
+    public new Task<T?> Popped => _typedPopped ??= ResultAs<T>(base.Popped);
 
     public override TimeSpan TransitionDuration => TimeSpan.FromMilliseconds(500);
 
@@ -365,18 +368,6 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
             linearTransition: PopGestureInProgress,
             topGap: TopGap,
             child: child);
-    }
-
-    public override void DidComplete(object? result)
-    {
-        base.DidComplete(result);
-        CompleteResult(result);
-    }
-
-    public override void Dispose()
-    {
-        _completed.TrySetResult(default);
-        base.Dispose();
     }
 
     internal SheetPopGestureController StartPopGesture(BuildContext context)
@@ -438,23 +429,6 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
                                 Color: handleColor),
                             child: new SizedBox(width: 36.0, height: 5.0)))),
             ]);
-    }
-
-    private void CompleteResult(object? result)
-    {
-        if (result is null)
-        {
-            _completed.TrySetResult(default);
-        }
-        else if (result is T value)
-        {
-            _completed.TrySetResult(value);
-        }
-        else
-        {
-            _completed.TrySetException(new InvalidCastException(
-                $"Route result of type {result.GetType().Name} cannot be converted to {typeof(T).Name}."));
-        }
     }
 }
 
@@ -824,6 +798,6 @@ public static class CupertinoSheets
             settings: settings,
             topGap: topGap);
         Navigator.Of(context, rootNavigator: true).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 }

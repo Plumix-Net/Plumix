@@ -73,7 +73,7 @@ public static class RawDialogs
                           fullscreenDialog: fullscreenDialog);
 
         navigator.Push(route);
-        return route is RawDialogRoute<T> rawDialogRoute ? rawDialogRoute.Completed : ResultOf<T>(route);
+        return route is RawDialogRoute<T> rawDialogRoute ? rawDialogRoute.Popped : ResultOf<T>(route);
     }
 
     /// <summary>

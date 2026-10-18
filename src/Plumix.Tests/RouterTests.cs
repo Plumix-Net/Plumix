@@ -377,13 +377,12 @@ public sealed class RouterTests : IDisposable
 
         Task<bool> popped = dispatcher.InvokeCallback(Task.FromResult(false));
         Pump(harness);
-        Assert.True(popped.IsCompletedSuccessfully);
-        Assert.True(SynchronousResultOf(popped));
+        Assert.True(TestBuildOwner.Complete(popped));
         Assert.False(navigator.CanPop);
 
         Task<bool> secondPop = dispatcher.InvokeCallback(Task.FromResult(false));
         Pump(harness);
-        Assert.False(SynchronousResultOf(secondPop));
+        Assert.False(TestBuildOwner.Complete(secondPop));
     }
 
     [Fact]

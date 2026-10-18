@@ -30,18 +30,18 @@ public sealed class WillPopScopeTests
 
         navigator!.Push(new BuilderPageRoute(
             builder: context => new WillPopScope(
-                onWillPop: () => allowPop,
+                onWillPop: () => Task.FromResult(allowPop),
                 child: new SizedBox(width: 1, height: 1)),
             settings: new RouteSettings(Name: "details")));
         owner.FlushBuild();
         Assert.Equal("details", navigator.CurrentRoute?.Settings?.Name);
 
-        Assert.True(navigator.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigator.MaybePop()));
         owner.FlushBuild();
         Assert.Equal("details", navigator.CurrentRoute?.Settings?.Name);
 
         allowPop = true;
-        Assert.True(navigator.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigator.MaybePop()));
         owner.FlushBuild();
         Assert.Equal("root", navigator.CurrentRoute?.Settings?.Name);
 
@@ -72,7 +72,7 @@ public sealed class WillPopScopeTests
 
         var guarded = new BuilderPageRoute(
             builder: _ => new WillPopScope(
-                onWillPop: () => false,
+                onWillPop: () => Task.FromResult(false),
                 child: new SizedBox(width: 1, height: 1)),
             settings: new RouteSettings(Name: "guarded"));
         navigator.Push(guarded);
@@ -82,7 +82,7 @@ public sealed class WillPopScopeTests
         // A route whose pop might be vetoed refuses the back-swipe gesture, the way Dart's
         // `PageRoute.popGestureEnabled` does.
         Assert.False(guarded.PopGestureEnabled);
-        Assert.False(guarded.WillPop());
+        Assert.Equal(RoutePopDisposition.DoNotPop, TestBuildOwner.Complete(guarded.WillPop()));
 
         root.UnmountRoot();
     }
@@ -94,8 +94,8 @@ public sealed class WillPopScopeTests
             builder: _ => new SizedBox(width: 1, height: 1),
             settings: new RouteSettings(Name: "detached"));
 
-        Assert.Throws<InvalidOperationException>(() => route.AddScopedWillPopCallback(() => true));
-        Assert.Throws<InvalidOperationException>(() => route.RemoveScopedWillPopCallback(() => true));
+        Assert.Throws<InvalidOperationException>(() => route.AddScopedWillPopCallback(() => Task.FromResult(true)));
+        Assert.Throws<InvalidOperationException>(() => route.RemoveScopedWillPopCallback(() => Task.FromResult(true)));
     }
 
     [Fact]
@@ -104,7 +104,7 @@ public sealed class WillPopScopeTests
         Assert.Throws<ArgumentException>(() => new Form(
             child: new SizedBox(width: 1, height: 1),
             canPop: false,
-            onWillPop: () => true));
+            onWillPop: () => Task.FromResult(true)));
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

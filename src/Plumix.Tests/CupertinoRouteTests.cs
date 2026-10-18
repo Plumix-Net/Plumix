@@ -186,11 +186,11 @@ public sealed class CupertinoRouteTests : IDisposable
     {
         var pageRoute = new CupertinoPageRoute<string>(_ => new SizedBox());
         pageRoute.DidComplete("page-result");
-        Assert.Equal("page-result", await pageRoute.Completed);
+        Assert.Equal("page-result", await pageRoute.Popped);
 
         var popupRoute = new CupertinoModalPopupRoute<int>(_ => new SizedBox());
         popupRoute.DidComplete(42);
-        Assert.Equal(42, await popupRoute.Completed);
+        Assert.Equal(42, await popupRoute.Popped);
     }
 
     private static TestRootElement MountNavigator(Route initialRoute)

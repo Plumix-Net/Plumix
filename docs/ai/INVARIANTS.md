@@ -61,7 +61,8 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 
 ## Navigation
 
-- `Navigator` route stack must always keep a valid top route.
+- `Navigator` starts with a valid route; `MaybePop` bubbles at the root. Direct `Pop`/`PopUntil` may empty history,
+  as in the pinned Flutter source; widget updates must not silently seed initial routes again.
 - Observer callbacks (`didPush/didPop/didReplace/didRemove`) must match stack mutations.
 - Back-button handling should route through navigator APIs, not host-only ad hoc logic.
 

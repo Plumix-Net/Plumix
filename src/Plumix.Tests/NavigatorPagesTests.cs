@@ -155,7 +155,7 @@ public sealed class NavigatorPagesTests : IDisposable
         ]);
         using var harness = new Harness(host);
 
-        Assert.True(harness.Navigator.MaybePop());
+        Assert.True(TestBuildOwner.Complete(harness.Navigator.MaybePop()));
         harness.Pump();
 
         Assert.Equal([false], invocations);

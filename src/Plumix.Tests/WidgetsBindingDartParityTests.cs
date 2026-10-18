@@ -388,7 +388,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
     }
 
     [Fact]
-    public async Task HandlePopRoute_AwaitsEachObserverBeforeAskingTheNext()
+    public void HandlePopRoute_AwaitsEachObserverBeforeAskingTheNext()
     {
         // Dart awaits every `didPopRoute` in turn: a pending answer is neither handled nor unhandled yet.
         var first = Observe(new PendingRouteObserver());
@@ -400,11 +400,12 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         Assert.Equal(0, second.PopCalls);
 
         first.Answer.SetResult(false);
+        EventLoop.FlushMicrotasks();
         Assert.False(handled.IsCompleted);
         Assert.Equal(1, second.PopCalls);
 
         second.Answer.SetResult(true);
-        Assert.True(await handled);
+        Assert.True(TestBuildOwner.Complete(handled));
     }
 
     [Fact]

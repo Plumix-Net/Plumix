@@ -139,7 +139,7 @@ public static class CupertinoDialogs
             anchorPoint: anchorPoint,
             requestFocus: requestFocus);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 
     public static Task<T?> ShowCupertinoDialog<T>(
@@ -163,6 +163,6 @@ public static class CupertinoDialogs
             requestFocus: requestFocus,
             anchorPoint: anchorPoint);
         Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
-        return route.Completed;
+        return route.Popped;
     }
 }

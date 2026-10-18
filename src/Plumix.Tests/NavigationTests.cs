@@ -40,7 +40,7 @@ public sealed class NavigationTests
         Assert.Equal("details", currentPageName);
         Assert.True(navigatorState.CanPop);
 
-        Assert.True(navigatorState.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
         owner.FlushBuild();
 
         // The revealed route keeps its cached page instead of rebuilding, so the visible route is read from
@@ -111,7 +111,7 @@ public sealed class NavigationTests
             captureState: _ => { }));
         owner.FlushBuild();
 
-        Assert.True(navigatorState.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
         owner.FlushBuild();
 
         Assert.Equal(
@@ -226,7 +226,7 @@ public sealed class NavigationTests
     }
 
     [Fact]
-    public void RouteObserver_DidReplace_RebindsSubscribersToReplacementRoute()
+    public void RouteObserver_DidReplace_DoesNotTransferSubscribersToReplacementRoute()
     {
         var owner = TestBuildOwner.Create();
         var routeObserver = new RouteObserver<PageRoute>();
@@ -286,7 +286,7 @@ public sealed class NavigationTests
         navigatorState.Pop();
         owner.FlushBuild();
 
-        Assert.Equal(["didPush", "didPop"], aware.Events);
+        Assert.Equal(["didPush"], aware.Events);
     }
 
     [Fact]
@@ -378,11 +378,11 @@ public sealed class NavigationTests
         rootRoute!.AddLocalHistoryEntry(new LocalHistoryEntry(onRemove: () => localHistoryRemoved = true));
         Assert.True(rootRoute.ImpliesAppBarDismissal);
 
-        Assert.True(navigatorState.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
         Assert.True(localHistoryRemoved);
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
         Assert.False(navigatorState.CanPop);
-        Assert.False(navigatorState.MaybePop());
+        Assert.False(TestBuildOwner.Complete(navigatorState.MaybePop()));
     }
 
     [Fact]
@@ -485,7 +485,7 @@ public sealed class NavigationTests
             captureState: _ => { }));
         owner.FlushBuild();
 
-        Assert.True(navigatorState.MaybePopFromUserGesture());
+        Assert.True(TestBuildOwner.Complete(navigatorState.MaybePopFromUserGesture()));
         owner.FlushBuild();
 
         Assert.Equal("root", CurrentPage(navigatorState));
@@ -554,7 +554,7 @@ public sealed class NavigationTests
         Assert.Equal("details", currentPageName);
         Assert.Equal(42, latestArguments);
 
-        Assert.Throws<InvalidOperationException>(() => navigatorState.PushNamed("/missing"));
+        Assert.Throws<InvalidOperationException>(() => { _ = navigatorState.PushNamed("/missing"); });
     }
 
     [Fact]
@@ -753,7 +753,7 @@ public sealed class NavigationTests
         Assert.Equal("target", currentPageName);
         Assert.True(navigatorState.CanPop);
 
-        Assert.True(navigatorState.MaybePop());
+        Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
         owner.FlushBuild();
         Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
@@ -938,7 +938,7 @@ public sealed class NavigationTests
     }
 
     [Fact]
-    public void Navigator_RemoveRoute_ThrowsWhenRemovingLastRoute()
+    public void Navigator_RemoveRoute_AllowsRemovingLastRoute()
     {
         var owner = TestBuildOwner.Create();
         NavigatorState? navigatorState = null;
@@ -961,7 +961,8 @@ public sealed class NavigationTests
 
         Assert.NotNull(navigatorState);
         Assert.NotNull(rootRoute);
-        Assert.Throws<InvalidOperationException>(() => navigatorState!.RemoveRoute(rootRoute!));
+        navigatorState!.RemoveRoute(rootRoute!);
+        Assert.Null(navigatorState.CurrentRoute);
     }
 
     [Fact]

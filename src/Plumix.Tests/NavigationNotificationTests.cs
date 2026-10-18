@@ -54,7 +54,7 @@ public sealed class NavigationNotificationTests : IDisposable
         });
         owner.FlushBuild();
 #pragma warning disable CS0618 // Dart's routes_test covers this through the deprecated WillPopScope.
-        route!.AddScopedWillPopCallback(() => false);
+        route!.AddScopedWillPopCallback(() => Task.FromResult(false));
 #pragma warning restore CS0618
 
         Pump(owner);
