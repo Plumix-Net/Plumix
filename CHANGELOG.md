@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Desktop selection handles and SelectableRegion actions/lifecycle match Dart (selectable_region.dart).
+- DesktopTextSelectionControls and native browser selection menus (desktop_text_selection.dart; selectable_region).
 - Breaking: SemanticsRole has all 33 dart:ui values, in Dart's order (dart:ui semantics.dart).
 - ServicesBinding.AccessibilityFocus and its flutter/accessibility didGainFocus handler (services/binding.dart).
 - FocusSemanticEvent (semantics/semantics_event.dart).

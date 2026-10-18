@@ -129,7 +129,7 @@ public sealed class SelectableRegion : StatefulWidget
         bool canCopy = selectionGeometry.Status == SelectionStatus.Uncollapsed;
         bool canSelectAll = selectionGeometry.HasContent;
         // The share button is not supported on the web.
-        bool platformCanShare = !Constants.KIsWeb
+        bool platformCanShare = !PlatformDefaults.IsWeb
             && PlatformDefaults.TargetPlatform switch
             {
                 TargetPlatform.Android => selectionGeometry.Status == SelectionStatus.Uncollapsed,
@@ -208,6 +208,7 @@ public sealed class SelectableRegionState
     private Point _selectionEndHandleDragPosition;
     private Orientation? _lastOrientation;
     private bool _isShiftPressed;
+    private IReadOnlyDictionary<Type, FlutterAction>? _actions;
     private bool? _adjustingSelectionEnd;
     private double? _directionalHorizontalBaseline;
 
@@ -217,6 +218,9 @@ public sealed class SelectableRegionState
     internal SelectionOverlay? SelectionOverlay => _selectionOverlay;
 
     private FocusNode FocusNode => Current.FocusNode ?? (_localFocusNode ??= new FocusNode());
+
+    private bool WebContextMenuEnabled => PlatformDefaults.IsWeb && BrowserContextMenu.Enabled
+        && PlatformDefaults.TargetPlatform is not (TargetPlatform.Android or TargetPlatform.IOS);
 
     private bool HasSelectionOverlayGeometry =>
         _selectionDelegate.Value.StartSelectionPoint is not null
@@ -398,6 +402,11 @@ public sealed class SelectableRegionState
     public override void DidChangeDependencies()
     {
         base.DidChangeDependencies();
+        if (PlatformDefaults.TargetPlatform is not (TargetPlatform.Android or TargetPlatform.IOS))
+        {
+            return;
+        }
+
         Orientation orientation = MediaQuery.OrientationOf(Context);
         if (_lastOrientation is { } lastOrientation && lastOrientation != orientation)
         {
@@ -413,13 +422,19 @@ public sealed class SelectableRegionState
         var previous = (SelectableRegion)oldWidget;
         if (!ReferenceEquals(previous.FocusNode, Current.FocusNode))
         {
+            bool? previousHasFocus = previous.FocusNode?.HasFocus;
             DetachFocusNode();
-            AttachFocusNode();
-        }
+            if (previous.FocusNode is null && Current.FocusNode is not null)
+            {
+                _localFocusNode?.Dispose();
+                _localFocusNode = null;
+            }
 
-        if (previous.ContextMenuBuilder != Current.ContextMenuBuilder)
-        {
-            HideToolbar();
+            AttachFocusNode();
+            if (FocusNode.HasFocus != previousHasFocus)
+            {
+                HandleFocusChanged();
+            }
         }
     }
 
@@ -490,7 +505,7 @@ public sealed class SelectableRegionState
     /// Copies the current selection to the clipboard.
     public void CopySelection()
     {
-        if (_selectable?.GetSelectedContent() is not { } data || data.PlainText.Length == 0)
+        if (_selectable?.GetSelectedContent() is not { } data)
         {
             return;
         }
@@ -535,14 +550,9 @@ public sealed class SelectableRegionState
             return false;
         }
 
-        if (Current.ContextMenuBuilder is null || ContextMenuButtonItems.Count == 0)
+        if (WebContextMenuEnabled)
         {
             return false;
-        }
-
-        if (location is { } anchor)
-        {
-            _lastSecondaryTapDownPosition = anchor;
         }
 
         if (_selectionOverlay is null)
@@ -786,6 +796,11 @@ public sealed class SelectableRegionState
 
     private void UpdateSelectionStatus()
     {
+#pragma warning disable CS0618 // The legacy selection controls read this synthetic selection.
+        TextEditingValue = new TextEditingValue("__", _selectionDelegate.Value.Status == SelectionStatus.None
+            ? TextSelection.Collapsed(1)
+            : new TextSelection(0, 1));
+#pragma warning restore CS0618
         if (HasSelectionOverlayGeometry)
         {
             UpdateSelectionOverlay();
@@ -884,7 +899,8 @@ public sealed class SelectableRegionState
         // The handle anchors at the paint origin; the selection edge sits at the line's centre.
         _selectionStartPosition = _selectionStartHandleDragPosition - new Point(0, startPoint.LineHeight / 2);
         TriggerSelectionStartEdgeUpdate();
-        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(details.GlobalPosition, startPoint));
+        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(
+            details.GlobalPosition, _selectionDelegate.Value.StartSelectionPoint!));
         UpdateSelectedContentIfNeeded();
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
     }
@@ -905,7 +921,8 @@ public sealed class SelectableRegionState
         _selectionEndHandleDragPosition += details.Delta;
         _selectionEndPosition = _selectionEndHandleDragPosition - new Point(0, endPoint.LineHeight / 2);
         TriggerSelectionEndEdgeUpdate();
-        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(details.GlobalPosition, endPoint));
+        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(
+            details.GlobalPosition, _selectionDelegate.Value.EndSelectionPoint!));
         UpdateSelectedContentIfNeeded();
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
     }
@@ -1474,33 +1491,39 @@ public sealed class SelectableRegionState
     {
         return new Dictionary<Type, FlutterAction>
         {
-            [typeof(SelectAllTextIntent)] = new SelectAllAction(this),
-            [typeof(CopySelectionTextIntent)] = new CopySelectionAction(this),
+            [typeof(SelectAllTextIntent)] = MakeOverridable(new SelectAllAction(this)),
+            [typeof(CopySelectionTextIntent)] = MakeOverridable(new CopySelectionAction(this)),
             [typeof(ExtendSelectionToNextWordBoundaryOrCaretLocationIntent)] =
-                new GranularlyExtendSelectionAction<ExtendSelectionToNextWordBoundaryOrCaretLocationIntent>(
-                    this, TextGranularity.Word),
+                MakeOverridable(
+                    new GranularlyExtendSelectionAction<ExtendSelectionToNextWordBoundaryOrCaretLocationIntent>(
+                        this, TextGranularity.Word)),
             [typeof(ExpandSelectionToDocumentBoundaryIntent)] =
-                new GranularlyExtendSelectionAction<ExpandSelectionToDocumentBoundaryIntent>(
-                    this, TextGranularity.Document),
+                MakeOverridable(new GranularlyExtendSelectionAction<ExpandSelectionToDocumentBoundaryIntent>(
+                    this, TextGranularity.Document)),
             [typeof(ExpandSelectionToLineBreakIntent)] =
-                new GranularlyExtendSelectionAction<ExpandSelectionToLineBreakIntent>(this, TextGranularity.Line),
+                MakeOverridable(new GranularlyExtendSelectionAction<ExpandSelectionToLineBreakIntent>(
+                    this, TextGranularity.Line)),
             [typeof(ExtendSelectionByCharacterIntent)] =
-                new GranularlyExtendCaretSelectionAction<ExtendSelectionByCharacterIntent>(
-                    this, TextGranularity.Character),
+                MakeOverridable(new GranularlyExtendCaretSelectionAction<ExtendSelectionByCharacterIntent>(
+                    this, TextGranularity.Character)),
             [typeof(ExtendSelectionToNextWordBoundaryIntent)] =
-                new GranularlyExtendCaretSelectionAction<ExtendSelectionToNextWordBoundaryIntent>(
-                    this, TextGranularity.Word),
+                MakeOverridable(new GranularlyExtendCaretSelectionAction<ExtendSelectionToNextWordBoundaryIntent>(
+                    this, TextGranularity.Word)),
             [typeof(ExtendSelectionToLineBreakIntent)] =
-                new GranularlyExtendCaretSelectionAction<ExtendSelectionToLineBreakIntent>(
-                    this, TextGranularity.Line),
+                MakeOverridable(new GranularlyExtendCaretSelectionAction<ExtendSelectionToLineBreakIntent>(
+                    this, TextGranularity.Line)),
             [typeof(ExtendSelectionVerticallyToAdjacentLineIntent)] =
-                new DirectionallyExtendCaretSelectionAction<ExtendSelectionVerticallyToAdjacentLineIntent>(this),
+                MakeOverridable(
+                    new DirectionallyExtendCaretSelectionAction<ExtendSelectionVerticallyToAdjacentLineIntent>(this)),
             [typeof(ExtendSelectionToDocumentBoundaryIntent)] =
-                new GranularlyExtendCaretSelectionAction<ExtendSelectionToDocumentBoundaryIntent>(
-                    this, TextGranularity.Document),
+                MakeOverridable(new GranularlyExtendCaretSelectionAction<ExtendSelectionToDocumentBoundaryIntent>(
+                    this, TextGranularity.Document)),
             [typeof(DismissIntent)] = new CallbackAction<DismissIntent>(HideToolbarIfVisible),
         };
     }
+
+    private FlutterAction<TIntent> MakeOverridable<TIntent>(FlutterAction<TIntent> action) where TIntent : Intent
+        => FlutterAction.Overridable(action, Context);
 
     private object? HideToolbarIfVisible(DismissIntent intent)
     {
@@ -1617,6 +1640,11 @@ public sealed class SelectableRegionState
 
     private void HandleFocusChanged()
     {
+        if (!FocusNode.HasFocus && WebContextMenuEnabled)
+        {
+            PlatformSelectableRegionContextMenu.Detach(_selectionDelegate);
+        }
+
         // Dart only clears the selection when focus is lost while the application is running: on
         // desktop, switching to another window makes the app inactive, and the selection must
         // survive until the user comes back.
@@ -1627,25 +1655,34 @@ public sealed class SelectableRegionState
             SetChangingThenFinalize();
         }
 
-        SetState(() => { });
+        if (WebContextMenuEnabled)
+        {
+            PlatformSelectableRegionContextMenu.Attach(_selectionDelegate);
+        }
     }
 
     // -- Build -----------------------------------------------------------------------
 
     public override Widget Build(BuildContext context)
     {
+        WidgetsDebug.DebugCheckHasOverlay(context);
         Widget result = new SelectableRegionSelectionStatusScope(
             _selectionStatusNotifier,
             new SelectionContainer(_selectionDelegate, Current.Child, registrar: this));
 
+        if (WebContextMenuEnabled)
+        {
+            result = new PlatformSelectableRegionContextMenu(result);
+        }
+
         // `Actions` sits outside `Focus` so a focused region resolves the text-editing intents that
         // the ambient `DefaultTextEditingShortcuts` produces.
-        result = new Focus(
+        result = Focus.WithExternalFocusNode(
             focusNode: FocusNode,
             includeSemantics: false,
             child: result);
 
-        result = new Actions(actions: BuildActions(), child: result);
+        result = new Actions(actions: _actions ??= BuildActions(), child: result);
 
         result = new RawGestureDetector(
             excludeFromSemantics: true,
@@ -1667,8 +1704,7 @@ public sealed class SelectableRegionState
             },
             child: result);
 
-        return new MouseRegion(
-            cursor: Current.MouseCursor ?? SystemMouseCursors.Text,
-            child: result);
+        // Retain the explicit C# extension, without changing the cursor in empty space by default.
+        return Current.MouseCursor is { } cursor ? new MouseRegion(cursor: cursor, child: result) : result;
     }
 }

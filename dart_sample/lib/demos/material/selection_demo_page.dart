@@ -1,4 +1,6 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart'
     show SelectedContent, SelectedContentRange;
 
@@ -16,6 +18,7 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
   int _menuValue = 0;
   int _pageClicks = 0;
   bool _interactive = true;
+  TargetPlatform _selectionPlatform = defaultTargetPlatform;
   String _singleSelection = 'none';
   String _areaSelection = 'none';
   String _listenerDetails = 'none';
@@ -47,6 +50,15 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
   void _showMenu() {
     _menuValue++;
     _menuController.show(context: context, contextMenuBuilder: _buildMenu);
+  }
+
+  Future<void> _toggleBrowserMenu() async {
+    if (BrowserContextMenu.enabled) {
+      await BrowserContextMenu.disableContextMenu();
+    } else {
+      await BrowserContextMenu.enableContextMenu();
+    }
+    if (mounted) setState(() {});
   }
 
   Widget _buildMenu(BuildContext context) {
@@ -256,6 +268,34 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
             'Scrollable selection: $_scrollableSelection',
             maxLines: 3,
             style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text('Platform selection controls', style: TextStyle(fontSize: 18)),
+          const Text(
+            'Switch the handle style, then long-press the text. Select all inside the field '
+            'to check that it keeps its own keyboard actions.',
+          ),
+          Wrap(spacing: 8, children: <Widget>[
+            TextButton(
+              onPressed: () => setState(() {
+                _selectionPlatform = TargetPlatform.values[(_selectionPlatform.index + 1) % 6];
+              }),
+              child: Text('Platform: ${_selectionPlatform.name}'),
+            ),
+            if (kIsWeb)
+              TextButton(
+                onPressed: _toggleBrowserMenu,
+                child: Text('Browser menu: ${BrowserContextMenu.enabled}'),
+              ),
+          ]),
+          Theme(
+            data: Theme.of(context).copyWith(platform: _selectionPlatform),
+            child: const SelectionArea(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: <Widget>[
+                Text("Select this paragraph with the platform's handles."),
+                TextField(decoration: InputDecoration(labelText: 'A field inside SelectionArea')),
+              ]),
+            ),
           ),
           const Divider(),
           const Text(

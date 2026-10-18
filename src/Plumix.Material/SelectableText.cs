@@ -308,6 +308,7 @@ internal sealed class SelectableTextState : State<SelectableText>, ITextSelectio
         {
             TargetPlatform.IOS => CupertinoTextSelectionHandleControls.Instance,
             TargetPlatform.MacOS => CupertinoDesktopTextSelectionControls.HandleControls,
+            TargetPlatform.Linux or TargetPlatform.Windows => DesktopTextSelectionControls.HandleControls,
             _ => MaterialTextSelectionHandleControls.Instance,
         };
 #pragma warning restore CS0618

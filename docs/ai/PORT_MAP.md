@@ -125,6 +125,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/date_picker.dart` | `src/Plumix.Material/DatePickerDialog.cs`<br>`src/Plumix.Material/DateRangePickerDialog.cs` | — | — |
 | `material_ui/date_picker_theme.dart` | `src/Plumix.Material/DatePickerTheme.cs` | — | — |
 | `material_ui/debug.dart` | `src/Plumix.Material/Debug.cs` | `src/Plumix.Tests/DebugOverflowIndicatorDartParityTests.cs`<br>`src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/MaterialDebugDartParityTests.cs`<br>`src/Plumix.Tests/MediaQueryDebugTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
+| `material_ui/desktop_text_selection.dart` | `src/Plumix.Material/DesktopTextSelectionControls.cs` | — | — |
 | `material_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `material_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `material_ui/dialog.dart` | `src/Plumix.Material/Dialog.cs` | `src/Plumix.Tests/CupertinoDialogGestureTests.cs`<br>`src/Plumix.Tests/CupertinoDialogTests.cs`<br>`src/Plumix.Tests/MaterialDialogTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerDialogTests.cs` | `dart_sample/lib/demos/material/dialog_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DialogDemoPage.cs` |
@@ -451,6 +452,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/text_layout_metrics.dart` | `src/Plumix/UI/TextBoundary.cs` | — | — |
 | `services/undo_manager.dart` | `src/Plumix/UI/UndoManager.cs` | — | — |
 | `widgets/_accessibility_evaluations.dart` | `src/Plumix/Widgets/AccessibilityEvaluations.cs` | `src/Plumix.Tests/AccessibilityEvaluationsDartParityTests.cs`<br>`src/Plumix.Tests/AccessibilityEvaluationsServiceExtensionDartParityTests.cs` | — |
+| `widgets/_platform_selectable_region_context_menu_io.dart` | `src/Plumix/Widgets/PlatformSelectableRegionContextMenu.cs` _(adapted)_ | — | — |
+| `widgets/_platform_selectable_region_context_menu_web.dart` | `src/Plumix/Widgets/PlatformSelectableRegionContextMenu.cs` _(adapted)_ | — | — |
 | `widgets/_window.dart` | `src/Plumix/Widgets/Windowing.cs`<br>`src/Plumix/Widgets/WindowingWidgets.cs` | `src/Plumix.Tests/WindowingTests.cs` | `dart_sample/lib/demos/general/windowing_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/WindowingDemoPage.cs` |
 | `widgets/_window_positioner.dart` | `src/Plumix/Widgets/WindowPositioner.cs` | `src/Plumix.Tests/WindowPositionerTests.cs` | — |
 | `widgets/actions.dart` | `src/Plumix/Widgets/Actions.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs` | `dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarActionsPaddingDemoPage.cs` |
@@ -711,11 +714,19 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix.Material/SegmentedControlLayout.cs`
 - `src/Plumix.Material/ThemeDataLerp.cs`
 
+### Ports with a qualified marker
+
+Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset. Each is a
+tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the
+marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
+
+- `src/Plumix/Widgets/PlatformSelectableRegionContextMenu.cs` — (adapted)
+
 ## Summary
 
-- Flutter files mapped: 590
-- C# files carrying a marker: 774
+- Flutter files mapped: 593
+- C# files carrying a marker: 777
 - C# files without a marker: 91
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 0
+- C# files with a qualified (non-strict) marker: 1
 

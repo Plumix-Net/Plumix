@@ -1,6 +1,6 @@
-using Avalonia.Media;
-using Plumix.Foundation;
+using Plumix.Cupertino;
 using Plumix.Rendering;
+using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -14,7 +14,19 @@ public sealed class SelectionArea : StatefulWidget
         Widget child,
         FocusNode? focusNode = null,
         TextSelectionControls? selectionControls = null,
-        SelectableRegionContextMenuBuilder? contextMenuBuilder = null,
+        TextMagnifierConfiguration? magnifierConfiguration = null,
+        Action<SelectedContent?>? onSelectionChanged = null,
+        Key? key = null)
+        : this(child, DefaultContextMenuBuilder, focusNode, selectionControls,
+            magnifierConfiguration, onSelectionChanged, key)
+    {
+    }
+
+    public SelectionArea(
+        Widget child,
+        SelectableRegionContextMenuBuilder? contextMenuBuilder,
+        FocusNode? focusNode = null,
+        TextSelectionControls? selectionControls = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         Action<SelectedContent?>? onSelectionChanged = null,
         Key? key = null) : base(key)
@@ -22,7 +34,7 @@ public sealed class SelectionArea : StatefulWidget
         Child = child ?? throw new ArgumentNullException(nameof(child));
         FocusNode = focusNode;
         SelectionControls = selectionControls;
-        ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
+        ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration;
         OnSelectionChanged = onSelectionChanged;
     }
@@ -56,15 +68,17 @@ public sealed class SelectionAreaState : State<SelectionArea>
 
     public override Widget Build(BuildContext context)
     {
-        // Dart picks handle controls per `Theme.of(context).platform`; the desktop
-        // and Cupertino handle-control singletons are not available to this package
-        // yet, so every platform uses the Material handles (see `DIVERGENCES.md`).
-        TextSelectionControls controls = Current.SelectionControls
-                                         ?? MaterialTextSelectionHandleControls.Instance;
-
-        // Dart's `SelectionAreaState.build` resolves no colors: the selectable children read the
-        // ambient `DefaultSelectionStyle` that `MaterialApp`/`Theme`/`TextSelectionTheme` install.
-        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+        MaterialDebug.DebugCheckHasMaterialLocalizations(context);
+        TextSelectionControls controls = Current.SelectionControls ?? Theme.Of(context).Platform switch
+        {
+            TargetPlatform.Android or TargetPlatform.Fuchsia => MaterialTextSelectionHandleControls.Instance,
+            TargetPlatform.Linux or TargetPlatform.Windows => DesktopTextSelectionControls.HandleControls,
+#pragma warning disable CS0618 // Pinned Flutter's handle-only controls.
+            TargetPlatform.IOS => CupertinoTextSelectionHandleControls.Instance,
+#pragma warning restore CS0618
+            TargetPlatform.MacOS => CupertinoDesktopTextSelectionControls.HandleControls,
+            _ => throw new ArgumentOutOfRangeException(),
+        };
 
         return new SelectableRegion(
             key: _selectableRegionKey,
@@ -74,7 +88,6 @@ public sealed class SelectionAreaState : State<SelectionArea>
             magnifierConfiguration: Current.MagnifierConfiguration
                                     ?? TextMagnifier.AdaptiveMagnifierConfiguration,
             onSelectionChanged: Current.OnSelectionChanged,
-            mouseCursor: selectionStyle.MouseCursor,
             child: Current.Child);
     }
 }

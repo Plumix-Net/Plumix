@@ -825,7 +825,9 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
             {
                 Rect localRect = RenderObject.TransformRect(transform, rect);
                 Rect resolved = drawableArea?.Intersect(localRect) ?? localRect;
-                if (IsFinite(resolved.Position) && resolved.Width > 0 && resolved.Height > 0)
+                if (IsFinite(resolved.Position)
+                    && double.IsFinite(resolved.Width) && double.IsFinite(resolved.Height)
+                    && resolved.Width > 0 && resolved.Height > 0)
                 {
                     selectionRects.Add(resolved);
                 }

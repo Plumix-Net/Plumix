@@ -21,6 +21,7 @@ internal sealed class SelectionDemoPageState : State
     private int _menuValue;
     private int _pageClicks;
     private bool _interactive = true;
+    private TargetPlatform _selectionPlatform = PlatformDefaults.TargetPlatform;
     private string _singleSelection = "none";
     private string _areaSelection = "none";
     private string _listenerDetails = "none";
@@ -74,6 +75,23 @@ internal sealed class SelectionDemoPageState : State
                             new Text("The page stays interactive while this menu is open."),
                             new TextButton(new Text("Close menu"), _menuController.Remove),
                         ]))));
+    }
+
+    private void ToggleBrowserMenu()
+    {
+        EventLoop.RunAsync(async () =>
+        {
+            if (BrowserContextMenu.Enabled)
+            {
+                await BrowserContextMenu.DisableContextMenu();
+            }
+            else
+            {
+                await BrowserContextMenu.EnableContextMenu();
+            }
+
+            if (Mounted) SetState(() => { });
+        });
     }
 
     public override Widget Build(BuildContext context)
@@ -196,6 +214,27 @@ internal sealed class SelectionDemoPageState : State
                         style: new TextStyle(
                             FontSize: 13),
                         maxLines: 3),
+                    new Divider(),
+                    new Text("Platform selection controls", style: new TextStyle(FontSize: 18)),
+                    new Text(
+                        "Switch the handle style, then long-press the text. Select all inside the field "
+                        + "to check that it keeps its own keyboard actions."),
+                    new Wrap(spacing: 8, children:
+                    [
+                        new TextButton(new Text($"Platform: {_selectionPlatform}"), () => SetState(() =>
+                            _selectionPlatform = (TargetPlatform)(((int)_selectionPlatform + 1) % 6))),
+                        .. PlatformDefaults.IsWeb ? new Widget[]
+                        {
+                            new TextButton(
+                                new Text($"Browser menu: {BrowserContextMenu.Enabled}"), ToggleBrowserMenu),
+                        } : System.Array.Empty<Widget>(),
+                    ]),
+                    new Theme(Theme.Of(context) with { Platform = _selectionPlatform },
+                        new SelectionArea(new Column(crossAxisAlignment: CrossAxisAlignment.Start, children:
+                        [
+                            new Text("Select this paragraph with the platform's handles."),
+                            new TextField(decoration: new InputDecoration(labelText: "A field inside SelectionArea")),
+                        ]))),
                     new Divider(),
                     new Text("DefaultSelectionStyle scope", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new DefaultSelectionStyle(

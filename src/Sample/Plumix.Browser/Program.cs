@@ -27,6 +27,7 @@ internal sealed partial class Program
         if (Application.Current?.ApplicationLifetime is ISingleViewApplicationLifetime { MainView: PlumixHost host })
         {
             await BrowserAccessibilityBridge.AttachAsync(host, "out");
+            await BrowserSelectionContextMenu.InitializeAsync(host, "out");
         }
     }
 
