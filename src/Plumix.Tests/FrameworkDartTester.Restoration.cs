@@ -22,16 +22,16 @@ internal sealed partial class FrameworkDartTester
 
     /// <summary>
     /// Dart's <c>tester.restartAndRestore</c>: tears the tree down, feeds the data the framework last
-    /// sent to the engine back to the manager and pumps the last <see cref="PumpWidget"/> widget again.
+    /// sent to the engine back to the manager and restores the original root, including its view wrapper.
     /// </summary>
     public void RestartAndRestore()
     {
         AssertRootBucketAccessed("restoration data has been collected to restore from");
-        Widget widget = _lastWidget;
+        Widget rootWidget = _lastRootWidget;
         TestRestorationData restorationData = RestorationManager.RestorationData;
         PumpWidget(new Container(key: new UniqueKey()));
         RestorationManager.RestoreFrom(restorationData);
-        PumpWidget(widget);
+        PumpWidget(rootWidget, wrapWithView: false);
     }
 
     /// <summary>Dart's <c>tester.getRestorationData</c>.</summary>

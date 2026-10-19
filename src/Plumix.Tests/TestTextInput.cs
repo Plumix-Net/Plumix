@@ -11,7 +11,7 @@ namespace Plumix.Tests;
 /// sends <c>TextInputClient.*</c> calls back the way an engine would.
 /// </summary>
 /// <remarks>
-/// flutter_test's binding registers one for every widget test; a Plumix test creates and disposes its
+/// The shared test binding registers one for every widget test. Services tests may construct their
 /// own (<see cref="Register"/> runs in the constructor).
 /// </remarks>
 internal sealed class TestTextInput : IDisposable
@@ -76,8 +76,8 @@ internal sealed class TestTextInput : IDisposable
     }
 
     /// <summary>
-    /// Adopts a client the framework attached before this instance was registered (C#-only: a
-    /// <see cref="FrameworkDartTester"/> registers its instance on first use, not when the test starts).
+    /// Adopts a client attached before registration (C#-only: the shared tester can opt out of
+    /// automatic registration and create this instance on first use).
     /// </summary>
     public void AdoptClient(int client)
     {

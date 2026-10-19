@@ -618,8 +618,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         scrollController.JumpTo(0.0);
         tester.Pump();
 
-        tester.View.UpdateMetrics(viewInsets: new Thickness(0, 0, 0, 500));
-        State(tester).DidChangeMetrics();
+        tester.View.ViewInsets = new Thickness(0, 0, 0, 500);
         tester.Pump();
 
         double offset = scrollController.Offset;
@@ -709,7 +708,7 @@ public sealed class EditableTextScrollingDartParityTests : IDisposable
         Assert.True(callback.Enabled);
 
         focusNode.Unfocus();
-        tester.Pump();
+        tester.PumpAndSettle();
         Assert.False(callback.Enabled);
     }
 

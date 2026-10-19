@@ -43,25 +43,11 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     // Dart's top-level `globalize`.
     private static Point Globalize(Point point, RenderBox box) => box.LocalToGlobal(point);
 
-    // flutter_test's onstage element walk (`skipOffstage: true`).
-    private static List<Element> OnstageElements(FrameworkDartTester tester)
-    {
-        var elements = new List<Element>();
-        void Visit(Element element)
-        {
-            elements.Add(element);
-            element.DebugVisitOnstageChildren(Visit);
-        }
-
-        tester.Root.DebugVisitOnstageChildren(Visit);
-        return elements;
-    }
-
     // `find.descendant(of: find.text(text), matching: find.byType(RichText))`, onstage only.
     private static List<RenderParagraph> FindParagraphs(FrameworkDartTester tester, string text)
     {
         var result = new List<RenderParagraph>();
-        foreach (Element element in OnstageElements(tester))
+        foreach (Element element in tester.OnstageElements())
         {
             if (element.Widget is not Text { Data: var data } || data != text)
             {
@@ -90,25 +76,12 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
 
     // `find.text(text)` with the default `skipOffstage: true`.
     private static int CountText(FrameworkDartTester tester, string text)
-        => OnstageElements(tester).Count(element => element.Widget is Text { Data: var data } && data == text);
+        => tester.OnstageElements().Count(element => element.Widget is Text { Data: var data } && data == text);
 
     private static Point GetBottomLeft(FrameworkDartTester tester, Element element)
     {
         Rect rect = tester.GetRect(element);
         return rect.BottomLeft;
-    }
-
-    // Dart's `tester.pumpAndSettle(duration)`.
-    private static void PumpAndSettle(FrameworkDartTester tester, TimeSpan duration)
-    {
-        int count = 0;
-        do
-        {
-            Assert.True(count <= 1000, "pumpAndSettle timed out");
-            tester.Pump(duration);
-            count += 1;
-        }
-        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
     }
 
     // keyboard_utils.dart: `sendKeyCombination`.
@@ -451,7 +424,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.True(controller.Offset > previousOffset);
 
         // Scroll to the end.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Equal(4200.0, controller.Offset);
         RenderParagraph paragraph99 = Paragraph(tester, "Item 99");
         RenderParagraph paragraph98 = Paragraph(tester, "Item 98");
@@ -504,7 +477,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         gesture.Up();
 
         // Shouldn't be stuck if gesture is up.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Null(tester.TakeException());
         gesture.RemovePointer();
     }
@@ -539,7 +512,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.True(controller.Offset < previousOffset);
 
         // Scroll to the beginning.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Equal(0.0, controller.Offset);
         RenderParagraph paragraph0 = Paragraph(tester, "Item 0");
         RenderParagraph paragraph1 = Paragraph(tester, "Item 1");
@@ -579,7 +552,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.True(controller.Offset > previousOffset);
 
         // Scroll to the end.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Equal(2080.0, controller.Offset);
         RenderParagraph paragraph9 = Paragraph(tester, "Item 9");
         RenderParagraph paragraph8 = Paragraph(tester, "Item 8");
@@ -622,7 +595,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.True(controller.Offset < previousOffset);
 
         // Scroll to the beginning.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Equal(0.0, controller.Offset);
         RenderParagraph paragraph0 = Paragraph(tester, "Item 0");
         RenderParagraph paragraph1 = Paragraph(tester, "Item 1");
@@ -769,7 +742,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
         Assert.True(controller.Offset > previousOffset);
 
         // Scroll to the end.
-        PumpAndSettle(tester, OneSecond);
+        tester.PumpAndSettle(OneSecond);
         Assert.Equal(4200.0, controller.Offset);
         RenderParagraph paragraph99 = Paragraph(tester, "Item 99");
         RenderParagraph paragraph98 = Paragraph(tester, "Item 98");
@@ -1277,7 +1250,7 @@ public sealed class ScrollableSelectionDartParityTests : IDisposable
     private static List<RenderParagraph> AllParagraphs(FrameworkDartTester tester, string text)
     {
         var result = new List<RenderParagraph>();
-        foreach (Element element in OnstageElements(tester)
+        foreach (Element element in tester.OnstageElements()
                      .Where(element => element.Widget is Text { Data: var data } && data == text))
         {
             void Visit(Element child)

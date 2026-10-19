@@ -366,7 +366,7 @@ public sealed class ScrollableMiscDartParityTests
 
             // Go into overscroll.
             double lastScrollOffset;
-            tester.Fling(FindText(tester, "Hello 0").Single(), new Vector(0.0, 1000.0), 1000.0);
+            tester.Fling(tester.OnstageElementsWithText("Hello 0").Single(), new Vector(0.0, 1000.0), 1000.0);
             tester.Pump(TimeSpan.FromMilliseconds(100));
             lastScrollOffset = controller.Offset;
             Assert.True(lastScrollOffset < 0.0, $"{lastScrollOffset}");
@@ -820,35 +820,35 @@ public sealed class ScrollableMiscDartParityTests
             .Geometry!.PaintExtent;
 
         Assert.Equal(150, HeaderPaintExtent());
-        Assert.Single(FindText(tester, "Tile 0"));
-        Assert.Empty(FindText(tester, "Tile 10"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
 
         tester.Drag(tester.ElementOfType<NestedScrollView>(), new Vector(0, -500));
         tester.Pump();
 
         Assert.Equal(56, HeaderPaintExtent());
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
 
         tester.RestartAndRestore();
 
         Assert.Equal(56, HeaderPaintExtent());
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
 
         TestRestorationData data = tester.GetRestorationData();
         tester.Drag(tester.ElementOfType<NestedScrollView>(), new Vector(0, 600));
         tester.Pump();
 
         Assert.Equal(150, HeaderPaintExtent());
-        Assert.Single(FindText(tester, "Tile 0"));
-        Assert.Empty(FindText(tester, "Tile 10"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
 
         tester.RestoreFrom(data);
 
         Assert.Equal(56, HeaderPaintExtent());
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
     }
 
     // Flutter: 'scrollable_restoration_test.dart: RestorationData is flushed even if no frame is scheduled'
@@ -862,11 +862,11 @@ public sealed class ScrollableMiscDartParityTests
                 cacheExtent: 0,
                 children: FiftyTiles())));
 
-        Assert.Single(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 1"));
-        Assert.Empty(FindText(tester, "Tile 10"));
-        Assert.Empty(FindText(tester, "Tile 11"));
-        Assert.Empty(FindText(tester, "Tile 12"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 1"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 11"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 12"));
 
         TestRestorationData initialData = tester.GetRestorationData();
         TestGesture gesture = tester.StartGesture(
@@ -875,11 +875,11 @@ public sealed class ScrollableMiscDartParityTests
         gesture.MoveBy(new Vector(0, -525));
         tester.Pump();
 
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Empty(FindText(tester, "Tile 1"));
-        Assert.Single(FindText(tester, "Tile 10"));
-        Assert.Single(FindText(tester, "Tile 11"));
-        Assert.Single(FindText(tester, "Tile 12"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 1"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 11"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 12"));
 
         // Restoration data hasn't changed.
         Assert.Same(initialData, tester.GetRestorationData());
@@ -896,38 +896,38 @@ public sealed class ScrollableMiscDartParityTests
             .ToList();
 
     private static Element TextElement(FrameworkDartTester tester, string text) =>
-        FindText(tester, text).Single();
+        tester.OnstageElementsWithText(text).Single();
 
     // scrollable_restoration_test.dart: pageViewScrollAndRestore.
     private static void PageViewScrollAndRestore(FrameworkDartTester tester)
     {
-        Assert.Single(FindText(tester, "Tile 0"));
-        Assert.Empty(FindText(tester, "Tile 10"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
 
         tester.State<ScrollableState>().Position.JumpTo(50.0 * 10);
         tester.PumpAndSettle();
 
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
 
         tester.RestartAndRestore();
 
         Assert.Equal(50.0 * 10, tester.State<ScrollableState>().Position.Pixels);
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
 
         TestRestorationData data = tester.GetRestorationData();
         tester.State<ScrollableState>().Position.JumpTo(0);
         tester.Pump();
 
-        Assert.Single(FindText(tester, "Tile 0"));
-        Assert.Empty(FindText(tester, "Tile 10"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 10"));
 
         tester.RestoreFrom(data);
 
         Assert.Equal(50.0 * 10, tester.State<ScrollableState>().Position.Pixels);
-        Assert.Empty(FindText(tester, "Tile 0"));
-        Assert.Single(FindText(tester, "Tile 10"));
+        Assert.Empty(tester.OnstageElementsWithText("Tile 0"));
+        Assert.Single(tester.OnstageElementsWithText("Tile 10"));
     }
 
     // scrollable_restoration_test.dart: restoreScrollAndVerify.
@@ -944,11 +944,11 @@ public sealed class ScrollableMiscDartParityTests
 
         void ExpectTiles(bool top)
         {
-            Assert.Equal(top ? 1 : 0, FindText(tester, "Tile 0").Count);
-            Assert.Equal(top ? 1 : 0, FindText(tester, "Tile 1").Count);
-            Assert.Equal(top ? 0 : 1, FindText(tester, "Tile 10").Count);
-            Assert.Equal(top ? 0 : 1, FindText(tester, "Tile 11").Count);
-            Assert.Equal(top ? 0 : 1, FindText(tester, "Tile 12").Count);
+            Assert.Equal(top ? 1 : 0, tester.OnstageElementsWithText("Tile 0").Count);
+            Assert.Equal(top ? 1 : 0, tester.OnstageElementsWithText("Tile 1").Count);
+            Assert.Equal(top ? 0 : 1, tester.OnstageElementsWithText("Tile 10").Count);
+            Assert.Equal(top ? 0 : 1, tester.OnstageElementsWithText("Tile 11").Count);
+            Assert.Equal(top ? 0 : 1, tester.OnstageElementsWithText("Tile 12").Count);
         }
 
         ExpectTiles(top: true);
@@ -1288,25 +1288,25 @@ public sealed class ScrollableMiscDartParityTests
                     new SizedBox(height: 600.0, child: new Text("The cape as red as blood")),
                     new SizedBox(height: 600.0, child: new Text("The hair as yellow as corn")),
                 ])));
-        Assert.Single(FindText(tester, "The cow as white as milk"));
-        Assert.Empty(FindText(tester, "The cape as red as blood"));
-        Assert.Empty(FindText(tester, "The hair as yellow as corn"));
+        Assert.Single(tester.OnstageElementsWithText("The cow as white as milk"));
+        Assert.Empty(tester.OnstageElementsWithText("The cape as red as blood"));
+        Assert.Empty(tester.OnstageElementsWithText("The hair as yellow as corn"));
         Actions.Invoke(
             tester.ElementOfType<SliverList>(),
             new ScrollIntent(direction: AxisDirection.Down, type: ScrollIncrementType.Page));
         tester.Pump(); // start scroll
         tester.Pump(TimeSpan.FromMilliseconds(1000)); // end scroll
-        Assert.Single(FindText(tester, "The cow as white as milk"));
-        Assert.Single(FindText(tester, "The cape as red as blood"));
-        Assert.Empty(FindText(tester, "The hair as yellow as corn"));
+        Assert.Single(tester.OnstageElementsWithText("The cow as white as milk"));
+        Assert.Single(tester.OnstageElementsWithText("The cape as red as blood"));
+        Assert.Empty(tester.OnstageElementsWithText("The hair as yellow as corn"));
         Actions.Invoke(
             tester.ElementOfType<SliverList>(),
             new ScrollIntent(direction: AxisDirection.Down, type: ScrollIncrementType.Page));
         tester.Pump(); // start scroll
         tester.Pump(TimeSpan.FromMilliseconds(1000)); // end scroll
-        Assert.Empty(FindText(tester, "The cow as white as milk"));
-        Assert.Single(FindText(tester, "The cape as red as blood"));
-        Assert.Single(FindText(tester, "The hair as yellow as corn"));
+        Assert.Empty(tester.OnstageElementsWithText("The cow as white as milk"));
+        Assert.Single(tester.OnstageElementsWithText("The cape as red as blood"));
+        Assert.Single(tester.OnstageElementsWithText("The hair as yellow as corn"));
     }
 
     // Regression test for https://github.com/flutter/flutter/issues/158063.
@@ -1408,28 +1408,6 @@ public sealed class ScrollableMiscDartParityTests
     }
 
     // ---------------------------------------------------------------- shared helpers
-
-    /// <summary>
-    /// Dart's <c>find.text(text)</c> with its default <c>skipOffstage: true</c>: the walk only
-    /// descends through <see cref="Element.DebugVisitOnstageChildren"/>, so children a sliver keeps
-    /// alive in its cache extent are not found.
-    /// </summary>
-    private static List<Element> FindText(FrameworkDartTester tester, string text)
-    {
-        var result = new List<Element>();
-        void Visit(Element element)
-        {
-            if (element.Widget is Text { Data: var data } && data == text)
-            {
-                result.Add(element);
-            }
-
-            element.DebugVisitOnstageChildren(Visit);
-        }
-
-        tester.Root.DebugVisitOnstageChildren(Visit);
-        return result;
-    }
 
     private static void AssertMoreOrLessEquals(double expected, double actual, double epsilon = 1e-10)
     {
@@ -1585,81 +1563,6 @@ public sealed class ScrollableMiscDartParityTests
             SizedBox.Expand();
 
         public override bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => false;
-    }
-
-    /// <summary>
-    /// flutter_test's <c>sendKeyEvent</c>/<c>sendKeyDownEvent</c>/<c>sendKeyUpEvent</c> under a
-    /// <c>KeySimulatorTransitModeVariant</c>: <see cref="RawKeyData"/> drives the legacy raw message
-    /// through <see cref="KeyEventManager"/>, <see cref="KeyDataThenRawKeyData"/> the regularized
-    /// <see cref="KeyEvent"/> stream through the focus manager.
-    /// </summary>
-    private sealed class KeySender(string transitMode)
-    {
-        public const string RawKeyData = "rawKeyData";
-        public const string KeyDataThenRawKeyData = "keyDataThenRawKeyData";
-
-        private readonly HashSet<LogicalKeyboardKey> _modifiersDown = [];
-
-        public void SendKeyEvent(LogicalKeyboardKey key)
-        {
-            SendKeyDownEvent(key);
-            SendKeyUpEvent(key);
-        }
-
-        public void SendKeyDownEvent(LogicalKeyboardKey key)
-        {
-            bool isModifier = IsModifier(key);
-            if (isModifier)
-            {
-                _modifiersDown.Add(key);
-            }
-
-            if (transitMode == RawKeyData)
-            {
-                KeySim.DispatchRaw(key, down: true, control: Control, meta: Meta);
-            }
-            else if (isModifier)
-            {
-                FocusManager.Instance.HandleKeyEvent(new KeyDownEvent(KeySim.PhysicalFor(key), key));
-            }
-            else
-            {
-                FocusManager.Instance.HandleKeyEvent(KeySim.Down(key, control: Control, meta: Meta));
-            }
-
-            EventLoop.FlushMicrotasks();
-        }
-
-        public void SendKeyUpEvent(LogicalKeyboardKey key)
-        {
-            bool isModifier = IsModifier(key);
-            if (isModifier)
-            {
-                _modifiersDown.Remove(key);
-            }
-
-            if (transitMode == RawKeyData)
-            {
-                KeySim.DispatchRaw(key, down: false, control: Control, meta: Meta);
-            }
-            else if (isModifier)
-            {
-                FocusManager.Instance.HandleKeyEvent(new KeyUpEvent(KeySim.PhysicalFor(key), key));
-            }
-            else
-            {
-                FocusManager.Instance.HandleKeyEvent(KeySim.Up(key, control: Control, meta: Meta));
-            }
-
-            EventLoop.FlushMicrotasks();
-        }
-
-        private bool Control => _modifiersDown.Contains(LogicalKeyboardKey.ControlLeft);
-
-        private bool Meta => _modifiersDown.Contains(LogicalKeyboardKey.MetaLeft);
-
-        private static bool IsModifier(LogicalKeyboardKey key) =>
-            key == LogicalKeyboardKey.ControlLeft || key == LogicalKeyboardKey.MetaLeft;
     }
 
     // scrollable_helpers_test.dart: _NoNotificationContextScrollable.

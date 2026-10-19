@@ -24,40 +24,15 @@ internal sealed partial class FrameworkDartTester
     private readonly List<CapturedAccessibilityAnnouncement> _channelAnnouncements = [];
 
     /// <summary>Dart's <c>tester.semantics</c>.</summary>
-    public SemanticsController Semantics => _semantics ??= new SemanticsController(this);
+    public SemanticsController Semantics => SemanticsBinding.Instance.SemanticsEnabled
+        ? _semantics ??= new SemanticsController(this)
+        : throw new InvalidOperationException("Semantics are not enabled.");
 
     /// <summary>
     /// Dart's <c>tester.ensureSemantics()</c>: keeps the view producing a semantics tree until the
     /// handle is disposed. The tree is built by the next frame, so pump after enabling.
     /// </summary>
-    public SemanticsHandle EnsureSemantics()
-    {
-        PipelineOwner owner = RenderView.Owner!;
-        bool createsOwner = owner.SemanticsOwner is null;
-        SemanticsHandle handle = owner.EnsureSemantics();
-        if (createsOwner)
-        {
-            // flutter_test's view clears every cached configuration before its initial semantics.
-            RenderView.ClearSemantics();
-            RenderView.ScheduleInitialSemantics();
-        }
-
-        return handle;
-    }
-
-    /// <summary>
-    /// The semantics half of Dart's <c>drawFrame</c> for this view: the root pipeline owner only flushes
-    /// its children while it has semantics itself, and <see cref="EnsureSemantics"/> enables them on the
-    /// view's owner alone.
-    /// </summary>
-    private void FlushOwnSemantics()
-    {
-        if (RendererBinding.Instance.SendFramesToEngine
-            && RendererBinding.Instance.RenderViews.FirstOrDefault(IsOwnRenderView)?.Owner is { } owner)
-        {
-            owner.FlushSemantics();
-        }
-    }
+    public SemanticsHandle EnsureSemantics() => SemanticsBinding.Instance.EnsureSemantics();
 
     /// <summary>
     /// Dart's <c>tester.getSemantics(finder)</c>: the semantics node of the single element's render
@@ -185,8 +160,7 @@ internal sealed class SemanticsController(FrameworkDartTester tester)
 
 /// <summary>
 /// semantics_tester.dart's <c>SemanticsTester</c>: holds a semantics handle for its lifetime and
-/// answers <c>includesNodeWith</c>/<c>nodesWith</c>. (<c>hasSemantics</c> over a <c>TestSemantics</c>
-/// tree is not ported here.)
+/// answers <c>includesNodeWith</c>/<c>nodesWith</c> and <c>hasSemantics</c> tree assertions.
 /// </summary>
 internal sealed class SemanticsTester : IDisposable
 {
@@ -202,6 +176,24 @@ internal sealed class SemanticsTester : IDisposable
     /// <summary>The root of the semantics tree.</summary>
     public SemanticsNode RootNode => _tester.SemanticsRootNode
                                      ?? throw new InvalidOperationException("Semantics are not built yet.");
+
+    public SemanticsOwner Owner => _tester.RenderView.Owner!.SemanticsOwner!;
+
+    public string Dump => Owner.DebugDumpTree();
+
+    public void ExpectHasSemantics(
+        TestSemantics expected,
+        bool ignoreRect = false,
+        bool ignoreTransform = false,
+        bool ignoreId = false,
+        DebugSemanticsDumpOrder childOrder = DebugSemanticsDumpOrder.TraversalOrder)
+    {
+        string? failure = expected.Match(RootNode, "root", ignoreRect, ignoreTransform, ignoreId, childOrder);
+        if (failure is not null)
+        {
+            throw new XunitException($"{failure}\n{Dump}");
+        }
+    }
 
     /// <summary>
     /// <c>nodesWith(...)</c>: every node (depth-first) whose given properties all match; flags and
@@ -219,7 +211,13 @@ internal sealed class SemanticsTester : IDisposable
         double? scrollExtentMax = null,
         double? scrollExtentMin = null,
         int? currentValueLength = null,
-        int? maxValueLength = null)
+        int? maxValueLength = null,
+        SemanticsNode? ancestor = null,
+        string? increasedValue = null,
+        string? decreasedValue = null,
+        string? minValue = null,
+        string? maxValue = null,
+        SemanticsInputType? inputType = null)
     {
         var result = new List<SemanticsNode>();
         void Visit(SemanticsNode node)
@@ -232,11 +230,16 @@ internal sealed class SemanticsTester : IDisposable
                 && (actions is null || data.Actions == actions)
                 && (flags is null || data.Flags == flags)
                 && (tags is null || (data.Tags is { } actual && actual.SetEquals(tags)))
-                && (scrollPosition is null || data.ScrollPosition == scrollPosition)
-                && (scrollExtentMax is null || data.ScrollExtentMax == scrollExtentMax)
-                && (scrollExtentMin is null || data.ScrollExtentMin == scrollExtentMin)
+                && (scrollPosition is null || NearEqual(data.ScrollPosition, scrollPosition.Value))
+                && (scrollExtentMax is null || NearEqual(data.ScrollExtentMax, scrollExtentMax.Value))
+                && (scrollExtentMin is null || NearEqual(data.ScrollExtentMin, scrollExtentMin.Value))
                 && (currentValueLength is null || data.CurrentValueLength == currentValueLength)
-                && (maxValueLength is null || data.MaxValueLength == maxValueLength))
+                && (maxValueLength is null || data.MaxValueLength == maxValueLength)
+                && (increasedValue is null || data.IncreasedValue == increasedValue)
+                && (decreasedValue is null || data.DecreasedValue == decreasedValue)
+                && (minValue is null || data.MinValue == minValue)
+                && (maxValue is null || data.MaxValue == maxValue)
+                && (inputType is null || data.InputType == inputType))
             {
                 result.Add(node);
             }
@@ -247,7 +250,7 @@ internal sealed class SemanticsTester : IDisposable
             }
         }
 
-        if (_tester.SemanticsRootNode is { } root)
+        if ((ancestor ?? _tester.SemanticsRootNode) is { } root)
         {
             Visit(root);
         }
@@ -263,8 +266,30 @@ internal sealed class SemanticsTester : IDisposable
         TextDirection? textDirection = null,
         SemanticsActions? actions = null,
         SemanticsFlags? flags = null,
-        IReadOnlySet<SemanticsTag>? tags = null) =>
-        NodesWith(label, value, hint, textDirection, actions, flags, tags).Count > 0;
+        IReadOnlySet<SemanticsTag>? tags = null,
+        double? scrollPosition = null,
+        double? scrollExtentMax = null,
+        double? scrollExtentMin = null) =>
+        NodesWith(label, value, hint, textDirection, actions, flags, tags,
+            scrollPosition, scrollExtentMax, scrollExtentMin).Count > 0;
+
+    public void ExpectIncludesNodeWith(
+        string? label = null,
+        SemanticsActions? actions = null,
+        SemanticsFlags? flags = null,
+        double? scrollPosition = null,
+        double? scrollExtentMax = null,
+        double? scrollExtentMin = null)
+    {
+        if (!IncludesNodeWith(label: label, actions: actions, flags: flags,
+                scrollPosition: scrollPosition, scrollExtentMax: scrollExtentMax, scrollExtentMin: scrollExtentMin))
+        {
+            throw new XunitException($"No matching semantics node.\n{Dump}");
+        }
+    }
+
+    private static bool NearEqual(double? actual, double expected) =>
+        actual is { } value && ((value > expected - 0.1 && value < expected + 0.1) || value == expected);
 
     public void Dispose()
     {

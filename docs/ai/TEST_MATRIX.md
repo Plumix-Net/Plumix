@@ -12,6 +12,7 @@ Document rules:
 
 | Area | Primary tests | What is covered | Typical gap to watch |
 | --- | --- | --- | --- |
+| Shared Flutter test binding | `src/Plumix.Tests/FrameworkDartTesterFrameTests.cs`, `FrameworkDartTesterHarnessTests.cs` | Scheduled-frame pumping, all seven engine phases, microtask/timer ordering, default semantics and text input, reusable view lifecycle, view-preserving restoration, and shared finders/semantics/controls exercised by the scroll and slider suites. | Older private harnesses still use `BuildOwner.FlushBuild`; see `BACKLOG.md`. |
 | Material debug ancestor checks (`debug.dart`) | `src/Plumix.Tests/MaterialDebugDartParityTests.cs`, `MaterialDartParityTests.cs` | All four helpers' missing-ancestor diagnostics, order and successful lookups; Material hidden by a `LookupBoundary`. | The core widgets debug helpers remain open in `BACKLOG.md`. |
 | Widget feedback (`widgets/feedback.dart`) | `src/Plumix.Tests/FeedbackTests.cs` | Tap and long-press semantics events, accessibility-channel payloads, platform sound/haptic branches, null wrappers and feedback-before-callback order. | Native sound and haptic output remains host-specific. |
 | Painting basic types (`painting/basic_types.dart`) | `src/Plumix.Tests/BasicTypesTests.cs` | Enum order and all axis, axis-direction and text-direction conversions. | No widget or paint behavior lives in this source file. |

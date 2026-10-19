@@ -1,8 +1,6 @@
 // Dart parity source: material_ui/lib/src/slider.dart
 // Mirrors material-ui-src/test/slider_test.dart (lines 2374-4023)
 
-using System.Reflection;
-using System.Text;
 using Avalonia;
 using Plumix.Cupertino;
 using Plumix.Foundation;
@@ -274,7 +272,6 @@ public sealed class SliderDartParityTestsB : IDisposable
             tester.PumpWidget(new MaterialApp(
                 home: new MaterialWidget(
                     child: new Slider(value: 0.5, onChanged: _ => { }, focusNode: focusNode))));
-            semantics.Flush();
 
             semantics.ExpectHasSemantics(new TestSemantics(
                 id: 0,
@@ -317,7 +314,7 @@ public sealed class SliderDartParityTestsB : IDisposable
                                         ]),
                                 ]),
                         ]),
-                ]));
+                ]), ignoreRect: true, ignoreTransform: true);
 
             Assert.False(focusNode.HasFocus);
             semantics.Owner.PerformAction(5, SemanticsActions.DidGainAccessibilityFocus);
@@ -942,7 +939,7 @@ public sealed class SliderDartParityTestsB : IDisposable
         Assert.False(renderObject.DebugNeedsLayout);
 
         tester.PumpWidget(BuildFrame(ThemeMode.Dark));
-        PumpBuildPhase(tester, TimeSpan.FromMilliseconds(100)); // to let the theme animate
+        tester.Pump(TimeSpan.FromMilliseconds(100), EnginePhase.Build); // to let the theme animate
 
         Assert.True(renderObject.DebugNeedsLayout);
 
@@ -1236,37 +1233,6 @@ public sealed class SliderDartParityTestsB : IDisposable
     private static bool NearEqual(double a, double b, double epsilon) =>
         (a > b - epsilon && a < b + epsilon) || a == b;
 
-    private static readonly FieldInfo TesterClock =
-        typeof(FrameworkDartTester).GetField("_clock", BindingFlags.Instance | BindingFlags.NonPublic)!;
-
-    /// <summary>
-    /// Dart's <c>tester.pump(duration, EnginePhase.build)</c>: the frame runs the transient callbacks,
-    /// then only <c>buildScope</c> and <c>finalizeTree</c> (TestWidgetsFlutterBinding.drawFrame).
-    /// </summary>
-    private static void PumpBuildPhase(FrameworkDartTester tester, TimeSpan duration)
-    {
-        var clock = (TimeSpan)TesterClock.GetValue(tester)!;
-        clock += duration;
-        TesterClock.SetValue(tester, clock);
-        RendererBinding binding = RendererBinding.Instance;
-        binding.EnsurePersistentFrameCallback();
-        binding.DrawFrameOverrideForTests = () =>
-        {
-            tester.Owner.BuildScope(tester.Root);
-            tester.Owner.FinalizeTree();
-        };
-        try
-        {
-            SchedulerBinding.Instance.HandleBeginFrame(clock);
-            EventLoop.FlushMicrotasks();
-            SchedulerBinding.Instance.HandleDrawFrame();
-        }
-        finally
-        {
-            binding.DrawFrameOverrideForTests = null;
-        }
-    }
-
     // ---------------------------------------------------------------------------------------------
     // File-level test classes from slider_test.dart
     // ---------------------------------------------------------------------------------------------
@@ -1363,169 +1329,4 @@ public sealed class SliderDartParityTestsB : IDisposable
     // semantics_tester.dart
     // ---------------------------------------------------------------------------------------------
 
-    /// <summary>semantics_tester.dart's <c>SemanticsTester</c>: keeps semantics on for the view.</summary>
-    private sealed class SemanticsTester : IDisposable
-    {
-        private readonly FrameworkDartTester _tester;
-        private SemanticsHandle? _handle;
-
-        public SemanticsTester(FrameworkDartTester tester)
-        {
-            _tester = tester;
-            PipelineOwner owner = tester.RenderView.Owner!;
-            bool createsOwner = owner.SemanticsOwner is null;
-            _handle = owner.EnsureSemantics();
-            if (createsOwner)
-            {
-                tester.RenderView.ClearSemantics();
-                tester.RenderView.ScheduleInitialSemantics();
-            }
-        }
-
-        public SemanticsOwner Owner => _tester.RenderView.Owner!.SemanticsOwner!;
-
-        /// <summary>
-        /// flutter_test's frame runs <c>flushSemantics</c> after compositing; the C# tester's frame
-        /// stops at composite.
-        /// </summary>
-        public void Flush() => _tester.RenderView.Owner!.FlushSemantics();
-
-        /// <summary>
-        /// Dart's <c>expect(semantics, hasSemantics(expected, ignoreRect: true, ignoreTransform: true))</c>
-        /// in traversal child order (the hasSemantics default).
-        /// </summary>
-        public void ExpectHasSemantics(TestSemantics expected)
-        {
-            string? failure = expected.Match(Owner.RootNode!, "root");
-            if (failure != null)
-            {
-                throw new XunitException($"{failure}\n{Owner.DebugDumpTree()}");
-            }
-        }
-
-        public void Dispose()
-        {
-            _handle?.Dispose();
-            _handle = null;
-        }
-    }
-
-    /// <summary>semantics_tester.dart's <c>TestSemantics</c> (rects and transforms ignored).</summary>
-    private sealed class TestSemantics(
-        int? id = null,
-        SemanticsFlags flags = SemanticsFlags.None,
-        SemanticsActions actions = SemanticsActions.None,
-        string label = "",
-        string value = "",
-        string increasedValue = "",
-        string decreasedValue = "",
-        string hint = "",
-        TextDirection? textDirection = null,
-        IReadOnlyList<TestSemantics>? children = null)
-    {
-        private readonly IReadOnlyList<TestSemantics> _children = children ?? [];
-
-        public string? Match(SemanticsNode node, string path)
-        {
-            SemanticsData data = node.GetSemanticsData();
-            var errors = new StringBuilder();
-            if (id is { } expectedId && expectedId != node.Id)
-            {
-                errors.Append($" expected id {expectedId} but found id {node.Id};");
-            }
-
-            if (data.Flags != flags)
-            {
-                errors.Append($" flags: expected {flags} but found {data.Flags};");
-            }
-
-            if (data.Actions != actions)
-            {
-                errors.Append($" actions: expected {actions} but found {data.Actions};");
-            }
-
-            if (data.AttributedLabel.String != label)
-            {
-                errors.Append($" label: expected \"{label}\" but found \"{data.AttributedLabel.String}\";");
-            }
-
-            if (data.AttributedValue.String != value)
-            {
-                errors.Append($" value: expected \"{value}\" but found \"{data.AttributedValue.String}\";");
-            }
-
-            if (data.AttributedIncreasedValue.String != increasedValue)
-            {
-                errors.Append(
-                    $" increasedValue: expected \"{increasedValue}\" but found "
-                    + $"\"{data.AttributedIncreasedValue.String}\";");
-            }
-
-            if (data.AttributedDecreasedValue.String != decreasedValue)
-            {
-                errors.Append(
-                    $" decreasedValue: expected \"{decreasedValue}\" but found "
-                    + $"\"{data.AttributedDecreasedValue.String}\";");
-            }
-
-            if (data.AttributedHint.String != hint || data.Tooltip != string.Empty)
-            {
-                errors.Append(" unexpected hint/tooltip;");
-            }
-
-            if (textDirection != null && textDirection != data.TextDirection)
-            {
-                errors.Append($" textDirection: expected {textDirection} but found {data.TextDirection};");
-            }
-
-            if ((data.AttributedLabel.String != string.Empty
-                 || data.AttributedValue.String != string.Empty
-                 || data.AttributedHint.String != string.Empty
-                 || data.AttributedIncreasedValue.String != string.Empty
-                 || data.AttributedDecreasedValue.String != string.Empty)
-                && data.TextDirection == null)
-            {
-                errors.Append(" a node with a label, value, or hint must have a textDirection;");
-            }
-
-            if (data.TextSelection != null)
-            {
-                errors.Append($" expected no text selection but found {data.TextSelection};");
-            }
-
-            if (data.Role != SemanticsRole.None)
-            {
-                errors.Append($" role: expected None but found {data.Role};");
-            }
-
-            if (data.MaxValueLength != null || data.CurrentValueLength != null)
-            {
-                errors.Append(" expected no maxValueLength/currentValueLength;");
-            }
-
-            IReadOnlyList<SemanticsNode> ordered =
-                node.DebugListChildrenInOrder(DebugSemanticsDumpOrder.TraversalOrder);
-            int childrenCount = node.MergeAllDescendantsIntoThisNode ? 0 : ordered.Count;
-            if (_children.Count != childrenCount)
-            {
-                errors.Append($" expected {_children.Count} children but found {childrenCount};");
-            }
-
-            if (errors.Length > 0)
-            {
-                return $"Node #{node.Id} at {path}:{errors}";
-            }
-
-            for (int i = 0; i < _children.Count; i += 1)
-            {
-                string? childFailure = _children[i].Match(ordered[i], $"{path}/{i}");
-                if (childFailure != null)
-                {
-                    return childFailure;
-                }
-            }
-
-            return null;
-        }
-    }
 }

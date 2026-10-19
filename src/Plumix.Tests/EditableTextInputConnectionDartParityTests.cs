@@ -69,8 +69,8 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void EditableTextSendsViewIdToConfig()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpFocused(Field());
+        TestTextInput textInput = tester.TestTextInput;
 
         EditableText.EditableTextState state = tester.State<EditableText.EditableTextState>();
         Assert.Equal(tester.View.ViewId, state.TextInputConfiguration.ViewId);
@@ -83,12 +83,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     {
         string? receivedAction = null;
         IDictionary? receivedData = null;
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpFocused(Field(onAppPrivateCommand: (action, data) =>
         {
             receivedAction = action;
             receivedData = data;
         }));
+        TestTextInput textInput = tester.TestTextInput;
         _controller.Text = "test";
 
         TestTextInput.Send(
@@ -110,8 +110,8 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void OpeningTheConnectionSendsTheStyleBeforeTheEditingStateAndShow()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpFocused(Field());
+        TestTextInput textInput = tester.TestTextInput;
 
         // Dart's `_openInputConnection`: setClient, then (after the size and transform) updateStyle,
         // setEditingState and show.
@@ -137,12 +137,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             WordSpacing: 2.0);
         TextStyle currentTextStyle = textStyle1;
         StateSetter? setState = null;
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpFocused(new StatefulBuilder((_, setter) =>
         {
             setState = setter;
             return Field(style: currentTextStyle);
         }));
+        TestTextInput textInput = tester.TestTextInput;
 
         textInput.Log.Clear();
         setState!(() => currentTextStyle = textStyle2);
@@ -269,9 +269,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void MaxLengthLimitsInput()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(
             new TextField(controller: _controller, focusNode: _focusNode, maxLength: 10));
+        TestTextInput textInput = tester.TestTextInput;
 
         textInput.EnterText("0123456789101112");
         Assert.Equal("0123456789", _controller.Text);
@@ -281,9 +281,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void MaxLengthLimitsInputWithSurrogatePairs()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(
             new TextField(controller: _controller, focusNode: _focusNode, maxLength: 10));
+        TestTextInput textInput = tester.TestTextInput;
 
         const string surrogatePair = "😆";
         textInput.EnterText($"{surrogatePair}0123456789101112");
@@ -294,9 +294,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void MaxLengthLimitsInputWithGraphemeClusters()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(
             new TextField(controller: _controller, focusNode: _focusNode, maxLength: 10));
+        TestTextInput textInput = tester.TestTextInput;
 
         const string graphemeCluster = "👨‍👩‍👦";
         textInput.EnterText($"{graphemeCluster}0123456789101112");
@@ -308,9 +308,9 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     public void MaxLengthLimitsInputInTheCenterOfAMaxedOutField()
     {
         const string testValue = "0123456789";
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(
             new TextField(controller: _controller, focusNode: _focusNode, maxLength: 10));
+        TestTextInput textInput = tester.TestTextInput;
 
         // Max out the character limit in the field.
         textInput.EnterText(testValue);
@@ -329,7 +329,6 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void MaxLengthStillWorksWithOtherFormatters()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(new TextField(
             controller: _controller,
             focusNode: _focusNode,
@@ -338,6 +337,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             [
                 FilteringTextInputFormatter.Deny(new System.Text.RegularExpressions.Regex("[a-z]"), "#"),
             ]));
+        TestTextInput textInput = tester.TestTextInput;
 
         textInput.EnterText("a一b二c三\nd四e五f六");
         // The default single line formatter replaces \n with empty string.
@@ -347,12 +347,12 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     [Fact]
     public void MaxLengthEnforcementNoneDoesNotLimitInput()
     {
-        using var textInput = new TestTextInput();
         using FrameworkDartTester tester = PumpTextField(new TextField(
             controller: _controller,
             focusNode: _focusNode,
             maxLength: 3,
             maxLengthEnforcement: MaxLengthEnforcement.None));
+        TestTextInput textInput = tester.TestTextInput;
 
         textInput.EnterText("12345");
         Assert.Equal("12345", _controller.Text);

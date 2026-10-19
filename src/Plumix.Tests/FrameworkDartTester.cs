@@ -13,10 +13,10 @@ using Xunit.Sdk;
 namespace Plumix.Tests;
 
 /// <summary>
-/// Drives a widget tree the way <c>flutter_test</c> does: every pump attaches the widget under a
-/// <see cref="View"/> and a <c>[root]</c> <see cref="RootWidget"/>, then runs a full frame (build,
-/// layout, paint, <see cref="BuildOwner.FinalizeTree"/>) from a persistent frame callback, so an
-/// exception thrown during the frame is reported instead of escaping the pump.
+/// Drives a widget tree the way <c>flutter_test</c> does: <see cref="PumpWidget"/> attaches it under
+/// the reusable <see cref="View"/> and a <c>[root]</c> <see cref="RootWidget"/>. Each scheduled frame
+/// runs through the requested <see cref="EnginePhase"/> and <see cref="BuildOwner.FinalizeTree"/>
+/// from a persistent frame callback, so frame exceptions are reported instead of escaping the pump.
 /// </summary>
 /// <remarks>
 /// Reported errors are kept the way <c>TestWidgetsFlutterBinding</c> keeps them: the first one is
@@ -38,8 +38,11 @@ internal sealed partial class FrameworkDartTester : IDisposable
     private RootElement _root;
     private bool _disposed;
     private readonly FlutterView _flutterView;
+    private readonly ReusableRenderView _renderView;
+    private readonly PipelineOwner _pipelineOwner;
+    private EnginePhase _phase = EnginePhase.SendSemanticsUpdate;
     private readonly FrameworkDartTester? _previousCurrent;
-    private Widget _lastWidget = new SizedBox();
+    private Widget _lastRootWidget = new SizedBox();
 
     /// <param name="fakeGestureTimers">
     /// Runs the gesture recognizers' timers (long press, double tap, ...) on the pump clock, the way
@@ -64,8 +67,8 @@ internal sealed partial class FrameworkDartTester : IDisposable
         bool fakeGestureTimers = false,
         double devicePixelRatio = 1.0,
         Size? logicalSize = null,
-        bool semanticsEnabled = false,
-        bool registerTestTextInput = false)
+        bool semanticsEnabled = true,
+        bool registerTestTextInput = true)
     {
         GestureBinding.Instance.ResetForTests();
         // flutter_test's postTest ends every test with ServicesBinding.resetInternalState: no lifecycle
@@ -77,6 +80,12 @@ internal sealed partial class FrameworkDartTester : IDisposable
             new Size(size.Width * devicePixelRatio, size.Height * devicePixelRatio),
             devicePixelRatio,
             Interlocked.Increment(ref _nextViewId));
+        _renderView = new ReusableRenderView(_flutterView);
+        _pipelineOwner = new PipelineOwner(
+            onSemanticsOwnerCreated: () => (_pipelineOwner!.RootNode as RenderView)?.ScheduleInitialSemantics(),
+            onSemanticsUpdate: _flutterView.UpdateSemantics,
+            onSemanticsOwnerDisposed: () => (_pipelineOwner!.RootNode as RenderView)?.ClearSemantics());
+        _owner.OnBuildScheduled = SchedulerBinding.Instance.EnsureVisualUpdate;
         View = new TestFlutterView(_flutterView);
         Binding = new FrameworkDartTestBinding(this);
         _previousCurrent = Current;
@@ -99,12 +108,14 @@ internal sealed partial class FrameworkDartTester : IDisposable
 
         // The Dart binding already has a root element when a test starts, so every pumpWidget goes
         // through the update path inside a frame. Bootstrap one here for the same reason.
-        _root = new RootWidget(child: Wrap(new SizedBox()), debugShortDescription: "[root]").Attach(_owner);
-        Pump();
         if (semanticsEnabled)
         {
             _semanticsHandle = EnsureSemantics();
         }
+
+        _root = new RootWidget(child: Wrap(new SizedBox()), debugShortDescription: "[root]").Attach(_owner);
+        SchedulerBinding.Instance.ScheduleFrame();
+        Pump();
     }
 
     /// <summary>
@@ -132,27 +143,37 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// Dart's <c>wrapWithView</c>: <see langword="false"/> attaches <paramref name="widget"/> as the root
     /// itself, for a tree that brings its own views.
     /// </param>
-    public void PumpWidget(Widget widget, TimeSpan? duration = null, bool wrapWithView = true)
+    public void PumpWidget(
+        Widget widget,
+        TimeSpan? duration = null,
+        bool wrapWithView = true,
+        EnginePhase phase = EnginePhase.SendSemanticsUpdate)
     {
-        _lastWidget = widget;
-        _root = new RootWidget(child: wrapWithView ? Wrap(widget) : widget, debugShortDescription: "[root]")
+        _lastRootWidget = wrapWithView ? Wrap(widget) : widget;
+        _root = new RootWidget(child: _lastRootWidget, debugShortDescription: "[root]")
             .Attach(_owner, _root);
-        Pump(duration);
+        SchedulerBinding.Instance.ScheduleFrame();
+        Pump(duration, phase);
     }
 
-    /// <summary>Dart's <c>WidgetTester.pump</c>: one frame, after advancing the clock.</summary>
-    public void Pump(TimeSpan? duration = null)
+    /// <summary>Dart's <c>WidgetTester.pump</c>: advances time and runs a frame only if one is scheduled.</summary>
+    public void Pump(TimeSpan? duration = null, EnginePhase phase = EnginePhase.SendSemanticsUpdate)
     {
         _clock += duration ?? TimeSpan.Zero;
         _timers?.Elapse(duration ?? TimeSpan.Zero);
+        _phase = phase;
         RendererBinding binding = RendererBinding.Instance;
         binding.EnsurePersistentFrameCallback();
         binding.DrawFrameOverrideForTests = _drawFrame;
         try
         {
-            SchedulerBinding.Instance.HandleBeginFrame(_clock);
-            EventLoop.FlushMicrotasks();
-            SchedulerBinding.Instance.HandleDrawFrame();
+            if (SchedulerBinding.Instance.HasScheduledFrame)
+            {
+                EventLoop.FlushMicrotasks();
+                SchedulerBinding.Instance.HandleBeginFrame(_clock);
+                EventLoop.FlushMicrotasks();
+                SchedulerBinding.Instance.HandleDrawFrame();
+            }
             // AutomatedTestWidgetsFlutterBinding.pump drains the fake-async microtasks after the frame.
             EventLoop.FlushMicrotasks();
         }
@@ -167,10 +188,19 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// <paramref name="duration"/> apart (100ms by default) until none is scheduled, failing once the
     /// clock passes <paramref name="timeout"/> (10 minutes of test time by default).
     /// </summary>
-    public int PumpAndSettle(TimeSpan? duration = null, TimeSpan? timeout = null)
+    public int PumpAndSettle(
+        TimeSpan? duration = null,
+        EnginePhase phase = EnginePhase.SendSemanticsUpdate,
+        TimeSpan? timeout = null)
     {
         TimeSpan step = duration ?? TimeSpan.FromMilliseconds(100);
-        TimeSpan endTime = _clock + (timeout ?? TimeSpan.FromMinutes(10));
+        TimeSpan limit = timeout ?? TimeSpan.FromMinutes(10);
+        if (step <= TimeSpan.Zero || limit <= TimeSpan.Zero)
+        {
+            throw new AssertionError("pumpAndSettle duration and timeout must be greater than zero.");
+        }
+
+        TimeSpan endTime = _clock + limit;
         int count = 0;
         do
         {
@@ -179,7 +209,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
                 throw new XunitException("pumpAndSettle timed out");
             }
 
-            Pump(step);
+            Pump(step, phase);
             count += 1;
         }
         while (SchedulerBinding.Instance.HasScheduledFrame);
@@ -271,7 +301,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     public int StartGesture(Point location)
     {
         int pointer = Interlocked.Increment(ref _nextPointer);
-        GestureBinding.Instance.HandlePointerEvent(RenderView, new PointerDownEvent(
+        SendEventToBinding(new PointerDownEvent(
             pointer: pointer,
             kind: PointerDeviceKind.Touch,
             position: location,
@@ -283,7 +313,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
     /// <summary>Dart's <c>TestGesture.up</c>.</summary>
     public void Up(int pointer, Point location)
     {
-        GestureBinding.Instance.HandlePointerEvent(RenderView, new PointerUpEvent(
+        SendEventToBinding(new PointerUpEvent(
             pointer: pointer,
             kind: PointerDeviceKind.Touch,
             position: location,
@@ -345,6 +375,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
             HardwareKeyboard.Instance.ClearState();
             GestureBinding.Instance.SamplingClock = new SamplingClock();
             SchedulerBinding.Instance.ResetInternalState();
+            _pipelineOwner.Dispose();
         }
 
         if (leftover is not null || unexpected.Count > 0)
@@ -359,7 +390,11 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
     }
 
-    private Widget Wrap(Widget widget) => new View(_flutterView, widget);
+    private Widget Wrap(Widget widget) => new View(
+        _flutterView,
+        widget,
+        deprecatedDoNotUseWillBeRemovedWithoutNoticePipelineOwner: _pipelineOwner,
+        deprecatedDoNotUseWillBeRemovedWithoutNoticeRenderView: _renderView);
 
     /// <summary>
     /// flutter_test's <c>_TestSamplingClock</c>: sampling and velocity-tracking stopwatches follow the
@@ -378,8 +413,30 @@ internal sealed partial class FrameworkDartTester : IDisposable
         // skips the rest of the frame and is reported by the scheduler's callback guard.
         _owner.BuildScope(_root);
         ApplySurfaceSize();
-        RendererBinding.Instance.DrawFrame();
-        FlushOwnSemantics();
+        RendererBinding binding = RendererBinding.Instance;
+        if (_phase >= EnginePhase.FlushSemantics)
+        {
+            binding.DrawFrame();
+        }
+        else if (_phase >= EnginePhase.Layout)
+        {
+            binding.RootPipelineOwner.FlushLayout();
+            if (_phase >= EnginePhase.CompositingBits)
+            {
+                binding.RootPipelineOwner.FlushCompositingBits();
+                if (_phase >= EnginePhase.Paint)
+                {
+                    binding.RootPipelineOwner.FlushPaint();
+                    if (_phase >= EnginePhase.Composite && binding.SendFramesToEngine)
+                    {
+                        foreach (RenderView view in binding.RenderViews.ToArray())
+                        {
+                            view.CompositeFrame();
+                        }
+                    }
+                }
+            }
+        }
         _owner.FinalizeTree();
     }
 
@@ -399,6 +456,18 @@ internal sealed partial class FrameworkDartTester : IDisposable
             _unexpected.Add(details);
         }
     }
+}
+
+/// <summary>flutter_test's EnginePhase: the last pipeline phase a pump executes.</summary>
+internal enum EnginePhase
+{
+    Build,
+    Layout,
+    CompositingBits,
+    Paint,
+    Composite,
+    FlushSemantics,
+    SendSemanticsUpdate,
 }
 
 /// <summary>flutter/packages/flutter/test/widgets/test_widgets.dart: <c>FlipWidget</c>.</summary>

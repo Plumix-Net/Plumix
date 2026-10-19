@@ -667,14 +667,14 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
             });
         var recording = new RecordingTextInputControl();
         UI.TextInput.SetInputControl(recording);
+        using FrameworkDartTester tester = Pump(
+            Field(toolbarOptions: ToolbarOptions.Empty),
+            TargetPlatform.IOS);
         using var textInput = new MockMethodCallHandler(
             SystemChannels.TextInput,
             call => call.Method == "TextInput.startLiveTextInput"
                 ? throw new PlatformException(code: "ERROR", message: "Channel failed")
                 : null);
-        using FrameworkDartTester tester = Pump(
-            Field(toolbarOptions: ToolbarOptions.Empty),
-            TargetPlatform.IOS);
         _focusNode.RequestFocus();
         tester.Pump();
         Select(tester, 2, 2);

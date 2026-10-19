@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Test binding frames, semantics, reusable views and shared scroll/slider helpers match flutter_test (binding.dart).
 - Breaking: Animated GIF/WebP/APNG playback, resize and stream lifecycle match Flutter (painting/image_stream.dart).
 
 - Breaking: Navigator async pops, route futures, pointer cancellation and transitions (navigator.dart; routes.dart).

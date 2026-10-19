@@ -33,7 +33,7 @@ public sealed class ScrollableDartParityTests
     public void HitTestBehaviorIsRespected()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         HitTestBehavior? GetBehavior<TWidget>() where TWidget : Widget
         {
             Element of = tester.ElementOfType<TWidget>();
@@ -80,7 +80,7 @@ public sealed class ScrollableDartParityTests
     public void HitTestBehaviorTranslucentLetsWidgetsUnderneathCatchTheHit()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         Key key = new UniqueKey();
         bool tapped = false;
         tester.PumpWidget(new Directionality(
@@ -107,7 +107,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, 200.0), touchSlopY: 0.0);
             Assert.Equal(-200.0, GetScrollOffset(tester));
@@ -124,7 +124,7 @@ public sealed class ScrollableDartParityTests
             Assert.Equal(heldPosition, GetScrollOffset(tester));
             gesture.Up();
             // Once the hold is let go, it should still snap back to origin.
-            Assert.Equal(3, PumpAndSettle(tester, TimeSpan.FromMinutes(1)));
+            Assert.Equal(3, tester.PumpAndSettle(TimeSpan.FromMinutes(1)));
             Assert.Equal(0.0, GetScrollOffset(tester));
         });
     }
@@ -138,7 +138,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
@@ -157,7 +157,7 @@ public sealed class ScrollableDartParityTests
     public void RepeatedFlingsDoNotBuildMomentumOnAndroid()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester);
         tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
         tester.Pump(); // trigger fling
@@ -179,7 +179,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
@@ -206,7 +206,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
@@ -229,7 +229,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
             tester.Pump(); // trigger fling
@@ -250,7 +250,7 @@ public sealed class ScrollableDartParityTests
     public void DragsCreepingUnaffectedOnAndroid()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester);
         TestGesture gesture = tester.StartGesture(
             tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -279,7 +279,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -318,7 +318,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -345,7 +345,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -375,7 +375,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -407,7 +407,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -445,7 +445,7 @@ public sealed class ScrollableDartParityTests
     public void ScrollPointerSignalsAreHandledOnFuchsia()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester);
         Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
         tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
@@ -466,7 +466,7 @@ public sealed class ScrollableDartParityTests
         // Pump a nested scrollable. The outer scrollable contains a sliver of a
         // 300-pixel-long scrollable followed by a 2000-pixel-long content.
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new CustomScrollView(
@@ -492,7 +492,7 @@ public sealed class ScrollableDartParityTests
     public void ScrollPointerSignalsAreIgnoredWhenScrollingIsDisabled()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester, scrollable: false);
         Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
         tester.SendPointerScroll(scrollEventLocation, new Vector(0.0, 20.0));
@@ -507,7 +507,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester, scrollable: false);
             Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
 
@@ -530,7 +530,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
             Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
@@ -563,7 +563,7 @@ public sealed class ScrollableDartParityTests
 
         using var controller = new ScrollController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         PumpTest(tester, controller: controller);
 
@@ -598,7 +598,7 @@ public sealed class ScrollableDartParityTests
     public void ScrollsInCorrectDirectionWhenScrollAxisIsReversed()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester, reverse: true);
 
         Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
@@ -615,7 +615,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
             Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
@@ -644,7 +644,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester, scrollDirection: Axis.Horizontal);
 
             Point scrollEventLocation = tester.GetCenter(tester.ElementOfType<Viewport>());
@@ -673,7 +673,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(
                 tester,
                 scrollDirection: Axis.Horizontal,
@@ -705,7 +705,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(
                 tester,
                 scrollDirection: Axis.Horizontal,
@@ -756,7 +756,7 @@ public sealed class ScrollableDartParityTests
     {
         // Regression test for https://github.com/flutter/flutter/issues/66816.
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpCanDragTestWidget(tester, canDrag: true);
         RenderIgnorePointer renderIgnorePointer = ScrollIgnorePointer(tester);
 
@@ -781,7 +781,7 @@ public sealed class ScrollableDartParityTests
     {
         // Regression test for https://github.com/flutter/flutter/issues/66816.
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpCanDragTestWidget(tester, canDrag: true);
         RenderIgnorePointer renderIgnorePointer = ScrollIgnorePointer(tester);
         Assert.False(renderIgnorePointer.Ignoring);
@@ -808,7 +808,7 @@ public sealed class ScrollableDartParityTests
     public void SetCanDragFalseBallisticDisablesUserInteractionUntilItStops()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpCanDragTestWidget(tester, canDrag: true);
         RenderIgnorePointer renderIgnorePointer = ScrollIgnorePointer(tester);
         Assert.False(renderIgnorePointer.Ignoring);
@@ -832,7 +832,7 @@ public sealed class ScrollableDartParityTests
         int expensiveWidgets = 0;
         using var controller = new ScrollController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
@@ -888,7 +888,7 @@ public sealed class ScrollableDartParityTests
         int cheapWidgets = 0;
         int expensiveWidgets = 0;
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             ListView.Builder(
@@ -905,8 +905,8 @@ public sealed class ScrollableDartParityTests
                 })));
 
         tester.PumpAndSettle();
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Box 0")));
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Box 52")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Box 0")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Box 52")));
 
         Assert.Equal(17, expensiveWidgets);
         Assert.Equal(0, cheapWidgets);
@@ -917,8 +917,8 @@ public sealed class ScrollableDartParityTests
         Scrollable.Of(FirstOfType<SizedBox>(tester)).Position.Activity.Delegate.GoBallistic(4000);
 
         tester.PumpAndSettle();
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Box 0")));
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Box 52")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Box 0")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Box 52")));
 
         Assert.Equal(40, expensiveWidgets);
         Assert.Equal(21, cheapWidgets);
@@ -931,7 +931,7 @@ public sealed class ScrollableDartParityTests
         int cheapWidgets = 0;
         int expensiveWidgets = 0;
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             ListView.Builder(
@@ -952,8 +952,8 @@ public sealed class ScrollableDartParityTests
         ScrollPosition position = Scrollable.Of(FirstOfType<SizedBox>(tester)).Position;
         var physics = (SuperPessimisticScrollPhysics)position.Physics;
 
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Box 0")));
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Cheap box 52")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Box 0")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 52")));
 
         Assert.Equal(17, physics.Count);
         Assert.Equal(17, expensiveWidgets);
@@ -966,8 +966,8 @@ public sealed class ScrollableDartParityTests
 
         tester.PumpAndSettle();
 
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Box 0")));
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Cheap box 52")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Box 0")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 52")));
 
         Assert.Equal(17, expensiveWidgets);
         Assert.Equal(44, cheapWidgets);
@@ -981,7 +981,7 @@ public sealed class ScrollableDartParityTests
         int cheapWidgets = 0;
         int expensiveWidgets = 0;
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             ListView.Builder(
@@ -1001,8 +1001,8 @@ public sealed class ScrollableDartParityTests
 
         ScrollPosition position = Scrollable.Of(FirstOfType<SizedBox>(tester)).Position;
 
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Cheap box 0")));
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Cheap box 52")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 0")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 52")));
 
         Assert.Equal(0, expensiveWidgets);
         Assert.Equal(17, cheapWidgets);
@@ -1014,8 +1014,8 @@ public sealed class ScrollableDartParityTests
 
         tester.PumpAndSettle();
 
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("Cheap box 0")));
-        Assert.Single(FindByKey(tester, new ValueKey<string>("Cheap box 52")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 0")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("Cheap box 52")));
 
         Assert.Equal(0, expensiveWidgets);
         Assert.Equal(61, cheapWidgets);
@@ -1027,7 +1027,7 @@ public sealed class ScrollableDartParityTests
     {
         using var controller = new PageController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
@@ -1059,36 +1059,36 @@ public sealed class ScrollableDartParityTests
         var targetMidRightPage1 = new ValueKey<string>("1_25_2");
         var targetMidLeftPage1 = new ValueKey<string>("1_25_0");
 
-        Assert.Single(FindByKey(tester, new ValueKey<string>("list_0")));
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("list_1")));
-        Assert.Single(FindByKey(tester, targetMidRightPage0));
-        Assert.Empty(FindByKey(tester, targetMidRightPage1));
-        Assert.Empty(FindByKey(tester, targetMidLeftPage1));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("list_0")));
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("list_1")));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidRightPage0));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidRightPage1));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidLeftPage1));
 
-        Scrollable.EnsureVisible(FindByKey(tester, targetMidRightPage0).Single());
+        Scrollable.EnsureVisible(tester.OnstageElementsWithKey(targetMidRightPage0).Single());
         tester.PumpAndSettle();
-        Assert.Single(FindByKey(tester, targetMidRightPage0));
-        Assert.Empty(FindByKey(tester, targetMidRightPage1));
-        Assert.Empty(FindByKey(tester, targetMidLeftPage1));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidRightPage0));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidRightPage1));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidLeftPage1));
 
         controller.JumpToPage(1);
         tester.PumpAndSettle();
 
-        Assert.Empty(FindByKey(tester, new ValueKey<string>("list_0")));
-        Assert.Single(FindByKey(tester, new ValueKey<string>("list_1")));
-        Scrollable.EnsureVisible(FindByKey(tester, targetMidRightPage1).Single());
+        Assert.Empty(tester.OnstageElementsWithKey(new ValueKey<string>("list_0")));
+        Assert.Single(tester.OnstageElementsWithKey(new ValueKey<string>("list_1")));
+        Scrollable.EnsureVisible(tester.OnstageElementsWithKey(targetMidRightPage1).Single());
         tester.PumpAndSettle();
 
-        Assert.Empty(FindByKey(tester, targetMidRightPage0));
-        Assert.Single(FindByKey(tester, targetMidRightPage1));
-        Assert.Single(FindByKey(tester, targetMidLeftPage1));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidRightPage0));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidRightPage1));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidLeftPage1));
 
-        Scrollable.EnsureVisible(FindByKey(tester, targetMidLeftPage1).Single());
+        Scrollable.EnsureVisible(tester.OnstageElementsWithKey(targetMidLeftPage1).Single());
         tester.PumpAndSettle();
 
-        Assert.Empty(FindByKey(tester, targetMidRightPage0));
-        Assert.Single(FindByKey(tester, targetMidRightPage1));
-        Assert.Single(FindByKey(tester, targetMidLeftPage1));
+        Assert.Empty(tester.OnstageElementsWithKey(targetMidRightPage0));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidRightPage1));
+        Assert.Single(tester.OnstageElementsWithKey(targetMidLeftPage1));
     }
 
     // Flutter: 'PointerScroll on nested NeverScrollable ListView goes to outer Scrollable.'
@@ -1099,7 +1099,7 @@ public sealed class ScrollableDartParityTests
         using var outerController = new ScrollController();
         using var innerController = new ScrollController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
@@ -1124,14 +1124,15 @@ public sealed class ScrollableDartParityTests
                     ]))));
         Assert.Equal(0.0, outerController.Position.Pixels);
         Assert.Equal(0.0, innerController.Position.Pixels);
-        Point outerScrollable = tester.GetCenter(FindByText(tester, "SingleChildScrollView 3").Single());
+        Point outerScrollable = tester.GetCenter(tester.OnstageElementsWithText("SingleChildScrollView 3").Single());
         // Hover over the outer scroll view and create a pointer scroll.
         tester.SendPointerScroll(outerScrollable, new Vector(0.0, 20.0));
         tester.Pump(TimeSpan.FromMilliseconds(250));
         Assert.Equal(20.0, outerController.Position.Pixels);
         Assert.Equal(0.0, innerController.Position.Pixels);
 
-        Point innerScrollable = tester.GetCenter(FindByText(tester, "Nested NeverScrollable ListView 20").Single());
+        Point innerScrollable = tester.GetCenter(
+            tester.OnstageElementsWithText("Nested NeverScrollable ListView 20").Single());
         // Hover over the inner scroll view and create a pointer scroll.
         // This inner scroll view is not scrollable, and so the outer should scroll.
         tester.SendPointerScroll(innerScrollable, new Vector(0.0, -20.0));
@@ -1147,7 +1148,7 @@ public sealed class ScrollableDartParityTests
     {
         using var controller = new ScrollController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         Widget Build(double height)
         {
@@ -1191,7 +1192,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             tester.PumpWidget(new Directionality(
                 TextDirection.Ltr,
                 new CustomScrollView(slivers: [new SliverToBoxAdapter(new SizedBox(height: 2000.0))])));
@@ -1226,7 +1227,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester, enableMouseDrag: false);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -1267,7 +1268,6 @@ public sealed class ScrollableDartParityTests
 
         using var tester = NewTester();
 
-        using DartSemantics dartSemantics = new(tester);
         tester.PumpWidget(BuildFrame(new HashSet<PointerDeviceKind> { PointerDeviceKind.Mouse }));
         tester.Drag(tester.ElementOfType<Scrollable>(), new Vector(0.0, -100.0), PointerDeviceKind.Mouse);
 
@@ -1296,7 +1296,7 @@ public sealed class ScrollableDartParityTests
         WithPlatform(platform, () =>
         {
             using var tester = NewTester();
-            using DartSemantics dartSemantics = new(tester);
+
             PumpTest(tester);
             TestGesture gesture = tester.StartGesture(
                 tester.GetCenter(tester.ElementOfType<Scrollable>()),
@@ -1325,7 +1325,7 @@ public sealed class ScrollableDartParityTests
     {
         // Regression test for https://github.com/flutter/flutter/issues/40419.
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         SemanticsHandle handle = tester.EnsureSemantics();
         var listView = new UniqueKey();
         Widget Build(bool enabled)
@@ -1383,7 +1383,7 @@ public sealed class ScrollableDartParityTests
         using var focusNode = new FocusNode();
         using var controller = new TextEditingController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         SemanticsHandle handle = tester.EnsureSemantics();
         var key = new UniqueKey();
@@ -1432,7 +1432,7 @@ public sealed class ScrollableDartParityTests
     public void ScrollInertiaCancelEvent()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         PumpTest(tester);
         tester.Fling(tester.ElementOfType<Scrollable>(), new Vector(0.0, -DragOffset), 1000.0);
         Assert.Equal(DragOffset, GetScrollOffset(tester));
@@ -1459,7 +1459,7 @@ public sealed class ScrollableDartParityTests
     public void SwappingViewportsInAScrollableDoesNotCrash()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         SemanticsHandle semantics = tester.EnsureSemantics();
         var key = new LabeledGlobalKey<State>(null);
         var key1 = new LabeledGlobalKey<State>(null);
@@ -1518,7 +1518,7 @@ public sealed class ScrollableDartParityTests
     public void DeltaToScrollOriginGetter()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new CustomScrollView(slivers: [new SliverToBoxAdapter(new SizedBox(height: 2000.0))])));
@@ -1547,7 +1547,7 @@ public sealed class ScrollableDartParityTests
     public void ResolvedPhysicsGetter()
     {
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new CustomScrollView(
@@ -1585,7 +1585,7 @@ public sealed class ScrollableDartParityTests
     {
         bool enable = false;
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Builder(_ => new StatefulBuilder((_, setState) => new Directionality(
             TextDirection.Ltr,
@@ -1615,7 +1615,7 @@ public sealed class ScrollableDartParityTests
         Assert.Equal(0.0, GetScrollOffset(tester));
 
         // Change state to include mouse pointer device.
-        tester.Tap(FindByText(tester, "Toggle dragDevices").Single());
+        tester.Tap(tester.OnstageElementsWithText("Toggle dragDevices").Single());
         tester.Pump();
         gesture.Up();
 
@@ -1636,7 +1636,7 @@ public sealed class ScrollableDartParityTests
     {
         ScrollBehavior? scrollBehavior = null;
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Builder(_ => new StatefulBuilder((_, setState) => new Directionality(
             TextDirection.Ltr,
@@ -1666,7 +1666,7 @@ public sealed class ScrollableDartParityTests
         gesture.Up();
 
         // Change state to include mouse pointer device.
-        tester.Tap(FindByText(tester, "Update ScrollBehavior").Single());
+        tester.Tap(tester.OnstageElementsWithText("Update ScrollBehavior").Single());
         tester.Pump();
 
         // Gesture should work after state change.
@@ -1689,7 +1689,7 @@ public sealed class ScrollableDartParityTests
         using var verticalController = new ScrollController();
         using var horizontalController = new ScrollController();
         using var tester = NewTester();
-        using DartSemantics dartSemantics = new(tester);
+
 
         tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
@@ -1793,25 +1793,6 @@ public sealed class ScrollableDartParityTests
         Assert.True(Math.Abs(expected - actual) <= epsilon, $"Expected {expected} (+/- {epsilon}), got {actual}.");
     }
 
-    // flutter_test: WidgetTester.pumpAndSettle(duration).
-    private static int PumpAndSettle(FrameworkDartTester tester, TimeSpan duration)
-    {
-        int count = 0;
-        do
-        {
-            if (count > 1000)
-            {
-                throw new Xunit.Sdk.XunitException("pumpAndSettle timed out");
-            }
-
-            tester.Pump(duration);
-            count += 1;
-        }
-        while (SchedulerBinding.Instance.HasScheduledFrame || SchedulerBinding.Instance.TransientCallbackCount > 0);
-
-        return count;
-    }
-
     // flutter_test: WidgetTester.tapAt.
     private static void TapAt(FrameworkDartTester tester, Point location)
     {
@@ -1848,31 +1829,9 @@ public sealed class ScrollableDartParityTests
         return result;
     }
 
-    // flutter_test finders skip offstage elements by default.
-    private static List<Element> OnstageElements(FrameworkDartTester tester)
-    {
-        var result = new List<Element>();
-        void Visit(Element element)
-        {
-            result.Add(element);
-            element.DebugVisitOnstageChildren(Visit);
-        }
-
-        tester.Root.DebugVisitOnstageChildren(Visit);
-        return result;
-    }
-
-    // flutter_test: find.byKey(key).
-    private static List<Element> FindByKey(FrameworkDartTester tester, Key key)
-        => OnstageElements(tester).Where(element => Equals(element.Widget.Key, key)).ToList();
-
-    // flutter_test: find.text(text).
-    private static List<Element> FindByText(FrameworkDartTester tester, string text)
-        => OnstageElements(tester).Where(element => element.Widget is Text { Data: var data } && data == text).ToList();
-
     // flutter_test: find.byType(T).evaluate().first.
     private static Element FirstOfType<TWidget>(FrameworkDartTester tester) where TWidget : Widget
-        => OnstageElements(tester).First(element => element.Widget.GetType() == typeof(TWidget));
+        => tester.OnstageElements().First(element => element.Widget.GetType() == typeof(TWidget));
 
 
     // semantics_tester.dart: includesNodeWith(tags: ...).
@@ -1891,52 +1850,6 @@ public sealed class ScrollableDartParityTests
         }
 
         return root is not null && Visit(root);
-    }
-
-    /// <summary>
-    /// flutter_test's default <c>testWidgets(semanticsEnabled: true)</c>: keeps a semantics handle open on
-    /// the view's pipeline owner and flushes its semantics at the end of every frame, the way
-    /// <c>drawFrame</c> does. The shared harness frame does not flush semantics, so this re-arms a
-    /// post-frame callback each frame. Frame scheduling matches Dart: a semantics update requested while
-    /// the scheduler is idle (for example from a ScrollMetricsNotification microtask) schedules a frame.
-    /// </summary>
-    private sealed class DartSemantics : IDisposable
-    {
-        private readonly FrameworkDartTester _tester;
-        private readonly SemanticsHandle _handle;
-        private bool _disposed;
-
-        public DartSemantics(FrameworkDartTester tester)
-        {
-            _tester = tester;
-            _handle = tester.RenderView.Owner!.EnsureSemantics();
-            Arm();
-        }
-
-        public void Dispose()
-        {
-            if (_disposed)
-            {
-                return;
-            }
-
-            _disposed = true;
-            _handle.Dispose();
-        }
-
-        private void Arm()
-        {
-            SchedulerBinding.Instance.AddPostFrameCallback(_ =>
-            {
-                if (_disposed)
-                {
-                    return;
-                }
-
-                _tester.RenderView.Owner?.FlushSemantics();
-                Arm();
-            });
-        }
     }
 
     private sealed class NoScrollbarBehavior : ScrollBehavior
@@ -1968,45 +1881,4 @@ public sealed class ScrollableDartParityTests
             => new ExtraSuperPessimisticScrollPhysics(BuildParent(ancestor));
     }
 
-    // button_tester.dart: TestButton.
-    private sealed class TestButton(Widget child, Action? onPressed = null) : StatelessWidget
-    {
-        public override Widget Build(BuildContext context)
-        {
-            return new Semantics(
-                label: "button",
-                button: true,
-                enabled: onPressed != null,
-                onTap: onPressed,
-                focusable: true,
-                child: new FocusableActionDetector(
-                    enabled: onPressed != null,
-                    child: new GestureDetector(onTap: onPressed, child: child)));
-        }
-    }
-
-    // editable_text_tester.dart: TestTextField. Plumix has no TextSelectionGestureDetectorBuilder; the
-    // Dart builder's detector excludes itself from semantics, so the semantics tree is unaffected.
-    private sealed class TestTextField(
-        bool autofocus,
-        TextEditingController controller,
-        FocusNode focusNode) : StatelessWidget
-    {
-        private static readonly Color Red = new Color(0xFFF44336);
-
-        public override Widget Build(BuildContext context)
-        {
-            return new Semantics(
-                enabled: true,
-                onTap: () => focusNode.RequestFocus(),
-                child: new EditableText(
-                    controller,
-                    focusNode: focusNode,
-                    autofocus: autofocus,
-                    cursorColor: Red,
-                    maxLines: 1,
-                    rendererIgnoresPointer: true,
-                    style: new TextStyle()));
-        }
-    }
 }

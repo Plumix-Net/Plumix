@@ -553,13 +553,20 @@ internal static class Find
             $"tooltip \"{message}\"",
             skipOffstage);
 
-    private static Finder BySemanticsLabel(Func<string, bool> matches, string description, bool skipOffstage) =>
-        new MatchFinder(
+    private static Finder BySemanticsLabel(Func<string, bool> matches, string description, bool skipOffstage)
+    {
+        if (!SemanticsBinding.Instance.SemanticsEnabled)
+        {
+            throw new InvalidOperationException("Semantics are not enabled.");
+        }
+
+        return new MatchFinder(
             element => element is RenderObjectElement { RenderObject: { } renderObject }
                        && renderObject.SemanticsNode is { } node
                        && matches(node.Label),
             description,
             skipOffstage);
+    }
 
     // finders.dart's `_MatchTextFinder.matches`.
     private static bool MatchesText(Widget widget, bool findRichText, Func<string, bool> matchesText)

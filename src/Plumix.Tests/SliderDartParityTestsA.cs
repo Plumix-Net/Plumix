@@ -1,6 +1,5 @@
 // Dart parity source: material_ui/lib/src/slider.dart
 // Mirrors material-ui-src/test/slider_test.dart (lines 1-2373)
-using System.Text;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
@@ -912,7 +911,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 value: "50%",
                 increasedValue: "55%",
                 decreasedValue: "45%",
-                textDirection: TextDirection.Ltr)));
+                textDirection: TextDirection.Ltr)), ignoreRect: true, ignoreTransform: true);
 
         // Disable slider
         tester.PumpWidget(new MaterialApp(
@@ -930,10 +929,10 @@ public sealed class SliderDartParityTestsA : IDisposable
                 increasedValue: "55%",
                 decreasedValue: "45%",
                 textDirection: TextDirection.Ltr));
-        semantics.ExpectHasSemantics(disabled);
+        semantics.ExpectHasSemantics(disabled, ignoreRect: true, ignoreTransform: true);
 
         tester.Pump();
-        semantics.ExpectHasSemantics(disabled);
+        semantics.ExpectHasSemantics(disabled, ignoreRect: true, ignoreTransform: true);
     }
 
     // Flutter: "Slider Semantics" (variant: iOS, macOS)
@@ -962,7 +961,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 value: "50%",
                 increasedValue: "60%",
                 decreasedValue: "40%",
-                textDirection: TextDirection.Ltr)));
+                textDirection: TextDirection.Ltr)), ignoreRect: true, ignoreTransform: true);
 
         // Disable slider
         tester.PumpWidget(new MaterialApp(
@@ -979,7 +978,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 value: "50%",
                 increasedValue: "60%",
                 decreasedValue: "40%",
-                textDirection: TextDirection.Ltr)));
+                textDirection: TextDirection.Ltr)), ignoreRect: true, ignoreTransform: true);
     }
 
     // Flutter: "Slider Semantics" (variant: windows)
@@ -1006,7 +1005,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 value: "50%",
                 increasedValue: "55%",
                 decreasedValue: "45%",
-                textDirection: TextDirection.Ltr)));
+                textDirection: TextDirection.Ltr)), ignoreRect: true, ignoreTransform: true);
 
         // Disable slider
         tester.PumpWidget(new MaterialApp(
@@ -1025,10 +1024,10 @@ public sealed class SliderDartParityTestsA : IDisposable
                 increasedValue: "55%",
                 decreasedValue: "45%",
                 textDirection: TextDirection.Ltr));
-        semantics.ExpectHasSemantics(disabled);
+        semantics.ExpectHasSemantics(disabled, ignoreRect: true, ignoreTransform: true);
 
         tester.Pump();
-        semantics.ExpectHasSemantics(disabled);
+        semantics.ExpectHasSemantics(disabled, ignoreRect: true, ignoreTransform: true);
     }
 
     // Flutter: "Slider semantics with custom formatter"
@@ -1059,7 +1058,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 increasedValue: "60",
                 decreasedValue: "20",
                 textDirection: TextDirection.Ltr),
-            new TestSemantics(id: 6)));
+            new TestSemantics(id: 6)), ignoreRect: true, ignoreTransform: true);
     }
 
     // Regression test for https://github.com/flutter/flutter/issues/101868
@@ -1094,7 +1093,7 @@ public sealed class SliderDartParityTestsA : IDisposable
                 increasedValue: "60",
                 decreasedValue: "20",
                 textDirection: TextDirection.Ltr),
-            new TestSemantics(id: 6)));
+            new TestSemantics(id: 6)), ignoreRect: true, ignoreTransform: true);
     }
 
     // Flutter: "Material3 - Slider is focusable and has correct focus color"
@@ -1518,146 +1517,4 @@ public sealed class SliderDartParityTestsA : IDisposable
         }
     }
 
-    /// <summary>semantics_tester.dart's <c>SemanticsTester</c>: keeps semantics on for the view.</summary>
-    private sealed class SemanticsTester : IDisposable
-    {
-        private readonly FrameworkDartTester _tester;
-        private SemanticsHandle? _handle;
-
-        public SemanticsTester(FrameworkDartTester tester)
-        {
-            _tester = tester;
-            PipelineOwner owner = ViewPipelineOwner(tester);
-            bool createsOwner = owner.SemanticsOwner is null;
-            _handle = owner.EnsureSemantics();
-            if (createsOwner)
-            {
-                tester.RenderView.ClearSemantics();
-                tester.RenderView.ScheduleInitialSemantics();
-            }
-        }
-
-        private SemanticsOwner Owner => ViewPipelineOwner(_tester).SemanticsOwner!;
-
-        /// <summary>
-        /// Dart's <c>expect(semantics, hasSemantics(expected, ignoreRect: true, ignoreTransform: true))</c>
-        /// (ids compared, traversal child order: hasSemantics' default).
-        /// </summary>
-        public void ExpectHasSemantics(TestSemantics expected)
-        {
-            // flutter_test's frame ends with `flushSemantics`; make sure the last pump's is done.
-            ViewPipelineOwner(_tester).FlushSemantics();
-            string? failure = expected.Match(Owner.RootNode!, "root");
-            if (failure != null)
-            {
-                throw new XunitException($"{failure}\n{Owner.DebugDumpTree()}");
-            }
-        }
-
-        public void Dispose()
-        {
-            _handle?.Dispose();
-            _handle = null;
-        }
-
-        private static PipelineOwner ViewPipelineOwner(FrameworkDartTester tester) => tester.RenderView.Owner!;
-    }
-
-    /// <summary>semantics_tester.dart's <c>TestSemantics</c>, reduced to what these tests compare.</summary>
-    private sealed class TestSemantics(
-        int id,
-        SemanticsFlags flags = SemanticsFlags.None,
-        SemanticsActions actions = SemanticsActions.None,
-        string label = "",
-        string value = "",
-        string increasedValue = "",
-        string decreasedValue = "",
-        TextDirection? textDirection = null,
-        IReadOnlyList<TestSemantics>? children = null)
-    {
-        private readonly IReadOnlyList<TestSemantics> _children = children ?? [];
-
-        public static TestSemantics Root(IReadOnlyList<TestSemantics> children) => new(0, children: children);
-
-        public string? Match(SemanticsNode node, string path)
-        {
-            SemanticsData data = node.GetSemanticsData();
-            var errors = new StringBuilder();
-            if (node.Id != id)
-            {
-                errors.Append($" expected node id {id} but found id {node.Id};");
-            }
-
-            if (data.Flags != flags)
-            {
-                errors.Append($" flags: expected {flags} but found {data.Flags};");
-            }
-
-            if (data.Actions != actions)
-            {
-                errors.Append($" actions: expected {actions} but found {data.Actions};");
-            }
-
-            if (data.Label != label)
-            {
-                errors.Append($" label: expected \"{label}\" but found \"{data.Label}\";");
-            }
-
-            if (data.Value != value)
-            {
-                errors.Append($" value: expected \"{value}\" but found \"{data.Value}\";");
-            }
-
-            if (data.IncreasedValue != increasedValue)
-            {
-                errors.Append($" increasedValue: expected \"{increasedValue}\" but found \"{data.IncreasedValue}\";");
-            }
-
-            if (data.DecreasedValue != decreasedValue)
-            {
-                errors.Append($" decreasedValue: expected \"{decreasedValue}\" but found \"{data.DecreasedValue}\";");
-            }
-
-            if (data.Hint != string.Empty || data.Tooltip != string.Empty)
-            {
-                errors.Append(" expected no hint/tooltip;");
-            }
-
-            if (textDirection != null && textDirection != data.TextDirection)
-            {
-                errors.Append($" textDirection: expected {textDirection} but found {data.TextDirection};");
-            }
-
-            if ((data.Label != string.Empty || data.Value != string.Empty || data.Hint != string.Empty
-                 || data.IncreasedValue != string.Empty || data.DecreasedValue != string.Empty)
-                && data.TextDirection == null)
-            {
-                errors.Append(" a node with a label, value, or hint must have a textDirection;");
-            }
-
-            IReadOnlyList<SemanticsNode> nodeChildren =
-                node.DebugListChildrenInOrder(DebugSemanticsDumpOrder.TraversalOrder);
-            int childrenCount = node.MergeAllDescendantsIntoThisNode ? 0 : nodeChildren.Count;
-            if (_children.Count != childrenCount)
-            {
-                errors.Append($" expected {_children.Count} children but found {childrenCount};");
-            }
-
-            if (errors.Length > 0)
-            {
-                return $"Node #{node.Id} at {path}:{errors}";
-            }
-
-            for (int i = 0; i < _children.Count; i += 1)
-            {
-                string? childFailure = _children[i].Match(nodeChildren[i], $"{path}/{i}");
-                if (childFailure != null)
-                {
-                    return childFailure;
-                }
-            }
-
-            return null;
-        }
-    }
 }

@@ -737,20 +737,4 @@ public sealed class TreeSliverDartParityTests
             ])));
     }
 
-    // button_tester.dart: TestButton.
-    private sealed class TestButton(Widget child, Action? onPressed = null) : StatelessWidget
-    {
-        public override Widget Build(BuildContext context)
-        {
-            return new Semantics(
-                label: "button",
-                button: true,
-                enabled: onPressed != null,
-                onTap: onPressed,
-                focusable: true,
-                child: new FocusableActionDetector(
-                    enabled: onPressed != null,
-                    child: new GestureDetector(onTap: onPressed, child: child)));
-        }
-    }
 }

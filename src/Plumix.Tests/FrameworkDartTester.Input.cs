@@ -14,8 +14,8 @@ internal sealed partial class FrameworkDartTester
 
     /// <summary>
     /// Dart's <c>tester.testTextInput</c>: the mock platform side of the text input channel. Registered
-    /// on first use (or from the start with <c>registerTestTextInput: true</c>) and unregistered when the
-    /// tester is disposed.
+    /// at the start by default (on first use with <c>registerTestTextInput: false</c>) and unregistered
+    /// when the tester is disposed.
     /// </summary>
     public TestTextInput TestTextInput
     {
@@ -156,4 +156,79 @@ internal sealed partial class FrameworkDartTester
         string keyLabel = key.KeyLabel;
         return keyLabel.Length == 1 ? keyLabel.ToLowerInvariant() : null;
     }
+}
+
+/// <summary>
+/// flutter_test's <c>sendKeyEvent</c>/<c>sendKeyDownEvent</c>/<c>sendKeyUpEvent</c> under a
+/// <c>KeySimulatorTransitModeVariant</c>: <see cref="RawKeyData"/> drives the legacy raw message
+/// through <see cref="KeyEventManager"/>, <see cref="KeyDataThenRawKeyData"/> the regularized
+/// <see cref="KeyEvent"/> stream through the focus manager.
+/// </summary>
+internal sealed class KeySender(string transitMode)
+{
+    public const string RawKeyData = "rawKeyData";
+    public const string KeyDataThenRawKeyData = "keyDataThenRawKeyData";
+
+    private readonly HashSet<LogicalKeyboardKey> _modifiersDown = [];
+
+    public void SendKeyEvent(LogicalKeyboardKey key)
+    {
+        SendKeyDownEvent(key);
+        SendKeyUpEvent(key);
+    }
+
+    public void SendKeyDownEvent(LogicalKeyboardKey key)
+    {
+        bool isModifier = IsModifier(key);
+        if (isModifier)
+        {
+            _modifiersDown.Add(key);
+        }
+
+        if (transitMode == RawKeyData)
+        {
+            KeySim.DispatchRaw(key, down: true, control: Control, meta: Meta);
+        }
+        else if (isModifier)
+        {
+            FocusManager.Instance.HandleKeyEvent(new KeyDownEvent(KeySim.PhysicalFor(key), key));
+        }
+        else
+        {
+            FocusManager.Instance.HandleKeyEvent(KeySim.Down(key, control: Control, meta: Meta));
+        }
+
+        EventLoop.FlushMicrotasks();
+    }
+
+    public void SendKeyUpEvent(LogicalKeyboardKey key)
+    {
+        bool isModifier = IsModifier(key);
+        if (isModifier)
+        {
+            _modifiersDown.Remove(key);
+        }
+
+        if (transitMode == RawKeyData)
+        {
+            KeySim.DispatchRaw(key, down: false, control: Control, meta: Meta);
+        }
+        else if (isModifier)
+        {
+            FocusManager.Instance.HandleKeyEvent(new KeyUpEvent(KeySim.PhysicalFor(key), key));
+        }
+        else
+        {
+            FocusManager.Instance.HandleKeyEvent(KeySim.Up(key, control: Control, meta: Meta));
+        }
+
+        EventLoop.FlushMicrotasks();
+    }
+
+    private bool Control => _modifiersDown.Contains(LogicalKeyboardKey.ControlLeft);
+
+    private bool Meta => _modifiersDown.Contains(LogicalKeyboardKey.MetaLeft);
+
+    private static bool IsModifier(LogicalKeyboardKey key) =>
+        key == LogicalKeyboardKey.ControlLeft || key == LogicalKeyboardKey.MetaLeft;
 }

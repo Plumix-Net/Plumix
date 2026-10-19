@@ -1,4 +1,3 @@
-using System.Text;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
@@ -7,7 +6,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using Xunit.Sdk;
 
 // Ports flutter/packages/flutter/test/widgets/scrollable_semantics_test.dart and
 // scrollable_semantics_traversal_order_test.dart.
@@ -33,7 +31,7 @@ public sealed class ScrollSemanticsDartParityTests
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(children: GenerateTexts(80))));
 
@@ -59,7 +57,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
         var controller = new ScrollController();
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(controller: controller, children: GenerateTexts(60))));
         SemanticsOwner semanticsOwner = semantics.Owner;
@@ -78,7 +76,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
         var controller = new ScrollController();
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(
                 controller: controller,
@@ -102,7 +100,7 @@ public sealed class ScrollSemanticsDartParityTests
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(children: GenerateTexts(3))));
         Assert.Empty(semantics.NodesWith(actions: ScrollUp | ScrollToOffset));
@@ -117,7 +115,7 @@ public sealed class ScrollSemanticsDartParityTests
         var controller = new NoDimensionsDuringSemanticsScrollController();
         try
         {
-            PumpWidget(tester, new Directionality(
+            tester.PumpWidget(new Directionality(
                 TextDirection.Ltr,
                 new ListView(controller: controller, children: GenerateTexts(60))));
 
@@ -137,7 +135,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
         ScrollPhysics physics = new NoImplicitScrollingScrollPhysics();
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(physics: physics, children: GenerateTexts(60))));
         Assert.Empty(semantics.NodesWith(actions: ScrollUp | ScrollToOffset));
@@ -162,7 +160,7 @@ public sealed class ScrollSemanticsDartParityTests
         var scrollController = new ScrollController(initialScrollOffset: kItemHeight / 2);
         try
         {
-            PumpWidget(tester, new Directionality(
+            tester.PumpWidget(new Directionality(
                 TextDirection.Ltr,
                 new ListView(controller: scrollController, children: containers)));
 
@@ -170,8 +168,8 @@ public sealed class ScrollSemanticsDartParityTests
 
             int firstContainerId = DebugSemantics(tester, containers[0]).Id;
             semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-            Pump(tester);
-            Pump(tester, TimeSpan.FromSeconds(5));
+            tester.Pump();
+            tester.Pump(TimeSpan.FromSeconds(5));
 
             Assert.Equal(0.0, scrollController.Offset);
         }
@@ -199,7 +197,7 @@ public sealed class ScrollSemanticsDartParityTests
         var scrollController = new ScrollController(initialScrollOffset: kItemHeight / 2);
         try
         {
-            PumpWidget(tester, new Directionality(
+            tester.PumpWidget(new Directionality(
                 TextDirection.Ltr,
                 new Localizations(
                     locale: new Locale("en", "us"),
@@ -223,8 +221,8 @@ public sealed class ScrollSemanticsDartParityTests
 
             int firstContainerId = DebugSemantics(tester, containers[0]).Id;
             semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-            Pump(tester);
-            Pump(tester, TimeSpan.FromSeconds(5));
+            tester.Pump();
+            tester.Pump(TimeSpan.FromSeconds(5));
             Assert.Equal(kExpandedAppBarHeight, tester.GetTopLeft(tester.ElementOfWidget(containers[0])).Y);
         }
         finally
@@ -256,7 +254,7 @@ public sealed class ScrollSemanticsDartParityTests
         var scrollController = new ScrollController(initialScrollOffset: 2.5 * kItemHeight);
         try
         {
-            PumpWidget(tester, new Directionality(
+            tester.PumpWidget(new Directionality(
                 TextDirection.Ltr,
                 new MediaQuery(
                     data: new MediaQueryData(),
@@ -280,8 +278,8 @@ public sealed class ScrollSemanticsDartParityTests
 
             int id0 = DebugSemantics(tester, children[0]).Id;
             semantics.Owner.PerformAction(id0, SemanticsActions.ShowOnScreen);
-            Pump(tester);
-            Pump(tester, TimeSpan.FromSeconds(5));
+            tester.Pump();
+            tester.Pump(TimeSpan.FromSeconds(5));
             Assert.Equal(
                 MaterialConstants.ToolbarHeight,
                 tester.GetTopLeft(tester.ElementOfWidget(children[0])).Y);
@@ -299,7 +297,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
 
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(children: GenerateTexts(80))));
 
@@ -333,7 +331,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
 
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             ListView.Builder(
                 dragStartBehavior: DragStartBehavior.Down,
@@ -373,7 +371,7 @@ public sealed class ScrollSemanticsDartParityTests
         List<Widget> children = Enumerable.Range(0, 80)
             .Select(i => (Widget)new SizedBox(height: 40.0, child: new Text($"Item {i}")))
             .ToList();
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(children: children)));
 
@@ -381,7 +379,7 @@ public sealed class ScrollSemanticsDartParityTests
             tester.GetCenter(tester.ElementOfType<ListView>()),
             PointerDeviceKind.Touch);
         gesture.MoveBy(new Vector(0.0, -40.0));
-        Pump(tester);
+        tester.Pump();
 
         semantics.ExpectIncludesNodeWith(label: "Item 1");
         semantics.ExpectIncludesNodeWith(label: "Item 2");
@@ -392,8 +390,9 @@ public sealed class ScrollSemanticsDartParityTests
     [Fact]
     public void CanToggleSemanticsOnOffOnWithoutCrash()
     {
-        using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
-        PumpWidget(tester, new Directionality(
+        using var tester = new FrameworkDartTester(
+            fakeGestureTimers: true, devicePixelRatio: 3.0, semanticsEnabled: false);
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new ListView(
                 children: Enumerable.Range(0, 40)
@@ -421,20 +420,20 @@ public sealed class ScrollSemanticsDartParityTests
 
         // Semantics on
         var semantics = new SemanticsTester(tester);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
         Assert.NotNull(ViewPipelineOwner(tester).SemanticsOwner);
-        semantics.ExpectHasSemantics(expectedSemantics);
+        semantics.ExpectHasSemantics(expectedSemantics, ignoreRect: true, ignoreTransform: true, ignoreId: true);
 
         // Semantics off
         semantics.Dispose();
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
         Assert.Null(ViewPipelineOwner(tester).SemanticsOwner);
 
         // Semantics on
         semantics = new SemanticsTester(tester);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
         Assert.NotNull(ViewPipelineOwner(tester).SemanticsOwner);
-        semantics.ExpectHasSemantics(expectedSemantics);
+        semantics.ExpectHasSemantics(expectedSemantics, ignoreRect: true, ignoreTransform: true, ignoreId: true);
 
         semantics.Dispose();
     }
@@ -476,13 +475,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(ShowOnScreenGroup.KItemHeight / 2, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, group.Children[0]).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(0.0, group.ScrollController.Offset);
     }
@@ -495,13 +494,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(ShowOnScreenGroup.KItemHeight / 2, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, group.Children[2]).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(ShowOnScreenGroup.KItemHeight, group.ScrollController.Offset);
     }
@@ -514,13 +513,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(ShowOnScreenGroup.KItemHeight / 2, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, group.Children[1]).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(ShowOnScreenGroup.KItemHeight / 2, group.ScrollController.Offset);
     }
@@ -584,13 +583,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(-250.0, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, new ValueKey<int>(2)).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(-300.0, group.ScrollController.Offset);
     }
@@ -604,13 +603,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(-250.0, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, new ValueKey<int>(4)).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(-200.0, group.ScrollController.Offset);
     }
@@ -624,13 +623,13 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
-        PumpWidget(tester, group.WidgetUnderTest);
+        tester.PumpWidget(group.WidgetUnderTest);
 
         Assert.Equal(-250.0, group.ScrollController.Offset);
 
         int firstContainerId = DebugSemantics(tester, new ValueKey<int>(3)).Id;
         semantics.Owner.PerformAction(firstContainerId, SemanticsActions.ShowOnScreen);
-        PumpAndSettle(tester);
+        tester.PumpAndSettle();
 
         Assert.Equal(-250.0, group.ScrollController.Offset);
     }
@@ -644,7 +643,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var semantics = new SemanticsTester(tester); // enables semantics tree generation
 
         // Context: https://github.com/flutter/flutter/issues/61631
-        PumpWidget(tester, new Directionality(
+        tester.PumpWidget(new Directionality(
             TextDirection.Ltr,
             new SingleChildScrollView(
                 child: new ListView(shrinkWrap: true, children: GenerateTexts(50)))));
@@ -671,7 +670,7 @@ public sealed class ScrollSemanticsDartParityTests
         foreach (SemanticsNode node in targetNodes)
         {
             semantics.Owner.PerformAction(node.Id, SemanticsActions.ShowOnScreen);
-            PumpAndSettle(tester);
+            tester.PumpAndSettle();
 
             Assert.Equal(NodeGlobalRect(outerListPane), NodeGlobalRect(innerListPane));
         }
@@ -720,7 +719,7 @@ public sealed class ScrollSemanticsDartParityTests
         try
         {
             List<Widget> listChildren = TwoLabelRows();
-            PumpWidget(tester, TraversalHost(new CustomScrollView(
+            tester.PumpWidget(TraversalHost(new CustomScrollView(
                 controller: controller,
                 semanticChildCount: 30,
                 slivers: [SliverList.FromChildren(listChildren)])));
@@ -755,7 +754,7 @@ public sealed class ScrollSemanticsDartParityTests
                                     ]),
                             ]),
                     ]),
-            ]));
+            ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
         }
         finally
         {
@@ -774,7 +773,7 @@ public sealed class ScrollSemanticsDartParityTests
         try
         {
             List<Widget> listChildren = TwoLabelRows();
-            PumpWidget(tester, TraversalHost(new CustomScrollView(
+            tester.PumpWidget(TraversalHost(new CustomScrollView(
                 controller: controller,
                 slivers:
                 [
@@ -799,7 +798,7 @@ public sealed class ScrollSemanticsDartParityTests
                                     children: FlatRows(i => $"Item {i}a", i => $"item {i}b", 13, 19, 15, 17)),
                             ]),
                     ]),
-            ]));
+            ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
         }
         finally
         {
@@ -820,7 +819,7 @@ public sealed class ScrollSemanticsDartParityTests
             List<Widget> listChildren = Enumerable.Range(0, 30)
                 .Select(i => (Widget)new SizedBox(height: 200.0, child: new Text($"Item {i}")))
                 .ToList();
-            PumpWidget(tester, TraversalHost(new CustomScrollView(
+            tester.PumpWidget(TraversalHost(new CustomScrollView(
                 controller: controller,
                 slivers:
                 [
@@ -851,7 +850,7 @@ public sealed class ScrollSemanticsDartParityTests
                                     children: gridChildren),
                             ]),
                     ]),
-            ]));
+            ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
         }
         finally
         {
@@ -872,7 +871,7 @@ public sealed class ScrollSemanticsDartParityTests
             List<Widget> listChildren = TwoLabelRows()
                 .Select(row => (Widget)new SliverToBoxAdapter(child: row))
                 .ToList();
-            PumpWidget(tester, TraversalHost(new CustomScrollView(controller: controller, slivers: listChildren)));
+            tester.PumpWidget(TraversalHost(new CustomScrollView(controller: controller, slivers: listChildren)));
 
             semantics.ExpectHasSemantics(TestSemantics.Root(
             [
@@ -889,7 +888,7 @@ public sealed class ScrollSemanticsDartParityTests
                                     children: FlatRows(i => $"Item {i}a", i => $"item {i}b", 13, 19, 15, 17)),
                             ]),
                     ]),
-            ]));
+            ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
         }
         finally
         {
@@ -908,7 +907,7 @@ public sealed class ScrollSemanticsDartParityTests
         try
         {
             List<Widget> listChildren = TwoLabelRows();
-            PumpWidget(tester, TraversalHost(new SingleChildScrollView(
+            tester.PumpWidget(TraversalHost(new SingleChildScrollView(
                 controller: controller,
                 child: new Column(children: listChildren))));
 
@@ -925,7 +924,7 @@ public sealed class ScrollSemanticsDartParityTests
                             actions: ScrollUp | ScrollDown | ScrollToOffset,
                             children: children),
                     ]),
-            ]));
+            ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
         }
         finally
         {
@@ -940,7 +939,7 @@ public sealed class ScrollSemanticsDartParityTests
         using var tester = new FrameworkDartTester(fakeGestureTimers: true, devicePixelRatio: 3.0);
         using var semantics = new SemanticsTester(tester);
 
-        PumpWidget(tester, TraversalHost(new Scrollable(
+        tester.PumpWidget(TraversalHost(new Scrollable(
             viewportBuilder: (_, offset) => new Viewport(
                 offset: offset,
                 center: new ValueKey<int>(0),
@@ -977,7 +976,7 @@ public sealed class ScrollSemanticsDartParityTests
                                 children: FlatRows(i => $"{i}a", i => $"{i}b", -2, 4, 0, 2)),
                         ]),
                 ]),
-        ]));
+        ]), ignoreRect: true, ignoreTransform: true, ignoreId: true);
     }
 
     /// <summary>Two leaves per index in <c>[first, last]</c>, hidden outside <c>[firstShown, lastShown]</c>.</summary>
@@ -1009,28 +1008,6 @@ public sealed class ScrollSemanticsDartParityTests
 
     private static PipelineOwner ViewPipelineOwner(FrameworkDartTester tester) => tester.RenderView.Owner!;
 
-    // flutter_test's frame runs `flushSemantics` after compositing; the C# tester's frame stops at
-    // composite, so every pump here finishes with the view's semantics flush.
-    private static void FlushSemantics(FrameworkDartTester tester) => ViewPipelineOwner(tester).FlushSemantics();
-
-    private static void PumpWidget(FrameworkDartTester tester, Widget widget)
-    {
-        tester.PumpWidget(widget);
-        FlushSemantics(tester);
-    }
-
-    private static void Pump(FrameworkDartTester tester, TimeSpan? duration = null)
-    {
-        tester.Pump(duration);
-        FlushSemantics(tester);
-    }
-
-    private static void PumpAndSettle(FrameworkDartTester tester)
-    {
-        tester.PumpAndSettle();
-        FlushSemantics(tester);
-    }
-
     private static void FlingUp(FrameworkDartTester tester, int repetitions = 1) =>
         Fling(tester, new Vector(0.0, -200.0), repetitions);
 
@@ -1042,8 +1019,8 @@ public sealed class ScrollSemanticsDartParityTests
         while (repetitions-- > 0)
         {
             tester.Fling(tester.ElementOfType<ListView>(), offset, 1000.0);
-            Pump(tester);
-            Pump(tester, TimeSpan.FromSeconds(5));
+            tester.Pump();
+            tester.Pump(TimeSpan.FromSeconds(5));
         }
     }
 
@@ -1078,236 +1055,6 @@ public sealed class ScrollSemanticsDartParityTests
         }
 
         return (value > b - epsilon && value < b + epsilon) || value == b;
-    }
-
-    /// <summary>semantics_tester.dart's <c>SemanticsTester</c>: keeps semantics on for the view.</summary>
-    private sealed class SemanticsTester : IDisposable
-    {
-        private readonly FrameworkDartTester _tester;
-        private SemanticsHandle? _handle;
-
-        public SemanticsTester(FrameworkDartTester tester)
-        {
-            _tester = tester;
-            PipelineOwner owner = ViewPipelineOwner(tester);
-            bool createsOwner = owner.SemanticsOwner is null;
-            _handle = owner.EnsureSemantics();
-            if (createsOwner)
-            {
-                // flutter_test's view is the binding's `_ReusableRenderView` (`ReusableRenderView`
-                // here), whose `scheduleInitialSemantics` clears every cached configuration first; the
-                // C# tester mounts a plain `RenderView`, so do the same clear here.
-                tester.RenderView.ClearSemantics();
-                tester.RenderView.ScheduleInitialSemantics();
-            }
-        }
-
-        public SemanticsOwner Owner => ViewPipelineOwner(_tester).SemanticsOwner!;
-
-        public string Dump => Owner.DebugDumpTree();
-
-        public List<SemanticsNode> NodesWith(
-            string? label = null,
-            SemanticsActions? actions = null,
-            SemanticsFlags? flags = null,
-            double? scrollPosition = null,
-            double? scrollExtentMax = null,
-            double? scrollExtentMin = null,
-            SemanticsNode? ancestor = null)
-        {
-            bool CheckNode(SemanticsNode node)
-            {
-                SemanticsData data = node.GetSemanticsData();
-                if (label != null && node.Label != label)
-                {
-                    return false;
-                }
-
-                if (actions is { } expectedActions && data.Actions != expectedActions)
-                {
-                    return false;
-                }
-
-                if (flags is { } expectedFlags && data.Flags != expectedFlags)
-                {
-                    return false;
-                }
-
-                if (scrollPosition is { } position && !NearEqual(node.ScrollPosition, position, 0.1))
-                {
-                    return false;
-                }
-
-                if (scrollExtentMax is { } max && !NearEqual(node.ScrollExtentMax, max, 0.1))
-                {
-                    return false;
-                }
-
-                if (scrollExtentMin is { } min && !NearEqual(node.ScrollExtentMin, min, 0.1))
-                {
-                    return false;
-                }
-
-                return true;
-            }
-
-            var result = new List<SemanticsNode>();
-            void Visit(SemanticsNode node)
-            {
-                if (CheckNode(node))
-                {
-                    result.Add(node);
-                }
-
-                foreach (SemanticsNode child in node.Children)
-                {
-                    Visit(child);
-                }
-            }
-
-            Visit(ancestor ?? Owner.RootNode!);
-            return result;
-        }
-
-        /// <summary>Dart's <c>expect(semantics, includesNodeWith(...))</c>.</summary>
-        public void ExpectIncludesNodeWith(
-            string? label = null,
-            SemanticsActions? actions = null,
-            SemanticsFlags? flags = null,
-            double? scrollPosition = null,
-            double? scrollExtentMax = null,
-            double? scrollExtentMin = null)
-        {
-            List<SemanticsNode> nodes = NodesWith(
-                label: label,
-                actions: actions,
-                flags: flags,
-                scrollPosition: scrollPosition,
-                scrollExtentMax: scrollExtentMax,
-                scrollExtentMin: scrollExtentMin);
-            if (nodes.Count == 0)
-            {
-                throw new XunitException(
-                    $"Expected a node with label={label} actions={actions} flags={flags} "
-                    + $"scrollPosition={scrollPosition} scrollExtentMax={scrollExtentMax} "
-                    + $"scrollExtentMin={scrollExtentMin}.\n{Dump}");
-            }
-        }
-
-        /// <summary>
-        /// Dart's <c>expect(semantics, hasSemantics(expected, ignoreId: true, ignoreRect: true,
-        /// ignoreTransform: true))</c> in traversal order.
-        /// </summary>
-        public void ExpectHasSemantics(TestSemantics expected)
-        {
-            string? failure = expected.Match(Owner.RootNode!, "root");
-            if (failure != null)
-            {
-                throw new XunitException($"{failure}\n{Dump}");
-            }
-        }
-
-        public void Dispose()
-        {
-            _handle?.Dispose();
-            _handle = null;
-        }
-    }
-
-    /// <summary>
-    /// semantics_tester.dart's <c>TestSemantics</c>, reduced to what these tests compare (ids, rects
-    /// and transforms are always ignored).
-    /// </summary>
-    private sealed class TestSemantics(
-        SemanticsFlags flags = SemanticsFlags.None,
-        SemanticsActions actions = SemanticsActions.None,
-        string label = "",
-        TextDirection? textDirection = null,
-        int? scrollIndex = null,
-        int? scrollChildren = null,
-        IReadOnlyList<TestSemantics>? children = null)
-    {
-        private readonly IReadOnlyList<TestSemantics> _children = children ?? [];
-
-        public static TestSemantics Root(IReadOnlyList<TestSemantics> children) => new(children: children);
-
-        public static TestSemantics RootChild(IReadOnlyList<TestSemantics> children) => new(children: children);
-
-        public string? Match(SemanticsNode node, string path)
-        {
-            SemanticsData data = node.GetSemanticsData();
-            var errors = new StringBuilder();
-            if (data.Flags != flags)
-            {
-                errors.Append($" flags: expected {flags} but found {data.Flags};");
-            }
-
-            if (data.Actions != actions)
-            {
-                errors.Append($" actions: expected {actions} but found {data.Actions};");
-            }
-
-            if (data.Label != label)
-            {
-                errors.Append($" label: expected \"{label}\" but found \"{data.Label}\";");
-            }
-
-            if (data.Value != string.Empty || data.Hint != string.Empty || data.Tooltip != string.Empty)
-            {
-                errors.Append(" expected no value/hint/tooltip;");
-            }
-
-            if (textDirection != null && textDirection != data.TextDirection)
-            {
-                errors.Append($" textDirection: expected {textDirection} but found {data.TextDirection};");
-            }
-
-            if ((data.Label != string.Empty || data.Value != string.Empty || data.Hint != string.Empty)
-                && data.TextDirection == null)
-            {
-                errors.Append(" a node with a label, value, or hint must have a textDirection;");
-            }
-
-            if (scrollIndex != null && scrollIndex != data.ScrollIndex)
-            {
-                errors.Append($" scrollIndex: expected {scrollIndex} but found {data.ScrollIndex};");
-            }
-
-            if (scrollChildren != null && scrollChildren != data.ScrollChildCount)
-            {
-                errors.Append($" scrollChildren: expected {scrollChildren} but found {data.ScrollChildCount};");
-            }
-
-            if (data.Role != SemanticsRole.None)
-            {
-                errors.Append($" role: expected None but found {data.Role};");
-            }
-
-            IReadOnlyList<SemanticsNode> actualChildren = node.MergeAllDescendantsIntoThisNode
-                ? []
-                : node.ChildrenInTraversalOrder;
-            int childrenCount = actualChildren.Count;
-            if (_children.Count != childrenCount)
-            {
-                errors.Append($" expected {_children.Count} children but found {childrenCount};");
-            }
-
-            if (errors.Length > 0)
-            {
-                return $"Node #{node.Id} at {path}:{errors}";
-            }
-
-            for (int i = 0; i < _children.Count; i += 1)
-            {
-                string? childFailure = _children[i].Match(actualChildren[i], $"{path}/{i}");
-                if (childFailure != null)
-                {
-                    return childFailure;
-                }
-            }
-
-            return null;
-        }
     }
 
     // scrollable_semantics_test.dart: _NoImplicitScrollingScrollPhysics.

@@ -1362,8 +1362,8 @@ public sealed class TwoDimensionalScrollableDartParityTests
     [Fact]
     public void DismissKeyboardOnDragAndKeepDismissedOnDrawerOpened()
     {
-        using var testTextInput = new TestTextInput();
         using FrameworkDartTester tester = CreateTester();
+        TestTextInput testTextInput = tester.TestTextInput;
         var overlayKey = new GlobalObjectKey<DrawerLikeContainerState>(new object());
 
         tester.PumpWidget(new TestWidgetsApp(
@@ -1581,48 +1581,6 @@ public sealed class TwoDimensionalScrollableDartParityTests
         tester.PumpAndSettle();
         Assert.True(verticalController.Position.Pixels > 840.0);
         Assert.Equal(0.0, horizontalController.Position.Pixels);
-    }
-
-    /// <summary>
-    /// editable_text_tester.dart's <c>TestTextField</c>, reduced to what the keyboard test needs: an
-    /// <see cref="EditableText"/> whose single tap requests focus (and so the keyboard).
-    /// </summary>
-    /// <remarks>
-    /// The Dart widget routes taps through a <c>TextSelectionGestureDetectorBuilder</c>, which Plumix
-    /// does not port; a single tap there ends in <c>EditableTextState.requestKeyboard</c>, which for an
-    /// unfocused field requests focus — exactly what this tap handler does.
-    /// </remarks>
-    private sealed class TestTextField : StatefulWidget
-    {
-        public override State CreateState() => new TestTextFieldState();
-    }
-
-    private sealed class TestTextFieldState : State<TestTextField>
-    {
-        private static readonly Color Red = new Color(0xFFF44336);
-
-        private readonly TextEditingController _controller = new();
-        private readonly FocusNode _focusNode = new();
-
-        public override void Dispose()
-        {
-            _focusNode.Dispose();
-            _controller.Dispose();
-            base.Dispose();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            return new GestureDetector(
-                behavior: HitTestBehavior.Translucent,
-                onTap: () => _focusNode.RequestFocus(),
-                child: new EditableText(
-                    controller: _controller,
-                    focusNode: _focusNode,
-                    cursorColor: Red,
-                    style: new TextStyle(),
-                    rendererIgnoresPointer: true));
-        }
     }
 
     // two_dimensional_scroll_view_test.dart: _DrawerLikeContainer.

@@ -19,8 +19,24 @@ internal sealed class TestTextField : StatefulWidget
         TextSelectionControls? selectionControls = null,
         TextEditingController? controller = null,
         bool showSelectionHandles = false,
-        Key? key = null) : base(key)
+        Key? key = null,
+        IReadOnlyList<string>? autofillHints = null,
+        Color? cursorColor = null,
+        bool cursorOpacityAnimates = false,
+        object? groupId = null,
+        Action<string>? onChanged = null,
+        bool? showCursor = null,
+        TextStyle? style = null,
+        Action<string>? onSubmitted = null) : base(key)
     {
+        AutofillHints = autofillHints ?? [];
+        CursorColor = cursorColor;
+        CursorOpacityAnimates = cursorOpacityAnimates;
+        GroupId = groupId ?? typeof(EditableText);
+        OnChanged = onChanged;
+        ShowCursor = showCursor;
+        Style = style;
+        OnSubmitted = onSubmitted;
         Autofocus = autofocus;
         ContextMenuBuilder = contextMenuBuilder;
         FocusNode = focusNode;
@@ -30,6 +46,22 @@ internal sealed class TestTextField : StatefulWidget
         Controller = controller;
         ShowSelectionHandles = showSelectionHandles;
     }
+
+    public IReadOnlyList<string>? AutofillHints { get; }
+
+    public Color? CursorColor { get; }
+
+    public bool CursorOpacityAnimates { get; }
+
+    public object GroupId { get; }
+
+    public Action<string>? OnChanged { get; }
+
+    public bool? ShowCursor { get; }
+
+    public TextStyle? Style { get; }
+
+    public Action<string>? OnSubmitted { get; }
 
     public bool Autofocus { get; }
 
@@ -91,16 +123,23 @@ internal sealed class TestTextField : StatefulWidget
                     child: new EditableText(
                         EffectiveController,
                         key: EditableTextKey,
+                        autofillHints: Widget.AutofillHints,
                         autofocus: Widget.Autofocus,
                         backgroundCursorColor: Red,
                         contextMenuBuilder: Widget.ContextMenuBuilder,
-                        cursorColor: Red,
+                        cursorColor: Widget.CursorColor ?? Red,
+                        cursorOpacityAnimates: Widget.CursorOpacityAnimates,
                         focusNode: EffectiveFocusNode,
+                        groupId: Widget.GroupId,
                         maxLines: Widget.MaxLines,
+                        multiline: Widget.MaxLines != 1,
+                        onChanged: Widget.OnChanged,
+                        onSubmitted: Widget.OnSubmitted,
                         readOnly: Widget.ReadOnly,
                         rendererIgnoresPointer: true,
                         selectionControls: Widget.SelectionControls ?? TestTextSelectionHandleControls.Instance,
-                        style: new TextStyle(),
+                        showCursor: Widget.ShowCursor,
+                        style: Widget.Style ?? new TextStyle(),
                         showSelectionHandles: Widget.ShowSelectionHandles)));
         }
     }

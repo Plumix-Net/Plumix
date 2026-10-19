@@ -68,6 +68,8 @@ internal sealed partial class FrameworkDartTester
     public void SendEventToBinding(PointerEvent @event)
     {
         GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
+        // Awaiting flutter_test's guarded event dispatcher gives each event a microtask boundary.
+        EventLoop.FlushMicrotasks();
     }
 
     /// <summary>Dart's <c>tester.drag(finder, offset)</c>.</summary>
