@@ -30,6 +30,7 @@ public sealed partial class RenderParagraph : RenderBox,
     private List<InlineSpanSemanticsInformation>? _semanticsInfo;
     private List<AttributedString>? _cachedAttributedLabels;
     private List<InlineSpanSemanticsInformation>? _cachedCombinedSemanticsInfos;
+    private OrderedDictionary<UniqueKey, SemanticsNode>? _cachedChildNodes;
     private Color? _selectionColor;
 
     /// Creates a paragraph render object.
@@ -899,26 +900,28 @@ public sealed partial class RenderParagraph : RenderBox,
         SemanticsConfiguration config,
         IReadOnlyList<SemanticsNode> children)
     {
-        _semanticsInfo ??= Text.GetSemanticsInformation();
-        _cachedCombinedSemanticsInfos ??= InlineSpan.CombineSemanticsInfo(_semanticsInfo);
-
+        DebugAssertions.Assert(_semanticsInfo is { Count: > 0 });
         var newChildren = new List<SemanticsNode>();
+        TextDirection currentDirection = TextDirection;
         double ordinal = 0.0;
         int start = 0;
+        int placeholderIndex = 0;
         int childIndex = 0;
         RenderBox? child = FirstChild;
+        var newChildCache = new OrderedDictionary<UniqueKey, SemanticsNode>();
+        _cachedCombinedSemanticsInfos ??= InlineSpan.CombineSemanticsInfo(_semanticsInfo!);
         foreach (InlineSpanSemanticsInformation info in _cachedCombinedSemanticsInfos)
         {
-            int selectionStart = start;
-            int selectionLength = info.Text.Length;
-            start += selectionLength;
+            var selection = new TextSelection(start, start + info.Text.Length);
+            start += info.Text.Length;
 
             if (info.IsPlaceholder)
             {
-                if (childIndex < children.Count)
+                // A placeholder may contribute no nodes, or several independently annotated nodes.
+                while (childIndex < children.Count
+                       && children[childIndex].IsTagged(new PlaceholderSpanIndexSemanticsTag(placeholderIndex)))
                 {
-                    bool laidOut = child?.parentData is TextParentData { InlineOffset: not null };
-                    if (laidOut)
+                    if (child!.parentData is TextParentData { InlineOffset: not null })
                     {
                         newChildren.Add(children[childIndex]);
                     }
@@ -926,83 +929,114 @@ public sealed partial class RenderParagraph : RenderBox,
                     childIndex += 1;
                 }
 
-                if (child is not null)
-                {
-                    child = ChildAfter(child);
-                }
-
+                child = ChildAfter(child!);
+                placeholderIndex += 1;
                 continue;
             }
 
-            if (selectionLength == 0)
+            TextDirection initialDirection = currentDirection;
+            IReadOnlyList<TextBox> rects = GetBoxesForSelection(selection);
+            if (rects.Count == 0)
             {
                 continue;
             }
 
-            Rect? bounds = BoundsForRange(selectionStart, selectionLength);
-            if (bounds is null)
+            Rect rect = rects[0].ToRect();
+            currentDirection = rects[0].Direction;
+            foreach (TextBox textBox in rects.Skip(1))
             {
-                continue;
+                rect = rect.Union(textBox.ToRect());
+                currentDirection = textBox.Direction;
             }
 
-            SemanticsNode childNode = Owner!.SemanticsOwner!.CreateDetachedNode(this);
+            // Infinite text boxes must not reach platform accessibility bridges.
+            rect = new Rect(
+                Math.Max(0.0, rect.Left),
+                Math.Max(0.0, rect.Top),
+                Math.Min(rect.Width, Constraints.MaxWidth),
+                Math.Min(rect.Height, Constraints.MaxHeight));
+            double left = Math.Floor(rect.Left) - 4.0;
+            double top = Math.Floor(rect.Top) - 4.0;
+            double right = Math.Ceiling(rect.Right) + 4.0;
+            double bottom = Math.Ceiling(rect.Bottom) + 4.0;
+            var currentRect = new Rect(left, top, right - left, bottom - top);
             var configuration = new SemanticsConfiguration
             {
-                SortKey = new OrdinalSortKey(ordinal),
-                Label = info.SemanticsLabel ?? info.Text,
+                SortKey = new OrdinalSortKey(ordinal++),
+                TextDirection = initialDirection,
+                Identifier = info.SemanticsIdentifier ?? string.Empty,
+                AttributedLabel = new AttributedString(info.SemanticsLabel ?? info.Text, info.StringAttributes),
             };
-            ordinal += 1;
             ApplyRecognizerSemantics(configuration, info.Recognizer);
-            childNode.UpdateWith(configuration, []);
-            // Flutter positions the per-run children by rect alone, in the paragraph's own coordinates.
-            childNode.Rect = bounds.Value;
-            newChildren.Add(childNode);
+            if (node.ParentPaintClipRect is { } parentPaintClipRect)
+            {
+                Rect paintRect = parentPaintClipRect.Intersect(currentRect);
+                configuration.IsHidden = (paintRect.Width <= 0.0 || paintRect.Height <= 0.0)
+                                         && currentRect.Width > 0.0 && currentRect.Height > 0.0;
+            }
+
+            SemanticsNode newChild;
+            if (_cachedChildNodes is { Count: > 0 })
+            {
+                UniqueKey firstKey = _cachedChildNodes.GetAt(0).Key;
+                newChild = _cachedChildNodes[firstKey];
+                _cachedChildNodes.Remove(firstKey);
+                newChildCache[firstKey] = newChild;
+            }
+            else
+            {
+                var key = new UniqueKey();
+                newChild = new SemanticsNode(GetType().Name, CreateShowOnScreenFor(key));
+                newChildCache[key] = newChild;
+            }
+
+            newChild.UpdateWith(configuration);
+            newChild.Rect = currentRect;
+            newChildren.Add(newChild);
         }
 
+        DebugAssertions.Assert(childIndex == children.Count);
+        DebugAssertions.Assert(child is null);
+        _cachedChildNodes = newChildCache;
         node.UpdateWith(config, newChildren);
+    }
+
+    private Action CreateShowOnScreenFor(UniqueKey key)
+    {
+        return () =>
+        {
+            SemanticsNode node = _cachedChildNodes![key];
+            ShowOnScreen(descendant: this, rect: node.Rect);
+        };
+    }
+
+    protected override void ClearOwnSemantics()
+    {
+        base.ClearOwnSemantics();
+        _cachedChildNodes = null;
     }
 
     private static void ApplyRecognizerSemantics(SemanticsConfiguration configuration, GestureRecognizer? recognizer)
     {
         switch (recognizer)
         {
-            case null:
-                return;
             case TapGestureRecognizer { OnTap: { } onTap }:
-                configuration.AddActionHandler(SemanticsActions.Tap, () => onTap());
-                configuration.Flags |= SemanticsFlags.IsLink;
-                return;
-            case TapGestureRecognizer:
-                return;
+                configuration.OnTap = onTap;
+                configuration.IsLink = true;
+                break;
+            case DoubleTapGestureRecognizer { OnDoubleTap: { } onDoubleTap }:
+                configuration.OnTap = onDoubleTap;
+                configuration.IsLink = true;
+                break;
             case LongPressGestureRecognizer { OnLongPress: { } onLongPress }:
-                configuration.AddActionHandler(SemanticsActions.LongPress, () => onLongPress());
-                return;
-            case LongPressGestureRecognizer:
-                return;
+                configuration.OnLongPress = onLongPress;
+                break;
+            case null or TapGestureRecognizer or DoubleTapGestureRecognizer or LongPressGestureRecognizer:
+                break;
             default:
-                throw new InvalidOperationException($"{recognizer.GetType().Name} is not supported.");
+                DebugAssertions.Assert(false, $"{recognizer.GetType().Name} is not supported.");
+                break;
         }
-    }
-
-    private Rect? BoundsForRange(int start, int length)
-    {
-        IReadOnlyList<TextBox> rects = GetBoxesForSelection(new TextSelection(start, start + length));
-        if (rects.Count == 0)
-        {
-            return null;
-        }
-
-        Rect rect = rects[0].ToRect();
-        for (int index = 1; index < rects.Count; index += 1)
-        {
-            rect = rect.Union(rects[index].ToRect());
-        }
-
-        return new Rect(
-            Math.Floor(rect.Left) - 4.0,
-            Math.Floor(rect.Top) - 4.0,
-            Math.Ceiling(rect.Width) + 8.0,
-            Math.Ceiling(rect.Height) + 8.0);
     }
 
     // -- Diagnostics -----------------------------------------------------------------------

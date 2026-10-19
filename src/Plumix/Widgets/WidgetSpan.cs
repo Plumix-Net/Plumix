@@ -388,12 +388,14 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
         RenderBox? child = Child;
         if (child is null)
         {
+            Layer = null;
             return;
         }
 
         if (_scale == 1.0)
         {
             context.PaintChild(child, offset);
+            Layer = null;
             return;
         }
 
@@ -405,6 +407,11 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
             transform,
             (inner, innerOffset) => inner.PaintChild(child, innerOffset),
             Layer as TransformLayer);
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        transform.ScaleByDouble(_scale, _scale, _scale, 1.0);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)

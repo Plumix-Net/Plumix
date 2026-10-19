@@ -10,7 +10,10 @@ class RichTextDemoPage extends StatefulWidget {
 
 class _RichTextDemoPageState extends State<RichTextDemoPage> {
   late final TapGestureRecognizer _tapRecognizer;
+  late final DoubleTapGestureRecognizer _doubleTapRecognizer;
+  late final LongPressGestureRecognizer _longPressRecognizer;
   int _taps = 0;
+  int _inlineActions = 0;
   bool _boldText = false;
   bool _spacingOverrides = false;
 
@@ -19,11 +22,17 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
     super.initState();
     _tapRecognizer = TapGestureRecognizer()
       ..onTap = () => setState(() => _taps += 1);
+    _doubleTapRecognizer = DoubleTapGestureRecognizer()
+      ..onDoubleTap = () => setState(() => _inlineActions += 1);
+    _longPressRecognizer = LongPressGestureRecognizer()
+      ..onLongPress = () => setState(() => _inlineActions += 1);
   }
 
   @override
   void dispose() {
     _tapRecognizer.dispose();
+    _doubleTapRecognizer.dispose();
+    _longPressRecognizer.dispose();
     super.dispose();
   }
 
@@ -49,6 +58,7 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
         ),
         _buildPaintedParagraph(),
         _buildInlineWidgetParagraph(),
+        _buildAccessibleInlineParagraph(),
         _buildAlignmentRow(),
         _buildDefaultTextStyleParagraph(),
         _buildOverflowAndStrut(),
@@ -217,6 +227,54 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
           ],
         ),
         style: TextStyle(fontSize: 16, color: Color(0xFF1D3557)),
+      ),
+    );
+  }
+
+  Widget _buildAccessibleInlineParagraph() {
+    return Container(
+      color: const Color(0xFFF0FDF4),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 6,
+        children: <Widget>[
+          const Text('Accessible inline actions', style: TextStyle(fontWeight: FontWeight.bold)),
+          RichText(
+            text: TextSpan(
+              text: 'Read ',
+              style: const TextStyle(fontSize: 16, color: Color(0xFF1D3557)),
+              children: <InlineSpan>[
+                const TextSpan(text: 'ABC', spellOut: true, semanticsIdentifier: 'inline-code'),
+                const TextSpan(text: ' then '),
+                TextSpan(
+                  text: 'double-tap',
+                  recognizer: _doubleTapRecognizer,
+                  style: const TextStyle(decoration: TextDecoration.underline),
+                ),
+                const TextSpan(text: ' or '),
+                TextSpan(
+                  text: 'hold',
+                  recognizer: _longPressRecognizer,
+                  style: const TextStyle(decoration: TextDecoration.underline),
+                ),
+                const TextSpan(text: ' beside '),
+                WidgetSpan(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    spacing: 4,
+                    children: <Widget>[
+                      Semantics(container: true, child: const Text('first')),
+                      Semantics(container: true, child: const Text('second')),
+                    ],
+                  ),
+                ),
+                const TextSpan(text: '.'),
+              ],
+            ),
+          ),
+          Text('Activated inline actions $_inlineActions times'),
+        ],
       ),
     );
   }

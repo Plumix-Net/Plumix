@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Paragraph inline semantics, span node reuse and scaled widget bounds match Dart (rendering/paragraph.dart).
+
 - Breaking: Async root restoration, stale-get arbitration and native mobile saved state (services/restoration.dart).
 - Breaking: Role checks, sticky annotation history and checked-state replacement match Dart (semantics/semantics.dart).
 

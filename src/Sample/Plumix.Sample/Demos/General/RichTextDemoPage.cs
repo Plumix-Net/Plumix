@@ -18,7 +18,10 @@ public sealed class RichTextDemoPage : StatefulWidget
 public sealed class RichTextDemoPageState : State
 {
     private readonly TapGestureRecognizer _tapRecognizer = new();
+    private readonly DoubleTapGestureRecognizer _doubleTapRecognizer = new();
+    private readonly LongPressGestureRecognizer _longPressRecognizer = new();
     private int _taps;
+    private int _inlineActions;
     private bool _boldText;
     private bool _spacingOverrides;
 
@@ -26,11 +29,15 @@ public sealed class RichTextDemoPageState : State
     {
         base.InitState();
         _tapRecognizer.OnTap = () => SetState(() => _taps += 1);
+        _doubleTapRecognizer.OnDoubleTap = () => SetState(() => _inlineActions += 1);
+        _longPressRecognizer.OnLongPress = () => SetState(() => _inlineActions += 1);
     }
 
     public override void Dispose()
     {
         _tapRecognizer.Dispose();
+        _doubleTapRecognizer.Dispose();
+        _longPressRecognizer.Dispose();
         base.Dispose();
     }
 
@@ -54,6 +61,7 @@ public sealed class RichTextDemoPageState : State
                         Color: Colors.DimGray)),
                 BuildPaintedParagraph(),
                 BuildInlineWidgetParagraph(),
+                BuildAccessibleInlineParagraph(),
                 BuildAlignmentRow(),
                 BuildDefaultTextStyleParagraph(),
                 BuildOverflowAndStrut(),
@@ -194,6 +202,41 @@ public sealed class RichTextDemoPageState : State
                         new TextSpan(text: " widgets flow with the text."),
                     ]),
                 style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557))));
+    }
+
+    private Widget BuildAccessibleInlineParagraph()
+    {
+        return new Container(
+            color: new Color(0xFFF0FDF4),
+            padding: new Thickness(12),
+            child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.Stretch,
+                spacing: 6,
+                children:
+                [
+                    new Text("Accessible inline actions", style: new TextStyle(FontWeight: FontWeight.Bold)),
+                    new RichText(text: new TextSpan(
+                        text: "Read ",
+                        style: new TextStyle(FontSize: 16, Color: new Color(0xFF1D3557)),
+                        children:
+                        [
+                            new TextSpan("ABC", spellOut: true, semanticsIdentifier: "inline-code"),
+                            new TextSpan(" then "),
+                            new TextSpan("double-tap", recognizer: _doubleTapRecognizer,
+                                style: new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline)),
+                            new TextSpan(" or "),
+                            new TextSpan("hold", recognizer: _longPressRecognizer,
+                                style: new TextStyle(Decoration: Plumix.UI.TextDecoration.Underline)),
+                            new TextSpan(" beside "),
+                            new WidgetSpan(new Row(mainAxisSize: MainAxisSize.Min, spacing: 4, children:
+                            [
+                                new Semantics(container: true, child: new Text("first")),
+                                new Semantics(container: true, child: new Text("second")),
+                            ])),
+                            new TextSpan("."),
+                        ])),
+                    new Text($"Activated inline actions {_inlineActions} times"),
+                ]));
     }
 
     private static Widget BuildAlignmentRow()
