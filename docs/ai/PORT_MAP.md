@@ -437,7 +437,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/raw_keyboard_macos.dart` | `src/Plumix/UI/RawKeyboardMacOs.cs` | — | — |
 | `services/raw_keyboard_web.dart` | `src/Plumix/UI/RawKeyboardWeb.cs` | — | — |
 | `services/raw_keyboard_windows.dart` | `src/Plumix/UI/RawKeyboardWindows.cs` | — | — |
-| `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/MaterialTimePickerRestorationTests.cs`<br>`src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
+| `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/HostRestorationChannelTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerRestorationTests.cs`<br>`src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationChannelDartParityTests.cs`<br>`src/Plumix.Tests/RestorationLifecycleDartParityTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationSampleTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | `dart_sample/lib/demos/general/restoration_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RestorationDemoPage.cs` |
 | `services/scribe.dart` | `src/Plumix/UI/Scribe.cs` | `src/Plumix.Tests/EditableTextScribeDartParityTests.cs` | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_channels.dart` | `src/Plumix/UI/SystemChannels.cs` | — | — |
@@ -547,7 +547,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/raw_tooltip.dart` | `src/Plumix/Widgets/RawTooltip.cs` | `src/Plumix.Tests/RawTooltipTests.cs` | — |
 | `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
-| `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/MaterialTimePickerRestorationTests.cs`<br>`src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
+| `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/HostRestorationChannelTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerRestorationTests.cs`<br>`src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationChannelDartParityTests.cs`<br>`src/Plumix.Tests/RestorationLifecycleDartParityTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationSampleTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | `dart_sample/lib/demos/general/restoration_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RestorationDemoPage.cs` |
 | `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
 | `widgets/router.dart` | `src/Plumix/Widgets/Router.cs` | `src/Plumix.Tests/PointerRouterTests.cs`<br>`src/Plumix.Tests/RouterTests.cs` | `dart_sample/lib/demos/general/router_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RouterDemoPage.cs` |
 | `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.TransitionRoute.cs`<br>`src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationNotificationTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/bottom_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/BottomNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
@@ -628,6 +628,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Accessibility/SemanticsAutomationPeers.cs`
 - `src/Plumix/Accessibility/WebSemantics.cs`
 - `src/Plumix/AndroidLifecycleChannel.cs`
+- `src/Plumix/AndroidRestorationChannel.cs`
 - `src/Plumix/AvaloniaWindowing.cs`
 - `src/Plumix/Developer/DeveloperService.cs`
 - `src/Plumix/Developer/Timeline.cs`
@@ -653,6 +654,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/HostPointerPacketEncoder.cs`
 - `src/Plumix/HotReload.cs`
+- `src/Plumix/IOSRestorationPlugin.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PipelineOwner.Headless.cs`
 - `src/Plumix/PlumixApplication.cs`
@@ -728,7 +730,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - Flutter files mapped: 593
 - C# files carrying a marker: 781
-- C# files without a marker: 93
+- C# files without a marker: 95
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 1
 

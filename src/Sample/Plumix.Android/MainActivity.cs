@@ -21,6 +21,10 @@ namespace Plumix.Android;
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
 public class MainActivity : AvaloniaMainActivity
 {
+    // One channel per engine/process, including when Android recreates its Activity.
+    private static readonly AndroidRestorationChannel RestorationChannel = new(waitForRestorationData: true);
+    private const string FrameworkRestorationBundleKey = "framework";
+
     private readonly AndroidLifecycleChannel _lifecycleChannel = new(
         WidgetsBinding.Instance.HandleAppLifecycleStateChanged);
     private AndroidSpellCheckService? _spellCheckService;
@@ -28,6 +32,8 @@ public class MainActivity : AvaloniaMainActivity
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        // An absent bundle is also a response: it releases the framework's initial delayed get.
+        RestorationChannel.SetRestorationData(savedInstanceState?.GetByteArray(FrameworkRestorationBundleKey));
         base.OnCreate(savedInstanceState);
         _spellCheckService = new AndroidSpellCheckService(this);
         DefaultSpellCheckService.PlatformHandler = _spellCheckService.Handler;
@@ -40,6 +46,12 @@ public class MainActivity : AvaloniaMainActivity
         OnBackInvokedDispatcher.RegisterOnBackInvokedCallback(
             IOnBackInvokedDispatcher.PriorityDefault,
             _predictiveBackCallback);
+    }
+
+    protected override void OnSaveInstanceState(Bundle outState)
+    {
+        outState.PutByteArray(FrameworkRestorationBundleKey, RestorationChannel.RestorationData);
+        base.OnSaveInstanceState(outState);
     }
 
     protected override void OnResume()

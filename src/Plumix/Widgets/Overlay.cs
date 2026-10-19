@@ -1714,6 +1714,16 @@ internal sealed class OverlayTheaterElement : MultiChildRenderObjectElement
     {
     }
 
+    public override void DebugVisitOnstageChildren(Action<Element> visitor)
+    {
+        var theater = (OverlayTheater)Widget;
+        Debug.Assert(Children.Count() >= theater.SkipCount);
+        foreach (Element child in Children.Skip(theater.SkipCount))
+        {
+            visitor(child);
+        }
+    }
+
     public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
         base.InsertRenderObjectChild(child, slot);

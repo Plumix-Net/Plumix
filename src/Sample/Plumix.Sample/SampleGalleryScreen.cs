@@ -28,6 +28,7 @@ internal static class SampleRoutes
     public const string Router = "/router";
     public const string PlatformMenuBar = "/platform-menu-bar";
     public const string Windowing = "/windowing";
+    public const string Restoration = "/restoration";
     public const string NavigatorDetails = "/navigator/details";
     public const string ListViewSeparated = "/list-separated";
     public const string ListViewFixedExtent = "/list-fixed-extent";
@@ -468,6 +469,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
 
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =
     [
+        new(
+            SampleRoutes.Restoration,
+            "State restoration",
+            "native saved state + restorable counter, note, scroll and route",
+            () => new RestorationDemoPage()),
         new(SampleRoutes.Counter, "Counter", "existing sample", () => new CounterScreen()),
         new(SampleRoutes.BlocCounter, "Bloc counter", "BlocProvider + BlocBuilder + BlocListener + BlocSelector", () => new BlocCounterDemoPage()),
         new(SampleRoutes.Navigator, "Navigator", "named routes + RouteData + stack APIs", () => new NavigatorDemoPage()),
@@ -789,6 +795,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
     {
         return new Scaffold(
             body: new Navigator(
+                restorationScopeId: "gallery",
                 onGenerateRoute: BuildRoute,
                 observers: [SampleNavigationObservers.PageRoutes],
                 initialRouteName: SampleRoutes.Menu));
@@ -905,7 +912,7 @@ internal sealed class SampleMenuPage : StatefulWidget
         private static Widget BuildPageButton(BuildContext context, SampleRouteDefinition page)
         {
             return new OutlinedButton(
-                onPressed: () => Navigator.Of(context).PushNamed(page.RouteName),
+                onPressed: () => Navigator.Of(context).RestorablePushNamed(page.RouteName),
                 child: new Text($"{page.Title}  |  {page.Subtitle}", style: new TextStyle(FontSize: 12)),
                 style: OutlinedButton.StyleFrom(
                     foregroundColor: Colors.Black,

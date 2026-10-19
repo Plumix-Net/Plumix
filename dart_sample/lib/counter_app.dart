@@ -30,6 +30,7 @@ class _CounterAppState extends State<CounterApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      restorationScopeId: 'sample',
       title: 'Flutter.Net Sample',
       theme: ThemeData(
         textTheme: const TextTheme(

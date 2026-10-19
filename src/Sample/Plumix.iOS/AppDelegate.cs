@@ -22,6 +22,8 @@ namespace Plumix.iOS;
 public partial class AppDelegate : AvaloniaAppDelegate<App>
 #pragma warning restore CA1711 // Identifiers should not have incorrect suffix
 {
+    private const string FrameworkRestorationStateKey = "FlutterRestorationStateAppData";
+    private readonly IOSRestorationPlugin _restorationPlugin = new(restorationEnabled: true);
     private readonly List<NSObject> _lifecycleObservers;
 
     public AppDelegate()
@@ -31,7 +33,13 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         [
             center.AddObserver(
                 UIApplication.DidBecomeActiveNotification,
-                _ => DispatchLifecycleState(AppLifecycleState.Resumed)),
+                _ =>
+                {
+                    // UIKit has finished decoding saved state before activation. Avalonia owns the
+                    // view controller, so this is our equivalent of Flutter's viewWillAppear hook.
+                    _restorationPlugin.MarkRestorationComplete();
+                    DispatchLifecycleState(AppLifecycleState.Resumed);
+                }),
             center.AddObserver(
                 UIApplication.WillResignActiveNotification,
                 _ => DispatchLifecycleState(AppLifecycleState.Inactive)),
@@ -45,6 +53,26 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
                 UIApplication.WillTerminateNotification,
                 _ => DispatchLifecycleState(AppLifecycleState.Detached)),
         ];
+    }
+
+    [Export("application:shouldSaveSecureApplicationState:")]
+    public bool ShouldSaveSecureApplicationState(UIApplication application, NSCoder coder) => true;
+
+    [Export("application:shouldRestoreSecureApplicationState:")]
+    public bool ShouldRestoreSecureApplicationState(UIApplication application, NSCoder coder) => true;
+
+    [Export("application:willEncodeRestorableStateWithCoder:")]
+    public void WillEncodeRestorableState(UIApplication application, NSCoder coder)
+    {
+        coder.Encode(_restorationPlugin.RestorationData ?? System.Array.Empty<byte>(), FrameworkRestorationStateKey);
+    }
+
+    [Export("application:didDecodeRestorableStateWithCoder:")]
+    public void DidDecodeRestorableState(UIApplication application, NSCoder coder)
+    {
+        _restorationPlugin.RestorationData = coder.ContainsKey(FrameworkRestorationStateKey)
+            ? coder.DecodeBytes(FrameworkRestorationStateKey)
+            : null;
     }
 
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)

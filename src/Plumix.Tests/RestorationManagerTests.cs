@@ -83,6 +83,9 @@ public sealed class RestorationManagerTests : IDisposable
             enabled: true,
             data: RawRestorationData.Build(values: new Dictionary<object, object?> { ["foo"] = 33 }));
 
+        Assert.Null(bucket);
+        EventLoop.FlushMicrotasks();
+
         Assert.Equal(33, bucket!.Read<int>("foo"));
     }
 

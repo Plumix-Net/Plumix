@@ -29,6 +29,7 @@ public sealed class CounterApp : StatefulWidget
         {
             return new MaterialApp(
                 debugShowCheckedModeBanner: false,
+                restorationScopeId: "sample",
                 title: "Flutter.Net Sample",
                 theme: new ThemeData(
                     textTheme: new MaterialTextTheme(

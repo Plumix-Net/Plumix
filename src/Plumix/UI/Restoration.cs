@@ -20,16 +20,23 @@ public class RestorationManager : ChangeNotifier
     private static readonly StandardMessageCodec RestorationCodec = new StandardMessageCodec();
 
     private readonly HashSet<RestorationBucket> _bucketsNeedingSerialization = [];
+    private readonly OptionalMethodChannel _channel;
 
     private RestorationBucket? _rootBucket;
-    private List<Action<RestorationBucket?>>? _pendingRootBucketCallbacks;
+    private TaskCompletionSource<RestorationBucket?>? _pendingRootBucket;
     private bool _rootBucketIsValid;
     private bool _isReplacing;
     private bool _debugDoingUpdate;
     private bool _serializationScheduled;
 
-    public RestorationManager()
+    public RestorationManager() : this(null)
     {
+    }
+
+    public RestorationManager(BinaryMessenger? binaryMessenger)
+    {
+        _channel = new OptionalMethodChannel(
+            SystemChannels.Restoration.Name, SystemChannels.Restoration.Codec, binaryMessenger);
         InitChannels();
     }
 
@@ -37,10 +44,13 @@ public class RestorationManager : ChangeNotifier
     /// The ambient manager used by <see cref="Plumix.Widgets.RootRestorationScope"/>.
     /// </summary>
     /// <remarks>
-    /// Dart parity source: <c>ServicesBinding.instance.restorationManager</c>. Plumix has no binding
-    /// singleton, so hosts and tests substitute their own manager here.
+    /// Compatibility alias for <c>ServicesBinding.instance.restorationManager</c>.
     /// </remarks>
-    public static RestorationManager Instance { get; set; } = new RestorationManager();
+    public static RestorationManager Instance
+    {
+        get => ServicesBinding.Instance.RestorationManager;
+        set => ServicesBinding.Instance.RestorationManager = value ?? throw new ArgumentNullException(nameof(value));
+    }
 
     /// <summary>
     /// Whether the framework is currently restoring into a new set of data provided by the host.
@@ -50,7 +60,7 @@ public class RestorationManager : ChangeNotifier
     /// <summary>Installs the <c>flutter/restoration</c> method-call handler.</summary>
     protected virtual void InitChannels()
     {
-        SystemChannels.Restoration.SetMethodCallHandler(HandleMethodCall);
+        _channel.SetMethodCallHandler(HandleMethodCall);
     }
 
     private Task<object?> HandleMethodCall(MethodCall call)
@@ -82,26 +92,50 @@ public class RestorationManager : ChangeNotifier
     }
 
     /// <summary>
-    /// Delivers the root bucket. Dart parity source: <c>Future&lt;RestorationBucket?&gt; get rootBucket</c>.
-    /// C# has no synchronous future, so the bucket is handed to <paramref name="callback"/>, which runs
-    /// synchronously whenever the data is already available.
+    /// The root bucket, or null when restoration is disabled. Invalid data shares one pending request;
+    /// valid data is available synchronously, like Dart's <c>SynchronousFuture</c>.
+    /// </summary>
+    public virtual Task<RestorationBucket?> RootBucket
+    {
+        get
+        {
+            if (_rootBucketIsValid)
+            {
+                return Task.FromResult(_rootBucket);
+            }
+
+            if (_pendingRootBucket is null)
+            {
+                _pendingRootBucket = new TaskCompletionSource<RestorationBucket?>(
+                    TaskCreationOptions.RunContinuationsAsynchronously);
+                Task<RestorationBucket?> pending = _pendingRootBucket.Task;
+                GetRootBucketFromEngine();
+                return pending;
+            }
+
+            return _pendingRootBucket.Task;
+        }
+    }
+
+    /// <summary>
+    /// Callback compatibility surface for <see cref="RootBucket"/>. Available data is delivered inline;
+    /// pending data is delivered in a microtask after the manager's replacement listeners.
     /// </summary>
     public virtual void GetRootBucket(Action<RestorationBucket?> callback)
     {
         ArgumentNullException.ThrowIfNull(callback);
-
-        if (_rootBucketIsValid)
+        Task<RestorationBucket?> pending = RootBucket;
+        if (pending.IsCompletedSuccessfully)
         {
-            callback(_rootBucket);
+            callback(pending.Result);
             return;
         }
 
-        bool requestPending = _pendingRootBucketCallbacks is not null;
-        (_pendingRootBucketCallbacks ??= []).Add(callback);
-        if (!requestPending)
+        EventLoop.RunAsync(async () =>
         {
-            GetRootBucketFromEngine();
-        }
+            RestorationBucket? bucket = await pending;
+            callback(bucket);
+        });
     }
 
     /// <summary>
@@ -111,22 +145,19 @@ public class RestorationManager : ChangeNotifier
     /// </summary>
     protected virtual void GetRootBucketFromEngine()
     {
-        Task<object?> pending = SystemChannels.Restoration.InvokeMethod<object>("get");
-        if (pending.IsCompletedSuccessfully)
+        EventLoop.RunAsync(async () =>
         {
-            // Dart's `SynchronousFuture` equivalent: a host that answers inline keeps the root bucket
-            // available in the same turn, which is what every restoration test relies on.
-            ParseAndHandleRestorationUpdateFromEngine(pending.Result);
-            return;
-        }
-
-        EventLoop.RunAsync(() => AwaitRootBucketFromEngine(pending));
-    }
-
-    private async Task AwaitRootBucketFromEngine(Task<object?> pending)
-    {
-        object? update = await pending;
-        ParseAndHandleRestorationUpdateFromEngine(update);
+            object? update = await _channel.InvokeMethod<object>("get");
+            // An engine reply is asynchronous even when an in-process platform handler answers inline.
+            // A push may already have completed this retrieval by the time the response is processed.
+            EventLoop.ScheduleMicrotask(() =>
+            {
+                if (_pendingRootBucket is not null)
+                {
+                    ParseAndHandleRestorationUpdateFromEngine(update);
+                }
+            });
+        });
     }
 
     /// <summary>Called by the host when it has new restoration data for the framework.</summary>
@@ -151,23 +182,13 @@ public class RestorationManager : ChangeNotifier
             : null;
         _rootBucketIsValid = true;
 
-        List<Action<RestorationBucket?>>? pending = _pendingRootBucketCallbacks;
-        _pendingRootBucketCallbacks = null;
+        _pendingRootBucket?.SetResult(_rootBucket);
+        _pendingRootBucket = null;
 
         if (!ReferenceEquals(_rootBucket, oldRoot))
         {
             NotifyListeners();
             oldRoot?.Dispose();
-        }
-
-        // Dart completes the pending `rootBucket` future here; its continuations run in a microtask,
-        // after the listeners above, so the callbacks are drained last.
-        if (pending is not null)
-        {
-            foreach (Action<RestorationBucket?> callback in pending)
-            {
-                callback(_rootBucket);
-            }
         }
     }
 
@@ -175,7 +196,7 @@ public class RestorationManager : ChangeNotifier
     /// <c>flutter/restoration</c> channel.</summary>
     protected virtual void SendToEngine(byte[] encodedData)
     {
-        _ = SystemChannels.Restoration.InvokeMethod<object>("put", encodedData);
+        EventLoop.RunAsync(async () => await _channel.InvokeMethod<object>("put", encodedData));
     }
 
     /// <summary>Decodes restoration data received from the host.</summary>

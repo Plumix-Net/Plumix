@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import 'demos/general/align_demo_page.dart';
+import 'demos/general/restoration_demo_page.dart';
 import 'demos/general/platform_menu_bar_demo_page.dart';
 import 'demos/general/windowing_demo_page.dart';
 import 'demos/general/async_builder_demo_page.dart';
@@ -742,6 +743,13 @@ class SampleGalleryScreen extends StatelessWidget {
   static final List<SampleRouteDefinition>
   _generalDemoPages = <SampleRouteDefinition>[
     SampleRouteDefinition(
+      routeName: SampleRoutes.restoration,
+      title: 'State restoration',
+      subtitle:
+          'native saved state + restorable counter, note, scroll and route',
+      builder: () => const RestorationDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.counter,
       title: 'Counter',
       subtitle: 'existing sample',
@@ -1230,6 +1238,7 @@ class SampleGalleryScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Navigator(
+        restorationScopeId: 'gallery',
         onGenerateRoute: _buildRoute,
         observers: <NavigatorObserver>[SampleNavigationObservers.pageRoutes],
         initialRoute: SampleRoutes.menu,
@@ -1362,7 +1371,8 @@ class _SampleMenuPageState extends State<SampleMenuPage> {
     SampleRouteDefinition page,
   ) {
     return OutlinedButton(
-      onPressed: () => Navigator.of(context).pushNamed(page.routeName),
+      onPressed: () =>
+          Navigator.of(context).restorablePushNamed(page.routeName),
       style: OutlinedButton.styleFrom(
         backgroundColor: const Color(0xFFDCE3ED),
         foregroundColor: Colors.black,

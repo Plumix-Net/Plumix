@@ -174,6 +174,7 @@ class SampleRoutes {
   static const String dismissibleSizeChangedLayout =
       '/dismissible-size-changed-layout';
   static const String stateStorage = '/state-storage';
+  static const String restoration = '/restoration';
   static const String navigationPop = '/navigation-pop';
   static const String asyncBuilders = '/async-builders';
   static const String statefulBuilderLookupBoundary =

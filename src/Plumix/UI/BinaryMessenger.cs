@@ -166,6 +166,7 @@ public class ServicesBinding
                 await HandleAccessibilityMessage(message!);
                 return null;
             });
+        RestorationManager = CreateRestorationManager();
         _ = InitKeyboard();
     }
 
@@ -227,6 +228,12 @@ public class ServicesBinding
 
     /// <summary>The messenger every channel uses unless it was given one explicitly.</summary>
     public virtual BinaryMessenger DefaultBinaryMessenger { get; } = new PlatformBinaryMessenger();
+
+    /// <summary>The state restoration manager owned by this services binding.</summary>
+    public RestorationManager RestorationManager { get; internal set; }
+
+    /// <summary>Creates the restoration manager, as in Dart's services binding.</summary>
+    protected virtual RestorationManager CreateRestorationManager() => new RestorationManager(DefaultBinaryMessenger);
 
     public virtual Rendering.AssetBundle RootBundle => Rendering.PlatformAssetBundle.Root;
 
