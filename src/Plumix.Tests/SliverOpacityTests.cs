@@ -50,7 +50,7 @@ public sealed class SliverOpacityTests : IDisposable
             opacity: 0.75,
             alwaysIncludeSemantics: true,
             sliver: new SliverToBoxAdapter(new SizedBox(width: 20, height: 30))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderSliverOpacity>(root.ChildElement);
         Assert.Same(renderOpacity, updated);
@@ -190,12 +190,12 @@ public sealed class SliverOpacityTests : IDisposable
             curve: Curves.Linear,
             sliver: new SliverToBoxAdapter(new SizedBox(width: 20, height: 30)),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
         Assert.InRange(halfway.Opacity.Value, 0.01, 0.99);
         double interruptedOpacity = halfway.Opacity.Value;
@@ -207,7 +207,7 @@ public sealed class SliverOpacityTests : IDisposable
             alwaysIncludeSemantics: true,
             sliver: new SliverToBoxAdapter(new SizedBox(width: 20, height: 30)),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var interrupted = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
         Assert.Equal(interruptedOpacity, interrupted.Opacity.Value, precision: 6);
@@ -215,7 +215,7 @@ public sealed class SliverOpacityTests : IDisposable
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
         Assert.Equal(0.2, finished.Opacity.Value, precision: 6);
         Assert.Equal(1, completed);
@@ -248,7 +248,7 @@ public sealed class SliverOpacityTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

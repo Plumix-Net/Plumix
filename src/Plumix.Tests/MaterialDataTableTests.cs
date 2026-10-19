@@ -254,7 +254,7 @@ public sealed class MaterialDataTableTests : IDisposable
         RenderTransform initial = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
         Assert.Equal(1.0, initial.DebugTransformMatrix()[0], precision: 6);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         state.SetAscending(false);
         harness.Pump(new Size(360.0, 180.0));
         AnimationPump.Prime();
@@ -659,7 +659,7 @@ public sealed class MaterialDataTableTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -672,18 +672,11 @@ public sealed class MaterialDataTableTests : IDisposable
         }
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
         public void Dispose() => _rootElement.UnmountRoot();

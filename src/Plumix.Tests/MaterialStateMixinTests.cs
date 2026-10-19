@@ -28,18 +28,18 @@ public sealed class MaterialStateMixinTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TrackingState trackingState = widget.LastState!;
         Assert.False(trackingState.Evaluate());
 
         trackingState.Notify(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(trackingState.Evaluate());
         Assert.Contains(state, trackingState.States);
 
         trackingState.Notify(false);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(trackingState.Evaluate());
         Assert.DoesNotContain(state, trackingState.States);
     }
@@ -52,20 +52,20 @@ public sealed class MaterialStateMixinTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TrackingState trackingState = widget.LastState!;
         var changes = new List<bool>();
         trackingState.OnChanged = changes.Add;
 
         trackingState.Notify(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         trackingState.Notify(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         trackingState.Notify(false);
-        owner.FlushBuild();
+        owner.PumpFrame();
         trackingState.Notify(false);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([true, false], changes);
     }
@@ -78,16 +78,16 @@ public sealed class MaterialStateMixinTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TrackingState trackingState = widget.LastState!;
         trackingState.Set(WidgetState.Disabled, isSet: true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(trackingState.IsDisabledState);
         Assert.Equal(new HashSet<WidgetState> { WidgetState.Disabled }, trackingState.States);
 
         trackingState.Set(WidgetState.Disabled, isSet: false);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(trackingState.IsDisabledState);
         Assert.Empty(trackingState.States);
     }
@@ -100,7 +100,7 @@ public sealed class MaterialStateMixinTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         WidgetStateProperty<string> property = WidgetStateProperty<string>.ResolveWith(
             states => states.Contains(WidgetState.Hovered) ? "hovered" : "rest");
@@ -109,7 +109,7 @@ public sealed class MaterialStateMixinTests
         Assert.Equal("rest", property.Resolve(trackingState.States));
 
         trackingState.Notify(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("hovered", property.Resolve(trackingState.States));
     }
 
@@ -121,11 +121,11 @@ public sealed class MaterialStateMixinTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TrackingState trackingState = widget.LastState!;
         trackingState.Notify(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var properties = new DiagnosticPropertiesBuilder();
         trackingState.DebugFillProperties(properties);

@@ -31,7 +31,7 @@ public sealed class DecoratedPinnedSliverTests
             decoration: second,
             position: DecorationPosition.Foreground,
             sliver: new SliverToBoxAdapter(new SizedBox(height: 20))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderDecoratedSliver>(root.ChildElement);
         Assert.Same(render, updated);
@@ -217,7 +217,7 @@ public sealed class DecoratedPinnedSliverTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

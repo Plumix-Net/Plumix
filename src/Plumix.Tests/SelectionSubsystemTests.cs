@@ -432,25 +432,21 @@ public sealed class SelectionSubsystemTests
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
             SchedulerBinding.PumpFrameForTests();
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+                _pipeline.FlushPaint();
+                _pipeline.CompositeFrame();
+            });
         }
 
         public void Dispose() => _root.UnmountRoot();

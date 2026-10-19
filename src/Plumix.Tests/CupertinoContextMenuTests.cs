@@ -182,7 +182,7 @@ public sealed class CupertinoContextMenuTests : IDisposable
         IReadOnlyList<BorderRadius> radii = harness.FindWidgets<ClipRSuperellipse>()
             .Select(clip => clip.BorderRadius.Resolve(TextDirection.Ltr))
             .ToArray();
-        Assert.Contains(BorderRadius.Zero, radii);
+        Assert.Contains(BorderRadius.Circular(CupertinoContextMenu.OpenBorderRadius), radii);
         Assert.Contains(BorderRadius.Circular(13.0), radii);
         Assert.Contains(
             harness.FindWidgets<SizedBox>(),

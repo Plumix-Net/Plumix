@@ -156,19 +156,19 @@ public sealed class MaterialExpandIconTests : IDisposable
         Assert.Equal(0.0, rotation.Turns.Value, precision: 6);
 
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.1));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.InRange(rotation.Turns.Value, 0.0, 0.5);
 
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.25));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.Equal(0.5, rotation.Turns.Value, precision: 6);
 
         harness.Update(BuildThemed(new ExpandIcon(_ => { }, isExpanded: false)));
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.25));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.25));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.Equal(0.0, rotation.Turns.Value, precision: 6);
@@ -328,7 +328,7 @@ public sealed class MaterialExpandIconTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -338,24 +338,17 @@ public sealed class MaterialExpandIconTests : IDisposable
         public void Update(Widget widget)
         {
             _rootElement.UpdateRoot(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

@@ -32,7 +32,7 @@ public sealed class MaterialRadioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         RadioPainter painter = FindRadioPainter(renderRoot);
@@ -61,7 +61,7 @@ public sealed class MaterialRadioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         RadioPainter painter = FindRadioPainter(renderRoot);
@@ -88,7 +88,7 @@ public sealed class MaterialRadioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         RadioPainter painter = FindRadioPainter(renderRoot);
@@ -123,7 +123,7 @@ public sealed class MaterialRadioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         RadioPainter painter = FindRadioPainter(renderRoot);
@@ -150,7 +150,7 @@ public sealed class MaterialRadioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         RadioPainter painter = FindRadioPainter(renderRoot);
@@ -179,14 +179,14 @@ public sealed class MaterialRadioTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
             EventLoop.FlushMicrotasks();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Equal("first", nextValue);
             focusNode.Dispose();
@@ -218,14 +218,14 @@ public sealed class MaterialRadioTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
             EventLoop.FlushMicrotasks();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Null(nextValue);
             focusNode.Dispose();
@@ -770,19 +770,14 @@ public sealed class MaterialRadioTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

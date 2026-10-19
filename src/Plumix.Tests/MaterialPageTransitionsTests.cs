@@ -258,7 +258,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Assert.True(WidgetsBinding.Instance.HandleStartBackGesture(start));
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
             new PredictiveBackEvent(0.5, SwipeEdge.Left, new Point(80.0, 340.0)));
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
 
         Assert.True(detailsRoute.PopGestureInProgress);
         Assert.Equal(0.5, detailsRoute.Animation.Value, precision: 6);
@@ -273,7 +273,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         WidgetsBinding.Instance.HandleUpdateBackGestureProgress(
             new PredictiveBackEvent(0.6, SwipeEdge.Left, new Point(100.0, 360.0)));
         _ = await WidgetsBinding.Instance.HandleCommitBackGesture();
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
         Assert.Same(initialRoute, navigator.CurrentRoute);
         Settle(root.TestOwner);
         Assert.False(navigator.UserGestureInProgress);
@@ -297,7 +297,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             delegatedTransition: (_, _, _, _, child) => new Opacity(0.5, child));
 
         navigator!.Push(delegatedRoute);
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
 
         Assert.NotNull(initialRoute.ReceivedTransition);
         Assert.Contains(FindWidgets<Opacity>(root), opacity => opacity.Value == 0.5);
@@ -354,17 +354,17 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         var root = new TestRootElement(rootWidget);
         root.Attach(root.TestOwner);
         root.TestOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
         Settle(root.TestOwner);
         return root;
     }
 
     private static void Settle(BuildOwner owner)
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static void PumpAfter(RenderHarness harness, Size size, TimeSpan duration)
@@ -599,7 +599,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             _root = new RenderRootElement(RenderView, widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -608,12 +608,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispatch(PointerEvent @event)

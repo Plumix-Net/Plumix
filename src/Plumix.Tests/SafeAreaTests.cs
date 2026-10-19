@@ -65,7 +65,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
         Assert.Equal(new Thickness(10, 20, 30, 40), outerPadding.Padding);
@@ -94,7 +94,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
         Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
@@ -127,7 +127,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
         var constraints = TestSliverConstraints.Create(
@@ -161,7 +161,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(10, 20, 30, 40), outerPadding.Padding);
@@ -186,7 +186,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(12, 4, 6, 34), outerPadding.Padding);
@@ -215,7 +215,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
@@ -239,7 +239,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
         var inner = Assert.IsType<RenderPadding>(outer.Child);
@@ -268,7 +268,7 @@ public sealed class SafeAreaTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(20, 20, 20, 0), outer.Padding);
@@ -278,7 +278,7 @@ public sealed class SafeAreaTests
                 Padding: new Thickness(100, 30, 0, 40),
                 ViewPadding: new Thickness(100, 30, 0, 40)),
             child: child));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         outer = RequireRenderObject<RenderPadding>(root.ChildElement);
         var inner = Assert.IsType<RenderPadding>(outer.Child);

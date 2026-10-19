@@ -69,7 +69,7 @@ public sealed class FractionallySizedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(Alignment.TopLeft, renderBox.Alignment);
@@ -81,7 +81,7 @@ public sealed class FractionallySizedBoxTests
             widthFactor: null,
             heightFactor: 0.8,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Same(renderBox, updated);

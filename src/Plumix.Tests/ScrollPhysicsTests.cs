@@ -1126,7 +1126,7 @@ public sealed class ScrollPhysicsTests
     private static void PumpSeconds(double seconds)
     {
         const double frame = 1.0 / 60.0;
-        double start = FrameClock.CurrentSeconds;
+        double start = AnimationPump.CurrentSeconds;
         for (int step = 1; step * frame <= seconds; step++)
         {
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));

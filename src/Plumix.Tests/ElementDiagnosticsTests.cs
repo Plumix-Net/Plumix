@@ -147,7 +147,7 @@ public sealed class ElementDiagnosticsTests
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         List<DiagnosticsNode> information = root.DescribeMissingAncestor(typeof(TestInherited));
 
@@ -196,7 +196,7 @@ public sealed class ElementDiagnosticsTests
         var root = new TestRootElement(new SizedBox(key: new ValueKey<string>("box")));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element child = root.ChildElement!;
         Assert.Equal(child.Widget.ToStringShort(), child.ToStringShort());
@@ -249,7 +249,7 @@ public sealed class ElementDiagnosticsTests
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Element child = root.ChildElement!;
         root.UnmountRoot();
 
@@ -313,7 +313,7 @@ public sealed class ElementDiagnosticsTests
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Element child = root.ChildElement!;
         root.UnmountRoot();
 
@@ -650,7 +650,7 @@ public sealed class ElementDiagnosticsTests
             _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -658,17 +658,12 @@ public sealed class ElementDiagnosticsTests
         public void Update(Widget widget)
         {
             _root.Update(new ViewScope(RenderView.FlutterView, widget));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public Element? FindElement(Func<Element, bool> predicate)

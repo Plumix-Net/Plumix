@@ -21,13 +21,13 @@ public sealed class InheritedNotifierTests
         var root = new TestRootElement(new IntInheritedNotifier(notifier, stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0], InheritedNotifierTracker.SeenValues);
 
         notifier.Value = 1;
         notifier.Value = 2;
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0, 2], InheritedNotifierTracker.SeenValues);
     }
@@ -45,19 +45,19 @@ public sealed class InheritedNotifierTests
         var root = new TestRootElement(new IntInheritedNotifier(notifierA, stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new IntInheritedNotifier(notifierB, stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0, 10], InheritedNotifierTracker.SeenValues);
 
         notifierA.Value = 1;
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([0, 10], InheritedNotifierTracker.SeenValues);
 
         notifierB.Value = 11;
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([0, 10, 11], InheritedNotifierTracker.SeenValues);
     }
 
@@ -73,24 +73,24 @@ public sealed class InheritedNotifierTests
         var root = new TestRootElement(new IntInheritedNotifier(notifier: null, stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([-1], InheritedNotifierTracker.SeenValues);
 
         root.Update(new IntInheritedNotifier(notifier, stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([-1, 5], InheritedNotifierTracker.SeenValues);
 
         notifier.Value = 6;
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([-1, 5, 6], InheritedNotifierTracker.SeenValues);
 
         root.Update(new IntInheritedNotifier(notifier: null, stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([-1, 5, 6, -1], InheritedNotifierTracker.SeenValues);
 
         notifier.Value = 7;
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([-1, 5, 6, -1], InheritedNotifierTracker.SeenValues);
     }
 
@@ -109,7 +109,7 @@ public sealed class InheritedNotifierTests
         var root = new TestRootElement(new SharedGlobalPlacementHost(includeGlobal: true, moveToLeft: true, globalWidget));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0], InheritedNotifierTracker.CountingSeenValues);
         Assert.Equal(1, notifier.ListenerCount);
@@ -119,7 +119,7 @@ public sealed class InheritedNotifierTests
         notifier.SetValue(1);
 
         root.Update(new SharedGlobalPlacementHost(includeGlobal: true, moveToLeft: false, globalWidget));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(0, InheritedNotifierTracker.CountingSeenValues[0]);
         Assert.Equal(1, InheritedNotifierTracker.CountingSeenValues[^1]);

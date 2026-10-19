@@ -37,7 +37,7 @@ public sealed class ClipWidgetsTests
         root.Update(new ClipOval(
             clipBehavior: Clip.None,
             child: new SizedBox(width: 40, height: 30)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedOval = RequireRenderObject<RenderClipOval>(root.ChildElement);
         Assert.Same(renderOval, updatedOval);
@@ -48,7 +48,7 @@ public sealed class ClipWidgetsTests
             clipper: pathClipper,
             clipBehavior: Clip.HardEdge,
             child: new SizedBox(width: 40, height: 30)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderPath = RequireRenderObject<RenderClipPath>(root.ChildElement);
         Assert.NotSame(renderOval, renderPath);
@@ -291,7 +291,7 @@ public sealed class ClipWidgetsTests
             clipBehavior: Clip.AntiAlias,
             elevation: 6.0,
             shadowColor: Colors.Purple));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderObject = RequireRenderObject<RenderPhysicalShape>(root.ChildElement);
         Assert.Same(renderObject, updatedRenderObject);
@@ -505,7 +505,7 @@ public sealed class ClipWidgetsTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static PipelineOwner BuildPipeline(RenderBox child, Size size)

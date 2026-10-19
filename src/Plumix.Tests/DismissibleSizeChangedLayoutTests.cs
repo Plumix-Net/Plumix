@@ -16,7 +16,7 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class DismissibleSizeChangedLayoutTests : IDisposable
 {
-    private double _clock = FrameClock.CurrentSeconds;
+    private double _clock = AnimationPump.CurrentSeconds;
 
     public DismissibleSizeChangedLayoutTests()
     {
@@ -456,19 +456,14 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose() => _rootElement.UnmountRoot();

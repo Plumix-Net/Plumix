@@ -232,7 +232,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.Equal(0, outerInvocations);
 
         action.SetEnabled(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(2, dependentBuilds);
         Assert.Equal(4, Actions.MaybeInvoke(capturedContext, new IncrementIntent(4)));
         Assert.Equal(4, action.Total);
@@ -260,7 +260,7 @@ public sealed class ActionsShortcutsTests : IDisposable
             action: second,
             listener: _ => notifications++,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
         first.SetEnabled(true);
         second.SetEnabled(false);
         Assert.Equal(2, notifications);
@@ -562,7 +562,7 @@ public sealed class ActionsShortcutsTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class IncrementIntent : Intent

@@ -93,7 +93,7 @@ public sealed class StackTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var stack = RequireRenderObject<RenderStack>(root.ChildElement);
         var firstChild = Assert.IsAssignableFrom<RenderBox>(stack.FirstChild);
@@ -112,7 +112,7 @@ public sealed class StackTests
                     bottom: 5,
                     child: new SizedBox(width: 10, height: 10)),
             ]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedStack = RequireRenderObject<RenderStack>(root.ChildElement);
         Assert.True(ReferenceEquals(stack, updatedStack));
@@ -132,7 +132,7 @@ public sealed class StackTests
         var root = new TestRootElement(BuildDirectionalStacks(TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var stack = RequireRenderObject<RenderStack>(root.ChildElement);
         var indexedStack = Assert.IsType<RenderIndexedStack>(stack.FirstChild);
@@ -142,7 +142,7 @@ public sealed class StackTests
             indexedStack.Alignment.Resolve(indexedStack.TextDirection));
 
         root.Update(BuildDirectionalStacks(TextDirection.Rtl));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(Alignment.BottomLeft, stack.Alignment.Resolve(stack.TextDirection));
         Assert.Equal(
@@ -238,7 +238,7 @@ public sealed class StackTests
             textDirection: TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var stack = RequireRenderObject<RenderIndexedStack>(root.ChildElement);
         RenderBox child = Assert.IsAssignableFrom<RenderBox>(stack.FirstChild);
@@ -266,7 +266,7 @@ public sealed class StackTests
             textDirection: TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var element = Assert.IsType<IndexedStackElement>(root.ChildElement);
         var onstage = new List<Element>();
@@ -315,7 +315,7 @@ public sealed class StackTests
         var contextRoot = new TestRootElement(new SizedBox());
         contextRoot.Attach(owner);
         owner.BuildScope(contextRoot, () => contextRoot.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Throws<AssertionError>(() => directional.CreateRenderObject(contextRoot));
         contextRoot.UnmountRoot();
     }

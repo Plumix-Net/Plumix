@@ -237,19 +237,14 @@ public sealed class ScrollBehaviorParityTests : IDisposable
             _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose() => _root.UnmountRoot();

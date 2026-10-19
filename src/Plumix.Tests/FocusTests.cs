@@ -78,10 +78,10 @@ public sealed class FocusTests : IDisposable
 
         firstRoot.Attach(firstOwner);
         firstOwner.BuildScope(firstRoot, () => firstRoot.Mount(parent: null, newSlot: null));
-        firstOwner.FlushBuild();
+        firstOwner.PumpFrame();
         secondRoot.Attach(secondOwner);
         secondOwner.BuildScope(secondRoot, () => secondRoot.Mount(parent: null, newSlot: null));
-        secondOwner.FlushBuild();
+        secondOwner.PumpFrame();
 
         Assert.Same(firstNode, firstManager.PrimaryFocus);
         Assert.Same(secondNode, secondManager.PrimaryFocus);
@@ -246,20 +246,20 @@ public sealed class FocusTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         first.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(ancestor.HasFocus);
         Assert.Equal([true], changes);
 
         second.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(ancestor.HasFocus);
         Assert.Equal([true], changes);
 
         outside.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(ancestor.HasFocus);
         Assert.Equal([true, false], changes);
     }
@@ -497,7 +497,7 @@ public sealed class FocusTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(focusNode.HasFocus);
         Assert.Same(focusNode, owner.FocusManager.PrimaryFocus);
@@ -525,7 +525,7 @@ public sealed class FocusTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         bool handled = owner.FocusManager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
 
@@ -549,7 +549,7 @@ public sealed class FocusTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(first, owner.FocusManager.PrimaryFocus);
         Assert.True(first.HasFocus);

@@ -75,7 +75,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
             state.AnimateToValue();
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(
-                TimeSpan.FromSeconds(FrameClock.CurrentSeconds) + TimeSpan.FromMilliseconds(250));
+                TimeSpan.FromSeconds(AnimationPump.CurrentSeconds) + TimeSpan.FromMilliseconds(250));
             harness.Pump(new Size(80, 40));
 
             Assert.False(state.Selected);
@@ -562,26 +562,19 @@ public sealed class RadioGroupRawRadioTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, appRoot);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

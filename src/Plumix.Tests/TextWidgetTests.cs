@@ -35,7 +35,7 @@ public sealed class TextWidgetTests
         }));
         fallbackRoot.Attach(fallbackOwner);
         fallbackOwner.BuildScope(fallbackRoot, () => fallbackRoot.Mount(parent: null, newSlot: null));
-        fallbackOwner.FlushBuild();
+        fallbackOwner.PumpFrame();
         Assert.Equal(new TextStyle(), noAncestor!.Style);
         Assert.True(noAncestor.SoftWrap);
 
@@ -57,7 +57,7 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(inherited);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(inherited, observed);
         Assert.Equal(TextAlign.Center, observed!.TextAlign);
@@ -92,7 +92,7 @@ public sealed class TextWidgetTests
                 }))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(observed);
         Assert.Equal(new TextStyle(FontSize: 20, Color: Colors.Red, FontWeight: FontWeight.Bold), observed.Style);
@@ -123,7 +123,7 @@ public sealed class TextWidgetTests
                 }))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(20, observed!.Style.FontSize);
         Assert.Equal(Colors.Black, observed.Style.Color);
@@ -182,7 +182,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal("alpha", paragraph.PlainText);
@@ -211,7 +211,7 @@ public sealed class TextWidgetTests
             maxLines: 3,
             overflow: TextOverflow.Clip,
             textDirection: TextDirection.Ltr));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Same(paragraph, updated);
@@ -289,7 +289,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(style1.FontFamily, paragraph.FontFamily);
@@ -327,7 +327,7 @@ public sealed class TextWidgetTests
                     overflow: TextOverflow.Fade,
                     textWidthBasis: TextWidthBasis.Parent,
                     textHeightBehavior: new TextHeightBehavior(true, false))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Same(paragraph, updated);
@@ -374,7 +374,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(TextStyle.Fallback.FontSize, paragraph.FontSize);
@@ -392,7 +392,7 @@ public sealed class TextWidgetTests
         var materialOwner = TestBuildOwner.Create();
         materialRoot.Attach(materialOwner);
         materialOwner.BuildScope(materialRoot, () => materialRoot.Mount(parent: null, newSlot: null));
-        materialOwner.FlushBuild();
+        materialOwner.PumpFrame();
 
         var materialParagraph = FindDescendant<RenderParagraph>(materialRoot.ChildElement!.RenderObject);
         Assert.NotNull(materialParagraph);
@@ -412,7 +412,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
@@ -428,7 +428,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(TextScaler.Linear(1.5), paragraph.TextScaler);
@@ -458,7 +458,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
@@ -486,7 +486,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
@@ -509,7 +509,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
@@ -530,7 +530,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
         Assert.NotNull(paragraph);
@@ -546,7 +546,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(root.ChildElement!.RenderObject);
         Assert.NotNull(constrainedBox);
@@ -570,7 +570,7 @@ public sealed class TextWidgetTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var transform = FindDescendant<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.NotNull(transform);

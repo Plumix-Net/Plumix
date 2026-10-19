@@ -63,7 +63,7 @@ public sealed class AspectRatioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderAspectRatio = RequireRenderObject<RenderAspectRatio>(root.ChildElement);
         Assert.Equal(1.5, renderAspectRatio.AspectRatio);
@@ -71,7 +71,7 @@ public sealed class AspectRatioTests
         root.Update(new AspectRatio(
             aspectRatio: 0.75,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderAspectRatio>(root.ChildElement);
         Assert.Same(renderAspectRatio, updated);
@@ -92,7 +92,7 @@ public sealed class AspectRatioTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var row = RequireRenderObject<RenderFlex>(root.ChildElement);
         var firstChild = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);

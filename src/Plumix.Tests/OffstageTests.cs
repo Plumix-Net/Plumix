@@ -83,7 +83,7 @@ public sealed class OffstageTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderOffstage>(root.ChildElement);
         Assert.True(renderBox.Offstage);
@@ -91,7 +91,7 @@ public sealed class OffstageTests
         root.Update(new Offstage(
             offstage: false,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderOffstage>(root.ChildElement);
         Assert.Same(renderBox, updated);

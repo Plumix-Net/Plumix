@@ -52,7 +52,7 @@ public sealed class NavigationNotificationTests : IDisposable
             route = ModalRoute.MaybeOf(context);
             return new SizedBox();
         });
-        owner.FlushBuild();
+        owner.PumpFrame();
 #pragma warning disable CS0618 // Dart's routes_test covers this through the deprecated WillPopScope.
         route!.AddScopedWillPopCallback(() => Task.FromResult(false));
 #pragma warning restore CS0618
@@ -262,18 +262,18 @@ public sealed class NavigationNotificationTests : IDisposable
 
         // Every dispatch this test sees must arrive from a post-frame callback, never from inside
         // the flush that registered the pop entry or pushed the route.
-        bool building = true;
         _onNotification = value =>
         {
-            if (building)
+            if (owner.DebugBuilding)
             {
                 duringBuild.Add(value);
             }
+
+            Assert.Equal(SchedulerPhase.PostFrameCallbacks, SchedulerBinding.Instance.SchedulerPhase);
         };
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigator!.Push(new BuilderPageRoute(_ => new SizedBox(), new RouteSettings(Name: "top")));
-        owner.FlushBuild();
-        building = false;
+        owner.PumpFrame();
 
         Assert.Empty(duringBuild);
         Pump(owner);
@@ -310,7 +310,7 @@ public sealed class NavigationNotificationTests : IDisposable
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigator = captured;
         return root;
     }
@@ -319,9 +319,9 @@ public sealed class NavigationNotificationTests : IDisposable
     {
         for (int index = 0; index < 3; index++)
         {
-            owner.FlushBuild();
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
-            owner.FlushBuild();
+            owner.PumpFrame();
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.01));
+            owner.PumpFrame();
         }
     }
 

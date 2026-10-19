@@ -345,7 +345,7 @@ public sealed class CupertinoMagnifierTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
     }

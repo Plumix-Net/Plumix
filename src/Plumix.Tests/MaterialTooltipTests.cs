@@ -271,7 +271,7 @@ public sealed class MaterialTooltipTests
         // no hover plumbing at all.
         Assert.Null(FindTooltipListener(harness.RenderView));
         Assert.Empty(harness.FindWidgets<RawTooltip>());
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.2));
         harness.Pump(new Size(120, 60));
 
         Assert.Null(FindParagraph(harness.RenderView, "Hidden tip"));
@@ -401,7 +401,7 @@ public sealed class MaterialTooltipTests
             var listener = FindTooltipListener(harness.RenderView);
             Assert.NotNull(listener);
             listener!.OnEnter?.Invoke(PointerEnter(1));
-            double clock = FrameClock.CurrentSeconds;
+            double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
             harness.Pump(new Size(160, 80));
@@ -414,7 +414,7 @@ public sealed class MaterialTooltipTests
 
             listener = FindTooltipListener(harness.RenderView);
             listener!.OnExit?.Invoke(PointerExit(1));
-            clock = FrameClock.CurrentSeconds;
+            clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
             harness.Pump(new Size(160, 80));
@@ -519,7 +519,7 @@ public sealed class MaterialTooltipTests
             Assert.Contains(paragraphs, paragraph => paragraph.PlainText == "Two");
 
             Assert.True(Tooltip.DismissAllToolTips());
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.20));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.20));
             harness.Pump(new Size(120, 60));
             Assert.Null(FindParagraph(harness.RenderView, "One"));
             Assert.Null(FindParagraph(harness.RenderView, "Two"));
@@ -572,6 +572,7 @@ public sealed class MaterialTooltipTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
 
         public WidgetRenderHarness(Widget rootWidget)
         {
@@ -583,26 +584,20 @@ public sealed class MaterialTooltipTests
                 new Directionality(TextDirection.Ltr, child: Overlay.Wrap(rootWidget)));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
@@ -622,7 +617,17 @@ public sealed class MaterialTooltipTests
             return widgets;
         }
 
-        public void Dispose() => _rootElement.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _rootElement.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
+        }
 
         private static void CollectStates<T>(Element element, List<T> states) where T : State
         {

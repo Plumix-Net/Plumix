@@ -237,7 +237,7 @@ public sealed class KeyboardListenerTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -245,16 +245,18 @@ public sealed class KeyboardListenerTests : IDisposable
         public void Update(Widget widget)
         {
             _rootElement.Update(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+                _pipeline.RequestSemanticsUpdate();
+                _pipeline.FlushSemantics();
+            });
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

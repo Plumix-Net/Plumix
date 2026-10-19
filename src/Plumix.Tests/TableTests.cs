@@ -963,7 +963,7 @@ public sealed class TableTests
         RenderBox lastRowCellBefore = table.Row(2)[0];
 
         root.Update(new Directionality(TextDirection.Ltr, BuildGrid(2, 4)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(table, FindRenderObject<RenderTable>(root));
         Assert.Equal(4, table.Columns);
@@ -981,7 +981,7 @@ public sealed class TableTests
         RenderBox keyedCellBefore = table.Row(0)[0];
 
         root.Update(new Directionality(TextDirection.Ltr, BuildKeyedRows([2, 1])));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(keyedCellBefore, table.Row(1)[0]);
     }
@@ -996,7 +996,7 @@ public sealed class TableTests
         RenderBox kept = table.Row(1)[0];
 
         root.Update(new Directionality(TextDirection.Ltr, BuildKeyedRows([2])));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, table.Rows);
         Assert.Null(removed.Parent);
@@ -1016,7 +1016,7 @@ public sealed class TableTests
         root.Update(new Directionality(
             TextDirection.Ltr,
             BuildGrid(1, 2, defaultColumnWidth: new IntrinsicColumnWidth())));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Same constraints: the widths only change if the new column width dirtied the layout.
         table.Layout(constraints);
@@ -1033,7 +1033,7 @@ public sealed class TableTests
 
         var decoration = new BoxDecoration(Color: Colors.Red);
         root.Update(new Directionality(TextDirection.Ltr, BuildGrid(1, 1, rowDecoration: decoration)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([decoration], table.RowDecorations);
     }
@@ -1098,7 +1098,7 @@ public sealed class TableTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return root;
     }
 

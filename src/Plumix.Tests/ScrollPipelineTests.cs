@@ -1727,20 +1727,21 @@ public sealed class ScrollPipelineTests
         {
             _root = new RootWidget(
                 child: new Directionality(TextDirection.Ltr, rootWidget)).Attach(_owner);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         /// <summary>The size is the view's own; the argument only documents the expected logical size.</summary>
         public void Pump(Size size)
         {
             _ = size;
-            _owner.FlushBuild();
             PipelineOwner root = RendererBinding.Instance.RootPipelineOwner;
-            root.FlushLayout();
-            root.FlushCompositingBits();
-            root.FlushPaint();
-            root.CompositeFrame();
-            _owner.FinalizeTree();
+            _owner.PumpFrame(() =>
+            {
+                root.FlushLayout();
+                root.FlushCompositingBits();
+                root.FlushPaint();
+                root.CompositeFrame();
+            });
         }
 
         public void Dispose() => _root.UnmountRoot();
@@ -1761,19 +1762,14 @@ public sealed class ScrollPipelineTests
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

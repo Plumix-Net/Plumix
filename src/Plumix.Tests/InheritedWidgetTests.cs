@@ -21,14 +21,14 @@ public sealed class InheritedWidgetTests
         var root = new TestRootElement(new IntScope(value: 1, child: stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1], InheritedTracker.DependentBuildValues);
         Assert.Equal(1, InheritedTracker.DependentDidChangeCount);
         Assert.Equal(1, InheritedTracker.PassiveBuildCount);
 
         root.Update(new IntScope(value: 2, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1, 2], InheritedTracker.DependentBuildValues);
         Assert.Equal(2, InheritedTracker.DependentDidChangeCount);
@@ -48,17 +48,17 @@ public sealed class InheritedWidgetTests
         var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: true, child: stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new ConditionalScope(value: 2, shouldNotify: false, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1], InheritedTracker.DependentBuildValues);
         Assert.Equal(1, InheritedTracker.DependentDidChangeCount);
         Assert.Equal(1, InheritedTracker.PassiveBuildCount);
 
         root.Update(new ConditionalScope(value: 3, shouldNotify: true, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1, 3], InheritedTracker.DependentBuildValues);
         Assert.Equal(2, InheritedTracker.DependentDidChangeCount);
@@ -102,7 +102,7 @@ public sealed class InheritedWidgetTests
         var root = new TestRootElement(new WrappingScope(value: 1, child: leaf));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var scopeElement = (InheritedElement)FirstChildOf(root)!;
         Element wrapper = FirstChildOf(scopeElement)!;
@@ -123,14 +123,14 @@ public sealed class InheritedWidgetTests
         var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: false, child: firstChild));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var scopeElement = (InheritedElement)FirstChildOf(root)!;
         Assert.Same(firstChild, FirstChildOf(scopeElement)!.Widget);
 
         var secondChild = new SizedBox(width: 2, height: 2);
         root.Update(new ConditionalScope(value: 2, shouldNotify: false, child: secondChild));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(secondChild, FirstChildOf(scopeElement)!.Widget);
 

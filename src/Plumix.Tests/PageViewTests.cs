@@ -742,7 +742,7 @@ public sealed class PageViewTests
 
     private static void Settle(WidgetRenderHarness harness)
     {
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         foreach (double step in new[] { 0.01, 0.2, 0.4, 0.8, 1.4, 2.4 })
         {
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + step));
@@ -784,25 +784,20 @@ public sealed class PageViewTests
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Replace(Widget child)
         {
             _rootElement.Update(new ViewScope(RenderView.FlutterView, new Directionality(TextDirection.Ltr, child)));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Dispose() => _rootElement.UnmountRoot();

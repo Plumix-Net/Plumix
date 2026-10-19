@@ -189,20 +189,20 @@ public sealed class AppLifecycleListenerTests
         Assert.Equal(1, buildCount);
 
         firstAnimation.SetStatus(AnimationStatus.Forward);
-        root.OwnerForTest.FlushBuild();
+        root.OwnerForTest.PumpFrame();
         Assert.Equal(2, buildCount);
 
         root.Update(new TestStatusTransition(secondAnimation, () => buildCount++));
-        root.OwnerForTest.FlushBuild();
+        root.OwnerForTest.PumpFrame();
         Assert.Equal(0, firstAnimation.StatusListenerCount);
         Assert.Equal(1, secondAnimation.StatusListenerCount);
 
         firstAnimation.SetStatus(AnimationStatus.Completed);
-        root.OwnerForTest.FlushBuild();
+        root.OwnerForTest.PumpFrame();
         Assert.Equal(3, buildCount);
 
         secondAnimation.SetStatus(AnimationStatus.Reverse);
-        root.OwnerForTest.FlushBuild();
+        root.OwnerForTest.PumpFrame();
         Assert.Equal(4, buildCount);
 
         root.UnmountRoot();
@@ -215,7 +215,7 @@ public sealed class AppLifecycleListenerTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return root;
     }
 

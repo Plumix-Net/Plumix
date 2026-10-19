@@ -39,7 +39,7 @@ public sealed class HotReloadTests : IDisposable
         var root = new TestRootElement(new ReassembleHost());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initialState = ReassembleTracker.CurrentState;
         Assert.NotNull(initialState);
@@ -48,7 +48,7 @@ public sealed class HotReloadTests : IDisposable
         Assert.Equal(0, ReassembleTracker.StateReassembleCount);
 
         owner.Reassemble(root);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(initialState, ReassembleTracker.CurrentState);
         Assert.Equal(2, ReassembleTracker.StatefulBuildCount);
@@ -67,11 +67,11 @@ public sealed class HotReloadTests : IDisposable
         var root = new TestRootElement(new ReassembleHost());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         ReassembleTracker.Events.Clear();
         owner.Reassemble(root);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["state-reassemble", "stateful-build", "stateless-build"], ReassembleTracker.Events);
 

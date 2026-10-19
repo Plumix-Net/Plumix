@@ -240,7 +240,7 @@ public sealed class BasicWidgetsParityTests
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         List<Widget> widgets = [];
         Visit(root);

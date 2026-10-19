@@ -33,7 +33,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(3.0, notification!.Metrics.Pixels);
         ScrollUpdateNotification update = notification.AsScrollUpdate();
@@ -59,7 +59,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, handled);
     }
@@ -78,7 +78,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(injected, resolved);
     }
@@ -119,7 +119,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(vertical);
         Assert.False(horizontal);
@@ -138,9 +138,9 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         controller.Signal();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, builds);
     }
@@ -162,7 +162,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(controller.HasClients);
     }
@@ -189,7 +189,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, controller.CreatedPositions);
     }
@@ -217,7 +217,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(behavior, inherited);
         Assert.IsType<RawScrollbar>(desktopChrome);
@@ -285,7 +285,7 @@ public sealed class ScrollInfrastructureTests
         {
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.True(dispatched);
         }
@@ -316,18 +316,18 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, notifications);
 
         root.Update(new NotificationListener<KeepAliveNotification>(
             onNotification: onNotification,
             child: new KeepAliveClientProbeWidget(keepAlive: false)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new NotificationListener<KeepAliveNotification>(
             onNotification: onNotification,
             child: new KeepAliveClientProbeWidget(keepAlive: true)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(2, notifications);
     }
@@ -361,7 +361,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(built);
         var item0 = Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
@@ -408,7 +408,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
         Assert.IsType<SeparatorMarker>(UnwrapSemanticIndex(sampledChildren[1]));
@@ -442,7 +442,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(rootSliver);
         Assert.NotNull(childSliver);
@@ -476,7 +476,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(sampledDelegate);
         Assert.IsType<SliverGridDelegateWithFixedCrossAxisCount>(sampledDelegate);
@@ -509,7 +509,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var fixedDelegate = Assert.IsType<SliverGridDelegateWithFixedCrossAxisCount>(sampledDelegate);
         Assert.Equal(3, fixedDelegate.CrossAxisCount);
@@ -541,7 +541,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var maxExtentDelegate = Assert.IsType<SliverGridDelegateWithMaxCrossAxisExtent>(sampledDelegate);
         Assert.Equal(120, maxExtentDelegate.MaxCrossAxisExtent);
@@ -575,7 +575,7 @@ public sealed class ScrollInfrastructureTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(rootSliver);
         Assert.NotNull(childSliver);

@@ -52,7 +52,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, animation.ListenerCount);
 
         animation.Set(new Vector(-0.4, 0.75), AnimationStatus.Reverse);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
         Assert.Equal(new Point(0.4, 0.75), translation.Translation);
@@ -83,7 +83,7 @@ public sealed class TransitionsTests : IDisposable
             position: second,
             transformHitTests: false,
             child: new SizedBox(width: 80, height: 40)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
         Assert.Equal(new Point(-0.5, 0.1), translation.Translation);
@@ -183,7 +183,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Point(0, -40), ((BoxParentData)align.Child!.parentData!).offset);
 
         animation.Set(0.5, AnimationStatus.Forward);
-        owner.FlushBuild();
+        owner.PumpFrame();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
         Assert.Equal(0.5, align.HeightFactor);
@@ -227,7 +227,7 @@ public sealed class TransitionsTests : IDisposable
                 axis: Axis.Horizontal,
                 axisAlignment: 0.5,
                 child: new SizedBox(width: 80, height: 40))));
-        owner.FlushBuild();
+        owner.PumpFrame();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
         Assert.Equal(0.75, align.WidthFactor);
@@ -295,7 +295,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, callbackCount);
 
         animation.Set(0.6, AnimationStatus.Forward);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.TranslationValues(6.0, 12.0, 0.0), renderTransform.DebugTransformMatrix());
@@ -303,7 +303,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(2, callbackCount);
 
         animation.Set(1.0, AnimationStatus.Completed);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.TranslationValues(10.0, 20.0, 0.0), renderTransform.DebugTransformMatrix());
@@ -333,7 +333,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, firstAnimation.ListenerCount);
 
         firstAnimation.Set(0.75, AnimationStatus.Forward);
-        owner.FlushBuild();
+        owner.PumpFrame();
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.Diagonal3Values(0.75, 0.75, 1.0), renderTransform.DebugTransformMatrix());
 
@@ -342,7 +342,7 @@ public sealed class TransitionsTests : IDisposable
             alignment: Alignment.TopLeft,
             filterQuality: FilterQuality.Low,
             child: new SizedBox(width: 30, height: 20)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.Diagonal3Values(1.25, 1.25, 1.0), renderTransform.DebugTransformMatrix());
@@ -350,7 +350,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, secondAnimation.ListenerCount);
 
         firstAnimation.Set(2.0, AnimationStatus.Completed);
-        owner.FlushBuild();
+        owner.PumpFrame();
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.Diagonal3Values(1.25, 1.25, 1.0), renderTransform.DebugTransformMatrix());
 
@@ -370,10 +370,10 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         animation.Forward(from: 0.0);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.Equal(AnimationStatus.Completed, animation.Status);
@@ -480,7 +480,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, firstAnimation.ListenerCount);
 
         firstAnimation.Set(new RelativeRect(20, 22, 40, 42), AnimationStatus.Forward);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
         parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
@@ -499,7 +499,7 @@ public sealed class TransitionsTests : IDisposable
                     rect: secondAnimation,
                     child: new SizedBox(width: 24, height: 16)),
             ]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
         Assert.Equal(7, parentData.Left);
@@ -542,7 +542,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Size(50, 30), renderStack.FirstChild.Size);
 
         animation.Set(null, AnimationStatus.Completed);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderStack.Layout(BoxConstraints.Tight(new Size(200, 120)));
         parentData = Assert.IsType<StackParentData>(renderStack.FirstChild!.parentData);
@@ -599,7 +599,7 @@ public sealed class TransitionsTests : IDisposable
                 child: child,
                 widthFactor: 2.0,
                 heightFactor: 3.0)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         renderAlign = Assert.IsType<RenderPositionedBox>(root.ChildElement.RenderObject);
         Assert.Equal(Alignment.BottomLeft, renderAlign.Alignment.Resolve(renderAlign.TextDirection));
@@ -665,7 +665,7 @@ public sealed class TransitionsTests : IDisposable
             textAlign: TextAlign.End,
             overflow: TextOverflow.Fade,
             maxLines: 1));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         paragraph = Assert.IsType<RenderParagraph>(root.ChildElement.RenderObject);
         Assert.Equal(22, paragraph.FontSize);
@@ -748,7 +748,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1, first.ListenerCount);
 
         first.Set(secondDecoration, AnimationStatus.Completed);
-        owner.FlushBuild();
+        owner.PumpFrame();
         render = Assert.IsType<RenderDecoratedBox>(root.ChildElement.RenderObject);
         Assert.Same(secondDecoration, render.Decoration);
 
@@ -756,7 +756,7 @@ public sealed class TransitionsTests : IDisposable
             decoration: second,
             position: DecorationPosition.Background,
             child: child));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         render = Assert.IsType<RenderDecoratedBox>(root.ChildElement.RenderObject);
         Assert.Same(replacementDecoration, render.Decoration);
@@ -796,7 +796,7 @@ public sealed class TransitionsTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class TestAnimation : Animation<double>

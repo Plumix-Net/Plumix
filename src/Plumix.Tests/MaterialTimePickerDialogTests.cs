@@ -935,7 +935,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -1115,7 +1115,7 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -1124,19 +1124,12 @@ public sealed partial class MaterialTimePickerDialogTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

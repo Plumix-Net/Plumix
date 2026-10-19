@@ -135,8 +135,7 @@ public class Ticker : IDisposable
             ScheduleTick();
         }
 
-        if (SchedulerBinding.Instance.IsHandlingFrame
-            && SchedulerBinding.Instance.SchedulerPhase > SchedulerPhase.Idle
+        if (SchedulerBinding.Instance.SchedulerPhase > SchedulerPhase.Idle
             && SchedulerBinding.Instance.SchedulerPhase < SchedulerPhase.PostFrameCallbacks)
         {
             _startTime = SchedulerBinding.Instance.CurrentFrameTimeStamp;
@@ -188,8 +187,7 @@ public class Ticker : IDisposable
         _animationId = SchedulerBinding.Instance.ScheduleFrameCallback(
             InternalTick,
             rescheduling: rescheduling,
-            scheduleNewFrame: false,
-            frameOnly: true);
+            scheduleNewFrame: false);
     }
 
     /// <summary>Cancels the frame callback that was requested by <see cref="ScheduleTick"/>, if any.</summary>

@@ -215,7 +215,7 @@ public sealed class CustomMultiChildLayoutTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T FindRenderObject<T>(Element root) where T : RenderObject

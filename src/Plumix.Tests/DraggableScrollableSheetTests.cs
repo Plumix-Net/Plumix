@@ -850,7 +850,7 @@ public sealed class DraggableScrollableSheetTests
         harness.Dispose();
 
         // Pumping after teardown must not throw or move anything.
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.5));
     }
 
     // ---------- Position absorption ----------
@@ -1039,7 +1039,7 @@ public sealed class DraggableScrollableSheetTests
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, BuildTree()));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
             Pump();
         }
 
@@ -1061,12 +1061,7 @@ public sealed class DraggableScrollableSheetTests
 
         public void Pump()
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(new Size(ScreenWidth, ScreenHeight));
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, new Size(ScreenWidth, ScreenHeight));
         }
 
         /// <summary>
@@ -1095,7 +1090,7 @@ public sealed class DraggableScrollableSheetTests
         /// </summary>
         public void PumpFrame(double seconds)
         {
-            _clockSeconds = Math.Max(_clockSeconds, FrameClock.CurrentSeconds) + seconds;
+            _clockSeconds = Math.Max(_clockSeconds, AnimationPump.CurrentSeconds) + seconds;
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(_clockSeconds));
             Pump();
         }

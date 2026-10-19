@@ -648,19 +648,21 @@ public sealed class SemanticsDataTests
             _rootElement = new HarnessRootElement(_renderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public SemanticsNode PumpAndGetSemantics(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+                _pipeline.FlushCompositingBits();
+                _pipeline.FlushPaint();
+                _pipeline.CompositeFrame();
+                _pipeline.RequestSemanticsUpdate();
+                _pipeline.FlushSemantics();
+            });
             SemanticsNode? root = _pipeline.SemanticsOwner!.RootNode;
             Assert.NotNull(root);
             return root!;

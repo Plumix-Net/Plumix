@@ -221,15 +221,15 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
 
         Dispatch(emitter!, AxisDirection.Right, pixels: 12);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
 
         Dispatch(emitter!, AxisDirection.Left, pixels: 12);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
     }
 
@@ -244,15 +244,15 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // AxisDirection.Up: scrolled under while content remains *after* the viewport.
         Dispatch(emitter!, AxisDirection.Up, pixels: 0);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.DarkGreen, MaterialColor(root));
 
         Dispatch(emitter!, AxisDirection.Up, pixels: 100);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
     }
 
@@ -294,38 +294,38 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Dispatch(emitter!, AxisDirection.Down, pixels: 12);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
 
         scaffold!.OpenDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
         AnimationPump.Advance(0.5);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(scaffold.IsDrawerOpen);
 
         // A dependency change while the drawer is open detaches the listener for good.
         rebuildTheme!(() => dark = true);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Dispatch(emitter!, AxisDirection.Down, pixels: 0);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
 
         // Closing the drawer and changing a dependency again re-attaches it.
         scaffold.CloseDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
         AnimationPump.Advance(0.5);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(scaffold.IsDrawerOpen);
 
         rebuildTheme!(() => dark = false);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Dispatch(emitter!, AxisDirection.Down, pixels: 0);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(Colors.Goldenrod, AppBarMaterialColor(root));
     }
 
@@ -353,7 +353,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Contains(FindWidgets<EndDrawerButton>(root.ChildElement), _ => true);
         Assert.DoesNotContain(
@@ -372,7 +372,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         DefaultTextStyle titleStyle = Assert.Single(
             FindWidgets<DefaultTextStyle>(root.ChildElement),
@@ -420,7 +420,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Single(
             FindWidgets<ConstrainedBox>(root.ChildElement),
@@ -441,7 +441,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // The toolbar is never wrapped in an Opacity: the fade lands on the text colors and icon theme.
         Assert.Empty(FindWidgets<Opacity>(root.ChildElement));
@@ -467,7 +467,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Opacity opacity = Assert.Single(FindWidgets<Opacity>(root.ChildElement));
         Assert.Equal(expected, opacity.Value, 3);
@@ -539,7 +539,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         MaterialWidget material = FindWidgets<MaterialWidget>(root.ChildElement)[0];
         Assert.Equal(ThemeData.Light.ColorScheme.SurfaceTint, material.SurfaceTintColor);
@@ -619,7 +619,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         return Assert.Single(FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>(root.ChildElement)).Value;
     }
@@ -639,7 +639,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         IReadOnlyList<IconTheme> themes = FindWidgets<IconTheme>(root.ChildElement);
         return themes[^1].Data.Color;
@@ -655,7 +655,7 @@ public sealed class MaterialAppBarTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.NotNull(captured);
         return captured!;
     }
@@ -739,19 +739,14 @@ public sealed class MaterialAppBarTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

@@ -318,7 +318,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 240));
         Assert.True(callbackValue);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 240));
@@ -350,7 +350,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Disposable body"));
 
         controller.Collapse();
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(360, 240));
@@ -898,7 +898,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, appRoot);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -912,19 +912,12 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

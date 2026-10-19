@@ -316,7 +316,7 @@ public sealed class CupertinoPickerTests : IDisposable
                                && detector.OnTap is not null)
             .ToArray();
         Assert.True(tappableChildren.Length >= 3);
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         tappableChildren[2].OnTap!.Invoke();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(ViewSize);
@@ -354,7 +354,7 @@ public sealed class CupertinoPickerTests : IDisposable
                 .ToArray();
             Assert.True(tappableChildren.Length >= 3);
 
-            clock = FrameClock.CurrentSeconds;
+            clock = AnimationPump.CurrentSeconds;
             tappableChildren[2].OnTap!.Invoke();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             harness.Pump(ViewSize);

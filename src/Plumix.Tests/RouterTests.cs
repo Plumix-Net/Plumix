@@ -36,11 +36,11 @@ public sealed class RouterTests : IDisposable
 
     private static void Pump(RestorationHarness harness)
     {
-        harness.FlushBuild();
+        harness.PumpFrame();
         EventLoop.FlushMicrotasks();
-        harness.FlushBuild();
+        harness.PumpFrame();
         SchedulerBinding.PumpFrameForTests();
-        harness.FlushBuild();
+        harness.PumpFrame();
     }
 
     private static async Task PumpUntil(RestorationHarness harness, Func<bool> condition)

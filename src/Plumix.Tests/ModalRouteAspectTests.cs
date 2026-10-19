@@ -295,7 +295,7 @@ public sealed class ModalRouteAspectTests : IDisposable
             _root = new HarnessRootElement(RenderView, navigator);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
             Pump();
         }
 
@@ -306,12 +306,7 @@ public sealed class ModalRouteAspectTests : IDisposable
 
         public void Pump()
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(ViewSize);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, ViewSize);
         }
 
         public void Dispose() => _root.UnmountRoot();

@@ -316,6 +316,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
     {
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
         private readonly HarnessRootElement _rootElement;
 
         /// <summary>
@@ -332,7 +333,8 @@ public sealed class FocusableActionDetectorTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, widget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
@@ -340,25 +342,34 @@ public sealed class FocusableActionDetectorTests : IDisposable
         public void Update(Widget widget)
         {
             _rootElement.Update(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Layout(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+            });
         }
 
         public void SendPointer(PointerEvent @event)
         {
             GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Dispose()
         {
-            _rootElement.UnmountRoot();
+            try
+            {
+                _rootElement.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

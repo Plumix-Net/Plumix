@@ -89,13 +89,13 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(new RecordingFlex([new ProbeWidget(), new ProbeWidget()]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RecordingFlexRenderBox render = Assert.IsType<RecordingFlexRenderBox>(root.RenderObject);
         render.Moves = 0;
 
         root.Update(new RecordingFlex([new ProbeWidget(), new ProbeWidget()]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Before IndexedSlot gained value equality every rebuild re-moved every child.
         Assert.Equal(0, render.Moves);
@@ -116,7 +116,7 @@ public sealed class FrameworkParityTests
         try
         {
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
         }
         finally
         {
@@ -141,7 +141,7 @@ public sealed class FrameworkParityTests
             var root = new TestRootElement(new SelfReturningBuilder());
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
         });
 
         Assert.Contains("A build function returned context.widget.", failure.ToString());
@@ -157,11 +157,11 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         ProbeState state = widget.CreatedState!;
         root.Update(new SizedBox());
-        owner.FlushBuild();
+        owner.PumpFrame();
         owner.FinalizeTree();
 
         var error = Assert.Throws<FlutterError>(() => state.Poke());
@@ -186,7 +186,7 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var error = Assert.Throws<FlutterError>(() => widget.CreatedState!.PokeAsynchronously());
         Assert.Contains("setState() callback argument returned a Future.", error.Message);
@@ -210,13 +210,13 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(new RudeDisposeWidget());
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's finalizeTree reports an unmount failure rather than throwing it.
         Exception failure = BuildErrors.TakeException(() =>
         {
             root.Update(new SizedBox());
-            owner.FlushBuild();
+            owner.PumpFrame();
             owner.FinalizeTree();
         });
         Assert.Contains("dispose failed to call super.dispose.", failure.ToString());
@@ -230,7 +230,7 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element probe = FindDescendant(root, element => element is StatefulElement)!;
         Assert.True(probe.DebugIsActive);
@@ -238,7 +238,7 @@ public sealed class FrameworkParityTests
         Assert.ThrowsAny<Exception>(() =>
         {
             root.Update(new SizedBox());
-            owner.FlushBuild();
+            owner.PumpFrame();
         });
 
         Assert.False(probe.DebugIsActive);
@@ -253,14 +253,14 @@ public sealed class FrameworkParityTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element probe = FindDescendant(root, element => element is StatefulElement)!;
 
         Exception failure = BuildErrors.TakeException(() =>
         {
             root.Update(new SizedBox());
-            owner.FlushBuild();
+            owner.PumpFrame();
             owner.FinalizeTree();
         });
 
@@ -287,7 +287,7 @@ public sealed class FrameworkParityTests
             var root = new TestRootElement(new RecordingFlex([new TestParentDataWidget(7.0, new ProbeWidget())]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
         });
 
         string message = failure.ToString();
@@ -307,7 +307,7 @@ public sealed class FrameworkParityTests
                 new TestParentDataWidget(1.0, new TestParentDataWidget(2.0, new ProbeWidget()))));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
         });
 
         string message = failure.ToString();
@@ -333,7 +333,7 @@ public sealed class FrameworkParityTests
             ]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
             owner.FinalizeTree();
         });
 
@@ -360,7 +360,7 @@ public sealed class FrameworkParityTests
             ]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
             owner.FinalizeTree();
         }
         finally
@@ -395,11 +395,11 @@ public sealed class FrameworkParityTests
                 new RecordingFlex([new ProbeWidget(key: new LabeledGlobalKey<State>("k"))]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
             log.Clear();
 
             root.Update(new SizedBox());
-            owner.FlushBuild();
+            owner.PumpFrame();
             owner.FinalizeTree();
         }
         finally

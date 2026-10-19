@@ -202,18 +202,19 @@ public sealed class FramePipelineTests
             bool microtaskRan = false;
             element.OnRebuild = () => EventLoop.ScheduleMicrotask(() => microtaskRan = true);
             element.MarkNeedsBuild();
-            owner.FlushBuild();
-            Assert.False(microtaskRan);
-
             var renderView = new RenderView(new FlutterView(new Size(80, 40)));
             var pipeline = new PipelineOwner(renderView);
             pipeline.Attach(renderView);
-            pipeline.FlushLayout();
-            pipeline.FlushCompositingBits();
-            pipeline.FlushPaint();
-            Assert.False(microtaskRan);
-
-            pipeline.CompositeFrame();
+            owner.PumpFrame(() =>
+            {
+                Assert.False(microtaskRan);
+                pipeline.FlushLayout();
+                pipeline.FlushCompositingBits();
+                pipeline.FlushPaint();
+                Assert.False(microtaskRan);
+                pipeline.CompositeFrame();
+                Assert.False(microtaskRan);
+            });
             Assert.True(microtaskRan);
             element.UnmountRoot();
         }

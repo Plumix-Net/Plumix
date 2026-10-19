@@ -690,7 +690,7 @@ public sealed class MaterialReorderableListTests
             Assert.Equal(31, proxyText.FontSize);
 
             AnimationPump.Prime();
-            double pickupClock = FrameClock.CurrentSeconds;
+            double pickupClock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
@@ -700,7 +700,7 @@ public sealed class MaterialReorderableListTests
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
 
             AnimationPump.Prime();
-            double clock = FrameClock.CurrentSeconds;
+            double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.13));
@@ -775,7 +775,7 @@ public sealed class MaterialReorderableListTests
             DispatchDown(binding, harness.RenderView, 81, new Point(100, 25), start);
             DispatchMove(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(100));
 
-            double clock = FrameClock.CurrentSeconds;
+            double clock = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             harness.Pump(new Size(200, 150));
@@ -984,32 +984,25 @@ public sealed class MaterialReorderableListTests
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void UpdateWidget(Widget widget)
         {
             _root.Update(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

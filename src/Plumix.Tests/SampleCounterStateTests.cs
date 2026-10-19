@@ -54,16 +54,16 @@ public sealed class SampleCounterStateTests
         var root = new TestRootElement(new CounterScope(model, new CounterCountProbeWidget()));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0], CounterScopeTracker.SeenCounts);
 
         model.Increment();
         model.Increment();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         model.Decrement();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([0, 2, 1], CounterScopeTracker.SeenCounts);
     }

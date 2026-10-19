@@ -1,3 +1,5 @@
+using Avalonia;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Tests;
@@ -14,4 +16,25 @@ internal static class TestBuildOwner
     }
 
     internal static BuildOwner Create() => new(focusManager: FocusManager.Instance);
+
+    /// <summary>Runs an isolated owner's build and optional render pipeline in a real test frame.</summary>
+    internal static void PumpFrame(this BuildOwner owner) => FrameworkDartTester.PumpFrame(owner);
+
+    internal static void PumpFrame(this BuildOwner owner, Action render)
+        => FrameworkDartTester.PumpFrame(owner, render);
+
+    internal static void PumpFrame(this BuildOwner owner, PipelineOwner pipeline, Size size, bool semantics = false)
+        => owner.PumpFrame(() =>
+        {
+            pipeline.RequestLayout();
+            pipeline.FlushLayout(size);
+            pipeline.FlushCompositingBits();
+            pipeline.FlushPaint();
+            pipeline.CompositeFrame();
+            if (semantics)
+            {
+                pipeline.RequestSemanticsUpdate();
+                pipeline.FlushSemantics();
+            }
+        });
 }

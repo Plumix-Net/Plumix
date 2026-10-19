@@ -23,10 +23,10 @@ public sealed class InactiveElementsTests
         var root = new TestRootElement(new Marker(log, "outer", new Marker(log, "inner")));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new SizedBox());
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's _unmount recurses through visitChildren *before* unmounting the element itself.
         Assert.Equal(["inner", "outer"], log);
@@ -43,10 +43,10 @@ public sealed class InactiveElementsTests
             new Column([new Marker(log, "first"), new Marker(log, "second")])));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new SizedBox());
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Only the subtree root is parked; every descendant is reached through visitChildren, so a
         // multi-child element in the middle no longer strands its children in the inactive state.
@@ -65,11 +65,11 @@ public sealed class InactiveElementsTests
         var root = new TestRootElement(toggle);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         ToggleState state = Assert.IsType<ToggleState>(toggle.CreatedState);
         state.Hide();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Both markers are removed in the same build, the shallow one first. Dart sorts the inactive
         // set by depth and walks it in reverse, so the deeper subtree is torn down first.
@@ -85,10 +85,10 @@ public sealed class InactiveElementsTests
         var root = new TestRootElement(new Column([new Marker(log, "kept", key: key)]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new Column([new SizedBox(), new Marker(log, "kept", key: key)]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Empty(log);
     }
@@ -101,7 +101,7 @@ public sealed class InactiveElementsTests
         var root = new TestRootElement(new Marker(log, "child"));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element child = ChildOf(root);
         owner.BuildScope(root, () => root.Update(new SizedBox()));

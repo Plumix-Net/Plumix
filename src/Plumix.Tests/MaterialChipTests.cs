@@ -416,7 +416,7 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
         var start = FindChipDecoration(harness.RenderView).Color;
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         harness.Pump(new Size(320, 120));
@@ -851,7 +851,7 @@ public sealed class MaterialChipTests : IDisposable
                 onDeleted: () => { },
                 chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
-        double forwardStart = FrameClock.CurrentSeconds;
+        double forwardStart = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 0.25));
         harness.Pump(new Size(320, 120));
@@ -868,7 +868,7 @@ public sealed class MaterialChipTests : IDisposable
             ThemeData.Light,
             new RawChip(label: new Text("Animated slots"), chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
-        double reverseStart = FrameClock.CurrentSeconds;
+        double reverseStart = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 0.125));
         harness.Pump(new Size(320, 120));
@@ -1056,7 +1056,7 @@ public sealed class MaterialChipTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -1065,24 +1065,17 @@ public sealed class MaterialChipTests : IDisposable
         {
             widget = new Directionality(TextDirection.Ltr, widget);
             _rootElement.UpdateRoot(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

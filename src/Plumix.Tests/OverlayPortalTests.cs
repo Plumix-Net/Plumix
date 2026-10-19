@@ -116,7 +116,7 @@ public sealed class OverlayPortalTests
         Assert.False(theater.NeedsPaint);
 
         controller.Show();
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         // Flutter's `_RenderTheater._addDeferredChild` suppresses `markNeedsLayout` and issues an
         // explicit `markNeedsPaint` in its place.
@@ -136,7 +136,7 @@ public sealed class OverlayPortalTests
         Assert.False(theater.NeedsPaint);
 
         controller.Hide();
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.False(theater.NeedsLayout);
         Assert.True(theater.NeedsPaint);
@@ -619,7 +619,7 @@ public sealed class OverlayPortalTests
                 new Directionality(TextDirection.Ltr, new Overlay(initialEntries: entries)));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
             _renderView = new RenderView(new FlutterView(new Size(800, 600)))
             {
                 Child = Assert.IsAssignableFrom<RenderBox>(_root.ChildElement?.RenderObject),
@@ -631,42 +631,43 @@ public sealed class OverlayPortalTests
 
         public int TheaterLayoutCount => _host.Count;
 
-        public void Pump(Size? size = null)
+        public void Pump(Size? size = null, Action? afterLayout = null)
         {
-            _owner.FlushBuild();
-            if (size is not null)
+            _owner.PumpFrame(() =>
             {
-                _renderView.MarkNeedsLayout();
-            }
+                if (size is not null)
+                {
+                    _renderView.MarkNeedsLayout();
+                }
 
-            _host.Observe(FindRenderObject<RenderOverlayTheater>());
-            _pipeline.FlushLayout(size ?? ViewSize);
+                _host.Observe(FindRenderObject<RenderOverlayTheater>());
+                _pipeline.FlushLayout(size ?? ViewSize);
+                afterLayout?.Invoke();
+            });
         }
 
-        public void FlushBuild() => _owner.FlushBuild();
+        public void PumpFrame() => _owner.PumpFrame();
 
         public void FlushPaint()
         {
-            Pump();
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            Pump(afterLayout: () =>
+            {
+                _pipeline.FlushCompositingBits();
+                _pipeline.FlushPaint();
+                _pipeline.CompositeFrame();
+            });
         }
 
         public SemanticsNode FlushSemantics()
         {
-            Pump();
-            _pipeline.FlushSemantics();
+            Pump(afterLayout: _pipeline.FlushSemantics);
             return Assert.IsType<SemanticsNode>(_pipeline.SemanticsOwner!.RootNode);
         }
 
         /// <summary>Lays out and paints, so the dirty flags start from a known state.</summary>
         public void FlushPaintFlags()
         {
-            Pump();
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            FlushPaint();
         }
 
         public void HitTest(BoxHitTestResult result, Point position)

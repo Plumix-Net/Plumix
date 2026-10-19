@@ -588,7 +588,7 @@ public sealed class MaterialDialogTests : IDisposable
                 return new AlertDialog(title: new Text("Slow"));
             },
             animationStyle: new AnimationStyle(Duration: TimeSpan.FromSeconds(1)));
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
@@ -601,7 +601,7 @@ public sealed class MaterialDialogTests : IDisposable
 
         Navigator.Of(captured).Pop();
         PumpAnimation();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 1.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 1.2));
         harness.Pump(new Size(600, 400));
         Assert.Null(await result);
     }
@@ -639,7 +639,7 @@ public sealed class MaterialDialogTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -718,26 +718,19 @@ public sealed class MaterialDialogTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

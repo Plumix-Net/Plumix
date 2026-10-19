@@ -208,7 +208,7 @@ public sealed class ProxyBoxParityTests
         var root = new TestRootElement(new FadeTransition(animation, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject? renderObject = FindFirstRenderObject(root);
         var animated = Assert.IsType<RenderAnimatedOpacity>(renderObject);
@@ -250,7 +250,7 @@ public sealed class ProxyBoxParityTests
                 child: new SizedBox(width: 20, height: 20))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var clip = Assert.IsType<RenderClipRSuperellipse>(FindFirstRenderObject(root));
         Assert.Equal(Clip.HardEdge, clip.ClipBehavior);
@@ -300,7 +300,7 @@ public sealed class ProxyBoxParityTests
         var root = new TestRootElement(new MergeSemantics(new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.IsType<RenderMergeSemantics>(FindFirstRenderObject(root));
     }

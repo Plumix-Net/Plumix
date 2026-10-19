@@ -436,7 +436,7 @@ public sealed class StateStorageWidgetsTests
                 new ViewScope(renderView.FlutterView, new Directionality(TextDirection.Ltr, child: widget)));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Update(Widget widget)
@@ -444,17 +444,12 @@ public sealed class StateStorageWidgetsTests
             _root.UpdateWidget(new ViewScope(
                 _view,
                 new Directionality(TextDirection.Ltr, child: widget)));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

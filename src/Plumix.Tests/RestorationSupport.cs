@@ -315,7 +315,7 @@ internal sealed class RestorationHarness : IDisposable
         _root = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _root.Attach(_owner);
         _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public RenderView RenderView { get; }
@@ -323,26 +323,18 @@ internal sealed class RestorationHarness : IDisposable
     /// The harness's own root element, so a test can walk the whole mounted tree.
     public Element RootElement => _root;
 
-    public void FlushBuild() => _owner.FlushBuild();
+    public void PumpFrame() => _owner.PumpFrame();
 
     public void Update(Widget widget)
     {
         _root.UpdateWidget(new ViewScope(RenderView.FlutterView, widget));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public void Pump(Size size)
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
+        _owner.PumpFrame(_pipeline, size);
 
-        // Flutter's `WidgetsBinding.drawFrame` finalizes the tree after the render phase, so the
-        // children a sliver dropped during layout are unmounted before post-frame callbacks run.
-        _owner.FinalizeTree();
     }
 
     public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root);

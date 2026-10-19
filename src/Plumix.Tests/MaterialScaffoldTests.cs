@@ -27,9 +27,9 @@ public sealed class MaterialScaffoldTests
     /// </summary>
     private static void SettleDrawerAnimation(BuildOwner owner)
     {
-        owner.FlushBuild();
+        owner.PumpFrame();
         AnimationPump.Advance(0.5);
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's `ScaffoldState.build` roots the scaffold in `Material(color: ...)`, so the background is
         // the first Material descendant's color (`scaffold_test.dart`, "Scaffold background color
@@ -74,7 +74,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         MaterialWidget background = FindWidgets<MaterialWidget>(root.ChildElement)[0];
         Assert.Equal(Colors.Crimson, background.Color);
@@ -92,7 +92,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = FindConstrainedBox(
             root.ChildElement?.RenderObject,
@@ -144,7 +144,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = FindConstrainedBox(
             root.ChildElement?.RenderObject,
@@ -188,7 +188,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = FindConstrainedBox(
             root.ChildElement?.RenderObject,
@@ -221,7 +221,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = FindConstrainedBox(
             root.ChildElement?.RenderObject,
@@ -247,7 +247,7 @@ public sealed class MaterialScaffoldTests
         {
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
         });
     }
 
@@ -266,7 +266,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
@@ -297,7 +297,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
@@ -319,7 +319,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
@@ -343,7 +343,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
@@ -372,7 +372,7 @@ public sealed class MaterialScaffoldTests
                 child: RestorableScaffold(context => scaffoldContext = context, restorationId: "scaffold")));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsDrawerOpen);
@@ -399,7 +399,7 @@ public sealed class MaterialScaffoldTests
             child: RestorableScaffold(context => restoredContext = context, restorationId: "scaffold")));
         restarted.Attach(restartOwner);
         restartOwner.BuildScope(restarted, () => restarted.Mount(parent: null, newSlot: null));
-        restartOwner.FlushBuild();
+        restartOwner.PumpFrame();
 
         var restored = Scaffold.Of(restoredContext!);
         Assert.False(restored.IsDrawerOpen);
@@ -425,7 +425,7 @@ public sealed class MaterialScaffoldTests
                 child: RestorableScaffold(context => scaffoldContext = context, restorationId: null)));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Scaffold.Of(scaffoldContext!).OpenDrawer();
             SettleDrawerAnimation(owner);
@@ -445,7 +445,7 @@ public sealed class MaterialScaffoldTests
             child: RestorableScaffold(context => restoredContext = context, restorationId: null)));
         restarted.Attach(restartOwner);
         restartOwner.BuildScope(restarted, () => restarted.Mount(parent: null, newSlot: null));
-        restartOwner.FlushBuild();
+        restartOwner.PumpFrame();
 
         Assert.False(Scaffold.Of(restoredContext!).IsDrawerOpen);
         Assert.Null(FindParagraphByText(restarted.ChildElement?.RenderObject, "Drawer panel"));
@@ -480,7 +480,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         var state = Scaffold.Of(scaffoldContext!);
@@ -516,12 +516,12 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         var state = Scaffold.Of(scaffoldContext!);
         state.OpenDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(state.IsDrawerOpen);
     }
@@ -544,7 +544,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         var state = Scaffold.Of(scaffoldContext!);
@@ -580,12 +580,12 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         var state = Scaffold.Of(scaffoldContext!);
         state.OpenEndDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(state.IsEndDrawerOpen);
     }
@@ -608,18 +608,18 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         var state = Scaffold.Of(scaffoldContext!);
 
         state.OpenEndDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(state.IsEndDrawerOpen);
         Assert.False(state.IsDrawerOpen);
 
         state.OpenDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(state.IsDrawerOpen);
         Assert.False(state.IsEndDrawerOpen);
     }
@@ -1067,7 +1067,7 @@ public sealed class MaterialScaffoldTests
             // and no scrim - is what the scaffold builds first.
             Assert.Null(FindColoredBox(harness.RenderView, IsBlackScrim));
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.05));
             harness.Pump(size);
@@ -1129,7 +1129,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1139,7 +1139,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7115, position: new Point(360, 120));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1185,7 +1185,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1195,7 +1195,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerUp(binding, harness.RenderView, pointer: 7116, position: new Point(360, 120));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1246,7 +1246,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7101, new Point(260, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1292,7 +1292,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1308,7 +1308,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7102, new Point(40, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1354,7 +1354,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1401,7 +1401,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1449,7 +1449,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7105, position: new Point(122, 120));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1501,7 +1501,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7111, new Point(120, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1547,7 +1547,7 @@ public sealed class MaterialScaffoldTests
             state.OpenEndDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1563,7 +1563,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7112, new Point(360, 120), start.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1609,7 +1609,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1656,7 +1656,7 @@ public sealed class MaterialScaffoldTests
             DispatchPointerCancel(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1711,7 +1711,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7121, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1731,7 +1731,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7122, new Point(40, 120), startCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1750,7 +1750,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7123, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1806,7 +1806,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7124, new Point(120, 120), endOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1826,7 +1826,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7125, new Point(360, 120), endCloseAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1845,7 +1845,7 @@ public sealed class MaterialScaffoldTests
                 binding, harness.RenderView, 7126, new Point(260, 120), startOpenAt.AddMilliseconds(90));
             harness.Pump(size);
 
-            now = FrameClock.CurrentSeconds;
+            now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1894,7 +1894,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1944,7 +1944,7 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
@@ -1989,7 +1989,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldContext is not null);
         Assert.NotNull(navigatorState);
@@ -1998,7 +1998,7 @@ public sealed class MaterialScaffoldTests
 
         var scaffoldState = Scaffold.Of(scaffoldContext!);
         scaffoldState.OpenDrawer();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(scaffoldState.IsDrawerOpen);
 
@@ -2008,7 +2008,7 @@ public sealed class MaterialScaffoldTests
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
 
         Assert.True(TestBuildOwner.Complete(Navigator.MaybePop(scaffoldContext)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(scaffoldState.IsDrawerOpen);
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
@@ -2047,7 +2047,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
         var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
@@ -2081,7 +2081,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
         var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
@@ -2117,7 +2117,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
         var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
@@ -2148,7 +2148,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Contains(
@@ -2179,7 +2179,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Contains(
@@ -2211,7 +2211,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Contains(
@@ -2236,7 +2236,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, string.Empty);
@@ -2263,7 +2263,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Contains(
@@ -2289,7 +2289,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Contains(
@@ -2314,7 +2314,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
@@ -2340,7 +2340,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var paragraph = FindParagraphByText(appBarBackground, "Demo");
@@ -2369,7 +2369,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(
             themedStyle,
@@ -2404,7 +2404,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(
             widgetStyle,
@@ -2424,7 +2424,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.True(toolbar.CenterMiddle);
@@ -2447,7 +2447,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.True(toolbar.CenterMiddle);
@@ -2472,7 +2472,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.False(toolbar.CenterMiddle);
@@ -2499,7 +2499,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.True(toolbar.CenterMiddle);
@@ -2527,7 +2527,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.False(toolbar.CenterMiddle);
@@ -2551,7 +2551,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
@@ -2580,7 +2580,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
@@ -2629,11 +2629,11 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(rootContext is not null);
         Navigator.PushNamed(rootContext!, "/details");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string arrowBackGlyph = char.ConvertFromUtf32(
             ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
@@ -2667,7 +2667,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string arrowBackGlyph = char.ConvertFromUtf32(
             ThemeData.Light.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
@@ -2678,7 +2678,7 @@ public sealed class MaterialScaffoldTests
 
         rootRoute!.AddLocalHistoryEntry(new LocalHistoryEntry());
         navigatorState!.SetState(() => { });
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var arrowBackAfter = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
         Assert.NotNull(arrowBackAfter);
@@ -2724,11 +2724,11 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(rootContext is not null);
         Navigator.PushNamed(rootContext!, "/dialog");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string closeGlyph = char.ConvertFromUtf32(Icons.Close.CodePoint);
         var closeParagraph = FindParagraphByText(root.ChildElement?.RenderObject, closeGlyph);
@@ -2780,11 +2780,11 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(rootContext is not null);
         Navigator.PushNamed(rootContext!, "/details");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
         var arrowBackParagraph = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);
@@ -2812,7 +2812,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
@@ -2846,7 +2846,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
@@ -2873,7 +2873,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var safeAreaPadding = FindPadding(appBarBackground, padding =>
@@ -2902,7 +2902,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var safeAreaPadding = FindPadding(appBarBackground, padding =>
@@ -2932,7 +2932,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
@@ -2971,7 +2971,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionsPadding = FindPadding(appBarBackground, padding =>
@@ -3010,7 +3010,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Crimson, capturedTheme!.Color);
@@ -3036,7 +3036,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.CadetBlue, capturedTheme!.Color);
@@ -3063,7 +3063,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.CadetBlue, capturedTheme!.Color);
@@ -3095,7 +3095,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.CadetBlue, capturedTheme!.Color);
@@ -3121,7 +3121,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(ThemeData.Light.IconTheme.Color, capturedTheme!.Color);
@@ -3153,7 +3153,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Goldenrod, capturedTheme!.Color);
@@ -3184,7 +3184,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Goldenrod, capturedTheme!.Color);
@@ -3214,7 +3214,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.CadetBlue, capturedTheme!.Color);
@@ -3248,7 +3248,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.LimeGreen, capturedTheme!.Color);
@@ -3280,7 +3280,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.DarkCyan, capturedTheme!.Color);
@@ -3307,7 +3307,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.DarkOrange, capturedTheme!.Color);
@@ -3333,7 +3333,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.LimeGreen, capturedTheme!.Color);
@@ -3364,7 +3364,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(snapshot);
         Assert.NotNull(snapshot!.TextStyle.Color);
@@ -3388,7 +3388,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.Equal(24, toolbar.MiddleSpacing);
@@ -3410,7 +3410,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.Equal(22, toolbar.MiddleSpacing);
@@ -3434,7 +3434,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
         Assert.Equal(30, toolbar.MiddleSpacing);
@@ -3456,7 +3456,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Equal(72, ResolvedToolbarHeight(appBarBackground));
@@ -3480,7 +3480,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Equal(64, ResolvedToolbarHeight(appBarBackground));
@@ -3497,7 +3497,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Equal(56, ResolvedToolbarHeight(appBarBackground));
@@ -3518,7 +3518,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         Assert.Equal(56, ResolvedToolbarHeight(appBarBackground));
@@ -3545,7 +3545,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
@@ -3575,7 +3575,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
@@ -3610,7 +3610,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var titleParagraph = FindParagraphByText(appBarBackground, "Title");
@@ -3645,7 +3645,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionParagraph = FindParagraphByText(appBarBackground, "Action");
@@ -3684,7 +3684,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
         var actionParagraph = FindParagraphByText(appBarBackground, "Action");
@@ -3718,7 +3718,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(0, ResolvedToolbarHeight(root.ChildElement?.RenderObject));
     }
@@ -3739,7 +3739,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var leading = FindConstrainedBox(
             root.ChildElement?.RenderObject,
@@ -3763,7 +3763,7 @@ public sealed class MaterialScaffoldTests
 
         localRoot.Attach(localOwner);
         localOwner.BuildScope(localRoot, () => localRoot.Mount(parent: null, newSlot: null));
-        localOwner.FlushBuild();
+        localOwner.PumpFrame();
         Assert.Contains(
             FindWidgets<MaterialWidget>(localRoot.ChildElement),
             material => material.Color == Colors.Crimson);
@@ -3780,7 +3780,7 @@ public sealed class MaterialScaffoldTests
 
         widgetRoot.Attach(widgetOwner);
         widgetOwner.BuildScope(widgetRoot, () => widgetRoot.Mount(parent: null, newSlot: null));
-        widgetOwner.FlushBuild();
+        widgetOwner.PumpFrame();
         Assert.Contains(
             FindWidgets<MaterialWidget>(widgetRoot.ChildElement),
             material => material.Color == Colors.DarkGreen);
@@ -3807,7 +3807,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(localData, captured);
     }
@@ -3902,7 +3902,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(captured);
         Assert.Equal(DrawerAlignment.End, captured!.Alignment);
@@ -3930,7 +3930,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
@@ -3958,7 +3958,7 @@ public sealed class MaterialScaffoldTests
         Assert.False(key.CurrentState!.IsOpen);
 
         key.CurrentState.Open();
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
         harness.Pump(new Size(400, 300));
@@ -4021,7 +4021,7 @@ public sealed class MaterialScaffoldTests
                 position: new Point(200, 120),
                 timestampUtc: start.AddMilliseconds(150));
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
@@ -4081,7 +4081,7 @@ public sealed class MaterialScaffoldTests
                 position: new Point(40, 120),
                 timestampUtc: start.AddSeconds(1.1));
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
@@ -4117,13 +4117,13 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Route? initialRoute = navigatorKey.CurrentState!.CurrentRoute;
         drawerKey.CurrentState!.Open();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(TestBuildOwner.Complete(navigatorKey.CurrentState.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(initialRoute, navigatorKey.CurrentState.CurrentRoute);
         Assert.Equal([true, false], callbacks);
@@ -4147,7 +4147,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Scaffold.Of(scaffoldContext!).OpenEndDrawer();
         SettleDrawerAnimation(owner);
 
@@ -4185,7 +4185,7 @@ public sealed class MaterialScaffoldTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(emitterContext);
         Assert.Contains(
@@ -4204,7 +4204,7 @@ public sealed class MaterialScaffoldTests
                 axisDirection: AxisDirection.Down,
                 devicePixelRatio: 1.0));
         notification.Dispatch(emitterContext);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
@@ -4516,19 +4516,14 @@ public sealed class MaterialScaffoldTests
                 new Directionality(TextDirection.Ltr, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

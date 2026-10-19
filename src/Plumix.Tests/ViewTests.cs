@@ -850,12 +850,8 @@ public sealed class ViewTests
         /// <summary>Dart's <c>drawFrame</c>: build, layout, finalize, then the microtasks the frame queued.</summary>
         public void Pump()
         {
-            _owner.FlushBuild();
-            RendererBinding.Instance.RootPipelineOwner.FlushLayout();
-            _owner.FinalizeTree();
-            EventLoop.FlushMicrotasks();
-            _owner.FlushBuild();
-            RendererBinding.Instance.RootPipelineOwner.FlushLayout();
+            _owner.PumpFrame(RendererBinding.Instance.RootPipelineOwner.FlushLayout);
+            _owner.PumpFrame(RendererBinding.Instance.RootPipelineOwner.FlushLayout);
         }
 
         public void Dispose()

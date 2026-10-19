@@ -191,10 +191,10 @@ public sealed class ImageWidgetTests : IDisposable
         await PumpUntilAsync(
             harness,
             () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, targetImage)));
-        double start = FrameClock.CurrentSeconds;
+        double start = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         IReadOnlyList<RenderImage> fadeOutImages = FindRenderImages(harness.RenderView);
         RenderImage fadingTarget = Assert.Single(
@@ -207,7 +207,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.InRange(fadingPlaceholder.Opacity!.Value, 0.27, 0.35);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.65));
-        harness.FlushBuild();
+        harness.PumpFrame();
         IReadOnlyList<RenderImage> fadeInImages = FindRenderImages(harness.RenderView);
         fadingTarget = Assert.Single(fadeInImages, image => ReferenceEquals(image.Image, targetImage));
         fadingPlaceholder = Assert.Single(
@@ -217,7 +217,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(0.0, fadingPlaceholder.Opacity!.Value, 6);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start + 1.1));
-        harness.FlushBuild();
+        harness.PumpFrame();
         RenderImage finalImage = Assert.Single(FindRenderImages(harness.RenderView));
         Assert.Same(targetImage, finalImage.Image);
         Assert.Equal(1.0, finalImage.Opacity!.Value, 6);
@@ -400,7 +400,7 @@ public sealed class ImageWidgetTests : IDisposable
         while (!predicate() && DateTime.UtcNow < deadline)
         {
             await Task.Delay(10);
-            harness.FlushBuild();
+            harness.PumpFrame();
         }
 
         Assert.True(predicate());
@@ -524,7 +524,7 @@ public sealed class ImageWidgetTests : IDisposable
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -533,23 +533,18 @@ public sealed class ImageWidgetTests : IDisposable
 
         public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root);
 
-        public void FlushBuild() => _owner.FlushBuild();
+        public void PumpFrame() => _owner.PumpFrame();
 
         public void Update(Widget widget)
         {
             widget = new Directionality(TextDirection.Ltr, widget);
             _root.UpdateWidget(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            Pipeline.RequestLayout();
-            Pipeline.FlushLayout(size);
-            Pipeline.FlushCompositingBits();
-            Pipeline.FlushPaint();
-            Pipeline.CompositeFrame();
+            _owner.PumpFrame(Pipeline, size);
         }
 
         public void Dispose()

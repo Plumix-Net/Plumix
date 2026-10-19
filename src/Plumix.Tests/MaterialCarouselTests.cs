@@ -585,7 +585,7 @@ public sealed class MaterialCarouselTests
             _root = new RootElement(RenderView, Wrap(carousel, _theme));
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -598,7 +598,7 @@ public sealed class MaterialCarouselTests
         /// </summary>
         public void PumpAnimation(TimeSpan duration)
         {
-            double start = FrameClock.CurrentSeconds;
+            double start = AnimationPump.CurrentSeconds;
             const double frame = 1.0 / 60.0;
             int frames = (int)Math.Ceiling(duration.TotalSeconds / frame) + 2;
             for (int step = 1; step <= frames; step++)
@@ -611,12 +611,7 @@ public sealed class MaterialCarouselTests
         public void Pump(Size size)
         {
             _surface = size;
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         /// <summary>Replaces the carousel with a new configuration and lays out again.</summary>

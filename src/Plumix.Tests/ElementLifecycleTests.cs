@@ -18,12 +18,12 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new KeyedListHost([1, 2, 3]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initial = KeyedTracker.CurrentStateIdByItem.ToDictionary(static pair => pair.Key, static pair => pair.Value);
 
         root.Update(new KeyedListHost([3, 1, 2]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(initial[1], KeyedTracker.CurrentStateIdByItem[1]);
         Assert.Equal(initial[2], KeyedTracker.CurrentStateIdByItem[2]);
@@ -31,7 +31,7 @@ public sealed class ElementLifecycleTests
         Assert.Empty(KeyedTracker.DisposedStateIds);
 
         root.Update(new KeyedListHost([3, 2, 4]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(initial[3], KeyedTracker.CurrentStateIdByItem[3]);
         Assert.Equal(initial[2], KeyedTracker.CurrentStateIdByItem[2]);
@@ -51,12 +51,12 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new GlobalReparentHost(moveToLeft: true, identity));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["init"], LifecycleTracker.Events);
 
         root.Update(new GlobalReparentHost(moveToLeft: false, identity));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         int deactivateIndex = LifecycleTracker.Events.IndexOf("deactivate");
         int activateIndex = LifecycleTracker.Events.IndexOf("activate");
@@ -81,12 +81,12 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["init"], LifecycleTracker.Events);
 
         root.Update(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["init"], LifecycleTracker.Events);
 
@@ -105,11 +105,11 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new GlobalPlacementHost(includeGlobal: false, moveToLeft: true, identity));
         root.Update(new GlobalPlacementHost(includeGlobal: true, moveToLeft: false, identity));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "deactivate"));
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "activate"));
@@ -130,11 +130,11 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new GlobalPlacementHost(includeGlobal: true, moveToLeft: false, identity));
         root.Update(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(2, LifecycleTracker.Events.Count(static eventName => eventName == "deactivate"));
         Assert.Equal(2, LifecycleTracker.Events.Count(static eventName => eventName == "activate"));
@@ -156,10 +156,10 @@ public sealed class ElementLifecycleTests
                 child: new LifecycleRecorderWidget(new ValueKey<string>("nested"))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new SizedBox(width: 1, height: 1));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "deactivate"));
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
@@ -177,7 +177,7 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new MixedKeyedUnkeyedHost(reorder: false));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initialKeyed = MixedTracker.CurrentKeyedStateIdByName.ToDictionary(
             static pair => pair.Key,
@@ -187,7 +187,7 @@ public sealed class ElementLifecycleTests
             static pair => pair.Value);
 
         root.Update(new MixedKeyedUnkeyedHost(reorder: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(initialKeyed["k1"], MixedTracker.CurrentKeyedStateIdByName["k1"]);
         Assert.Equal(initialKeyed["k2"], MixedTracker.CurrentKeyedStateIdByName["k2"]);
@@ -212,7 +212,7 @@ public sealed class ElementLifecycleTests
         var root = new TestRootElement(new NestedMixedAcrossParentsHost(reorder: false));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         string initialKeyedBranchState = NestedBranchTracker.CurrentKeyedStateIdByName["branch-keyed"];
         string initialUnkeyedBranchState = NestedBranchTracker.CurrentUnkeyedStateIdByName["branch-unkeyed"];
@@ -224,7 +224,7 @@ public sealed class ElementLifecycleTests
             static pair => pair.Value);
 
         root.Update(new NestedMixedAcrossParentsHost(reorder: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(initialKeyedBranchState, NestedBranchTracker.CurrentKeyedStateIdByName["branch-keyed"]);
         Assert.NotEqual(initialUnkeyedBranchState, NestedBranchTracker.CurrentUnkeyedStateIdByName["branch-unkeyed"]);

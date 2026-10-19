@@ -25,7 +25,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.Equal("root", currentPageName);
@@ -35,13 +35,13 @@ public sealed class NavigationTests
             name: "details",
             onBuild: name => currentPageName = name,
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("details", currentPageName);
         Assert.True(navigatorState.CanPop);
 
         Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // The revealed route keeps its cached page instead of rebuilding, so the visible route is read from
         // the navigator rather than from the last build that ran.
@@ -65,7 +65,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.Equal("root", currentPageName);
@@ -74,7 +74,7 @@ public sealed class NavigationTests
             name: "replacement",
             onBuild: name => currentPageName = name,
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("replacement", currentPageName);
         Assert.False(navigatorState.CanPop);
@@ -97,22 +97,22 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.Push(BuildRoute(
             name: "details",
             onBuild: _ => { },
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState.PushReplacement(BuildRoute(
             name: "replacement",
             onBuild: _ => { },
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(
             [
@@ -143,7 +143,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedRoute);
         Assert.Same(initialRoute, capturedRoute);
@@ -199,7 +199,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.NotNull(rootRoute);
@@ -209,7 +209,7 @@ public sealed class NavigationTests
         Assert.Equal(["didPush"], rootAware.Events);
 
         navigatorState!.PushNamed("/details");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(detailsRoute);
         Assert.Equal(["didPush", "didPushNext"], rootAware.Events);
@@ -219,7 +219,7 @@ public sealed class NavigationTests
         Assert.Equal(["didPush"], detailsAware.Events);
 
         navigatorState.Pop();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["didPush", "didPushNext", "didPopNext"], rootAware.Events);
         Assert.Equal(["didPush", "didPop"], detailsAware.Events);
@@ -270,10 +270,10 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushNamed("/details");
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.NotNull(detailsRoute);
 
         var aware = new RecordingRouteAware();
@@ -281,10 +281,10 @@ public sealed class NavigationTests
         Assert.Equal(["didPush"], aware.Events);
 
         navigatorState.PushReplacementNamed("/replacement");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState.Pop();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["didPush"], aware.Events);
     }
@@ -333,7 +333,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(rootRoute);
         Assert.NotNull(navigatorState);
@@ -343,7 +343,7 @@ public sealed class NavigationTests
         routeObserver.Unsubscribe(aware);
 
         navigatorState!.PushNamed("/details");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["didPush"], aware.Events);
     }
@@ -369,7 +369,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.NotNull(rootRoute);
@@ -402,13 +402,13 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.Push(BuildRoute(
             name: "details",
             onBuild: _ => { },
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState.StartUserGesture();
         navigatorState.StopUserGesture();
@@ -440,7 +440,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.StartUserGesture();
         navigatorState.StartUserGesture();
@@ -477,16 +477,16 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.Push(BuildRoute(
             name: "details",
             onBuild: name => currentPageName = name,
             captureState: _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(TestBuildOwner.Complete(navigatorState.MaybePopFromUserGesture()));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("root", CurrentPage(navigatorState));
         Assert.False(navigatorState.UserGestureInProgress);
@@ -542,14 +542,14 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.Equal("menu", currentPageName);
         Assert.Null(latestArguments);
 
         navigatorState!.PushNamed("/details", arguments: 42);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("details", currentPageName);
         Assert.Equal(42, latestArguments);
@@ -599,14 +599,14 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(rootContext is not null);
         Assert.Equal("root", currentPageName);
         Assert.False(Navigator.CanPop(rootContext));
 
         Navigator.PushNamed(rootContext, "/details", arguments: 99);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(detailsContext is not null);
         Assert.Equal("details", currentPageName);
@@ -614,7 +614,7 @@ public sealed class NavigationTests
         Assert.True(Navigator.CanPop(detailsContext));
 
         Navigator.Pop(detailsContext);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(rootContext is not null);
         Assert.Equal("/", CurrentPage(Navigator.Of(rootContext)));
@@ -659,10 +659,10 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushReplacementNamed("/replacement");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("replacement", currentPageName);
         Assert.False(navigatorState.CanPop);
@@ -684,18 +684,18 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.Push(BuildRoute("a", name => currentPageName = name, _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.Push(BuildRoute("b", name => currentPageName = name, _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.Push(BuildRoute("c", name => currentPageName = name, _ => { }));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("c", currentPageName);
 
         navigatorState.PopUntil(route => route.Settings.Name == "a");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("a", CurrentPage(navigatorState));
         Assert.True(navigatorState.CanPop);
@@ -739,22 +739,22 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushNamed("/a");
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.PushNamed("/b");
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("b", currentPageName);
 
         navigatorState.PushNamedAndRemoveUntil("/target", route => route.Settings.Name == "/");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("target", currentPageName);
         Assert.True(navigatorState.CanPop);
 
         Assert.True(TestBuildOwner.Complete(navigatorState.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
@@ -797,14 +797,14 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushNamed("/a");
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.PushNamed("/b");
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.PushNamedAndRemoveUntil("/target", route => route.Settings.Name == "/");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(
             [
@@ -860,21 +860,21 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushNamed("/a");
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.PushNamed("/b");
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("b", currentPageName);
 
         navigatorState.RemoveRoute(routesByName["/a"]);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("b", currentPageName);
         Assert.True(navigatorState.CanPop);
 
         navigatorState.Pop();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
     }
@@ -920,18 +920,18 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.PushNamed("/a");
-        owner.FlushBuild();
+        owner.PumpFrame();
         navigatorState.PushNamed("/b");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState.RemoveRouteBelow(routesByName["/b"]);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState.Pop();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("/", CurrentPage(navigatorState));
         Assert.False(navigatorState.CanPop);
@@ -957,7 +957,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigatorState);
         Assert.NotNull(rootRoute);
@@ -996,7 +996,7 @@ public sealed class NavigationTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("/details", currentPageName);
         Assert.NotNull(capturedRouteData);
@@ -1047,41 +1047,41 @@ public sealed class NavigationTests
         var root = new TestRootElement(new Navigator(initialRoute));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigatorState!.Push(detailsRoute);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(detailsAnimation);
         Assert.Same(detailsAnimation, detailsTransitionAnimation);
         Assert.Equal(AnimationStatus.Forward, detailsAnimation!.Status);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation!.Value, precision: 6);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.3));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(AnimationStatus.Completed, detailsAnimation.Status);
 
         navigatorState.Pop();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Same(initialRoute, navigatorState.CurrentRoute);
         Assert.Equal(AnimationStatus.Reverse, detailsAnimation.Status);
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
 
-        double reverseNow = FrameClock.CurrentSeconds;
+        double reverseNow = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.05));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.2));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(AnimationStatus.Dismissed, rootSecondaryAnimation.Status);
         Assert.Throws<InvalidOperationException>(() => _ = detailsRoute.Animation);
 

@@ -195,7 +195,7 @@ public sealed class RenderObjectLifecycleTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TestRenderBox renderObject = Assert.IsType<TestRenderBox>(widget.CreatedRenderObject);
         Assert.False(renderObject.DebugDisposed);
@@ -215,7 +215,7 @@ public sealed class RenderObjectLifecycleTests
         var root = new TestRootElement(widget);
         root.Attach(buildOwner);
         buildOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        buildOwner.FlushBuild();
+        buildOwner.PumpFrame();
         PipelineOwner pipeline = root.Pipeline;
         pipeline.FlushLayout(new Size(100, 100));
         pipeline.FlushCompositingBits();
@@ -244,7 +244,7 @@ public sealed class RenderObjectLifecycleTests
         var root = new TestRootElement(outerWidget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         TrackingRenderBox outer = Assert.IsType<TrackingRenderBox>(outerWidget.CreatedRenderObject);
         TrackingRenderBox inner = Assert.IsType<TrackingRenderBox>(innerWidget.CreatedRenderObject);
@@ -259,7 +259,7 @@ public sealed class RenderObjectLifecycleTests
         Assert.Same(outer, inner.Parent);
         Assert.Same(inner, outer.Child);
 
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(outer.DebugDisposed);
         Assert.True(inner.DebugDisposed);
     }

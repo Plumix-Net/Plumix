@@ -75,7 +75,7 @@ public sealed class ElementWidgetLifetimeTests
         var state = Assert.IsType<DisposeState>(element.State);
         var replacement = new DisposeWidget(key, throws);
         new RootWidget(replacement).Attach(owner, root);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Same(element, root.ChildElement);
         Assert.Same(replacement, element.Widget);
         Assert.Equal(1, owner.GlobalKeyCount);
@@ -118,11 +118,11 @@ public sealed class ElementWidgetLifetimeTests
         root.Update(new RootWidget(replacement));
         Assert.Same(element, root.ChildElement);
         Assert.Same(replacement, element.Widget);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(element.Mounted);
 
         root.Update(new RootWidget(new EmptyWidget()));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(element.Mounted);
         Assert.Throws<InvalidOperationException>(() => element.Widget);
         Assert.Equal(0, owner.GlobalKeyCount);

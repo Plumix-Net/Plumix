@@ -974,10 +974,8 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
             RenderOverlayTheater.LayoutTheaterChild(child, Constraints, Size, Theater.ResolvedAlignment);
         }
 
-        // Dart asserts `_callbackId == null` here, because a Flutter frame always runs the transient
-        // callback before the next layout. Plumix's widget-test harnesses flush layout without running a
-        // frame at all, so a still-pending id is reused instead of asserted on.
-        _callbackId ??= SchedulerBinding.Instance.ScheduleFrameCallback(HandleFrameCallback, scheduleNewFrame: false);
+        DebugAssertions.Assert(_callbackId is null);
+        _callbackId = SchedulerBinding.Instance.ScheduleFrameCallback(HandleFrameCallback, scheduleNewFrame: false);
     }
 
     /// <inheritdoc />

@@ -161,7 +161,7 @@ public sealed class FilterWidgetsTests
                     blendMode: BlendMode.Source,
                     enabled: false)),
             updatedKey));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = FindElementRenderObject<RenderBackdropFilter>(root.ChildElement);
         Assert.Same(renderObject, updated);
@@ -216,7 +216,7 @@ public sealed class FilterWidgetsTests
         root.Update(new ColorFiltered(
             updatedColorFilter,
             new SizedBox(width: 12.0, height: 8.0)));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var updatedColorRenderObject = RequireRenderObject<RenderColorFilter>(root.ChildElement);
         Assert.Same(colorRenderObject, updatedColorRenderObject);
         Assert.Same(updatedColorFilter, updatedColorRenderObject.ColorFilter);
@@ -226,7 +226,7 @@ public sealed class FilterWidgetsTests
         root.Update(new ImageFiltered(
             initialImageFilter,
             new SizedBox(width: 12.0, height: 8.0)));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var imageRenderObject = RequireRenderObject<RenderImageFilter>(root.ChildElement);
         Assert.Same(initialImageFilter, imageRenderObject.ImageFilter);
         Assert.True(imageRenderObject.Enabled);
@@ -235,7 +235,7 @@ public sealed class FilterWidgetsTests
             updatedImageFilter,
             new SizedBox(width: 12.0, height: 8.0),
             enabled: false));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var updatedImageRenderObject = RequireRenderObject<RenderImageFilter>(root.ChildElement);
         Assert.Same(imageRenderObject, updatedImageRenderObject);
         Assert.Same(updatedImageFilter, updatedImageRenderObject.ImageFilter);
@@ -270,7 +270,7 @@ public sealed class FilterWidgetsTests
             updatedCallback,
             child: new SizedBox(width: 20.0, height: 10.0),
             blendMode: BlendMode.SourceIn));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderObject = RequireRenderObject<RenderShaderMask>(root.ChildElement);
         Assert.Same(renderObject, updatedRenderObject);
@@ -669,7 +669,7 @@ public sealed class FilterWidgetsTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

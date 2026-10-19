@@ -314,7 +314,7 @@ public sealed class TapRegionTests
             _root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
             _renderView = new RenderView(new FlutterView(new Size(800, 600), viewId: HarnessViewId))
             {
                 Child = Assert.IsAssignableFrom<RenderBox>(_root.ChildElement?.RenderObject),
@@ -342,8 +342,10 @@ public sealed class TapRegionTests
 
         public void Pump()
         {
-            _owner.FlushBuild();
-            _pipeline.FlushLayout(new Size(240, 120));
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.FlushLayout(new Size(240, 120));
+            });
         }
 
         public SemanticsOwner PumpSemantics()

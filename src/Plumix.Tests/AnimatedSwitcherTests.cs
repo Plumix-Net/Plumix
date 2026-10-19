@@ -78,7 +78,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             childKey: new ValueKey<int>(1),
             transitionBuilder,
             layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(0, previousCount);
         Assert.Equal(2, transitionBuilds);
@@ -88,26 +88,26 @@ public sealed class AnimatedSwitcherTests : IDisposable
             childKey: new ValueKey<int>(2),
             transitionBuilder,
             layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, previousCount);
 
         // A frame has to elapse before the second child can become a *retained* outgoing child: a
         // reverse from a still-dismissed controller has nothing to animate and settles at once.
         AnimationPump.Advance(0.05);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(BuildSwitcher(
             value: "three",
             childKey: new ValueKey<int>(3),
             transitionBuilder,
             layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(2, previousCount);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(0, previousCount);
 
         root.UnmountRoot();
@@ -150,7 +150,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             childKey: new ValueKey<int>(2),
             firstBuilder,
             layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(2, firstBuilderCalls);
 
         root.Update(BuildSwitcher(
@@ -158,7 +158,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
             childKey: new ValueKey<int>(2),
             secondBuilder,
             layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(3, secondBuilderCalls);
         root.UnmountRoot();
@@ -259,15 +259,15 @@ public sealed class AnimatedSwitcherTests : IDisposable
         root.Update(BuildCrossFade(
             CrossFadeState.ShowSecond,
             () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         clip = RequireRenderObject<RenderClipRect>(root.ChildElement);
         clip.MarkNeedsLayout();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 5.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         FindRenderObject<RenderAnimatedSize>(clip)!.MarkNeedsLayout();
         clip.MarkNeedsLayout();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
@@ -278,7 +278,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal(0, completed);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 12.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         FindRenderObject<RenderAnimatedSize>(clip)!.MarkNeedsLayout();
         clip.MarkNeedsLayout();
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
@@ -332,13 +332,13 @@ public sealed class AnimatedSwitcherTests : IDisposable
             reverseDuration: TimeSpan.FromMilliseconds(80),
             excludeBottomFocus: false,
             layoutBuilder: builder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(bottomTickerEnabled);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(bottomTickerEnabled);
 
         root.UnmountRoot();
@@ -423,7 +423,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

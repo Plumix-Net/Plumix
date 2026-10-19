@@ -25,7 +25,7 @@ public sealed class BaselineTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var baseline = RequireRenderObject<RenderBaseline>(root.ChildElement);
         Assert.Equal(18, baseline.Baseline);
@@ -35,7 +35,7 @@ public sealed class BaselineTests
             baseline: 24,
             baselineType: TextBaseline.Ideographic,
             child: new SizedBox(width: 20, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderBaseline>(root.ChildElement);
         Assert.Same(baseline, updated);
@@ -126,7 +126,7 @@ public sealed class BaselineTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RequireRenderObject<RenderIgnoreBaseline>(root.ChildElement);
     }

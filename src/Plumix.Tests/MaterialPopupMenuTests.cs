@@ -266,7 +266,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(action!.PerformAction(SemanticsActions.Tap));
 
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.075));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.075));
         harness.Pump(new Size(500, 360));
         Assert.NotNull(FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Done.CodePoint)));
         Assert.Contains(FindDescendants<RenderOpacity>(harness.RenderView), opacity =>
@@ -682,7 +682,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             position: new RelativeRect(20, 20, 200, 100));
         PumpAnimation();
         harness.Pump(new Size(300, 200));
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.02));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.02));
         harness.Pump(new Size(300, 200));
 
         RenderSingleChildViewport viewport = Assert.Single(
@@ -808,7 +808,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             constraints: new BoxConstraints(MinWidth: 180, MaxWidth: 180),
             clipBehavior: Clip.HardEdge,
             popUpAnimationStyle: AnimationStyle.NoAnimation);
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.01));
         harness.Pump(new Size(500, 360));
 
         Assert.True(positionBuilds >= 1);
@@ -837,7 +837,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
@@ -896,6 +896,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
 
         public WidgetRenderHarness(Widget rootWidget)
         {
@@ -905,7 +906,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
@@ -917,23 +919,26 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _rootElement.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _rootElement.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

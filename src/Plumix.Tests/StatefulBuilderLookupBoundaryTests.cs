@@ -37,7 +37,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
         Assert.NotNull(stateSetter);
 
         stateSetter!(() => value = 2);
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.Equal(1, parentBuilds);
         Assert.Equal(2, localBuilds);
@@ -69,7 +69,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
         Assert.Equal(1, secondBuilds);
 
         originalSetter!(() => { });
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.Equal(1, firstBuilds);
         Assert.Equal(2, secondBuilds);
@@ -321,7 +321,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            FlushBuild();
+            PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -329,14 +329,16 @@ public sealed class StatefulBuilderLookupBoundaryTests
         public void Update(Widget widget)
         {
             _root.Update(widget);
-            FlushBuild();
+            PumpFrame();
         }
 
-        public void FlushBuild()
+        public void PumpFrame()
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(new Avalonia.Size(100, 100));
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(new Avalonia.Size(100, 100));
+            });
         }
 
         public void Dispose()

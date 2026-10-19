@@ -138,7 +138,7 @@ public sealed class MagnifierTests : IDisposable
         var probeState = harness.FindState<ContextProbeState>();
         using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
         var controller = new MagnifierController(animation);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
 
         Task show = controller.Show(probeState.Context, _ => new SizedBox(width: 20, height: 10));
         Assert.Equal(AnimationStatus.Forward, animation.Status);
@@ -360,7 +360,7 @@ public sealed class MagnifierTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -369,12 +369,7 @@ public sealed class MagnifierTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            Pipeline.RequestLayout();
-            Pipeline.FlushLayout(size);
-            Pipeline.FlushCompositingBits();
-            Pipeline.FlushPaint();
-            Pipeline.CompositeFrame();
+            _owner.PumpFrame(Pipeline, size);
         }
 
         public T FindState<T>() where T : State

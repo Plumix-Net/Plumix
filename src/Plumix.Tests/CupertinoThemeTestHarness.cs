@@ -16,8 +16,9 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
     private readonly BuildOwner _owner = TestBuildOwner.Create();
     private readonly PipelineOwner _pipeline;
     private readonly RootElement _root;
+    private readonly IDisposable? _viewRegistration;
 
-    public CupertinoThemeTestHarness(Widget widget)
+    public CupertinoThemeTestHarness(Widget widget, bool registerForPointerEvents = false)
     {
         RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
@@ -25,7 +26,8 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _root.Attach(_owner);
         _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
+        _viewRegistration = registerForPointerEvents ? new TestRenderViewRegistration(RenderView) : null;
     }
 
     public RenderView RenderView { get; }
@@ -33,31 +35,30 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
     public void PumpWidget(Widget widget)
     {
         _root.Update(new ViewScope(RenderView.FlutterView, widget));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
-    public void FlushBuild() => _owner.FlushBuild();
+    public void PumpFrame() => _owner.PumpFrame();
+
+    public void PumpFrame(Action render) => _owner.PumpFrame(render);
 
     public void Layout(Size size)
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(size);
+        _owner.PumpFrame(() =>
+        {
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+        });
     }
 
     public void Pump(Size size)
     {
-        Layout(size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
+        _owner.PumpFrame(_pipeline, size);
     }
 
     public SemanticsNode? PumpAndGetSemantics(Size size)
     {
-        Pump(size);
-        _pipeline.RequestSemanticsUpdate();
-        _pipeline.FlushSemantics();
+        _owner.PumpFrame(_pipeline, size, semantics: true);
         return _pipeline.SemanticsOwner!.RootNode;
     }
 
@@ -97,7 +98,17 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         }
     }
 
-    public void Dispose() => _root.UnmountRoot();
+    public void Dispose()
+    {
+        try
+        {
+            _root.UnmountRoot();
+        }
+        finally
+        {
+            _viewRegistration?.Dispose();
+        }
+    }
 
     private static void Visit<T>(Element element, List<T> result) where T : Widget
     {

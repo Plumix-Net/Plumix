@@ -126,12 +126,12 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.Equal(0, controller.Offset);
 
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.1));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.1));
         harness.Pump(new Size(320, 300));
         Assert.True(controller.Offset > 0);
         Assert.IsType<DrivenScrollActivity>(controller.PrimaryPosition!.Activity);
 
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.2));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.2));
         harness.Pump(new Size(320, 300));
         Assert.IsType<IdleScrollActivity>(controller.PrimaryPosition.Activity);
     }
@@ -458,7 +458,7 @@ public sealed class MaterialStepperTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -466,24 +466,17 @@ public sealed class MaterialStepperTests : IDisposable
         public void Update(Widget widget)
         {
             _rootElement.UpdateRoot(new ViewScope(RenderView.FlutterView, widget));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

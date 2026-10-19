@@ -139,7 +139,7 @@ internal static class EmptyBuildContext
             }));
             root.Attach(Owner);
             Owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            Owner.FlushBuild();
+            Owner.PumpFrame();
             _instance = captured!;
             return _instance;
         }
@@ -224,7 +224,7 @@ internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvid
             })));
         root.Attach(_owner);
         _owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
         _root = root;
         _notificationContext = captured!;
     }

@@ -768,7 +768,7 @@ public sealed class MaterialScaffoldGeometryTests
         harness.Pump(Viewport);
 
         WidgetsBinding.Instance.HandleStatusBarTap();
-        double start = FrameClock.CurrentSeconds;
+        double start = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(start));
 
         // The source animation runs for 1000ms on Curves.easeOutCirc; these are the offsets Flutter's own
@@ -874,25 +874,20 @@ public sealed class MaterialScaffoldGeometryTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Update(Widget widget)
         {
             _rootElement.Update(widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Tick(double seconds)

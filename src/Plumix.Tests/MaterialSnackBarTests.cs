@@ -407,7 +407,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             Colors.Green,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         Tap(harness.RenderView, new Point(100, 30), 901);
         harness.Pump(new Size(200, 60));
         Tap(harness.RenderView, new Point(100, 30), 902);
@@ -445,7 +445,7 @@ public sealed class MaterialSnackBarTests : IDisposable
             Colors.Green,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         Tap(harness.RenderView, new Point(100, 30), 903);
         harness.Pump(new Size(200, 60));
         AnimationPump.Prime();
@@ -953,26 +953,19 @@ public sealed class MaterialSnackBarTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

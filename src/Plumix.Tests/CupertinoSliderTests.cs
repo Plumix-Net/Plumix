@@ -420,7 +420,7 @@ public sealed class CupertinoSliderTests : IDisposable
         Assert.Equal(0.0, render.PositionValue);
 
         // `AnimateTo` scales the 500 ms transition by the covered fraction, so 0 -> 0.4 takes 200 ms.
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         Assert.True(render.PositionValue is > 0.0 and < 0.4);

@@ -42,7 +42,7 @@ public sealed class DirectionalPositionedTableCellTests
         var root = new TestRootElement(BuildDirectionalStack(TextDirection.Ltr));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var stack = FindRenderObject<RenderStack>(root);
         var child = Assert.IsAssignableFrom<RenderBox>(stack.FirstChild);
@@ -52,7 +52,7 @@ public sealed class DirectionalPositionedTableCellTests
         Assert.Equal(4, parentData.Top);
 
         root.Update(BuildDirectionalStack(TextDirection.Rtl));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedStack = FindRenderObject<RenderStack>(root);
         Assert.Same(stack, updatedStack);
@@ -90,7 +90,7 @@ public sealed class DirectionalPositionedTableCellTests
         var root = new TestRootElement(BuildTableCell(TableCellVerticalAlignment.Top));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var table = FindRenderObject<RenderTable>(root);
         var cell = Assert.IsType<RenderSemanticsAnnotations>(table.Row(0)[0]);
@@ -99,7 +99,7 @@ public sealed class DirectionalPositionedTableCellTests
         Assert.Equal(SemanticsRole.Cell, cell.Properties.Role);
 
         root.Update(BuildTableCell(TableCellVerticalAlignment.Bottom));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedTable = FindRenderObject<RenderTable>(root);
         var updatedCell = Assert.IsType<RenderSemanticsAnnotations>(updatedTable.Row(0)[0]);

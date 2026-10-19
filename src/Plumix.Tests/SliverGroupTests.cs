@@ -41,7 +41,7 @@ public sealed class SliverGroupTests
             ]));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var group = Assert.IsType<RenderSliverCrossAxisGroup>(root.ChildElement!.RenderObject);
         RenderSliver first = group.FirstChild!;
         RenderSliver second = group.ChildAfter(first)!;

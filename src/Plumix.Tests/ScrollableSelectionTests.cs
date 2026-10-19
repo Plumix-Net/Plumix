@@ -426,7 +426,7 @@ public sealed class ScrollableSelectionTests
 
         // One monotonic clock for the whole rig: the auto scroller's ticker reads the frame
         // timestamp, so a per-call counter would make time run backwards between pump loops.
-        private int _frame;
+        private TimeSpan _frameTime;
 
         private SelectionRig(
             RestorationHarness harness,
@@ -440,6 +440,7 @@ public sealed class ScrollableSelectionTests
             Controller = controller;
             Delegate = scrollableDelegate;
             ScrollableBox = scrollableBox;
+            _frameTime = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp;
         }
 
         public StaticSelectionContainerDelegate Registrar { get; }
@@ -481,7 +482,8 @@ public sealed class ScrollableSelectionTests
             for (int i = 0; i < frames; i += 1)
             {
                 _harness.Pump(Surface);
-                SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
+                _frameTime += TimeSpan.FromMilliseconds(50);
+                SchedulerBinding.PumpFrameForTests(_frameTime);
                 _harness.Pump(Surface);
             }
         }
@@ -504,7 +506,8 @@ public sealed class ScrollableSelectionTests
             for (int i = 0; i < frames; i += 1)
             {
                 _harness.Pump(Surface);
-                SchedulerBinding.PumpFrameForTests(TimeSpan.FromMilliseconds(50 * ++_frame));
+                _frameTime += TimeSpan.FromMilliseconds(50);
+                SchedulerBinding.PumpFrameForTests(_frameTime);
                 _harness.Pump(Surface);
                 if (_endPosition is { } position)
                 {

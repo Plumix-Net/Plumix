@@ -93,7 +93,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         Assert.True(controller.IsExpanded);
         Assert.Equal(2, FindParagraphs(harness.RenderView, "Content").Count);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
         harness.Pump(ViewSize);
@@ -121,7 +121,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         harness.Pump(ViewSize);
 
         Tap(harness.RenderView, new Point(160.0, 22.0), 812);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.125));
         harness.Pump(ViewSize);

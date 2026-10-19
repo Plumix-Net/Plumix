@@ -31,7 +31,7 @@ internal sealed class ScrollSemanticsHarness
         _rootElement = new HarnessRootElement(RenderView, Wrap(rootWidget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public RenderView RenderView { get; }
@@ -51,13 +51,15 @@ internal sealed class ScrollSemanticsHarness
 
     public void Pump(Size size)
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
-        _pipeline.FlushSemantics();
+        _owner.PumpFrame(() =>
+        {
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+            _pipeline.CompositeFrame();
+            _pipeline.FlushSemantics();
+        });
     }
 
     public SemanticsNode? FindSemanticsNode(string label)

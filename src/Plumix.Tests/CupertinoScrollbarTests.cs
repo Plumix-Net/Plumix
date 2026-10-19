@@ -19,7 +19,7 @@ public sealed class CupertinoScrollbarTests
 
     // Frame timestamps have to advance monotonically from where the scheduler's clock stands, or a
     // ticker started mid-frame (which anchors to `SchedulerBinding.Instance.CurrentFrameTimeStamp`) never advances.
-    private double _clock = FrameClock.CurrentSeconds;
+    private double _clock = AnimationPump.CurrentSeconds;
 
     public CupertinoScrollbarTests()
     {
@@ -454,7 +454,7 @@ public sealed class CupertinoScrollbarTests
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -462,12 +462,7 @@ public sealed class CupertinoScrollbarTests
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose() => _root.UnmountRoot();

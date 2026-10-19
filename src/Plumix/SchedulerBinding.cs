@@ -323,9 +323,7 @@ public sealed class SchedulerBinding
     public bool Locked => _lockCount > 0;
 
     /// <summary>
-    /// Whether a frame is actually being produced. <see cref="SchedulerPhase"/> alone cannot answer
-    /// this in Plumix, because <see cref="BuildScope"/> reports the build phase for builds driven
-    /// outside a frame.
+    /// Whether the begin/draw pair of an engine frame is in progress.
     /// </summary>
     internal bool IsHandlingFrame => _handlingFrame;
 
@@ -528,7 +526,15 @@ public sealed class SchedulerBinding
         bool rescheduling = false,
         bool scheduleNewFrame = true)
     {
-        return ScheduleFrameCallback(callback, rescheduling, scheduleNewFrame, frameOnly: false);
+        ArgumentNullException.ThrowIfNull(callback);
+        if (scheduleNewFrame)
+        {
+            ScheduleFrame();
+        }
+
+        _nextFrameCallbackId += 1;
+        _transientCallbacks[_nextFrameCallbackId] = FrameCallbackEntry.Create(callback, rescheduling);
+        return _nextFrameCallbackId;
     }
 
     /// <summary>
@@ -699,10 +705,7 @@ public sealed class SchedulerBinding
     /// currently producing a frame.</summary>
     /// <remarks>
     /// Dart's <c>SchedulerBinding.ensureVisualUpdate</c>, which schedules in the idle and post-frame
-    /// phases and returns in the others. Plumix's <see cref="SchedulerPhase"/> also reports
-    /// <see cref="SchedulerPhase.PersistentCallbacks"/> for builds driven outside a frame
-    /// (<see cref="BuildScope"/>), so the in-frame phases only suppress the request while
-    /// <see cref="IsHandlingFrame"/>; see <c>docs/ai/DIVERGENCES.md</c>.
+    /// phases and returns in the others.
     /// </remarks>
     public void EnsureVisualUpdate()
     {
@@ -715,11 +718,6 @@ public sealed class SchedulerBinding
             case SchedulerPhase.TransientCallbacks:
             case SchedulerPhase.MidFrameMicrotasks:
             case SchedulerPhase.PersistentCallbacks:
-                if (!IsHandlingFrame)
-                {
-                    ScheduleFrame();
-                }
-
                 return;
         }
     }
@@ -1351,8 +1349,7 @@ public sealed class SchedulerBinding
     }
 
     // ---------------------------------------------------------------------------------------------
-    // C#-only members below: host teardown and the hand-pumped test harnesses. See
-    // docs/ai/DIVERGENCES.md and the BuildOwner.FlushBuild row of docs/ai/BACKLOG.md.
+    // C#-only members below: host teardown and test frame delivery.
     // ---------------------------------------------------------------------------------------------
 
     /// <summary>Resets the binding to a freshly constructed state, for test isolation.</summary>
@@ -1382,78 +1379,6 @@ public sealed class SchedulerBinding
     /// <remarks>Lets a binding re-register its callback after a test reset this one.</remarks>
     internal bool HasPersistentFrameCallback(Action<TimeSpan> callback) =>
         _persistentCallbacks.Contains(callback);
-
-    /// <summary>
-    /// <see cref="ScheduleFrameCallback(Action{TimeSpan}, bool, bool)"/> for a callback that must
-    /// only ever run inside a real frame.
-    /// </summary>
-    /// <remarks>
-    /// <see cref="RunScheduledFrameCallbacksOutsideFrame"/> drains the transient callbacks for a
-    /// harness pump that produces no frame, and a <see cref="Ticker"/> must not advance animation
-    /// time there — Dart only ever ticks from <c>handleBeginFrame</c>.
-    /// </remarks>
-    internal int ScheduleFrameCallback(
-        Action<TimeSpan> callback,
-        bool rescheduling,
-        bool scheduleNewFrame,
-        bool frameOnly)
-    {
-        ArgumentNullException.ThrowIfNull(callback);
-
-        if (scheduleNewFrame)
-        {
-            ScheduleFrame();
-        }
-
-        _nextFrameCallbackId += 1;
-        _transientCallbacks[_nextFrameCallbackId] = FrameCallbackEntry.Create(callback, rescheduling, frameOnly);
-        return _nextFrameCallbackId;
-    }
-
-    /// <summary>
-    /// Reports the persistent-callback phase for a build driven outside a frame, the way a
-    /// hand-pumped harness builds; restores the previous phase when disposed.
-    /// </summary>
-    internal IDisposable BuildScope()
-    {
-        return new BuildScopeToken(this);
-    }
-
-    /// <summary>
-    /// Runs the callbacks queued by <see cref="ScheduleFrameCallback(Action{TimeSpan}, bool, bool)"/>,
-    /// without producing a frame: a widget-test harness pumps by flushing the build, layout and paint
-    /// phases by hand, so the transient callbacks a real frame would run first have to be drained
-    /// explicitly (see <c>BuildOwner.FlushBuild</c>).
-    /// </summary>
-    internal void RunScheduledFrameCallbacksOutsideFrame()
-    {
-        if (_handlingFrame || _transientCallbacks.Count == 0)
-        {
-            return;
-        }
-
-        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
-
-        TimeSpan timestamp = _currentFrameTimeStamp ?? AdjustForEpoch(_lastRawTimeStamp);
-        Dictionary<int, FrameCallbackEntry> callbacks = _transientCallbacks;
-        _transientCallbacks = [];
-        foreach ((int id, FrameCallbackEntry entry) in callbacks)
-        {
-            if (entry.FrameOnly)
-            {
-                // Tickers keep their registration for the next real frame; ticking them here would
-                // advance animation time outside a frame, which Dart never does.
-                _transientCallbacks[id] = entry;
-            }
-            else if (!_removedIds.Contains(id))
-            {
-                InvokeFrameCallback(entry.Callback, timestamp, entry.DebugStack);
-            }
-        }
-
-        // `_removedIds` is not cleared here: the frame-only entries put back above may still be
-        // cancelled before the real frame runs, and ids are never reused, so nothing else can match.
-    }
 
     /// <summary>
     /// One engine frame as the event loop runs it: begin, drain the microtasks, draw, drain again.
@@ -1510,11 +1435,10 @@ public sealed class SchedulerBinding
     /// <summary>Dart's private <c>_FrameCallbackEntry</c>.</summary>
     private sealed class FrameCallbackEntry
     {
-        private FrameCallbackEntry(Action<TimeSpan> callback, string? debugStack, bool frameOnly)
+        private FrameCallbackEntry(Action<TimeSpan> callback, string? debugStack)
         {
             Callback = callback;
             DebugStack = debugStack;
-            FrameOnly = frameOnly;
         }
 
         /// <summary>The registration stack of the transient callback currently executing.</summary>
@@ -1524,14 +1448,11 @@ public sealed class SchedulerBinding
 
         public string? DebugStack { get; }
 
-        /// <summary>C#-only; see <see cref="RunScheduledFrameCallbacksOutsideFrame"/>.</summary>
-        public bool FrameOnly { get; }
-
-        public static FrameCallbackEntry Create(Action<TimeSpan> callback, bool rescheduling, bool frameOnly)
+        public static FrameCallbackEntry Create(Action<TimeSpan> callback, bool rescheduling)
         {
             if (!Constants.KDebugMode)
             {
-                return new FrameCallbackEntry(callback, null, frameOnly);
+                return new FrameCallbackEntry(callback, null);
             }
 
             if (rescheduling)
@@ -1552,12 +1473,12 @@ public sealed class SchedulerBinding
                     ]);
                 }
 
-                return new FrameCallbackEntry(callback, DebugCurrentCallbackStack, frameOnly);
+                return new FrameCallbackEntry(callback, DebugCurrentCallbackStack);
             }
 
             // TODO(ianh): trim the frames from this library, so that the call to scheduleFrameCallback
             // is the top one
-            return new FrameCallbackEntry(callback, Environment.StackTrace, frameOnly);
+            return new FrameCallbackEntry(callback, Environment.StackTrace);
         }
     }
 
@@ -1651,24 +1572,4 @@ public sealed class SchedulerBinding
         }
     }
 
-    private sealed class BuildScopeToken : IDisposable
-    {
-        private readonly SchedulerBinding _binding;
-        private readonly SchedulerPhase _previousPhase;
-
-        public BuildScopeToken(SchedulerBinding binding)
-        {
-            _binding = binding;
-            _previousPhase = binding._schedulerPhase;
-            if (_previousPhase == SchedulerPhase.Idle)
-            {
-                binding._schedulerPhase = SchedulerPhase.PersistentCallbacks;
-            }
-        }
-
-        public void Dispose()
-        {
-            _binding._schedulerPhase = _previousPhase;
-        }
-    }
 }

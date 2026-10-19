@@ -424,6 +424,7 @@ public sealed class MaterialLegacyButtonTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly RootElement _root;
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
 
         public WidgetTree(Widget widget)
         {
@@ -433,7 +434,8 @@ public sealed class MaterialLegacyButtonTests
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
@@ -442,19 +444,24 @@ public sealed class MaterialLegacyButtonTests
 
         public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root.Child);
 
-        public void FlushBuild() => _owner.FlushBuild();
+        public void PumpFrame() => _owner.PumpFrame();
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
-        public void Dispose() => _root.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _root.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
+        }
 
         private static T? FindWidget<T>(Element? element) where T : Widget
         {

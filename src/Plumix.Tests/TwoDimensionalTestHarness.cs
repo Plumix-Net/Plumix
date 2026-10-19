@@ -553,7 +553,7 @@ internal sealed class TwoDimensionalRenderHarness : IDisposable
         _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public RenderView RenderView { get; }
@@ -563,18 +563,13 @@ internal sealed class TwoDimensionalRenderHarness : IDisposable
 
     public void Pump(Size size)
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
+        _owner.PumpFrame(_pipeline, size);
     }
 
     public void Replace(Widget child)
     {
         _rootElement.Update(new ViewScope(RenderView.FlutterView, child));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public void Dispose()

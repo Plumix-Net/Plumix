@@ -21,7 +21,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
         EventLoop.FlushMicrotasks();
     }
 
@@ -37,17 +37,23 @@ internal sealed class FocusLayoutHarness : IDisposable
 
     public void Layout(Size size)
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(size);
+        _owner.PumpFrame(() =>
+        {
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+        });
         EventLoop.FlushMicrotasks();
     }
 
     public SemanticsNode? LayoutAndGetSemantics(Size size)
     {
-        Layout(size);
-        _pipeline.RequestSemanticsUpdate();
-        _pipeline.FlushSemantics();
+        _owner.PumpFrame(() =>
+        {
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+        });
         return _pipeline.SemanticsOwner!.RootNode;
     }
 

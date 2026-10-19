@@ -86,11 +86,11 @@ public sealed class AsyncBuilderTests : IDisposable
         Assert.Equal(1, stream.ListenerCount);
 
         stream.Emit(11);
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Active, data: 11);
 
         stream.Complete();
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 11);
 
         root.UnmountRoot();
@@ -108,13 +108,13 @@ public sealed class AsyncBuilderTests : IDisposable
 
         var error = new InvalidOperationException("stream failure");
         stream.Fail(error);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(ConnectionState.Active, snapshots[^1].ConnectionState);
         Assert.Same(error, snapshots[^1].Error);
         Assert.True(snapshots[^1].HasError);
 
         root.Update(Build(null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(ConnectionState.None, snapshots[^1].ConnectionState);
         Assert.Same(error, snapshots[^1].Error);
         root.UnmountRoot();
@@ -136,21 +136,21 @@ public sealed class AsyncBuilderTests : IDisposable
         Mount(root, owner);
 
         first.Emit(3);
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Active, data: 3);
 
         root.Update(Build(second));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
         AssertSnapshot(snapshots[^1], ConnectionState.Waiting, data: 3);
 
         first.EmitIgnoringDisposal(99);
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Waiting, data: 3);
 
         second.Emit(8);
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Active, data: 8);
         root.UnmountRoot();
 
@@ -171,13 +171,13 @@ public sealed class AsyncBuilderTests : IDisposable
         Mount(root, owner);
 
         first.Emit(2);
-        owner.FlushBuild();
+        owner.PumpFrame();
         first.Complete();
-        owner.FlushBuild();
+        owner.PumpFrame();
         root.Update(new FoldingStreamBuilder(second, summaries));
-        owner.FlushBuild();
+        owner.PumpFrame();
         second.Fail(new InvalidOperationException("boom"));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("initial|connected|data:2|done|disconnected|connected|error:boom", summaries[^1]);
         root.UnmountRoot();
@@ -238,7 +238,7 @@ public sealed class AsyncBuilderTests : IDisposable
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 4);
 
         root.Update(Build(second.Task));
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Waiting, data: 4);
 
         second.SetResult(9);
@@ -263,17 +263,17 @@ public sealed class AsyncBuilderTests : IDisposable
         Mount(root, owner);
 
         root.Update(Build(second.Task));
-        owner.FlushBuild();
+        owner.PumpFrame();
         first.SetResult(1);
         await Task.Delay(20);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.DoesNotContain(snapshots, snapshot => snapshot.Data == 1);
 
         int buildCount = snapshots.Count;
         root.UnmountRoot();
         second.SetResult(2);
         await Task.Delay(20);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(buildCount, snapshots.Count);
 
         FutureBuilder<int> Build(Task<int> future)
@@ -317,7 +317,7 @@ public sealed class AsyncBuilderTests : IDisposable
         EventLoop.FlushMicrotasks();
         Assert.True(builderElement.Dirty);
 
-        owner.FlushBuild();
+        owner.PumpFrame();
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 7);
         root.UnmountRoot();
     }
@@ -360,7 +360,7 @@ public sealed class AsyncBuilderTests : IDisposable
         while (!condition() && DateTime.UtcNow < deadline)
         {
             await Task.Delay(5);
-            owner.FlushBuild();
+            owner.PumpFrame();
         }
 
         Assert.True(condition(), "Timed out waiting for the asynchronous builder snapshot.");
@@ -370,7 +370,7 @@ public sealed class AsyncBuilderTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class FoldingStreamBuilder : StreamBuilderBase<int, string>

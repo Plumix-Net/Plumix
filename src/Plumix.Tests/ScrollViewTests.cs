@@ -294,7 +294,7 @@ public sealed class ScrollViewTests
             _root = new ProbeRoot(new Directionality(TextDirection.Ltr, probe));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         private BuildContext Context { get; set; } = null!;

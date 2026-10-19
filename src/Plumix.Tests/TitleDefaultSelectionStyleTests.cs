@@ -133,7 +133,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
                 }))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(resolved);
         Assert.Equal(inheritedCursor, resolved.CursorColor);
@@ -147,7 +147,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
             fallback = DefaultSelectionStyle.Of(context);
             return new SizedBox();
         }));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(fallback);
         Assert.Null(fallback.CursorColor);
@@ -174,7 +174,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
                     }))));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, resolvedThemeValue);
         Assert.Equal(Colors.Crimson, resolvedSelectionColor);

@@ -338,7 +338,7 @@ public sealed class MaterialColorSchemeTests
         var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(localized);
         Assert.Equal(15, localized.TextTheme.BodyMedium.FontSize);

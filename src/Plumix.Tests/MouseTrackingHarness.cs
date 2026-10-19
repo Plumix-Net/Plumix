@@ -30,7 +30,7 @@ internal sealed class MouseTrackingHarness : IDisposable
         _rootElement = new HarnessRootElement(RenderView, new Directionality(TextDirection.Ltr, child: widget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
         Layout();
     }
 
@@ -42,12 +42,7 @@ internal sealed class MouseTrackingHarness : IDisposable
     public void Layout(Size? size = null)
     {
         _size = size ?? _size;
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(_size);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
+        _owner.PumpFrame(_pipeline, _size);
     }
 
     /// <summary>
@@ -64,7 +59,7 @@ internal sealed class MouseTrackingHarness : IDisposable
     public void Update(Widget widget)
     {
         _rootElement.Update(new Directionality(TextDirection.Ltr, child: widget));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
         PumpFrame();
     }
 
@@ -72,7 +67,7 @@ internal sealed class MouseTrackingHarness : IDisposable
     public void SendPointer(PointerEvent @event)
     {
         GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public void Dispose()

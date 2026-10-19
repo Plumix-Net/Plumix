@@ -170,7 +170,7 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.Equal([0xFF007AFFu, 0x33007AFFu], ColorsOf(FindRender(harness)));
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.08));
         harness.PumpWidget(Wrap(new CupertinoSegmentedControl<string>(

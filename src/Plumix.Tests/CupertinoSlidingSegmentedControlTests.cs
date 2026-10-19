@@ -552,7 +552,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
 
     private static void PumpAnimation(CupertinoThemeTestHarness harness, double milliseconds)
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + (milliseconds / 1000.0)));
         harness.Pump(ViewSize);

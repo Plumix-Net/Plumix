@@ -109,7 +109,7 @@ public sealed class VisibilityTests
         root.Update(new Visibility(
             visible: false,
             child: new ProbeWidget(key, onDispose: () => disposals++)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, disposals);
         Assert.Null(key.CurrentState);
@@ -117,7 +117,7 @@ public sealed class VisibilityTests
         root.Update(new Visibility(
             visible: true,
             child: new ProbeWidget(key, onDispose: () => disposals++)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(key.CurrentState);
         Assert.NotSame(initialState, key.CurrentState);
@@ -141,7 +141,7 @@ public sealed class VisibilityTests
             visible: false,
             maintainState: true,
             child: new ProbeWidget(key, onDispose: () => disposals++)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(initialState, key.CurrentState);
         Assert.Equal(0, disposals);
@@ -185,7 +185,7 @@ public sealed class VisibilityTests
         root.Update(Visibility.Maintain(
             visible: false,
             child: new HitTestWidget(new Size(40, 30))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         visibility = RequireRenderObject<RenderVisibility>(root.ChildElement);
         visibility.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
@@ -219,7 +219,7 @@ public sealed class VisibilityTests
                 visible: true,
                 maintainState: true,
                 child: probe)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(probe.LastVisibility);
         root.UnmountRoot();
@@ -380,7 +380,7 @@ public sealed class VisibilityTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T FindWidget<T>(Element root) where T : Widget

@@ -312,7 +312,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class TestImageStreamCompleter : ImageStreamCompleter

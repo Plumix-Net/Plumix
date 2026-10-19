@@ -34,7 +34,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -77,7 +77,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
         Assert.Equal(secondary, button.FillColor);
@@ -102,7 +102,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
@@ -131,7 +131,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         Assert.Null(FindDescendant<RenderClipPath>(renderRoot));
@@ -151,7 +151,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's Material clips through its physical shape (RenderPhysicalShape.clipBehavior).
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -194,7 +194,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
         var hero = Assert.IsType<Hero>(mergeSemantics.Child);
@@ -217,7 +217,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(first.HeroTag);
         Assert.Same(first.HeroTag, second.HeroTag);
@@ -243,7 +243,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
         Assert.IsType<RawMaterialButton>(mergeSemantics.Child);
@@ -262,7 +262,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // `_EffectiveMouseCursor` falls through to `WidgetStateMouseCursor.adaptiveClickable`, which
         // is the basic cursor off the web.
@@ -289,7 +289,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -426,7 +426,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -450,7 +450,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -476,7 +476,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
@@ -504,7 +504,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paddings = FindDescendants<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(20, 0, 20, 0));
@@ -533,7 +533,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var constrainedBox = FindSizingConstrainedBox(renderRoot);
@@ -633,7 +633,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
         Assert.Equal(new StadiumBorder(new BorderSide(Colors.Red, 2)), button.Shape);
@@ -665,7 +665,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -697,11 +697,12 @@ public sealed class MaterialFloatingActionButtonTests
 
         var hoverListener = FindHoverPointerListener(harness.RenderView);
         Assert.NotNull(hoverListener);
-        hoverListener!.OnEnter?.Invoke(
-            new PointerEnterEvent(
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerHoverEvent(
                 pointer: 700,
                 kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
+                position: new Point(28, 28),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
         // Dart's `Material` animates elevation over `animationDuration`, so the shadow only reaches
@@ -741,7 +742,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -762,7 +763,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         Assert.Null(FindParagraphByText(renderRoot, "Create item"));
@@ -786,7 +787,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         Assert.NotNull(FindDescendant<RenderFloatingActionButtonChildOverflowBox>(renderRoot));
@@ -838,7 +839,7 @@ public sealed class MaterialFloatingActionButtonTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
             Assert.NotNull(FindParagraphByText(renderRoot, "FloatingActionButton baseline"));
@@ -853,13 +854,14 @@ public sealed class MaterialFloatingActionButtonTests
     /// Runs Dart's `Material` elevation animation to completion.
     private static void SettleMaterialAnimation(BuildOwner owner, TimeSpan timestamp)
     {
-        owner.FlushBuild();
+        owner.PumpFrame();
+        timestamp = TimeSpan.FromSeconds(Math.Max(timestamp.TotalSeconds, AnimationPump.CurrentSeconds));
         // The first pump establishes the ticker's start time; the second one runs the 200 ms
         // `kThemeChangeDuration` to completion.
         SchedulerBinding.PumpFrameForTests(timestamp);
-        owner.FlushBuild();
+        owner.PumpFrame();
         SchedulerBinding.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static RawMaterialButton RequireBuiltButton(Widget? builtWidget)
@@ -1084,6 +1086,7 @@ public sealed class MaterialFloatingActionButtonTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
 
         public FabRenderHarness(Widget rootWidget)
         {
@@ -1093,19 +1096,15 @@ public sealed class MaterialFloatingActionButtonTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         /// Runs Dart's `Material` elevation animation to completion: the first frame establishes the
@@ -1113,13 +1112,24 @@ public sealed class MaterialFloatingActionButtonTests
         public void Settle(Size size, TimeSpan timestamp)
         {
             Pump(size);
+            timestamp = TimeSpan.FromSeconds(Math.Max(timestamp.TotalSeconds, AnimationPump.CurrentSeconds));
             SchedulerBinding.PumpFrameForTests(timestamp);
             Pump(size);
             SchedulerBinding.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
             Pump(size);
         }
 
-        public void Dispose() => _rootElement.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _rootElement.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

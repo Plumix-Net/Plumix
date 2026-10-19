@@ -108,7 +108,7 @@ public sealed class CupertinoIconsTests
                 child: new Icon(icon, size: 128.0)));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
             Assert.NotNull(paragraph);
@@ -126,7 +126,7 @@ public sealed class CupertinoIconsTests
             child: new Icon(CupertinoIcons.Back)));
         directionalRoot.Attach(owner);
         owner.BuildScope(directionalRoot, () => directionalRoot.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.NotNull(FindDescendant<RenderTransform>(directionalRoot.ChildElement!.RenderObject));
 
         var plainRoot = new TestRootElement(new Directionality(
@@ -134,7 +134,7 @@ public sealed class CupertinoIconsTests
             child: new Icon(CupertinoIcons.Heart)));
         plainRoot.Attach(owner);
         owner.BuildScope(plainRoot, () => plainRoot.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Null(FindDescendant<RenderTransform>(plainRoot.ChildElement!.RenderObject));
     }
 

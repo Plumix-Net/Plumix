@@ -80,7 +80,7 @@ public sealed class RootWidgetTests
         Assert.True(root.Dirty);
         Assert.Same(firstChild, root.ChildElement);
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(root.Dirty);
         Assert.Same(firstChild, root.ChildElement);
@@ -109,7 +109,7 @@ public sealed class RootWidgetTests
         Element firstChild = root.ChildElement!;
 
         new RootWidget(child: new SizedBox(width: 3, height: 4)).Attach(owner, root);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotSame(firstChild, root.ChildElement);
         Assert.IsType<SizedBox>(root.ChildElement!.Widget);
@@ -197,7 +197,7 @@ public sealed class RootWidgetTests
             var owner = TestBuildOwner.Create();
             RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
             new RootWidget(child: new Thrower()).Attach(owner, root);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Null(root.ChildElement);
             // The probe's render object also reports that it has no View to attach to.

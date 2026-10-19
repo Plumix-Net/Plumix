@@ -233,7 +233,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(begin.PrimaryColor, observedTheme!.PrimaryColor);
 
         root.Update(new AnimatedTheme(
@@ -241,12 +241,12 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             child: probe,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Color interruptedColor = observedTheme!.PrimaryColor;
         Assert.NotEqual(begin.PrimaryColor, interruptedColor);
         Assert.NotEqual(firstTarget.PrimaryColor, interruptedColor);
@@ -256,13 +256,13 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             child: probe,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(interruptedColor, observedTheme!.PrimaryColor);
 
         // The interrupting update restarts the controller, so it needs its own start frame.
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(secondTarget.PrimaryColor, observedTheme.PrimaryColor);
         Assert.Equal(1, completed);
 
@@ -316,7 +316,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(navigator);
         Assert.Equal(TimeSpan.FromMilliseconds(120), route.TransitionDuration);

@@ -848,20 +848,22 @@ public sealed class ViewportRevealTests
                 new ViewScope(RenderView.FlutterView, new Directionality(TextDirection.Ltr, child: rootWidget)));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+                _pipeline.FlushCompositingBits();
+                _pipeline.FlushPaint();
+                _pipeline.CompositeFrame();
+                _pipeline.FlushSemantics();
+            });
         }
 
         public SemanticsNode? FindSemanticsNode(string label)

@@ -227,7 +227,7 @@ public sealed class CupertinoSheetTests : IDisposable
                 useNestedNavigation: true,
                 settings: new RouteSettings(Name: "/sheet"),
                 showDragHandle: true);
-            root.TestOwner.FlushBuild();
+            root.TestOwner.PumpFrame();
             Settle(root.TestOwner);
 
             var sheetRoute = Assert.IsType<CupertinoSheetRoute<object?>>(navigator!.CurrentRoute);
@@ -260,7 +260,7 @@ public sealed class CupertinoSheetTests : IDisposable
         });
         TestRootElement root = MountNavigator(rootRoute);
         navigator!.Push(sheetRoute);
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
         Settle(root.TestOwner);
         return new SheetHarness(root, navigator, rootRoute, sheetRoute);
     }
@@ -289,16 +289,16 @@ public sealed class CupertinoSheetTests : IDisposable
         var root = new TestRootElement(wrapped);
         root.Attach(root.TestOwner);
         root.TestOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
         return root;
     }
 
     private static void Settle(BuildOwner owner)
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static IReadOnlyList<T> FindWidgets<T>(Element root) where T : class

@@ -34,7 +34,7 @@ public sealed class TickerModeTests : IDisposable
         Assert.Equal(1, state.BuildCount);
 
         root.Update(new TickerMode(child: child, enabled: false));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(state.Ticker.IsTicking);
         Assert.True(state.Ticker.IsActive);
@@ -42,7 +42,7 @@ public sealed class TickerModeTests : IDisposable
         Assert.Equal(1, state.BuildCount);
 
         root.Update(new TickerMode(child: child, enabled: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(state.Ticker.IsTicking);
         Assert.Equal(1, state.BuildCount);
@@ -78,7 +78,7 @@ public sealed class TickerModeTests : IDisposable
             innerEnabled: false,
             outerForceFrames: false,
             innerForceFrames: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(outerState.Ticker.IsTicking);
         Assert.False(innerState.Ticker.IsTicking);
@@ -112,7 +112,7 @@ public sealed class TickerModeTests : IDisposable
         root.Update(new TickerMode(
             child: TickerMode.Merge(child: probe, enabled: true, forceFrames: false),
             enabled: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(new TickerModeData(Enabled: true, ForceFrames: false), values);
         Assert.Contains(new TickerModeData(Enabled: true, ForceFrames: false), notifications);
@@ -154,26 +154,26 @@ public sealed class TickerModeTests : IDisposable
         var root = new TestRootElement(new TickerMode(child: child, enabled: true));
         Mount(root, owner);
         TickingState state = Assert.IsType<TickingState>(key.CurrentState);
-        double now = FrameClock.CurrentSeconds;
+        double now = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp.TotalSeconds;
 
-        // A ticker started outside a frame takes its start timestamp from the first frame it sees, so
-        // this frame reports zero elapsed time and establishes the clock the mute must not reset.
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        // Mount already pumped the first frame, establishing the clock the mute must not reset.
         Assert.Equal(1, state.TickCount);
         Assert.Equal(TimeSpan.Zero, state.LastElapsed);
 
         root.Update(new TickerMode(child: child, enabled: false));
-        owner.FlushBuild();
+        owner.PumpFrame();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         Assert.Equal(1, state.TickCount);
         Assert.False(state.Ticker.IsTicking);
         Assert.True(state.Ticker.IsActive);
 
         root.Update(new TickerMode(child: child, enabled: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
+        Assert.Equal(2, state.TickCount);
+        Assert.Equal(TimeSpan.Zero, state.LastElapsed);
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.0));
 
-        Assert.Equal(2, state.TickCount);
+        Assert.Equal(3, state.TickCount);
         Assert.True(state.LastElapsed >= TimeSpan.FromSeconds(1.9));
         root.UnmountRoot();
     }
@@ -194,16 +194,16 @@ public sealed class TickerModeTests : IDisposable
         var root = new TestRootElement(new TickerMode(child: animation, enabled: false));
         Mount(root, owner);
         int initialBuilds = builds;
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(initialBuilds, builds);
 
         root.Update(new TickerMode(child: animation, enabled: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(builds > initialBuilds);
         root.UnmountRoot();
@@ -226,7 +226,7 @@ public sealed class TickerModeTests : IDisposable
             child: child,
             enabled: false,
             key: new ValueKey<int>(2)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Same(state, childKey.CurrentState);
         Assert.False(state.Ticker.IsTicking);
@@ -258,7 +258,7 @@ public sealed class TickerModeTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class TickingWidget : StatefulWidget

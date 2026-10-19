@@ -24,7 +24,7 @@ public sealed class MetaDataIndexedSemanticsTests
         var root = new TestRootElement(initial);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderMetaData = RequireRenderObject<RenderMetaData>(root.ChildElement);
         Assert.Null(renderMetaData.MetaData);
@@ -35,7 +35,7 @@ public sealed class MetaDataIndexedSemanticsTests
             metaData: marker,
             behavior: HitTestBehavior.Opaque,
             child: new SizedBox(width: 20, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderMetaData>(root.ChildElement);
         Assert.Same(renderMetaData, updated);
@@ -91,7 +91,7 @@ public sealed class MetaDataIndexedSemanticsTests
                 child: new SizedBox(width: 20, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var indexed = RequireRenderObject<RenderIndexedSemantics>(root.ChildElement);
         Assert.Equal(3, indexed.Index);
@@ -99,7 +99,7 @@ public sealed class MetaDataIndexedSemanticsTests
         root.Update(new IndexedSemantics(
             index: -2,
             child: new SizedBox(width: 20, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderIndexedSemantics>(root.ChildElement);
         Assert.Same(indexed, updated);

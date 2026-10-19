@@ -164,6 +164,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         _phase = phase;
         RendererBinding binding = RendererBinding.Instance;
         binding.EnsurePersistentFrameCallback();
+        Action? previous = binding.DrawFrameOverrideForTests;
         binding.DrawFrameOverrideForTests = _drawFrame;
         try
         {
@@ -179,7 +180,7 @@ internal sealed partial class FrameworkDartTester : IDisposable
         }
         finally
         {
-            binding.DrawFrameOverrideForTests = null;
+            binding.DrawFrameOverrideForTests = previous;
         }
     }
 

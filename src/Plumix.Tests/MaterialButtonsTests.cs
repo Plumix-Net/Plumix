@@ -57,7 +57,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -84,7 +84,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -111,7 +111,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -140,7 +140,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.DarkCyan, capturedTheme!.Color);
@@ -345,7 +345,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -376,7 +376,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         ButtonStyle style = Assert.IsType<ButtonStyle>(captured);
         Assert.NotNull(style.TextStyle);
@@ -425,7 +425,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -604,7 +604,7 @@ public sealed class MaterialButtonsTests
         var root = new TestRootElement(BuildButton(() => { }));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -615,10 +615,10 @@ public sealed class MaterialButtonsTests
                 position: new Point(10, 8),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(BuildButton(onPressed: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal([true], hoverChanges);
         Assert.True(statesController.Value.Contains(WidgetState.Hovered));
         Assert.True(statesController.Value.Contains(WidgetState.Disabled));
@@ -632,7 +632,7 @@ public sealed class MaterialButtonsTests
                 position: new Point(130, 90),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([true, false], hoverChanges);
         Assert.False(statesController.Value.Contains(WidgetState.Hovered));
@@ -662,14 +662,14 @@ public sealed class MaterialButtonsTests
         var root = new TestRootElement(BuildButton(() => { }));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         statesController.Update(WidgetState.Pressed, true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(statesController.Value.Contains(WidgetState.Pressed));
 
         root.Update(BuildButton(onPressed: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(statesController.Value.Contains(WidgetState.Pressed));
         Assert.True(statesController.Value.Contains(WidgetState.Disabled));
@@ -739,7 +739,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedIconTheme);
         Assert.Equal(Colors.OrangeRed, capturedIconTheme!.Color);
@@ -773,7 +773,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(foregroundStates.Contains(WidgetState.Focused));
         Assert.True(backgroundStates.Contains(WidgetState.Focused));
@@ -807,15 +807,15 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(Colors.Black, capturedIconTheme!.Color);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         statesController.Update(WidgetState.Focused, true);
-        owner.FlushBuild();
+        owner.PumpFrame();
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         var animatedTextColor = Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color;
@@ -825,7 +825,7 @@ public sealed class MaterialButtonsTests
         Assert.InRange(capturedIconTheme!.Color!.Red, (byte)1, (byte)254);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
-        owner.FlushBuild();
+        owner.PumpFrame();
         paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
         Assert.Equal(Colors.White, capturedIconTheme!.Color);
@@ -872,7 +872,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Gold, capturedTheme!.Color);
@@ -898,7 +898,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Gray, capturedTheme!.Color);
@@ -922,7 +922,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.Gold, capturedTheme!.Color);
@@ -944,7 +944,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's `ElevatedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
         // disabled and no `disabledIconColor` was given, so the default disabled colour wins.
@@ -970,7 +970,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // Dart's `OutlinedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
         // disabled and no `disabledIconColor` was given, so the default disabled colour wins.
@@ -999,7 +999,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(ApplyOpacity(Colors.DarkSlateBlue, 0.38), capturedTheme!.Color);
@@ -1019,7 +1019,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -1041,7 +1041,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -1063,7 +1063,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1085,7 +1085,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1107,7 +1107,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1130,7 +1130,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1154,7 +1154,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1178,7 +1178,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1200,7 +1200,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(row);
@@ -1224,7 +1224,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(row);
@@ -1248,7 +1248,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(row);
@@ -1272,7 +1272,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(row);
@@ -1295,7 +1295,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1318,7 +1318,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1343,7 +1343,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1367,7 +1367,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1392,7 +1392,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1419,7 +1419,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1489,7 +1489,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -1543,7 +1543,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1564,7 +1564,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1586,7 +1586,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1608,7 +1608,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1631,7 +1631,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1655,7 +1655,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1681,7 +1681,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1706,7 +1706,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1727,7 +1727,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -1749,7 +1749,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1770,7 +1770,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1792,7 +1792,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1814,7 +1814,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1837,7 +1837,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1861,7 +1861,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1885,7 +1885,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1910,7 +1910,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -1931,7 +1931,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -1953,7 +1953,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1974,7 +1974,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -1995,7 +1995,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2017,7 +2017,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2039,7 +2039,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2061,7 +2061,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2084,7 +2084,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2108,7 +2108,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2134,7 +2134,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(padding);
@@ -2157,7 +2157,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -2182,7 +2182,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
@@ -2203,7 +2203,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -2230,7 +2230,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -2259,7 +2259,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -2295,7 +2295,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -2327,7 +2327,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2354,7 +2354,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2381,7 +2381,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2412,7 +2412,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2432,7 +2432,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2452,7 +2452,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2473,7 +2473,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var defaultDecorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -2489,7 +2489,7 @@ public sealed class MaterialButtonsTests
                 position: new Point(10, 8),
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var hoveredDecorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
@@ -2527,7 +2527,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2550,7 +2550,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2577,7 +2577,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2601,7 +2601,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2624,7 +2624,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2651,7 +2651,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2674,7 +2674,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2695,7 +2695,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2727,7 +2727,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2741,7 +2741,7 @@ public sealed class MaterialButtonsTests
             Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
 
         focusNode.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2771,7 +2771,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2805,10 +2805,10 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         focusNode.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2836,7 +2836,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -2865,7 +2865,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -2889,7 +2889,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2918,7 +2918,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -2946,7 +2946,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -2980,7 +2980,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -3012,7 +3012,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -3045,7 +3045,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3068,7 +3068,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3090,7 +3090,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(align);
@@ -3117,7 +3117,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(align);
@@ -3145,7 +3145,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(align);
@@ -3167,7 +3167,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -3190,7 +3190,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -3213,7 +3213,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -3240,7 +3240,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -3265,7 +3265,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -3290,7 +3290,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3319,7 +3319,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3347,7 +3347,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3374,7 +3374,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3401,7 +3401,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3434,7 +3434,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3466,7 +3466,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3496,7 +3496,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3527,7 +3527,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3558,7 +3558,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3589,7 +3589,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3616,7 +3616,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var paragraph = FindDescendant<RenderParagraph>(renderRoot);
@@ -3672,7 +3672,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3707,7 +3707,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3741,7 +3741,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3834,7 +3834,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
@@ -3850,7 +3850,7 @@ public sealed class MaterialButtonsTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var hoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
@@ -3897,7 +3897,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -3927,7 +3927,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -3955,7 +3955,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -3982,7 +3982,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -4008,7 +4008,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -4037,7 +4037,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -4066,7 +4066,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -4095,7 +4095,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -4125,7 +4125,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -4155,7 +4155,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -4185,7 +4185,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -4216,7 +4216,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
@@ -4438,7 +4438,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var decorated = MaterialSurfaceProbe.Find(renderRoot);
@@ -4497,7 +4497,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
@@ -4513,7 +4513,7 @@ public sealed class MaterialButtonsTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var hoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
@@ -4529,7 +4529,7 @@ public sealed class MaterialButtonsTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var exitedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(exitedDecorated);
@@ -4581,11 +4581,11 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         FocusTestSupport.RequestFocusOnFirstFocus(root.ChildElement!);
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
@@ -4601,7 +4601,7 @@ public sealed class MaterialButtonsTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var focusedHoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedHoveredDecorated);
@@ -4617,7 +4617,7 @@ public sealed class MaterialButtonsTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow));
 
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var focusOnlyDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusOnlyDecorated);
@@ -4857,10 +4857,10 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         focusNode.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
@@ -4988,7 +4988,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var clip = FindDescendant<RenderClipRRect>(renderRoot);
@@ -5029,7 +5029,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
 
@@ -5049,7 +5049,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
 
@@ -5097,14 +5097,14 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
         Assert.Null(initialDecorated!.HighlightColor);
 
         focusNode.RequestFocus();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
@@ -5133,7 +5133,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(focusNode.HasFocus);
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
@@ -5161,7 +5161,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(focusNode.HasFocus);
 
@@ -5173,7 +5173,7 @@ public sealed class MaterialButtonsTests
                     focusNode: focusNode,
                     autofocus: true,
                     child: new Text("Autofocus update"))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(focusNode.HasFocus);
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
@@ -5227,7 +5227,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.MediumAquamarine, capturedTheme!.Color);
@@ -5301,7 +5301,7 @@ public sealed class MaterialButtonsTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.NotNull(capturedTheme);
             Assert.Equal(expectedForeground, capturedTheme!.Color);
@@ -5333,7 +5333,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(
             expected.CopyWith(
@@ -5359,7 +5359,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -5384,7 +5384,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
@@ -5410,7 +5410,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
@@ -5440,7 +5440,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.ForestGreen, capturedTheme!.Color);
@@ -5467,7 +5467,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.OrangeRed, capturedTheme!.Color);
@@ -5489,7 +5489,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
@@ -5511,7 +5511,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var unselectedDecorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(unselectedDecorated);
@@ -5526,7 +5526,7 @@ public sealed class MaterialButtonsTests
                     isSelected: true,
                     style: IconButton.StyleFrom(animationDuration: TimeSpan.Zero),
                     onPressed: () => { })));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var selectedDecorated = MaterialSurfaceProbe.Find(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(selectedDecorated);
@@ -5655,7 +5655,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.DarkOrange, capturedTheme!.Color);
@@ -5685,7 +5685,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(statesController.Value.Contains(WidgetState.Selected));
         Assert.True(statesController.Value.Contains(WidgetState.Disabled));
@@ -5698,7 +5698,7 @@ public sealed class MaterialButtonsTests
                     isSelected: false,
                     statesController: statesController,
                     onPressed: () => { })));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(statesController.Value.Contains(WidgetState.Selected));
         Assert.False(statesController.Value.Contains(WidgetState.Disabled));
@@ -5728,7 +5728,7 @@ public sealed class MaterialButtonsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.ForestGreen, capturedTheme!.Color);
@@ -6021,26 +6021,19 @@ public sealed class MaterialButtonsTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

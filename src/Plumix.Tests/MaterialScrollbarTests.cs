@@ -18,7 +18,7 @@ public sealed class MaterialScrollbarTests
     private static readonly Size ViewportSize = new(200, 240);
     private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-    private double _clock = FrameClock.CurrentSeconds;
+    private double _clock = AnimationPump.CurrentSeconds;
 
     public MaterialScrollbarTests()
     {
@@ -726,13 +726,10 @@ public sealed class MaterialScrollbarTests
         using var missingControllerHarness = new WidgetRenderHarness(new RawScrollbar(
             thumbVisibility: true,
             child: new SizedBox()));
-        missingControllerHarness.Pump(ViewportSize);
-        double schedulerNow = FrameClock.CurrentSeconds;
-
         // Dart's `_invokeFrameCallback` reports a throwing post-frame callback through
         // `FlutterError.reportError` rather than letting it escape the frame.
         InvalidOperationException missing = Assert.IsType<InvalidOperationException>(
-            PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+            PumpAndCaptureReportedError(() => missingControllerHarness.Pump(ViewportSize)));
         Assert.Contains("ScrollController", missing.Message);
 
         SchedulerBinding.ResetForTests();
@@ -746,22 +743,20 @@ public sealed class MaterialScrollbarTests
                     BuildVerticalList(controller, 20),
                     BuildVerticalList(controller, 20),
                 ])));
-        multipleHarness.Pump(ViewportSize);
-        schedulerNow = FrameClock.CurrentSeconds;
         FlutterError multiple = Assert.IsType<FlutterError>(
-            PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+            PumpAndCaptureReportedError(() => multipleHarness.Pump(ViewportSize)));
         Assert.Contains("more than one ScrollPosition", multiple.Message);
         SchedulerBinding.ResetForTests();
     }
 
-    private static object PumpAndCaptureReportedError(TimeSpan timestamp)
+    private static object PumpAndCaptureReportedError(Action pump)
     {
         List<FlutterErrorDetails> reported = [];
         FlutterExceptionHandler? previous = FlutterError.OnError;
         FlutterError.OnError = reported.Add;
         try
         {
-            SchedulerBinding.PumpFrameForTests(timestamp);
+            pump();
         }
         finally
         {
@@ -1324,7 +1319,6 @@ public sealed class MaterialScrollbarTests
 
     private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event)
     {
-        harness.RegisterForPointerEvents();
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, @event);
     }
 
@@ -1406,7 +1400,7 @@ public sealed class MaterialScrollbarTests
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
-        private bool _registeredForPointerEvents;
+        private readonly IDisposable _viewRegistration;
         private readonly bool _provideMediaQuery;
 
         public WidgetRenderHarness(Widget widget, bool provideMediaQuery = true)
@@ -1418,37 +1412,21 @@ public sealed class MaterialScrollbarTests
             _root = new HarnessRootElement(RenderView, provideMediaQuery ? Wrap(widget) : widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
         public Element RootElement => _root;
 
-        public void RegisterForPointerEvents()
-        {
-            if (_registeredForPointerEvents)
-            {
-                return;
-            }
-
-            RendererBinding.Instance.AddRenderView(RenderView);
-            _registeredForPointerEvents = true;
-        }
-
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void UpdateWidget(Widget widget)
         {
             _root.Update(_provideMediaQuery ? Wrap(widget) : widget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Dispose()
@@ -1459,10 +1437,7 @@ public sealed class MaterialScrollbarTests
             }
             finally
             {
-                if (_registeredForPointerEvents)
-                {
-                    RendererBinding.Instance.RemoveRenderView(RenderView);
-                }
+                _viewRegistration.Dispose();
             }
         }
     }
@@ -1477,7 +1452,7 @@ public sealed class MaterialScrollbarTests
             _root = new TreeRootElement(Wrap(widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root.Child);

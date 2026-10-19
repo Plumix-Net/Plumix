@@ -74,7 +74,7 @@ public sealed class InheritedElementScopeTests
 
         // GetInherited registers no dependency, so a notifying update must not rebuild the reader.
         root.Update(new DerivedScope(value: 2, child: body));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, buildCount);
 
@@ -229,7 +229,7 @@ public sealed class InheritedElementScopeTests
         Assert.NotNull(reader!.InheritedElements);
 
         root.Update(new BaseScope(value: 1, child: new SizedBox()));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Null(reader.InheritedElements);
         Assert.Throws<FlutterError>(() => reader.DependOnInheritedWidgetOfExactType<BaseScope>());
@@ -259,7 +259,7 @@ public sealed class InheritedElementScopeTests
             new SizedBox(),
             new BaseScope(value: 3, child: probe)
         ])));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(3, probe.BaseScope!.Value);
 
@@ -279,7 +279,7 @@ public sealed class InheritedElementScopeTests
         Assert.Equal(1, probe.BuildCount);
 
         root.Update(new BaseScope(value: 9, child: new Column(children: [probe])));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(9, probe.BaseScope!.Value);
 
@@ -290,7 +290,7 @@ public sealed class InheritedElementScopeTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private class BaseScope : InheritedWidget

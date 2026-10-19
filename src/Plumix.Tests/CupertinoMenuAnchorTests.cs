@@ -818,7 +818,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         MenuController controller,
         Size? size = null)
     {
-        var harness = new CupertinoThemeTestHarness(widget);
+        var harness = new CupertinoThemeTestHarness(widget, registerForPointerEvents: true);
         harness.Pump(size ?? ViewSize);
         controller.Open();
         harness.Pump(size ?? ViewSize);

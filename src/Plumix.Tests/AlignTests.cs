@@ -85,7 +85,7 @@ public sealed class AlignTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.TopLeft, renderAlign.Alignment);
@@ -97,7 +97,7 @@ public sealed class AlignTests
             widthFactor: 2,
             heightFactor: 2,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.True(ReferenceEquals(renderAlign, updated));
@@ -118,7 +118,7 @@ public sealed class AlignTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.Center, renderAlign.Alignment);
@@ -138,7 +138,7 @@ public sealed class AlignTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.TopRight, renderAlign.Alignment.Resolve(renderAlign.TextDirection));

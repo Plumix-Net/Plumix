@@ -590,7 +590,7 @@ public sealed class MaterialBottomNavigationBarTests
 
             harness.UpdateRootWidget(Build(1));
             AnimationPump.Prime();
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.60));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.60));
             harness.Pump(new Size(800, 600));
 
             List<double> settled = GetBottomNavigationTileWidths(harness.RenderView.Child, 2);
@@ -1149,7 +1149,7 @@ public sealed class MaterialBottomNavigationBarTests
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, child: widget));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return new MountedScope(root);
     }
 
@@ -1574,32 +1574,25 @@ public sealed class MaterialBottomNavigationBarTests
                 new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void UpdateRootWidget(Widget rootWidget)
         {
             _rootElement.Update(new Directionality(TextDirection.Ltr, child: rootWidget));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

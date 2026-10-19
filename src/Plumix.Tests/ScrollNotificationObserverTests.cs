@@ -307,23 +307,18 @@ public sealed class ScrollNotificationObserverTests
             _root = new HarnessRootElement(renderView, new ViewScope(renderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Update(Widget widget)
         {
             _root.UpdateWidget(new ViewScope(_view, widget));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
             // The position schedules its metrics notification as a microtask, because the listeners
             // that would receive it have already been built by the time layout establishes them.
             EventLoop.FlushMicrotasks();

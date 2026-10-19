@@ -37,7 +37,7 @@ internal sealed class DecoratorHarness : IDisposable
         _root = new RootElement(RenderView, wrapped);
         _root.Attach(_owner);
         _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-        _owner.FlushBuild();
+        _owner.PumpFrame();
     }
 
     public RenderView RenderView { get; }
@@ -47,19 +47,12 @@ internal sealed class DecoratorHarness : IDisposable
 
     public void Pump()
     {
-        _owner.FlushBuild();
-        _pipeline.RequestLayout();
-        _pipeline.FlushLayout(_viewSize);
-        _pipeline.FlushCompositingBits();
-        _pipeline.FlushPaint();
-        _pipeline.CompositeFrame();
+        _owner.PumpFrame(_pipeline, _viewSize);
     }
 
     public SemanticsNode PumpSemantics()
     {
-        Pump();
-        _pipeline.RequestSemanticsUpdate();
-        _pipeline.FlushSemantics();
+        _owner.PumpFrame(_pipeline, _viewSize, semantics: true);
         return _pipeline.SemanticsOwner!.RootNode
                ?? throw new InvalidOperationException("The semantics tree is empty.");
     }

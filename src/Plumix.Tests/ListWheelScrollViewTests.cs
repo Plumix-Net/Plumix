@@ -904,7 +904,7 @@ public sealed class ListWheelScrollViewTests
         using var harness = Harness(Wheel(controller, 100, itemExtent: 100.0));
         harness.Pump(Screen);
 
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         _ = controller.AnimateToItem(0, TimeSpan.FromSeconds(1), Curves.Linear);
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(Screen);
@@ -1070,7 +1070,7 @@ public sealed class ListWheelScrollViewTests
 
         // Flutter's test pumps one frame and then a single one-second frame, which is where the
         // spring's remaining fraction of a pixel goes below the asserted 0.2.
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.016));
         harness.Pump(Screen);
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.016));
@@ -1260,7 +1260,7 @@ public sealed class ListWheelScrollViewTests
         Settle(harness);
         Assert.Equal(900.0, controller.Offset);
 
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         OuterChild(harness, 7).ShowOnScreen(duration: TimeSpan.FromSeconds(2));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         harness.Pump(Screen);
@@ -1487,7 +1487,7 @@ public sealed class ListWheelScrollViewTests
             pointer, PointerDeviceKind.Touch, position, PointerButtons.Primary, now));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, now.AddMilliseconds(50)));
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.5));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.5));
         harness.Pump(Screen);
     }
 
@@ -1530,7 +1530,7 @@ public sealed class ListWheelScrollViewTests
 
     private static void Settle(WidgetRenderHarness harness)
     {
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         // Flutter's pumpAndSettle pumps every 100 ms; the wheel corrects its extents on every layout,
         // so the ballistic must not skip frames.
         for (double step = 0.016; step < 6.0; step += 0.05)
@@ -1654,7 +1654,7 @@ public sealed class ListWheelScrollViewTests
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -1663,18 +1663,13 @@ public sealed class ListWheelScrollViewTests
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Replace(Widget child)
         {
             _rootElement.Update(new ViewScope(RenderView.FlutterView, new Directionality(TextDirection.Ltr, child)));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Dispose() => _rootElement.UnmountRoot();

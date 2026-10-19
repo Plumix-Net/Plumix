@@ -57,7 +57,7 @@ public sealed class BuildScopeTests
         Assert.True(inner.Element.Dirty);
 
         // The ambient build pass owns a different scope, so it must not touch this element.
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.True(inner.Element.Dirty);
         Assert.Equal(1, inner.Builds);
 
@@ -113,7 +113,7 @@ public sealed class BuildScopeTests
         deep!.Bump();
         middle!.Bump();
         outer!.Bump();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["outer", "middle", "deep"], order);
         Assert.Equal(2, outer.Builds);
@@ -140,7 +140,7 @@ public sealed class BuildScopeTests
         // behind the cursor and is only reached because the flush re-sorts and rewinds.
         parent!.OnBuild = () => child!.Bump();
         parent.Bump();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["parent", "child"], order);
         Assert.False(child!.Element.Dirty);
@@ -167,7 +167,7 @@ public sealed class BuildScopeTests
         FlutterError.OnError = reported.Add;
         try
         {
-            owner.FlushBuild();
+            owner.PumpFrame();
         }
         finally
         {
@@ -288,7 +288,7 @@ public sealed class BuildScopeTests
         deep.Bump();
 
         // `ComponentElement.PerformRebuild` reports a failing build rather than letting it escape.
-        FlutterError error = BuildErrors.Throws<FlutterError>(owner.FlushBuild);
+        FlutterError error = BuildErrors.Throws<FlutterError>(owner.PumpFrame);
         Assert.Contains("setState() or markNeedsBuild() called during build.", error.Message);
         Assert.Contains("the framework is already in the process of building widgets", error.Message);
         Assert.Contains("The widget on which setState() or markNeedsBuild() was called was", error.Message);
@@ -323,7 +323,7 @@ public sealed class BuildScopeTests
             }
         };
         outer.Bump();
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // The dirty descendant is reached by the same build, so no error and it did rebuild.
         Assert.True(deep!.Builds > deepBuildsBefore);
@@ -357,7 +357,7 @@ public sealed class BuildScopeTests
         // scheduleBuildFor rejects re-queueing an already-listed element from outside one.
         int builds = moved.Builds;
         owner.BuildScope(root, moved.Bump);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(builds, moved.Builds);
         Assert.True(moved.Element.Dirty, "still dirty after the ambient flush");
 
@@ -389,7 +389,7 @@ public sealed class BuildScopeTests
         Assert.Equal(1, inner.Builds);
 
         inner.Bump();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, inner.Builds);
     }
 
@@ -417,7 +417,7 @@ public sealed class BuildScopeTests
         Assert.Equal(1, inner.Builds);
 
         owner.BuildScope(root, inner.Bump);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, inner.Builds);
 
         renderObject.Layout(constraints, parentUsesSize: true);
@@ -443,9 +443,12 @@ public sealed class BuildScopeTests
         Assert.Equal(1, builderCalls);
         Assert.Equal(1, inner!.Builds);
 
-        owner.BuildScope(root, inner.Bump);
-        Assert.True(renderObject.DebugNeedsLayout);
-        LayoutOnce(renderObject, constraints);
+        owner.PumpFrame(() =>
+        {
+            owner.BuildScope(root, inner.Bump);
+            Assert.True(renderObject.DebugNeedsLayout);
+            LayoutOnce(renderObject, constraints);
+        });
 
         // Dart enters `owner.buildScope(this, null)` even when the builder itself has nothing to do,
         // which is the only thing that flushes this scope's dirty list.
@@ -534,7 +537,7 @@ public sealed class BuildScopeTests
         child.UnmountRoot();
         Assert.Equal(dirty, child.Dirty);
         Assert.Equal(dirty, child.InDirtyList);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(dirty, child.Dirty);
         Assert.False(child.InDirtyList);
         Assert.Empty(root.BuildScope.DirtyElements);
@@ -633,7 +636,7 @@ public sealed class BuildScopeTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static void LayoutOnce(RenderBox renderObject, BoxConstraints constraints)

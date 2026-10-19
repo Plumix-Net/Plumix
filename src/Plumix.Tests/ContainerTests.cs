@@ -22,7 +22,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(4), outer.Padding);
@@ -40,7 +40,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var align = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.BottomRight, align.Alignment);
@@ -58,7 +58,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var padding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(6, 4, 2, 1), padding.Padding);
@@ -77,7 +77,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
         Assert.Equal(new BoxConstraints(MinWidth: 20, MaxWidth: 40, MinHeight: 12, MaxHeight: 22), constrained.AdditionalConstraints);
@@ -96,7 +96,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var constrained = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
         Assert.Equal(
@@ -116,7 +116,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var transform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(Matrix4.TranslationValues(12, 0, 0.0), transform.DebugTransformMatrix());
@@ -138,7 +138,7 @@ public sealed class ContainerTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var margin = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(

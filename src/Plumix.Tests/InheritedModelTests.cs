@@ -19,19 +19,19 @@ public sealed class InheritedModelTests
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, InheritedModelTracker.AspectABuildCount);
         Assert.Equal(1, InheritedModelTracker.AspectBBuildCount);
 
         root.Update(new ABModel(a: 2, b: 10, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(2, InheritedModelTracker.AspectABuildCount);
         Assert.Equal(1, InheritedModelTracker.AspectBBuildCount);
 
         root.Update(new ABModel(a: 2, b: 20, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(2, InheritedModelTracker.AspectABuildCount);
         Assert.Equal(2, InheritedModelTracker.AspectBBuildCount);
@@ -48,14 +48,14 @@ public sealed class InheritedModelTests
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, InheritedModelTracker.UnqualifiedBuildCount);
 
         root.Update(new ABModel(a: 2, b: 10, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
         root.Update(new ABModel(a: 2, b: 20, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(3, InheritedModelTracker.UnqualifiedBuildCount);
     }
@@ -71,14 +71,14 @@ public sealed class InheritedModelTests
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, InheritedModelTracker.MultiAspectBuildCount);
 
         root.Update(new ABModel(a: 2, b: 10, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
         root.Update(new ABModel(a: 2, b: 20, child: stableChildTree));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(3, InheritedModelTracker.MultiAspectBuildCount);
     }
@@ -107,7 +107,7 @@ public sealed class InheritedModelTests
         var root = new TestRootElement(BuildTree(outerA: 10, outerB: 100, innerA: 1, innerB: 1000));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1], InheritedModelTracker.ShadowASeenValues);
         Assert.Equal([100], InheritedModelTracker.ShadowBSeenValues);
@@ -115,20 +115,20 @@ public sealed class InheritedModelTests
         Assert.Equal(1, InheritedModelTracker.ShadowBBuildCount);
 
         root.Update(BuildTree(outerA: 11, outerB: 100, innerA: 1, innerB: 1000));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, InheritedModelTracker.ShadowABuildCount);
         Assert.Equal(1, InheritedModelTracker.ShadowBBuildCount);
 
         root.Update(BuildTree(outerA: 11, outerB: 100, innerA: 2, innerB: 1000));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([1, 2], InheritedModelTracker.ShadowASeenValues);
         Assert.Equal(2, InheritedModelTracker.ShadowABuildCount);
         Assert.Equal(1, InheritedModelTracker.ShadowBBuildCount);
 
         root.Update(BuildTree(outerA: 11, outerB: 200, innerA: 2, innerB: 1000));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([100, 200], InheritedModelTracker.ShadowBSeenValues);
         Assert.Equal(2, InheritedModelTracker.ShadowABuildCount);

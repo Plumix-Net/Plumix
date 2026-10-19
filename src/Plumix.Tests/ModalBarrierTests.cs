@@ -130,7 +130,7 @@ public sealed class ModalBarrierTests
         Assert.Equal(Colors.Red, FindWidget<ModalBarrier>(root).Color);
 
         animation.SetValue(Colors.Blue);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(Colors.Blue, FindWidget<ModalBarrier>(root).Color);
         root.UnmountRoot();
@@ -225,7 +225,7 @@ public sealed class ModalBarrierTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T FindWidget<T>(Element root) where T : Widget

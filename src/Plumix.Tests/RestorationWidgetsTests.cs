@@ -256,7 +256,7 @@ public sealed class RestorationWidgetsTests : IDisposable
         Assert.Equal(1, manager.RootBucketAccessed);
 
         manager.RespondWith(enabled: true, data: RawRestorationData.Build());
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.True(built);
         Assert.Equal("root-child", seen!.RestorationId);
@@ -312,7 +312,7 @@ public sealed class RestorationWidgetsTests : IDisposable
                     ["root-child"] = RawRestorationData.Build(
                         values: new Dictionary<object, object?> { ["foo"] = 22 }),
                 }));
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.NotSame(original, seen);
         Assert.Equal(22, seen!.Read<int>("foo"));
@@ -506,7 +506,7 @@ public sealed class RestorationWidgetsTests : IDisposable
                                 values: new Dictionary<object, object?> { ["foo"] = 42 }),
                         }),
                 }));
-        harness.FlushBuild();
+        harness.PumpFrame();
 
         Assert.Equal(new[] { "fromPrimitives", "initWithValue" }, property.Log);
         Assert.Equal(42, property.Value);
@@ -633,6 +633,6 @@ public sealed class RestorationWidgetsTests : IDisposable
         manager.RespondWith(enabled: true, data: RawRestorationData.Build());
 
         using RenderErrorRethrowScope renderErrors = RenderErrorRethrowScope.Enter();
-        Assert.Throws<InvalidOperationException>(harness.FlushBuild);
+        Assert.Throws<InvalidOperationException>(harness.PumpFrame);
     }
 }

@@ -46,7 +46,7 @@ public sealed class DecoratedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderDecorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
         Assert.Equal(Colors.CadetBlue, renderDecorated.AsBoxDecoration.Color);
@@ -60,7 +60,7 @@ public sealed class DecoratedBoxTests
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.White, 3)),
                 BorderRadius: BorderRadius.Circular(12)),
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
         Assert.True(ReferenceEquals(renderDecorated, updated));
@@ -92,7 +92,7 @@ public sealed class DecoratedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var decorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
         Assert.Equal(Colors.Red, decorated.AsBoxDecoration.Color);

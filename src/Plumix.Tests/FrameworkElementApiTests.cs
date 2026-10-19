@@ -189,14 +189,14 @@ public sealed class FrameworkElementApiTests
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["mount", "rebuild"], log.Events);
         Assert.Equal(1, log.ChildBuilds);
 
         log.Events.Clear();
         root.Update(new LifecycleProbe(log, new SizedBox(width: 20, height: 20)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(["update", "rebuild"], log.Events);
         Assert.Equal(2, log.ChildBuilds);
@@ -220,11 +220,11 @@ public sealed class FrameworkElementApiTests
             new LifecycleProbe(log, new SizedBox(width: 10, height: 10), new ValueKey<int>(1)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         log.Events.Clear();
         root.Update(new LifecycleProbe(log, new SizedBox(width: 10, height: 10), new ValueKey<int>(2)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // A different key cannot update the old element, so the old one is deactivated and a new one mounts.
         Assert.Contains("deactivate", log.Events);
@@ -247,7 +247,7 @@ public sealed class FrameworkElementApiTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.False(root.Dirty);
         Assert.False(FindProbeElement(root).Dirty);
@@ -261,7 +261,7 @@ public sealed class FrameworkElementApiTests
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element probe = FindProbeElement(root);
         Assert.False(probe.Dirty);
@@ -292,7 +292,7 @@ public sealed class FrameworkElementApiTests
         var owner = TestBuildOwner.Create();
         element.Attach(owner);
         owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         element.UnmountRoot();
 
         int builds = log.ChildBuilds;
@@ -316,11 +316,11 @@ public sealed class FrameworkElementApiTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, builds);
 
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, builds);
     }
 
@@ -339,7 +339,7 @@ public sealed class FrameworkElementApiTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(insideBuild, "BuildContext.DebugDoingBuild must be true inside Build().");
         Assert.False(captured!.DebugDoingBuild);
@@ -353,10 +353,10 @@ public sealed class FrameworkElementApiTests
         var root = new ProbeRootElement(new DoingBuildProbe(log));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.Update(new DoingBuildProbe(log));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal([("create", true), ("update", true)], log);
     }
@@ -371,7 +371,7 @@ public sealed class FrameworkElementApiTests
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Element probe = FindProbeElement(root);
         root.UnmountRoot();
@@ -402,7 +402,7 @@ public sealed class FrameworkElementApiTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.NotNull(captured);
         Assert.Same(owner, captured!.Owner);

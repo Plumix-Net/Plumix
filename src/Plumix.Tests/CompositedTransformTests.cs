@@ -27,7 +27,7 @@ public sealed class CompositedTransformTests
 
         targetRoot.Attach(targetOwner);
         targetOwner.BuildScope(targetRoot, () => targetRoot.Mount(parent: null, newSlot: null));
-        targetOwner.FlushBuild();
+        targetOwner.PumpFrame();
 
         RenderLeaderLayer target = RequireRenderObject<RenderLeaderLayer>(targetRoot.ChildElement);
         Assert.Same(firstLink, target.Link);
@@ -35,7 +35,7 @@ public sealed class CompositedTransformTests
         targetRoot.Update(new CompositedTransformTarget(
             secondLink,
             child: new SizedBox(width: 20, height: 10)));
-        targetOwner.FlushBuild();
+        targetOwner.PumpFrame();
 
         RenderLeaderLayer updatedTarget = RequireRenderObject<RenderLeaderLayer>(targetRoot.ChildElement);
         Assert.Same(target, updatedTarget);
@@ -49,7 +49,7 @@ public sealed class CompositedTransformTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderFollowerLayer follower = RequireRenderObject<RenderFollowerLayer>(root.ChildElement);
         Assert.Same(firstLink, follower.Link);
@@ -65,7 +65,7 @@ public sealed class CompositedTransformTests
             targetAnchor: Alignment.BottomRight,
             followerAnchor: Alignment.Center,
             child: new SizedBox(width: 20, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RenderFollowerLayer updated = RequireRenderObject<RenderFollowerLayer>(root.ChildElement);
         Assert.Same(follower, updated);

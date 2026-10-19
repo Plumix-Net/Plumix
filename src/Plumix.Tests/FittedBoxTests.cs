@@ -65,7 +65,7 @@ public sealed class FittedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderFittedBox>(root.ChildElement);
         Assert.Equal(BoxFit.Fill, renderBox.Fit);
@@ -75,7 +75,7 @@ public sealed class FittedBoxTests
             fit: BoxFit.None,
             alignment: Alignment.BottomRight,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFittedBox>(root.ChildElement);
         Assert.Same(renderBox, updated);

@@ -31,7 +31,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderOpacity = RequireRenderObject<RenderOpacity>(root.ChildElement);
         Assert.Equal(1.0, renderOpacity.Opacity);
@@ -39,7 +39,7 @@ public sealed class BasicWidgetProxyTests
         root.Update(new Opacity(
             opacity: 0.25,
             child: new SizedBox(width: 16, height: 16)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderOpacity = RequireRenderObject<RenderOpacity>(root.ChildElement);
         Assert.Same(renderOpacity, updatedRenderOpacity);
@@ -74,7 +74,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(Matrix4.TranslationValues(12, 6, 0.0), renderTransform.DebugTransformMatrix());
@@ -86,7 +86,7 @@ public sealed class BasicWidgetProxyTests
             alignment: Alignment.BottomRight,
             filterQuality: FilterQuality.High,
             child: new SizedBox(width: 20, height: 12)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Same(renderTransform, updatedRenderTransform);
@@ -106,7 +106,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var translation = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.Equal(new Point(0.25, -0.5), translation.Translation);
@@ -116,7 +116,7 @@ public sealed class BasicWidgetProxyTests
             translation: new Point(double.PositiveInfinity, 0.75),
             transformHitTests: false,
             child: new SizedBox(width: 20, height: 12)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.Same(translation, updated);
@@ -159,7 +159,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var rotated = RequireRenderObject<RenderRotatedBox>(root.ChildElement);
         Assert.Equal(1, rotated.QuarterTurns);
@@ -167,7 +167,7 @@ public sealed class BasicWidgetProxyTests
         root.Update(new RotatedBox(
             quarterTurns: -2,
             child: new SizedBox(width: 80, height: 30)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderRotatedBox>(root.ChildElement);
         Assert.Same(rotated, updated);
@@ -227,7 +227,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderClipRect = RequireRenderObject<RenderClipRect>(root.ChildElement);
         Assert.Same(initialClipper, renderClipRect.Clipper);
@@ -237,7 +237,7 @@ public sealed class BasicWidgetProxyTests
         root.Update(new ClipRect(
             clipper: updatedClipper,
             child: new SizedBox(width: 40, height: 50)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderClipRect = RequireRenderObject<RenderClipRect>(root.ChildElement);
         Assert.Same(renderClipRect, updatedRenderClipRect);
@@ -256,7 +256,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderClipRRect = RequireRenderObject<RenderClipRRect>(root.ChildElement);
         Assert.Equal(initialBorderRadius, renderClipRRect.BorderRadius);
@@ -265,7 +265,7 @@ public sealed class BasicWidgetProxyTests
         root.Update(new ClipRRect(
             borderRadius: updatedBorderRadius,
             child: new SizedBox(width: 40, height: 50)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updatedRenderClipRRect = RequireRenderObject<RenderClipRRect>(root.ChildElement);
         Assert.Same(renderClipRRect, updatedRenderClipRRect);
@@ -284,7 +284,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var ignorePointer = RequireRenderObject<RenderIgnorePointer>(root.ChildElement);
         Assert.True(ignorePointer.Ignoring);
@@ -294,7 +294,7 @@ public sealed class BasicWidgetProxyTests
             ignoring: false,
             ignoringSemantics: true,
             child: new SizedBox(width: 16, height: 16)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderIgnorePointer>(root.ChildElement);
         Assert.Same(ignorePointer, updated);
@@ -314,7 +314,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var absorbPointer = RequireRenderObject<RenderAbsorbPointer>(root.ChildElement);
         Assert.True(absorbPointer.Absorbing);
@@ -324,7 +324,7 @@ public sealed class BasicWidgetProxyTests
             absorbing: false,
             ignoringSemantics: true,
             child: new SizedBox(width: 16, height: 16)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderAbsorbPointer>(root.ChildElement);
         Assert.Same(absorbPointer, updated);
@@ -351,7 +351,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var wrap = RequireRenderObject<RenderWrap>(root.ChildElement);
         Assert.Equal(3, wrap.Spacing);
@@ -374,7 +374,7 @@ public sealed class BasicWidgetProxyTests
                 new SizedBox(width: 10, height: 10),
                 new SizedBox(width: 20, height: 10),
             ]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderWrap>(root.ChildElement);
         Assert.Same(wrap, updated);
@@ -414,7 +414,7 @@ public sealed class BasicWidgetProxyTests
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderFlow = RequireRenderObject<RenderFlow>(root.ChildElement);
         Assert.Same(initialDelegate, renderFlow.Delegate);
@@ -426,7 +426,7 @@ public sealed class BasicWidgetProxyTests
             updatedDelegate,
             children: [keyedChild, plainChild],
             clipBehavior: Clip.None));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFlow>(root.ChildElement);
         Assert.Same(renderFlow, updated);
@@ -462,7 +462,7 @@ public sealed class BasicWidgetProxyTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var flex = RequireRenderObject<RenderFlex>(root.ChildElement);
         Assert.Equal(Plumix.UI.TextBaseline.Alphabetic, flex.TextBaseline);
@@ -471,7 +471,7 @@ public sealed class BasicWidgetProxyTests
             crossAxisAlignment: CrossAxisAlignment.Baseline,
             textBaseline: Plumix.UI.TextBaseline.Ideographic,
             children: [new SizedBox(width: 10, height: 10)]));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFlex>(root.ChildElement);
         Assert.Same(flex, updated);

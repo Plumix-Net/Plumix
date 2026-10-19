@@ -93,7 +93,7 @@ public sealed class OverflowBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderConstrainedOverflowBox>(root.ChildElement);
         Assert.Equal(Alignment.TopLeft, renderBox.Alignment);
@@ -111,7 +111,7 @@ public sealed class OverflowBoxTests
             maxHeight: 80,
             fit: OverflowBoxFit.Max,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderConstrainedOverflowBox>(root.ChildElement);
         Assert.Same(renderBox, updated);
@@ -135,7 +135,7 @@ public sealed class OverflowBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderSizedOverflowBox>(root.ChildElement);
         Assert.Equal(new Size(80, 40), renderBox.RequestedSize);
@@ -145,7 +145,7 @@ public sealed class OverflowBoxTests
             size: new Size(120, 50),
             alignment: Alignment.BottomRight,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderSizedOverflowBox>(root.ChildElement);
         Assert.Same(renderBox, updated);

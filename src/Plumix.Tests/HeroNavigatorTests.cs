@@ -169,7 +169,7 @@ public sealed partial class HeroNavigatorTests
                     }));
             harness.Pump(viewportSize);
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
             harness.Pump(viewportSize);
@@ -811,7 +811,6 @@ public sealed partial class HeroNavigatorTests
             // Dart asserts inside `Hero._allHeroesFor`, which only runs once a flight is being formed,
             // so the duplicate tag surfaces on the push and not while the route subtree is first built.
             navigatorState!.Push(BuildDuplicateHeroTagRoute(routeName: "duplicate-tags"));
-            harness.Pump(viewportSize);
 
             // The flight is formed from a post-frame callback, and Dart's `_invokeFrameCallback`
             // reports what one throws through `FlutterError.reportError` instead of rethrowing.
@@ -820,6 +819,7 @@ public sealed partial class HeroNavigatorTests
             FlutterError.OnError = reported.Add;
             try
             {
+                harness.Pump(viewportSize);
                 PumpHeroTransitionFrame(harness, viewportSize);
             }
             finally
@@ -903,7 +903,7 @@ public sealed partial class HeroNavigatorTests
 
             // A linear `Hero.curve` makes the flight sample the raw route animation value.
             double rawBefore = destinationAnimation!.Value;
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.05));
             harness.Pump(viewportSize);
             double rawAfter = destinationAnimation.Value;
 
@@ -955,7 +955,7 @@ public sealed partial class HeroNavigatorTests
             harness.Pump(viewportSize);
             PumpHeroTransitionFrame(harness, viewportSize);
 
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.05));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.05));
             harness.Pump(viewportSize);
 
             Assert.NotNull(destinationAnimation);
@@ -1183,11 +1183,11 @@ public sealed partial class HeroNavigatorTests
     {
         PumpHeroTransitionFrame(harness, viewportSize);
 
-        double afterStart = FrameClock.CurrentSeconds;
+        double afterStart = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
         harness.Pump(viewportSize);
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.001));
         harness.Pump(viewportSize);
     }
 
@@ -1201,7 +1201,7 @@ public sealed partial class HeroNavigatorTests
         harness.Pump(viewportSize);
         AnimationPump.Prime();
         harness.Pump(viewportSize);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
@@ -1448,7 +1448,7 @@ public sealed partial class HeroNavigatorTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -1477,12 +1477,7 @@ public sealed partial class HeroNavigatorTests
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

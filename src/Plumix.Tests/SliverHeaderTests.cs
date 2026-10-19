@@ -106,7 +106,7 @@ public sealed class SliverHeaderTests
             child: new SizedBox(height: 200)));
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var header = Assert.IsType<RenderSliverResizingHeader>(root.ChildElement!.RenderObject);
         Assert.NotNull(header.MinExtentPrototype);

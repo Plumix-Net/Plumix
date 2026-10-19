@@ -644,7 +644,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(AnimationStatus.Forward, searchDelegate.TransitionAnimation.Status);
         harness.Pump(new Size(640, 420));
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         Assert.Equal(AnimationStatus.Completed, searchDelegate.TransitionAnimation.Status);
@@ -666,7 +666,7 @@ public sealed class MaterialSearchTests : IDisposable
         searchDelegate.Close("Widget");
         Assert.Equal(AnimationStatus.Reverse, searchDelegate.TransitionAnimation.Status);
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         Assert.Equal(AnimationStatus.Dismissed, searchDelegate.TransitionAnimation.Status);
@@ -690,7 +690,7 @@ public sealed class MaterialSearchTests : IDisposable
         harness.FindState<SearchLaunchHostState>().Open();
         harness.Pump(new Size(640, 420));
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.4));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
@@ -811,7 +811,7 @@ public sealed class MaterialSearchTests : IDisposable
         {
             harness.Pump(size);
             AnimationPump.Prime();
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.7));
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.7));
         }
 
         harness.Pump(size);
@@ -983,7 +983,7 @@ public sealed class MaterialSearchTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -992,13 +992,15 @@ public sealed class MaterialSearchTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(() =>
+            {
+                _pipeline.RequestLayout();
+                _pipeline.FlushLayout(size);
+                _pipeline.FlushCompositingBits();
+                _pipeline.FlushPaint();
+                _pipeline.CompositeFrame();
+                _pipeline.FlushSemantics();
+            });
         }
 
         public void Dispose()
@@ -1007,9 +1009,7 @@ public sealed class MaterialSearchTests : IDisposable
             // OverlayEntry removed by a disposing State defers marking its overlay dirty to after the
             // frame; unmounting outside that phase would mark the half-unmounted overlay dirty, abort
             // the State's dispose and leave its binding observers registered.
-            using IDisposable frame = SchedulerBinding.Instance.BuildScope();
-            _owner.FinalizeTree();
-            _rootElement.UnmountRoot();
+            _owner.PumpFrame(_rootElement.UnmountRoot);
         }
 
         public T FindState<T>() where T : State

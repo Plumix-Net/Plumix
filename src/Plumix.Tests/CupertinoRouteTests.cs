@@ -69,7 +69,7 @@ public sealed class CupertinoRouteTests : IDisposable
                 _ => new SizedBox(),
                 title: "Details");
             navigator!.Push(detailsRoute);
-            root.TestOwner.FlushBuild();
+            root.TestOwner.PumpFrame();
 
             Assert.Equal("Root", detailsRoute.PreviousTitle.Value);
 
@@ -77,7 +77,7 @@ public sealed class CupertinoRouteTests : IDisposable
                 _ => new SizedBox(),
                 title: "Replacement");
             navigator.Replace(rootRoute, replacement);
-            root.TestOwner.FlushBuild();
+            root.TestOwner.PumpFrame();
 
             Assert.Equal("Replacement", detailsRoute.PreviousTitle.Value);
         }
@@ -142,7 +142,7 @@ public sealed class CupertinoRouteTests : IDisposable
                 _ => new SizedBox(),
                 fullscreenDialog: true);
             navigator!.Push(fullscreen);
-            root.TestOwner.FlushBuild();
+            root.TestOwner.PumpFrame();
 
             Assert.NotEmpty(FindWidgets<CupertinoFullscreenDialogTransition>(root));
             Assert.False(rootRoute.CanTransitionTo(fullscreen));
@@ -203,17 +203,17 @@ public sealed class CupertinoRouteTests : IDisposable
         var root = new TestRootElement(rootWidget);
         root.Attach(root.TestOwner);
         root.TestOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        root.TestOwner.FlushBuild();
+        root.TestOwner.PumpFrame();
         Settle(root.TestOwner);
         return root;
     }
 
     private static void Settle(BuildOwner owner)
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static IReadOnlyList<T> FindWidgets<T>(Element root) where T : Widget

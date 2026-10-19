@@ -587,7 +587,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 
         AnimationPump.Prime();
         harness.Pump(new Size(400, 600));
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.35));
         harness.Pump(new Size(400, 600));
 
         var active = Assert.Single(harness.FindWidgets<ActiveSearchableBottom>());
@@ -598,7 +598,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 
         AnimationPump.Prime();
         harness.Pump(new Size(400, 600));
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.35));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.35));
         harness.Pump(new Size(400, 600));
 
         Assert.Single(harness.FindWidgets<InactiveSearchableBottom>());
@@ -790,11 +790,11 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     {
         PumpHeroTransitionFrame(harness, viewportSize);
 
-        double afterStart = FrameClock.CurrentSeconds;
+        double afterStart = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.60));
         harness.Pump(viewportSize);
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.001));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.001));
         harness.Pump(viewportSize);
     }
 
@@ -808,7 +808,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         harness.Pump(viewportSize);
         AnimationPump.Prime();
         harness.Pump(viewportSize);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
         harness.Pump(viewportSize);
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
@@ -896,7 +896,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -910,12 +910,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose() => _root.UnmountRoot();

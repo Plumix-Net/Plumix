@@ -156,7 +156,7 @@ public sealed class CupertinoRefreshTests
         await WaitUntilAsync(() => state.RefreshState == RefreshIndicatorMode.Done);
         sliver.Layout(Constraints(overlap: -101.0), parentUsesSize: true);
         Assert.Equal(1, refreshCalls);
-        harness.FlushBuild();
+        harness.PumpFrame();
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
         Assert.False(sliver.HasLayoutExtent);
     }
@@ -174,13 +174,13 @@ public sealed class CupertinoRefreshTests
         var sliver = HostedSliver(harness);
         var state = harness.FindState<CupertinoSliverRefreshControlState>();
 
-        sliver.Layout(Constraints(overlap: -100.0), parentUsesSize: true);
+        harness.PumpFrame(() => sliver.Layout(Constraints(overlap: -100.0), parentUsesSize: true));
         Assert.Equal(RefreshIndicatorMode.Armed, state.RefreshState);
-        sliver.Layout(Constraints(overlap: -99.0), parentUsesSize: true);
+        harness.PumpFrame(() => sliver.Layout(Constraints(overlap: -99.0), parentUsesSize: true));
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
-        sliver.Layout(Constraints(overlap: -11.0), parentUsesSize: true);
+        harness.PumpFrame(() => sliver.Layout(Constraints(overlap: -11.0), parentUsesSize: true));
         Assert.Equal(RefreshIndicatorMode.Done, state.RefreshState);
-        sliver.Layout(Constraints(overlap: -9.0), parentUsesSize: true);
+        harness.PumpFrame(() => sliver.Layout(Constraints(overlap: -9.0), parentUsesSize: true));
         Assert.Equal(RefreshIndicatorMode.Inactive, state.RefreshState);
         Assert.Equal(
             [

@@ -73,7 +73,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 harness.FindWidgets<AnimatedContainer>(),
                 container => container.Child is ConstrainedBox box && box.Constraints.MinHeight == 48.0).Margin);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 240));
@@ -112,7 +112,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         TapParagraph(harness.RenderView, "First gap panel", pointer: 813);
         harness.Pump(new Size(360, 280));
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 280));
@@ -435,19 +435,14 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public IReadOnlyList<T> FindWidgets<T>() where T : Widget

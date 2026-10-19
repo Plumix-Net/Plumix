@@ -189,12 +189,14 @@ public sealed class MaterialDropdownTests : IDisposable
             value => value.Padding == new Thickness(16, 0, 4, 0));
         Assert.Empty(UnderlineBorders(harness));
 
-        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(
-            new DropdownButton<string>(
+        BuildErrors.Throws<InvalidOperationException>(() =>
+        {
+            using var invalid = new WidgetRenderHarness(Wrap(new DropdownButton<string>(
                 items,
                 _ => { },
                 selectedItemBuilder: _ => [new Text("Only one")],
-                value: "one"))));
+                value: "one")));
+        });
     }
 
     [Fact]
@@ -345,7 +347,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
         // `_resize` runs over the [0.25, 0.5] interval of the 300 ms route animation.
         AnimationPump.Prime();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.03));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.03));
         harness.Pump(new Size(500, 360));
         // The route's scroll view now carries a scrollbar of its own, which is also a CustomPaint.
         var painter = Assert.IsType<DropdownMenuPainter>(
@@ -353,7 +355,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 .Where(paint => paint.Painter is DropdownMenuPainter)).Painter);
         Assert.Equal(0.0, painter.Resize.Value, precision: 3);
 
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.09));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.09));
         harness.Pump(new Size(500, 360));
         Assert.True(painter.Resize.Value > 0.0);
 
@@ -584,7 +586,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Contains(
             FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
             layout => layout.LayoutDelegate is DropdownMenuRouteLayout<string>);
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.01));
         harness.Pump(new Size(300, 500));
         Assert.DoesNotContain(
             FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
@@ -1789,7 +1791,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
     private static void PumpAnimation()
     {
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
@@ -1852,6 +1854,7 @@ public sealed class MaterialDropdownTests : IDisposable
         private readonly BuildOwner _owner = TestBuildOwner.Create();
         private readonly HarnessRootElement _rootElement;
         private readonly PipelineOwner _pipeline;
+        private readonly IDisposable _viewRegistration;
 
         public WidgetRenderHarness(Widget rootWidget)
         {
@@ -1861,36 +1864,40 @@ public sealed class MaterialDropdownTests : IDisposable
             _rootElement = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
+            _viewRegistration = new TestRenderViewRegistration(RenderView);
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void SendPointer(PointerEvent @event)
         {
             GestureBinding.Instance.HandlePointerEvent(RenderView, @event);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _rootElement.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _rootElement.UnmountRoot();
+            }
+            finally
+            {
+                _viewRegistration.Dispose();
+            }
+        }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

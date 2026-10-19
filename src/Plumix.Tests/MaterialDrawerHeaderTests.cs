@@ -195,7 +195,7 @@ public sealed class MaterialDrawerHeaderTests
             semantics,
             node => node.Label?.Contains("Hide accounts", StringComparison.Ordinal) == true));
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -210,7 +210,7 @@ public sealed class MaterialDrawerHeaderTests
                     && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(button!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(304, 260));
-        now = FrameClock.CurrentSeconds;
+        now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -299,7 +299,7 @@ public sealed class MaterialDrawerHeaderTests
         harness.Pump(new Size(304, 260));
         harness.Update(BuildHeader());
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(304, 260));
@@ -320,7 +320,7 @@ public sealed class MaterialDrawerHeaderTests
             ThemeData.Light));
 
         TapDetails(harness);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
@@ -332,7 +332,7 @@ public sealed class MaterialDrawerHeaderTests
         TapDetails(harness);
         TapDetails(harness);
         TapDetails(harness);
-        now = FrameClock.CurrentSeconds;
+        now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
@@ -480,7 +480,7 @@ public sealed class MaterialDrawerHeaderTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -490,24 +490,17 @@ public sealed class MaterialDrawerHeaderTests
         public void Update(Widget rootWidget)
         {
             _rootElement.UpdateRoot(rootWidget);
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

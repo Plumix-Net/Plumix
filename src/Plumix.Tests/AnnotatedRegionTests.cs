@@ -44,7 +44,7 @@ public sealed class AnnotatedRegionTests
             value: "second",
             sized: false,
             child: new SizedBox(width: 30, height: 15)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderAnnotatedRegion<string>>(root.ChildElement);
         Assert.Same(render, updated);
@@ -199,7 +199,7 @@ public sealed class AnnotatedRegionTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

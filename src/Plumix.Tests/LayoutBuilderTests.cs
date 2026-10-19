@@ -158,7 +158,7 @@ public sealed class LayoutBuilderTests
         Assert.Equal([1], values);
 
         root.Update(new TestInheritedValue(2, layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, builderCalls);
 
         renderObject.Layout(constraints, parentUsesSize: true);
@@ -284,7 +284,7 @@ public sealed class LayoutBuilderTests
         renderObject.Layout(constraints);
 
         element.MarkNeedsBuild();
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, builderCalls);
 
         renderObject.Layout(constraints);
@@ -312,7 +312,7 @@ public sealed class LayoutBuilderTests
         Assert.Equal([1], values);
 
         root.Update(new TestInheritedValue(2, layoutBuilder));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(1, builderCalls);
 
         renderObject.Layout(constraints);
@@ -389,8 +389,10 @@ public sealed class LayoutBuilderTests
         // the pipeline owner itself, so the callback still runs when the ancestor declines to lay this
         // subtree out - which is what keeps global keys in the deferred subtree unique.
         FindElement<LayoutBuilderElement>(root).MarkNeedsBuild();
-        owner.FlushBuild();
-        pipeline.FlushLayout(new Size(200, 100));
+        owner.PumpFrame(() =>
+        {
+            pipeline.FlushLayout(new Size(200, 100));
+        });
         Assert.Equal(2, builds);
     }
 
@@ -420,8 +422,10 @@ public sealed class LayoutBuilderTests
 
         host.SkipChildLayout = true;
         FindElement<SliverLayoutBuilderElement>(root).MarkNeedsBuild();
-        owner.FlushBuild();
-        pipeline.FlushLayout(new Size(200, 100));
+        owner.PumpFrame(() =>
+        {
+            pipeline.FlushLayout(new Size(200, 100));
+        });
         Assert.Equal(2, builds);
     }
 
@@ -599,7 +603,7 @@ public sealed class LayoutBuilderTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class TestInheritedValue : InheritedWidget

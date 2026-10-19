@@ -100,7 +100,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(1, notifications);
         Assert.Equal(0, controller.Animation!.Value);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.16));
@@ -841,7 +841,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(1, tapped);
         Assert.True(controller.IndexIsChanging);
 
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1072,7 +1072,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
 
         controller.AnimateTo(2);
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1082,7 +1082,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(0, PageLeft(PageBoxes(harness.RenderView)[^1]), precision: 3);
 
         controller.AnimateTo(0);
-        clock = FrameClock.CurrentSeconds;
+        clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1094,7 +1094,7 @@ public sealed class MaterialTabsTests
             44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.Primary, now.AddMilliseconds(40)));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             44, PointerDeviceKind.Touch, new Point(20, 90), PointerButtons.None, now.AddMilliseconds(50)));
-        clock = FrameClock.CurrentSeconds;
+        clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1122,7 +1122,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
 
         controller.AnimateTo(3);
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1182,7 +1182,7 @@ public sealed class MaterialTabsTests
         Assert.All(notifications, notification => Assert.Equal(0, notification.Depth));
         Assert.Equal(300, notifications[0].Metrics.ViewportDimension, precision: 3);
 
-        double clock = FrameClock.CurrentSeconds;
+        double clock = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
@@ -1294,7 +1294,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(200, 60));
 
         controller.AnimateTo(1, duration: TimeSpan.FromMilliseconds(200));
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.04));
@@ -1341,7 +1341,7 @@ public sealed class MaterialTabsTests
         using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(controller: controller)));
         harness.Pump(new Size());
         controller.AnimateTo(1);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
@@ -1557,7 +1557,7 @@ public sealed class MaterialTabsTests
             _root = new HarnessRootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
             Roots[RenderView] = _root;
         }
 
@@ -1585,17 +1585,12 @@ public sealed class MaterialTabsTests
         public void Update(Widget widget)
         {
             _root.Update(new ViewScope(RenderView.FlutterView, widget));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public void Dispose()

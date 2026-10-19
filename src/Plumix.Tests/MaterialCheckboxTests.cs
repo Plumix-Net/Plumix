@@ -54,7 +54,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.Coral, painter.ActiveColor);
@@ -84,7 +84,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(MaterialColors.Transparent, painter.InactiveColor);
@@ -114,7 +114,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(ApplyOpacity(Colors.Brown, 0.38), painter.ActiveColor);
@@ -134,7 +134,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.Lime, painter.CheckColor);
@@ -153,7 +153,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.Null(paragraph);
@@ -173,7 +173,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Null(painter.Value);
@@ -302,14 +302,14 @@ public sealed class MaterialCheckboxTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Equal(true, nextValue);
         }
@@ -339,14 +339,14 @@ public sealed class MaterialCheckboxTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Null(nextValue);
         }
@@ -376,14 +376,14 @@ public sealed class MaterialCheckboxTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.Equal(false, nextValue);
         }
@@ -410,7 +410,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.MediumPurple, painter.ActiveColor);
@@ -434,7 +434,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.ForestGreen, painter.ActiveColor);
@@ -463,7 +463,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.OrangeRed, painter.ActiveColor);
@@ -492,7 +492,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.True(painter.InactiveSide.HasValue);
@@ -531,7 +531,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
         ColorMatchers.AssertSameColorAs(Color.FromARGB(255, 0, 122, 255), painter.ActiveColor);
@@ -555,7 +555,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.Null(paragraph);
@@ -579,7 +579,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.Orange, painter.ActiveColor);
@@ -688,7 +688,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // brightness == dark and value == false is exactly the painter's dark-gradient condition.
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
@@ -713,7 +713,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         // An enabled checked checkbox paints the dark fill color flat, never the gradient.
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
@@ -738,7 +738,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(7, painter.SplashRadius);
@@ -760,7 +760,7 @@ public sealed class MaterialCheckboxTests
             setValue!(null);
             harness.Pump(new Size(160, 120));
 
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
             harness.Pump(new Size(160, 120));
@@ -797,7 +797,7 @@ public sealed class MaterialCheckboxTests
 
         checkedRoot.Attach(owner);
         owner.BuildScope(checkedRoot, () => checkedRoot.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter checkedPainter = FindCheckboxPainter(checkedRoot.ChildElement);
         Assert.Equal(Colors.Coral, checkedPainter.ActiveColor);
@@ -811,7 +811,7 @@ public sealed class MaterialCheckboxTests
                 child: new Checkbox(value: false, onChanged: _ => { })));
         uncheckedRoot.Attach(owner);
         owner.BuildScope(uncheckedRoot, () => uncheckedRoot.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter uncheckedPainter = FindCheckboxPainter(uncheckedRoot.ChildElement);
         Assert.Equal(Colors.CadetBlue, uncheckedPainter.InactiveSide!.Value.Color);
@@ -894,7 +894,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(0.0, painter.ActiveSide!.Value.Width);
@@ -924,7 +924,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(4.0, painter.ActiveSide!.Value.Width);
@@ -946,7 +946,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(Colors.ForestGreen, painter.InactiveColor);
@@ -964,7 +964,7 @@ public sealed class MaterialCheckboxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10), painter.ActiveReactionColor);
@@ -1126,26 +1126,19 @@ public sealed class MaterialCheckboxTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

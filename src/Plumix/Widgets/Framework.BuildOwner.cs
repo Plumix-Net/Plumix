@@ -55,12 +55,12 @@ public sealed class BuildOwner
     internal InactiveElements InactiveElements { get; } = new();
 
     /// <summary>
-    /// The element mounted without a parent, used as the debug build root of the parameterless
-    /// harness pump. Dart reads it from <c>WidgetsBinding.rootElement</c>.
+    /// The element mounted without a parent, used by isolated test frames.
+    /// Dart reads it from <c>WidgetsBinding.rootElement</c>.
     /// </summary>
-    private Element? _rootElement;
+    internal Element? RootElement { get; private set; }
 
-    internal void RegisterRootElement(Element element) => _rootElement = element;
+    internal void RegisterRootElement(Element element) => RootElement = element;
 
     /// <summary>The element registered under <paramref name="key"/> by any live owner.</summary>
     internal static Element? LookupGlobalKey(GlobalKey key)
@@ -259,7 +259,6 @@ public sealed class BuildOwner
             FlutterTimeline.StartSync("BUILD", arguments: debugTimelineArguments);
         }
 
-        using IDisposable buildPhase = SchedulerBinding.Instance.BuildScope();
         try
         {
             _scheduledFlushDirtyElements = true;
@@ -316,36 +315,6 @@ public sealed class BuildOwner
         }
 
         DebugAssertions.Assert(_debugStateLockLevel >= 0);
-    }
-
-    /// <summary>
-    /// Plumix-only harness pump: runs the transient frame callbacks, flushes the root build scope and
-    /// finalizes the tree, the way a frame does between its build and post-frame phases.
-    /// </summary>
-    internal void FlushBuild()
-    {
-        using EventLoop.FrameworkThreadScope scope = EventLoop.EnterFrameworkThread();
-        EventLoop.FlushMicrotasks();
-
-        // Dart runs the transient frame callbacks before the build phase of every frame, and
-        // `LayoutBuilder`'s scope defers its rebuild request to one. A harness pump produces no
-        // frame, so drain them here or that rebuild is dropped.
-        SchedulerBinding.Instance.RunScheduledFrameCallbacksOutsideFrame();
-        if (_rootElement is not null)
-        {
-            BuildScope(_rootElement);
-        }
-
-        // A harness pump has no render phase of its own to finalize after, so it finalizes here, in
-        // the persistent-callback phase every Dart `finalizeTree` runs in: an OverlayEntry a disposing
-        // State removes then defers marking its overlay dirty until after the frame.
-        using (SchedulerBinding.Instance.BuildScope())
-        {
-            FinalizeTree();
-        }
-
-        // The harness finishes its render frame in PipelineOwner.CompositeFrame. Microtasks
-        // scheduled during build must wait until then, as they do in a production frame.
     }
 
     // Debug-only global-key bookkeeping. Dart keeps the same structures on BuildOwner and reads them

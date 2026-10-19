@@ -33,16 +33,16 @@ public sealed class WillPopScopeTests
                 onWillPop: () => Task.FromResult(allowPop),
                 child: new SizedBox(width: 1, height: 1)),
             settings: new RouteSettings(Name: "details")));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("details", navigator.CurrentRoute?.Settings?.Name);
 
         Assert.True(TestBuildOwner.Complete(navigator.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("details", navigator.CurrentRoute?.Settings?.Name);
 
         allowPop = true;
         Assert.True(TestBuildOwner.Complete(navigator.MaybePop()));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("root", navigator.CurrentRoute?.Settings?.Name);
 
         root.UnmountRoot();
@@ -67,7 +67,7 @@ public sealed class WillPopScopeTests
             builder: _ => new SizedBox(width: 1, height: 1),
             settings: new RouteSettings(Name: "plain"));
         navigator!.Push(plain);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.False(plain.HasScopedWillPopCallback);
 
         var guarded = new BuilderPageRoute(
@@ -76,7 +76,7 @@ public sealed class WillPopScopeTests
                 child: new SizedBox(width: 1, height: 1)),
             settings: new RouteSettings(Name: "guarded"));
         navigator.Push(guarded);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(guarded.HasScopedWillPopCallback);
         // A route whose pop might be vetoed refuses the back-swipe gesture, the way Dart's
@@ -111,7 +111,7 @@ public sealed class WillPopScopeTests
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

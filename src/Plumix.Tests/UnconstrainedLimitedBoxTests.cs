@@ -68,7 +68,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopStart, renderBox.Alignment);
@@ -89,7 +89,7 @@ public sealed class UnconstrainedLimitedBoxTests
                 constrainedAxis: null,
                 clipBehavior: Clip.AntiAlias,
                 child: new SizedBox(width: 10, height: 10))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
         Assert.Same(renderBox, updated);
@@ -118,7 +118,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderConstraintsTransformBox>(root.ChildElement);
         Assert.Equal(TextDirection.Ltr, renderBox.TextDirection);
@@ -310,7 +310,7 @@ public sealed class UnconstrainedLimitedBoxTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var renderBox = RequireRenderObject<RenderLimitedBox>(root.ChildElement);
         Assert.Equal(120, renderBox.MaxWidth);
@@ -320,7 +320,7 @@ public sealed class UnconstrainedLimitedBoxTests
             maxWidth: 90,
             maxHeight: 44,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderLimitedBox>(root.ChildElement);
         Assert.Same(renderBox, updated);

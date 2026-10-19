@@ -25,7 +25,7 @@ public sealed class IntrinsicWidgetsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(0.0, widget.StepWidth);
         Assert.Equal(0.0, widget.StepHeight);
@@ -37,7 +37,7 @@ public sealed class IntrinsicWidgetsTests
             stepWidth: 12.0,
             stepHeight: 8.0,
             child: new SizedBox(width: 20.0, height: 10.0)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderIntrinsicWidth>(root.ChildElement);
         Assert.Same(renderObject, updated);
@@ -83,7 +83,7 @@ public sealed class IntrinsicWidgetsTests
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         RequireRenderObject<RenderIntrinsicHeight>(root.ChildElement);
     }

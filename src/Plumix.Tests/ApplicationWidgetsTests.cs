@@ -118,11 +118,11 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal("first", value);
 
         root.Update(BuildLocalizations("ignored", shouldReload: false));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("first", value);
 
         root.Update(BuildLocalizations("reloaded", shouldReload: true));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("reloaded", value);
         root.UnmountRoot();
     }
@@ -386,7 +386,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal(["/", "/a", "/a/b"], observer.PushedNames);
         Assert.True(navigatorKey.CurrentState!.CanPop);
         navigatorKey.CurrentState.PushNamed("/missing");
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("unknown:/missing", navigatorKey.CurrentState.CurrentRoute!.Settings.Name);
         root.UnmountRoot();
     }
@@ -743,9 +743,9 @@ public sealed class ApplicationWidgetsTests : IDisposable
     {
         for (int index = 0; index < 3; index++)
         {
-            owner.FlushBuild();
-            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
-            owner.FlushBuild();
+            owner.PumpFrame();
+            SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.01));
+            owner.PumpFrame();
         }
     }
 
@@ -753,7 +753,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private sealed record TestStrings(string Value);

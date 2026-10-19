@@ -135,12 +135,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement);
         Assert.InRange(halfway.Opacity.Value, 0.01, 0.99);
         Assert.False(halfway.AlwaysIncludeSemantics);
@@ -153,14 +153,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             alwaysIncludeSemantics: true,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var interrupted = RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement);
         Assert.Equal(halfwayOpacity, interrupted.Opacity.Value, precision: 6);
         Assert.True(interrupted.AlwaysIncludeSemantics);
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(0.8, RequireRenderObject<RenderAnimatedOpacity>(root.ChildElement).Opacity.Value, precision: 6);
         Assert.Equal(1, completed);
 
@@ -185,12 +185,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.InRange(halfway.Translation.X, 0.01, 0.99);
         Assert.InRange(halfway.Translation.Y, -0.49, -0.01);
@@ -203,14 +203,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var interrupted = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
         Assert.Equal(halfwayTranslation.X, interrupted.Translation.X, precision: 6);
         Assert.Equal(halfwayTranslation.Y, interrupted.Translation.Y, precision: 6);
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Vector finished = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement).Translation;
         Assert.Equal(-0.5, finished.X, precision: 6);
         Assert.Equal(0.75, finished.Y, precision: 6);
@@ -271,12 +271,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             filterQuality: FilterQuality.Low,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.InRange(halfway.DebugTransformMatrix()[0], 1.01, 1.99);
         Assert.Equal(halfway.DebugTransformMatrix()[0], halfway.DebugTransformMatrix()[5], precision: 6);
@@ -292,7 +292,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             filterQuality: FilterQuality.High,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var interrupted = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(halfwayScale, interrupted.DebugTransformMatrix()[0], precision: 6);
         Assert.Equal(Alignment.BottomRight, interrupted.Alignment);
@@ -300,7 +300,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Equal(0.5, finished.DebugTransformMatrix()[0], precision: 6);
         Assert.Equal(0.5, finished.DebugTransformMatrix()[5], precision: 6);
@@ -327,12 +327,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Matrix4 halfway = RequireRenderObject<RenderTransform>(root.ChildElement).DebugTransformMatrix();
         Assert.InRange(halfway[0], 0.01, 0.99);
         Assert.InRange(halfway[1], 0.01, 0.99);
@@ -341,7 +341,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Matrix4 finished = RequireRenderObject<RenderTransform>(root.ChildElement).DebugTransformMatrix();
         Assert.Equal(0, finished[0], precision: 6);
         Assert.Equal(1, finished[1], precision: 6);
@@ -440,12 +440,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         EdgeInsetsGeometry halfway = RequireRenderObject<RenderPadding>(root.ChildElement).Padding;
         Assert.InRange(halfway.Left, 0.1, 19.9);
         Assert.InRange(halfway.Top, 0.1, 9.9);
@@ -458,11 +458,11 @@ public sealed class ImplicitAnimationsTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(halfway, RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
 
         AnimationPump.Advance(1.0);
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(new Thickness(30), RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
         Assert.Equal(1, completed);
 
@@ -491,12 +491,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.InRange(halfway.Alignment.X, -0.99, 0.99);
         Assert.InRange(halfway.Alignment.Y, -0.99, 0.99);
@@ -505,7 +505,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0, completed);
 
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.BottomRight, finished.Alignment);
         Assert.Equal(3, finished.WidthFactor);
@@ -534,7 +534,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             heightFactor: 3,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var withFactors = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(2, withFactors.WidthFactor);
         Assert.Equal(3, withFactors.HeightFactor);
@@ -545,7 +545,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         // Dart only visits a factor tween while the factor is non-null, so the last tween stays.
         var withoutFactors = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(2, withoutFactors.WidthFactor);
@@ -653,12 +653,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             width: 40,
             height: 30,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData halfway = GetOnlyStackParentData(root);
         Assert.InRange(halfway.Left!.Value, 0.1, 79.9);
         Assert.InRange(halfway.Top!.Value, 0.1, 39.9);
@@ -674,14 +674,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             width: 10,
             height: 12,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData interrupted = GetOnlyStackParentData(root);
         Assert.Equal(halfwayLeft, interrupted.Left!.Value, precision: 6);
         Assert.Equal(halfwayTop, interrupted.Top!.Value, precision: 6);
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData finished = GetOnlyStackParentData(root);
         Assert.Equal(20, finished.Left);
         Assert.Equal(10, finished.Top);
@@ -711,7 +711,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             width: 24,
             height: 18,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         StackParentData data = GetOnlyStackParentData(root);
         Assert.Null(data.Left);
@@ -738,12 +738,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             direction: Plumix.UI.TextDirection.Rtl,
             start: 80,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData rtlHalfway = GetOnlyStackParentData(root);
         Assert.Null(rtlHalfway.Left);
         Assert.InRange(rtlHalfway.Right!.Value, 0.1, 79.9);
@@ -753,14 +753,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             direction: Plumix.UI.TextDirection.Ltr,
             start: 80,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData ltrHalfway = GetOnlyStackParentData(root);
         Assert.Equal(halfwayLogicalStart, ltrHalfway.Left!.Value, precision: 6);
         Assert.Null(ltrHalfway.Right);
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         StackParentData finished = GetOnlyStackParentData(root);
         Assert.Equal(80, finished.Left);
         Assert.Null(finished.Right);
@@ -820,12 +820,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             textHeightBehavior: new TextHeightBehavior(false, false),
             curve: Curves.Linear,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.InRange(halfway.FontSize, 10.1, 29.9);
         Assert.InRange(halfway.LetterSpacing, 0.1, 3.9);
@@ -843,7 +843,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             duration: TimeSpan.FromMilliseconds(200),
             curve: Curves.Linear,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal(
             interruptedFontSize,
             RequireRenderObject<RenderParagraph>(root.ChildElement).FontSize,
@@ -851,7 +851,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderParagraph>(root.ChildElement);
         Assert.Equal(18, finished.FontSize, precision: 6);
         Assert.Equal(Colors.Green, Assert.IsType<SolidColorBrush>(finished.Foreground).Color);
@@ -889,7 +889,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             elevation: 8,
             shadowColor: Colors.Purple,
             child: new SizedBox(width: 40, height: 24)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
         Assert.Same(physical, updated);
@@ -957,16 +957,16 @@ public sealed class ImplicitAnimationsTests : IDisposable
             elevation: 12,
             curve: Curves.Linear,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var immediate = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
         Assert.Equal(BoxShape.Circle, immediate.Shape);
         Assert.Equal(Clip.HardEdge, immediate.ClipBehavior);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
         Assert.InRange(halfway.BorderRadius!.Value.Radius, 0.1, 19.9);
         Assert.InRange(halfway.Elevation, 0.1, 11.9);
@@ -985,7 +985,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             animateShadowColor: false,
             curve: Curves.Linear,
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var interrupted = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
         Assert.Equal(interruptedElevation, interrupted.Elevation, precision: 6);
         Assert.Equal(Colors.Green, interrupted.Color);
@@ -994,9 +994,9 @@ public sealed class ImplicitAnimationsTests : IDisposable
         // The interrupting update restarts the controller: the first of these frames gives it its start
         // timestamp and the second runs it past the end.
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderPhysicalModel>(root.ChildElement);
         Assert.Equal(4, finished.BorderRadius!.Value.Radius, precision: 6);
         // The animation reports completion (below); the residual here is the frame it lands on, which
@@ -1052,12 +1052,12 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var halfway = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.InRange(halfway.Alignment.X, -0.99, 0.99);
         Assert.InRange(halfway.Alignment.Y, -0.99, 0.99);
@@ -1074,7 +1074,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             curve: Curves.Linear,
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var interrupted = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(interruptedWidth, interrupted.WidthFactor!.Value, precision: 6);
@@ -1082,7 +1082,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        owner.FlushBuild();
+        owner.PumpFrame();
         var finished = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(Alignment.Center, finished.Alignment);
         Assert.Equal(0.4, finished.WidthFactor!.Value, precision: 6);
@@ -1107,7 +1107,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             widthFactor: null,
             heightFactor: 0.4,
             child: new SizedBox(width: 10, height: 10)));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         var updated = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(0.5, updated.WidthFactor);
@@ -1142,7 +1142,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Mount(root, owner);
 
         root.Update(new SizedBox(width: 1, height: 1));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         root.UnmountRoot();
     }
@@ -1200,7 +1200,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     {
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

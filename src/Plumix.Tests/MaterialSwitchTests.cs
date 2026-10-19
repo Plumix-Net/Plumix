@@ -629,14 +629,14 @@ public sealed class MaterialSwitchTests
 
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             focusNode.RequestFocus();
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
-            owner.FlushBuild();
+            owner.PumpFrame();
 
             Assert.True(nextValue);
         }
@@ -832,7 +832,7 @@ public sealed class MaterialSwitchTests
         var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return root;
     }
 
@@ -895,7 +895,7 @@ public sealed class MaterialSwitchTests
         var owner = TestBuildOwner.Create();
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return root;
     }
 
@@ -1104,7 +1104,7 @@ public sealed class MaterialSwitchTests
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
             _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -1124,19 +1124,12 @@ public sealed class MaterialSwitchTests
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 

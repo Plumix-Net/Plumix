@@ -580,7 +580,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         public void Advance(TimeSpan elapsed)
         {
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             // The first frame only gives a freshly started ticker its start timestamp.
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now));
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now) + elapsed);
@@ -636,7 +636,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             _root = new RootElement(RenderView, Wrap(sliver));
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -647,12 +647,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         public void Pump()
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(new Size(300, ViewportExtent));
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, new Size(300, ViewportExtent));
         }
 
         public void ScrollTo(double offset) => _controller.JumpTo(offset);

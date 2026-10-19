@@ -741,7 +741,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")),
             transitionAnimationController: controller);
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
@@ -808,7 +808,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             _ => new SizedBox(height: 100, child: new Text("Persistent")),
             transitionAnimationController: transitionController);
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
@@ -1282,7 +1282,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     private static void PumpAnimation()
     {
         EventLoop.FlushMicrotasks();
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
@@ -1354,23 +1354,16 @@ public sealed class MaterialBottomSheetTests : IDisposable
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
         public RenderView RenderView { get; }
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
         public void Dispose() => _root.UnmountRoot();

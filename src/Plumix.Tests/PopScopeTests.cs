@@ -72,17 +72,17 @@ public sealed class PopScopeTests : IDisposable
                 child: new PopScopeProbe(
                     state => probe = state,
                     (didPop, result) => invocations.Add((didPop, result))))));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(TestBuildOwner.Complete(navigator.MaybePop("blocked")));
         Assert.Equal("details", navigator.CurrentRoute?.Settings.Name);
         Assert.Equal([(false, "blocked")], invocations);
 
         probe!.SetCanPop(true);
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(TestBuildOwner.Complete(navigator.MaybePop("accepted")));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal("root", navigator.CurrentRoute?.Settings.Name);
         Assert.Equal([(false, "blocked"), (true, "accepted")], invocations);
@@ -117,10 +117,10 @@ public sealed class PopScopeTests : IDisposable
                     callbackResult = result;
                 },
                 child: new SizedBox())));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         navigator.Pop("forced");
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(didPop);
         Assert.Equal("forced", callbackResult);
@@ -162,15 +162,15 @@ public sealed class PopScopeTests : IDisposable
                         innerNavigator = Navigator.Of(context);
                         return new SizedBox();
                     })))));
-        owner.FlushBuild();
+        owner.PumpFrame();
         PumpNavigationNotifications(owner);
 
         innerNavigator!.Push(BuildRoute("inner-details", _ => new SizedBox()));
-        owner.FlushBuild();
+        owner.PumpFrame();
         PumpNavigationNotifications(owner);
 
         Assert.True(TestBuildOwner.Complete(outerNavigator.MaybePop("nested-result")));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.Equal(1, callbackCount);
         Assert.Equal("nested-result", callbackResult);
@@ -179,7 +179,7 @@ public sealed class PopScopeTests : IDisposable
 
         PumpNavigationNotifications(owner);
         Assert.True(TestBuildOwner.Complete(outerNavigator.MaybePop("outer-result")));
-        owner.FlushBuild();
+        owner.PumpFrame();
         Assert.Equal("outer-root", outerNavigator.CurrentRoute?.Settings.Name);
         Assert.Equal(1, callbackCount);
 
@@ -213,7 +213,7 @@ public sealed class PopScopeTests : IDisposable
                     callbackResult = result;
                 },
                 child: new SizedBox())));
-        owner.FlushBuild();
+        owner.PumpFrame();
 
         Assert.True(TestBuildOwner.Complete(navigator.MaybePop("unsaved")));
         Assert.False(didPop);
@@ -233,16 +233,16 @@ public sealed class PopScopeTests : IDisposable
         var root = new TestRootElement(widget);
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
-        owner.FlushBuild();
+        owner.PumpFrame();
         return root;
     }
 
     private static void PumpNavigationNotifications(BuildOwner owner)
     {
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.01));
-        owner.FlushBuild();
-        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(FrameClock.CurrentSeconds + 0.02));
-        owner.FlushBuild();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.01));
+        owner.PumpFrame();
+        SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(AnimationPump.CurrentSeconds + 0.02));
+        owner.PumpFrame();
     }
 
     private sealed class PopScopeProbe : StatefulWidget

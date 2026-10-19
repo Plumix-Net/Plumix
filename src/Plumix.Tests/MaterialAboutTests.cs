@@ -271,7 +271,7 @@ public sealed class MaterialAboutTests : IDisposable
         harness.Pump(new Size(640, 480));
         Assert.NotNull(FindParagraph(harness.RenderView, "Dialog app"));
 
-        double now = FrameClock.CurrentSeconds;
+        double now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -279,7 +279,7 @@ public sealed class MaterialAboutTests : IDisposable
         var actionNodes = FindNodes(semantics!, node => node.Actions.HasFlag(SemanticsActions.Tap)).ToArray();
         Assert.True(actionNodes.Length >= 2);
         Assert.True(harness.PerformSemanticsAction(actionNodes[^1].Id, SemanticsActions.Tap));
-        now = FrameClock.CurrentSeconds;
+        now = AnimationPump.CurrentSeconds;
         AnimationPump.Prime();
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
@@ -844,7 +844,7 @@ public sealed class MaterialAboutTests : IDisposable
 
             EventLoop.FlushMicrotasks();
             harness.Pump(size);
-            double now = FrameClock.CurrentSeconds;
+            double now = AnimationPump.CurrentSeconds;
             AnimationPump.Prime();
             SchedulerBinding.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.6));
             harness.Pump(size);
@@ -989,7 +989,7 @@ public sealed class MaterialAboutTests : IDisposable
                 new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
-            _owner.FlushBuild();
+            _owner.PumpFrame();
         }
 
         public RenderView RenderView { get; }
@@ -998,19 +998,12 @@ public sealed class MaterialAboutTests : IDisposable
 
         public void Pump(Size size)
         {
-            _owner.FlushBuild();
-            _pipeline.RequestLayout();
-            _pipeline.FlushLayout(size);
-            _pipeline.FlushCompositingBits();
-            _pipeline.FlushPaint();
-            _pipeline.CompositeFrame();
+            _owner.PumpFrame(_pipeline, size);
         }
 
         public SemanticsNode? PumpAndGetSemantics(Size size)
         {
-            Pump(size);
-            _pipeline.RequestSemanticsUpdate();
-            _pipeline.FlushSemantics();
+            _owner.PumpFrame(_pipeline, size, semantics: true);
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
