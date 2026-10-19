@@ -264,7 +264,7 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
                 container: true,
                 label: "Actions",
                 expanded: true,
-                onExpand: () => log.Add("expand"),
+                onTap: () => log.Add("actions tap"),
                 onCollapse: () => log.Add("collapse"),
                 child: Leaf()),
         ]));
@@ -274,7 +274,7 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
         Assert.Equal(ExpandCollapseState.Collapsed, tapped.ExpandCollapseState);
         Assert.Equal(ExpandCollapseState.Expanded, actions.ExpandCollapseState);
         Assert.NotNull(Find(host, "Tapped").GetProvider<IInvokeProvider>());
-        Assert.Null(Find(host, "Actions").GetProvider<IInvokeProvider>());
+        Assert.NotNull(Find(host, "Actions").GetProvider<IInvokeProvider>());
 
         tapped.Collapse();
         tapped.Expand();
@@ -375,7 +375,9 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
             new Semantics(container: true, label: "Level 3", headingLevel: 3, child: Leaf()),
             new Semantics(container: true, label: "Tip", tooltip: "More", child: Leaf()),
             new Semantics(container: true, label: "Main", role: SemanticsRole.Main, child: Leaf()),
-            new Semantics(container: true, label: "Tab", role: SemanticsRole.Tab, child: Leaf()),
+            new Semantics(
+                container: true, label: "Tab", role: SemanticsRole.Tab, selected: false,
+                onTap: static () => { }, child: Leaf()),
             new Semantics(container: true, label: "Live", liveRegion: true, child: Leaf()),
         ]));
 

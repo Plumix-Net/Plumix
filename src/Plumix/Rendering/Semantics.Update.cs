@@ -99,6 +99,8 @@ public sealed partial class SemanticsNode
     internal void AddToUpdate(SemanticsUpdateBuilder builder, HashSet<int> customSemanticsActionIdsUpdate)
     {
         Debug.Assert(_dirty);
+        SemanticsData data = GetSemanticsData();
+        DebugSemanticsRoleChecks.CheckSemanticsData(this);
 
         IReadOnlyList<int> childrenInTraversalOrder;
         IReadOnlyList<int> childrenInHitTestOrder;
@@ -118,8 +120,6 @@ public sealed partial class SemanticsNode
             childrenInTraversalOrder = [.. ChildrenInTraversalOrder.Select(static child => child.Id)];
             childrenInHitTestOrder = [.. ChildrenInHitTestOrder.Reverse().Select(static child => child.Id)];
         }
-
-        SemanticsData data = GetSemanticsData();
 
         // Dart reads the ids off the flattened data, so a merge root also reports the custom actions
         // and the hint overrides of every descendant it absorbed.

@@ -1,3 +1,5 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/gestures.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -44,7 +46,8 @@ class _StateStorageDemoPageState extends State<StateStorageDemoPage> {
           'receives scroll and dimension notifications across sibling subtrees. '
           'The readout is also wrapped in translucent MetaData and '
           'IndexedSemantics(index: 0) without changing layout; its identified '
-          'semantics node merges the readout label while optional text stays empty.',
+          'status node merges the readout label while optional text stays empty. '
+          'The list and its rows expose list/listItem roles with an explicit list boundary.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -105,10 +108,15 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
   Widget build(BuildContext context) {
     final Widget scrollView = SingleChildScrollView(
       key: const PageStorageKey<String>('state-storage-list'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        spacing: 6,
-        children: List<Widget>.generate(18, _buildRow),
+      child: Semantics(
+        container: true,
+        explicitChildNodes: true,
+        role: SemanticsRole.list,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          spacing: 6,
+          children: List<Widget>.generate(18, _buildRow),
+        ),
       ),
     );
     final Widget indicatedScrollView = _useStretch
@@ -167,11 +175,16 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
             behavior: HitTestBehavior.translucent,
             child: Semantics(
               identifier: 'scroll-observer-readout',
+              role: SemanticsRole.status,
+              button: false,
               label: '',
               value: '',
               hint: '',
               tooltip: '',
-              child: IndexedSemantics(index: 0, child: _ScrollObserverReadout()),
+              child: IndexedSemantics(
+                index: 0,
+                child: _ScrollObserverReadout(),
+              ),
             ),
           ),
           Expanded(
@@ -205,12 +218,16 @@ class _RestorableStorageListState extends State<_RestorableStorageList> {
   }
 
   static Widget _buildRow(int index) {
-    return Container(
-      height: 44,
-      color: index.isEven ? const Color(0xFFF4F7FA) : const Color(0xFFE6EDF5),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      alignment: Alignment.centerLeft,
-      child: Text('Stored row ${index + 1}'),
+    return Semantics(
+      container: true,
+      role: SemanticsRole.listItem,
+      child: Container(
+        height: 44,
+        color: index.isEven ? const Color(0xFFF4F7FA) : const Color(0xFFE6EDF5),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        alignment: Alignment.centerLeft,
+        child: Text('Stored row ${index + 1}'),
+      ),
     );
   }
 }

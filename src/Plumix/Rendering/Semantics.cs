@@ -488,7 +488,17 @@ public sealed class ChildSemanticsConfigurationsResultBuilder
 public sealed class SemanticsConfiguration
 {
     public bool IsSemanticBoundary { get; set; }
-    public bool IsMergingSemanticsOfDescendants { get; set; }
+    public bool IsMergingSemanticsOfDescendants
+    {
+        get => _isMergingSemanticsOfDescendants;
+        set
+        {
+            _isMergingSemanticsOfDescendants = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private bool _isMergingSemanticsOfDescendants;
     public bool ExplicitChildNodes { get; set; }
     public bool IsBlockingSemanticsOfPreviouslyPaintedNodes { get; set; }
     public bool IsBlockingUserActions { get; set; }
@@ -512,7 +522,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _attributedLabel = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -534,7 +544,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _attributedHint = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -558,6 +568,7 @@ public sealed class SemanticsConfiguration
             }
 
             _hintOverrides = value;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -576,7 +587,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _tooltip = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -598,7 +609,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _attributedValue = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -620,7 +631,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _attributedIncreasedValue = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -642,14 +653,34 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _attributedDecreasedValue = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
     private AttributedString _attributedDecreasedValue = AttributedString.Empty;
 
-    public string? MinValue { get; set; }
-    public string? MaxValue { get; set; }
+    public string? MinValue
+    {
+        get => _minValue;
+        set
+        {
+            _minValue = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private string? _minValue;
+    public string? MaxValue
+    {
+        get => _maxValue;
+        set
+        {
+            _maxValue = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private string? _maxValue;
 
     /// <summary>
     /// A stable identifier UI testing frameworks address the node by. It is never announced to the
@@ -663,16 +694,12 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _identifier = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
     private string _identifier = string.Empty;
-    private bool _hasBeenTextAnnotated;
-
-    // Dart's `_hasBeenAnnotated` as set by a flag setter whose value leaves `Flags` unchanged (the
-    // rest of `HasBeenAnnotated` is derived from the configuration's state).
-    private bool _hasBeenFlagAnnotated;
+    private bool _hasBeenAnnotated;
 
     /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.headingLevel</c>.</remarks>
@@ -686,7 +713,13 @@ public sealed class SemanticsConfiguration
                 throw new ArgumentOutOfRangeException(nameof(value), "Heading level must be between 0 and 6");
             }
 
+            if (_headingLevel == value)
+            {
+                return;
+            }
+
             _headingLevel = value;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -694,38 +727,198 @@ public sealed class SemanticsConfiguration
 
     /// <summary>The URL a link node navigates to.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.linkUrl</c>.</remarks>
-    public Uri? LinkUrl { get; set; }
+    public Uri? LinkUrl
+    {
+        get => _linkUrl;
+        set
+        {
+            if (Equals(_linkUrl, value))
+            {
+                return;
+            }
+
+            _linkUrl = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private Uri? _linkUrl;
 
     /// <summary>The maximum number of characters the node's value accepts.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.maxValueLength</c>.</remarks>
-    public int? MaxValueLength { get; set; }
+    public int? MaxValueLength
+    {
+        get => _maxValueLength;
+        set
+        {
+            if (Equals(_maxValueLength, value))
+            {
+                return;
+            }
+
+            _maxValueLength = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _maxValueLength;
 
     /// <summary>The number of characters the node's value currently holds.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.currentValueLength</c>.</remarks>
-    public int? CurrentValueLength { get; set; }
+    public int? CurrentValueLength
+    {
+        get => _currentValueLength;
+        set
+        {
+            if (Equals(_currentValueLength, value))
+            {
+                return;
+            }
+
+            _currentValueLength = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _currentValueLength;
 
     /// <summary>The <see cref="Identifier"/>s of the nodes whose visibility this node controls.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.controlsNodes</c>.</remarks>
-    public IReadOnlySet<string>? ControlsNodes { get; set; }
+    public IReadOnlySet<string>? ControlsNodes
+    {
+        get => _controlsNodes;
+        set
+        {
+            _controlsNodes = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private IReadOnlySet<string>? _controlsNodes;
 
     /// <summary>The node's form-validation outcome.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.validationResult</c>.</remarks>
-    public SemanticsValidationResult ValidationResult { get; set; } = SemanticsValidationResult.None;
+    public SemanticsValidationResult ValidationResult
+    {
+        get => _validationResult;
+        set
+        {
+            _validationResult = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private SemanticsValidationResult _validationResult = SemanticsValidationResult.None;
 
     /// <summary>The node's current text selection, for editable nodes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.textSelection</c>.</remarks>
-    public TextSelection? TextSelection { get; set; }
+    public TextSelection? TextSelection
+    {
+        get => _textSelection;
+        set
+        {
+            _textSelection = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private TextSelection? _textSelection;
 
     /// <summary>The id of the platform view this node stands for.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.platformViewId</c>.</remarks>
-    public int? PlatformViewId { get; set; }
-    public SemanticsRole Role { get; set; }
-    public SemanticsInputType InputType { get; set; }
-    public SemanticsHitTestBehavior HitTestBehavior { get; set; } = SemanticsHitTestBehavior.Defer;
-    public SemanticsFlags Flags { get; set; } = SemanticsFlags.None;
-    public SemanticsActions Actions { get; set; } = SemanticsActions.None;
-    public int? IndexInParent { get; set; }
-    public SemanticsSortKey? SortKey { get; set; }
+    public int? PlatformViewId
+    {
+        get => _platformViewId;
+        set
+        {
+            if (Equals(_platformViewId, value))
+            {
+                return;
+            }
+
+            _platformViewId = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _platformViewId;
+    public SemanticsRole Role
+    {
+        get => _role;
+        set
+        {
+            _role = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private SemanticsRole _role;
+    public SemanticsInputType InputType
+    {
+        get => _inputType;
+        set
+        {
+            _inputType = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private SemanticsInputType _inputType;
+    public SemanticsHitTestBehavior HitTestBehavior
+    {
+        get => _hitTestBehavior;
+        set
+        {
+            _hitTestBehavior = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private SemanticsHitTestBehavior _hitTestBehavior = SemanticsHitTestBehavior.Defer;
+    public SemanticsFlags Flags
+    {
+        get => _flags;
+        set
+        {
+            _flags = value;
+            _hasBeenAnnotated |= value != SemanticsFlags.None;
+        }
+    }
+
+    private SemanticsFlags _flags;
+    public SemanticsActions Actions
+    {
+        get => _actions;
+        set
+        {
+            _actions = value;
+            _hasBeenAnnotated |= value != SemanticsActions.None;
+        }
+    }
+
+    private SemanticsActions _actions;
+    public int? IndexInParent
+    {
+        get => _indexInParent;
+        set
+        {
+            _indexInParent = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _indexInParent;
+    public SemanticsSortKey? SortKey
+    {
+        get => _sortKey;
+        set
+        {
+            _sortKey = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private SemanticsSortKey? _sortKey;
 
     /// <summary>
     /// Identifies this node as the traversal parent other nodes graft onto; must be unique across
@@ -743,6 +936,7 @@ public sealed class SemanticsConfiguration
             }
 
             _traversalParentIdentifier = value;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -764,6 +958,7 @@ public sealed class SemanticsConfiguration
             }
 
             _traversalChildIdentifier = value;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -780,7 +975,7 @@ public sealed class SemanticsConfiguration
         set
         {
             _textDirection = value;
-            _hasBeenTextAnnotated = true;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -798,6 +993,7 @@ public sealed class SemanticsConfiguration
         {
             ArgumentNullException.ThrowIfNull(value);
             _localeForSubtree = value;
+            _hasBeenAnnotated = true;
         }
     }
 
@@ -818,9 +1014,7 @@ public sealed class SemanticsConfiguration
     public bool IsHidden
     {
         get => Flags.HasFlag(SemanticsFlags.IsHidden);
-        set => Flags = value
-            ? Flags | SemanticsFlags.IsHidden
-            : Flags & ~SemanticsFlags.IsHidden;
+        set => SetFlag(SemanticsFlags.IsHidden, value);
     }
 
     /// <summary>Whether the node represents a slider.</summary>
@@ -828,9 +1022,7 @@ public sealed class SemanticsConfiguration
     public bool IsSlider
     {
         get => Flags.HasFlag(SemanticsFlags.IsSlider);
-        set => Flags = value
-            ? Flags | SemanticsFlags.IsSlider
-            : Flags & ~SemanticsFlags.IsSlider;
+        set => SetFlag(SemanticsFlags.IsSlider, value);
     }
 
     /// <summary>Whether the node is a button.</summary>
@@ -989,6 +1181,7 @@ public sealed class SemanticsConfiguration
             : null;
         set
         {
+            _hasBeenAnnotated = true;
             if (value is null)
             {
                 return;
@@ -996,10 +1189,7 @@ public sealed class SemanticsConfiguration
 
             Flags |= SemanticsFlags.HasCheckedState;
             SetFlag(SemanticsFlags.IsChecked, value.Value);
-            if (value.Value)
-            {
-                Flags &= ~SemanticsFlags.IsCheckStateMixed;
-            }
+            Flags &= ~SemanticsFlags.IsCheckStateMixed;
         }
     }
 
@@ -1010,9 +1200,12 @@ public sealed class SemanticsConfiguration
     /// <remarks>Flutter's <c>SemanticsConfiguration.isCheckStateMixed</c>.</remarks>
     public bool? IsCheckStateMixed
     {
-        get => Flags.HasFlag(SemanticsFlags.IsCheckStateMixed);
+        get => Flags.HasFlag(SemanticsFlags.HasCheckedState)
+            ? Flags.HasFlag(SemanticsFlags.IsCheckStateMixed)
+            : null;
         set
         {
+            _hasBeenAnnotated = true;
             if (value != true)
             {
                 return;
@@ -1023,11 +1216,15 @@ public sealed class SemanticsConfiguration
         }
     }
 
-    private void SetFlag(SemanticsFlags flag, bool value) =>
+    private void SetFlag(SemanticsFlags flag, bool value)
+    {
         Flags = value ? Flags | flag : Flags & ~flag;
+        _hasBeenAnnotated = true;
+    }
 
     private void SetTristate(SemanticsFlags stateFlag, SemanticsFlags valueFlag, bool? value)
     {
+        _hasBeenAnnotated = true;
         if (value is null)
         {
             Flags &= ~(stateFlag | valueFlag);
@@ -1051,6 +1248,7 @@ public sealed class SemanticsConfiguration
             : null;
         set
         {
+            _hasBeenAnnotated = true;
             if (value is null)
             {
                 Flags &= ~(SemanticsFlags.HasEnabledState | SemanticsFlags.IsEnabled);
@@ -1077,7 +1275,7 @@ public sealed class SemanticsConfiguration
         {
             // Dart's setter marks the configuration annotated whatever the value, so a
             // `Semantics(focusable: false)` (every non-focusable `Focus`) still contributes a node.
-            _hasBeenFlagAnnotated = true;
+            _hasBeenAnnotated = true;
             if (!value)
             {
                 Flags &= ~(SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused);
@@ -1105,6 +1303,7 @@ public sealed class SemanticsConfiguration
             : null;
         set
         {
+            _hasBeenAnnotated = true;
             if (value is null)
             {
                 Flags &= ~(SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused);
@@ -1132,6 +1331,7 @@ public sealed class SemanticsConfiguration
         get => _accessibilityFocusBlockType;
         set
         {
+            _hasBeenAnnotated = true;
             _accessibilityFocusBlockType = value;
             Flags = value != AccessibilityFocusBlockType.None
                 ? Flags | SemanticsFlags.IsAccessibilityFocusBlocked
@@ -1212,21 +1412,81 @@ public sealed class SemanticsConfiguration
     /// The current scroll position in logical pixels, or <c>null</c> when this configuration does not
     /// describe a scrollable. <see cref="ScrollExtentMin"/> and <see cref="ScrollExtentMax"/> bound it.
     /// </summary>
-    public double? ScrollPosition { get; set; }
+    public double? ScrollPosition
+    {
+        get => _scrollPosition;
+        set
+        {
+            _scrollPosition = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private double? _scrollPosition;
 
     /// <summary>The maximum in-range value for <see cref="ScrollPosition"/>.</summary>
-    public double? ScrollExtentMax { get; set; }
+    public double? ScrollExtentMax
+    {
+        get => _scrollExtentMax;
+        set
+        {
+            _scrollExtentMax = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private double? _scrollExtentMax;
 
     /// <summary>The minimum in-range value for <see cref="ScrollPosition"/>.</summary>
-    public double? ScrollExtentMin { get; set; }
+    public double? ScrollExtentMin
+    {
+        get => _scrollExtentMin;
+        set
+        {
+            _scrollExtentMin = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private double? _scrollExtentMin;
 
     /// <summary>
     /// The total number of scrollable children, or <c>null</c> when the count is unknown or unbounded.
     /// </summary>
-    public int? ScrollChildCount { get; set; }
+    public int? ScrollChildCount
+    {
+        get => _scrollChildCount;
+        set
+        {
+            if (Equals(_scrollChildCount, value))
+            {
+                return;
+            }
+
+            _scrollChildCount = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _scrollChildCount;
 
     /// <summary>The index of the first visible scrollable child.</summary>
-    public int? ScrollIndex { get; set; }
+    public int? ScrollIndex
+    {
+        get => _scrollIndex;
+        set
+        {
+            if (Equals(_scrollIndex, value))
+            {
+                return;
+            }
+
+            _scrollIndex = value;
+            _hasBeenAnnotated = true;
+        }
+    }
+
+    private int? _scrollIndex;
 
     /// <summary>
     /// Whether the platform may scroll this node without an explicit scroll action, for example to
@@ -1235,9 +1495,7 @@ public sealed class SemanticsConfiguration
     public bool HasImplicitScrolling
     {
         get => Flags.HasFlag(SemanticsFlags.HasImplicitScrolling);
-        set => Flags = value
-            ? Flags | SemanticsFlags.HasImplicitScrolling
-            : Flags & ~SemanticsFlags.HasImplicitScrolling;
+        set => SetFlag(SemanticsFlags.HasImplicitScrolling, value);
     }
 
     public Action? OnScrollLeft
@@ -1648,6 +1906,29 @@ public sealed class SemanticsConfiguration
 
     private Action? _onShowOnScreen;
 
+    /// <summary>The mutable map of custom accessibility action handlers.</summary>
+    /// <remarks>Assigning even an empty map annotates the configuration; mutating the getter does not.</remarks>
+    public Dictionary<CustomSemanticsAction, Action> CustomSemanticsActions
+    {
+        get => _customActionHandlers ??= [];
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _hasBeenAnnotated = true;
+            _customActionHandlers = value;
+            AddActionHandler(SemanticsActions.CustomAction, OnCustomSemanticsAction);
+        }
+    }
+
+    private void OnCustomSemanticsAction(object? args)
+    {
+        CustomSemanticsAction? action = CustomSemanticsAction.GetAction((int)args!);
+        if (action is not null && _customActionHandlers?.GetValueOrDefault(action) is { } callback)
+        {
+            callback();
+        }
+    }
+
     public void AddCustomActionHandler(CustomSemanticsAction action, Action handler)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -1675,7 +1956,7 @@ public sealed class SemanticsConfiguration
         var clone = new SemanticsConfiguration
         {
             IsSemanticBoundary = IsSemanticBoundary,
-            IsMergingSemanticsOfDescendants = IsMergingSemanticsOfDescendants,
+            _isMergingSemanticsOfDescendants = _isMergingSemanticsOfDescendants,
             ExplicitChildNodes = ExplicitChildNodes,
             IsBlockingSemanticsOfPreviouslyPaintedNodes = IsBlockingSemanticsOfPreviouslyPaintedNodes,
             IsBlockingUserActions = IsBlockingUserActions,
@@ -1688,32 +1969,30 @@ public sealed class SemanticsConfiguration
             _attributedValue = _attributedValue,
             _attributedIncreasedValue = _attributedIncreasedValue,
             _attributedDecreasedValue = _attributedDecreasedValue,
-            MinValue = MinValue,
-            MaxValue = MaxValue,
+            _minValue = _minValue,
+            _maxValue = _maxValue,
             _identifier = _identifier,
             _headingLevel = _headingLevel,
-            LinkUrl = LinkUrl,
-            MaxValueLength = MaxValueLength,
-            CurrentValueLength = CurrentValueLength,
-            ControlsNodes = ControlsNodes,
-            ValidationResult = ValidationResult,
-            TextSelection = TextSelection,
-            PlatformViewId = PlatformViewId,
-            Role = Role,
-            InputType = InputType,
-            HitTestBehavior = HitTestBehavior,
-            Flags = Flags,
-            Actions = Actions,
-            IndexInParent = IndexInParent,
-            SortKey = SortKey,
+            _linkUrl = _linkUrl,
+            _maxValueLength = _maxValueLength,
+            _currentValueLength = _currentValueLength,
+            _controlsNodes = _controlsNodes,
+            _validationResult = _validationResult,
+            _textSelection = _textSelection,
+            _platformViewId = _platformViewId,
+            _role = _role,
+            _inputType = _inputType,
+            _hitTestBehavior = _hitTestBehavior,
+            _flags = _flags,
+            _actions = _actions,
+            _indexInParent = _indexInParent,
+            _sortKey = _sortKey,
             _textDirection = _textDirection,
-            _hasBeenTextAnnotated = _hasBeenTextAnnotated,
-            _hasBeenFlagAnnotated = _hasBeenFlagAnnotated,
-            ScrollPosition = ScrollPosition,
-            ScrollExtentMax = ScrollExtentMax,
-            ScrollExtentMin = ScrollExtentMin,
-            ScrollChildCount = ScrollChildCount,
-            ScrollIndex = ScrollIndex,
+            _scrollPosition = _scrollPosition,
+            _scrollExtentMax = _scrollExtentMax,
+            _scrollExtentMin = _scrollExtentMin,
+            _scrollChildCount = _scrollChildCount,
+            _scrollIndex = _scrollIndex,
             _onScrollLeft = _onScrollLeft,
             _onScrollRight = _onScrollRight,
             _onScrollUp = _onScrollUp,
@@ -1761,6 +2040,7 @@ public sealed class SemanticsConfiguration
             clone._customActionHandlers = new Dictionary<CustomSemanticsAction, Action>(_customActionHandlers);
         }
 
+        clone._hasBeenAnnotated = _hasBeenAnnotated;
         return clone;
     }
 
@@ -1797,46 +2077,7 @@ public sealed class SemanticsConfiguration
     /// <summary>The shared empty configuration Flutter calls <c>_kEmptyConfig</c>.</summary>
     internal static SemanticsConfiguration Empty { get; } = new();
 
-    internal bool HasBeenAnnotated =>
-        _hasBeenTextAnnotated
-        || _hasBeenFlagAnnotated
-        || !string.IsNullOrWhiteSpace(Label)
-        || !string.IsNullOrWhiteSpace(Hint)
-        || !string.IsNullOrWhiteSpace(OnTapHint)
-        || !string.IsNullOrWhiteSpace(Tooltip)
-        || !string.IsNullOrWhiteSpace(Value)
-        || !string.IsNullOrWhiteSpace(IncreasedValue)
-        || !string.IsNullOrWhiteSpace(DecreasedValue)
-        || !string.IsNullOrWhiteSpace(MinValue)
-        || !string.IsNullOrWhiteSpace(MaxValue)
-        || Role != SemanticsRole.None
-        || InputType != SemanticsInputType.None
-        || HitTestBehavior != SemanticsHitTestBehavior.Defer
-        || Flags != SemanticsFlags.None
-        || Actions != SemanticsActions.None
-        || TextDirection.HasValue
-        || SortKey is not null
-        || IndexInParent.HasValue
-        || ScrollPosition.HasValue
-        || ScrollExtentMax.HasValue
-        || ScrollExtentMin.HasValue
-        || ScrollChildCount.HasValue
-        || ScrollIndex.HasValue
-        || HasActionHandlers
-        || HasCustomActionHandlers
-        || TraversalParentIdentifier is not null
-        || TraversalChildIdentifier is not null
-        || !string.IsNullOrEmpty(Identifier)
-        || HeadingLevel != 0
-        || LinkUrl is not null
-        || MaxValueLength.HasValue
-        || CurrentValueLength.HasValue
-        || ControlsNodes is not null
-        || ValidationResult != SemanticsValidationResult.None
-        || TextSelection.HasValue
-        || PlatformViewId.HasValue
-        || _hintOverrides is not null
-        || _localeForSubtree is not null;
+    internal bool HasBeenAnnotated => _hasBeenAnnotated;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
     {
@@ -1987,7 +2228,7 @@ public sealed class SemanticsConfiguration
             return;
         }
 
-        _hasBeenFlagAnnotated |= child._hasBeenFlagAnnotated;
+        _hasBeenAnnotated = true;
         Flags |= child.Flags;
         Actions |= child.EffectiveActions;
         AccessibilityFocusBlockType = _accessibilityFocusBlockType.Merge(child.AccessibilityFocusBlockType);

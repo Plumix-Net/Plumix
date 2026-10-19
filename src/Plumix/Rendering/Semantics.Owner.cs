@@ -30,6 +30,8 @@ public sealed partial class SemanticsOwner
     /// <remarks>Flutter's <c>SemanticsOwner.getSemanticsNode</c>.</remarks>
     public SemanticsNode? GetSemanticsNode(int id) => _nodes.GetValueOrDefault(id);
 
+    internal IEnumerable<SemanticsNode> RegisteredNodes => _nodes.Values;
+
     internal bool ContainsNodeId(int id) => _nodes.ContainsKey(id);
 
     internal void RegisterNode(SemanticsNode node)

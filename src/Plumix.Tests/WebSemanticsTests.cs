@@ -39,8 +39,10 @@ public sealed class WebSemanticsTests : IDisposable
             new Semantics(container: true, label: "slider", onIncrease: static () => { }, child: Leaf()),
             new Semantics(container: true, label: "image", image: true, child: Leaf()),
             new Semantics(container: true, label: "image button", image: true, button: true, child: Leaf()),
-            new Semantics(container: true, label: "tab", role: SemanticsRole.Tab, button: true, child: Leaf()),
-            new Semantics(container: true, label: "tooltip role", role: SemanticsRole.Tooltip, child: Leaf()),
+            new Semantics(
+                container: true, label: "tab", role: SemanticsRole.Tab, button: true, selected: false,
+                onTap: static () => { }, child: Leaf()),
+            new Semantics(container: true, label: "generic", child: Leaf()),
         ]));
 
         WebSemanticsElement link = Describe("link");
@@ -56,7 +58,7 @@ public sealed class WebSemanticsTests : IDisposable
         Assert.Equal(WebSemanticsRole.Button, Describe("image button").Role);
         Assert.Equal(WebSemanticsRole.Tab, Describe("tab").Role);
         Assert.Equal("tab", Describe("tab").Attributes["role"]);
-        Assert.Equal(WebSemanticsRole.Generic, Describe("tooltip role").Role);
+        Assert.Equal(WebSemanticsRole.Generic, Describe("generic").Role);
     }
 
     // Header tests and the heading test.
@@ -193,7 +195,9 @@ public sealed class WebSemanticsTests : IDisposable
     {
         _harness.Pump(new Column(children:
         [
-            new Semantics(container: true, label: "tab", role: SemanticsRole.Tab, selected: true, child: Leaf()),
+            new Semantics(
+                container: true, label: "tab", role: SemanticsRole.Tab, selected: true,
+                onTap: static () => { }, child: Leaf()),
             new Semantics(container: true, label: "item", selected: false, child: Leaf()),
             new Semantics(container: true, label: "checked", selected: true, @checked: true, child: Leaf()),
             new Semantics(container: true, label: "expander", expanded: true, child: Leaf()),
@@ -278,6 +282,8 @@ public sealed class WebSemanticsTests : IDisposable
                 container: true,
                 label: "number",
                 value: "0.5",
+                minValue: "0",
+                maxValue: "1",
                 role: SemanticsRole.ProgressBar,
                 child: Leaf()),
         ]));

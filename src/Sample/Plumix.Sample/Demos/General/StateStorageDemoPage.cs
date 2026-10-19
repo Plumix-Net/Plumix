@@ -47,7 +47,8 @@ internal sealed class StateStorageDemoPageState : State
                     "Drag past an edge to compare Flutter glow and stretch indicators; the observer readout " +
                     "receives scroll and dimension notifications across sibling subtrees. The readout is also " +
                     "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout; " +
-                    "its identified semantics node merges the readout label while optional text stays empty.",
+                    "its status node merges the readout label while optional text stays empty. " +
+                    "The list and its rows expose list/listItem roles with an explicit list boundary.",
                     style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Row(
                     spacing: 8,
@@ -101,12 +102,16 @@ internal sealed class RestorableStorageListState : State
     {
         Widget scrollView = new SingleChildScrollView(
             key: new PageStorageKey<string>("state-storage-list"),
-            child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 6,
-                children: Enumerable.Range(0, 18)
-                    .Select(BuildRow)
-                    .ToArray()));
+            child: new Semantics(
+                container: true,
+                explicitChildNodes: true,
+                role: SemanticsRole.List,
+                child: new Column(
+                    crossAxisAlignment: CrossAxisAlignment.Stretch,
+                    spacing: 6,
+                    children: Enumerable.Range(0, 18)
+                        .Select(BuildRow)
+                        .ToArray())));
         Widget indicatedScrollView = _useStretch
             ? new StretchingOverscrollIndicator(
                 axisDirection: AxisDirection.Down,
@@ -140,6 +145,8 @@ internal sealed class RestorableStorageListState : State
                         behavior: HitTestBehavior.Translucent,
                         child: new Semantics(
                             identifier: "scroll-observer-readout",
+                            role: SemanticsRole.Status,
+                            button: false,
                             label: string.Empty,
                             value: string.Empty,
                             hint: string.Empty,
@@ -173,12 +180,15 @@ internal sealed class RestorableStorageListState : State
 
     private static Widget BuildRow(int index)
     {
-        return new Container(
-            height: 44,
-            color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
-            padding: new Thickness(12, 0),
-            alignment: Alignment.CenterLeft,
-            child: new Text($"Stored row {index + 1}", style: new TextStyle(Color: Colors.Black)));
+        return new Semantics(
+            container: true,
+            role: SemanticsRole.ListItem,
+            child: new Container(
+                height: 44,
+                color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
+                padding: new Thickness(12, 0),
+                alignment: Alignment.CenterLeft,
+                child: new Text($"Stored row {index + 1}", style: new TextStyle(Color: Colors.Black))));
     }
 
     private static Widget BuildButton(string label, Action onTap)
