@@ -25,5 +25,6 @@ internal static class TestPlatformDefaults
     internal static void PinTargetPlatform()
     {
         PlatformDefaults.DebugDefaultTargetPlatform = TargetPlatform.Android;
+        ServicesBinding.Instance = new TestServicesBinding();
     }
 }

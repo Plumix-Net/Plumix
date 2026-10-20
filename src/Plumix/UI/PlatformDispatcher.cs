@@ -1,8 +1,12 @@
 using Avalonia.Threading;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.UI;
+
+public delegate void PlatformMessageCallback(
+    string name, ByteData? data, PlatformMessageResponseCallback callback);
 
 // Dart parity source (reference):
 // flutter/bin/cache/pkg/sky_engine/lib/ui/platform_dispatcher.dart
@@ -32,6 +36,138 @@ public sealed class PlatformDispatcher
     /// <summary>The ambient platform dispatcher.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.instance</c>.</remarks>
     public static PlatformDispatcher Instance { get; } = new();
+
+    public ChannelBuffers ChannelBuffers => ServicesBinding.Instance.ChannelBuffers;
+
+    private PlatformMessageCallback? _onPlatformMessage;
+    private ExecutionContext? _platformMessageContext;
+
+    [Obsolete("Use ChannelBuffers.SetListener instead.")]
+    public PlatformMessageCallback? OnPlatformMessage
+    {
+        get => _onPlatformMessage;
+        set
+        {
+            _onPlatformMessage = value;
+            _platformMessageContext = ExecutionContext.Capture();
+        }
+    }
+
+    /// <summary>The embedder's channel-listening notifications.</summary>
+    public event Action<string, bool>? ChannelUpdate;
+
+    public void SendChannelUpdate(string name, bool listening) => ChannelUpdate?.Invoke(name, listening);
+
+    /// <summary>Delivers an engine message, including the channel-buffer control protocol.</summary>
+    public void DispatchPlatformMessage(
+        string name, ByteData? data, PlatformMessageResponseCallback callback)
+    {
+        if (name == ChannelBuffers.KControlChannelName)
+        {
+            try
+            {
+                ChannelBuffers.HandleMessage(data!);
+            }
+            finally
+            {
+                callback(null);
+            }
+        }
+        else if (_onPlatformMessage is { } handler)
+        {
+            if (_platformMessageContext is { } context)
+            {
+                ExecutionContext.Run(context, _ => handler(name, data, callback), null);
+            }
+            else
+            {
+                handler(name, data, callback);
+            }
+        }
+        else
+        {
+            ChannelBuffers.Push(name, data, callback);
+        }
+    }
+
+    /// <summary>Sends a framework message through the in-process host transport.</summary>
+    public void SendPlatformMessage(
+        string name, ByteData? data, PlatformMessageResponseCallback? callback)
+        => SendPlatformMessage(name, data, callback, ServicesBinding.Instance.DefaultBinaryMessenger,
+            exception => FlutterError.ReportError(
+                new FlutterErrorDetails(exception: exception, stack: exception.StackTrace)));
+
+    internal void SendPlatformMessage(
+        string name, ByteData? data, PlatformMessageResponseCallback? callback,
+        BinaryMessenger messenger, Action<Exception> onError)
+    {
+        ExecutionContext? context = ExecutionContext.Capture();
+        Task<ByteData?> result = SendPlatformMessageAsync(name, data, messenger);
+        EventLoop.RunAsync(async () =>
+        {
+            ByteData? reply;
+            try
+            {
+                reply = await result;
+            }
+            catch (Exception exception)
+            {
+                onError(exception);
+                return;
+            }
+            if (callback is null)
+            {
+                return;
+            }
+
+            try
+            {
+                if (context is null)
+                {
+                    callback(reply);
+                }
+                else
+                {
+                    ExecutionContext.Run(context, _ => callback(reply), null);
+                }
+            }
+            catch (Exception exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(exception: exception, stack: exception.StackTrace));
+            }
+        });
+    }
+
+    internal Task<ByteData?> SendPlatformMessageAsync(string name, ByteData? data, BinaryMessenger messenger) =>
+        (messenger is PlatformBinaryMessenger platform
+            ? platform.SendToPlatform(name, data)
+            : messenger.Send(name, data)) ?? Task.FromResult<ByteData?>(null);
+
+    private string _initialLifecycleState = string.Empty;
+    private bool _initialLifecycleStateAccessed;
+
+    public string InitialLifecycleState
+    {
+        get
+        {
+            _initialLifecycleStateAccessed = true;
+            return _initialLifecycleState;
+        }
+    }
+
+    public void UpdateInitialLifecycleState(string state)
+    {
+        if (!_initialLifecycleStateAccessed)
+        {
+            _initialLifecycleState = state;
+        }
+    }
+
+    internal void ResetInitialLifecycleStateForTests(string state, bool accessed = false)
+    {
+        _initialLifecycleState = state;
+        _initialLifecycleStateAccessed = accessed;
+    }
 
     /// <summary>The platform's implicit view, when the application is running in single-view mode.</summary>
     /// <remarks>

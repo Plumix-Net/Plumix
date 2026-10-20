@@ -26,6 +26,11 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
     private int _metricsChanges;
     private int _brightnessChanges;
     private int _memoryPressureEvents;
+    private readonly ChannelBuffers _messageBuffers = new();
+    private const string DemoChannel = "plumix/lifecycle-buffer-demo";
+    private int _messageNumber;
+    private string _lastMessage = "none";
+    private bool _listening;
 
     public override void InitState()
     {
@@ -53,6 +58,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
 
     public override void Dispose()
     {
+        _messageBuffers.ClearListener(DemoChannel);
         WidgetsBinding.Instance.RemoveObserver(this);
         _lifecycleListener.Dispose();
         _disposableContext.Dispose();
@@ -125,6 +131,26 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                                     onPressed: () => WidgetsBinding.Instance.HandleMemoryPressure(),
                                     child: new Text("Simulate memory pressure")),
                             ]),
+                        new Text("Messages before listening", style: new TextStyle(FontSize: 16)),
+                        new Text(
+                            "Queue several messages, then start listening. The default buffer keeps the latest "
+                            + "message; new messages arrive immediately while listening."),
+                        new Text(
+                            $"Sent: {_messageNumber} · Received: {_lastMessage} · "
+                            + $"Listening: {(_listening ? "true" : "false")}"),
+                        new Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children:
+                            [
+                                new TextButton(onPressed: QueueMessage, child: new Text("Queue message")),
+                                new TextButton(
+                                    onPressed: _listening ? null : StartListening,
+                                    child: new Text("Start listening")),
+                                new TextButton(
+                                    onPressed: _listening ? StopListening : null,
+                                    child: new Text("Stop listening")),
+                            ]),
                     ])));
     }
 
@@ -136,6 +162,32 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
             padding: new Thickness(12),
             child: new Text(
                 $"Animation status: {_controller.Status}\nStatusTransitionWidget builds: {_statusBuildCount}"));
+    }
+
+    private void QueueMessage()
+    {
+        SetState(() => _messageNumber++);
+        _messageBuffers.Push(DemoChannel, new StringCodec().EncodeMessage($"Message {_messageNumber}"), _ => { });
+    }
+
+    private void StartListening()
+    {
+        SetState(() => _listening = true);
+        _messageBuffers.SetListener(DemoChannel, (data, reply) =>
+        {
+            if (Mounted)
+            {
+                SetState(() => _lastMessage = new StringCodec().DecodeMessage(data) ?? "empty");
+            }
+
+            reply(null);
+        });
+    }
+
+    private void StopListening()
+    {
+        _messageBuffers.ClearListener(DemoChannel);
+        SetState(() => _listening = false);
     }
 
     private void HandleLifecycleStateChanged(AppLifecycleState state)

@@ -33,7 +33,8 @@ public class BasicMessageChannel<T>
     public MessageCodec<T> Codec { get; }
 
     /// <summary>The messenger which sends the bytes for this channel.</summary>
-    public BinaryMessenger BinaryMessenger => _binaryMessenger ?? ServicesBinding.Instance.DefaultBinaryMessenger;
+    public BinaryMessenger BinaryMessenger => PlatformChannelProfiling.Wrap(
+        this, _binaryMessenger ?? ServicesBinding.Instance.DefaultBinaryMessenger, Codec);
 
     /// <summary>Sends the specified <paramref name="message"/> to the platform plugins on this channel.</summary>
     /// <returns>The reply, or <c>null</c> if the reply was empty.</returns>
@@ -88,7 +89,8 @@ public class MethodChannel
     public MethodCodec Codec { get; }
 
     /// <summary>The messenger which sends the bytes for this channel.</summary>
-    public BinaryMessenger BinaryMessenger => _binaryMessenger ?? ServicesBinding.Instance.DefaultBinaryMessenger;
+    public BinaryMessenger BinaryMessenger => PlatformChannelProfiling.Wrap(
+        this, _binaryMessenger ?? ServicesBinding.Instance.DefaultBinaryMessenger, Codec);
 
     /// <summary>Invokes a <paramref name="method"/> on this channel with the specified
     /// <paramref name="arguments"/>.</summary>
@@ -172,7 +174,10 @@ public class MethodChannel
     {
         ArgumentNullException.ThrowIfNull(method);
         ByteData input = Codec.EncodeMethodCall(new MethodCall(method, arguments));
-        Task<ByteData?>? send = BinaryMessenger.Send(Name, input);
+        BinaryMessenger messenger = BinaryMessenger;
+        Task<ByteData?>? send = PlatformChannelProfiling.ShouldProfilePlatformChannels
+            ? ((PlatformChannelProfiling.ProfiledBinaryMessenger)messenger).SendWithPostfix(Name, $"#{method}", input)
+            : messenger.Send(Name, input);
         ByteData? result = send is null ? null : await send;
         if (result is null)
         {
@@ -346,7 +351,10 @@ internal sealed class BroadcastObservable<T> : IObservable<T>
         _observers.Add(observer);
         if (_observers.Count == 1)
         {
-            _ = OnListen?.Invoke();
+            if (OnListen is { } onListen)
+            {
+                EventLoop.RunAsync(onListen);
+            }
         }
 
         return new Subscription(this, observer);
@@ -385,7 +393,10 @@ internal sealed class BroadcastObservable<T> : IObservable<T>
         _observers.Clear();
         if (hadObservers)
         {
-            _ = OnCancel?.Invoke();
+            if (OnCancel is { } onCancel)
+            {
+                EventLoop.RunAsync(onCancel);
+            }
         }
     }
 
@@ -411,7 +422,10 @@ internal sealed class BroadcastObservable<T> : IObservable<T>
             _observer = null;
             if (_owner._observers.Remove(observer) && _owner._observers.Count == 0)
             {
-                _ = _owner.OnCancel?.Invoke();
+                if (_owner.OnCancel is { } onCancel)
+                {
+                    EventLoop.RunAsync(onCancel);
+                }
             }
         }
     }

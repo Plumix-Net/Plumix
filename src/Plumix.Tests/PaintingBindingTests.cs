@@ -311,7 +311,7 @@ public sealed class PaintingBindingTests : IDisposable
         }
     }
 
-    private sealed class RecordingServicesBinding : ServicesBinding
+    private sealed class RecordingServicesBinding : TestServicesBinding
     {
         public RecordingBundle Bundle { get; } = new();
         public override AssetBundle RootBundle => Bundle;
@@ -327,7 +327,7 @@ public sealed class PaintingBindingTests : IDisposable
         public override void Evict(string key) => Evicted = key;
     }
 
-    private sealed class DeferredServicesBinding : ServicesBinding
+    private sealed class DeferredServicesBinding : TestServicesBinding
     {
         public TaskCompletionSource Completion { get; } = new();
         public override Task HandleSystemMessage(object systemMessage) => Completion.Task;

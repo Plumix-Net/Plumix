@@ -5,6 +5,7 @@ using Plumix.Widgets;
 namespace Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/binary_messenger.dart
+// Dart parity source: flutter/packages/flutter/lib/src/services/binding.dart
 
 /// <summary>Signature for listening to changes in the <see cref="SystemUiMode"/>.</summary>
 /// <remarks>Set by <see cref="SystemChrome.SetSystemUIChangeCallback"/>.</remarks>
@@ -85,6 +86,9 @@ public class PlatformBinaryMessenger : BinaryMessenger
     }
 
     public override Task<ByteData?>? Send(string channel, ByteData? message)
+        => SendToPlatform(channel, message);
+
+    internal Task<ByteData?>? SendToPlatform(string channel, ByteData? message)
     {
         ArgumentNullException.ThrowIfNull(channel);
         if (!_platformHandlers.TryGetValue(channel, out MessageHandler? handler))
@@ -108,7 +112,7 @@ public class PlatformBinaryMessenger : BinaryMessenger
     }
 
     /// <summary>Whether a framework handler is registered for <paramref name="channel"/>.</summary>
-    public bool HasMessageHandler(string channel) => _handlers.ContainsKey(channel);
+    public virtual bool HasMessageHandler(string channel) => _handlers.ContainsKey(channel);
 
     private static void Register(Dictionary<string, MessageHandler> handlers, string channel, MessageHandler? handler)
     {
@@ -126,6 +130,52 @@ public class PlatformBinaryMessenger : BinaryMessenger
         ByteData? data = await reply;
         callback?.Invoke(data);
     }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/services/binding.dart (_DefaultBinaryMessenger)
+internal sealed class DefaultBinaryMessenger(ChannelBuffers buffers) : PlatformBinaryMessenger
+{
+    public override Task HandlePlatformMessage(
+        string channel, ByteData? data, PlatformMessageResponseCallback? callback)
+    {
+        buffers.Push(channel, data, reply => callback?.Invoke(reply));
+        return Task.CompletedTask;
+    }
+
+    // The in-process transport already returns a one-shot Task, rather than an engine response id
+    // that needs a Completer. Preserve the awaiting caller's context (including test bindings).
+    public override Task<ByteData?> Send(string channel, ByteData? message) =>
+        PlatformDispatcher.Instance.SendPlatformMessageAsync(channel, message, this);
+
+    public override void SetMessageHandler(string channel, MessageHandler? handler)
+    {
+        if (handler is null)
+        {
+            buffers.ClearListener(channel);
+        }
+        else
+        {
+            buffers.SetListener(channel, (data, callback) => EventLoop.RunAsync(async () =>
+            {
+                ByteData? response = null;
+                try
+                {
+                    Task<ByteData?>? result = handler(data);
+                    response = result is null ? null : await result;
+                }
+                catch (Exception exception)
+                {
+                    ServicesDebug.ReportError(exception, "during a platform message callback");
+                }
+                finally
+                {
+                    callback(response);
+                }
+            }));
+        }
+    }
+
+    public override bool HasMessageHandler(string channel) => buffers.HasListener(channel);
 }
 
 /// <summary>
@@ -150,6 +200,8 @@ public class ServicesBinding
     /// </remarks>
     public ServicesBinding()
     {
+        DefaultBinaryMessenger = CreateBinaryMessenger();
+        RestorationManager = CreateRestorationManager();
         new MethodChannel(SystemChannels.Platform.Name, SystemChannels.Platform.Codec, DefaultBinaryMessenger)
             .SetMethodCallHandler(HandlePlatformMessage);
         new BasicMessageChannel<object?>(
@@ -166,8 +218,10 @@ public class ServicesBinding
                 await HandleAccessibilityMessage(message!);
                 return null;
             });
-        RestorationManager = CreateRestorationManager();
-        _ = InitKeyboard();
+        new BasicMessageChannel<string?>(
+                SystemChannels.Lifecycle.Name, SystemChannels.Lifecycle.Codec, DefaultBinaryMessenger)
+            .SetMessageHandler(HandleLifecycleMessage);
+        EventLoop.RunAsync(InitKeyboard);
     }
 
     /// <summary>Notifies when the accessibility focus on the system has changed.</summary>
@@ -227,7 +281,63 @@ public class ServicesBinding
     public static ServicesBinding Instance { get; set; } = new ServicesBinding();
 
     /// <summary>The messenger every channel uses unless it was given one explicitly.</summary>
-    public virtual BinaryMessenger DefaultBinaryMessenger { get; } = new PlatformBinaryMessenger();
+    public virtual BinaryMessenger DefaultBinaryMessenger { get; }
+
+    /// <summary>The incoming message queues owned by the engine side of this binding.</summary>
+    public ChannelBuffers ChannelBuffers { get; } = new();
+
+    protected virtual BinaryMessenger CreateBinaryMessenger() => new DefaultBinaryMessenger(ChannelBuffers);
+
+    internal static void InitServiceExtensions()
+    {
+        if (Constants.KDebugMode)
+        {
+            BindingBase.RegisterStringServiceExtension(
+                ServicesServiceExtensions.Evict.DartName(),
+                static () => Task.FromResult(string.Empty),
+                static asset =>
+                {
+                    Painting.PaintingBinding.Instance.Evict(asset);
+                    return Task.CompletedTask;
+                });
+        }
+
+        if (!Constants.KReleaseMode)
+        {
+            BindingBase.RegisterBoolServiceExtension(
+                ServicesServiceExtensions.ProfilePlatformChannels.DartName(),
+                static () => Task.FromResult(PlatformChannelProfiling.DebugProfilePlatformChannels),
+                static enabled =>
+                {
+                    PlatformChannelProfiling.DebugProfilePlatformChannels = enabled;
+                    return Task.CompletedTask;
+                });
+        }
+    }
+
+    private static Task<string?> HandleLifecycleMessage(string? message)
+    {
+        AppLifecycleState state = message switch
+        {
+            "AppLifecycleState.resumed" => AppLifecycleState.Resumed,
+            "AppLifecycleState.inactive" => AppLifecycleState.Inactive,
+            "AppLifecycleState.hidden" => AppLifecycleState.Hidden,
+            "AppLifecycleState.paused" => AppLifecycleState.Paused,
+            "AppLifecycleState.detached" => AppLifecycleState.Detached,
+            _ => throw new InvalidOperationException($"Unknown app lifecycle state: {message}"),
+        };
+        WidgetsBinding.Instance.HandleAppLifecycleStateChanged(state);
+        return Task.FromResult<string?>(null);
+    }
+
+    protected internal void ReadInitialLifecycleStateFromNativeWindow()
+    {
+        if (SchedulerBinding.Instance.LifecycleState is null
+            && PlatformDispatcher.Instance.InitialLifecycleState is { Length: > 0 } state)
+        {
+            EventLoop.RunAsync(() => HandleLifecycleMessage(state));
+        }
+    }
 
     /// <summary>The state restoration manager owned by this services binding.</summary>
     public RestorationManager RestorationManager { get; internal set; }

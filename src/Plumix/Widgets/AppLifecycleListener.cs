@@ -243,6 +243,8 @@ public partial class WidgetsBinding
         // `BindingBase()` runs `initServiceExtensions` after `initInstances`; BindingBase's own link of
         // that chain registers first, the widgets binding's (from InitInstances) follows in Dart.
         BindingBase.InitServiceExtensions();
+        ServicesBinding.InitServiceExtensions();
+        ServicesBinding.Instance.ReadInitialLifecycleStateFromNativeWindow();
 
         if (!Constants.KReleaseMode)
         {

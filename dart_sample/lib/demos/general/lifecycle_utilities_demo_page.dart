@@ -1,3 +1,6 @@
+import 'dart:ui' as ui;
+
+import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 class LifecycleUtilitiesDemoPage extends StatefulWidget {
@@ -19,6 +22,11 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
   int _metricsChanges = 0;
   int _brightnessChanges = 0;
   int _memoryPressureEvents = 0;
+  final ui.ChannelBuffers _messageBuffers = ui.ChannelBuffers();
+  static const String _demoChannel = 'plumix/lifecycle-buffer-demo';
+  int _messageNumber = 0;
+  String _lastMessage = 'none';
+  bool _listening = false;
 
   @override
   void initState() {
@@ -57,6 +65,7 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
 
   @override
   void dispose() {
+    _messageBuffers.clearListener(_demoChannel);
     WidgetsBinding.instance.removeObserver(this);
     _lifecycleListener.dispose();
     _disposableContext.dispose();
@@ -142,6 +151,35 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
                 ),
               ],
             ),
+            const Text(
+              'Messages before listening',
+              style: TextStyle(fontSize: 16),
+            ),
+            const Text(
+              'Queue several messages, then start listening. The default buffer '
+              'keeps the latest message; new messages arrive immediately while listening.',
+            ),
+            Text(
+              'Sent: $_messageNumber · Received: $_lastMessage · Listening: $_listening',
+            ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                TextButton(
+                  onPressed: _queueMessage,
+                  child: const Text('Queue message'),
+                ),
+                TextButton(
+                  onPressed: _listening ? null : _startListening,
+                  child: const Text('Start listening'),
+                ),
+                TextButton(
+                  onPressed: _listening ? _stopListening : null,
+                  child: const Text('Stop listening'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -158,6 +196,32 @@ class _LifecycleUtilitiesDemoPageState extends State<LifecycleUtilitiesDemoPage>
         'StatusTransitionWidget builds: $_statusBuildCount',
       ),
     );
+  }
+
+  void _queueMessage() {
+    setState(() => _messageNumber++);
+    _messageBuffers.push(
+      _demoChannel,
+      const StringCodec().encodeMessage('Message $_messageNumber'),
+      (_) {},
+    );
+  }
+
+  void _startListening() {
+    setState(() => _listening = true);
+    _messageBuffers.setListener(_demoChannel, (data, reply) {
+      if (mounted) {
+        setState(() {
+          _lastMessage = const StringCodec().decodeMessage(data) ?? 'empty';
+        });
+      }
+      reply(null);
+    });
+  }
+
+  void _stopListening() {
+    _messageBuffers.clearListener(_demoChannel);
+    setState(() => _listening = false);
   }
 
   void _handleLifecycleStateChanged(AppLifecycleState state) {

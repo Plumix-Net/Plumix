@@ -509,6 +509,18 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/DragTargetTests.cs`
   - `src/Plumix.Tests/TapRegionTests.cs`
 
+### Platform Channels
+
+- Read First: `src/Plumix/UI/BinaryMessenger.cs` (services binding and default messenger),
+  `PlatformChannel.cs` (basic/method/event channels), `ChannelBuffers.cs` (engine inbound queues and
+  control protocol), `PlatformChannelProfiling.cs` (traffic statistics and timeline), and
+  `PlatformDispatcher.cs` (engine message ingress/egress).
+- Primary Tests: `PlatformChannelTests.cs`, `ChannelBuffersDartParityTests.cs`,
+  `PlatformChannelProfilingDartParityTests.cs`, `ServicesChannelsDartParityTests.cs`, `MessageCodecsTests.cs`.
+- The default messenger buffers inbound messages; `HandlePlatformMessage` completes when queued,
+  before any delayed handler reply. `PlatformBinaryMessenger` is the explicit synchronous custom
+  messenger. A newly registered default listener drains through framework microtasks, even if empty.
+
 ### Focus, Keyboard, Actions, and Shortcuts
 
 - Goal: focus ownership/traversal, host key dispatch, focused keyboard listeners, intent/action routing, shortcuts,

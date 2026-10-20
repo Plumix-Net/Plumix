@@ -37,10 +37,11 @@ DART_DEMOS = REPO / "dart_sample" / "lib"
 # Matches both `// Dart parity source: flutter/packages/...` and the `(reference)` / plural forms,
 # plus bare continuation lines listing a second dart path. Material/Cupertino ports reference the
 # extracted pub packages (`material_ui/lib/src/...`, `cupertino_ui/lib/src/...`) instead of the
-# framework checkout.
+# framework checkout. Engine dart:ui primitives live in engine/src/flutter/lib/ui/.
 MARKER = re.compile(
     r"(?:^|\s)((?:flutter/)?packages/flutter(?:_localizations)?/lib/src/[\w/]+(?:\.\w+)*\.dart"
-    r"|(?:material_ui|cupertino_ui)/lib/src/[\w/]+(?:\.\w+)*\.dart)"
+    r"|(?:material_ui|cupertino_ui)/lib/src/[\w/]+(?:\.\w+)*\.dart"
+    r"|(?:flutter/)?engine/src/flutter/lib/ui/[\w/]+(?:\.\w+)*\.dart)"
 )
 
 
@@ -169,7 +170,7 @@ def render(
         "framework sources. **Do not edit by hand** — fix the marker in the C# file and regenerate.",
         "",
         "Use it to go straight from a Flutter file to everything on the C# side (and back) without",
-        "searching. Paths under `packages/flutter/...` resolve inside the pinned checkout; paths under",
+        "searching. Paths under `packages/flutter/...` and `engine/...` resolve inside the pinned checkout; paths under",
         "`material_ui/...` / `cupertino_ui/...` resolve inside the pinned pub packages — see",
         "`AGENTS.md` > Local Reference Paths for the pins and the symlinks.",
         "",
