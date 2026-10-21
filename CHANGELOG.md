@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Signed radii, rounded geometry, native superellipse hit tests and RSTransform match Dart (ui/geometry.dart).
 - Breaking: Native paragraph metrics, variable fonts, shadows and text paints match SkParagraph (ui/text.dart).
 - Breaking: Buffered platform channels and traffic profiling match Dart (binding.dart; platform_channel.dart).
 - Breaking: Paragraph inline semantics, span node reuse and scaled widget bounds match Dart (rendering/paragraph.dart).

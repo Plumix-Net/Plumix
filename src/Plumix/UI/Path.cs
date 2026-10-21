@@ -268,13 +268,7 @@ public sealed class Path
     // Dart parity source: dart:ui Path.addRRect.
     public void AddRRect(RRect rrect)
     {
-        // dart:ui keeps an unsorted rect as given; Skia sorts it when the contour is added.
-        if (rrect.Width < 0.0 || rrect.Height < 0.0)
-        {
-            rrect = new RRect(Sorted(rrect.Rect), rrect.TopLeft, rrect.TopRight, rrect.BottomRight, rrect.BottomLeft);
-        }
-
-        RRect scaled = rrect.ScaleRadii();
+        RRect scaled = rrect.NormalizeForPaint();
         Plumix.Rendering.Radius topLeft = scaled.TopLeft;
         bool uniformCircular = topLeft.X == topLeft.Y
                                && scaled.TopRight == topLeft

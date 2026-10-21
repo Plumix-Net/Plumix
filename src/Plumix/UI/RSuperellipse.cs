@@ -8,107 +8,93 @@ namespace Plumix.UI;
 /// <summary>A rectangle whose corners use Flutter's continuous rounded-superellipse contour.</summary>
 public readonly record struct RSuperellipse
 {
-    public RSuperellipse(
-        Rect rect,
-        Radius topLeft,
-        Radius topRight,
-        Radius bottomRight,
-        Radius bottomLeft)
-    {
-        Rect = rect;
-        TopLeft = topLeft;
-        TopRight = topRight;
-        BottomRight = bottomRight;
-        BottomLeft = bottomLeft;
-    }
+    private readonly RoundRectGeometry _geometry;
 
-    public Rect Rect { get; }
+    public RSuperellipse(Rect rect, Radius topLeft, Radius topRight, Radius bottomRight, Radius bottomLeft)
+        : this(new RoundRectGeometry(rect.Left, rect.Top, rect.Right, rect.Bottom,
+            topLeft, topRight, bottomRight, bottomLeft)) { }
 
-    public Radius TopLeft { get; }
+    private RSuperellipse(RoundRectGeometry geometry) => _geometry = geometry;
 
-    public Radius TopRight { get; }
+    public Rect Rect => _geometry.OuterRect;
+    public Rect OuterRect => _geometry.OuterRect;
+    public Radius TopLeft => _geometry.TopLeft;
+    public Radius TopRight => _geometry.TopRight;
+    public Radius BottomRight => _geometry.BottomRight;
+    public Radius BottomLeft => _geometry.BottomLeft;
+    public double Left => _geometry.Left;
+    public double Top => _geometry.Top;
+    public double Right => _geometry.Right;
+    public double Bottom => _geometry.Bottom;
+    public double Width => _geometry.Width;
+    public double Height => _geometry.Height;
+    public Point Center => _geometry.Center;
+    public double ShortestSide => _geometry.ShortestSide;
+    public double LongestSide => _geometry.LongestSide;
+    public Rect SafeInnerRect => _geometry.SafeInnerRect;
+    public Rect MiddleRect => _geometry.MiddleRect;
+    public Rect WideMiddleRect => _geometry.WideMiddleRect;
+    public Rect TallMiddleRect => _geometry.TallMiddleRect;
+    public bool IsEmpty => _geometry.IsEmpty;
+    public bool IsFinite => _geometry.IsFinite;
+    public bool IsRect => _geometry.IsRect;
+    public bool IsStadium => _geometry.IsStadium;
+    public bool IsEllipse => _geometry.IsEllipse;
+    public bool IsCircle => _geometry.IsCircle;
+    public bool HasNaN => _geometry.HasNaN;
+    public Radius TlRadius => TopLeft;
+    public double TlRadiusX => TopLeft.X;
+    public double TlRadiusY => TopLeft.Y;
+    public Radius TrRadius => TopRight;
+    public double TrRadiusX => TopRight.X;
+    public double TrRadiusY => TopRight.Y;
+    public Radius BrRadius => BottomRight;
+    public double BrRadiusX => BottomRight.X;
+    public double BrRadiusY => BottomRight.Y;
+    public Radius BlRadius => BottomLeft;
+    public double BlRadiusX => BottomLeft.X;
+    public double BlRadiusY => BottomLeft.Y;
 
-    public Radius BottomRight { get; }
-
-    public Radius BottomLeft { get; }
-
-    public Rect OuterRect => Rect;
-
-    public double Width => Rect.Width;
-
-    public double Height => Rect.Height;
-
-    public static RSuperellipse Zero { get; } = new(default, Radius.Zero, Radius.Zero, Radius.Zero, Radius.Zero);
-
+    public static RSuperellipse Zero => default;
     public static RSuperellipse FromRectAndRadius(Rect rect, Radius radius) =>
         new(rect, radius, radius, radius, radius);
-
+    public static RSuperellipse FromRectAndRadius(Rect rect, double radius) =>
+        FromRectAndRadius(rect, Radius.Circular(radius));
+    public static RSuperellipse FromRectXY(Rect rect, double radiusX, double radiusY) =>
+        FromRectAndRadius(rect, new Radius(radiusX, radiusY));
+    public static RSuperellipse FromLTRBXY(
+        double left, double top, double right, double bottom, double radiusX, double radiusY) =>
+        FromLTRBR(left, top, right, bottom, new Radius(radiusX, radiusY));
+    public static RSuperellipse FromLTRBR(double left, double top, double right, double bottom, Radius radius) =>
+        FromLTRBAndCorners(left, top, right, bottom, radius, radius, radius, radius);
+    public static RSuperellipse FromLTRBAndCorners(
+        double left, double top, double right, double bottom,
+        Radius topLeft = default, Radius topRight = default,
+        Radius bottomRight = default, Radius bottomLeft = default) =>
+        new(new RoundRectGeometry(left, top, right, bottom, topLeft, topRight, bottomRight, bottomLeft));
     public static RSuperellipse FromRectAndCorners(
-        Rect rect,
-        Radius? topLeft = null,
-        Radius? topRight = null,
-        Radius? bottomRight = null,
-        Radius? bottomLeft = null) => new(
-        rect,
-        topLeft ?? Radius.Zero,
-        topRight ?? Radius.Zero,
-        bottomRight ?? Radius.Zero,
-        bottomLeft ?? Radius.Zero);
+        Rect rect, Radius? topLeft = null, Radius? topRight = null,
+        Radius? bottomRight = null, Radius? bottomLeft = null) =>
+        new(rect, topLeft ?? default, topRight ?? default, bottomRight ?? default, bottomLeft ?? default);
 
-    public RSuperellipse Shift(Point offset) => new(
-        new Rect(Rect.Position + (Vector)offset, Rect.Size),
-        TopLeft,
-        TopRight,
-        BottomRight,
-        BottomLeft);
-
-    public RSuperellipse Inflate(double delta) => new(
-        Rect.Inflate(delta),
-        InflateRadius(TopLeft, delta),
-        InflateRadius(TopRight, delta),
-        InflateRadius(BottomRight, delta),
-        InflateRadius(BottomLeft, delta));
-
+    public RSuperellipse Shift(Point offset) => new(_geometry.Shift(offset));
+    public RSuperellipse Inflate(double delta) => new(_geometry.Inflate(delta));
     public RSuperellipse Deflate(double delta) => Inflate(-delta);
+    public RSuperellipse ScaleRadii() => new(_geometry.ScaleRadii());
+    public static RSuperellipse? Lerp(RSuperellipse? a, RSuperellipse? b, double t) => a is { } start
+        ? new RSuperellipse(start._geometry.LerpTo(b?._geometry, t))
+        : b is { } end ? new RSuperellipse(end._geometry.LerpTo(null, 1 - t)) : null;
+    public override string ToString() => _geometry.Format(nameof(RSuperellipse));
 
-    public RSuperellipse ScaleRadii()
-    {
-        double scale = 1.0;
-        scale = MinScale(scale, BottomLeft.Y + TopLeft.Y, Height);
-        scale = MinScale(scale, TopLeft.X + TopRight.X, Width);
-        scale = MinScale(scale, TopRight.Y + BottomRight.Y, Height);
-        scale = MinScale(scale, BottomRight.X + BottomLeft.X, Width);
-        if (scale >= 1.0)
-        {
-            return this;
-        }
-
-        return new RSuperellipse(
-            Rect,
-            Radius.Elliptical(TopLeft.X * scale, TopLeft.Y * scale),
-            Radius.Elliptical(TopRight.X * scale, TopRight.Y * scale),
-            Radius.Elliptical(BottomRight.X * scale, BottomRight.Y * scale),
-            Radius.Elliptical(BottomLeft.X * scale, BottomLeft.Y * scale));
-    }
-
-    public bool Contains(Point point) => Rect.Contains(point) && ToPath().Contains(point);
+    public bool Contains(Point point) => SuperellipseGeometry.Contains(this, point);
 
     public Path ToPath()
     {
         var path = new Path();
-        RoundSuperellipsePathBuilder.AddToPath(path, ScaleRadii());
+        RoundSuperellipsePathBuilder.AddToPath(path, new RSuperellipse(_geometry.NormalizeForPaint()));
         return path;
     }
 
-    private static Radius InflateRadius(Radius radius, double delta) =>
-        Radius.Elliptical(Math.Max(0.0, radius.X + delta), Math.Max(0.0, radius.Y + delta));
-
-    private static double MinScale(double scale, double sum, double limit)
-    {
-        return sum > limit && sum != 0.0
-            ? Math.Min(scale, limit / sum)
-            : scale;
-    }
 }
 
 // Port of Flutter engine's impeller::RoundSuperellipseParam path dispatch. The engine deliberately
@@ -116,9 +102,9 @@ public readonly record struct RSuperellipse
 internal static class RoundSuperellipsePathBuilder
 {
     private const double GapFactor = 0.29289321881;
-    private const double CloseEnough = 1e-5;
+    private const double CloseEnough = 1e-3;
 
-    private static readonly (double N, double Kxj)[] NAndXjTable =
+    internal static readonly (double N, double Kxj)[] NAndXjTable =
     [
         (2.00000000, 1.13276676),
         (2.18349805, 1.20311921),
@@ -156,7 +142,7 @@ internal static class RoundSuperellipsePathBuilder
         bool allCornersSame = shape.TopLeft == shape.TopRight
                               && shape.TopRight == shape.BottomRight
                               && shape.BottomRight == shape.BottomLeft
-                              && shape.TopLeft != Radius.Zero;
+                              && shape.TopLeft.X > 0 && shape.TopLeft.Y > 0;
         if (allCornersSame)
         {
             Quadrant quadrant = ComputeQuadrant(

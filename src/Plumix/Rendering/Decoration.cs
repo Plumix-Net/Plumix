@@ -9,6 +9,7 @@ using Plumix.Painting;
 // Dart parity source: flutter/packages/flutter/lib/src/painting/shape_decoration.dart
 // Dart parity source: flutter/packages/flutter/lib/src/painting/border_radius.dart
 // Dart parity source: flutter/packages/flutter/lib/src/painting/borders.dart
+// Dart parity source: flutter/engine/src/flutter/lib/ui/geometry.dart (Radius)
 
 namespace Plumix.Rendering;
 
@@ -136,54 +137,57 @@ public abstract class BoxPainter : IDisposable
     }
 }
 
+// Dart parity source: flutter/engine/src/flutter/lib/ui/geometry.dart (Radius)
 public readonly record struct Radius
 {
-    public Radius(double x, double y)
-    {
-        X = Math.Max(0.0, x);
-        Y = Math.Max(0.0, y);
-    }
+    public Radius(double x, double y) { X = x; Y = y; }
 
     public double X { get; }
-
     public double Y { get; }
-
     public static Radius Zero => new(0.0, 0.0);
-
     public static implicit operator Radius(double value) => Circular(value);
+    public static Radius Circular(double radius) => new(radius, radius);
+    public static Radius Elliptical(double x, double y) => new(x, y);
 
-    public static Radius Circular(double radius)
-    {
-        double effectiveRadius = Math.Max(0.0, radius);
-        return new Radius(effectiveRadius, effectiveRadius);
-    }
+    // Compatibility convenience; Dart clamps at the RRect-like inflation boundary.
+    public Radius Deflate(double amount) => new(Math.Max(0.0, X - amount), Math.Max(0.0, Y - amount));
 
-    public static Radius Elliptical(double x, double y)
-    {
-        return new Radius(x, y);
-    }
+    public Radius Clamp(Radius maximum) => Clamp(minimum: null, maximum: maximum);
 
-    public Radius Deflate(double amount)
-    {
-        return new Radius(Math.Max(0.0, X - amount), Math.Max(0.0, Y - amount));
-    }
+    public Radius Clamp(Radius? minimum = null, Radius? maximum = null) => ClampValues(
+        minimum?.X, minimum?.Y, maximum?.X, maximum?.Y);
 
-    public Radius Clamp(Radius maximum)
-    {
-        return new Radius(Math.Min(X, maximum.X), Math.Min(Y, maximum.Y));
-    }
+    public Radius ClampValues(
+        double? minimumX = null,
+        double? minimumY = null,
+        double? maximumX = null,
+        double? maximumY = null) => new(
+            CurveFormat.ClampDouble(X, minimumX ?? double.NegativeInfinity, maximumX ?? double.PositiveInfinity),
+            CurveFormat.ClampDouble(Y, minimumY ?? double.NegativeInfinity, maximumY ?? double.PositiveInfinity));
 
-    public static Radius operator *(Radius radius, double factor)
-    {
-        return new Radius(radius.X * factor, radius.Y * factor);
-    }
+    public bool Equals(Radius other) => X == other.X && Y == other.Y;
+    public override int GetHashCode() => HashCode.Combine(X, Y);
 
-    public static Radius Lerp(Radius a, Radius b, double t)
-    {
-        return new Radius(
-            a.X + ((b.X - a.X) * t),
-            a.Y + ((b.Y - a.Y) * t));
-    }
+    public static Radius operator -(Radius value) => new(-value.X, -value.Y);
+    public static Radius operator -(Radius a, Radius b) => new(a.X - b.X, a.Y - b.Y);
+    public static Radius operator +(Radius a, Radius b) => new(a.X + b.X, a.Y + b.Y);
+    public static Radius operator *(Radius radius, double factor) => new(radius.X * factor, radius.Y * factor);
+    public static Radius operator /(Radius radius, double divisor) => new(radius.X / divisor, radius.Y / divisor);
+    public static Radius operator %(Radius radius, double divisor) => new(
+        DartGeometry.Modulo(radius.X, divisor), DartGeometry.Modulo(radius.Y, divisor));
+
+    public Radius TruncateDivide(double divisor) => new(
+        DartGeometry.TruncateQuotient(X, divisor), DartGeometry.TruncateQuotient(Y, divisor));
+
+    public static Radius Lerp(Radius a, Radius b, double t) => new(
+        DartGeometry.LerpDouble(a.X, b.X, t), DartGeometry.LerpDouble(a.Y, b.Y, t));
+
+    public static Radius? Lerp(Radius? a, Radius? b, double t) =>
+        b is null ? a * (1.0 - t) : a is null ? b * t : Lerp(a.Value, b.Value, t);
+
+    public override string ToString() => X == Y
+        ? $"Radius.circular({DartGeometry.Fixed(X)})"
+        : $"Radius.elliptical({DartGeometry.Fixed(X)}, {DartGeometry.Fixed(Y)})";
 }
 
 public readonly record struct BorderRadius
@@ -248,7 +252,7 @@ public readonly record struct BorderRadius
 
     public static BorderRadius Circular(double radius)
     {
-        return new(Math.Max(0, radius));
+        return new(radius);
     }
 
     /// <summary>Dart's `BorderRadius.all`: the same (possibly elliptical) radius on every corner.</summary>
@@ -311,10 +315,10 @@ public readonly record struct BorderRadius
     public Plumix.UI.RSuperellipse ToRSuperellipse(Avalonia.Rect rect) =>
         Plumix.UI.RSuperellipse.FromRectAndCorners(
             rect,
-            TopLeftRadius,
-            TopRightRadius,
-            BottomRightRadius,
-            BottomLeftRadius);
+            TopLeftRadius.Clamp(minimum: Plumix.Rendering.Radius.Zero),
+            TopRightRadius.Clamp(minimum: Plumix.Rendering.Radius.Zero),
+            BottomRightRadius.Clamp(minimum: Plumix.Rendering.Radius.Zero),
+            BottomLeftRadius.Clamp(minimum: Plumix.Rendering.Radius.Zero));
 
     public static BorderRadius operator *(BorderRadius radius, double factor)
     {

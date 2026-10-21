@@ -3,165 +3,102 @@ using Plumix.Rendering;
 
 namespace Plumix.UI;
 
-// Dart parity source: dart:ui RRect (control-port subset used by input borders)
+// Dart parity source: flutter/engine/src/flutter/lib/ui/geometry.dart (RRect)
 
 public readonly record struct RRect
 {
-    public RRect(
-        Rect rect,
-        Radius topLeft,
-        Radius topRight,
-        Radius bottomRight,
-        Radius bottomLeft)
-    {
-        Rect = rect;
-        TopLeft = topLeft;
-        TopRight = topRight;
-        BottomRight = bottomRight;
-        BottomLeft = bottomLeft;
-    }
+    private readonly RoundRectGeometry _geometry;
 
-    public Rect Rect { get; }
+    public RRect(Rect rect, Radius topLeft, Radius topRight, Radius bottomRight, Radius bottomLeft)
+        : this(new RoundRectGeometry(rect.Left, rect.Top, rect.Right, rect.Bottom,
+            topLeft, topRight, bottomRight, bottomLeft)) { }
 
-    public Radius TopLeft { get; }
+    private RRect(RoundRectGeometry geometry) => _geometry = geometry;
 
-    public Radius TopRight { get; }
+    public Rect Rect => _geometry.OuterRect;
+    public Rect OuterRect => _geometry.OuterRect;
+    public Radius TopLeft => _geometry.TopLeft;
+    public Radius TopRight => _geometry.TopRight;
+    public Radius BottomRight => _geometry.BottomRight;
+    public Radius BottomLeft => _geometry.BottomLeft;
+    public double Left => _geometry.Left;
+    public double Top => _geometry.Top;
+    public double Right => _geometry.Right;
+    public double Bottom => _geometry.Bottom;
+    public double Width => _geometry.Width;
+    public double Height => _geometry.Height;
+    public Point Center => _geometry.Center;
+    public double ShortestSide => _geometry.ShortestSide;
+    public double LongestSide => _geometry.LongestSide;
+    public Rect SafeInnerRect => _geometry.SafeInnerRect;
+    public Rect MiddleRect => _geometry.MiddleRect;
+    public Rect WideMiddleRect => _geometry.WideMiddleRect;
+    public Rect TallMiddleRect => _geometry.TallMiddleRect;
+    public bool IsEmpty => _geometry.IsEmpty;
+    public bool IsFinite => _geometry.IsFinite;
+    public bool IsRect => _geometry.IsRect;
+    public bool IsStadium => _geometry.IsStadium;
+    public bool IsEllipse => _geometry.IsEllipse;
+    public bool IsCircle => _geometry.IsCircle;
+    public bool HasNaN => _geometry.HasNaN;
+    public Radius TlRadius => TopLeft;
+    public double TlRadiusX => TopLeft.X;
+    public double TlRadiusY => TopLeft.Y;
+    public Radius TrRadius => TopRight;
+    public double TrRadiusX => TopRight.X;
+    public double TrRadiusY => TopRight.Y;
+    public Radius BrRadius => BottomRight;
+    public double BrRadiusX => BottomRight.X;
+    public double BrRadiusY => BottomRight.Y;
+    public Radius BlRadius => BottomLeft;
+    public double BlRadiusX => BottomLeft.X;
+    public double BlRadiusY => BottomLeft.Y;
 
-    public Radius BottomRight { get; }
-
-    public Radius BottomLeft { get; }
-
-    public double Left => Rect.Left;
-
-    public double Top => Rect.Top;
-
-    public double Right => Rect.Right;
-
-    public double Bottom => Rect.Bottom;
-
-    public double Width => Rect.Width;
-
-    public double Height => Rect.Height;
-
-    public BorderRadius Radii => new(TopLeft, TopRight, BottomRight, BottomLeft);
-
-    public static RRect FromRectAndRadius(Rect rect, Radius radius) =>
-        new(rect, radius, radius, radius, radius);
-
-    public static RRect FromRectAndCorners(Rect rect, BorderRadius borderRadius) => new(
-        rect,
-        borderRadius.TopLeftRadius,
-        borderRadius.TopRightRadius,
-        borderRadius.BottomRightRadius,
-        borderRadius.BottomLeftRadius);
-
-    public double ShortestSide => Math.Min(Math.Abs(Width), Math.Abs(Height));
-
-    public Point Center => Rect.Center;
-
-    /// <remarks>Flutter's <c>RRect.fromRectXY</c>: one elliptical radius on all four corners.</remarks>
+    public static RRect Zero => default;
+    public static RRect FromRectAndRadius(Rect rect, Radius radius) => new(rect, radius, radius, radius, radius);
+    public static RRect FromRectAndRadius(Rect rect, double radius) => FromRectAndRadius(rect, Radius.Circular(radius));
     public static RRect FromRectXY(Rect rect, double radiusX, double radiusY) =>
-        FromRectAndRadius(rect, new Plumix.Rendering.Radius(radiusX, radiusY));
-
-    public static RRect FromRectAndRadius(Rect rect, double radius) =>
-        FromRectAndRadius(rect, Plumix.Rendering.Radius.Circular(radius));
-
-    // Dart parity source: dart:ui RRect.fromLTRBXY. The rect is stored sorted: dart:ui keeps the
-    // coordinates as given, but Skia sorts an unsorted rect at draw time, so this is render-equivalent.
+        FromRectAndRadius(rect, new Radius(radiusX, radiusY));
     public static RRect FromLTRBXY(
-        double left,
-        double top,
-        double right,
-        double bottom,
-        double radiusX,
-        double radiusY)
-    {
-        var radius = Plumix.Rendering.Radius.Elliptical(radiusX, radiusY);
-        var rect = new Rect(
-            Math.Min(left, right),
-            Math.Min(top, bottom),
-            Math.Abs(right - left),
-            Math.Abs(bottom - top));
-        return new RRect(rect, radius, radius, radius, radius);
-    }
-
-    /// <summary>Dart's <c>RRect.fromLTRBR</c>: one radius on all four corners.</summary>
-    /// <remarks>Stored sorted, like <see cref="FromLTRBXY"/>.</remarks>
+        double left, double top, double right, double bottom, double radiusX, double radiusY) =>
+        FromLTRBR(left, top, right, bottom, new Radius(radiusX, radiusY));
     public static RRect FromLTRBR(double left, double top, double right, double bottom, Radius radius) =>
         FromLTRBAndCorners(left, top, right, bottom, radius, radius, radius, radius);
-
-    /// <summary>Dart's <c>RRect.fromLTRBAndCorners</c>; omitted corners are <c>Radius.zero</c>.</summary>
-    /// <remarks>Stored sorted, like <see cref="FromLTRBXY"/>.</remarks>
     public static RRect FromLTRBAndCorners(
-        double left,
-        double top,
-        double right,
-        double bottom,
-        Radius topLeft = default,
-        Radius topRight = default,
-        Radius bottomRight = default,
-        Radius bottomLeft = default)
-    {
-        var rect = new Rect(
-            Math.Min(left, right),
-            Math.Min(top, bottom),
-            Math.Abs(right - left),
-            Math.Abs(bottom - top));
-        return new RRect(rect, topLeft, topRight, bottomRight, bottomLeft);
-    }
+        double left, double top, double right, double bottom,
+        Radius topLeft = default, Radius topRight = default,
+        Radius bottomRight = default, Radius bottomLeft = default) =>
+        new(new RoundRectGeometry(left, top, right, bottom, topLeft, topRight, bottomRight, bottomLeft));
+    public static RRect FromRectAndCorners(
+        Rect rect, Radius? topLeft = null, Radius? topRight = null,
+        Radius? bottomRight = null, Radius? bottomLeft = null) =>
+        new(rect, topLeft ?? default, topRight ?? default, bottomRight ?? default, bottomLeft ?? default);
 
-    /// Moves each edge out by the matching inset and grows every radius by the same amounts.
-    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.inflateRRect.
-    /// <remarks>Dart's <c>RRect.shift</c>.</remarks>
-    public RRect Shift(Point offset) =>
-        new(new Rect(Rect.Position + offset, Rect.Size), TopLeft, TopRight, BottomRight, BottomLeft);
+    public RRect Shift(Point offset) => new(_geometry.Shift(offset));
+    public RRect Inflate(double delta) => new(_geometry.Inflate(delta));
+    public RRect Deflate(double delta) => Inflate(-delta);
+    public RRect ScaleRadii() => new(_geometry.ScaleRadii());
+    public static RRect? Lerp(RRect? a, RRect? b, double t) => a is { } start
+        ? new RRect(start._geometry.LerpTo(b?._geometry, t))
+        : b is { } end ? new RRect(end._geometry.LerpTo(null, 1 - t)) : null;
+    public override string ToString() => _geometry.Format(nameof(RRect));
 
-    public RRect InflateEdges(Thickness insets) => new(
-        new Rect(
-            Rect.Left - insets.Left,
-            Rect.Top - insets.Top,
-            Rect.Width + insets.Left + insets.Right,
-            Rect.Height + insets.Top + insets.Bottom),
-        Plumix.Rendering.Radius.Elliptical(TopLeft.X + insets.Left, TopLeft.Y + insets.Top),
-        Plumix.Rendering.Radius.Elliptical(TopRight.X + insets.Right, TopRight.Y + insets.Top),
-        Plumix.Rendering.Radius.Elliptical(BottomRight.X + insets.Right, BottomRight.Y + insets.Bottom),
-        Plumix.Rendering.Radius.Elliptical(BottomLeft.X + insets.Left, BottomLeft.Y + insets.Bottom));
+    public BorderRadius Radii => new(TopLeft, TopRight, BottomRight, BottomLeft);
+    public static RRect FromRectAndCorners(Rect rect, BorderRadius borderRadius) => new(
+        rect, borderRadius.TopLeftRadius.Clamp(minimum: Radius.Zero),
+        borderRadius.TopRightRadius.Clamp(minimum: Radius.Zero),
+        borderRadius.BottomRightRadius.Clamp(minimum: Radius.Zero),
+        borderRadius.BottomLeftRadius.Clamp(minimum: Radius.Zero));
 
-    /// Moves each edge in by the matching inset and shrinks every radius by the same amounts.
-    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.deflateRRect.
+    // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart (inflateRRect/deflateRRect)
+    public RRect InflateEdges(Thickness insets) => FromLTRBAndCorners(
+        Left - insets.Left, Top - insets.Top, Right + insets.Right, Bottom + insets.Bottom,
+        new Radius(TopLeft.X + insets.Left, TopLeft.Y + insets.Top).Clamp(minimum: Radius.Zero),
+        new Radius(TopRight.X + insets.Right, TopRight.Y + insets.Top).Clamp(minimum: Radius.Zero),
+        new Radius(BottomRight.X + insets.Right, BottomRight.Y + insets.Bottom).Clamp(minimum: Radius.Zero),
+        new Radius(BottomLeft.X + insets.Left, BottomLeft.Y + insets.Bottom).Clamp(minimum: Radius.Zero));
     public RRect DeflateEdges(Thickness insets) =>
         InflateEdges(new Thickness(-insets.Left, -insets.Top, -insets.Right, -insets.Bottom));
-
-    public RRect Inflate(double delta) => new(
-        new Rect(Rect.Left - delta, Rect.Top - delta, Rect.Width + (delta * 2.0), Rect.Height + (delta * 2.0)),
-        InflateRadius(TopLeft, delta),
-        InflateRadius(TopRight, delta),
-        InflateRadius(BottomRight, delta),
-        InflateRadius(BottomLeft, delta));
-
-    public RRect Deflate(double delta) => Inflate(-delta);
-
-    /// Proportionally shrinks every radius when the radii on a side exceed that side's length.
-    public RRect ScaleRadii()
-    {
-        double scale = 1.0;
-        scale = MinScale(scale, BottomLeft.Y + TopLeft.Y, Height);
-        scale = MinScale(scale, TopLeft.X + TopRight.X, Width);
-        scale = MinScale(scale, TopRight.Y + BottomRight.Y, Height);
-        scale = MinScale(scale, BottomRight.X + BottomLeft.X, Width);
-
-        if (scale >= 1.0)
-        {
-            return this;
-        }
-
-        return new RRect(
-            Rect,
-            Radius.Elliptical(TopLeft.X * scale, TopLeft.Y * scale),
-            Radius.Elliptical(TopRight.X * scale, TopRight.Y * scale),
-            Radius.Elliptical(BottomRight.X * scale, BottomRight.Y * scale),
-            Radius.Elliptical(BottomLeft.X * scale, BottomLeft.Y * scale));
-    }
 
     /// <summary>Whether the point specified by the given offset lies inside the rounded rectangle.</summary>
     /// <remarks>
@@ -227,10 +164,12 @@ public readonly record struct RRect
         return true;
     }
 
+    internal RRect NormalizeForPaint() => new(_geometry.NormalizeForPaint());
+
     /// Builds the closed outline of this rounded rectangle, corner arcs included.
     public Path ToPath()
     {
-        RRect scaled = ScaleRadii();
+        RRect scaled = new(_geometry.NormalizeForPaint());
         var path = new Path();
         path.MoveTo(scaled.Left + scaled.TopLeft.X, scaled.Top);
         path.LineTo(scaled.Right - scaled.TopRight.X, scaled.Top);
@@ -269,16 +208,4 @@ public readonly record struct RRect
         path.ArcTo(corner, startAngle, Math.PI / 2.0, forceMoveTo: false);
     }
 
-    private static Radius InflateRadius(Radius radius, double delta) =>
-        Radius.Elliptical(Math.Max(0.0, radius.X + delta), Math.Max(0.0, radius.Y + delta));
-
-    private static double MinScale(double scale, double sum, double limit)
-    {
-        if (sum <= 0.0 || limit <= 0.0)
-        {
-            return scale;
-        }
-
-        return Math.Min(scale, limit / sum);
-    }
 }

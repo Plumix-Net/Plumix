@@ -76,7 +76,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/thumb_painter.dart` | `src/Plumix.Cupertino/CupertinoThumbPainter.cs` | — | — |
 | `engine/src/flutter/lib/ui/channel_buffers.dart` | `src/Plumix/UI/ChannelBuffers.cs` | `src/Plumix.Tests/ChannelBuffersDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/compositing.dart` | `src/Plumix/UI/Compositing.cs` | `src/Plumix.Tests/CompositingLayerTests.cs` | `dart_sample/lib/demos/general/scene_compositing_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/SceneCompositingDemoPage.cs` |
-| `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/UI/Geometry.cs` _(reference) (engine parity, approximate)_<br>`src/Plumix/UI/RSuperellipse.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs` | — |
+| `engine/src/flutter/lib/ui/geometry.dart` | `src/Plumix/Rendering/Decoration.cs`<br>`src/Plumix/UI/DartGeometry.cs`<br>`src/Plumix/UI/Geometry.cs`<br>`src/Plumix/UI/RRect.cs`<br>`src/Plumix/UI/RSTransform.cs`<br>`src/Plumix/UI/RSuperellipse.cs`<br>`src/Plumix/UI/RoundRectGeometry.cs`<br>`src/Plumix/UI/SuperellipseGeometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `engine/src/flutter/lib/ui/key.dart` | `src/Plumix/UI/Key.cs` | `src/Plumix.Tests/FocusOnKeyDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysDuplicatedDartParityTests.cs`<br>`src/Plumix.Tests/GlobalKeysMovingDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardDartParityTests.cs`<br>`src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/HostKeyEventMessageTests.cs`<br>`src/Plumix.Tests/KeyDartParityTests.cs`<br>`src/Plumix.Tests/KeyParityTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs`<br>`src/Plumix.Tests/KeyboardMapsTests.cs`<br>`src/Plumix.Tests/LayoutBuilderAndGlobalKeysDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataAppleAndroidDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyEventDataDesktopWebDartParityTests.cs`<br>`src/Plumix.Tests/RawKeyboardDartParityTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `engine/src/flutter/lib/ui/window.dart` | `src/Plumix/UI/AccessibilityFeatures.cs` | `src/Plumix.Tests/AccessibilityFeaturesDartParityTests.cs` | — |
 | `material_ui/about.dart` | `src/Plumix.Material/About.cs` | `src/Plumix.Tests/MaterialAboutTests.cs` | `dart_sample/lib/demos/material/about_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AboutDemoPage.cs` |
@@ -332,7 +332,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/BoxDecorationDartParityTests.cs`<br>`src/Plumix.Tests/DecorationImageDartParityTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ShapeDecorationDartParityTests.cs` | — |
 | `painting/decoration_image.dart` | `src/Plumix/Rendering/DecorationImage.cs` | `src/Plumix.Tests/DecorationImageDartParityTests.cs` | — |
 | `painting/edge_insets.dart` | `src/Plumix/Rendering/EdgeInsetsGeometry.cs` | — | — |
-| `painting/geometry.dart` | `src/Plumix/Painting/Geometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs` | — |
+| `painting/geometry.dart` | `src/Plumix/Painting/Geometry.cs` | `src/Plumix.Tests/AlignmentGeometryTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/RSuperellipseGeometryTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/UiGeometryDartParityTests.cs` | — |
 | `painting/gradient.dart` | `src/Plumix/Rendering/Gradient.cs` | `src/Plumix.Tests/GradientTests.cs` | `dart_sample/lib/demos/general/gradients_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GradientsDemoPage.cs` |
 | `painting/image_cache.dart` | `src/Plumix/Rendering/ImageCache.cs` | — | — |
 | `painting/image_provider.dart` | `src/Plumix/Rendering/ImageProvider.cs` | `src/Plumix.Tests/AnimatedImageProviderTests.cs`<br>`src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
@@ -681,7 +681,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Canvas.cs`
 - `src/Plumix/UI/Clip.cs`
 - `src/Plumix/UI/Color.cs`
-- `src/Plumix/UI/DartGeometry.cs`
 - `src/Plumix/UI/Display.cs`
 - `src/Plumix/UI/FilteredImages.cs`
 - `src/Plumix/UI/FlowLayers.cs`
@@ -703,7 +702,6 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Path.cs`
 - `src/Plumix/UI/PlatformDispatcher.cs`
 - `src/Plumix/UI/PointerData.cs`
-- `src/Plumix/UI/RRect.cs`
 - `src/Plumix/UI/SkiaImageCodec.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix/UI/TextBox.cs`
@@ -728,14 +726,13 @@ Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset.
 tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the
 marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
-- `src/Plumix/UI/Geometry.cs` — (reference) (engine parity, approximate)
 - `src/Plumix/Widgets/PlatformSelectableRegionContextMenu.cs` — (adapted)
 
 ## Summary
 
 - Flutter files mapped: 599
-- C# files carrying a marker: 790
-- C# files without a marker: 93
+- C# files carrying a marker: 796
+- C# files without a marker: 91
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 2
+- C# files with a qualified (non-strict) marker: 1
 

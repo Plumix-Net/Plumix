@@ -25,6 +25,7 @@ internal sealed class DecoratedBoxDemoPageState : State
     private bool _multiply;
     private double _fade = 0.5;
     private bool _invert;
+    private bool _outerProbe;
     private readonly MemoryImage _image = new(ImageDemoPageState.SampleBytes);
 
     public override Widget Build(BuildContext context)
@@ -32,7 +33,7 @@ internal sealed class DecoratedBoxDemoPageState : State
         var fillColor = _accentFill ? new Color(0xFF9DC4FF) : new Color(0xFFF3F3F3);
         var borderColor = _accentFill ? new Color(0xFF1D3557) : new Color(0xFF555555);
 
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
@@ -41,8 +42,9 @@ internal sealed class DecoratedBoxDemoPageState : State
                 new Text(
                     "Adjust border width and corner radius; toggle fill theme, shadow blur style and blend mode.",
                     style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         BuildButton("Radius -", () => ChangeRadius(-4), width: 88, colorHex: "#FFDCE3ED"),
@@ -50,8 +52,9 @@ internal sealed class DecoratedBoxDemoPageState : State
                         BuildButton("Border -", () => ChangeBorder(-1), width: 88, colorHex: "#FFE9F5EC"),
                         BuildButton("Border +", () => ChangeBorder(1), width: 88, colorHex: "#FFE9F5EC"),
                     ]),
-                new Row(
+                new Wrap(
                     spacing: 8,
+                    runSpacing: 8,
                     children:
                     [
                         BuildButton(_accentFill ? "Fill: accent" : "Fill: neutral", ToggleFill, width: 128, colorHex: "#FFF3E8D8"),
@@ -103,6 +106,17 @@ internal sealed class DecoratedBoxDemoPageState : State
                                         style: new TextStyle(
                                             FontSize: 14,
                                             Color: new Color(0xFF14213D)))))))),
+                new Text("Rounded corner hit testing", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
+                BuildButton(
+                    _outerProbe ? "Point: outer" : "Point: inner",
+                    () => SetState(() => _outerProbe = !_outerProbe),
+                    width: 128,
+                    colorHex: "#FFE0F0F5"),
+                new Row(spacing: 16, children:
+                [
+                    BuildGeometryProbe(false),
+                    BuildGeometryProbe(true),
+                ]),
                 new Text("DecorationImage cross-fade", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
                 new Row(
                     spacing: 8,
@@ -140,7 +154,17 @@ internal sealed class DecoratedBoxDemoPageState : State
                                                 new Color(0xFF2A9D8F),
                                                 BlendMode.Color)),
                                         _fade)))))),
-            ]);
+            ]));
+    }
+
+    private Widget BuildGeometryProbe(bool continuous)
+    {
+        bool contains = GeometryProbePainter.Contains(continuous, _outerProbe);
+        return new Column(children:
+        [
+            new Text($"{(continuous ? "Continuous" : "Circular")}: {(contains ? "inside" : "outside")}"),
+            new CustomPaint(size: new Size(110, 110), painter: new GeometryProbePainter(continuous, _outerProbe)),
+        ]);
     }
 
     private void CycleFade()
@@ -210,6 +234,36 @@ internal sealed class DecoratedBoxDemoPageState : State
             _multiply = false;
             _fade = 0.5;
             _invert = false;
+            _outerProbe = false;
         });
     }
+}
+
+internal sealed class GeometryProbePainter(bool continuous, bool outer) : CustomPainter
+{
+    private static Point Probe(bool outer) => outer ? new Point(95.74, 99.89) : new Point(95.72, 99.87);
+
+    internal static bool Contains(bool continuous, bool outer) => continuous
+        ? Plumix.UI.RSuperellipse.FromLTRBXY(0, 0, 100, 100, 5, 5).Contains(Probe(outer))
+        : Plumix.UI.RRect.FromLTRBXY(0, 0, 100, 100, 5, 5).Contains(Probe(outer));
+
+    public override void Paint(PaintingContext context, Size size)
+    {
+        var paint = new Plumix.UI.Paint { Color = new Color(0xFF9DC4FF) };
+        if (continuous)
+        {
+            context.Canvas.DrawRSuperellipse(Plumix.UI.RSuperellipse.FromLTRBXY(5, 5, 105, 105, 5, 5), paint);
+        }
+        else
+        {
+            context.Canvas.DrawRRect(Plumix.UI.RRect.FromLTRBXY(5, 5, 105, 105, 5, 5), paint);
+        }
+        context.Canvas.DrawCircle(Probe(outer) + new Point(5, 5), 2,
+            new Plumix.UI.Paint
+            {
+                Color = Contains(continuous, outer) ? new Color(0xFF1B5E20) : new Color(0xFFB71C1C),
+            });
+    }
+
+    public override bool ShouldRepaint(CustomPainter oldDelegate) => true;
 }
