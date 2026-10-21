@@ -33,7 +33,7 @@ public sealed class MaterialDialogTests : IDisposable
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new Dialog(elevation: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Dialog(insetPadding: new Thickness(-1)));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DialogThemeData(Elevation: -1));
+        Assert.Equal(-1, new DialogThemeData(Elevation: -1).Elevation);
         Assert.Throws<ArgumentOutOfRangeException>(() => new AlertDialog(actionsOverflowButtonSpacing: -1));
 
         var fullscreen = Dialog.Fullscreen(child: new Text("full"));

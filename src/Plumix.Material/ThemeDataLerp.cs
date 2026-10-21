@@ -321,37 +321,6 @@ public sealed partial record DataTableThemeData
     }
 }
 
-public sealed partial record DialogThemeData
-{
-    public static DialogThemeData Lerp(DialogThemeData? a, DialogThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b) && a is not null)
-        {
-            return a;
-        }
-
-        DialogThemeData selected = t < 0.5
-            ? a ?? new DialogThemeData()
-            : b ?? new DialogThemeData();
-        return selected with
-        {
-            BackgroundColor = MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, t),
-            Elevation = MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
-            ShadowColor = MaterialThemeLerp.Color(a?.ShadowColor, b?.ShadowColor, t),
-            SurfaceTintColor = MaterialThemeLerp.Color(a?.SurfaceTintColor, b?.SurfaceTintColor, t),
-            Shape = MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
-            Alignment = AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, t),
-            IconColor = MaterialThemeLerp.Color(a?.IconColor, b?.IconColor, t),
-            TitleTextStyle = MaterialThemeLerp.TextStyle(a?.TitleTextStyle, b?.TitleTextStyle, t),
-            ContentTextStyle = MaterialThemeLerp.TextStyle(a?.ContentTextStyle, b?.ContentTextStyle, t),
-            ActionsPadding = EdgeInsetsGeometry.Lerp(a?.ActionsPadding, b?.ActionsPadding, t),
-            BarrierColor = MaterialThemeLerp.Color(a?.BarrierColor, b?.BarrierColor, t),
-            InsetPadding = MaterialThemeLerp.Thickness(a?.InsetPadding, b?.InsetPadding, t),
-            ClipBehavior = t < 0.5 ? a?.ClipBehavior : b?.ClipBehavior,
-            Constraints = MaterialThemeLerp.BoxConstraints(a?.Constraints, b?.Constraints, t),
-        };
-    }
-}
 
 public sealed partial record MaterialBannerThemeData
 {

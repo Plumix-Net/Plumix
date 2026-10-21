@@ -20,6 +20,7 @@ public sealed class DialogDemoPage : StatefulWidget
         private bool _scrollable;
         private bool _barrierDismissible = true;
         private bool _useThemeOverrides;
+        private bool _legacyTheme;
         private bool _appleAdaptive;
         private string _lastResult = "none";
 
@@ -33,9 +34,16 @@ public sealed class DialogDemoPage : StatefulWidget
                     TitleTextStyle: Theme.Of(context).TextTheme.HeadlineSmall.CopyWith(color: new Color(0xFF004D40)),
                     BarrierColor: Color.FromARGB(0x99, 0x00, 0x4D, 0x40))
                 : new DialogThemeData();
-            Widget content = new DialogTheme(
-                dialogTheme,
-                new Builder(innerContext => BuildContent(innerContext)));
+            Widget child = new Builder(innerContext => BuildContent(innerContext));
+            Widget content = _legacyTheme
+                ? new DialogTheme(
+                    backgroundColor: dialogTheme.BackgroundColor,
+                    iconColor: dialogTheme.IconColor,
+                    shape: dialogTheme.Shape,
+                    titleTextStyle: dialogTheme.TitleTextStyle,
+                    barrierColor: dialogTheme.BarrierColor,
+                    child: child)
+                : new DialogTheme(data: dialogTheme, child: child);
             if (_appleAdaptive)
             {
                 content = new Theme(Theme.Of(context) with { Platform = TargetPlatform.IOS }, content);
@@ -55,19 +63,24 @@ public sealed class DialogDemoPage : StatefulWidget
                     new Text(
                         "Dialog, AlertDialog, SimpleDialog, typed results, intrinsic width, actions overflow, and scrollable choices.",
                         style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(_scrollable ? "Scrollable" : "Static", () => SetState(() => _scrollable = !_scrollable)),
                             ControlButton(_barrierDismissible ? "Barrier closes" : "Barrier locked", () => SetState(() => _barrierDismissible = !_barrierDismissible)),
                             ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
                             ControlButton(
+                                _legacyTheme ? "Legacy theme" : "Data theme",
+                                () => SetState(() => _legacyTheme = !_legacyTheme)),
+                            ControlButton(
                                 _appleAdaptive ? "Apple platform" : "Host platform",
                                 () => SetState(() => _appleAdaptive = !_appleAdaptive)),
                         ]),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             new ElevatedButton(new Text("SHOW ALERT"), () => ShowAlert(context)),

@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: DialogTheme legacy APIs, diagnostics and nullable interpolation match Dart (dialog_theme.dart).
 - Breaking: EditableText autofocus runs once after layout and preserves selection (widgets/editable_text.dart).
 - Breaking: Signed radii, rounded geometry, native superellipse hit tests and RSTransform match Dart (ui/geometry.dart).
 - Breaking: Native paragraph metrics, variable fonts, shadows and text paints match SkParagraph (ui/text.dart).

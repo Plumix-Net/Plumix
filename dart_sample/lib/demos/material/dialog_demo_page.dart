@@ -12,6 +12,7 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
   bool _scrollable = false;
   bool _barrierDismissible = true;
   bool _useThemeOverrides = false;
+  bool _legacyTheme = false;
   bool _appleAdaptive = false;
   String _lastResult = 'none';
 
@@ -30,13 +31,24 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
             barrierColor: const Color(0x99004D40),
           )
         : const DialogThemeData();
-    return Theme(
-      data: Theme.of(context).copyWith(
-        dialogTheme: dialogTheme,
-        platform: _appleAdaptive ? TargetPlatform.iOS : null,
-      ),
-      child: Builder(builder: _buildContent),
-    );
+    final Widget child = Builder(builder: _buildContent);
+    Widget content = _legacyTheme
+        ? DialogTheme(
+            backgroundColor: dialogTheme.backgroundColor,
+            iconColor: dialogTheme.iconColor,
+            shape: dialogTheme.shape,
+            titleTextStyle: dialogTheme.titleTextStyle,
+            barrierColor: dialogTheme.barrierColor,
+            child: child,
+          )
+        : DialogTheme(data: dialogTheme, child: child);
+    if (_appleAdaptive) {
+      content = Theme(
+        data: Theme.of(context).copyWith(platform: TargetPlatform.iOS),
+        child: content,
+      );
+    }
+    return content;
   }
 
   Widget _buildContent(BuildContext context) {
@@ -70,8 +82,11 @@ class _DialogDemoPageState extends State<DialogDemoPage> {
               child: Text(_useThemeOverrides ? 'Theme on' : 'Theme off'),
             ),
             TextButton(
-              onPressed: () =>
-                  setState(() => _appleAdaptive = !_appleAdaptive),
+              onPressed: () => setState(() => _legacyTheme = !_legacyTheme),
+              child: Text(_legacyTheme ? 'Legacy theme' : 'Data theme'),
+            ),
+            TextButton(
+              onPressed: () => setState(() => _appleAdaptive = !_appleAdaptive),
               child: Text(_appleAdaptive ? 'Apple platform' : 'Host platform'),
             ),
           ],
