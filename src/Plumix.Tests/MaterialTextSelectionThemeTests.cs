@@ -339,7 +339,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.PumpFrame();
+            // The first frame must include layout before EditableText's one-shot autofocus callback.
         }
 
         public RenderView RenderView { get; }

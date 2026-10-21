@@ -24,7 +24,12 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController();
+    _nameController = TextEditingController.fromValue(
+      const TextEditingValue(
+        text: 'Flutter!',
+        selection: TextSelection.collapsed(offset: 3),
+      ),
+    );
     _notesController = TextEditingController();
     _pinController = TextEditingController();
     _caretController = TextEditingController(text: 'Wide rounded caret');
@@ -118,14 +123,24 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
             style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
           ),
           const Text(
-            'Name',
+            'Name (autofocus preserves the caret at offset 3)',
             style: TextStyle(fontSize: 12, color: Colors.black54),
           ),
           _buildTextField(
             controller: _nameController,
+            autofocus: true,
             placeholder: 'Type your name',
             onChanged: (String value) =>
                 setState(() => _lastChange = 'name = $value'),
+          ),
+          ValueListenableBuilder<TextEditingValue>(
+            valueListenable: _nameController,
+            builder: (BuildContext context, TextEditingValue value, Widget? child) {
+              return Text(
+                'name selection: ${value.selection.baseOffset}/${value.selection.extentOffset}',
+                style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+              );
+            },
           ),
           const Text(
             'Notes (multiline)',
@@ -293,6 +308,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
     required TextEditingController controller,
     required String placeholder,
     required ValueChanged<String> onChanged,
+    bool autofocus = false,
     bool multiline = false,
     int? maxLines,
     bool obscureText = false,
@@ -305,6 +321,7 @@ class _EditableTextDemoPageState extends State<EditableTextDemoPage> {
   }) {
     return TextField(
       controller: controller,
+      autofocus: autofocus,
       undoController: undoController,
       inputFormatters: inputFormatters,
       enabled: _enabled,

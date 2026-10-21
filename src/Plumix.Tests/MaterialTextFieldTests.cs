@@ -406,7 +406,7 @@ public sealed class MaterialTextFieldTests : IDisposable
             _root = new RootElement(RenderView, new ViewScope(RenderView.FlutterView, widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(null, null));
-            _owner.PumpFrame();
+            // The first frame must include layout before EditableText's one-shot autofocus callback.
         }
         public RenderView RenderView { get; }
         public void Pump(Size size)

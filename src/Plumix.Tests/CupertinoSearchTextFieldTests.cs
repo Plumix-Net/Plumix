@@ -279,11 +279,10 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
     public void Autofocus_RequestsFocusThroughTheInnerTextField()
     {
         using var focusNode = new FocusNode();
-        using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoSearchTextField(
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        tester.PumpWidget(new TestWidgetsApp(home: Wrap(new CupertinoSearchTextField(
             focusNode: focusNode,
-            autofocus: true)));
-
-        harness.Pump(ViewSize);
+            autofocus: true))));
 
         Assert.True(focusNode.HasFocus);
     }

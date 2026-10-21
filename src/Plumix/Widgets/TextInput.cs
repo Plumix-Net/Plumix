@@ -2043,11 +2043,15 @@ public sealed partial class EditableText : StatefulWidget
 
             if (!_didAutoFocus && Widget.Autofocus)
             {
-                // Dart autofocuses from a post-frame callback after `_flagInternalFocus()`; the
-                // Focus widget below autofocuses the node, so only the flag is set here (see
-                // docs/ai/DIVERGENCES.md).
                 _didAutoFocus = true;
-                FlagInternalFocus();
+                SchedulerBinding.Instance.AddPostFrameCallback(_ =>
+                {
+                    if (Mounted && RenderEditable is { HasSize: true })
+                    {
+                        FlagInternalFocus();
+                        FocusScope.Of(Context).Autofocus(_focusNode!);
+                    }
+                }, "EditableText.autofocus");
             }
 
             DidChangeDependenciesForCursor();
@@ -2407,7 +2411,6 @@ public sealed partial class EditableText : StatefulWidget
                                 child: new Focus(
                                     focusNode: _focusNode,
                                     includeSemantics: false,
-                                    autofocus: Widget.Autofocus,
                                     canRequestFocus: Widget.Enabled && Widget.CanRequestFocus,
                                     onKeyEvent: Widget.OnKeyEvent,
                                     debugLabel: Constants.KReleaseMode ? null : "EditableText",

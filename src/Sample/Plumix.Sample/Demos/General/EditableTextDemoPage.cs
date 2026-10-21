@@ -34,7 +34,7 @@ internal sealed class EditableTextDemoPageState : State
 
     public override void InitState()
     {
-        _nameController = new TextEditingController();
+        _nameController = new TextEditingController("Flutter!", TextSelection.Collapsed(3));
         _notesController = new TextEditingController();
         _pinController = new TextEditingController();
         _caretController = new TextEditingController("Wide rounded caret");
@@ -123,12 +123,20 @@ internal sealed class EditableTextDemoPageState : State
                         style: new TextStyle(
                             FontSize: 12,
                             Color: Colors.DarkSlateGray)),
-                    new Text("Name", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                    new Text(
+                        "Name (autofocus preserves the caret at offset 3)",
+                        style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _nameController,
+                        autofocus: true,
                         enabled: _enabled,
                         placeholder: "Type your name",
                         onChanged: value => SetState(() => _lastChange = $"name = {value}")),
+                    new ValueListenableBuilder<TextEditingValue>(
+                        valueListenable: _nameController,
+                        builder: (_, value, _) => new Text(
+                            $"name selection: {value.Selection.BaseOffset}/{value.Selection.ExtentOffset}",
+                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray))),
                     new Text("Notes (multiline)", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                     new EditableText(
                         controller: _notesController,

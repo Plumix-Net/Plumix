@@ -392,6 +392,99 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
         Assert.Equal("••••••", Shown(tester));
     }
 
+    // ------------------------------------------------- autofocus lifecycle
+
+    [Theory]
+    [InlineData(TargetPlatform.Android)]
+    [InlineData(TargetPlatform.Fuchsia)]
+    [InlineData(TargetPlatform.IOS)]
+    [InlineData(TargetPlatform.Linux)]
+    [InlineData(TargetPlatform.MacOS)]
+    [InlineData(TargetPlatform.Windows)]
+    public void AutofocusPreservesValidSelectionAndCollapsesInvalidSelectionAtTheEnd(TargetPlatform platform)
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        TextSelection[] selections = [TextSelection.Collapsed(-1), TextSelection.Collapsed(3), new(2, 5)];
+
+        foreach (TextSelection selection in selections)
+        {
+            tester.PumpWidget(new SizedBox());
+            _controller.Value = new TextEditingValue("Flutter!", selection);
+            tester.PumpWidget(Wrap(Field()));
+
+            Assert.True(_focusNode.HasFocus);
+            TextSelection expected = selection.IsValid ? selection : TextSelection.Collapsed(8);
+            Assert.Equal(expected, _controller.Selection);
+
+            // Focus completes after the first frame; the next frame paints that selection.
+            tester.Pump();
+            Assert.Equal(expected, Editable(tester).Selection);
+        }
+    }
+
+    [Fact]
+    public void AutofocusWithoutLayoutIsSkippedAndNeverRetried()
+    {
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        _controller.Text = "Flutter!";
+        Widget Build(bool tickersEnabled) => Wrap(new TickerMode(enabled: tickersEnabled, child: Field()));
+        tester.PumpWidget(Build(true), phase: EnginePhase.Build);
+
+        Assert.False(Editable(tester).HasSize);
+        Assert.False(_focusNode.HasFocus);
+        Assert.Equal(TextSelection.Collapsed(-1), _controller.Selection);
+
+        tester.PumpWidget(Build(false));
+        tester.PumpWidget(Build(true));
+
+        Assert.True(Editable(tester).HasSize);
+        Assert.False(_focusNode.HasFocus);
+        Assert.Equal(TextSelection.Collapsed(-1), _controller.Selection);
+    }
+
+    [Fact]
+    public void EnablingAutofocusWaitsForADependencyChange()
+    {
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        Widget Build(bool autofocus, bool tickersEnabled = true) =>
+            Wrap(new TickerMode(enabled: tickersEnabled, child: Field(autofocus: autofocus)));
+        tester.PumpWidget(Build(false));
+        tester.PumpWidget(Build(true));
+        Assert.False(_focusNode.HasFocus);
+
+        tester.PumpWidget(Build(true, tickersEnabled: false));
+        Assert.True(_focusNode.HasFocus);
+
+        _focusNode.Unfocus();
+        tester.Pump();
+        tester.PumpWidget(Build(true));
+        Assert.False(_focusNode.HasFocus);
+    }
+
+    [Fact]
+    public void MultilineAutofocusOnTheFirstFramePreservesUpstreamAffinity()
+    {
+        _controller.Value = new TextEditingValue(
+            "Flutter!", new TextSelection(0, 0, TextAffinity.Upstream));
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        tester.PumpWidget(Wrap(new EditableText(
+            controller: _controller,
+            focusNode: _focusNode,
+            autofocus: true,
+            multiline: true,
+            maxLines: 10,
+            showSelectionHandles: true,
+            style: new TextStyle(FontSize: 10.0),
+            cursorColor: CursorColor,
+            backgroundCursorColor: new Color(0xFF9E9E9E))));
+        tester.PumpAndSettle();
+
+        Assert.True(_focusNode.HasFocus);
+        Assert.Equal(new TextSelection(0, 0, TextAffinity.Upstream), _controller.Selection);
+        Assert.Null(tester.TakeException());
+    }
+
     // ------------------------------------------------- focus after the app resumed
 
     [Theory]
@@ -403,7 +496,9 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
     public void FocusRegainedAfterTheAppResumedKeepsTheCollapsedSelection(TargetPlatform platform)
     {
         _controller.Text = "Flutter!";
-        using FrameworkDartTester tester = Pump(Field(), platform);
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        using var tester = new FrameworkDartTester(fakeGestureTimers: true);
+        tester.PumpWidget(Wrap(Field()));
         FocusManager.Instance.ListenToApplicationLifecycleChangesIfSupported();
         Assert.True(_focusNode.HasFocus);
         Assert.Equal(TextSelection.Collapsed(8), _controller.Selection);
@@ -447,7 +542,6 @@ public sealed class EditableTextCursorDartParityTests : IDisposable
                 backgroundCursorColor: new Color(0xFF9E9E9E),
                 maxLines: 1),
         ])));
-        tester.Pump();
         FocusManager.Instance.ListenToApplicationLifecycleChangesIfSupported();
         Assert.True(_focusNode.HasFocus);
 
