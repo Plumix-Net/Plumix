@@ -105,7 +105,8 @@ public sealed class ParagraphBuilder
     {
         ThrowIfBuilt();
         _built = true;
-        var content = new ParagraphContent(_style, _text.ToString(), _runs, _placeholders, _styleStack[0]);
+        var content = new ParagraphContent(
+            _style, _text.ToString(), _runs, _placeholders, _styleStack[0], _styleStack[^1]);
         return ParagraphBackend.Create(content);
     }
 
@@ -241,13 +242,15 @@ internal sealed class ParagraphContent
         string text,
         IReadOnlyList<StyledRange> runs,
         IReadOnlyList<ParagraphPlaceholder> placeholders,
-        ResolvedTextStyle defaultStyle)
+        ResolvedTextStyle defaultStyle,
+        ResolvedTextStyle? emptyStyle = null)
     {
         Style = style;
         Text = text;
         Runs = runs;
         Placeholders = placeholders;
         DefaultStyle = defaultStyle;
+        EmptyStyle = emptyStyle ?? defaultStyle;
     }
 
     public ParagraphStyle Style { get; }
@@ -260,6 +263,9 @@ internal sealed class ParagraphContent
 
     /// The style text inherits when no style was pushed: the paragraph style's defaults.
     public ResolvedTextStyle DefaultStyle { get; }
+
+    /// The builder's current style, retained for the engine's completely empty paragraph metrics.
+    public ResolvedTextStyle EmptyStyle { get; }
 
     public TextDirection TextDirection => Style.TextDirection ?? TextDirection.Ltr;
 

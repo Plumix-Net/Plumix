@@ -4,6 +4,7 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -16,6 +17,7 @@
     <ItemGroup>
         <PackageReference Include="Avalonia" />
         <PackageReference Include="SkiaSharp" />
+        <PackageReference Include="HarfBuzzSharp" />
     </ItemGroup>
 
     <ItemGroup>

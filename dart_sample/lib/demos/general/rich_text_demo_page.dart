@@ -38,32 +38,35 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 12,
-      children: <Widget>[
-        const Text(
-          'RichText + TextSpan + WidgetSpan',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'One paragraph, many styles. Spans share a single line layout, carry their own gesture '
-          'recognizers, and can embed inline widgets.',
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        _buildStyledParagraph(),
-        Text(
-          'Tapped the link span $_taps times',
-          style: const TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-        _buildPaintedParagraph(),
-        _buildInlineWidgetParagraph(),
-        _buildAccessibleInlineParagraph(),
-        _buildAlignmentRow(),
-        _buildDefaultTextStyleParagraph(),
-        _buildOverflowAndStrut(),
-        _buildAccessibilityOverrides(context),
-      ],
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 12,
+        children: <Widget>[
+          const Text(
+            'RichText + TextSpan + WidgetSpan',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'One paragraph, many styles. Spans share a single line layout, carry their own gesture '
+            'recognizers, and can embed inline widgets.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildStyledParagraph(),
+          Text(
+            'Tapped the link span $_taps times',
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          _buildPaintedParagraph(),
+          _buildInlineWidgetParagraph(),
+          _buildAccessibleInlineParagraph(),
+          _buildAlignmentRow(),
+          _buildDefaultTextStyleParagraph(),
+          _buildOverflowAndStrut(),
+          _buildParagraphEffects(),
+          _buildAccessibilityOverrides(context),
+        ],
+      ),
     );
   }
 
@@ -199,7 +202,9 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
             const TextSpan(text: ' one, and tabular figures: '),
             const TextSpan(
               text: '1111 / 8888',
-              style: TextStyle(fontFeatures: <FontFeature>[FontFeature.tabularFigures()]),
+              style: TextStyle(
+                fontFeatures: <FontFeature>[FontFeature.tabularFigures()],
+              ),
             ),
           ],
         ),
@@ -239,13 +244,20 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 6,
         children: <Widget>[
-          const Text('Accessible inline actions', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text(
+            'Accessible inline actions',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           RichText(
             text: TextSpan(
               text: 'Read ',
               style: const TextStyle(fontSize: 16, color: Color(0xFF1D3557)),
               children: <InlineSpan>[
-                const TextSpan(text: 'ABC', spellOut: true, semanticsIdentifier: 'inline-code'),
+                const TextSpan(
+                  text: 'ABC',
+                  spellOut: true,
+                  semanticsIdentifier: 'inline-code',
+                ),
                 const TextSpan(text: ' then '),
                 TextSpan(
                   text: 'double-tap',
@@ -333,6 +345,60 @@ class _RichTextDemoPageState extends State<RichTextDemoPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  static Widget _buildParagraphEffects() {
+    return Container(
+      color: const Color(0xFFF0F9FF),
+      padding: const EdgeInsets.all(12),
+      child: RichText(
+        textHeightBehavior: const TextHeightBehavior(
+          applyHeightToFirstAscent: false,
+          applyHeightToLastDescent: false,
+          leadingDistribution: TextLeadingDistribution.even,
+        ),
+        strutStyle: const StrutStyle(fontSize: 18, height: 1.5),
+        text: TextSpan(
+          style: const TextStyle(fontSize: 18, color: Color(0xFF1D3557)),
+          children: <InlineSpan>[
+            const TextSpan(
+              text: 'Shadows',
+              style: TextStyle(
+                shadows: <Shadow>[
+                  Shadow(
+                    color: Color(0x883B82F6),
+                    offset: Offset(3, 3),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+            const TextSpan(text: ' and '),
+            TextSpan(
+              text: 'outlined text\n',
+              style: TextStyle(
+                foreground: Paint()
+                  ..color = const Color(0xFFBE185D)
+                  ..style = PaintingStyle.stroke
+                  ..strokeWidth = 0.8,
+              ),
+            ),
+            const TextSpan(
+              text: 'Wide spacing',
+              style: TextStyle(letterSpacing: 3, height: 2),
+            ),
+            const TextSpan(text: ' with '),
+            const TextSpan(
+              text: 'thick underline',
+              style: TextStyle(
+                decoration: TextDecoration.underline,
+                decorationThickness: 3,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

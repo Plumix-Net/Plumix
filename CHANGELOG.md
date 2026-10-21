@@ -9,17 +9,14 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Native paragraph metrics, variable fonts, shadows and text paints match SkParagraph (ui/text.dart).
 - Breaking: Buffered platform channels and traffic profiling match Dart (binding.dart; platform_channel.dart).
-
 - Breaking: Paragraph inline semantics, span node reuse and scaled widget bounds match Dart (rendering/paragraph.dart).
-
 - Breaking: Async root restoration, stale-get arbitration and native mobile saved state (services/restoration.dart).
 - Breaking: Role checks, sticky annotation history and checked-state replacement match Dart (semantics/semantics.dart).
-
 - Breaking: Build scopes preserve scheduler phase; isolated tests run real frames (framework.dart; binding.dart).
 - Test binding frames, semantics, reusable views and shared scroll/slider helpers match flutter_test (binding.dart).
 - Breaking: Animated GIF/WebP/APNG playback, resize and stream lifecycle match Flutter (painting/image_stream.dart).
-
 - Breaking: Navigator async pops, route futures, pointer cancellation and transitions (navigator.dart; routes.dart).
 - Breaking: Desktop selection handles and SelectableRegion actions/lifecycle match Dart (selectable_region.dart).
 - DesktopTextSelectionControls and native browser selection menus (desktop_text_selection.dart; selectable_region).

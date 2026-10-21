@@ -274,6 +274,35 @@ public partial class Canvas
         AddDrawCommand(rasterized.Draw);
     }
 
+    // Paragraph glyph outlines use the same Paint pipeline as framework-owned shapes.
+    internal void DrawTextGeometry(Geometry geometry, Paint paint)
+    {
+        bool filter = paint.ColorFilter is not null || paint.ImageFilter is not null || paint.InvertColors;
+        if (filter)
+        {
+            SaveLayer(geometry.GetRenderBounds(new Pen(Brushes.Black, paint.StrokeWidth)).Inflate(
+                PaintRasterizer.BlurExtent(paint.MaskFilter?.Sigma ?? 0.0) + 1.0), new Paint
+            {
+                ColorFilter = paint.ColorFilter,
+                ImageFilter = paint.ImageFilter,
+                InvertColors = paint.InvertColors,
+                BlendMode = paint.BlendMode,
+            });
+        }
+
+        Paint effective = filter ? new Paint(paint) { BlendMode = BlendMode.SourceOver } : paint;
+        DrawShape(
+            "drawTextGeometry",
+            effective,
+            call => call,
+            () => geometry,
+            (context, fill, pen) => context.DrawGeometry(fill, pen, geometry));
+        if (filter)
+        {
+            Restore();
+        }
+    }
+
     private static Pen CreatePen(Paint paint, IBrush brush) => new(
         brush,
         paint.StrokeWidth,

@@ -79,9 +79,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   side with `TestTextInput.cs` (flutter_test's) or drive the real plugin with its `HostTextInput` helper. Coverage:
   `HostTextInputPluginTests.cs`, `TextInputModelTests.cs`, `EditableTextInputConnectionDartParityTests.cs`.
 - Text layout enters through `Painting/TextPainter.cs`, which builds a dart:ui-shaped `UI/Paragraph.cs` with
-  `UI/ParagraphBuilder.cs`; `UI/AvaloniaParagraph.cs` lays it out when a font manager exists and
-  `UI/HeadlessParagraph.cs` (Flutter's FlutterTest metrics) everywhere else. `RenderParagraph.cs` delegates to the
-  painter. Coverage: `TextPainterTests.cs`, `RenderParagraphTests.cs`, `ParagraphEngineTests.cs`.
+  `UI/ParagraphBuilder.cs`; `UI/AvaloniaParagraph.cs` owns native run/strut/selection metrics,
+  `UI/ParagraphShaping.cs` resolves per-run spacing/features and `UI/VariableFont.cs` shapes and draws
+  the same HarfBuzz variable instance. `UI/ParagraphDecorations.cs` follows pinned SkParagraph patterns.
+  `UI/HeadlessParagraph.cs` supplies FlutterTest metrics without a platform. `RenderParagraph.cs` delegates
+  to the painter. Coverage: `TextPainterTests.cs`, `RenderParagraphTests.cs`, `ParagraphEngineTests.cs`,
+  `AvaloniaParagraphDartParityTests.cs` (bundled Ahem and variable Roboto Slab, including raster pixels).
 - Material read-only selection enters through `SelectableText.cs` + `SelectionArea.cs` + `TextSelectionTheme.cs`;
   core default inheritance lives in `Widgets/DefaultSelectionStyle.cs` and `Widgets/InheritedTheme.cs`;
   shared registration, keyboard/copy flow, and multi-paragraph coordination live in core `Widgets/Selection.cs`,

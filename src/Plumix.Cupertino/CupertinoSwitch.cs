@@ -751,14 +751,14 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         Color activeColor = _activeIcon?.Color ?? CupertinoColors.Black;
         Color iconColor = Color.Lerp(inactiveColor, activeColor, currentValue);
         double iconSize = icon.Size ?? DefaultIconSize;
-        FontWeight weight = icon.FontWeight ?? ResolveFontWeight(icon.Weight ?? _iconTheme.Weight);
         var style = new TextStyle(
             FontFamily: Icon.ResolveFontFamily(icon.IconData!),
             FontSize: iconSize,
             Color: iconColor,
-            FontWeight: weight,
-            Height: 1.0,
-            LetterSpacing: 0.0);
+            FontWeight: icon.FontWeight,
+            Inherit: false,
+            Shadows: icon.Shadows ?? _iconTheme.Shadows,
+            FontVariations: BuildIconVariations(icon));
         _textPainter ??= new TextPainter(textDirection: _textDirection, maxLines: 1);
         _textPainter.TextDirection = _textDirection;
         _textPainter.Text = new TextSpan(char.ConvertFromUtf32(icon.IconData!.CodePoint), style: style);
@@ -779,17 +779,16 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
 
     private static Color WithOpacity(Color color, double opacity) => color.WithOpacity(opacity);
 
-    private static FontWeight ResolveFontWeight(double? weight)
+    private IReadOnlyList<FontVariation> BuildIconVariations(Icon icon)
     {
-        double value = weight ?? 400.0;
-        if (value < 150.0) return FontWeight.Thin;
-        if (value < 250.0) return FontWeight.ExtraLight;
-        if (value < 350.0) return FontWeight.Light;
-        if (value < 450.0) return FontWeight.Normal;
-        if (value < 550.0) return FontWeight.Medium;
-        if (value < 650.0) return FontWeight.SemiBold;
-        if (value < 750.0) return FontWeight.Bold;
-        if (value < 850.0) return FontWeight.ExtraBold;
-        return FontWeight.Black;
+        var variations = new List<FontVariation>();
+        if ((icon.Fill ?? _iconTheme.Fill) is double fill) variations.Add(new FontVariation("FILL", fill));
+        if ((icon.Weight ?? _iconTheme.Weight) is double weight) variations.Add(new FontVariation("wght", weight));
+        if ((icon.Grade ?? _iconTheme.Grade) is double grade) variations.Add(new FontVariation("GRAD", grade));
+        if ((icon.OpticalSize ?? _iconTheme.OpticalSize) is double size)
+        {
+            variations.Add(new FontVariation("opsz", size));
+        }
+        return variations;
     }
 }

@@ -18,6 +18,9 @@ internal static class RasterBackend
     {
         ParagraphBackend.EnsureProbed();
         Avalonia.Skia.SkiaPlatform.Initialize();
+        var builder = AppBuilder.Configure<Application>().UseStandardRuntimePlatformSubsystem().UseHarfBuzz();
+        builder.RuntimePlatformServicesInitializer!();
+        builder.TextShapingSubsystemInitializer!();
     }
 
     /// <summary>The premultiplied BGRA bytes of <paramref name="bitmap"/>, row by row, whatever its format.</summary>

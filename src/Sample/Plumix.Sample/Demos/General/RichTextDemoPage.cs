@@ -43,7 +43,7 @@ public sealed class RichTextDemoPageState : State
 
     public override Widget Build(BuildContext context)
     {
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 12,
             children:
@@ -65,8 +65,9 @@ public sealed class RichTextDemoPageState : State
                 BuildAlignmentRow(),
                 BuildDefaultTextStyleParagraph(),
                 BuildOverflowAndStrut(),
+                BuildParagraphEffects(),
                 BuildAccessibilityOverrides(context),
-            ]);
+            ]));
     }
 
     // MediaQuery.boldText and the text spacing overrides: Text and Text.rich apply them, RichText does not.
@@ -288,6 +289,32 @@ public sealed class RichTextDemoPageState : State
                         style: new TextStyle(FontSize: 16, Color: textColor),
                         strutStyle: new StrutStyle(FontSize: 16, Height: 2, ForceStrutHeight: true)),
                 ]));
+    }
+
+    private static Widget BuildParagraphEffects()
+    {
+        return new Container(
+            color: new Color(0xFFF0F9FF),
+            padding: new Thickness(12),
+            child: new RichText(
+                textHeightBehavior: new TextHeightBehavior(false, false, TextLeadingDistribution.Even),
+                strutStyle: new StrutStyle(FontSize: 18, Height: 1.5),
+                text: new TextSpan(
+                    style: new TextStyle(FontSize: 18, Color: new Color(0xFF1D3557)),
+                    children:
+                    [
+                        new TextSpan("Shadows", style: new TextStyle(Shadows:
+                            [new Shadow(new Color(0x883B82F6), new Point(3, 3), 2)])),
+                        new TextSpan(" and "),
+                        new TextSpan("outlined text\n", style: new TextStyle(Foreground: new Paint
+                        {
+                            Color = new Color(0xFFBE185D), Style = PaintingStyle.Stroke, StrokeWidth = 0.8,
+                        })),
+                        new TextSpan("Wide spacing", style: new TextStyle(LetterSpacing: 3, Height: 2)),
+                        new TextSpan(" with "),
+                        new TextSpan("thick underline", style: new TextStyle(
+                            Decoration: Plumix.UI.TextDecoration.Underline, DecorationThickness: 3)),
+                    ])));
     }
 
     private static Widget BuildDefaultTextStyleParagraph()

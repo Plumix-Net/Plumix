@@ -230,6 +230,36 @@ public sealed class ParagraphEngineTests
         Assert.Equal(new LineMetrics(true, 10.5, 3.5, 10.5, 14, 70, 0, 10.5, 0), line);
     }
 
+    [Theory]
+    [InlineData(true, 95.0)]
+    [InlineData(false, 85.0)]
+    public void LineMetrics_KeepNativeRunMetricsSeparateFromStrut(bool force, double reportedBaseline)
+    {
+        Paragraph paragraph = Build("A", new ParagraphStyle(FontSize: 20,
+            StrutStyle: new ParagraphStrutStyle(FontSize: 10, Height: 10, Leading: 2, ForceStrutHeight: force)));
+        paragraph.Layout(new ParagraphConstraints(100));
+        Assert.Equal(120, paragraph.Height);
+        Assert.Equal(85, paragraph.AlphabeticBaseline);
+        Assert.Equal(120, paragraph.IdeographicBaseline);
+        LineMetrics metrics = paragraph.GetLineMetricsAt(0)!.Value;
+        Assert.Equal(15, metrics.Ascent);
+        Assert.Equal(5, metrics.Descent);
+        Assert.Equal(15, metrics.UnscaledAscent);
+        Assert.Equal(20, metrics.Height);
+        Assert.Equal(reportedBaseline, metrics.Baseline);
+    }
+
+    [Fact]
+    public void EmptyParagraph_UsesCurrentPushedStyleForMetrics()
+    {
+        var builder = new ParagraphBuilder(new ParagraphStyle());
+        builder.PushStyle(new ParagraphTextStyle(FontSize: 40));
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(100));
+        Assert.Equal(40, paragraph.Height);
+        Assert.Equal(0, paragraph.NumberOfLines);
+    }
+
     [Fact]
     public void ParagraphBuilder_CannotBeUsedAfterBuild()
     {

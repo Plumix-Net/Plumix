@@ -28,6 +28,7 @@ internal sealed class HeadlessParagraph : Paragraph
     private readonly bool _forceStrutHeight;
     private readonly double _strutAscent;
     private readonly double _strutDescent;
+    private readonly double _strutLeadingHalf;
     private readonly double _minIntrinsicWidth;
     private readonly double _maxIntrinsicWidth;
     private readonly List<Line> _lines = [];
@@ -49,6 +50,8 @@ internal sealed class HeadlessParagraph : Paragraph
         ResolveBidiLevels();
         MarkBreakOpportunities();
         (_strutEnabled, _strutAscent, _strutDescent, _forceStrutHeight) = ComputeStrut();
+        _strutLeadingHalf = Math.Max(content.Style.StrutStyle?.Leading ?? 0.0, 0.0)
+            * (content.Style.StrutStyle?.FontSize ?? TextDefaults.DefaultFontSize) / 2.0;
         (_minIntrinsicWidth, _maxIntrinsicWidth) = ComputeIntrinsicWidths();
     }
 
@@ -65,7 +68,7 @@ internal sealed class HeadlessParagraph : Paragraph
     public override double AlphabeticBaseline => _lines.Count == 0 ? 0.0 : _lines[0].Baseline;
 
     public override double IdeographicBaseline =>
-        _lines.Count == 0 ? 0.0 : _lines[0].Baseline + _lines[0].UnscaledDescent;
+        _lines.Count == 0 ? 0.0 : _lines[0].Ascent + _lines[0].Descent;
 
     public override bool DidExceedMaxLines => _didExceedMaxLines;
 
@@ -523,25 +526,26 @@ internal sealed class HeadlessParagraph : Paragraph
             bool trimAscent = lineIndex == 0 && !behavior.ApplyHeightToFirstAscent;
             bool trimDescent = lineIndex == _lines.Count - 1 && !behavior.ApplyHeightToLastDescent;
             var metrics = new LineTextMetrics();
+            var reported = new LineTextMetrics();
             for (int index = line.FirstCluster; index < line.EndCluster; index++)
             {
                 Cluster cluster = _clusters[index];
                 if (cluster.Placeholder is null)
                 {
-                    Accumulate(ref metrics, cluster.Style, trimAscent, trimDescent);
+                    AddStyle(cluster.Style);
                 }
             }
 
             if (line.EllipsisStyle is { } ellipsisStyle)
             {
-                Accumulate(ref metrics, ellipsisStyle, trimAscent, trimDescent);
+                AddStyle(ellipsisStyle);
             }
 
             if (!metrics.HasText)
             {
                 for (int index = line.FirstCluster; index < line.EndCluster; index++)
                 {
-                    Accumulate(ref metrics, _clusters[index].Style, trimAscent, trimDescent);
+                    AddStyle(_clusters[index].Style);
                 }
             }
 
@@ -549,8 +553,8 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 ResolvedTextStyle emptyStyle = line.Start > 0
                     ? _content.StyleAt(line.Start - 1)
-                    : _content.DefaultStyle;
-                Accumulate(ref metrics, emptyStyle, trimAscent, trimDescent);
+                    : Text.Length == 0 ? _content.EmptyStyle : _content.DefaultStyle;
+                AddStyle(emptyStyle);
             }
 
             double ascent = metrics.Ascent;
@@ -568,6 +572,9 @@ internal sealed class HeadlessParagraph : Paragraph
                 cluster.PlaceholderAscent = placeholderAscent;
                 ascent = Math.Max(ascent, placeholderAscent);
                 descent = Math.Max(descent, placeholderDescent);
+                (double runA, double runD) = PlaceholderMetrics(placeholder, reported.Ascent, reported.Descent);
+                reported.Ascent = Math.Max(reported.Ascent, runA);
+                reported.Descent = Math.Max(reported.Descent, runD);
             }
 
             if (_strutEnabled)
@@ -582,12 +589,22 @@ internal sealed class HeadlessParagraph : Paragraph
             line.UnscaledAscent = metrics.UnscaledAscent;
             line.UnscaledDescent = metrics.UnscaledDescent;
             line.Baseline = top + ascent;
+            line.ReportedAscent = reported.Ascent;
+            line.ReportedDescent = reported.Descent;
+            double finalDescent = _forceStrutHeight ? _strutDescent - _strutLeadingHalf : descent;
+            line.ReportedBaseline = top + Math.Round(ascent + descent, MidpointRounding.AwayFromZero) - finalDescent;
 
             // SkParagraph's `InternalLineMetrics::height()` rounds each line's height to whole pixels
             // (`::round(descent - ascent + leading)`), so fractional font sizes stack integral lines.
             top += Math.Round(ascent + descent, MidpointRounding.AwayFromZero);
             PositionLine(line, lineIndex == _lines.Count - 1);
             _longestLine = Math.Max(_longestLine, line.ContentWidth);
+
+            void AddStyle(ResolvedTextStyle style)
+            {
+                Accumulate(ref metrics, style, trimAscent, trimDescent);
+                Accumulate(ref reported, style, false, false);
+            }
         }
 
         _height = top;
@@ -1155,13 +1172,13 @@ internal sealed class HeadlessParagraph : Paragraph
         Line line = _lines[index];
         return new LineMetrics(
             HardBreak: line.HardBreak || index == _lines.Count - 1,
-            Ascent: line.Ascent,
-            Descent: line.Descent,
-            UnscaledAscent: line.UnscaledAscent,
-            Height: line.Ascent + line.Descent,
+            Ascent: line.ReportedAscent,
+            Descent: line.ReportedDescent,
+            UnscaledAscent: line.ReportedAscent,
+            Height: Math.Round(line.ReportedAscent + line.ReportedDescent, MidpointRounding.AwayFromZero),
             Width: line.ContentWidth,
             Left: line.Left,
-            Baseline: line.Baseline,
+            Baseline: line.ReportedBaseline,
             LineNumber: index);
     }
 
@@ -1294,6 +1311,12 @@ internal sealed class HeadlessParagraph : Paragraph
         public double UnscaledDescent { get; set; }
 
         public double Baseline { get; set; }
+
+        public double ReportedAscent { get; set; }
+
+        public double ReportedDescent { get; set; }
+
+        public double ReportedBaseline { get; set; }
 
         public double Left { get; set; }
 
