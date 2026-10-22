@@ -109,16 +109,42 @@ public abstract class LocalizationsDelegate
 
     public abstract object Load(Locale locale);
 
+    /// <summary>Loads resources synchronously or asynchronously, as Dart's delegate future does.</summary>
+    /// <remarks>Direct values load synchronously; Task-backed results notify in a microtask.</remarks>
+    public virtual ValueTask<object> LoadAsync(Locale locale) => new(Load(locale));
+
+    // ValueTask equality retains its backing-object identity: only a directly supplied result is
+    // Dart's SynchronousFuture. A completed Task still delivers its listeners in a microtask.
+    // Callers Preserve first so reading Result cannot consume an IValueTaskSource twice.
+    internal static bool IsSynchronous<TValue>(ValueTask<TValue> result) where TValue : class =>
+        result.IsCompletedSuccessfully && result.Equals(new ValueTask<TValue>(result.Result));
+
     public abstract bool ShouldReload(LocalizationsDelegate oldDelegate);
+
+    public override string ToString() => $"{GetType().Name}[{ResourceType.Name}]";
 }
 
 public abstract class LocalizationsDelegate<T> : LocalizationsDelegate where T : class
 {
-    public sealed override Type ResourceType => typeof(T);
+    public override Type ResourceType => typeof(T);
 
-    public abstract T LoadTyped(Locale locale);
+    /// <summary>Loads synchronous resources. Async delegates override LoadTypedAsync instead.</summary>
+    public virtual T LoadTyped(Locale locale) => throw new NotSupportedException(
+        "This localization delegate supports asynchronous loading only. Use LoadTypedAsync.");
+
+    public virtual ValueTask<T> LoadTypedAsync(Locale locale) => new(LoadTyped(locale));
 
     public sealed override object Load(Locale locale) => LoadTyped(locale);
+
+    public sealed override ValueTask<object> LoadAsync(Locale locale)
+    {
+        ValueTask<T> result = LoadTypedAsync(locale).Preserve();
+        return IsSynchronous(result)
+            ? new ValueTask<object>(result.Result)
+            : new ValueTask<object>(BoxAsync(result));
+    }
+
+    private static async Task<object> BoxAsync(ValueTask<T> result) => await result;
 }
 
 public abstract class WidgetsLocalizations
@@ -159,11 +185,12 @@ public abstract class WidgetsLocalizations
 
     public static WidgetsLocalizations Of(BuildContext context)
     {
+        WidgetsDebug.DebugCheckHasWidgetsLocalizations(context);
         return Localizations.Of<WidgetsLocalizations>(context);
     }
 }
 
-public sealed class DefaultWidgetsLocalizations : WidgetsLocalizations
+public class DefaultWidgetsLocalizations : WidgetsLocalizations
 {
     public DefaultWidgetsLocalizations()
     {
@@ -222,17 +249,17 @@ public sealed class Localizations : StatefulWidget
     public Localizations(
         Locale locale,
         IEnumerable<LocalizationsDelegate> delegates,
-        Widget child,
+        Widget? child = null,
         bool isApplicationLevel = false,
         Key? key = null) : base(key)
     {
         Locale = locale ?? throw new ArgumentNullException(nameof(locale));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Child = child;
         IsApplicationLevel = isApplicationLevel;
         Delegates = (delegates ?? throw new ArgumentNullException(nameof(delegates))).ToArray();
         if (!Delegates.Any(
                 localizationsDelegate =>
-                    localizationsDelegate.ResourceType == typeof(WidgetsLocalizations)))
+                    localizationsDelegate is LocalizationsDelegate<WidgetsLocalizations>))
         {
             throw new ArgumentException(
                 "Localizations requires a WidgetsLocalizations delegate.",
@@ -244,13 +271,13 @@ public sealed class Localizations : StatefulWidget
 
     public IReadOnlyList<LocalizationsDelegate> Delegates { get; }
 
-    public Widget Child { get; }
+    public Widget? Child { get; }
 
     public bool IsApplicationLevel { get; }
 
     public static Localizations Override(
         BuildContext context,
-        Widget child,
+        Widget? child = null,
         Locale? locale = null,
         IReadOnlyList<LocalizationsDelegate>? delegates = null,
         Key? key = null)
@@ -264,9 +291,9 @@ public sealed class Localizations : StatefulWidget
             mergedDelegates.AddRange(delegates);
         }
 
-        mergedDelegates.AddRange(scope.Delegates);
+        mergedDelegates.AddRange(scope.State.CurrentWidget.Delegates);
         return new Localizations(
-            locale: locale ?? scope.Locale,
+            locale: locale ?? scope.State.Locale!,
             delegates: mergedDelegates,
             child: child,
             key: key);
@@ -280,39 +307,78 @@ public sealed class Localizations : StatefulWidget
     }
 
     public static T? MaybeOf<T>(BuildContext context) where T : class
+        => Of<T>(context, typeof(T));
+
+    /// <summary>Looks up resources by delegate type, returning null when the scope has none.</summary>
+    public static T? Of<T>(BuildContext context, Type type) where T : class
     {
         LocalizationsScope? scope = context.DependOnInheritedWidgetOfExactType<LocalizationsScope>();
-        return scope?.Resources.GetValueOrDefault(typeof(T)) as T;
+        return (T?)(scope?.State.Resources.GetValueOrDefault(type));
     }
 
     public static Locale LocaleOf(BuildContext context)
     {
-        return MaybeLocaleOf(context)
-               ?? throw new InvalidOperationException("No Localizations ancestor was found.");
+        Locale? locale = MaybeLocaleOf(context);
+        if (locale is null && Constants.KDebugMode)
+        {
+            throw new FlutterError(
+                "Requested the Locale of a context that does not include a Localizations ancestor.\n"
+                + "To request the Locale, the context used to retrieve the Localizations widget must "
+                + "be that of a widget that is a descendant of a Localizations widget.");
+        }
+
+        return locale ?? throw new InvalidOperationException("No Localizations ancestor was found.");
     }
 
     public static Locale? MaybeLocaleOf(BuildContext context)
     {
-        return context.DependOnInheritedWidgetOfExactType<LocalizationsScope>()?.Locale;
+        return context.DependOnInheritedWidgetOfExactType<LocalizationsScope>()?.State.Locale;
     }
 
     public override State CreateState() => new LocalizationsState();
 
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Locale>("locale", Locale));
+        properties.Add(new IterableProperty<LocalizationsDelegate>("delegates", Delegates));
+    }
+
     private sealed class LocalizationsState : State<Localizations>
     {
+        private readonly GlobalKey _localizedResourcesScopeKey = new LabeledGlobalKey<State>(null);
         private IReadOnlyDictionary<Type, object> _resources =
             new Dictionary<Type, object>();
-        private Locale _locale = null!;
+        private Locale? _locale;
 
-        private Localizations CurrentWidget => (Localizations)StateWidget;
+        public Locale? Locale
+        {
+            get => _locale;
+            private set
+            {
+                if (Equals(_locale, value))
+                {
+                    return;
+                }
+
+                PlatformDispatcher.Instance.SetApplicationLocale(value!);
+                _locale = value;
+            }
+        }
+
+        public Localizations CurrentWidget => (Localizations)StateWidget;
+
+        public IReadOnlyDictionary<Type, object> Resources => _resources;
 
         public override void InitState()
         {
+            base.InitState();
             Load(CurrentWidget.Locale);
         }
 
         public override void DidUpdateWidget(Localizations oldWidget)
         {
+            base.DidUpdateWidget(oldWidget);
             var oldLocalizations = (Localizations)oldWidget;
             if (!Equals(CurrentWidget.Locale, oldLocalizations.Locale)
                 || AnyDelegatesShouldReload(oldLocalizations))
@@ -323,6 +389,11 @@ public sealed class Localizations : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            if (_locale is null)
+            {
+                return new SizedBox(width: 0.0, height: 0.0);
+            }
+
             WidgetsLocalizations widgetsLocalizations =
                 (WidgetsLocalizations)_resources[typeof(WidgetsLocalizations)];
 
@@ -333,12 +404,12 @@ public sealed class Localizations : StatefulWidget
                 container: !CurrentWidget.IsApplicationLevel,
                 textDirection: widgetsLocalizations.TextDirection,
                 child: new LocalizationsScope(
-                    locale: _locale,
-                    delegates: CurrentWidget.Delegates,
+                    state: this,
                     resources: _resources,
+                    key: _localizedResourcesScopeKey,
                     child: new Directionality(
                         textDirection: widgetsLocalizations.TextDirection,
-                        child: CurrentWidget.Child)));
+                        child: CurrentWidget.Child!)));
         }
 
         private bool AnyDelegatesShouldReload(Localizations oldWidget)
@@ -364,28 +435,113 @@ public sealed class Localizations : StatefulWidget
 
         private void Load(Locale locale)
         {
-            var resources = new Dictionary<Type, object>();
-            var loadedResourceTypes = new HashSet<Type>();
-            foreach (LocalizationsDelegate localizationsDelegate in CurrentWidget.Delegates)
+            ValueTask<IReadOnlyDictionary<Type, object>> result = LoadAll(locale, CurrentWidget.Delegates);
+            if (LocalizationsDelegate.IsSynchronous(result))
             {
-                if (!localizationsDelegate.IsSupported(locale)
-                    || !loadedResourceTypes.Add(localizationsDelegate.ResourceType))
+                _resources = result.Result;
+                Locale = locale;
+                return;
+            }
+
+            RendererBinding.Instance.DeferFirstFrame();
+            EventLoop.ScheduleMicrotask(() => EventLoop.RunAsync(async () =>
+            {
+                IReadOnlyDictionary<Type, object> resources;
+                try
                 {
-                    continue;
+                    resources = await result;
+                }
+                catch (Exception exception)
+                {
+                    // Dart forwards failed futures to the isolate's uncaught-error handler. There is no
+                    // successful load to release this deferral, so preserve it and report through ours.
+                    FlutterError.ReportError(new FlutterErrorDetails(
+                        exception: exception,
+                        stack: exception.StackTrace,
+                        library: "widgets library",
+                        context: new ErrorDescription("while loading localizations")));
+                    return;
                 }
 
-                resources[localizationsDelegate.ResourceType] = localizationsDelegate.Load(locale);
-            }
+                if (Mounted)
+                {
+                    SetState(() =>
+                    {
+                        _resources = resources;
+                        Locale = locale;
+                    });
+                }
 
-            if (!resources.ContainsKey(typeof(WidgetsLocalizations)))
-            {
-                throw new InvalidOperationException(
-                    $"No WidgetsLocalizations delegate supports locale {locale}.");
-            }
-
-            _locale = locale;
-            _resources = resources;
+                RendererBinding.Instance.AllowFirstFrame();
+            }));
         }
+
+        private static ValueTask<IReadOnlyDictionary<Type, object>> LoadAll(
+            Locale locale,
+            IReadOnlyList<LocalizationsDelegate> allDelegates)
+        {
+            var resources = new Dictionary<Type, object>();
+            var loadedResourceTypes = new HashSet<Type>();
+            var delegates = new List<LocalizationsDelegate>();
+            foreach (LocalizationsDelegate localizationsDelegate in allDelegates)
+            {
+                if (!loadedResourceTypes.Contains(localizationsDelegate.ResourceType)
+                    && localizationsDelegate.IsSupported(locale))
+                {
+                    loadedResourceTypes.Add(localizationsDelegate.ResourceType);
+                    delegates.Add(localizationsDelegate);
+                }
+            }
+
+            var pending = new List<(Type Type, Task<object> Future)>();
+            foreach (LocalizationsDelegate localizationsDelegate in delegates)
+            {
+                ValueTask<object> result = localizationsDelegate.LoadAsync(locale).Preserve();
+                if (LocalizationsDelegate.IsSynchronous(result) && result.Result is not null)
+                {
+                    resources[localizationsDelegate.ResourceType] = result.Result;
+                }
+                else
+                {
+                    pending.Add((localizationsDelegate.ResourceType, result.AsTask()));
+                }
+            }
+
+            return pending.Count == 0
+                ? new ValueTask<IReadOnlyDictionary<Type, object>>(resources)
+                : new ValueTask<IReadOnlyDictionary<Type, object>>(CompletePending());
+
+            async Task<IReadOnlyDictionary<Type, object>> CompletePending()
+            {
+                object[] values = await Task.WhenAll(pending.Select(entry => entry.Future));
+                for (int index = 0; index < pending.Count; index += 1)
+                {
+                    resources[pending[index].Type] = values[index];
+                }
+
+                return resources;
+            }
+        }
+    }
+
+    private sealed class LocalizationsScope : InheritedWidget
+    {
+        public LocalizationsScope(
+            LocalizationsState state,
+            IReadOnlyDictionary<Type, object> resources,
+            Widget child,
+            Key? key = null) : base(child, key)
+        {
+            State = state;
+            Resources = resources;
+        }
+
+        public LocalizationsState State { get; }
+
+        public IReadOnlyDictionary<Type, object> Resources { get; }
+
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+            !ReferenceEquals(((LocalizationsScope)oldWidget).Resources, Resources);
     }
 
     public static Locale Resolve(
@@ -511,34 +667,6 @@ public sealed class Localizations : StatefulWidget
     private static string LanguageAndCountryKey(Locale locale)
     {
         return $"{locale.LanguageCode}_{locale.CountryCode}";
-    }
-}
-
-internal sealed class LocalizationsScope : InheritedWidget
-{
-    public LocalizationsScope(
-        Locale locale,
-        IReadOnlyList<LocalizationsDelegate> delegates,
-        IReadOnlyDictionary<Type, object> resources,
-        Widget child,
-        Key? key = null) : base(child, key)
-    {
-        Locale = locale;
-        Delegates = delegates;
-        Resources = resources;
-    }
-
-    public Locale Locale { get; }
-
-    public IReadOnlyList<LocalizationsDelegate> Delegates { get; }
-
-    public IReadOnlyDictionary<Type, object> Resources { get; }
-
-    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        var oldScope = (LocalizationsScope)oldWidget;
-        return !Equals(oldScope.Locale, Locale)
-               || !ReferenceEquals(oldScope.Resources, Resources);
     }
 }
 

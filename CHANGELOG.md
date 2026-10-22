@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Async localization batches defer first frames and report committed locales (widgets/localizations.dart).
 - Breaking: Text-field buckets, controller swaps, form reset and restoration match Dart (text_field.dart).
 - Breaking: Windows host keys preserve shifted characters; windowing errors use Dart newlines (_window.dart).
 - Breaking: CupertinoMenuAnchor subtitle blending, exact colors and swipe lifecycle match Dart (menu_anchor.dart).

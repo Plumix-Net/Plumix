@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -22,6 +25,15 @@ class _CupertinoLocalizationsDemoPageState
   static final DateTime _sampleDate = DateTime(2019, 3, 25);
 
   int _selected = 0;
+  bool _asyncLoading = false;
+  final List<(Locale, Completer<_DemoStrings>)> _pending =
+      <(Locale, Completer<_DemoStrings>)>[];
+
+  @override
+  void dispose() {
+    _completeLoads();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,14 +51,54 @@ class _CupertinoLocalizationsDemoPageState
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Wrap(spacing: 8, runSpacing: 8, children: _buildLocaleButtons()),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: <Widget>[
+            _buildAction(_asyncLoading ? 'Async: on' : 'Async: off', () {
+              _completeLoads();
+              setState(() => _asyncLoading = !_asyncLoading);
+            }),
+            _buildAction('Complete load', _completeLoads),
+          ],
+        ),
+        const Text(
+          'With Async on, choose a language, then Complete load. '
+          'Previous translations stay visible.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
         Localizations(
           locale: _locales[_selected].$2,
-          delegates: GlobalCupertinoLocalizations.delegates,
+          delegates: <LocalizationsDelegate<dynamic>>[
+            _DemoStringsDelegate(_loadResources, _asyncLoading),
+            ...GlobalCupertinoLocalizations.delegates,
+          ],
           child: Builder(builder: _buildTranslations),
         ),
       ],
     );
   }
+
+  Future<_DemoStrings> _loadResources(Locale locale) {
+    if (!_asyncLoading) {
+      return SynchronousFuture<_DemoStrings>(_DemoStrings(locale));
+    }
+    final Completer<_DemoStrings> completion = Completer<_DemoStrings>();
+    _pending.add((locale, completion));
+    return completion.future;
+  }
+
+  void _completeLoads() {
+    final List<(Locale, Completer<_DemoStrings>)> pending =
+        List<(Locale, Completer<_DemoStrings>)>.of(_pending);
+    _pending.clear();
+    for (final (Locale locale, Completer<_DemoStrings> completion) in pending) {
+      completion.complete(_DemoStrings(locale));
+    }
+  }
+
+  static Widget _buildAction(String label, VoidCallback onTap) =>
+      CupertinoButton(onPressed: onTap, child: Text(label));
 
   List<Widget> _buildLocaleButtons() {
     return <Widget>[
@@ -90,6 +142,13 @@ class _CupertinoLocalizationsDemoPageState
         crossAxisAlignment: CrossAxisAlignment.stretch,
         spacing: 6,
         children: <Widget>[
+          _buildRow(
+            'loadedLocale',
+            Localizations.of<_DemoStrings>(
+              context,
+              _DemoStrings,
+            )!.locale.toString(),
+          ),
           _buildRow('textDirection', widgets.textDirection.name),
           _buildRow('alertDialogLabel', localizations.alertDialogLabel),
           _buildRow(
@@ -158,4 +217,27 @@ class _CupertinoLocalizationsDemoPageState
       ],
     );
   }
+}
+
+class _DemoStrings {
+  const _DemoStrings(this.locale);
+
+  final Locale locale;
+}
+
+class _DemoStringsDelegate extends LocalizationsDelegate<_DemoStrings> {
+  const _DemoStringsDelegate(this.loadResources, this.asynchronous);
+
+  final Future<_DemoStrings> Function(Locale) loadResources;
+  final bool asynchronous;
+
+  @override
+  bool isSupported(Locale locale) => true;
+
+  @override
+  Future<_DemoStrings> load(Locale locale) => loadResources(locale);
+
+  @override
+  bool shouldReload(_DemoStringsDelegate old) =>
+      asynchronous != old.asynchronous;
 }

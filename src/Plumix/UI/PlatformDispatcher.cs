@@ -313,6 +313,23 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action? OnLocaleChanged { get; set; }
 
+    /// <summary>The most recently committed locale reported by a Localizations scope.</summary>
+    public Locale? ApplicationLocale { get; private set; }
+
+    /// <summary>Lets the host consume dart:ui's application-locale notification.</summary>
+    public event Action<Locale>? ApplicationLocaleChanged;
+
+    /// <summary>Reports a resolved application locale to the platform.</summary>
+    /// <remarks>dart:ui's <c>PlatformDispatcher.setApplicationLocale</c>.</remarks>
+    public void SetApplicationLocale(Locale locale)
+    {
+        ArgumentNullException.ThrowIfNull(locale);
+        ApplicationLocale = locale;
+        ApplicationLocaleChanged?.Invoke(locale);
+    }
+
+    internal void ResetApplicationLocaleForTests(Locale? locale) => ApplicationLocale = locale;
+
     /// <summary>
     /// The platform's own resolution of the supported locales against the user's preferences, which
     /// <see cref="ComputePlatformResolvedLocale"/> asks.
