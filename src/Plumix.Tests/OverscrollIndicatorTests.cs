@@ -11,7 +11,7 @@ using Xunit;
 namespace Plumix.Tests;
 
 [Collection(SchedulerTestCollection.Name)]
-public sealed class OverscrollIndicatorTests : IDisposable
+public sealed partial class OverscrollIndicatorTests : IDisposable
 {
     private static readonly Size Viewport = new(240, 300);
 
@@ -75,7 +75,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
     }
 
     [Fact]
-    public void Glow_DispatchesConfirmationOncePerOverscrollSequenceAndHonorsPaintOffset()
+    public void Glow_ConfirmsEveryOverscrollAsPinnedDartDoesAndHonorsPaintOffset()
     {
         int confirmations = 0;
         var emitterKey = new LabeledGlobalKey<NotificationEmitterState>("glow-emitter");
@@ -104,7 +104,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
         PumpAnimation(harness, TimeSpan.FromMilliseconds(100));
 
         GlowingOverscrollIndicatorState state = harness.FindState<GlowingOverscrollIndicatorState>();
-        Assert.Equal(1, confirmations);
+        Assert.Equal(2, confirmations);
         Assert.Equal(24.0, state.LeadingController.PaintOffset);
         Assert.True(state.LeadingController.GlowOpacity > 0.0);
         Assert.Equal(0.0, state.TrailingController.GlowOpacity);
@@ -115,7 +115,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
             scrollDelta: 4));
         emitter.Dispatch(new OverscrollNotification(Metrics(), 20, dragDetails: details));
 
-        Assert.Equal(2, confirmations);
+        Assert.Equal(3, confirmations);
     }
 
     [Fact]
@@ -525,6 +525,12 @@ public sealed class OverscrollIndicatorTests : IDisposable
         public void Pump(Size size)
         {
             _owner.PumpFrame(_pipeline, size);
+        }
+
+        public void Update(Widget widget)
+        {
+            _rootElement.Update(widget);
+            Pump(Viewport);
         }
 
         public T FindState<T>() where T : State

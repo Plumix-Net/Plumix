@@ -1,3 +1,5 @@
+import 'dart:ui' show PointerDeviceKind;
+
 import 'package:material_ui/material_ui.dart';
 
 class ScrollPhysicsDemoPage extends StatelessWidget {
@@ -15,7 +17,7 @@ class ScrollPhysicsDemoPage extends StatelessWidget {
         ),
         const Text(
           'Drag past either end: bouncing physics rubber-band and spring back, '
-          'clamping physics stop at the edge, never-scrollable ignores the drag.',
+          'clamping physics show a glow at the edge; hold, move sideways, then release.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         const Text(
@@ -72,11 +74,12 @@ class ScrollPhysicsDemoPage extends StatelessWidget {
               ),
               Expanded(
                 child: _buildList(
-                  'Clamping (Android)',
+                  'Clamping + glow',
                   const Color(0xFFE3F2FD),
                   const ClampingScrollPhysics(
                     parent: RangeMaintainingScrollPhysics(),
                   ),
+                  showGlow: true,
                 ),
               ),
               Expanded(
@@ -93,34 +96,54 @@ class ScrollPhysicsDemoPage extends StatelessWidget {
     );
   }
 
-  Widget _buildList(String title, Color color, ScrollPhysics physics) {
+  Widget _buildList(
+    String title,
+    Color color,
+    ScrollPhysics physics, {
+    bool showGlow = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 6,
       children: <Widget>[
         Text(title, style: const TextStyle(fontSize: 14, color: Colors.black)),
-        Expanded(
-          child: ListView.builder(
-            itemCount: 24,
-            itemExtent: 44,
-            physics: physics,
-            addAutomaticKeepAlives: false,
-            itemBuilder: (BuildContext context, int index) {
-              return Container(
-                color: index.isEven ? color : Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 8,
-                ),
-                child: Text(
-                  'row #$index',
-                  style: const TextStyle(fontSize: 13, color: Colors.black),
-                ),
-              );
-            },
-          ),
-        ),
+        Expanded(child: _buildScrollView(color, physics, showGlow)),
       ],
     );
+  }
+
+  Widget _buildScrollView(Color color, ScrollPhysics physics, bool showGlow) {
+    final Widget list = ListView.builder(
+      itemCount: 24,
+      itemExtent: 44,
+      physics: physics,
+      addAutomaticKeepAlives: false,
+      itemBuilder: (BuildContext context, int index) {
+        return Container(
+          color: index.isEven ? color : Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          child: Text(
+            'row #$index',
+            style: const TextStyle(fontSize: 13, color: Colors.black),
+          ),
+        );
+      },
+    );
+    return showGlow
+        ? GlowingOverscrollIndicator(
+            axisDirection: AxisDirection.down,
+            color: const Color(0xFF1565C0),
+            child: ScrollConfiguration(
+              behavior: const ScrollBehavior().copyWith(
+                overscroll: false,
+                dragDevices: <PointerDeviceKind>{
+                  ...const ScrollBehavior().dragDevices,
+                  PointerDeviceKind.mouse,
+                },
+              ),
+              child: list,
+            ),
+          )
+        : list;
   }
 }

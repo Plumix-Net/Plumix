@@ -8,6 +8,17 @@ public abstract class Notification
 {
     public BuildContext? Context { get; private set; }
 
+    public override string ToString()
+    {
+        var description = new List<string>();
+        DebugFillDescription(description);
+        return $"{Diagnostics.ObjectRuntimeType(this, "Notification")}({string.Join(", ", description)})";
+    }
+
+    protected virtual void DebugFillDescription(List<string> description)
+    {
+    }
+
     /// <summary>
     /// Starts bubbling this notification at <paramref name="target"/>. Dart's
     /// <c>Notification.dispatch</c>: the walk itself is <see cref="BuildContext.DispatchNotification"/>,

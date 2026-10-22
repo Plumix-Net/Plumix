@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -29,6 +30,13 @@ public sealed class OverscrollIndicatorNotification : Notification, IViewportNot
     public void DisallowIndicator()
     {
         Accepted = false;
+    }
+
+    protected override void DebugFillDescription(List<string> description)
+    {
+        base.DebugFillDescription(description);
+        description.Add(Depth == 0 ? "depth: 0 (local)" : $"depth: {Depth} (remote)");
+        description.Add(Leading ? "side: leading edge" : "side: trailing edge");
     }
 
     void IViewportNotification.IncrementDepth()
@@ -128,6 +136,21 @@ public sealed class GlowingOverscrollIndicator : StatefulWidget
     public Widget? Child { get; }
 
     public override State CreateState() => new GlowingOverscrollIndicatorState();
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<AxisDirection>("axisDirection", AxisDirection));
+        string showDescription = (ShowLeading, ShowTrailing) switch
+        {
+            (true, true) => "both sides",
+            (true, false) => "leading side only",
+            (false, true) => "trailing side only",
+            (false, false) => "neither side (!)",
+        };
+        properties.Add(new MessageProperty("show", showDescription));
+        properties.Add(new ColorProperty("color", Color, showName: false));
+    }
 }
 
 internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollIndicator>
@@ -141,7 +164,6 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
     private GlowController _leadingController = null!;
     private GlowController _trailingController = null!;
     private MergedListenable _controllers = null!;
-    private Type? _lastNotificationType;
 
     private GlowingOverscrollIndicator CurrentWidget =>
         (GlowingOverscrollIndicator)StateWidget;
@@ -152,6 +174,7 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
 
     public override void InitState()
     {
+        base.InitState();
         _leadingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis, this);
         _trailingController = new GlowController(CurrentWidget.Color, CurrentWidget.Axis, this);
         _controllers = new MergedListenable(_leadingController, _trailingController);
@@ -159,6 +182,7 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
 
     public override void DidUpdateWidget(GlowingOverscrollIndicator oldWidget)
     {
+        base.DidUpdateWidget(oldWidget);
         var oldIndicator = (GlowingOverscrollIndicator)oldWidget;
         if (oldIndicator.Color == CurrentWidget.Color && oldIndicator.Axis == CurrentWidget.Axis)
         {
@@ -212,11 +236,16 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
 
         if (notification is OverscrollNotification overscrollNotification)
         {
+            if (Constants.KDebugMode && overscrollNotification.Overscroll == 0.0)
+            {
+                throw new FlutterError("Overscroll must be nonzero.");
+            }
+
             bool isLeading = overscrollNotification.Overscroll < 0.0;
             GlowController controller = isLeading
                 ? _leadingController
                 : _trailingController;
-            if (_lastNotificationType != typeof(OverscrollNotification))
+            // Pinned Dart tests a Type with `is! OverscrollNotification`, so it confirms every event.
             {
                 var confirmation = new OverscrollIndicatorNotification(isLeading);
                 confirmation.Dispatch(Context);
@@ -231,6 +260,11 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
             {
                 if (overscrollNotification.Velocity != 0.0)
                 {
+                    if (Constants.KDebugMode && overscrollNotification.DragDetails is not null)
+                    {
+                        throw new FlutterError("An overscroll impact cannot have drag details.");
+                    }
+
                     controller.AbsorbImpact(Math.Abs(overscrollNotification.Velocity));
                 }
                 else if (overscrollNotification.DragDetails is DragUpdateDetails dragDetails)
@@ -256,7 +290,6 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
             _trailingController.ScrollEnd();
         }
 
-        _lastNotificationType = notification.GetType();
         return false;
     }
 
@@ -267,23 +300,20 @@ internal sealed class GlowingOverscrollIndicatorState : State<GlowingOverscrollI
         out double crossAxisOffset,
         out double crossExtent)
     {
-        Size size = notification.Context?.FindRenderObject() is RenderBox { HasSize: true } renderBox
-            ? renderBox.Size
-            : new Size(
-                Math.Max(1.0, notification.Metrics.ViewportDimension),
-                Math.Max(1.0, notification.Metrics.ViewportDimension));
-
+        var renderBox = (RenderBox)notification.Context!.FindRenderObject()!;
+        Size size = renderBox.Size;
+        Point position = renderBox.GlobalToLocal(dragDetails.GlobalPosition);
         if (notification.Metrics.Axis == Axis.Horizontal)
         {
-            extent = Math.Max(1.0, size.Width);
-            crossExtent = Math.Max(1.0, size.Height);
-            crossAxisOffset = Math.Clamp(dragDetails.LocalPosition.Y, 0.0, crossExtent);
+            extent = size.Width;
+            crossExtent = size.Height;
+            crossAxisOffset = Math.Clamp(position.Y, 0.0, crossExtent);
         }
         else
         {
-            extent = Math.Max(1.0, size.Height);
-            crossExtent = Math.Max(1.0, size.Width);
-            crossAxisOffset = Math.Clamp(dragDetails.LocalPosition.X, 0.0, crossExtent);
+            extent = size.Height;
+            crossExtent = size.Width;
+            crossAxisOffset = Math.Clamp(position.X, 0.0, crossExtent);
         }
     }
 }
@@ -588,6 +618,11 @@ internal enum GlowState
 
 internal sealed class GlowController : ChangeNotifier
 {
+    private static readonly TimeSpan RecedeTime = TimeSpan.FromMilliseconds(600);
+    private static readonly TimeSpan PullTime = TimeSpan.FromMilliseconds(167);
+    private static readonly TimeSpan PullHoldTime = TimeSpan.FromMilliseconds(167);
+    private static readonly TimeSpan PullDecayTime = TimeSpan.FromMilliseconds(2000);
+    private const double CrossAxisHalfTimeMicroseconds = 16667.0;
     private const double MaxOpacity = 0.5;
     private const double PullOpacityGlowFactor = 0.8;
     private const double VelocityGlowFactor = 0.00006;
@@ -595,24 +630,19 @@ internal sealed class GlowController : ChangeNotifier
     private const double WidthToHeightFactor = 0.75 * (2.0 - Sqrt3);
     private const double MinVelocity = 100.0;
     private const double MaxVelocity = 10000.0;
-    private readonly Ticker _ticker;
+    private readonly AnimationController _glowController;
+    private readonly CurvedAnimation _glowAnimation;
+    private readonly DoubleTween _glowOpacityTween = new(0.0, 0.0);
+    private readonly DoubleTween _glowSizeTween = new(0.0, 0.0);
+    private readonly Animation<double> _glowOpacity;
+    private readonly Animation<double> _glowSize;
+    private readonly Ticker _displacementTicker;
+    private TimeSpan? _displacementTickerLastElapsed;
     private Axis _axis;
     private Color _color;
     private double _displacement = 0.5;
     private double _displacementTarget = 0.5;
-    private double _glowOpacity;
-    private double _glowSize;
-    private double _phaseDuration;
-    private double _phaseElapsed;
-    // The ticker reports time since it started, so the per-frame delta this controller's exponential
-    // smoothing needs is derived from the previous elapsed value.
-    private TimeSpan _lastElapsed;
-    private double _phaseStartOpacity;
-    private double _phaseStartSize;
-    private double _phaseTargetOpacity;
-    private double _phaseTargetSize;
     private double _pullDistance;
-    // Dart's `_pullRecedeTimer`: a pull holds for `_pullHoldTime`, then recedes over `_pullDecayTime`.
     private GestureTimer? _pullRecedeTimer;
     private GlowState _state;
 
@@ -620,7 +650,13 @@ internal sealed class GlowController : ChangeNotifier
     {
         _color = color;
         _axis = axis;
-        _ticker = vsync?.CreateTicker(HandleTick) ?? new Ticker(HandleTick);
+        _glowController = new AnimationController(vsync: vsync);
+        _glowController.AddStatusListener(ChangePhase);
+        _glowAnimation = new CurvedAnimation(_glowController, Curves.Decelerate);
+        _glowAnimation.AddListener(NotifyListeners);
+        _glowOpacity = _glowAnimation.Drive(_glowOpacityTween);
+        _glowSize = _glowAnimation.Drive(_glowSizeTween);
+        _displacementTicker = vsync?.CreateTicker(TickDisplacement) ?? new Ticker(TickDisplacement);
     }
 
     public Color Color
@@ -659,174 +695,149 @@ internal sealed class GlowController : ChangeNotifier
 
     internal GlowState State => _state;
 
-    internal double GlowOpacity => _glowOpacity;
+    internal double GlowOpacity => _glowOpacity.Value;
 
-    internal double GlowSize => _glowSize;
+    internal double GlowSize => _glowSize.Value;
 
     internal double Displacement => _displacement;
 
     public void AbsorbImpact(double velocity)
     {
+        if (Constants.KDebugMode && velocity < 0.0)
+        {
+            throw new FlutterError("Glow impact velocity must be nonnegative.");
+        }
+
         _pullRecedeTimer?.Cancel();
         _pullRecedeTimer = null;
         velocity = Math.Clamp(velocity, MinVelocity, MaxVelocity);
+        _glowOpacityTween.Begin = _state == GlowState.Idle ? 0.3 : GlowOpacity;
+        _glowOpacityTween.End = Math.Clamp(velocity * VelocityGlowFactor, _glowOpacityTween.Begin.Value, MaxOpacity);
+        _glowSizeTween.Begin = GlowSize;
+        _glowSizeTween.End = Math.Min(0.025 + 7.5e-7 * velocity * velocity, 1.0);
+        _glowController.Duration = TimeSpan.FromMilliseconds(
+            Math.Round(0.15 + velocity * 0.02, MidpointRounding.AwayFromZero));
+        _glowController.Forward(from: 0.0);
         _displacement = 0.5;
-        _displacementTarget = 0.5;
-        BeginPhase(
-            GlowState.Absorb,
-            _state == GlowState.Idle ? 0.3 : _glowOpacity,
-            Math.Clamp(velocity * VelocityGlowFactor, _glowOpacity, MaxOpacity),
-            _glowSize,
-            Math.Min(0.025 + 7.5e-7 * velocity * velocity, 1.0),
-            (0.15 + velocity * 0.02) / 1000.0);
+        _state = GlowState.Absorb;
     }
 
-    public void Pull(
-        double overscroll,
-        double extent,
-        double crossAxisOffset,
-        double crossExtent)
+    public void Pull(double overscroll, double extent, double crossAxisOffset, double crossExtent)
     {
-        _pullDistance += overscroll / 200.0;
-        double safeExtent = Math.Max(1.0, extent);
-        double safeCrossExtent = Math.Max(1.0, crossExtent);
-        double targetOpacity = Math.Min(
-            _glowOpacity + overscroll / safeExtent * PullOpacityGlowFactor,
-            MaxOpacity);
-        double height = Math.Min(safeExtent, safeCrossExtent * WidthToHeightFactor);
-        double denominator = 0.7 * Math.Sqrt(Math.Max(0.0, _pullDistance * height));
-        double targetSize = denominator <= 0.0
-            ? _glowSize
-            : Math.Max(1.0 - 1.0 / denominator, _glowSize);
-        _displacementTarget = Math.Clamp(crossAxisOffset / safeCrossExtent, 0.0, 1.0);
         _pullRecedeTimer?.Cancel();
-        BeginPhase(
-            GlowState.Pull,
-            _glowOpacity,
-            targetOpacity,
-            _glowSize,
-            targetSize,
-            0.167);
-        _pullRecedeTimer = GestureTimer.Start(TimeSpan.FromMilliseconds(167), () => Recede(2.0));
+        _pullDistance += overscroll / 200.0;
+        // Each read evaluates the tween after the preceding assignment, as in Dart.
+        _glowOpacityTween.Begin = GlowOpacity;
+        _glowOpacityTween.End = Math.Min(GlowOpacity + overscroll / extent * PullOpacityGlowFactor, MaxOpacity);
+        double height = Math.Min(extent, crossExtent * WidthToHeightFactor);
+        _glowSizeTween.Begin = GlowSize;
+        _glowSizeTween.End = Math.Max(1.0 - 1.0 / (0.7 * Math.Sqrt(_pullDistance * height)), GlowSize);
+        _displacementTarget = crossAxisOffset / crossExtent;
+        if (_displacementTarget != _displacement)
+        {
+            if (!_displacementTicker.IsTicking)
+            {
+                _displacementTicker.Start();
+            }
+        }
+        else
+        {
+            _displacementTicker.Stop();
+            _displacementTickerLastElapsed = null;
+        }
+
+        _glowController.Duration = PullTime;
+        if (_state != GlowState.Pull)
+        {
+            _glowController.Forward(from: 0.0);
+            _state = GlowState.Pull;
+        }
+        else if (!_glowController.IsAnimating)
+        {
+            NotifyListeners();
+        }
+
+        _pullRecedeTimer = GestureTimer.Start(PullHoldTime, () => Recede(PullDecayTime));
     }
 
     public void ScrollEnd()
     {
         if (_state == GlowState.Pull)
         {
-            Recede(0.6);
+            Recede(RecedeTime);
         }
     }
 
     public void Paint(PaintingContext context, Size size)
     {
-        if (_glowOpacity <= 0.0 || size.Width <= 0.0 || size.Height <= 0.0)
+        if (GlowOpacity == 0.0)
         {
             return;
         }
 
-        double baseGlowScale = size.Width > size.Height
-            ? size.Height / size.Width
-            : 1.0;
+        double baseGlowScale = size.Width > size.Height ? size.Height / size.Width : 1.0;
         double radius = size.Width * 1.5;
         double height = Math.Min(size.Height, size.Width * WidthToHeightFactor);
-        double scaleY = _glowSize * baseGlowScale;
-        if (scaleY <= 0.0)
-        {
-            return;
-        }
-
+        double scaleY = GlowSize * baseGlowScale;
         var clipRect = new Rect(0.0, 0.0, size.Width, height);
-        var center = new Point(
-            size.Width / 2.0 * (0.5 + _displacement),
-            height - radius);
-        byte alpha = (byte)Math.Round(Math.Clamp(_glowOpacity, 0.0, 1.0) * byte.MaxValue);
-        var brush = new SolidColorBrush(
-            Color.FromARGB(alpha, Color.Red, Color.Green, Color.Blue));
-        Matrix4 transform = Matrix4.Identity();
-        transform.ScaleByDouble(1.0, scaleY, 1.0, 1);
-        transform.TranslateByDouble(0.0, PaintOffset + PaintOffsetScrollPixels, 0, 1);
+        var center = new Point(size.Width / 2.0 * (0.5 + _displacement), height - radius);
+        var paint = new Paint { Color = Color.WithOpacity(GlowOpacity) };
         context.Canvas.Save();
-        context.Canvas.Transform(transform);
+        context.Canvas.Translate(0.0, PaintOffset + PaintOffsetScrollPixels);
+        context.Canvas.Scale(1.0, scaleY);
         context.Canvas.ClipRect(clipRect, doAntiAlias: false);
-        context.Canvas.DrawCircle(brush, null, center, radius);
+        context.Canvas.DrawCircle(center, radius, paint);
         context.Canvas.Restore();
     }
 
     public override void Dispose()
     {
+        _glowController.Dispose();
+        _glowAnimation.Dispose();
+        _displacementTicker.Dispose();
         _pullRecedeTimer?.Cancel();
-        _ticker.Dispose();
         base.Dispose();
     }
 
-    private void BeginPhase(
-        GlowState state,
-        double startOpacity,
-        double targetOpacity,
-        double startSize,
-        double targetSize,
-        double duration)
+    private void ChangePhase(AnimationStatus status)
     {
-        _state = state;
-        _phaseStartOpacity = startOpacity;
-        _phaseTargetOpacity = targetOpacity;
-        _phaseStartSize = startSize;
-        _phaseTargetSize = targetSize;
-        _phaseDuration = Math.Max(duration, 0.000001);
-        _phaseElapsed = 0.0;
-        if (!_ticker.IsActive)
-        {
-            _lastElapsed = TimeSpan.Zero;
-            _ticker.Start();
-        }
-    }
-
-    private void HandleTick(TimeSpan elapsed)
-    {
-        double seconds = (elapsed - _lastElapsed).TotalSeconds;
-        _lastElapsed = elapsed;
-        if (Math.Abs(_displacementTarget - _displacement) > 0.0001)
-        {
-            _displacement = _displacementTarget
-                            - (_displacementTarget - _displacement)
-                            * Math.Pow(2.0, -(seconds * 1_000_000.0) / (1_000_000.0 / 60.0));
-        }
-
-        _phaseElapsed += seconds;
-        double t = Math.Clamp(_phaseElapsed / _phaseDuration, 0.0, 1.0);
-        double curved = 1.0 - (1.0 - t) * (1.0 - t);
-        _glowOpacity = Lerp(_phaseStartOpacity, _phaseTargetOpacity, curved);
-        _glowSize = Lerp(_phaseStartSize, _phaseTargetSize, curved);
-        NotifyListeners();
-
-        if (t < 1.0)
+        if (status != AnimationStatus.Completed)
         {
             return;
         }
 
         if (_state == GlowState.Absorb)
         {
-            Recede(0.6);
+            Recede(RecedeTime);
         }
         else if (_state == GlowState.Recede)
         {
             _state = GlowState.Idle;
             _pullDistance = 0.0;
-            _glowOpacity = 0.0;
-            _glowSize = 0.0;
-            _ticker.Stop();
-            NotifyListeners();
-        }
-        else if (_state == GlowState.Pull && Math.Abs(_displacementTarget - _displacement) <= 0.0001)
-        {
-            // A completed pull holds still until `_pullRecedeTimer` fires, as Dart's glow controller
-            // stops animating once `forward` completes.
-            _ticker.Stop();
         }
     }
 
-    private void Recede(double duration)
+    private void TickDisplacement(TimeSpan elapsed)
+    {
+        if (_displacementTickerLastElapsed is TimeSpan lastElapsed)
+        {
+            long microseconds = (elapsed - lastElapsed).Ticks / 10;
+            _displacement = _displacementTarget - (_displacementTarget - _displacement)
+                * Math.Pow(2.0, -microseconds / CrossAxisHalfTimeMicroseconds);
+            NotifyListeners();
+            if (Plumix.Physics.PhysicsUtils.NearEqual(
+                _displacementTarget, _displacement, Plumix.Physics.Tolerance.DefaultTolerance.Distance))
+            {
+                _displacementTicker.Stop();
+                _displacementTickerLastElapsed = null;
+                return;
+            }
+        }
+
+        _displacementTickerLastElapsed = elapsed;
+    }
+
+    private void Recede(TimeSpan duration)
     {
         if (_state is GlowState.Recede or GlowState.Idle)
         {
@@ -835,20 +846,16 @@ internal sealed class GlowController : ChangeNotifier
 
         _pullRecedeTimer?.Cancel();
         _pullRecedeTimer = null;
-
-        BeginPhase(
-            GlowState.Recede,
-            _glowOpacity,
-            0.0,
-            _glowSize,
-            0.0,
-            duration);
+        _glowOpacityTween.Begin = GlowOpacity;
+        _glowOpacityTween.End = 0.0;
+        _glowSizeTween.Begin = GlowSize;
+        _glowSizeTween.End = 0.0;
+        _glowController.Duration = duration;
+        _glowController.Forward(from: 0.0);
+        _state = GlowState.Recede;
     }
 
-    private static double Lerp(double begin, double end, double t)
-    {
-        return begin + (end - begin) * t;
-    }
+    public override string ToString() => $"_GlowController(color: {Color}, axis: {Axis.ToString().ToLowerInvariant()})";
 }
 
 internal sealed class GlowingOverscrollIndicatorPainter : CustomPainter
@@ -869,6 +876,9 @@ internal sealed class GlowingOverscrollIndicatorPainter : CustomPainter
     internal GlowController? TrailingController { get; }
 
     internal AxisDirection AxisDirection { get; }
+
+    public override string ToString() =>
+        $"_GlowingOverscrollIndicatorPainter({LeadingController}, {TrailingController})";
 
     public override void Paint(PaintingContext context, Size size)
     {

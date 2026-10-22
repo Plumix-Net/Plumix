@@ -1,7 +1,9 @@
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): dart_sample/lib/demos/general/scroll_physics_demo_page.dart (exact sample parity)
@@ -20,7 +22,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                 new Text("Scroll physics", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Drag past either end: bouncing physics rubber-band and spring back, "
-                    + "clamping physics stop at the edge, never-scrollable ignores the drag.",
+                    + "clamping physics show a glow at the edge; hold, move sideways, then release.",
                     style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
                 new Text("Single child: horizontal strip with directional padding", style: new TextStyle(FontSize: 14)),
                 new SizedBox(
@@ -58,10 +60,11 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                                         parent: new RangeMaintainingScrollPhysics()))),
                             new Expanded(
                                 child: BuildList(
-                                    "Clamping (Android)",
+                                    "Clamping + glow",
                                     new Color(0xFFE3F2FD),
                                     new ClampingScrollPhysics(
-                                        parent: new RangeMaintainingScrollPhysics()))),
+                                        parent: new RangeMaintainingScrollPhysics()),
+                                    showGlow: true)),
                             new Expanded(
                                 child: BuildList(
                                     "Never (locked)",
@@ -71,7 +74,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
             ]);
     }
 
-    private static Widget BuildList(string title, Color color, ScrollPhysics physics)
+    private static Widget BuildList(string title, Color color, ScrollPhysics physics, bool showGlow = false)
     {
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -80,15 +83,33 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
             [
                 new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Expanded(
-                    child: ListView.Builder(
-                        itemCount: 24,
-                        itemExtent: 44,
-                        physics: physics,
-                        itemBuilder: (_, index) => new Container(
-                            color: index % 2 == 0 ? color : Colors.White,
-                            padding: new Thickness(10, 8),
-                            child: new Text($"row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
-                        addAutomaticKeepAlives: false)),
+                    child: BuildScrollView(color, physics, showGlow)),
             ]);
+    }
+
+    private static Widget BuildScrollView(Color color, ScrollPhysics physics, bool showGlow)
+    {
+        Widget list = ListView.Builder(
+            itemCount: 24,
+            itemExtent: 44,
+            physics: physics,
+            itemBuilder: (_, index) => new Container(
+                color: index % 2 == 0 ? color : Colors.White,
+                padding: new Thickness(10, 8),
+                child: new Text($"row #{index}", style: new TextStyle(FontSize: 13, Color: Colors.Black))),
+            addAutomaticKeepAlives: false);
+        return showGlow
+            ? new GlowingOverscrollIndicator(
+                axisDirection: AxisDirection.Down,
+                color: new Color(0xFF1565C0),
+                child: new ScrollConfiguration(
+                    new ScrollBehavior().CopyWith(
+                        overscroll: false,
+                        dragDevices: new HashSet<PointerDeviceKind>(new ScrollBehavior().DragDevices)
+                        {
+                            PointerDeviceKind.Mouse,
+                        }),
+                    list))
+            : list;
     }
 }
