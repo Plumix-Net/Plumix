@@ -78,7 +78,8 @@ public sealed class TextFormField : FormField<string>
                 magnifierConfiguration,
                 onSelectionChanged,
                 errorBuilder,
-                inputFormatters),
+                inputFormatters,
+                restorationId),
             onSaved: onSaved,
             forceErrorText: forceErrorText,
             validator: validator,
@@ -219,7 +220,8 @@ public sealed class TextFormField : FormField<string>
         TextMagnifierConfiguration? magnifierConfiguration,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged,
         FormFieldErrorBuilder? errorBuilder,
-        IReadOnlyList<TextInputFormatter>? inputFormatters)
+        IReadOnlyList<TextInputFormatter>? inputFormatters,
+        string? restorationId)
     {
         var effectiveDecoration = decoration;
         if (state.ErrorText is { } errorText)
@@ -228,55 +230,72 @@ public sealed class TextFormField : FormField<string>
             effectiveDecoration = effectiveDecoration.WithFormError(errorText, error);
         }
 
-        return new TextField(
-            controller: state.EffectiveController,
-            focusNode: focusNode,
-            decoration: effectiveDecoration,
-            style: style,
-            textAlign: textAlign,
-            textDirection: textDirection,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            readOnly: readOnly,
-            autofocus: autofocus,
-            obscuringCharacter: obscuringCharacter,
-            obscureText: obscureText,
-            maxLines: maxLines,
-            minLines: minLines,
-            expands: expands,
-            maxLength: maxLength,
-            inputFormatters: inputFormatters,
-            onChanged: value => state.HandleTextFieldChanged(value, onChanged),
-            onTap: onTap,
-            onEditingComplete: onEditingComplete,
-            onSubmitted: onFieldSubmitted,
-            enabled: enabled,
-            buildCounter: buildCounter,
-            mouseCursor: mouseCursor,
-            canRequestFocus: canRequestFocus,
-            enableInteractiveSelection: enableInteractiveSelection,
-            contextMenuBuilder: contextMenuBuilder,
-            magnifierConfiguration: magnifierConfiguration,
-            onSelectionChanged: onSelectionChanged);
+        return new UnmanagedRestorationScope(
+            bucket: state.Bucket,
+            child: new TextField(
+                restorationId: restorationId,
+                controller: state.EffectiveController,
+                focusNode: focusNode,
+                decoration: effectiveDecoration,
+                style: style,
+                textAlign: textAlign,
+                textDirection: textDirection,
+                keyboardType: keyboardType,
+                textInputAction: textInputAction,
+                readOnly: readOnly,
+                autofocus: autofocus,
+                obscuringCharacter: obscuringCharacter,
+                obscureText: obscureText,
+                maxLines: maxLines,
+                minLines: minLines,
+                expands: expands,
+                maxLength: maxLength,
+                inputFormatters: inputFormatters,
+                onChanged: value => state.HandleTextFieldChanged(value, onChanged),
+                onTap: onTap,
+                onEditingComplete: onEditingComplete,
+                onSubmitted: onFieldSubmitted,
+                enabled: enabled,
+                buildCounter: buildCounter,
+                mouseCursor: mouseCursor,
+                canRequestFocus: canRequestFocus,
+                enableInteractiveSelection: enableInteractiveSelection,
+                contextMenuBuilder: contextMenuBuilder,
+                magnifierConfiguration: magnifierConfiguration,
+                onSelectionChanged: onSelectionChanged));
     }
 }
 
 public sealed class TextFormFieldState : FormFieldState<string>
 {
-    private TextEditingController? _controller;
-    private bool _ownsController;
-    private bool _suppressControllerChange;
+    private RestorableTextEditingController? _controller;
     private string _initialValue = string.Empty;
 
     private TextFormField Current => (TextFormField)StateWidget;
-    public TextEditingController EffectiveController => Current.Controller ?? _controller!;
+    public TextEditingController EffectiveController => Current.Controller ?? _controller!.Value;
+
+    protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
+    {
+        base.RestoreState(oldBucket, initialRestore);
+        if (_controller is not null)
+        {
+            RegisterController();
+        }
+        SetValue(EffectiveController.Text);
+    }
 
     public override void InitState()
     {
         base.InitState();
         _initialValue = Current.InitialValue ?? Current.Controller?.Text ?? string.Empty;
-        AttachController(Current.Controller, _initialValue);
-        SetValue(EffectiveController.Text);
+        if (Current.Controller is null)
+        {
+            CreateLocalController(new TextEditingValue(_initialValue));
+        }
+        else
+        {
+            Current.Controller.AddListener(HandleControllerChanged);
+        }
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -285,15 +304,28 @@ public sealed class TextFormFieldState : FormFieldState<string>
         var old = (TextFormField)oldWidget;
         if (ReferenceEquals(old.Controller, Current.Controller)) return;
 
-        string previousText = old.Controller?.Text ?? _controller?.Text ?? Value ?? string.Empty;
-        DetachController(old.Controller);
-        AttachController(Current.Controller, previousText);
-        if (Current.Controller is not null) SetValue(Current.Controller.Text);
+        old.Controller?.RemoveListener(HandleControllerChanged);
+        Current.Controller?.AddListener(HandleControllerChanged);
+        if (old.Controller is not null && Current.Controller is null)
+        {
+            CreateLocalController(old.Controller.Value);
+        }
+        if (Current.Controller is not null)
+        {
+            SetValue(Current.Controller.Text);
+            if (old.Controller is null)
+            {
+                UnregisterFromRestoration(_controller!);
+                _controller!.Dispose();
+                _controller = null;
+            }
+        }
     }
 
     public override void Dispose()
     {
-        DetachController(Current.Controller);
+        Current.Controller?.RemoveListener(HandleControllerChanged);
+        _controller?.Dispose();
         base.Dispose();
     }
 
@@ -302,46 +334,41 @@ public sealed class TextFormFieldState : FormFieldState<string>
         base.DidChange(value);
         string normalized = value ?? string.Empty;
         if (!string.Equals(EffectiveController.Text, normalized, StringComparison.Ordinal))
-            EffectiveController.Text = normalized;
+            EffectiveController.Value = new TextEditingValue(normalized);
     }
 
     public override void Reset()
     {
-        _suppressControllerChange = true;
-        EffectiveController.Text = _initialValue;
-        _suppressControllerChange = false;
+        EffectiveController.Value = new TextEditingValue(_initialValue);
         base.Reset();
-        SetValue(_initialValue);
         Current.OnChanged?.Invoke(EffectiveController.Text);
     }
 
     internal void HandleTextFieldChanged(string value, Action<string>? onChanged)
     {
-        if (!string.Equals(Value, value, StringComparison.Ordinal)) base.DidChange(value);
+        DidChange(value);
         onChanged?.Invoke(value);
     }
 
-    private void AttachController(TextEditingController? external, string initialText)
+    private void RegisterController()
     {
-        _controller = external ?? new TextEditingController(initialText);
-        _ownsController = external is null;
-        _controller.AddListener(HandleControllerChanged);
+        RegisterForRestoration(_controller!, "controller");
     }
 
-    private void DetachController(TextEditingController? external)
+    private void CreateLocalController(TextEditingValue? value)
     {
-        var controller = external ?? _controller;
-        if (controller is null) return;
-        controller.RemoveListener(HandleControllerChanged);
-        if (_ownsController) controller.Dispose();
-        _controller = null;
-        _ownsController = false;
+        _controller = value is null
+            ? new RestorableTextEditingController()
+            : RestorableTextEditingController.FromValue(value.Value);
+        if (!RestorePending)
+        {
+            RegisterController();
+        }
     }
 
     private void HandleControllerChanged()
     {
-        if (_suppressControllerChange) return;
         if (!string.Equals(EffectiveController.Text, Value, StringComparison.Ordinal))
-            base.DidChange(EffectiveController.Text);
+            DidChange(EffectiveController.Text);
     }
 }

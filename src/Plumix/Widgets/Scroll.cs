@@ -412,7 +412,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
 
 public abstract class AutomaticKeepAliveClientMixin : State
 {
-    private KeepAliveHandle? _keepAliveHandle;
+    private readonly AutomaticKeepAliveClient _keepAlive = new();
 
     protected abstract bool WantKeepAlive { get; }
 
@@ -430,14 +430,7 @@ public abstract class AutomaticKeepAliveClientMixin : State
 
     protected void EnsureKeepAlive()
     {
-        if (_keepAliveHandle != null)
-        {
-            return;
-        }
-
-        var handle = new KeepAliveHandle();
-        _keepAliveHandle = handle;
-        new KeepAliveNotification(handle).Dispatch(Context);
+        _keepAlive.Ensure(Context);
     }
 
     public override void InitState()
@@ -463,14 +456,7 @@ public abstract class AutomaticKeepAliveClientMixin : State
 
     private void ReleaseKeepAlive()
     {
-        var handle = _keepAliveHandle;
-        if (handle == null)
-        {
-            return;
-        }
-
-        _keepAliveHandle = null;
-        handle.Release();
+        _keepAlive.Release();
     }
 }
 

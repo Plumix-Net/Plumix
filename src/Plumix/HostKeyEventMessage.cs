@@ -23,21 +23,29 @@ internal static class HostKeyEventMessage
     private static bool _scrollLockOn;
 
     /// <summary>
-    /// Encodes the host event as the running platform's raw key message, sends it on
+    /// Encodes the host event as the running platform's raw key message (preceded by KeyData on Windows), sends it on
     /// <see cref="SystemChannels.KeyEvent"/> and returns the framework's <c>handled</c> reply.
     /// </summary>
     public static bool Dispatch(KeyEventArgs e, bool isDown)
     {
         PhysicalKeyboardKey physicalKey = HostKeyboardMap.PhysicalKeyFor(e.PhysicalKey);
         LogicalKeyboardKey logicalKey = HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol);
+        KeyEventDeviceType deviceType = HostKeyboardMap.DeviceTypeFor(e.KeyDeviceType);
         Dictionary<string, object?> message = Encode(
             CurrentKeymap(),
             physicalKey,
             logicalKey,
             e.KeySymbol,
             e.KeyModifiers,
-            HostKeyboardMap.DeviceTypeFor(e.KeyDeviceType),
+            deviceType,
             isDown);
+
+        if (OperatingSystem.IsWindows())
+        {
+            // The Windows raw packet has one code point for both identity and text. The engine's
+            // separate KeyData packet preserves the actual character without changing the logical key.
+            DispatchWindowsKeyData(physicalKey, logicalKey, e.KeySymbol, deviceType, isDown);
+        }
 
         bool handled = false;
         _ = ServicesBinding.Instance.DefaultBinaryMessenger.HandlePlatformMessage(
@@ -52,6 +60,53 @@ internal static class HostKeyEventMessage
                 }
             });
         return handled;
+    }
+
+    private static void DispatchWindowsKeyData(
+        PhysicalKeyboardKey physical, LogicalKeyboardKey logical, string? character,
+        KeyEventDeviceType deviceType, bool isDown)
+    {
+        using var scope = EventLoop.EnterFrameworkThread();
+        var keyboard = HardwareKeyboard.Instance;
+        var manager = ServicesBinding.Instance.KeyEventManager;
+        TimeSpan timestamp = SchedulerBinding.Instance.CurrentSystemFrameTimeStamp;
+        // Select the engine's KeyData-then-raw mode even for an unmatched key-up.
+        manager.HandleKeyData(new KeyData(timestamp, KeyEventType.Down, 0, 0, null, false));
+        foreach (var modifier in new[]
+                 {
+                     (PhysicalKeyboardKey.ShiftLeft, LogicalKeyboardKey.ShiftLeft),
+                     (PhysicalKeyboardKey.ShiftRight, LogicalKeyboardKey.ShiftRight),
+                     (PhysicalKeyboardKey.ControlLeft, LogicalKeyboardKey.ControlLeft),
+                     (PhysicalKeyboardKey.ControlRight, LogicalKeyboardKey.ControlRight),
+                     (PhysicalKeyboardKey.AltLeft, LogicalKeyboardKey.AltLeft),
+                     (PhysicalKeyboardKey.AltRight, LogicalKeyboardKey.AltRight),
+                     (PhysicalKeyboardKey.MetaLeft, LogicalKeyboardKey.MetaLeft),
+                     (PhysicalKeyboardKey.MetaRight, LogicalKeyboardKey.MetaRight),
+                 })
+        {
+            if (modifier.Item1.Equals(physical)) continue;
+            bool pressed = keyboard.LookUpLayout(modifier.Item1) is not null;
+            bool desired = ModifiersDown.Contains(modifier.Item1);
+            if (pressed != desired)
+            {
+                manager.HandleKeyData(new KeyData(
+                    timestamp, desired ? KeyEventType.Down : KeyEventType.Up,
+                    modifier.Item1.UsbHidUsage, modifier.Item2.KeyId, null, true));
+            }
+        }
+        LogicalKeyboardKey? recorded = keyboard.LookUpLayout(physical);
+        if (!isDown && recorded is null) return;
+        KeyEventType type = !isDown ? KeyEventType.Up
+            : recorded is null ? KeyEventType.Down : KeyEventType.Repeat;
+        string label = logical.KeyLabel;
+        string? effectiveCharacter = character is { Length: > 0 }
+                                     && !LogicalKeyboardKey.IsControlCharacter(character)
+            ? character
+            : label.Length == 1 && !LogicalKeyboardKey.IsControlCharacter(label) ? label.ToLowerInvariant() : null;
+        manager.HandleKeyData(new KeyData(
+            timestamp, type, physical.UsbHidUsage, (recorded ?? logical).KeyId,
+            isDown ? effectiveCharacter : null,
+            false, deviceType));
     }
 
     /// <summary>Forgets the tracked modifier and lock state. Test-only.</summary>

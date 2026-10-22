@@ -17,19 +17,13 @@ public static class Windowing
 {
     /// <summary>Dart's <c>_kWindowingDisabledErrorMessage</c>.</summary>
     internal const string WindowingDisabledErrorMessage =
-        """
-        Windowing APIs are not enabled.
-
-        Windowing APIs are currently experimental. Do not use windowing APIs in
-        production applications or plugins published to pub.dev.
-
-        To try experimental windowing APIs:
-        1. Switch to Flutter's main release channel.
-        2. Turn on the windowing feature flag.
-
-        See: https://github.com/flutter/flutter/issues/30701.
-
-        """;
+        "Windowing APIs are not enabled.\n\n"
+        + "Windowing APIs are currently experimental. Do not use windowing APIs in\n"
+        + "production applications or plugins published to pub.dev.\n\n"
+        + "To try experimental windowing APIs:\n"
+        + "1. Switch to Flutter's main release channel.\n"
+        + "2. Turn on the windowing feature flag.\n\n"
+        + "See: https://github.com/flutter/flutter/issues/30701.\n";
 
     /// <summary>
     /// Dart's FLAG CHECK: throws <see cref="NotSupportedException"/> (Dart's <c>UnsupportedError</c>)

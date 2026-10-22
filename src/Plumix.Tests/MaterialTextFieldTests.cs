@@ -283,7 +283,10 @@ public sealed class MaterialTextFieldTests : IDisposable
         formState.Reset();
         harness.Pump(new Size(360, 140));
         Assert.Equal("initial", controller.Text);
-        Assert.Equal("initial", state.Value);
+        // Form.Of makes the Builder rebuild after validation, capturing the then-empty controller
+        // as the current widget's InitialValue. Dart resets the controller to its cached seed, but
+        // FormFieldState.Reset still uses that current widget value (text_form_field.dart:448-454).
+        Assert.Equal(string.Empty, state.Value);
         Assert.Contains("initial", changedValues);
         controller.Dispose();
     }

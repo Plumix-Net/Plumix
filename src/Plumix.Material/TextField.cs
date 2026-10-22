@@ -360,7 +360,12 @@ public sealed class TextField : StatefulWidget
         {
             base.DidUpdateWidget(oldWidget);
             var old = (TextField)oldWidget;
-            if (!ReferenceEquals(old.Controller, Current.Controller)) { DetachController(); AttachController(Current.Controller); }
+            if (!ReferenceEquals(old.Controller, Current.Controller))
+            {
+                TextEditingValue? previousValue = old.Controller?.Value;
+                DetachController();
+                AttachController(Current.Controller, previousValue);
+            }
             if (!ReferenceEquals(old.FocusNode, Current.FocusNode)) { DetachFocusNode(); AttachFocusNode(Current.FocusNode); }
         }
 
@@ -461,6 +466,8 @@ public sealed class TextField : StatefulWidget
                 autocorrectionTextRectColor: theme.Platform == TargetPlatform.IOS ? selectionColor : null,
                 restorationId: "editable",
                 key: _editableTextKey);
+
+            editable = new RepaintBoundary(new UnmanagedRestorationScope(bucket: Bucket, child: editable));
 
             if (multiline && !Current.Expands)
             {
@@ -598,19 +605,21 @@ public sealed class TextField : StatefulWidget
 
         public override void Dispose()
         {
-            DetachController();
+            DetachController(unregister: false);
             DetachFocusNode();
             base.Dispose();
         }
 
-        private void AttachController(TextEditingController? external)
+        private void AttachController(TextEditingController? external, TextEditingValue? value = null)
         {
             if (external is null)
             {
                 // Dart's `_TextFieldState._createLocalController`: the owned controller is restorable
                 // so `restorationId` survives a state restoration. Its value only becomes readable
                 // once `RestoreState` has registered it, so it is resolved lazily in `Build`.
-                _restorableController = new RestorableTextEditingController();
+                _restorableController = value is null
+                    ? new RestorableTextEditingController()
+                    : RestorableTextEditingController.FromValue(value.Value);
                 if (!RestorePending) RegisterForRestoration(_restorableController, "controller");
                 _ownsController = true;
                 return;
@@ -631,14 +640,14 @@ public sealed class TextField : StatefulWidget
             _controller = restored;
             _controller.AddListener(Changed);
         }
-        private void DetachController()
+        private void DetachController(bool unregister = true)
         {
             _controller?.RemoveListener(Changed);
             if (_ownsController)
             {
                 if (_restorableController is not null)
                 {
-                    if (_restorableController.RegisteredRestorationId is not null)
+                    if (unregister && _restorableController.RegisteredRestorationId is not null)
                         UnregisterFromRestoration(_restorableController);
                     _restorableController.Dispose();
                     _restorableController = null;

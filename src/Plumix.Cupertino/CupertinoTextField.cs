@@ -669,6 +669,7 @@ internal sealed class CupertinoTextFieldState
     private CupertinoTextFieldSelectionGestureDetectorBuilder? _selectionGestureDetectorBuilder;
     private TextEditingController? _controller;
     private RestorableTextEditingController? _restorableController;
+    private readonly AutomaticKeepAliveClient _keepAlive = new();
     private FocusNode? _focusNode;
     private bool _ownsController;
     private bool _ownsFocusNode;
@@ -709,8 +710,9 @@ internal sealed class CupertinoTextFieldState
         var old = (CupertinoTextField)oldWidget;
         if (!ReferenceEquals(old.Controller, Current.Controller))
         {
+            TextEditingValue? previousValue = old.Controller?.Value;
             DetachController();
-            AttachController(Current.Controller);
+            AttachController(Current.Controller, previousValue);
         }
         if (!ReferenceEquals(old.FocusNode, Current.FocusNode))
         {
@@ -723,6 +725,10 @@ internal sealed class CupertinoTextFieldState
     public override Widget Build(BuildContext context)
     {
         EnsureController();
+        if (_restorableController is not null && _controller!.Text.Length > 0)
+        {
+            _keepAlive.Ensure(context);
+        }
         CupertinoThemeData theme = CupertinoTheme.Of(context);
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
         TextStyle textStyle = ResolveTextStyle(theme);
@@ -821,6 +827,7 @@ internal sealed class CupertinoTextFieldState
             restorationId: "editable",
             key: _editableTextKey);
 
+        editable = new UnmanagedRestorationScope(bucket: Bucket, child: editable);
         Widget content = hasAttachments
             ? BuildDecoratedContent(context, editable, placeholderStyle, textAlignVertical)
             : new Padding(Current.Padding, new RepaintBoundary(editable));
@@ -845,9 +852,16 @@ internal sealed class CupertinoTextFieldState
 
     public override void Dispose()
     {
-        DetachController();
+        _keepAlive.Release();
+        DetachController(unregister: false);
         DetachFocusNode();
         base.Dispose();
+    }
+
+    public override void Deactivate()
+    {
+        _keepAlive.Release();
+        base.Deactivate();
     }
 
     private bool ShouldShowSelectionHandles(SelectionChangedCause? cause)
@@ -1087,11 +1101,13 @@ internal sealed class CupertinoTextFieldState
         }
     }
 
-    private void AttachController(TextEditingController? external)
+    private void AttachController(TextEditingController? external, TextEditingValue? value = null)
     {
         if (external is null)
         {
-            _restorableController = new RestorableTextEditingController();
+            _restorableController = value is null
+                ? new RestorableTextEditingController()
+                : RestorableTextEditingController.FromValue(value.Value);
             if (!RestorePending)
             {
                 RegisterForRestoration(_restorableController, "controller");
@@ -1120,12 +1136,13 @@ internal sealed class CupertinoTextFieldState
         _controller.AddListener(HandleControllerChanged);
     }
 
-    private void DetachController()
+    private void DetachController(bool unregister = true)
     {
         _controller?.RemoveListener(HandleControllerChanged);
         if (_ownsController && _restorableController is not null)
         {
-            if (_restorableController.RegisteredRestorationId is not null)
+            _keepAlive.Release();
+            if (unregister && _restorableController.RegisteredRestorationId is not null)
             {
                 UnregisterFromRestoration(_restorableController);
             }
@@ -1161,6 +1178,17 @@ internal sealed class CupertinoTextFieldState
 
     private void HandleControllerChanged()
     {
+        if (_restorableController is not null)
+        {
+            if (_controller!.Text.Length > 0)
+            {
+                _keepAlive.Ensure(Context);
+            }
+            else
+            {
+                _keepAlive.Release();
+            }
+        }
         if (Mounted)
         {
             SetState(static () => { });

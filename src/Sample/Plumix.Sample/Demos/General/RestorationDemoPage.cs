@@ -1,5 +1,6 @@
 using System.Linq;
 using Avalonia;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -28,7 +29,7 @@ public sealed class RestorationDemoPage : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            return new SingleChildScrollView(
+            return new UnmanagedRestorationScope(bucket: Bucket, child: new SingleChildScrollView(
                 restorationId: "scroll",
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -48,12 +49,34 @@ public sealed class RestorationDemoPage : StatefulWidget
                         new TextField(
                             controller: _note.Value,
                             decoration: new InputDecoration(labelText: "Restorable note")),
+                        new TextField(
+                            restorationId: "material-note",
+                            maxLines: 3,
+                            decoration: new InputDecoration(labelText: "Owned Material note")),
+                        new TextFormField(
+                            restorationId: "material-form",
+                            initialValue: "Material seed",
+                            maxLines: 3,
+                            autovalidateMode: AutovalidateMode.OnUserInteraction,
+                            validator: value => string.IsNullOrEmpty(value) ? "Required" : null,
+                            decoration: new InputDecoration(labelText: "Restorable Material form")),
+                        new CupertinoTextField(
+                            restorationId: "cupertino-note",
+                            maxLines: 3,
+                            placeholder: "Owned Cupertino note"),
+                        new CupertinoTextFormFieldRow(
+                            restorationId: "cupertino-form",
+                            initialValue: "Cupertino seed",
+                            maxLines: 3,
+                            autovalidateMode: AutovalidateMode.OnUserInteraction,
+                            validator: value => string.IsNullOrEmpty(value) ? "Required" : null,
+                            prefix: new Text("Restorable Cupertino form")),
                         .. Enumerable.Range(1, 24).Select(index => new Container(
                             height: 48,
                             alignment: Alignment.CenterLeft,
                             padding: new Thickness(12, 0),
                             child: new Text($"Restorable row {index}"))),
-                    ]));
+                    ])));
         }
 
         public override void Dispose()

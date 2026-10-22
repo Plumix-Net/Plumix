@@ -308,7 +308,6 @@ public sealed class CupertinoTextFormFieldRow : FormField<string>
 internal sealed class CupertinoTextFormFieldRowState : FormFieldState<string>
 {
     private RestorableTextEditingController? _controller;
-    private bool _suppressControllerChange;
 
     private CupertinoTextFormFieldRow Current => (CupertinoTextFormFieldRow)StateWidget;
 
@@ -387,9 +386,7 @@ internal sealed class CupertinoTextFormFieldRowState : FormFieldState<string>
 
     public override void Reset()
     {
-        _suppressControllerChange = true;
         EffectiveController.Value = new TextEditingValue(Current.InitialValue ?? string.Empty);
-        _suppressControllerChange = false;
         base.Reset();
         Current.OnChanged?.Invoke(EffectiveController.Text);
     }
@@ -418,10 +415,6 @@ internal sealed class CupertinoTextFormFieldRowState : FormFieldState<string>
 
     private void HandleControllerChanged()
     {
-        if (_suppressControllerChange)
-        {
-            return;
-        }
         if (!string.Equals(EffectiveController.Text, Value, StringComparison.Ordinal))
         {
             DidChange(EffectiveController.Text);

@@ -95,6 +95,40 @@ public sealed class PlumixHostInputTests : IDisposable
         Assert.Equal(Plumix.UI.PhysicalKeyboardKey.Slash, events[0].PhysicalKey);
     }
 
+    [Fact]
+    public void PlumixHost_WindowsKeyDataPreservesTextAndSynchronizesMissedModifiers()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        var events = new List<Plumix.UI.KeyEvent>();
+        using var focus = new FocusNode
+        {
+            OnKeyEvent = (_, value) =>
+            {
+                Assert.True(EventLoop.IsFrameworkThread);
+                events.Add(value);
+                return KeyEventResult.Handled;
+            },
+        };
+        FrameworkFocusManager.Instance.RegisterNode(focus);
+        focus.RequestFocus();
+        EventLoop.FlushMicrotasks();
+        var host = new TestPlumixHost();
+        Assert.True(host.DispatchKeyDown(
+            Key.A, KeyModifiers.Shift, keySymbol: "A", physicalKey: PhysicalKey.A));
+        Assert.True(HardwareKeyboard.Instance.IsShiftPressed);
+        var down = Assert.Single(events.OfType<Plumix.UI.KeyDownEvent>(), value => !value.Synthesized);
+        Assert.Equal("A", down.Character);
+        Assert.Equal(LogicalKeyboardKey.KeyA, down.LogicalKey);
+        Assert.Contains(events, value => value.Synthesized && value.LogicalKey == LogicalKeyboardKey.ShiftLeft);
+        Assert.True(host.DispatchKeyUp(Key.A, keySymbol: "a", physicalKey: PhysicalKey.A));
+        Assert.False(HardwareKeyboard.Instance.IsShiftPressed);
+        Assert.Empty(HardwareKeyboard.Instance.PhysicalKeysPressed);
+        events.Clear();
+        Assert.True(host.DispatchKeyDown(Key.A, physicalKey: PhysicalKey.A));
+        Assert.Equal("a", Assert.Single(events).Character);
+        Assert.True(host.DispatchKeyUp(Key.A, physicalKey: PhysicalKey.A));
+    }
+
     [Theory]
     [InlineData(NavigationMethod.Tab, KeyModifiers.None, ViewFocusDirection.Forward)]
     [InlineData(NavigationMethod.Tab, KeyModifiers.Shift, ViewFocusDirection.Backward)]

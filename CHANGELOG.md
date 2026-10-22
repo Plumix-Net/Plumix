@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Text-field buckets, controller swaps, form reset and restoration match Dart (text_field.dart).
+- Breaking: Windows host keys preserve shifted characters; windowing errors use Dart newlines (_window.dart).
 - Breaking: CupertinoMenuAnchor subtitle blending, exact colors and swipe lifecycle match Dart (menu_anchor.dart).
 - Breaking: DialogTheme legacy APIs, diagnostics and nullable interpolation match Dart (dialog_theme.dart).
 - Breaking: EditableText autofocus runs once after layout and preserves selection (widgets/editable_text.dart).
