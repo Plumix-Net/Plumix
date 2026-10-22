@@ -23,6 +23,7 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
   String _areaSelection = 'none';
   String _listenerDetails = 'none';
   String _scrollableSelection = 'none';
+  String _nestedSelection = 'none';
 
   @override
   void initState() {
@@ -270,6 +271,31 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),
+          const Text(
+            'Nested paragraphs and dictionary words',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            'Triple-click Text E, then drag back to Text B and return. '
+            'Double-click words in the last line to check dictionary boundaries.',
+          ),
+          SelectionArea(
+            onSelectionChanged: (SelectedContent? content) {
+              setState(() => _nestedSelection = content?.plainText ?? 'none');
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _nestedParagraph('Text A.', 'Text B.', 'Text C.'),
+                _nestedParagraph('Text D.', 'Text E.', 'Text F.'),
+                const Text(
+                  'ภาษาไทยภาษาไทย · ພາສາລາວ · ភាសាខ្មែរ · 中文测试 · 日本語の文章',
+                ),
+              ],
+            ),
+          ),
+          Text('Nested selection: $_nestedSelection', maxLines: 4),
+          const Divider(),
           const Text('Platform selection controls', style: TextStyle(fontSize: 18)),
           const Text(
             'Switch the handle style, then long-press the text. Select all inside the field '
@@ -339,4 +365,17 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
       ),
     );
   }
+
+  static Widget _nestedParagraph(String first, String second, String third) =>
+      Text.rich(
+        TextSpan(
+          children: <InlineSpan>[
+            WidgetSpan(child: Text(first)),
+            const TextSpan(text: '\n'),
+            WidgetSpan(child: Text(second)),
+            const TextSpan(text: '\n'),
+            WidgetSpan(child: Text(third)),
+          ],
+        ),
+      );
 }

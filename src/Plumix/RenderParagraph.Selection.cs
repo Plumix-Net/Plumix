@@ -14,6 +14,8 @@ public sealed partial class RenderParagraph
 {
     private const char PlaceholderCharacter = (char)PlaceholderSpan.PlaceholderCodeUnit;
 
+    internal IReadOnlyList<SelectableFragment>? LastSelectableFragments => _lastSelectableFragments;
+
     private ISelectionRegistrar? _registrar;
     private List<SelectableFragment>? _lastSelectableFragments;
 
@@ -217,7 +219,7 @@ public sealed partial class RenderParagraph
 }
 
 /// One selectable run of a [RenderParagraph], split at placeholder boundaries.
-internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLayoutMetrics
+internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, ITextLayoutMetrics
 {
     private const char PlaceholderCharacter = (char)PlaceholderSpan.PlaceholderCodeUnit;
     private const int PlaceholderLength = 1;
@@ -764,17 +766,26 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
         TextPosition position = _paragraph.GetPositionForOffset(adjustedOffset);
         TextPosition positionInFullText = _paragraph.GetPositionForOffset(adjustedOffsetRelativeToParagraph);
         bool paragraphContainsPosition = SelectionUtils.RectContains(_paragraph.PaintBounds, localPosition);
-        SelectionResult? result = isEnd
-            ? UpdateSelectionEndEdgeByMultiSelectableTextBoundary(
-                paragraphContainsPosition,
-                positionInFullText,
-                existingSelectionStart,
-                existingSelectionEnd)
-            : UpdateSelectionStartEdgeByMultiSelectableTextBoundary(
-                paragraphContainsPosition,
-                positionInFullText,
-                existingSelectionStart,
-                existingSelectionEnd);
+        SelectionResult? result;
+        if (IsPlaceholder())
+        {
+            result = isEnd
+                ? UpdateSelectionEndEdgeAtPlaceholderByMultiSelectableTextBoundary(
+                    globalPosition, paragraphContainsPosition, positionInFullText,
+                    existingSelectionStart, existingSelectionEnd)
+                : UpdateSelectionStartEdgeAtPlaceholderByMultiSelectableTextBoundary(
+                    globalPosition, paragraphContainsPosition, positionInFullText,
+                    existingSelectionStart, existingSelectionEnd);
+        }
+        else
+        {
+            result = isEnd
+                ? UpdateSelectionEndEdgeByMultiSelectableTextBoundary(
+                    paragraphContainsPosition, positionInFullText, existingSelectionStart, existingSelectionEnd)
+                : UpdateSelectionStartEdgeByMultiSelectableTextBoundary(
+                    paragraphContainsPosition, positionInFullText, existingSelectionStart, existingSelectionEnd);
+        }
+
         if (result is { } resolved)
         {
             return resolved;

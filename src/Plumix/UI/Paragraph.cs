@@ -307,6 +307,8 @@ public sealed record ParagraphStyle(
 public abstract class Paragraph : IDisposable
 {
     private bool _disposed;
+    private int[]? _wordBoundaries;
+    private bool _wordBoundariesInitialized;
 
     private protected Paragraph(string text)
     {
@@ -365,13 +367,28 @@ public abstract class Paragraph : IDisposable
     /// Returns the glyph closest to the given offset, or null when the paragraph shows no glyphs.
     public abstract GlyphInfo? GetClosestGlyphInfoForOffset(Point offset);
 
-    /// Returns the UAX #29 word boundary range enclosing the character at `position`.
+    /// Returns the backend's word boundary range enclosing the character at `position`.
     ///
     /// The character is the one before the offset for an upstream position and the one at the
     /// offset for a downstream position.
     public TextRange GetWordBoundary(TextPosition position)
     {
         int characterPosition = position.Affinity == TextAffinity.Upstream ? position.Offset - 1 : position.Offset;
+        if (!_wordBoundariesInitialized)
+        {
+            _wordBoundaries = TextSegmentation.GetWordBoundaries(Text);
+            _wordBoundariesInitialized = true;
+        }
+
+        if (_wordBoundaries is { Length: > 0 } boundaries)
+        {
+            if (characterPosition < 0) return new TextRange(0, 0);
+            if (characterPosition >= Text.Length) return new TextRange(Text.Length, Text.Length);
+            int index = Array.BinarySearch(boundaries, characterPosition);
+            int startIndex = index >= 0 ? index : ~index - 1;
+            return new TextRange(boundaries[startIndex], boundaries[startIndex + 1]);
+        }
+
         (int start, int end) = UnicodeText.GetWordRange(Text, characterPosition);
         return new TextRange(start, end);
     }

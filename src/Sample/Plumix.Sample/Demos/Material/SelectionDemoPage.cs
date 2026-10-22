@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Plumix.UI;
@@ -26,6 +27,7 @@ internal sealed class SelectionDemoPageState : State
     private string _areaSelection = "none";
     private string _listenerDetails = "none";
     private string _scrollableSelection = "none";
+    private string _nestedSelection = "none";
 
     public override void InitState()
     {
@@ -215,6 +217,21 @@ internal sealed class SelectionDemoPageState : State
                             FontSize: 13),
                         maxLines: 3),
                     new Divider(),
+                    new Text("Nested paragraphs and dictionary words", style: new TextStyle(FontSize: 18)),
+                    new Text(
+                        "Triple-click Text E, then drag back to Text B and return. "
+                        + "Double-click words in the last line to check dictionary boundaries."),
+                    new SelectionArea(
+                        onSelectionChanged: content => SetState(() =>
+                            _nestedSelection = content?.PlainText ?? "none"),
+                        child: new Column(crossAxisAlignment: CrossAxisAlignment.Start, children:
+                        [
+                            NestedParagraph("Text A.", "Text B.", "Text C."),
+                            NestedParagraph("Text D.", "Text E.", "Text F."),
+                            new Text("ภาษาไทยภาษาไทย · ພາສາລາວ · ភាសាខ្មែរ · 中文测试 · 日本語の文章"),
+                        ])),
+                    new Text($"Nested selection: {_nestedSelection}", maxLines: 4),
+                    new Divider(),
                     new Text("Platform selection controls", style: new TextStyle(FontSize: 18)),
                     new Text(
                         "Switch the handle style, then long-press the text. Select all inside the field "
@@ -265,4 +282,12 @@ internal sealed class SelectionDemoPageState : State
                             errorText: "An errored field paints cursorErrorColor")),
                 ]));
     }
+
+    private static Widget NestedParagraph(string first, string second, string third) => Text.Rich(new TextSpan(
+        children:
+        [
+            new WidgetSpan(new Text(first)), new TextSpan("\n"),
+            new WidgetSpan(new Text(second)), new TextSpan("\n"),
+            new WidgetSpan(new Text(third)),
+        ]));
 }
