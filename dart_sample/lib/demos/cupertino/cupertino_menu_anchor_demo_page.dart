@@ -12,6 +12,7 @@ class CupertinoMenuAnchorDemoPage extends StatefulWidget {
 class _CupertinoMenuAnchorDemoPageState
     extends State<CupertinoMenuAnchorDemoPage> {
   String _lastAction = 'No action selected';
+  bool _darkMenu = false;
 
   @override
   Widget build(BuildContext context) {
@@ -29,60 +30,75 @@ class _CupertinoMenuAnchorDemoPageState
           'destructive states.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
-        CupertinoMenuAnchor(
-          enableLongPressToOpen: true,
-          menuChildren: <Widget>[
-            CupertinoMenuItem(
-              leading: const Icon(CupertinoIcons.pencil),
-              trailing: const Text('⌘R'),
-              subtitle: const Text('Keep this document in place'),
-              onPressed: () => _select('Rename'),
-              child: const Text('Rename'),
-            ),
-            CupertinoMenuItem(
-              leading: const Icon(CupertinoIcons.share),
-              onPressed: () => _select('Share'),
-              child: const Text('Share'),
-            ),
-            const CupertinoMenuDivider(),
-            const CupertinoMenuItem(
-              leading: Icon(CupertinoIcons.folder),
-              onPressed: null,
-              child: Text('Unavailable action'),
-            ),
-            CupertinoMenuItem(
-              leading: const Icon(CupertinoIcons.trash),
-              isDestructiveAction: true,
-              onPressed: () => _select('Delete'),
-              child: const Text('Delete'),
-            ),
-          ],
-          builder: (
-            BuildContext context,
-            MenuController controller,
-            Widget? child,
-          ) {
-            return CupertinoButton(
-              color: const Color(0xFF007AFF),
-              onPressed: controller.isOpen ? controller.close : controller.open,
-              child: child ??
-                  const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    spacing: 8,
-                    children: <Widget>[
-                      Text(
-                        'Document actions',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      Icon(
-                        CupertinoIcons.chevron_down,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ],
-                  ),
-            );
-          },
+        CupertinoButton(
+          onPressed: () => setState(() => _darkMenu = !_darkMenu),
+          child: Text(_darkMenu ? 'Menu theme: Dark' : 'Menu theme: Light'),
+        ),
+        CupertinoTheme(
+          data: CupertinoThemeData(
+            brightness: _darkMenu ? Brightness.dark : Brightness.light,
+          ),
+          child: CupertinoMenuAnchor(
+            enableLongPressToOpen: true,
+            menuChildren: <Widget>[
+              CupertinoMenuItem(
+                leading: const Icon(CupertinoIcons.pencil),
+                trailing: const Text('⌘R'),
+                subtitle: const Text('Keep this document in place'),
+                onPressed: () => _select('Rename'),
+                child: const Text('Rename'),
+              ),
+              CupertinoMenuItem(
+                leading: const Icon(CupertinoIcons.share),
+                onPressed: () => _select('Share'),
+                child: const Text('Share'),
+              ),
+              const CupertinoMenuDivider(),
+              const CupertinoMenuItem(
+                leading: Icon(CupertinoIcons.folder),
+                subtitle: Text('This action is not available'),
+                onPressed: null,
+                child: Text('Unavailable action'),
+              ),
+              CupertinoMenuItem(
+                leading: const Icon(CupertinoIcons.trash),
+                subtitle: const Text('Remove this document'),
+                isDestructiveAction: true,
+                onPressed: () => _select('Delete'),
+                child: const Text('Delete'),
+              ),
+            ],
+            builder:
+                (
+                  BuildContext context,
+                  MenuController controller,
+                  Widget? child,
+                ) {
+                  return CupertinoButton(
+                    color: const Color(0xFF007AFF),
+                    onPressed: controller.isOpen
+                        ? controller.close
+                        : controller.open,
+                    child:
+                        child ??
+                        const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          spacing: 8,
+                          children: <Widget>[
+                            Text(
+                              'Document actions',
+                              style: TextStyle(color: Colors.white),
+                            ),
+                            Icon(
+                              CupertinoIcons.chevron_down,
+                              color: Colors.white,
+                              size: 18,
+                            ),
+                          ],
+                        ),
+                  );
+                },
+          ),
         ),
         Text(
           _lastAction,

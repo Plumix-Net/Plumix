@@ -299,6 +299,12 @@ internal sealed class RenderCupertinoMenuSwipeSurface : RenderProxyBoxWithHitTes
         ? new Rect(LocalToGlobal(default), Size)
         : default;
 
+    protected override void OnDetach()
+    {
+        _region?.Unregister(this);
+        base.OnDetach();
+    }
+
     public override void Dispose()
     {
         _region?.Unregister(this);
@@ -371,6 +377,17 @@ internal sealed class CupertinoMenuSwipeHandle : Drag
             }
         }
 
+        _enteredTargets.RemoveAll(target =>
+        {
+            if (targets.Contains(target))
+            {
+                return false;
+            }
+
+            target.OnExit?.Invoke();
+            return true;
+        });
+
         var hitTargets = new List<CupertinoMenuSwipeTarget>();
         var newlyEnteredTargets = new List<CupertinoMenuSwipeTarget>();
         bool hitExistingTarget = false;
@@ -380,6 +397,7 @@ internal sealed class CupertinoMenuSwipeHandle : Drag
             {
                 hitExistingTarget = true;
                 hitTargets.Add(target);
+                continue;
             }
             else if (!hitExistingTarget)
             {

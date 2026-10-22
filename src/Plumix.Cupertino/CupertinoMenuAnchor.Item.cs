@@ -133,13 +133,13 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
 
     private static readonly CupertinoDynamicColor KDefaultTextColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromARGB(245, 0, 0, 0),
-            Color.FromARGB(245, 255, 255, 255));
+            Color.From(0.96, 0.0, 0.0, 0.0),
+            Color.From(0.96, 1.0, 1.0, 1.0));
 
     private static readonly CupertinoDynamicColor KDefaultSubtitleTextColor =
         CupertinoDynamicColor.WithBrightness(
-            Color.FromARGB(140, 0, 0, 0),
-            Color.FromARGB(102, 255, 255, 255));
+            Color.From(0.55, 0.0, 0.0, 0.0),
+            Color.From(0.4, 1.0, 1.0, 1.0));
 
     private static readonly WidgetStateProperty<MouseCursor> KDefaultCursor =
         WidgetStateProperty<MouseCursor>.ResolveWith(states =>
@@ -325,19 +325,19 @@ public sealed class CupertinoMenuItem : StatelessWidget, CupertinoMenuEntry
     }
 
     /// <summary>Dart parity source: <c>CupertinoMenuItem._resolveDefaultSubtitleStyle</c>.</summary>
-    /// <remarks>
-    /// Dart puts the color on a <c>foreground</c> <c>Paint</c> with a <c>BlendMode.hardLight</c>
-    /// (light) / <c>BlendMode.plus</c> (dark) blend; Plumix's <c>TextStyle</c> carries no
-    /// <c>Paint</c>, so the color is set directly (see <c>docs/ai/DIVERGENCES.md</c>).
-    /// </remarks>
     internal static TextStyle ResolveDefaultSubtitleStyle(BuildContext context, TextScaler textScaler)
     {
+        bool isDark = CupertinoTheme.MaybeBrightnessOf(context) == PlatformBrightness.Dark;
         return CupertinoDynamicTypeStyle.Subhead
             .ResolveTextStyle(textScaler)
             .CopyWith(
                 fontSize: 15.0,
                 textBaseline: Plumix.UI.TextBaseline.Alphabetic,
-                color: KDefaultSubtitleTextColor.ResolveFrom(context));
+                foreground: new Paint
+                {
+                    BlendMode = isDark ? BlendMode.Plus : BlendMode.HardLight,
+                    Color = KDefaultSubtitleTextColor.ResolveFrom(context),
+                });
     }
 
     /// <summary>Dart parity source: <c>CupertinoMenuItem._handleSelect</c>.</summary>
@@ -776,7 +776,6 @@ internal sealed class CupertinoMenuItemInteractionHandlerState : State<Cupertino
             onExit: IsEnabled ? HandlePointerExit : null,
             hitTestBehavior: HitTestBehavior.DeferToChild,
             cursor: cursor,
-            opaque: false,
             child: new DecoratedBox(
                 decoration.CopyWith(
                     color: CupertinoDynamicColor.MaybeResolve(decoration.Color, context),

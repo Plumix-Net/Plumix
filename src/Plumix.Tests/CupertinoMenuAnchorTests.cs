@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Plumix.Cupertino;
 using Plumix.Gestures;
 using Plumix.Painting;
@@ -513,20 +514,123 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         Assert.Contains(FindAll<RenderParagraph>(large.RenderView), p => p.PlainText == "L");
     }
 
-    [Fact]
-    public void Item_SubtitleUsesTheSubheadStepAndTheSubtitleColor()
+    [Theory]
+    [InlineData(false, true, false)]
+    [InlineData(true, true, false)]
+    [InlineData(false, false, false)]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, true)]
+    [InlineData(true, true, true)]
+    public void Item_SubtitleUsesTheForegroundBlendRegardlessOfEnabledOrDestructiveState(
+        bool dark,
+        bool enabled,
+        bool destructive)
+    {
+        PlatformBrightness brightness = dark ? PlatformBrightness.Dark : PlatformBrightness.Light;
+        using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
+            child: new Text("Title"),
+            subtitle: new Text("Subtitle"),
+            isDestructiveAction: destructive,
+            onPressed: enabled ? static () => { } : null), brightness));
+        harness.Pump(ViewSize);
+
+        RenderParagraph subtitle = FindParagraph(harness.RenderView, "Subtitle");
+        TextStyle style = subtitle.Text.Style!;
+        Assert.Equal(15.0, style.FontSize!.Value, precision: 6);
+        Assert.Null(style.FontWeight);
+        Assert.Null(style.Color);
+        Assert.Equal(TextBaseline.Alphabetic, style.TextBaseline);
+        Assert.Equal(2, subtitle.MaxLines);
+        Paint foreground = Assert.IsType<Paint>(style.Foreground);
+        Assert.Equal(dark ? BlendMode.Plus : BlendMode.HardLight, foreground.BlendMode);
+        ColorMatchers.AssertSameColorAs(
+            dark ? Color.From(0.4, 1.0, 1.0, 1.0) : Color.From(0.55, 0.0, 0.0, 0.0),
+            foreground.Color,
+            threshold: 0.0);
+    }
+
+    [Theory]
+    [InlineData(14.0, 12.0, 16.0, 0.0, false)]
+    [InlineData(15.0, 13.0, 18.0, -0.08, false)]
+    [InlineData(16.0, 14.0, 19.0, -0.15, false)]
+    [InlineData(17.0, 15.0, 20.0, -0.23, false)]
+    [InlineData(19.0, 17.0, 22.0, -0.43, false)]
+    [InlineData(21.0, 19.0, 24.0, -0.45, false)]
+    [InlineData(23.0, 21.0, 28.0, -0.36, false)]
+    [InlineData(28.0, 25.0, 31.0, 0.15, true)]
+    [InlineData(33.0, 30.0, 37.0, 0.40, true)]
+    [InlineData(40.0, 36.0, 43.0, 0.37, true)]
+    [InlineData(47.0, 42.0, 50.0, 0.37, true)]
+    [InlineData(53.0, 49.0, 58.0, 0.33, true)]
+    public void Item_SubtitleKeepsTheSubheadTypographyAcrossEveryDynamicTypeStep(
+        double bodySize,
+        double subheadSize,
+        double lineHeight,
+        double letterSpacing,
+        bool displayFont)
     {
         using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
             child: new Text("Title"),
             subtitle: new Text("Subtitle"),
-            onPressed: static () => { })));
+            onPressed: static () => { }), textScale: bodySize / 17.0));
         harness.Pump(ViewSize);
 
         RenderParagraph subtitle = FindParagraph(harness.RenderView, "Subtitle");
-        Assert.Equal(15.0, subtitle.Text.Style!.FontSize!.Value, precision: 6);
-        Assert.Equal(
-            Color.FromARGB(140, 0, 0, 0),
-            Assert.IsType<SolidColorBrush>(subtitle.Foreground).Color);
+        TextStyle style = subtitle.Text.Style!;
+        Assert.Equal(15.0, style.FontSize);
+        Assert.Equal(lineHeight / subheadSize, style.Height!.Value, precision: 6);
+        Assert.Equal(letterSpacing, style.LetterSpacing!.Value, precision: 6);
+        Assert.Equal(displayFont ? "CupertinoSystemDisplay" : "CupertinoSystemText", style.FontFamily!.Name);
+        Assert.Equal(bodySize / 17.0, subtitle.TextScaler.Scale(17.0) / 17.0, precision: 6);
+        Assert.Equal(bodySize >= 28.0 ? 100 : 2, subtitle.MaxLines);
+        Assert.Equal(BlendMode.HardLight, Assert.IsType<Paint>(style.Foreground).BlendMode);
+    }
+
+    [Fact]
+    public void Item_SubtitlePaintTracksThemeChangesOnTheSameItem()
+    {
+        var item = new CupertinoMenuItem(child: new Text("Title"), subtitle: new Text("Subtitle"));
+        using var harness = new CupertinoThemeTestHarness(Wrap(item));
+        harness.Pump(ViewSize);
+        RenderParagraph paragraph = FindParagraph(harness.RenderView, "Subtitle");
+        Assert.Equal(BlendMode.HardLight, paragraph.Text.Style!.Foreground!.BlendMode);
+
+        harness.PumpWidget(Wrap(item, PlatformBrightness.Dark));
+        harness.Pump(ViewSize);
+        Assert.Same(paragraph, FindParagraph(harness.RenderView, "Subtitle"));
+        Assert.Equal(BlendMode.Plus, paragraph.Text.Style!.Foreground!.BlendMode);
+        Assert.Equal(0.4, paragraph.Text.Style.Foreground.Color.A);
+    }
+
+    [Theory]
+    [InlineData(false, 14, 29, 43)]
+    [InlineData(true, 134, 166, 198)]
+    public void Item_SubtitleForegroundBlendsWithTheNativeRasterBackdrop(bool dark, int red, int green, int blue)
+    {
+        using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuItem(
+            child: new Text("Title"),
+            subtitle: new Text("A")), dark ? PlatformBrightness.Dark : PlatformBrightness.Light));
+        harness.Pump(ViewSize);
+        TextStyle style = FindParagraph(harness.RenderView, "A").Text.Style!;
+        var paragraphStyle = new ParagraphStyle(
+            FontSize: 15.0,
+            FontFamily: new FontFamily("avares://Plumix.Tests/Fixtures/Fonts#Ahem"));
+        ResolvedTextStyle defaults = ResolvedTextStyle.FromParagraphStyle(paragraphStyle);
+        ResolvedTextStyle run = defaults.Merge(style.GetTextStyle() with { FontFamily = paragraphStyle.FontFamily });
+        using var paragraph = new AvaloniaParagraph(new ParagraphContent(
+            paragraphStyle, "A", [new StyledRange(0, 1, run)], [], defaults, run));
+        paragraph.Layout(new ParagraphConstraints(100.0));
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        canvas.DrawRect(new Rect(0.0, 0.0, 100.0, 100.0), new Paint { Color = new Color(0xFF204060) });
+        canvas.DrawParagraph(paragraph, default);
+        using Bitmap image = recorder.EndRecording().ToImageSync(100, 100);
+
+        var pixel = RasterBackend.PixelAt(image, 7, 10);
+        Assert.InRange((int)pixel.R, red - 1, red + 1);
+        Assert.InRange((int)pixel.G, green - 1, green + 1);
+        Assert.InRange((int)pixel.B, blue - 1, blue + 1);
+        Assert.Equal(255, pixel.A);
     }
 
     [Fact]
@@ -753,6 +857,94 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
         }
 
         Assert.Equal(1.0, Assert.Single(harness.FindWidgets<ScaleTransition>()).Scale.Value, precision: 3);
+    }
+
+    [Fact]
+    public void Swipe_DetachedSurfacesStopContributingToDistanceBeforeDisposal()
+    {
+        var distances = new List<double>();
+        using var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoMenuSwipeRegion(
+            enabled: true,
+            onDistanceChanged: distances.Add,
+            child: new Center(child: new CupertinoMenuSwipeSurface(
+                child: new SizedBox(width: 100.0, height: 100.0))))), registerForPointerEvents: true);
+        harness.Pump(ViewSize);
+        var region = harness.FindState<CupertinoMenuSwipeRegionState>();
+        var extra = new RenderCupertinoMenuSwipeSurface(region, TimeSpan.Zero, null);
+        extra.Attach(new PipelineOwner());
+        extra.Layout(BoxConstraints.Tight(new Size(100.0, 100.0)));
+        var surface = (RenderBox)harness.FindRenderObject<CupertinoMenuSwipeSurface>();
+        Point start = surface.LocalToGlobal(new Point(10.0, 10.0));
+        DateTime timestamp = DateTime.UtcNow;
+        try
+        {
+            GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+                703, PointerDeviceKind.Touch, start, PointerButtons.Primary, timestamp));
+            GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+                703, PointerDeviceKind.Touch, start + new Vector(30.0, 0.0), PointerButtons.Primary,
+                timestamp.AddMilliseconds(20.0)));
+            Assert.NotEmpty(distances);
+
+            extra.Detach();
+            GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+                703, PointerDeviceKind.Touch, new Point(10.0, 10.0), PointerButtons.Primary,
+                timestamp.AddMilliseconds(40.0)));
+
+            Assert.True(distances[^1] > 100.0, $"Detached surface still affected swipe distance: {distances[^1]}.");
+            GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+                703, PointerDeviceKind.Touch, new Point(10.0, 10.0), PointerButtons.None,
+                timestamp.AddMilliseconds(60.0)));
+            Assert.Equal(0.0, distances[^1]);
+        }
+        finally
+        {
+            if (extra.Attached)
+            {
+                extra.Detach();
+            }
+
+            extra.Dispose();
+        }
+    }
+
+    [Fact]
+    public void Swipe_NestedTargetsLeaveBeforeEnteringTheirParentOrSiblingAndCompleteOnlyTheHitTarget()
+    {
+        var events = new List<string>();
+        CupertinoMenuSwipeTarget Target(string name, Widget child) => new(
+            child: new ColoredBox(Colors.White, child: child),
+            onEnter: () => events.Add($"enter:{name}"),
+            onExit: () => events.Add($"exit:{name}"),
+            onCompletion: () => events.Add($"complete:{name}"));
+        Widget child = Target("parent", new SizedBox(width: 200.0, height: 200.0, child: new Column(
+            children:
+            [
+                new Row(children:
+                [
+                    Target("a", new SizedBox(width: 100.0, height: 100.0)),
+                    Target("b", new SizedBox(width: 100.0, height: 100.0)),
+                ]),
+                new SizedBox(width: 200.0, height: 100.0),
+            ])));
+        using var harness = new CupertinoThemeTestHarness(Wrap(new Center(child)), registerForPointerEvents: true);
+        harness.Pump(ViewSize);
+        RenderBox parent = (RenderBox)harness.FindRenderObject<CupertinoMenuSwipeTarget>();
+        Point start = parent.LocalToGlobal(new Point(10.0, 10.0));
+        var handle = new CupertinoMenuSwipeHandle(
+            harness.RenderView.FlutterView.ViewId, start, _ => { }, _ => { }, () => { });
+        Assert.Equal(["enter:a"], events);
+
+        void Move(double x, double y) => handle.Update(new DragUpdateDetails(
+            default, default, new Point(x, y), null));
+        Move(100.0, 0.0);
+        Move(0.0, 100.0);
+        Move(-100.0, -100.0);
+        Move(1.0, 0.0);
+        handle.End(default);
+        Assert.Equal(
+            ["enter:a", "exit:a", "enter:b", "exit:b", "enter:parent", "exit:parent", "enter:a",
+                "exit:a", "complete:a"],
+            events);
     }
 
     private static Widget Entry(bool isDivider, string label) =>
