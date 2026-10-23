@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Widgets;
 
@@ -23,6 +24,16 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
     private HashSet<ISelectable> _additions = [];
     private bool _extendSelectionInProgress;
     private SelectionGeometry _selectionGeometry = new(SelectionStatus.None, hasContent: false);
+
+    /// <summary>Creates an instance of <see cref="MultiSelectableSelectionContainerDelegate"/>.</summary>
+    protected MultiSelectableSelectionContainerDelegate()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
 
     /// The list of selectables managed by this delegate, in screen order.
     public List<ISelectable> Selectables { get; private set; } = [];

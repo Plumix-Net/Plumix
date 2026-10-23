@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/scheduler/ticker.dart
 
@@ -36,6 +37,10 @@ public class Ticker : IDisposable
     {
         _onTick = onTick ?? throw new ArgumentNullException(nameof(onTick));
         DebugLabel = debugLabel;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("scheduler", "Ticker", this);
+        }
     }
 
     /// <summary>An optional label provided for debugging purposes.</summary>
@@ -244,6 +249,10 @@ public class Ticker : IDisposable
             return;
         }
 
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _disposed = true;
         if (_future is not null)
         {

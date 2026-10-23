@@ -587,6 +587,15 @@ internal sealed class SelectionKeepAlive : StatefulWidget
 /// </remarks>
 public abstract class TwoDimensionalChildDelegate : ChangeNotifier
 {
+    /// <summary>Creates a delegate that supplies children for scrolling in two dimensions.</summary>
+    protected TwoDimensionalChildDelegate()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
     /// <summary>
     /// Returns the child at <paramref name="vicinity"/>, or null when there is no child there.
     /// </summary>

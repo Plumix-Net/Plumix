@@ -236,6 +236,11 @@ internal sealed partial class SelectableFragment : ChangeNotifier, ISelectable, 
 
     public SelectableFragment(RenderParagraph paragraph, string fullText, TextRange range)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         if (!range.IsValid || range.IsCollapsed || !range.IsNormalized)
         {
             throw new ArgumentException("A selectable fragment requires a valid, non-empty range.", nameof(range));

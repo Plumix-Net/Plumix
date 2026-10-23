@@ -412,6 +412,10 @@ internal sealed class NestedScrollCoordinator : IScrollActivityDelegate, IScroll
         _parent = parent;
         _onHasScrolledBodyChanged = onHasScrolledBodyChanged;
         _floatHeaderSlivers = floatHeaderSlivers;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "_NestedScrollCoordinator", this);
+        }
         double initialScrollOffset = _parent?.InitialScrollOffset ?? 0.0;
         OuterController = new NestedScrollController(this, initialScrollOffset);
         InnerController = new NestedScrollController(this);
@@ -947,6 +951,10 @@ internal sealed class NestedScrollCoordinator : IScrollActivityDelegate, IScroll
 
     public void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         ScrollDragController? drag = _currentDrag;
         _currentDrag = null;
         drag?.Dispose();

@@ -56,6 +56,10 @@ public sealed class BannerPainter : CustomPainter
         Color = color ?? DefaultColor;
         TextStyle = textStyle ?? DefaultTextStyle;
         Shadow = shadow ?? DefaultShadow;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "BannerPainter", this);
+        }
     }
 
     public string Message { get; }
@@ -133,6 +137,10 @@ public sealed class BannerPainter : CustomPainter
 
     public override void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _disposed = true;
         _textPainter?.Dispose();
         _textPainter = null;

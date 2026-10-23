@@ -198,6 +198,16 @@ public abstract class RestorableProperty : ChangeNotifier
     private RestorationState? _owner;
     private bool _propertyDisposed;
 
+    /// <summary>Creates a <see cref="RestorableProperty"/>.</summary>
+    protected RestorableProperty()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
+
     /// <summary>Whether the object currently returned by the property should be serialized.</summary>
     public virtual bool Enabled => true;
 

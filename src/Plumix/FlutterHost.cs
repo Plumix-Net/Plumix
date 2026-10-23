@@ -5,6 +5,7 @@ using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -44,6 +45,18 @@ public class PlumixHost : Control
     private static readonly List<PlumixHost> s_attachedHosts = [];
     private static PlumixHost? s_platformChannelHost;
     private static bool s_isMouseCursorHandlerInstalled;
+
+    // The Android engine's back callback state (`PlatformPlugin.setFrameworkHandlesBack`). Only the
+    // Android framework reports it; elsewhere back keys always go to the framework.
+    private static bool s_frameworkHandlesBack = true;
+
+    // Avalonia raises `TopLevel.BackRequested` for the platform's system back only on Android; the
+    // desktop backends raise it for Alt+Left and the mouse back button, which Flutter's desktop
+    // embedders do not treat as back (Alt+Left moves by word in macOS text fields).
+    private static readonly bool s_listensToSystemBack = OperatingSystem.IsAndroid();
+
+    /// <summary>Resets the process-wide back callback state the Android framework reported. Test-only.</summary>
+    internal static void ResetFrameworkHandlesBackForTests() => s_frameworkHandlesBack = true;
 
     // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
     // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
@@ -272,24 +285,54 @@ public class PlumixHost : Control
             return;
         }
 
-        bool isBackKey = e.Key is Key.Escape or Key.Back or Key.BrowserBack;
-        if (!isBackKey)
+        // Avalonia's `Key.Back` is Backspace on every platform (Android's KEYCODE_DEL); Android's
+        // KEYCODE_BACK arrives as `Key.Escape`.
+        bool isBackKey = e.Key is Key.Escape or Key.BrowserBack;
+        if (isBackKey && HandleBackButton())
         {
-            return;
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>
+    /// Answers the system back request Avalonia raises on the <see cref="TopLevel"/>: Android's
+    /// <c>OnBackPressedDispatcher</c> callback.
+    /// </summary>
+    /// <remarks>
+    /// The request is left unhandled when the framework does not handle back, so the platform closes the
+    /// app itself, as the engine's disabled back callback lets it.
+    /// </remarks>
+    internal void HandleBackRequested(RoutedEventArgs e)
+    {
+        if (!e.Handled && HandleBackButton())
+        {
+            e.Handled = true;
+        }
+    }
+
+    private void HandleTopLevelBackRequested(object? sender, RoutedEventArgs e) => HandleBackRequested(e);
+
+    /// <summary>
+    /// The engine's back button: a <c>popRoute</c> message, sent only while the framework reported it
+    /// handles back (<c>SystemNavigator.setFrameworkHandlesBack</c>). Returns whether the host must
+    /// treat the back press as consumed.
+    /// </summary>
+    private static bool HandleBackButton()
+    {
+        if (!s_frameworkHandlesBack)
+        {
+            return false;
         }
 
-        // The engine's back key is a `popRoute` message the platform does not wait on. Avalonia needs the
-        // answer now: a pop an observer is still deciding stays with the framework.
+        // The platform does not wait on `popRoute`; Avalonia needs the answer now: a pop an observer is
+        // still deciding stays with the framework.
         Task<bool> handled;
         using (EventLoop.EnterFrameworkThread())
         {
             handled = WidgetsBinding.Instance.HandlePopRoute();
         }
 
-        if (!handled.IsCompleted || handled is { IsCompletedSuccessfully: true, Result: true })
-        {
-            e.Handled = true;
-        }
+        return !handled.IsCompleted || handled is { IsCompletedSuccessfully: true, Result: true };
     }
 
     protected override void OnKeyUp(KeyEventArgs e)
@@ -990,6 +1033,11 @@ public class PlumixHost : Control
         }
 
         _attachedTopLevel.ActualThemeVariantChanged += HandleActualThemeVariantChanged;
+        if (s_listensToSystemBack)
+        {
+            _attachedTopLevel.BackRequested += HandleTopLevelBackRequested;
+        }
+
         _insetsManager = _attachedTopLevel.InsetsManager;
         if (_insetsManager != null)
         {
@@ -1032,6 +1080,7 @@ public class PlumixHost : Control
         if (_attachedTopLevel != null)
         {
             _attachedTopLevel.ActualThemeVariantChanged -= HandleActualThemeVariantChanged;
+            _attachedTopLevel.BackRequested -= HandleTopLevelBackRequested;
         }
 
         _attachedTopLevel = null;
@@ -1307,7 +1356,7 @@ public class PlumixHost : Control
         _isSubscribedToPlatformChannel = true;
     }
 
-    private void DetachPlatformChannelHandler()
+    private protected void DetachPlatformChannelHandler()
     {
         if (!_isSubscribedToPlatformChannel)
         {
@@ -1336,6 +1385,9 @@ public class PlumixHost : Control
                 return Task.FromResult<object?>(null);
             case "HapticFeedback.vibrate":
                 OnFrameworkHapticFeedback(call.Arguments as string);
+                return Task.FromResult<object?>(null);
+            case "SystemNavigator.setFrameworkHandlesBack":
+                s_frameworkHandlesBack = call.Arguments is true;
                 return Task.FromResult<object?>(null);
             case "SystemChrome.setSystemUIOverlayStyle":
                 _currentSystemUiOverlayStyle =

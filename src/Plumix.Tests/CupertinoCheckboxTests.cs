@@ -397,6 +397,7 @@ public sealed class CupertinoCheckboxTests
     public void Focus_UsesHslFocusColorFormula_AndHonorsCustomFocusColor()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         try
         {
             var node = new FocusNode();

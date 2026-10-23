@@ -165,6 +165,10 @@ internal readonly record struct CanvasCall(
     public double StrokeWidth => Brush is null && Pen is not null ? Pen.Thickness : 0.0;
 }
 
+/// <summary>Signature for <see cref="Picture"/> lifecycle events.</summary>
+/// <remarks>Dart's <c>ui.PictureEventCallback</c>.</remarks>
+public delegate void PictureEventCallback(Picture picture);
+
 /// <summary>An object representing a sequence of recorded graphical operations.</summary>
 /// <remarks>
 /// Dart's <c>ui.Picture</c>. Plumix records Avalonia draw calls rather than a Skia display list, so
@@ -181,6 +185,22 @@ public sealed class Picture
         _commands = commands;
         DebugCalls = debugCalls ?? [];
     }
+
+    /// <summary>A callback that is invoked to report a picture creation.</summary>
+    /// <remarks>
+    /// It's preferred to use <see cref="FlutterMemoryAllocations"/> than to use
+    /// <see cref="OnCreate"/> directly because <see cref="FlutterMemoryAllocations"/> allows
+    /// multiple callbacks.
+    /// </remarks>
+    public static PictureEventCallback? OnCreate { get; set; }
+
+    /// <summary>A callback that is invoked to report the picture disposal.</summary>
+    /// <remarks>
+    /// It's preferred to use <see cref="FlutterMemoryAllocations"/> than to use
+    /// <see cref="OnDispose"/> directly because <see cref="FlutterMemoryAllocations"/> allows
+    /// multiple callbacks.
+    /// </remarks>
+    public static PictureEventCallback? OnDispose { get; set; }
 
     /// <summary>Plumix-only: the debug descriptions of the recorded calls, in order.</summary>
     internal IReadOnlyList<CanvasCall> DebugCalls { get; }
@@ -234,6 +254,8 @@ public sealed class Picture
 
             _disposed = true;
         }
+
+        OnDispose?.Invoke(this);
     }
 
     /// <summary>Rasterizes this picture into a new image of the specified pixel size.</summary>
@@ -450,8 +472,11 @@ public sealed class PictureRecorder
             throw new InvalidOperationException("PictureRecorder.EndRecording was called more than once.");
         }
 
-        _picture = new Picture(_commands ?? [], _debugCalls);
-        return _picture;
+        Picture picture = new(_commands ?? [], _debugCalls);
+        _picture = picture;
+        // We invoke the handler here, not in the Picture constructor, as Dart does.
+        Picture.OnCreate?.Invoke(picture);
+        return picture;
     }
 }
 

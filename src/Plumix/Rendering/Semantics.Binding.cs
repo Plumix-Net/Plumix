@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/semantics/binding.dart
 
@@ -15,10 +16,9 @@ namespace Plumix.Rendering;
 /// <see cref="Dispose"/>. When every outstanding handle is closed — and nothing else is asking for
 /// semantics — the framework stops producing them.
 /// <para>
-/// Dart splits this in two: the public <c>SemanticsHandle</c> from <c>semantics/binding.dart</c> and
-/// the private <c>_LocalSemanticsHandle</c> in <c>rendering/object.dart</c> that
-/// <c>PipelineOwner.ensureSemantics</c> returns. Both are just a <c>dispose()</c> over a callback, so
-/// Plumix has one class whose callback the creator supplies.
+/// Dart's private <c>_LocalSemanticsHandle</c> in <c>rendering/object.dart</c>, which
+/// <c>PipelineOwner.ensureSemantics</c> returns, implements this class; in C# it derives from it and
+/// reports its own name to <see cref="FlutterMemoryAllocations"/>.
 /// </para>
 /// </remarks>
 public class SemanticsHandle
@@ -27,9 +27,19 @@ public class SemanticsHandle
     private bool _disposed;
 
     internal SemanticsHandle(Action onDispose)
+        : this(onDispose, "semantics", "SemanticsHandle")
+    {
+    }
+
+    /// <summary>
+    /// C#-only: lets a subclass report its own library and class name to
+    /// <see cref="FlutterMemoryAllocations"/>, as Dart's <c>_LocalSemanticsHandle</c> does.
+    /// </summary>
+    private protected SemanticsHandle(Action onDispose, string flutterLibrary, string className)
     {
         ArgumentNullException.ThrowIfNull(onDispose);
         _onDispose = onDispose;
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchCreated(flutterLibrary, className, this));
     }
 
     /// <summary>Closes this semantics handle.</summary>
@@ -42,6 +52,7 @@ public class SemanticsHandle
         }
 
         _disposed = true;
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchDisposed(this));
         _onDispose();
     }
 }

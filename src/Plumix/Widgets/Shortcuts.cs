@@ -488,6 +488,11 @@ public class ShortcutManager : ChangeNotifier
         IReadOnlyDictionary<ShortcutActivator, Intent>? shortcuts = null,
         bool modal = false)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         _shortcuts = shortcuts ?? new Dictionary<ShortcutActivator, Intent>();
         Modal = modal;
     }
@@ -782,6 +787,16 @@ public sealed class ShortcutRegistry : ChangeNotifier
 {
     private readonly Dictionary<ShortcutRegistryEntry, IReadOnlyDictionary<ShortcutActivator, Intent>> _entries = [];
     private bool _notificationScheduled;
+
+    /// <summary>Creates an instance of <see cref="ShortcutRegistry"/>.</summary>
+    public ShortcutRegistry()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
 
     public IReadOnlyDictionary<ShortcutActivator, Intent> Shortcuts
     {

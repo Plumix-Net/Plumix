@@ -62,6 +62,10 @@ public abstract class ScrollActivity : IDisposable
     protected ScrollActivity(IScrollActivityDelegate @delegate)
     {
         _delegate = @delegate;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "ScrollActivity", this);
+        }
     }
 
     /// <summary>The delegate that this activity will use to actuate the scroll view.</summary>
@@ -157,6 +161,10 @@ public abstract class ScrollActivity : IDisposable
     /// <summary>Called when the scroll view stops performing this activity.</summary>
     public virtual void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         IsDisposed = true;
     }
 
@@ -286,6 +294,10 @@ public class ScrollDragController : IDrag
         _lastNonStationaryTimestampUtc = details.SourceTimeStampUtc;
         _kind = details.Kind;
         _offsetSinceLastStop = motionStartDistanceThreshold == null ? null : 0.0;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "ScrollDragController", this);
+        }
     }
 
     /// <summary>The object that will actuate the scroll view as the user drags.</summary>
@@ -458,6 +470,10 @@ public class ScrollDragController : IDrag
     /// <summary>Called by the delegate when it is no longer sending events to this object.</summary>
     public virtual void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         LastDetails = null;
         OnDragCanceled?.Invoke();
     }

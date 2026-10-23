@@ -1,3 +1,5 @@
+using Plumix.Foundation;
+
 namespace Plumix.Widgets;
 
 // Dart parity source:
@@ -18,6 +20,10 @@ public sealed class DisposableBuildContext<T> : IDisposable where T : State
         }
 
         _state = state;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "DisposableBuildContext", this);
+        }
     }
 
     public BuildContext? Context
@@ -31,6 +37,10 @@ public sealed class DisposableBuildContext<T> : IDisposable where T : State
 
     public void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _state = null;
     }
 

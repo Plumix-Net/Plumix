@@ -248,6 +248,10 @@ public abstract class Route
     {
         Settings = settings ?? new RouteSettings();
         _requestFocus = requestFocus;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "Route<T>", this);
+        }
     }
 
     public RouteSettings Settings { get; private set; }
@@ -468,6 +472,10 @@ public abstract class Route
     {
         _restorationScopeId.Dispose();
         _disposeCompleter.TrySetResult(null);
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
     }
 
     /// <summary>Consumes a local entry before starting the route's reverse transition.</summary>

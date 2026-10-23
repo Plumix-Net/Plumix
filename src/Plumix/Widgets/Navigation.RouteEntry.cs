@@ -359,6 +359,10 @@ internal sealed class RouteEntry : RouteTransitionRecord
         PageBased = pageBased;
         RestorationInformation = restorationInformation;
         CurrentState = initialState;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "_RouteEntry", this);
+        }
     }
 
     private Route RouteValue { get; }
@@ -642,6 +646,10 @@ internal sealed class RouteEntry : RouteTransitionRecord
 
     public void ForcedDispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         CurrentState = RouteLifecycle.Disposed;
         Route.Dispose();
         Route.Detach();

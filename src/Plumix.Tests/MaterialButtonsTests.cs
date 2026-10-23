@@ -4565,6 +4565,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_HoverOverlayTakesPriorityOverFocusOverlay()
     {
+        using var highlightStrategy = new HighlightStrategyScope();
         var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
         {
@@ -4628,6 +4629,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_KeyboardActivation_UsesPressedOverlay_AndInvokesOnPressedOnKeyDownOnly()
     {
         using var tester = new FrameworkDartTester();
+        using var highlightStrategy = new HighlightStrategyScope();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
@@ -4707,6 +4709,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_KeyboardActivation_IgnoresModifiedSpaceChord()
     {
         using var tester = new FrameworkDartTester();
+        using var highlightStrategy = new HighlightStrategyScope();
         var focusedOverlay = Colors.SeaGreen;
         var pressedOverlay = Colors.OrangeRed;
         int pressedCount = 0;
@@ -4756,6 +4759,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_PressedOverlayTakesPriorityOverFocusOverlay()
     {
+        using var highlightStrategy = new HighlightStrategyScope();
         Color otherOverlay = Colors.CornflowerBlue;
         Color pressedOverlay = Colors.Gold;
         var focusNode = new FocusNode();
@@ -4784,6 +4788,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_M2DefaultOverlay_UsesPressedAndFocusedOpacity010()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         ThemeData theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -4810,6 +4815,7 @@ public sealed class MaterialButtonsTests
     public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         ThemeData theme = ThemeData.Light with
         {
             UseMaterial3 = false,
@@ -4836,6 +4842,7 @@ public sealed class MaterialButtonsTests
     public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
 
         var owner = TestBuildOwner.Create();
         var theme = ThemeData.Light with
@@ -5079,6 +5086,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_ExternalFocusNode_RequestFocus_AppliesFocusedOverlay()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
 
         var owner = TestBuildOwner.Create();
         var focusNode = new FocusNode();

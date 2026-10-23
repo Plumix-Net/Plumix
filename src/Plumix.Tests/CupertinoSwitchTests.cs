@@ -205,6 +205,7 @@ public sealed class CupertinoSwitchTests
     public void Focus_UsesThreePointFivePixelRingAndCallback()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         try
         {
             var node = new FocusNode();

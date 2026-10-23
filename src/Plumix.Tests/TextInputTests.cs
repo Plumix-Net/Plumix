@@ -232,6 +232,39 @@ public sealed class TextInputTests : IDisposable
     }
 
     [Fact]
+    public void EditableText_RepeatedEditingAndCaretKeys_KeepEditing()
+    {
+        // Android IMEs deliver a held or quickly repeated DEL as key repeats; the text-editing
+        // shortcuts are `SingleActivator`s, which accept repeats.
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        try
+        {
+            var controller = new TextEditingController();
+            using FrameworkDartTester tester = PumpField(new EditableText(controller: controller, autofocus: true));
+            Assert.True(HostTextInput.InsertText("abcd"));
+
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace)));
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Repeat(LogicalKeyboardKey.Backspace)));
+            Assert.Equal("ab", controller.Text);
+
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Repeat(LogicalKeyboardKey.ArrowLeft)));
+            Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
+
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Repeat(LogicalKeyboardKey.Delete)));
+            Assert.Equal("b", controller.Text);
+
+            // Backspace with nothing left to delete is still the field's key.
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Repeat(LogicalKeyboardKey.Backspace)));
+            Assert.Equal("b", controller.Text);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+        }
+    }
+
+    [Fact]
     public void EditableText_CompositionUpdateCommitAndEscape_Work()
     {
         var controller = new TextEditingController();

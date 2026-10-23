@@ -660,6 +660,10 @@ internal sealed class IndicatorPainter : CustomPainter
         IndicatorAnimation = indicatorAnimation;
         TextDirection = textDirection;
         _repaint = repaint;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("material", "_IndicatorPainter", this);
+        }
         if (old is not null)
         {
             SaveTabOffsets(old._currentTabOffsets, old._currentTextDirection);
@@ -835,6 +839,10 @@ internal sealed class IndicatorPainter : CustomPainter
 
     public override void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _painter?.Dispose();
         _repaint.Dispose();
         base.Dispose();

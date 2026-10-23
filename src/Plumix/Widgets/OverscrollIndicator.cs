@@ -648,6 +648,11 @@ internal sealed class GlowController : ChangeNotifier
 
     public GlowController(Color color, Axis axis, ITickerProvider? vsync = null)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         _color = color;
         _axis = axis;
         _glowController = new AnimationController(vsync: vsync);

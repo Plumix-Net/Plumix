@@ -19,6 +19,15 @@ internal sealed class RouteHistory : ChangeNotifier, IReadOnlyList<RouteEntry>
 {
     private readonly List<RouteEntry> _entries = [];
 
+    public RouteHistory()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
+
     public int Count => _entries.Count;
 
     public RouteEntry this[int index] => _entries[index];

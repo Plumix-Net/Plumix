@@ -562,6 +562,11 @@ public class ScrollController : ChangeNotifier
         Action<ScrollPosition>? onAttach = null,
         Action<ScrollPosition>? onDetach = null)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         InitialScrollOffset = initialScrollOffset;
         KeepScrollOffset = keepScrollOffset;
         DebugLabel = debugLabel;

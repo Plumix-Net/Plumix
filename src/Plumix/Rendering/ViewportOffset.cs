@@ -35,6 +35,15 @@ public enum ScrollDirection
 /// </remarks>
 public abstract class ViewportOffset : ChangeNotifier
 {
+    /// <summary>Default constructor.</summary>
+    protected ViewportOffset()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
     /// <summary>
     /// The number of pixels to offset the children in the opposite of the axis direction.
     /// </summary>

@@ -10,6 +10,12 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
 - Breaking: InkSparkle draws the native turbulence and white-sparkle shader with retained uniforms (ink_sparkle.dart).
+- Linux host key messages carry the typed (shifted) character in `unicodeScalarValues`, as GTK does (C#-only).
+- Breaking: Android system back reaches popRoute via TopLevel.BackRequested, gated by setFrameworkHandlesBack (C#-only).
+- Breaking: The host no longer treats Avalonia's Key.Back (Backspace / Android KEYCODE_DEL) as a back button (C#-only).
+- Android scan-code-less IME keys release a key left pressed, as KeyEmbedderResponder does (C#-only).
+- Breaking: Memory-allocation events cover every Dart publisher and Picture (foundation/memory_allocations.dart).
+- Breaking: _HighlightModeManager split out; default highlight mode uses target platform (focus_manager.dart).
 - Breaking: Native gradient shaders preserve focal circles, decal, sweep tiling and matrices (painting/gradient.dart).
 - Breaking: Cupertino toolbar hairlines and onstage debug traversal match Dart (text_selection_toolbar.dart).
 - Breaking: InputDecoration copy, legacy API, hint/icon layout and counter semantics match Dart (input_decorator.dart).
