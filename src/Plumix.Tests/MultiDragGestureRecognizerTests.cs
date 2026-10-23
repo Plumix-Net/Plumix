@@ -9,8 +9,106 @@ namespace Plumix.Tests;
 
 // Dart parity source: flutter/packages/flutter/test/gestures/multidrag_test.dart
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class MultiDragGestureRecognizerTests
 {
+    // Flutter: device-kind filtering and null/default allowedButtonsFilter.
+    [Theory]
+    [InlineData(0, false)]
+    [InlineData(1, false)]
+    [InlineData(2, false)]
+    [InlineData(3, false)]
+    [InlineData(0, true)]
+    [InlineData(1, true)]
+    [InlineData(2, true)]
+    [InlineData(3, true)]
+    public void Recognizers_FilterDeviceKindsAndButtons(int recognizerKind, bool customFilter)
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        using var timers = new FakeGestureTimers();
+        AllowedButtonsFilter? filter = customFilter ? buttons => buttons == PointerButtons.Secondary : null;
+        IReadOnlySet<PointerDeviceKind> devices = new HashSet<PointerDeviceKind> { PointerDeviceKind.Touch };
+        using MultiDragGestureRecognizer recognizer = recognizerKind switch
+        {
+            0 => new ImmediateMultiDragGestureRecognizer(supportedDevices: devices, allowedButtonsFilter: filter),
+            1 => new HorizontalMultiDragGestureRecognizer(supportedDevices: devices, allowedButtonsFilter: filter),
+            2 => new VerticalMultiDragGestureRecognizer(supportedDevices: devices, allowedButtonsFilter: filter),
+            _ => new DelayedMultiDragGestureRecognizer(supportedDevices: devices, allowedButtonsFilter: filter),
+        };
+        int starts = 0;
+        recognizer.OnStart = position =>
+        {
+            starts++;
+            return new RecordingDrag(position);
+        };
+        var listener = new RenderPointerListener(
+            onPointerDown: recognizer.AddPointer,
+            behavior: HitTestBehavior.Opaque,
+            child: new FixedHitTestBox(new Size(80, 80), true));
+        var pipeline = BuildPipeline(listener);
+        try
+        {
+            int pointer = 1;
+            foreach (PointerDeviceKind kind in new[] { PointerDeviceKind.Mouse, PointerDeviceKind.Touch })
+            {
+                foreach (PointerButtons buttons in new[]
+                         {
+                             PointerButtons.Primary,
+                             PointerButtons.Secondary,
+                             PointerButtons.Primary | PointerButtons.Secondary,
+                         })
+                {
+                    binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                        pointer, kind, new Point(20, 20), buttons, DateTime.UtcNow));
+                    timers.Elapse(TimeSpan.FromMilliseconds(500));
+                    binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                        pointer++, kind, new Point(20, 20), PointerButtons.None, DateTime.UtcNow));
+                }
+            }
+
+            Assert.Equal(1, starts);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void NullStartAndCancel_RemovePointerRoutesAndLeaveNoClient()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        using var recognizer = new ImmediateMultiDragGestureRecognizer();
+        RecordingDrag? drag = null;
+        int starts = 0;
+        recognizer.OnStart = position => ++starts == 1 ? null : drag = new RecordingDrag(position);
+        var listener = new RenderPointerListener(onPointerDown: recognizer.AddPointer,
+            behavior: HitTestBehavior.Opaque, child: new FixedHitTestBox(new Size(80, 80), true));
+        var pipeline = BuildPipeline(listener);
+        try
+        {
+            DateTime now = DateTime.UtcNow;
+            Down(binding, pipeline, 11, new Point(10, 10), now);
+            Move(binding, pipeline, 11, new Point(20, 20), now);
+            Up(binding, pipeline, 11, new Point(20, 20), now);
+            Assert.Null(drag);
+            Down(binding, pipeline, 12, new Point(10, 10), now);
+            Assert.NotNull(drag);
+            Assert.Null(drag.Updates[0].PrimaryDelta);
+            Assert.Null(drag.Updates[0].Kind);
+            binding.HandlePointerEvent(pipeline.Root, new PointerCancelEvent(
+                12, PointerDeviceKind.Touch, new Point(10, 10), PointerButtons.None, now));
+            Assert.Equal(1, drag.Cancels);
+            Assert.Equal(0, drag.Ends);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
     [Fact]
     public void ImmediateRecognizer_SoleArenaMemberStartsIndependentDragsAtPointerDown()
     {

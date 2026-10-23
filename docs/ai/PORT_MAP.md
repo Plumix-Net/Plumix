@@ -552,7 +552,7 @@ Flutter checkout used for validation: `D:\Repositories\Plumix-meta\Plumix\flutte
 | `widgets/raw_menu_anchor.dart` | `src/Plumix/Widgets/RawMenuAnchor.cs` | `src/Plumix.Tests/RawMenuAnchorTests.cs` | — |
 | `widgets/raw_radio.dart` | `src/Plumix/Widgets/RawRadio.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
 | `widgets/raw_tooltip.dart` | `src/Plumix/Widgets/RawTooltip.cs` | `src/Plumix.Tests/RawTooltipTests.cs` | — |
-| `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |
+| `widgets/reorderable_list.dart` | `src/Plumix/Widgets/ReorderableList.DragInfo.cs`<br>`src/Plumix/Widgets/ReorderableList.cs` | `src/Plumix.Tests/MaterialReorderableListTests.cs`<br>`src/Plumix.Tests/ReorderableListDartParityTests.cs` | `dart_sample/lib/demos/material/reorderable_list_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ReorderableListDemoPage.cs` |
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
 | `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/HostRestorationChannelTests.cs`<br>`src/Plumix.Tests/MaterialTimePickerRestorationTests.cs`<br>`src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationChannelDartParityTests.cs`<br>`src/Plumix.Tests/RestorationLifecycleDartParityTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationSampleTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs`<br>`src/Plumix.Tests/TextFieldRestorationDartParityTests.cs` | `dart_sample/lib/demos/general/restoration_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RestorationDemoPage.cs` |
 | `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
@@ -736,7 +736,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 600
-- C# files carrying a marker: 804
+- C# files carrying a marker: 805
 - C# files without a marker: 95
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 1

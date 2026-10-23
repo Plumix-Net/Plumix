@@ -19,6 +19,7 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
     'Foxtrot',
   ];
   bool _buildDefaultDragHandles = true;
+  bool _delayedHandles = false;
   String _status = 'Drag an item to reorder it';
 
   @override
@@ -45,6 +46,15 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
                 _buildDefaultDragHandles
                     ? 'Use custom handles'
                     : 'Use default handles',
+              ),
+            ),
+            TextButton(
+              onPressed: () => setState(() {
+                _buildDefaultDragHandles = false;
+                _delayedHandles = !_delayedHandles;
+              }),
+              child: Text(
+                _delayedHandles ? 'Use instant drag' : 'Use long press',
               ),
             ),
             Expanded(
@@ -115,6 +125,11 @@ class _ReorderableListDemoPageState extends State<ReorderableListDemoPage> {
       subtitle: Text('Stable key: ${label.toLowerCase()}'),
       trailing: _buildDefaultDragHandles
           ? null
+          : _delayedHandles
+          ? ReorderableDelayedDragStartListener(
+              index: index,
+              child: const Icon(Icons.drag_handle),
+            )
           : ReorderableDragStartListener(
               index: index,
               child: const Icon(Icons.drag_handle),

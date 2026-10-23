@@ -7,7 +7,7 @@ using Plumix.Foundation;
 namespace Plumix.Gestures;
 
 /// <summary>The client owned by one pointer accepted by a multi-drag recognizer.</summary>
-public abstract class Drag
+public abstract class Drag : IDrag
 {
     public abstract void Update(DragUpdateDetails details);
 
@@ -25,7 +25,6 @@ public delegate Drag? GestureMultiDragStartCallback(Point position);
 public abstract class MultiDragPointerState : IDisposable
 {
     private readonly VelocityTracker _velocityTracker;
-    private Point _lastPosition;
     private Drag? _client;
     private DateTime? _lastPendingEventTimestampUtc;
     private GestureArenaEntry? _arenaEntry;
@@ -39,7 +38,6 @@ public abstract class MultiDragPointerState : IDisposable
         Kind = kind;
         GestureSettings = gestureSettings;
         _velocityTracker = new VelocityTracker(kind);
-        _lastPosition = initialPosition;
         if (Constants.KDebugMode)
         {
             FoundationDebug.DebugMaybeDispatchCreated("gestures", "MultiDragPointerState", this);
@@ -73,18 +71,20 @@ public abstract class MultiDragPointerState : IDisposable
             return;
         }
 
-        _velocityTracker.AddPosition(@event.TimestampUtc, @event.Position);
-        Point delta = new(@event.Position.X - _lastPosition.X, @event.Position.Y - _lastPosition.Y);
-        _lastPosition = @event.Position;
+        if (!@event.Synthesized)
+        {
+            _velocityTracker.AddPosition(@event.TimestampUtc, @event.Position);
+        }
+
+        Point delta = @event.Delta;
         if (_client is not null)
         {
             _client.Update(new DragUpdateDetails(
                 GlobalPosition: @event.Position,
-                LocalPosition: @event.LocalPosition,
+                LocalPosition: @event.Position,
                 Delta: delta,
-                PrimaryDelta: 0.0,
-                SourceTimeStampUtc: @event.TimestampUtc,
-                Kind: Kind));
+                PrimaryDelta: null,
+                SourceTimeStampUtc: @event.TimestampUtc));
         }
         else
         {
@@ -124,9 +124,8 @@ public abstract class MultiDragPointerState : IDisposable
             GlobalPosition: InitialPosition,
             LocalPosition: InitialPosition,
             Delta: PendingDelta ?? default,
-            PrimaryDelta: 0.0,
-            SourceTimeStampUtc: _lastPendingEventTimestampUtc,
-            Kind: Kind);
+            PrimaryDelta: null,
+            SourceTimeStampUtc: _lastPendingEventTimestampUtc);
         PendingDelta = null;
         _lastPendingEventTimestampUtc = null;
         _client.Update(details);
@@ -136,7 +135,7 @@ public abstract class MultiDragPointerState : IDisposable
     {
         if (_client is not null)
         {
-            var details = new DragEndDetails(velocity: _velocityTracker.GetVelocity(), primaryVelocity: 0.0);
+            var details = new DragEndDetails(velocity: _velocityTracker.GetVelocity(), primaryVelocity: null);
             Drag client = _client;
             _client = null;
             client.End(details);
@@ -183,8 +182,12 @@ public abstract class MultiDragGestureRecognizer : GestureRecognizer
 {
     private readonly Dictionary<int, MultiDragPointerState> _pointers = [];
 
-    protected MultiDragGestureRecognizer(GestureBinding? binding = null)
-        : base(binding, allowedButtonsFilter: DefaultButtonAcceptBehavior)
+    protected MultiDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter ?? DefaultButtonAcceptBehavior)
     {
     }
 
@@ -320,7 +323,12 @@ internal sealed class ImmediatePointerState : MultiDragPointerState
 /// <summary>Recognizes movement both horizontally and vertically on a per-pointer basis.</summary>
 public sealed class ImmediateMultiDragGestureRecognizer : MultiDragGestureRecognizer
 {
-    public ImmediateMultiDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public ImmediateMultiDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
     }
 
@@ -354,7 +362,12 @@ internal sealed class HorizontalPointerState : MultiDragPointerState
 /// <summary>Recognizes movement in the horizontal direction on a per-pointer basis.</summary>
 public sealed class HorizontalMultiDragGestureRecognizer : MultiDragGestureRecognizer
 {
-    public HorizontalMultiDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public HorizontalMultiDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
     }
 
@@ -388,7 +401,12 @@ internal sealed class VerticalPointerState : MultiDragPointerState
 /// <summary>Recognizes movement in the vertical direction on a per-pointer basis.</summary>
 public sealed class VerticalMultiDragGestureRecognizer : MultiDragGestureRecognizer
 {
-    public VerticalMultiDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public VerticalMultiDragGestureRecognizer(
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
     }
 
@@ -480,7 +498,11 @@ public sealed class DelayedMultiDragGestureRecognizer : MultiDragGestureRecogniz
 {
     public DelayedMultiDragGestureRecognizer(
         TimeSpan? delay = null,
-        GestureBinding? binding = null) : base(binding)
+        GestureBinding? binding = null,
+        object? debugOwner = null,
+        IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
+        AllowedButtonsFilter? allowedButtonsFilter = null)
+        : base(binding, debugOwner, supportedDevices, allowedButtonsFilter)
     {
         Delay = delay ?? TimeSpan.FromMilliseconds(500);
         if (Delay < TimeSpan.Zero)

@@ -19,6 +19,7 @@ public sealed class ReorderableListDemoPage : StatefulWidget
     {
         private readonly List<string> _items = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot"];
         private bool _buildDefaultDragHandles = true;
+        private bool _delayedHandles;
         private string _status = "Drag an item to reorder it";
 
         public override Widget Build(BuildContext context)
@@ -44,6 +45,13 @@ public sealed class ReorderableListDemoPage : StatefulWidget
                                 onPressed: ToggleHandles,
                                 child: new Text(
                                     _buildDefaultDragHandles ? "Use custom handles" : "Use default handles")),
+                            new TextButton(
+                                onPressed: () => SetState(() =>
+                                {
+                                    _buildDefaultDragHandles = false;
+                                    _delayedHandles = !_delayedHandles;
+                                }),
+                                child: new Text(_delayedHandles ? "Use instant drag" : "Use long press")),
                             new Expanded(new Text(
                                 _status,
                                 style: new TextStyle(
@@ -89,11 +97,18 @@ public sealed class ReorderableListDemoPage : StatefulWidget
             for (int index = 0; index < _items.Count; index++)
             {
                 string label = _items[index];
-                Widget? trailing = _buildDefaultDragHandles
-                    ? null
-                    : new ReorderableDragStartListener(
-                        child: new Icon(Icons.DragHandle),
-                        index: index);
+                Widget? trailing = null;
+                if (!_buildDefaultDragHandles)
+                {
+                    trailing = _delayedHandles
+                        ? new ReorderableDelayedDragStartListener(
+                            child: new Icon(Icons.DragHandle),
+                            index: index)
+                        : new ReorderableDragStartListener(
+                            child: new Icon(Icons.DragHandle),
+                            index: index);
+                }
+
                 items.Add(new ListTile(
                     key: new ValueKey<string>(label),
                     leading: new CircleAvatar(

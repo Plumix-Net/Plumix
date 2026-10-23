@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Reorderable APIs, drag lifecycle and axis/drop geometry match Dart (reorderable_list.dart).
 - Explicit host keymaps select their own keyboard pipeline on Windows (C#-only).
 - Breaking: Host clicks get distinct gesture IDs while keeping device IDs (pointer_data_packet_converter.cc).
 - Native DrawPaint preserves GPU shader coordinates; ink demos expose visible ink and slow motion in both samples.

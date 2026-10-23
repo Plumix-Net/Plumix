@@ -148,7 +148,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; inherited
   and explicit proxy bounds come from core `Widgets/DragBoundary.cs`. Gesture-arena drag ownership, keyed sliver
   items, gap animation, variable extents, boundary clamping, and callback normalization are covered by
-  `MaterialReorderableListTests.cs`.
+  `MaterialReorderableListTests.cs` and `ReorderableListDartParityTests.cs`; `ReorderableList.DragInfo.cs` owns the
+  multi-drag client and proxy, using the shared `Gestures/MultiDragGestureRecognizer.cs` recognizers.
 - Animated lists enter through core `Widgets/AnimatedList.cs`; logical/physical index translation, incoming/outgoing
   item animations, separated coordination, and keyed sliver remapping are covered by `AnimatedListTests.cs`.
 - Animated grids enter through core `Widgets/AnimatedGrid.cs`; grid delegate layout, logical/physical index

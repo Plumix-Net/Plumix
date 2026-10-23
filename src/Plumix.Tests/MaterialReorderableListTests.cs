@@ -267,7 +267,7 @@ public sealed class MaterialReorderableListTests
                         [
                             new SliverReorderableList(
                                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                                    child: new SizedBox(height: 50),
+                                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(height: 50)),
                                     index: index,
                                     key: new ValueKey<int>(index)),
                                 itemCount: 3,
@@ -314,7 +314,7 @@ public sealed class MaterialReorderableListTests
                         [
                             new SliverReorderableList(
                                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                                    child: new SizedBox(height: 50),
+                                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(height: 50)),
                                     index: index,
                                     key: new ValueKey<int>(index)),
                                 itemCount: 3,
@@ -354,7 +354,7 @@ public sealed class MaterialReorderableListTests
         {
             Widget list = new ReorderableList(
                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                    child: new SizedBox(height: 50),
+                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(height: 50)),
                     index: index,
                     key: new ValueKey<int>(index)),
                 itemCount: 3,
@@ -395,7 +395,7 @@ public sealed class MaterialReorderableListTests
 #pragma warning disable CS0618
             Widget list = new ReorderableList(
                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                    child: new SizedBox(height: 50),
+                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(height: 50)),
                     index: index,
                     key: new ValueKey<int>(index)),
                 itemCount: 3,
@@ -432,7 +432,7 @@ public sealed class MaterialReorderableListTests
         {
             Widget list = new ReorderableList(
                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                    child: new SizedBox(width: 50),
+                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(width: 50)),
                     index: index,
                     key: new ValueKey<int>(index)),
                 itemCount: 3,
@@ -761,7 +761,7 @@ public sealed class MaterialReorderableListTests
         {
             Widget list = new ReorderableList(
                 itemBuilder: (_, index) => new ReorderableDragStartListener(
-                    child: new SizedBox(height: 50),
+                    child: new ColoredBox(new Color(0xFFFFFFFF), child: new SizedBox(height: 50)),
                     index: index,
                     key: new ValueKey<int>(index)),
                 itemCount: 20,
