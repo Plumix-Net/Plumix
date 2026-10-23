@@ -142,7 +142,8 @@ public sealed class PaintTransformTests
         Assert.False(combined.Contains(new Point(30, 0.5)));
         Assert.True(combined.Contains(new Point(30, 10)));
         Assert.Equal(new Rect(0, 0, 100, 50), combined.GetBounds());
-        Assert.Throws<InvalidOperationException>(() => combined.LineTo(0, 0));
+        combined.AddRect(new Rect(120, 0, 10, 10));
+        Assert.True(combined.Contains(new Point(125, 5)));
     }
 
     [Fact]
@@ -153,12 +154,8 @@ public sealed class PaintTransformTests
         var right = new Path();
         right.AddRect(new Rect(20, 0, 40, 40));
 
-        // Painting defers to Avalonia's combined geometry with the matching mode.
-        var excluded = (CombinedGeometry)Path.Combine(PathOperation.Difference, left, right).ToGeometry();
-        Assert.Equal(GeometryCombineMode.Exclude, excluded.GeometryCombineMode);
-        Assert.Equal(
-            GeometryCombineMode.Intersect,
-            ((CombinedGeometry)Path.Combine(PathOperation.Intersect, left, right).ToGeometry()).GeometryCombineMode);
+        // Boolean results are concrete independent contours, shared by paint and containment.
+        Assert.False(Path.Combine(PathOperation.Difference, left, right).ToGeometry().FillContains(new Point(30, 20)));
 
         Assert.True(Path.Combine(PathOperation.Intersect, left, right).Contains(new Point(30, 20)));
         Assert.False(Path.Combine(PathOperation.Intersect, left, right).Contains(new Point(10, 20)));

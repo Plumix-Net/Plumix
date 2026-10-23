@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-10-21
+last_updated: 2026-10-23
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M6 Cupertino library port (docs/CUPERTINO_TODO.md); M5 cross-host stability continues in parallel."
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
@@ -17,6 +17,7 @@ status:
   widget_element_state_lifecycle: done
   render_pipeline_layout_paint_compositing_semantics: done
   ui_geometry_companions_and_rounded_shape_contracts: done
+  native_path_geometry_boolean_operations_and_metrics: done
   native_paragraph_metrics_variable_fonts_and_paints: done
   scheduler_ticker_frame_flow: done
   gesture_arena_and_recognizers: done

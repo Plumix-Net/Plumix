@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
@@ -25,6 +26,8 @@ internal sealed class ProxyWidgetsDemoPageState : State
     private bool _tightClip = true;
     private double _fractionalShift;
     private int _quarterTurns;
+    private int _pathOperation;
+    private int _pathStep = 1;
 
     public override Widget Build(BuildContext context)
     {
@@ -32,7 +35,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
             ? new Rect(0, 0, 120, 80)
             : new Rect(0, 0, 190, 110);
 
-        return new Column(
+        return new SingleChildScrollView(child: new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             spacing: 10,
             children:
@@ -192,7 +195,19 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         BuildColoredBoxEdgeProbe("smooth", isAntiAlias: true),
                         BuildColoredBoxEdgeProbe("crisp", isAntiAlias: false),
                     ]),
-            ]);
+                new Text("Path operations + measured contours", style: new TextStyle(FontSize: 14)),
+                new Row(spacing: 8, children:
+                [
+                    BuildButton(((PathOperation)_pathOperation).ToString(),
+                        () => SetState(() => _pathOperation = (_pathOperation + 1) % 5),
+                        width: 144, colorHex: "#FFE8EDF9"),
+                    BuildButton($"Trace {_pathStep}/4",
+                        () => SetState(() => _pathStep = (_pathStep + 1) % 5),
+                        width: 104, colorHex: "#FFE9F5EC"),
+                ]),
+                new SizedBox(width: 240, height: 120,
+                    child: new CustomPaint(painter: new PathProbePainter((PathOperation)_pathOperation, _pathStep))),
+            ]));
     }
 
     private static Widget BuildColoredBoxEdgeProbe(string label, bool isAntiAlias)
@@ -265,6 +280,8 @@ internal sealed class ProxyWidgetsDemoPageState : State
             _tightClip = true;
             _fractionalShift = 0;
             _quarterTurns = 0;
+            _pathOperation = 0;
+            _pathStep = 1;
         });
     }
 
@@ -296,5 +313,38 @@ internal sealed class ProxyWidgetsDemoPageState : State
         }
 
         public override bool ShouldReclip(CustomClipper<Path> oldClipper) => false;
+    }
+
+    private sealed class PathProbePainter(PathOperation operation, int step) : CustomPainter
+    {
+        public override void Paint(PaintingContext context, Size size)
+        {
+            var left = new Path();
+            left.MoveTo(10, 90);
+            left.CubicTo(10, -15, 140, -15, 140, 90);
+            left.Close();
+            var right = new Path();
+            right.AddOval(new Rect(65, 15, 110, 90));
+            Path result = Path.Combine(operation, left, right);
+            // A boolean result can be extended and measured like any other path.
+            result.AddRect(new Rect(195, 15, 20, 20));
+            context.Canvas.DrawPath(result, new Paint { Color = new Color(0xFF6750A4) });
+            PathMetric metric = result.ComputeMetrics().First();
+            double distance = metric.Length * step / 4.0;
+            context.Canvas.DrawPath(metric.ExtractPath(0, distance), new Paint
+            {
+                Color = new Color(0xFFFFB300), Style = PaintingStyle.Stroke, StrokeWidth = 3,
+            });
+            Tangent? tangent = metric.GetTangentForOffset(distance);
+            if (tangent is not null)
+            {
+                context.Canvas.DrawCircle(tangent.Position, 4, new Paint { Color = new Color(0xFFB3261E) });
+            }
+        }
+
+        public override bool ShouldRepaint(CustomPainter oldDelegate) =>
+            oldDelegate is not PathProbePainter other || other.Operation != operation || other.Step != step;
+        private PathOperation Operation => operation;
+        private int Step => step;
     }
 }

@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Native Path curves, boolean contours, perspective transforms and metrics match Dart (ui/painting.dart).
 - Breaking: Nested paragraph selection and ICU/Intl word boundaries follow Dart (rendering/paragraph.dart; ui/text.dart).
 - Breaking: Glow phases, drag geometry and paint offsets match pinned Dart (widgets/overscroll_indicator.dart).
 - Breaking: Async localization batches defer first frames and report committed locales (widgets/localizations.dart).

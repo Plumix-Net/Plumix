@@ -389,7 +389,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Dismissible.cs`
   - `src/Plumix/Widgets/SizeChangedLayoutNotifier.cs`
   - `src/Plumix/Rendering/SizeChangedLayoutNotifier.cs`
-  - `src/Plumix/UI/Path.cs`
+  - `src/Plumix/UI/Path.cs`, `PathMetrics.cs` (native curves/boolean contours/perspective and snapshot measurements)
   - `src/Plumix/UI/Canvas.cs`
   - `src/Plumix/Painting/ClipContext.cs`
   - `src/Plumix/Rendering/Layer.cs`
@@ -402,6 +402,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     (platform views: controllers/channel, render objects, `AndroidView`/`UiKitView`/`PlatformViewLink`)
 - Primary Tests:
   - `src/Plumix.Tests/BasicWidgetProxyTests.cs`
+  - `src/Plumix.Tests/PathDartParityTests.cs`
   - `src/Plumix.Tests/IntrinsicQueryParityTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/UnconstrainedLimitedBoxTests.cs`

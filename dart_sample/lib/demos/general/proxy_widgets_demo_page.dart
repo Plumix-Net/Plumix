@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show PathMetric, Tangent;
 
 import 'package:material_ui/material_ui.dart';
 
@@ -17,6 +18,8 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
   bool _tightClip = true;
   double _fractionalShift = 0;
   int _quarterTurns = 0;
+  int _pathOperation = 0;
+  int _pathStep = 1;
 
   @override
   Widget build(BuildContext context) {
@@ -24,251 +27,291 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
         ? const Rect.fromLTWH(0, 0, 120, 80)
         : const Rect.fromLTWH(0, 0, 190, 110);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      spacing: 10,
-      children: <Widget>[
-        const Text(
-          'Proxy widgets: transforms + clips',
-          style: TextStyle(fontSize: 20, color: Colors.black),
-        ),
-        const Text(
-          'Use controls to fade a high-contrast black card over white canvas.',
-          style: TextStyle(fontSize: 14, color: Colors.black54),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: 'Opacity -',
-              onTap: () => _changeOpacity(-0.3),
-              width: 96,
-              background: const Color(0xFFDCE3ED),
-            ),
-            _buildButton(
-              label: 'Opacity +',
-              onTap: () => _changeOpacity(0.3),
-              width: 96,
-              background: const Color(0xFFDCE3ED),
-            ),
-            _buildButton(
-              label: 'Reset',
-              onTap: _reset,
-              width: 88,
-              background: const Color(0xFFE9F5EC),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: 'Left',
-              onTap: () => _move(-20),
-              width: 88,
-              background: const Color(0xFFF3E8D8),
-            ),
-            _buildButton(
-              label: 'Right',
-              onTap: () => _move(20),
-              width: 88,
-              background: const Color(0xFFF3E8D8),
-            ),
-            _buildButton(
-              label: _tightClip ? 'Clip: tight' : 'Clip: wide',
-              onTap: _toggleClip,
-              width: 104,
-              background: const Color(0xFFE8EDF9),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: 'Opacity 0',
-              onTap: () => _setOpacity(0),
-              width: 96,
-              background: const Color(0xFFF6E0E0),
-            ),
-            _buildButton(
-              label: 'Opacity 1',
-              onTap: () => _setOpacity(1),
-              width: 96,
-              background: const Color(0xFFE0F0E7),
-            ),
-          ],
-        ),
-        Text(
-          'opacity=${_opacity.toStringAsFixed(2)}, shiftX=${_shiftX.toStringAsFixed(0)}, clip=${_tightClip ? 'tight' : 'wide'}',
-          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-        ),
-        Container(
-          width: 220,
-          height: 140,
-          color: const Color(0xFFE7EDF6),
-          padding: const EdgeInsets.all(8),
-          child: ClipRect(
-            clipper: _FixedRectClipper(clip),
-            child: Transform.translate(
-              offset: Offset(_shiftX, 10),
-              child: Opacity(
-                opacity: _opacity,
-                child: Container(
-                  width: 140,
-                  height: 90,
-                  color: const Color(0xFF111111),
-                  padding: const EdgeInsets.all(8),
-                  child: const Text(
-                    'Layer',
-                    style: TextStyle(fontSize: 14, color: Colors.white),
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        spacing: 10,
+        children: <Widget>[
+          const Text(
+            'Proxy widgets: transforms + clips',
+            style: TextStyle(fontSize: 20, color: Colors.black),
+          ),
+          const Text(
+            'Use controls to fade a high-contrast black card over white canvas.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: 'Opacity -',
+                onTap: () => _changeOpacity(-0.3),
+                width: 96,
+                background: const Color(0xFFDCE3ED),
+              ),
+              _buildButton(
+                label: 'Opacity +',
+                onTap: () => _changeOpacity(0.3),
+                width: 96,
+                background: const Color(0xFFDCE3ED),
+              ),
+              _buildButton(
+                label: 'Reset',
+                onTap: _reset,
+                width: 88,
+                background: const Color(0xFFE9F5EC),
+              ),
+            ],
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: 'Left',
+                onTap: () => _move(-20),
+                width: 88,
+                background: const Color(0xFFF3E8D8),
+              ),
+              _buildButton(
+                label: 'Right',
+                onTap: () => _move(20),
+                width: 88,
+                background: const Color(0xFFF3E8D8),
+              ),
+              _buildButton(
+                label: _tightClip ? 'Clip: tight' : 'Clip: wide',
+                onTap: _toggleClip,
+                width: 104,
+                background: const Color(0xFFE8EDF9),
+              ),
+            ],
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: 'Opacity 0',
+                onTap: () => _setOpacity(0),
+                width: 96,
+                background: const Color(0xFFF6E0E0),
+              ),
+              _buildButton(
+                label: 'Opacity 1',
+                onTap: () => _setOpacity(1),
+                width: 96,
+                background: const Color(0xFFE0F0E7),
+              ),
+            ],
+          ),
+          Text(
+            'opacity=${_opacity.toStringAsFixed(2)}, shiftX=${_shiftX.toStringAsFixed(0)}, clip=${_tightClip ? 'tight' : 'wide'}',
+            style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+          ),
+          Container(
+            width: 220,
+            height: 140,
+            color: const Color(0xFFE7EDF6),
+            padding: const EdgeInsets.all(8),
+            child: ClipRect(
+              clipper: _FixedRectClipper(clip),
+              child: Transform.translate(
+                offset: Offset(_shiftX, 10),
+                child: Opacity(
+                  opacity: _opacity,
+                  child: Container(
+                    width: 140,
+                    height: 90,
+                    color: const Color(0xFF111111),
+                    padding: const EdgeInsets.all(8),
+                    child: const Text(
+                      'Layer',
+                      style: TextStyle(fontSize: 14, color: Colors.white),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
-        const Text(
-          'FractionalTranslation + RotatedBox',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        Row(
-          spacing: 8,
-          children: <Widget>[
-            _buildButton(
-              label: 'Shift',
-              onTap: _cycleFractionalShift,
-              width: 88,
-              background: const Color(0xFFE8EDF9),
-            ),
-            _buildButton(
-              label: 'Rotate',
-              onTap: _rotateQuarterTurn,
-              width: 88,
-              background: const Color(0xFFF3E8D8),
-            ),
-            Text(
-              'fraction=${_fractionalShift.toStringAsFixed(1)}, turns=$_quarterTurns',
-              style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-            ),
-          ],
-        ),
-        Row(
-          spacing: 16,
-          children: <Widget>[
-            Container(
-              width: 120,
-              height: 80,
-              color: const Color(0xFFE7EDF6),
-              child: Center(
-                child: FractionalTranslation(
-                  translation: Offset(_fractionalShift, 0),
-                  child: Container(
-                    width: 56,
-                    height: 32,
-                    color: const Color(0xFF6750A4),
-                    child: const Center(
-                      child: Text(
-                        'Shift',
-                        style: TextStyle(fontSize: 12, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
+          const Text(
+            'FractionalTranslation + RotatedBox',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: 'Shift',
+                onTap: _cycleFractionalShift,
+                width: 88,
+                background: const Color(0xFFE8EDF9),
               ),
-            ),
-            Container(
-              width: 120,
-              height: 80,
-              color: const Color(0xFFE7EDF6),
-              child: Center(
-                child: RotatedBox(
-                  quarterTurns: _quarterTurns,
-                  child: Container(
-                    width: 64,
-                    height: 28,
-                    color: const Color(0xFF386A20),
-                    child: const Center(
-                      child: Text(
-                        'Rotate',
-                        style: TextStyle(fontSize: 12, color: Colors.white),
-                      ),
-                    ),
-                  ),
-                ),
+              _buildButton(
+                label: 'Rotate',
+                onTap: _rotateQuarterTurn,
+                width: 88,
+                background: const Color(0xFFF3E8D8),
               ),
-            ),
-          ],
-        ),
-        const Text(
-          'ClipOval + ClipPath + PhysicalShape',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        Row(
-          spacing: 16,
-          children: <Widget>[
-            SizedBox(
-              width: 96,
-              height: 72,
-              child: ClipOval(
-                child: ColoredBox(
-                  color: Color(0xFF6750A4),
-                  child: Center(
-                    child: Text(
-                      'Oval',
-                      style: TextStyle(fontSize: 13, color: Colors.white),
-                    ),
-                  ),
-                ),
+              Text(
+                'fraction=${_fractionalShift.toStringAsFixed(1)}, turns=$_quarterTurns',
+                style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
               ),
-            ),
-            SizedBox(
-              width: 96,
-              height: 72,
-              child: ClipPath(
-                clipper: _TrianglePathClipper(),
-                child: ColoredBox(
-                  color: Color(0xFF386A20),
-                  child: Center(
-                    child: Text(
-                      'Path',
-                      style: TextStyle(fontSize: 13, color: Colors.white),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: 96,
-              height: 72,
-              child: PhysicalShape(
-                clipper: _TrianglePathClipper(),
-                color: Color(0xFFB3261E),
-                clipBehavior: Clip.antiAlias,
-                elevation: 6,
-                shadowColor: Colors.black,
+            ],
+          ),
+          Row(
+            spacing: 16,
+            children: <Widget>[
+              Container(
+                width: 120,
+                height: 80,
+                color: const Color(0xFFE7EDF6),
                 child: Center(
-                  child: Text(
-                    'Physical',
-                    style: TextStyle(fontSize: 13, color: Colors.white),
+                  child: FractionalTranslation(
+                    translation: Offset(_fractionalShift, 0),
+                    child: Container(
+                      width: 56,
+                      height: 32,
+                      color: const Color(0xFF6750A4),
+                      child: const Center(
+                        child: Text(
+                          'Shift',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
+              Container(
+                width: 120,
+                height: 80,
+                color: const Color(0xFFE7EDF6),
+                child: Center(
+                  child: RotatedBox(
+                    quarterTurns: _quarterTurns,
+                    child: Container(
+                      width: 64,
+                      height: 28,
+                      color: const Color(0xFF386A20),
+                      child: const Center(
+                        child: Text(
+                          'Rotate',
+                          style: TextStyle(fontSize: 12, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Text(
+            'ClipOval + ClipPath + PhysicalShape',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          Row(
+            spacing: 16,
+            children: <Widget>[
+              SizedBox(
+                width: 96,
+                height: 72,
+                child: ClipOval(
+                  child: ColoredBox(
+                    color: Color(0xFF6750A4),
+                    child: Center(
+                      child: Text(
+                        'Oval',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 96,
+                height: 72,
+                child: ClipPath(
+                  clipper: _TrianglePathClipper(),
+                  child: ColoredBox(
+                    color: Color(0xFF386A20),
+                    child: Center(
+                      child: Text(
+                        'Path',
+                        style: TextStyle(fontSize: 13, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(
+                width: 96,
+                height: 72,
+                child: PhysicalShape(
+                  clipper: _TrianglePathClipper(),
+                  color: Color(0xFFB3261E),
+                  clipBehavior: Clip.antiAlias,
+                  elevation: 6,
+                  shadowColor: Colors.black,
+                  child: Center(
+                    child: Text(
+                      'Physical',
+                      style: TextStyle(fontSize: 13, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const Text(
+            'ColoredBox edge anti-aliasing',
+            style: TextStyle(fontSize: 14, color: Colors.black),
+          ),
+          Row(
+            spacing: 24,
+            children: <Widget>[
+              _buildColoredBoxEdgeProbe(label: 'smooth', isAntiAlias: true),
+              _buildColoredBoxEdgeProbe(label: 'crisp', isAntiAlias: false),
+            ],
+          ),
+          const Text(
+            'Path operations + measured contours',
+            style: TextStyle(fontSize: 14),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              _buildButton(
+                label: const <String>[
+                  'Difference',
+                  'Intersect',
+                  'Union',
+                  'Xor',
+                  'ReverseDifference',
+                ][_pathOperation],
+                onTap: () =>
+                    setState(() => _pathOperation = (_pathOperation + 1) % 5),
+                width: 144,
+                background: const Color(0xFFE8EDF9),
+              ),
+              _buildButton(
+                label: 'Trace $_pathStep/4',
+                onTap: () => setState(() => _pathStep = (_pathStep + 1) % 5),
+                width: 104,
+                background: const Color(0xFFE9F5EC),
+              ),
+            ],
+          ),
+          SizedBox(
+            width: 240,
+            height: 120,
+            child: CustomPaint(
+              painter: _PathProbePainter(
+                PathOperation.values[_pathOperation],
+                _pathStep,
+              ),
             ),
-          ],
-        ),
-        const Text(
-          'ColoredBox edge anti-aliasing',
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        Row(
-          spacing: 24,
-          children: <Widget>[
-            _buildColoredBoxEdgeProbe(label: 'smooth', isAntiAlias: true),
-            _buildColoredBoxEdgeProbe(label: 'crisp', isAntiAlias: false),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -365,6 +408,8 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
       _tightClip = true;
       _fractionalShift = 0;
       _quarterTurns = 0;
+      _pathOperation = 0;
+      _pathStep = 1;
     });
   }
 }
@@ -395,4 +440,43 @@ class _TrianglePathClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(_TrianglePathClipper oldClipper) => false;
+}
+
+class _PathProbePainter extends CustomPainter {
+  _PathProbePainter(this.operation, this.step);
+  final PathOperation operation;
+  final int step;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Path left = Path()
+      ..moveTo(10, 90)
+      ..cubicTo(10, -15, 140, -15, 140, 90)
+      ..close();
+    final Path right = Path()..addOval(const Rect.fromLTWH(65, 15, 110, 90));
+    final Path result = Path.combine(operation, left, right)
+      ..addRect(const Rect.fromLTWH(195, 15, 20, 20));
+    canvas.drawPath(result, Paint()..color = const Color(0xFF6750A4));
+    final PathMetric metric = result.computeMetrics().first;
+    final double distance = metric.length * step / 4;
+    canvas.drawPath(
+      metric.extractPath(0, distance),
+      Paint()
+        ..color = const Color(0xFFFFB300)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3,
+    );
+    final Tangent? tangent = metric.getTangentForOffset(distance);
+    if (tangent != null) {
+      canvas.drawCircle(
+        tangent.position,
+        4,
+        Paint()..color = const Color(0xFFB3261E),
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_PathProbePainter oldDelegate) =>
+      oldDelegate.operation != operation || oldDelegate.step != step;
 }

@@ -1,17 +1,20 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
+using Plumix.Rendering;
+using Plumix.Widgets;
+using SkiaSharp;
 
 namespace Plumix.UI;
 
-// Dart parity source: dart:ui Path (control-port subset used by ClipPath)
-
+// Dart parity source: flutter/engine/src/flutter/lib/ui/painting.dart (Path)
+// Engine adapter: engine/src/flutter/lib/ui/painting/path.cc. Skia owns geometry, as in Flutter.
 public enum PathFillType
 {
     NonZero,
     EvenOdd,
 }
 
-/// Strategies for combining paths, matching `dart:ui`'s `PathOperation`.
 public enum PathOperation
 {
     Difference,
@@ -21,762 +24,343 @@ public enum PathOperation
     ReverseDifference,
 }
 
+/// <summary>A mutable collection of native line, quadratic, conic and cubic contours.</summary>
 public sealed class Path
 {
-    private readonly List<PathContour> _contours = [];
-    private List<Point>? _currentPoints;
-    private bool _currentClosed;
-    private (PathOperation Operation, Path First, Path Second)? _combination;
+    private readonly SKPath _path;
 
-    public Path()
-    {
-    }
-
-    /// <summary>Copies a path without sharing mutable subpaths, as in Dart's <c>Path.from</c>.</summary>
+    public Path() : this(new SKPath()) { }
     public Path(Path source)
     {
         ArgumentNullException.ThrowIfNull(source);
-        FillType = source.FillType;
-        _contours.AddRange(source._contours);
-        _currentPoints = source._currentPoints is null ? null : [.. source._currentPoints];
-        _currentClosed = source._currentClosed;
-        if (source._combination is { } combination)
-        {
-            _combination = (combination.Operation, new Path(combination.First), new Path(combination.Second));
-        }
+        _path = new SKPath(source._path);
     }
+    internal Path(SKPath path) => _path = path;
 
-    public PathFillType FillType { get; set; } = PathFillType.NonZero;
-
-    /// Combines the two paths according to the manner specified by the given `operation`.
-    public static Path Combine(PathOperation operation, Path path1, Path path2)
+    public PathFillType FillType
     {
-        ArgumentNullException.ThrowIfNull(path1);
-        ArgumentNullException.ThrowIfNull(path2);
-        return new Path { _combination = (operation, path1, path2) };
+        get => _path.FillType == SKPathFillType.EvenOdd ? PathFillType.EvenOdd : PathFillType.NonZero;
+        set => _path.FillType = value == PathFillType.EvenOdd ? SKPathFillType.EvenOdd : SKPathFillType.Winding;
     }
 
-    public void MoveTo(double x, double y)
-    {
-        FinishCurrentContour();
-        _currentPoints = [new Point(x, y)];
-        _currentClosed = false;
-    }
-
-    public void LineTo(double x, double y)
-    {
-        EnsureCurrentContour();
-        _currentPoints!.Add(new Point(x, y));
-    }
-
-    /// Starts a new subpath at the given offset from the current point.
-    public void RelativeMoveTo(double dx, double dy)
-    {
-        Point current = CurrentPoint;
-        MoveTo(current.X + dx, current.Y + dy);
-    }
-
-    /// Adds a straight line segment from the current point to the point at the given offset from it.
-    public void RelativeLineTo(double dx, double dy)
-    {
-        Point current = CurrentPoint;
-        LineTo(current.X + dx, current.Y + dy);
-    }
-
-    /// The point the next relative operation starts from; the origin before any point was added.
-    private Point CurrentPoint =>
-        _currentPoints is { Count: > 0 } points ? points[^1] : default;
-
-    public void QuadraticBezierTo(double x1, double y1, double x2, double y2)
-    {
-        EnsureCurrentContour();
-        Point start = _currentPoints![^1];
-        const int segmentCount = 16;
-        for (int segment = 1; segment <= segmentCount; segment++)
-        {
-            double t = segment / (double)segmentCount;
-            double inverse = 1.0 - t;
-            _currentPoints.Add(new Point(
-                (inverse * inverse * start.X) + (2.0 * inverse * t * x1) + (t * t * x2),
-                (inverse * inverse * start.Y) + (2.0 * inverse * t * y1) + (t * t * y2)));
-        }
-    }
-
-    public void CubicTo(double x1, double y1, double x2, double y2, double x3, double y3)
-    {
-        EnsureCurrentContour();
-        Point start = _currentPoints![^1];
-        const int segmentCount = 24;
-        for (int segment = 1; segment <= segmentCount; segment++)
-        {
-            double t = segment / (double)segmentCount;
-            double inverse = 1.0 - t;
-            _currentPoints.Add(new Point(
-                (inverse * inverse * inverse * start.X)
-                + (3.0 * inverse * inverse * t * x1)
-                + (3.0 * inverse * t * t * x2)
-                + (t * t * t * x3),
-                (inverse * inverse * inverse * start.Y)
-                + (3.0 * inverse * inverse * t * y1)
-                + (3.0 * inverse * t * t * y2)
-                + (t * t * t * y3)));
-        }
-    }
-
-    // Dart parity source: dart:ui Path.conicTo (rational quadratic segment).
-    public void ConicTo(double x1, double y1, double x2, double y2, double weight)
-    {
-        EnsureCurrentContour();
-        Point start = _currentPoints![^1];
-        const int segmentCount = 24;
-        for (int segment = 1; segment <= segmentCount; segment++)
-        {
-            double t = segment / (double)segmentCount;
-            double inverse = 1.0 - t;
-            double weightedMiddle = 2.0 * inverse * t * weight;
-            double denominator = (inverse * inverse) + weightedMiddle + (t * t);
-            if (denominator == 0.0)
-            {
-                continue;
-            }
-
-            _currentPoints.Add(new Point(
-                ((inverse * inverse * start.X) + (weightedMiddle * x1) + (t * t * x2)) / denominator,
-                ((inverse * inverse * start.Y) + (weightedMiddle * y1) + (t * t * y2)) / denominator));
-        }
-    }
-
-    // Dart parity source: dart:ui Path.reset.
-    public void Reset()
-    {
-        _contours.Clear();
-        _currentPoints = null;
-        _currentClosed = false;
-        _combination = null;
-    }
-
-    // Dart parity source: dart:ui Path.transform (affine subset).
-    /// <remarks>Dart's <c>Path.shift</c>.</remarks>
-    public Path Shift(Point offset) =>
-        offset.X == 0.0 && offset.Y == 0.0
-            ? this
-            : Transform(Matrix.CreateTranslation(offset.X, offset.Y));
-
-    public Path Transform(Matrix matrix)
-    {
-        if (_combination is { } combination)
-        {
-            return Combine(
-                combination.Operation,
-                combination.First.Transform(matrix),
-                combination.Second.Transform(matrix));
-        }
-
-        var transformed = new Path { FillType = FillType };
-        foreach (PathContour contour in SnapshotContours())
-        {
-            transformed._contours.Add(PathContour.Polygon(
-                [.. contour.FlattenedPoints.Select(point => point.Transform(matrix))],
-                contour.IsClosed));
-        }
-
-        return transformed;
-    }
-
-    // Dart parity source: dart:ui Path.addArc / Path.arcTo (oval-inscribed sweep).
-    public void AddArc(Rect oval, double startAngleRadians, double sweepAngleRadians)
-    {
-        FinishCurrentContour();
-        _currentPoints = [];
-        _currentClosed = false;
-        AppendArcPoints(oval, startAngleRadians, sweepAngleRadians, forceMoveTo: true);
-    }
+    public void MoveTo(double x, double y) => _path.MoveTo(Narrow(x), Narrow(y));
+    public void RelativeMoveTo(double dx, double dy) => _path.RMoveTo(Narrow(dx), Narrow(dy));
+    public void LineTo(double x, double y) => _path.LineTo(Narrow(x), Narrow(y));
+    public void RelativeLineTo(double dx, double dy) => _path.RLineTo(Narrow(dx), Narrow(dy));
+    public void QuadraticBezierTo(double x1, double y1, double x2, double y2) =>
+        _path.QuadTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2));
+    public void RelativeQuadraticBezierTo(double x1, double y1, double x2, double y2) =>
+        _path.RQuadTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2));
+    public void CubicTo(double x1, double y1, double x2, double y2, double x3, double y3) =>
+        _path.CubicTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2), Narrow(x3), Narrow(y3));
+    public void RelativeCubicTo(double x1, double y1, double x2, double y2, double x3, double y3) =>
+        _path.RCubicTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2), Narrow(x3), Narrow(y3));
+    public void ConicTo(double x1, double y1, double x2, double y2, double weight) =>
+        _path.ConicTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2), Narrow(weight));
+    public void RelativeConicTo(double x1, double y1, double x2, double y2, double weight) =>
+        _path.RConicTo(Narrow(x1), Narrow(y1), Narrow(x2), Narrow(y2), Narrow(weight));
 
     public void ArcTo(Rect oval, double startAngleRadians, double sweepAngleRadians, bool forceMoveTo)
     {
-        EnsureCurrentContour();
-        AppendArcPoints(oval, startAngleRadians, sweepAngleRadians, forceMoveTo);
+        CheckRect(oval);
+        _path.ArcTo(ToNative(oval), Degrees(startAngleRadians), Degrees(sweepAngleRadians), forceMoveTo);
     }
 
-    private void AppendArcPoints(
-        Rect oval,
-        double startAngleRadians,
-        double sweepAngleRadians,
-        bool forceMoveTo)
+    public void ArcToPoint(Point arcEnd, Radius radius = default,
+        double rotation = 0.0, bool largeArc = false, bool clockwise = true)
     {
-        double radiusX = oval.Width / 2.0;
-        double radiusY = oval.Height / 2.0;
-        Point center = oval.Center;
-        int segmentCount = Math.Max(2, (int)Math.Ceiling(Math.Abs(sweepAngleRadians) / (Math.PI / 16.0)));
-        for (int segment = 0; segment <= segmentCount; segment++)
-        {
-            double angle = startAngleRadians + (sweepAngleRadians * segment / segmentCount);
-            var point = new Point(
-                center.X + (Math.Cos(angle) * radiusX),
-                center.Y + (Math.Sin(angle) * radiusY));
-            if (segment == 0 && _currentPoints!.Count > 0)
-            {
-                // Skia's `arcTo`: `forceMoveTo` starts a new contour at the arc's start; otherwise a
-                // line joins the current point to the start (skipped when they coincide).
-                if (forceMoveTo)
-                {
-                    MoveTo(point.X, point.Y);
-                    continue;
-                }
-
-                if (_currentPoints[^1] == point)
-                {
-                    continue;
-                }
-            }
-
-            _currentPoints!.Add(point);
-        }
+        CheckPoint(arcEnd);
+        CheckRadius(radius);
+        _path.ArcTo(Narrow(radius.X), Narrow(radius.Y), Narrow(rotation),
+            largeArc ? SKPathArcSize.Large : SKPathArcSize.Small,
+            clockwise ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
+            Narrow(arcEnd.X), Narrow(arcEnd.Y));
     }
 
-    public void Close()
+    public void RelativeArcToPoint(Point arcEndDelta, Radius radius = default,
+        double rotation = 0.0, bool largeArc = false, bool clockwise = true)
     {
-        if (_currentPoints is null)
-        {
-            return;
-        }
-
-        _currentClosed = true;
-        FinishCurrentContour();
+        CheckPoint(arcEndDelta);
+        CheckRadius(radius);
+        _path.RArcTo(Narrow(radius.X), Narrow(radius.Y), Narrow(rotation),
+            largeArc ? SKPathArcSize.Large : SKPathArcSize.Small,
+            clockwise ? SKPathDirection.Clockwise : SKPathDirection.CounterClockwise,
+            Narrow(arcEndDelta.X), Narrow(arcEndDelta.Y));
     }
 
     public void AddRect(Rect rect)
     {
-        FinishCurrentContour();
-        _contours.Add(PathContour.Rectangle(rect));
+        CheckRect(rect);
+        _path.AddRect(ToNative(rect));
     }
 
     public void AddOval(Rect oval)
     {
-        FinishCurrentContour();
-        _contours.Add(PathContour.Ellipse(oval));
+        CheckRect(oval);
+        _path.AddOval(ToNative(oval));
     }
 
-    public void AddRoundedRect(Rect rect, double radius)
+    public void AddArc(Rect oval, double startAngleRadians, double sweepAngleRadians)
     {
-        FinishCurrentContour();
-        rect = Sorted(rect);
-        double clampedRadius = Math.Clamp(radius, 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
-        _contours.Add(PathContour.RoundedRectangle(rect, clampedRadius));
+        CheckRect(oval);
+        _path.AddArc(ToNative(oval), Degrees(startAngleRadians), Degrees(sweepAngleRadians));
     }
 
-    // Dart parity source: dart:ui Path.addRRect.
-    public void AddRRect(RRect rrect)
-    {
-        RRect scaled = rrect.NormalizeForPaint();
-        Plumix.Rendering.Radius topLeft = scaled.TopLeft;
-        bool uniformCircular = topLeft.X == topLeft.Y
-                               && scaled.TopRight == topLeft
-                               && scaled.BottomRight == topLeft
-                               && scaled.BottomLeft == topLeft;
-        if (uniformCircular)
-        {
-            AddRoundedRect(scaled.Rect, topLeft.X);
-            return;
-        }
-
-        AddPath(scaled.ToPath());
-    }
-
-    // Skia's `SkRect::sort`: a rect whose right/bottom lie before its left/top is normalized.
-    private static Rect Sorted(Rect rect)
-    {
-        if (rect.Width >= 0.0 && rect.Height >= 0.0)
-        {
-            return rect;
-        }
-
-        double left = Math.Min(rect.Left, rect.Right);
-        double top = Math.Min(rect.Top, rect.Bottom);
-        return new Rect(left, top, Math.Abs(rect.Width), Math.Abs(rect.Height));
-    }
-
-    // Dart parity source: dart:ui Path.addRSuperellipse.
-    public void AddRSuperellipse(RSuperellipse rsuperellipse)
-    {
-        AddPath(rsuperellipse.ToPath());
-    }
-
-    // Dart parity source: dart:ui Path.addPolygon.
     public void AddPolygon(IReadOnlyList<Point> points, bool close)
     {
         ArgumentNullException.ThrowIfNull(points);
-        if (points.Count == 0)
+        var native = new SKPoint[points.Count];
+        for (int index = 0; index < points.Count; index++)
         {
-            return;
+            native[index] = ToNative(points[index]);
         }
 
-        FinishCurrentContour();
-        _contours.Add(PathContour.Polygon(points, close));
+        _path.AddPoly(native, close);
     }
 
-    // Dart parity source: dart:ui Path.getBounds.
+    public void AddRoundedRect(Rect rect, double radius) => AddRRect(RRect.FromRectXY(rect, radius, radius));
+
+    public void AddRRect(RRect rrect)
+    {
+        RRect normalized = rrect.NormalizeForPaint();
+        CheckRect(normalized.Rect);
+        using var roundRect = new SKRoundRect();
+        roundRect.SetRectRadii(ToNative(normalized.Rect),
+        [
+            ToNativeRadius(normalized.TopLeft), ToNativeRadius(normalized.TopRight),
+            ToNativeRadius(normalized.BottomRight), ToNativeRadius(normalized.BottomLeft),
+        ]);
+        _path.AddRoundRect(roundRect);
+    }
+
+    public void AddRSuperellipse(RSuperellipse rsuperellipse) => AddPath(rsuperellipse.ToPath());
+    public void AddPath(Path other) => AddPath(other, default);
+    public void AddPath(Path path, Point offset, IReadOnlyList<double>? matrix4 = null) =>
+        Append(path, offset, matrix4, SKPathAddMode.Append);
+    public void ExtendWithPath(Path path, Point offset, IReadOnlyList<double>? matrix4 = null) =>
+        Append(path, offset, matrix4, SKPathAddMode.Extend);
+
+    private void Append(Path path, Point offset, IReadOnlyList<double>? matrix4, SKPathAddMode mode)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        CheckPoint(offset);
+        if (matrix4 is null)
+        {
+            _path.AddPath(path._path, Narrow(offset.X), Narrow(offset.Y), mode);
+        }
+        else
+        {
+            SKMatrix matrix = ToNativeMatrix(matrix4);
+            matrix.TransX += Narrow(offset.X);
+            matrix.TransY += Narrow(offset.Y);
+            _path.AddPath(path._path, in matrix, mode);
+        }
+    }
+
+    public void Close() => _path.Close();
+    public void Reset() => _path.Reset();
+
+    public bool Contains(Point point)
+    {
+        CheckPoint(point);
+        return _path.Contains(Narrow(point.X), Narrow(point.Y));
+    }
+
+    public Path Shift(Point offset)
+    {
+        CheckPoint(offset);
+        var result = new Path(this);
+        result._path.Offset(Narrow(offset.X), Narrow(offset.Y));
+        return result;
+    }
+
+    public Path Transform(Matrix matrix) => TransformNative(new SKMatrix(
+        Narrow(matrix.M11), Narrow(matrix.M21), Narrow(matrix.M31),
+        Narrow(matrix.M12), Narrow(matrix.M22), Narrow(matrix.M32), 0, 0, 1));
+    public Path Transform(IReadOnlyList<double> matrix4) => TransformNative(ToNativeMatrix(matrix4));
+
+    private Path TransformNative(SKMatrix matrix)
+    {
+        var result = new SKPath();
+        _path.Transform(matrix, result);
+        return new Path(result);
+    }
+
     public Rect GetBounds()
     {
-        if (_combination is { } combination)
-        {
-            Rect first = combination.First.GetBounds();
-            Rect second = combination.Second.GetBounds();
-            return combination.Operation switch
-            {
-                PathOperation.Difference => first,
-                PathOperation.ReverseDifference => second,
-                PathOperation.Intersect => first.Intersect(second),
-                _ => first.Union(second),
-            };
-        }
-
-        IReadOnlyList<PathContour> contours = SnapshotContours();
-        if (contours.Count == 0)
+        // Pinned SkPathBuilder.computeFiniteBounds ignores a trailing move, but checks all points
+        // for finiteness. The bundled SKPath.Bounds predates that trimming rule.
+        SKPoint[] points = _path.Points;
+        if (points.Length == 0 || points.Any(point => !float.IsFinite(point.X) || !float.IsFinite(point.Y)))
         {
             return default;
         }
 
-        Rect bounds = contours[0].Bounds;
-        for (int index = 1; index < contours.Count; index++)
+        using var iterator = _path.CreateRawIterator();
+        var segment = new SKPoint[4];
+        SKPathVerb last = SKPathVerb.Done;
+        SKPathVerb verb;
+        while ((verb = iterator.Next(segment)) != SKPathVerb.Done)
         {
-            bounds = bounds.Union(contours[index].Bounds);
+            last = verb;
         }
 
-        return bounds;
+        int count = points.Length - (last == SKPathVerb.Move && _path.VerbCount > 1 ? 1 : 0);
+        double left = points[0].X;
+        double top = points[0].Y;
+        double right = left;
+        double bottom = top;
+        for (int index = 1; index < count; index++)
+        {
+            left = Math.Min(left, points[index].X);
+            top = Math.Min(top, points[index].Y);
+            right = Math.Max(right, points[index].X);
+            bottom = Math.Max(bottom, points[index].Y);
+        }
+
+        return new Rect(left, top, right - left, bottom - top);
     }
 
-    public void AddPath(Path other)
+    public static Path Combine(PathOperation operation, Path path1, Path path2)
     {
-        ArgumentNullException.ThrowIfNull(other);
-        other.ThrowIfCombined();
-        FinishCurrentContour();
-        _contours.AddRange(other.SnapshotContours());
+        ArgumentNullException.ThrowIfNull(path1);
+        ArgumentNullException.ThrowIfNull(path2);
+        var result = new SKPath();
+        if (!path1._path.Op(path2._path, (SKPathOp)operation, result))
+        {
+            result.Dispose();
+            throw new InvalidOperationException(
+                "Path.combine() failed.  This may be due an invalid path; in particular, check for NaN values.");
+        }
+
+        return new Path(result);
     }
 
-    public bool Contains(Point point)
-    {
-        if (_combination is { } combination)
-        {
-            bool first = combination.First.Contains(point);
-            bool second = combination.Second.Contains(point);
-            return combination.Operation switch
-            {
-                PathOperation.Difference => first && !second,
-                PathOperation.ReverseDifference => second && !first,
-                PathOperation.Intersect => first && second,
-                PathOperation.Xor => first ^ second,
-                _ => first || second,
-            };
-        }
-
-        IReadOnlyList<PathContour> contours = SnapshotContours();
-        bool inside;
-        if (FillType == PathFillType.EvenOdd)
-        {
-            inside = false;
-            foreach (PathContour contour in contours)
-            {
-                if (contour.Contains(point))
-                {
-                    inside = !inside;
-                }
-            }
-        }
-        else
-        {
-            int winding = 0;
-            foreach (PathContour contour in contours)
-            {
-                winding += contour.WindingNumber(point);
-            }
-
-            inside = winding != 0;
-        }
-
-        if (inside)
-        {
-            return true;
-        }
-
-        // Skia's `SkPath::contains` (what dart:ui's `Path.contains` calls) also answers true for a point
-        // that lies on the outline once (`onCurveCount` odd), such as a polygon vertex. An even count
-        // needs Skia's tangent test; it is treated as outside, like two cancelling edges.
-        int onCurveCount = 0;
-        foreach (PathContour contour in contours)
-        {
-            onCurveCount += contour.OnCurveCount(point);
-        }
-
-        return (onCurveCount & 1) != 0;
-    }
+    public PathMetrics ComputeMetrics(bool forceClosed = false) => new(_path, forceClosed);
+    public override string ToString() => "Path";
 
     internal Geometry ToGeometry()
     {
-        if (_combination is { } combination)
+        if (_path.IsOval)
         {
-            GeometryCombineMode mode = combination.Operation switch
+            return new EllipseGeometry(FromNative(_path.GetOvalBounds()));
+        }
+
+        if (_path.IsRect)
+        {
+            return new RectangleGeometry(FromNative(_path.GetRect()));
+        }
+
+        if (_path.IsRoundRect)
+        {
+            using SKRoundRect rounded = _path.GetRoundRect();
+            SKPoint[] radii = rounded.Radii;
+            if (radii.All(radius => radius == radii[0]))
             {
-                PathOperation.Difference or PathOperation.ReverseDifference => GeometryCombineMode.Exclude,
-                PathOperation.Intersect => GeometryCombineMode.Intersect,
-                PathOperation.Xor => GeometryCombineMode.Xor,
-                _ => GeometryCombineMode.Union,
-            };
-            bool reversed = combination.Operation == PathOperation.ReverseDifference;
-            return new CombinedGeometry(
-                mode,
-                (reversed ? combination.Second : combination.First).ToGeometry(),
-                (reversed ? combination.First : combination.Second).ToGeometry());
+                return new RectangleGeometry(FromNative(rounded.Rect), radii[0].X, radii[0].Y);
+            }
         }
 
-        IReadOnlyList<PathContour> contours = SnapshotContours();
-        if (contours.Count == 0)
-        {
-            return new RectangleGeometry();
-        }
-
-        if (contours.Count == 1)
-        {
-            PathContour contour = contours[0];
-            return contour.Kind switch
-            {
-                PathContourKind.Rectangle => new RectangleGeometry(contour.Bounds),
-                PathContourKind.RoundedRectangle => new RectangleGeometry(
-                    contour.Bounds,
-                    contour.Radius,
-                    contour.Radius),
-                PathContourKind.Ellipse => new EllipseGeometry(contour.Bounds),
-                _ => BuildStreamGeometry(contours, FillType),
-            };
-        }
-
-        return BuildStreamGeometry(contours, FillType);
-    }
-
-    private static Geometry BuildStreamGeometry(
-        IReadOnlyList<PathContour> contours,
-        PathFillType fillType)
-    {
         var geometry = new StreamGeometry();
-        using var context = geometry.Open();
-        context.SetFillRule(fillType == PathFillType.NonZero ? FillRule.NonZero : FillRule.EvenOdd);
-        foreach (PathContour contour in contours)
+        using StreamGeometryContext context = geometry.Open();
+        context.SetFillRule(FillType == PathFillType.EvenOdd ? FillRule.EvenOdd : FillRule.NonZero);
+        using var iterator = _path.CreateRawIterator();
+        var points = new SKPoint[4];
+        bool open = false;
+        SKPathVerb verb;
+        while ((verb = iterator.Next(points)) != SKPathVerb.Done)
         {
-            IReadOnlyList<Point> points = contour.FlattenedPoints;
-            if (points.Count == 0)
+            switch (verb)
             {
-                continue;
-            }
+                case SKPathVerb.Move:
+                    if (open)
+                    {
+                        context.EndFigure(false);
+                    }
 
-            context.BeginFigure(points[0], isFilled: true);
-            for (int index = 1; index < points.Count; index++)
-            {
-                context.LineTo(points[index]);
+                    context.BeginFigure(FromNative(points[0]), true);
+                    open = true;
+                    break;
+                case SKPathVerb.Line:
+                    context.LineTo(FromNative(points[1]));
+                    break;
+                case SKPathVerb.Quad:
+                    context.QuadraticBezierTo(FromNative(points[1]), FromNative(points[2]));
+                    break;
+                case SKPathVerb.Conic:
+                    WriteConic(context, points, iterator.ConicWeight());
+                    break;
+                case SKPathVerb.Cubic:
+                    context.CubicBezierTo(FromNative(points[1]), FromNative(points[2]), FromNative(points[3]));
+                    break;
+                case SKPathVerb.Close:
+                    context.EndFigure(true);
+                    open = false;
+                    break;
             }
+        }
 
-            context.EndFigure(contour.IsClosed);
+        if (open)
+        {
+            context.EndFigure(false);
         }
 
         return geometry;
     }
 
-    private void EnsureCurrentContour()
+    private static void WriteConic(StreamGeometryContext context, SKPoint[] points, float weight)
     {
-        ThrowIfCombined();
-        _currentPoints ??= [new Point(0, 0)];
+        // Avalonia has no rational quadratic command. Only this bridge approximates conics; native
+        // geometry, containment, boolean operations, transforms and metrics retain exact conics.
+        double factor = (weight - 1.0) / (4.0 * (2.0 + weight));
+        double errorX = factor * (points[0].X - 2.0 * points[1].X + points[2].X);
+        double errorY = factor * (points[0].Y - 2.0 * points[1].Y + points[2].Y);
+        double error = Math.Sqrt(errorX * errorX + errorY * errorY);
+        int subdivisions = 0;
+        while (error > 0.01 && subdivisions < 5)
+        {
+            error *= 0.25;
+            subdivisions++;
+        }
+
+        SKPoint[] quads = SKPath.ConvertConicToQuads(points[0], points[1], points[2], weight, subdivisions);
+        for (int index = 1; index + 1 < quads.Length; index += 2)
+        {
+            context.QuadraticBezierTo(FromNative(quads[index]), FromNative(quads[index + 1]));
+        }
     }
 
-    /// A path produced by <see cref="Combine"/> keeps its operands instead of a flattened contour list,
-    /// so contours cannot be appended to it. Combine again to build a larger shape.
-    private void ThrowIfCombined()
+    internal static float Narrow(double value) => double.IsFinite(value)
+        ? (float)Math.Clamp(value, -float.MaxValue, float.MaxValue) : (float)value;
+    private static float Degrees(double radians) => Narrow(radians) * 180.0f / (float)Math.PI;
+    private static SKPoint ToNative(Point point) => new(Narrow(point.X), Narrow(point.Y));
+    private static Point FromNative(SKPoint point) => new(point.X, point.Y);
+    private static SKRect ToNative(Rect rect) =>
+        new(Narrow(rect.Left), Narrow(rect.Top), Narrow(rect.Right), Narrow(rect.Bottom));
+    private static Rect FromNative(SKRect rect) => new(rect.Left, rect.Top, rect.Width, rect.Height);
+
+    private static SKPoint ToNativeRadius(Radius radius)
     {
-        if (_combination is not null)
-        {
-            throw new InvalidOperationException("A combined path cannot be extended with new contours.");
-        }
+        CheckRadius(radius);
+        return new SKPoint(Narrow(radius.X), Narrow(radius.Y));
     }
 
-    private IReadOnlyList<PathContour> SnapshotContours()
+    private static SKMatrix ToNativeMatrix(IReadOnlyList<double> matrix4)
     {
-        if (_currentPoints is not { Count: > 0 } points)
-        {
-            return _contours;
-        }
-
-        var contours = new List<PathContour>(_contours.Count + 1);
-        contours.AddRange(_contours);
-        contours.Add(PathContour.Polygon(points, _currentClosed));
-        return contours;
+        ArgumentNullException.ThrowIfNull(matrix4);
+        DebugAssertions.Assert(matrix4.Count == 16 && matrix4.All(double.IsFinite),
+            "'matrix4' must have 16 finite entries.");
+        return new SKMatrix(
+            Narrow(matrix4[0]), Narrow(matrix4[4]), Narrow(matrix4[12]),
+            Narrow(matrix4[1]), Narrow(matrix4[5]), Narrow(matrix4[13]),
+            Narrow(matrix4[3]), Narrow(matrix4[7]), Narrow(matrix4[15]));
     }
 
-    private void FinishCurrentContour()
-    {
-        ThrowIfCombined();
-        if (_currentPoints is not { Count: > 0 } points)
-        {
-            _currentPoints = null;
-            _currentClosed = false;
-            return;
-        }
-
-        _contours.Add(PathContour.Polygon(points, _currentClosed));
-        _currentPoints = null;
-        _currentClosed = false;
-    }
-
-    private enum PathContourKind
-    {
-        Polygon,
-        Rectangle,
-        RoundedRectangle,
-        Ellipse,
-    }
-
-    private sealed class PathContour
-    {
-        private PathContour(
-            PathContourKind kind,
-            Rect bounds,
-            IReadOnlyList<Point> points,
-            bool isClosed,
-            double radius = 0.0)
-        {
-            Kind = kind;
-            Bounds = bounds;
-            FlattenedPoints = points;
-            IsClosed = isClosed;
-            Radius = radius;
-        }
-
-        public PathContourKind Kind { get; }
-        public Rect Bounds { get; }
-        public IReadOnlyList<Point> FlattenedPoints { get; }
-        public bool IsClosed { get; }
-        public double Radius { get; }
-
-        public static PathContour Polygon(IReadOnlyList<Point> points, bool isClosed)
-        {
-            double minX = points.Min(static point => point.X);
-            double minY = points.Min(static point => point.Y);
-            double maxX = points.Max(static point => point.X);
-            double maxY = points.Max(static point => point.Y);
-            return new PathContour(
-                PathContourKind.Polygon,
-                new Rect(minX, minY, maxX - minX, maxY - minY),
-                points.ToArray(),
-                isClosed);
-        }
-
-        public static PathContour Rectangle(Rect rect)
-        {
-            return new PathContour(
-                PathContourKind.Rectangle,
-                rect,
-                [rect.TopLeft, rect.TopRight, rect.BottomRight, rect.BottomLeft],
-                isClosed: true);
-        }
-
-        public static PathContour RoundedRectangle(Rect rect, double radius)
-        {
-            IReadOnlyList<Point> points = radius <= 0.0
-                ? [rect.TopLeft, rect.TopRight, rect.BottomRight, rect.BottomLeft]
-                : BuildRoundedRectanglePoints(rect, radius);
-            return new PathContour(
-                PathContourKind.RoundedRectangle,
-                rect,
-                points,
-                isClosed: true,
-                radius);
-        }
-
-        public static PathContour Ellipse(Rect rect)
-        {
-            const int segmentCount = 48;
-            var points = new List<Point>(segmentCount);
-            for (int segment = 0; segment < segmentCount; segment++)
-            {
-                double angle = (Math.PI * 2.0 * segment) / segmentCount;
-                points.Add(new Point(
-                    rect.Center.X + (Math.Cos(angle) * rect.Width / 2.0),
-                    rect.Center.Y + (Math.Sin(angle) * rect.Height / 2.0)));
-            }
-
-            return new PathContour(PathContourKind.Ellipse, rect, points, isClosed: true);
-        }
-
-        public bool Contains(Point point)
-        {
-            return Kind switch
-            {
-                PathContourKind.Rectangle => Bounds.Contains(point),
-                PathContourKind.RoundedRectangle => ContainsRoundedRectangle(point),
-                PathContourKind.Ellipse => ContainsEllipse(point),
-                _ => WindingNumber(point) != 0,
-            };
-        }
-
-        /// <summary>
-        /// Skia's <c>winding_line</c> on-curve bookkeeping over the flattened outline (always closed, as
-        /// <c>SkPath::contains</c> treats it): a vertex counts for the edge that starts at it, an edge
-        /// interior point counts once, a horizontal edge counts its span except its end point. Curved
-        /// and rectangular kinds already include their boundary in <see cref="Contains"/>.
-        /// </summary>
-        public int OnCurveCount(Point point)
-        {
-            if (Kind != PathContourKind.Polygon || !ContainsBoundsInclusive(Bounds, point))
-            {
-                return 0;
-            }
-
-            int count = 0;
-            IReadOnlyList<Point> points = FlattenedPoints;
-            for (int index = 0; index < points.Count; index++)
-            {
-                Point start = points[index];
-                Point end = points[(index + 1) % points.Count];
-                if (start.Y == end.Y)
-                {
-                    if (point.Y == start.Y
-                        && (start.X - point.X) * (end.X - point.X) <= 0.0
-                        && point.X != end.X)
-                    {
-                        count += 1;
-                    }
-
-                    continue;
-                }
-
-                if (point.Y < Math.Min(start.Y, end.Y) || point.Y > Math.Max(start.Y, end.Y))
-                {
-                    continue;
-                }
-
-                if (point.X == start.X && point.Y == start.Y)
-                {
-                    count += 1;
-                }
-                else if (!(point.X == end.X && point.Y == end.Y) && Cross(start, end, point) == 0.0)
-                {
-                    count += 1;
-                }
-            }
-
-            return count;
-        }
-
-        public int WindingNumber(Point point)
-        {
-            if (!ContainsBoundsInclusive(Bounds, point))
-            {
-                return 0;
-            }
-
-            if (Kind == PathContourKind.Ellipse)
-            {
-                return ContainsEllipse(point) ? 1 : 0;
-            }
-
-            if (Kind == PathContourKind.RoundedRectangle)
-            {
-                return ContainsRoundedRectangle(point) ? 1 : 0;
-            }
-
-            int winding = 0;
-            IReadOnlyList<Point> points = FlattenedPoints;
-            int edgeCount = points.Count;
-            for (int index = 0; index < edgeCount; index++)
-            {
-                Point start = points[index];
-                Point end = points[(index + 1) % points.Count];
-                if (start.Y <= point.Y)
-                {
-                    if (end.Y > point.Y && Cross(start, end, point) > 0)
-                    {
-                        winding += 1;
-                    }
-                }
-                else if (end.Y <= point.Y && Cross(start, end, point) < 0)
-                {
-                    winding -= 1;
-                }
-            }
-
-            return winding;
-        }
-
-        private bool ContainsRoundedRectangle(Point point)
-        {
-            if (!Bounds.Contains(point))
-            {
-                return false;
-            }
-
-            if (Radius <= 0.0
-                || (point.X >= Bounds.Left + Radius && point.X <= Bounds.Right - Radius)
-                || (point.Y >= Bounds.Top + Radius && point.Y <= Bounds.Bottom - Radius))
-            {
-                return true;
-            }
-
-            double centerX = point.X < Bounds.Center.X ? Bounds.Left + Radius : Bounds.Right - Radius;
-            double centerY = point.Y < Bounds.Center.Y ? Bounds.Top + Radius : Bounds.Bottom - Radius;
-            double deltaX = point.X - centerX;
-            double deltaY = point.Y - centerY;
-            return (deltaX * deltaX) + (deltaY * deltaY) <= Radius * Radius;
-        }
-
-        private bool ContainsEllipse(Point point)
-        {
-            if (Bounds.Width <= 0.0 || Bounds.Height <= 0.0)
-            {
-                return false;
-            }
-
-            double normalizedX = (point.X - Bounds.Center.X) / Bounds.Width;
-            double normalizedY = (point.Y - Bounds.Center.Y) / Bounds.Height;
-            return (normalizedX * normalizedX) + (normalizedY * normalizedY) <= 0.25;
-        }
-
-        private static bool ContainsBoundsInclusive(Rect rect, Point point)
-        {
-            return point.X >= rect.Left
-                   && point.X <= rect.Right
-                   && point.Y >= rect.Top
-                   && point.Y <= rect.Bottom;
-        }
-
-        private static double Cross(Point start, Point end, Point point)
-        {
-            return ((end.X - start.X) * (point.Y - start.Y))
-                   - ((point.X - start.X) * (end.Y - start.Y));
-        }
-
-        private static IReadOnlyList<Point> BuildRoundedRectanglePoints(Rect rect, double radius)
-        {
-            const int segmentsPerCorner = 8;
-            var points = new List<Point>((segmentsPerCorner + 1) * 4);
-            AddArc(points, new Point(rect.Right - radius, rect.Top + radius), radius, -Math.PI / 2.0, 0.0);
-            AddArc(points, new Point(rect.Right - radius, rect.Bottom - radius), radius, 0.0, Math.PI / 2.0);
-            AddArc(points, new Point(rect.Left + radius, rect.Bottom - radius), radius, Math.PI / 2.0, Math.PI);
-            AddArc(points, new Point(rect.Left + radius, rect.Top + radius), radius, Math.PI, Math.PI * 1.5);
-            return points;
-
-            static void AddArc(
-                List<Point> target,
-                Point center,
-                double arcRadius,
-                double startAngle,
-                double endAngle)
-            {
-                for (int segment = 0; segment <= segmentsPerCorner; segment++)
-                {
-                    double t = segment / (double)segmentsPerCorner;
-                    double angle = startAngle + ((endAngle - startAngle) * t);
-                    target.Add(new Point(
-                        center.X + (Math.Cos(angle) * arcRadius),
-                        center.Y + (Math.Sin(angle) * arcRadius)));
-                }
-            }
-        }
-    }
+    private static void CheckPoint(Point point) => DebugAssertions.Assert(
+        !double.IsNaN(point.X) && !double.IsNaN(point.Y), "Offset argument contained a NaN value.");
+    private static void CheckRadius(Radius radius) => DebugAssertions.Assert(
+        !double.IsNaN(radius.X) && !double.IsNaN(radius.Y), "Radius argument contained a NaN value.");
+    private static void CheckRect(Rect rect) => DebugAssertions.Assert(
+        !double.IsNaN(rect.Left) && !double.IsNaN(rect.Top)
+        && !double.IsNaN(rect.Right) && !double.IsNaN(rect.Bottom), "Rect argument contained a NaN value.");
 }
