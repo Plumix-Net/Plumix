@@ -48,7 +48,7 @@ internal static class HostKeyEventMessage
             deviceType,
             isDown);
 
-        if (OperatingSystem.IsWindows())
+        if (keymap == "windows")
         {
             // The Windows raw packet has one code point for both identity and text. The engine's
             // separate KeyData packet preserves the actual character without changing the logical key.

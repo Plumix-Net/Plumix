@@ -736,7 +736,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 600
-- C# files carrying a marker: 803
+- C# files carrying a marker: 804
 - C# files without a marker: 95
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 1

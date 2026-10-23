@@ -9,6 +9,9 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Explicit host keymaps select their own keyboard pipeline on Windows (C#-only).
+- Breaking: Host clicks get distinct gesture IDs while keeping device IDs (pointer_data_packet_converter.cc).
+- Native DrawPaint preserves GPU shader coordinates; ink demos expose visible ink and slow motion in both samples.
 - Breaking: InkSparkle draws the native turbulence and white-sparkle shader with retained uniforms (ink_sparkle.dart).
 - Linux host key messages carry the typed (shifted) character in `unicodeScalarValues`, as GTK does (C#-only).
 - Breaking: Android system back reaches popRoute via TopLevel.BackRequested, gated by setFrameworkHandlesBack (C#-only).
