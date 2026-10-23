@@ -22,6 +22,7 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
   bool _enabled = true;
   bool _obscure = true;
   bool _error = false;
+  bool _maintainHintSize = true;
   String _submitted = 'none';
   String _formStatus = 'not validated';
   String _systemMenuAction = 'none';
@@ -121,6 +122,63 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
           const Text(
             'Decorator geometry probes',
             style: TextStyle(fontSize: 18),
+          ),
+          TextButton(
+            onPressed: () =>
+                setState(() => _maintainHintSize = !_maintainHintSize),
+            child: Text(
+              _maintainHintSize
+                  ? 'Hint space: retained'
+                  : 'Hint space: collapses',
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            decoration: InputDecoration(
+              hint: const Text(
+                'Custom multiline hint\nType to fade this hint away\nClear text to restore the hint',
+              ),
+              maintainHintSize: _maintainHintSize,
+              hintFadeDuration: const Duration(milliseconds: 120),
+              helperText: 'Toggle hint space, then enter and clear text',
+              filled: true,
+            ),
+          ),
+          TextField(
+            enabled: _enabled,
+            decoration: InputDecoration(
+              filled: true,
+              labelText: 'Affix icon buttons',
+              prefixIconColor: Colors.teal,
+              suffixIconColor: Colors.indigo,
+              prefixIcon: IconButton(
+                icon: const Icon(Icons.email),
+                onPressed: () => setState(() => _submitted = 'prefix button'),
+                tooltip: 'Prefix action',
+              ),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.visibility),
+                onPressed: () => setState(() => _submitted = 'suffix button'),
+                tooltip: 'Suffix action',
+              ),
+              counterText: '3/10',
+              semanticCounterText: '7 characters remaining',
+            ),
+          ),
+          Align(
+            alignment: Alignment.topLeft,
+            child: SizedBox(
+              width: 280,
+              child: TextField(
+                enabled: _enabled,
+                decoration: const InputDecoration(
+                  labelText:
+                      'A long floating label can use the full outline width',
+                  floatingLabelBehavior: FloatingLabelBehavior.always,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
           ),
           TextField(
             enabled: _enabled,

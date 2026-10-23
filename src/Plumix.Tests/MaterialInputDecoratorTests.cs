@@ -55,7 +55,8 @@ public sealed class MaterialInputDecoratorTests
         Assert.Throws<ArgumentException>(() => new InputDecoration(label: new Text("A"), labelText: "B"));
         Assert.Throws<ArgumentException>(() => new InputDecoration(prefix: new Text("A"), prefixText: "B"));
         Assert.Throws<ArgumentException>(() => new InputDecoration(error: new Text("A"), errorText: "B"));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new InputDecoration(errorMaxLines: 0));
+        // Dart validates line counts when Text is built, not when decoration metadata is constructed.
+        Assert.Equal(0, new InputDecoration(errorMaxLines: 0).ErrorMaxLines);
 
         InputDecoration collapsed = InputDecoration.Collapsed("Hint");
         Assert.True(collapsed.IsCollapsed);

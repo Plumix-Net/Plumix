@@ -14,7 +14,7 @@ public enum FloatingLabelBehavior { Never, Auto, Always }
 
 public enum FloatingLabelAlignment { Start, Center }
 
-public sealed record InputDecoration
+public sealed partial record InputDecoration
 {
     internal const double FinalLabelScale = 0.75;
     internal const double InputExtraPadding = 4.0;
@@ -78,7 +78,8 @@ public sealed record InputDecoration
         string? semanticCounterText = null,
         bool? alignLabelWithHint = null,
         BoxConstraints? constraints = null,
-        VisualDensity? visualDensity = null)
+        VisualDensity? visualDensity = null,
+        bool maintainHintHeight = true)
     {
         if (label is not null && labelText is not null)
         {
@@ -110,10 +111,6 @@ public sealed record InputDecoration
             throw new ArgumentException("Declaring both error and errorText is not supported.");
         }
 
-        ValidateLines(helperMaxLines, nameof(helperMaxLines));
-        ValidateLines(hintMaxLines, nameof(hintMaxLines));
-        ValidateLines(errorMaxLines, nameof(errorMaxLines));
-
         Icon = icon;
         IconColor = iconColor;
         Label = label;
@@ -131,6 +128,7 @@ public sealed record InputDecoration
         HintMaxLines = hintMaxLines;
         HintFadeDuration = hintFadeDuration;
         MaintainHintSize = maintainHintSize;
+        _maintainHintHeight = maintainHintHeight;
         MaintainLabelSize = maintainLabelSize;
         Error = error;
         ErrorText = errorText;
@@ -190,6 +188,15 @@ public sealed record InputDecoration
     public int? HintMaxLines { get; init; }
     public TimeSpan? HintFadeDuration { get; init; }
     public bool MaintainHintSize { get; init; }
+    private readonly bool _maintainHintHeight = true;
+
+    [Obsolete("Use MaintainHintSize instead. Deprecated in Flutter after v3.28.0-2.0.pre.")]
+    public bool MaintainHintHeight
+    {
+        get => _maintainHintHeight;
+        init => _maintainHintHeight = value;
+    }
+
     public bool MaintainLabelSize { get; init; }
     public Widget? Error { get; init; }
     public string? ErrorText { get; init; }
@@ -239,30 +246,76 @@ public sealed record InputDecoration
         int? hintMaxLines = null,
         TimeSpan? hintFadeDuration = null,
         bool maintainHintSize = true,
-        bool? filled = null,
+        bool? filled = false,
         Color? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         bool enabled = true,
-        BoxConstraints? constraints = null) => new(
-        hintText: hintText,
+        BoxConstraints? constraints = null,
+        FloatingLabelBehavior? floatingLabelBehavior = null,
+        FloatingLabelAlignment? floatingLabelAlignment = null,
+        bool maintainHintHeight = true,
+        bool maintainLabelSize = false) => Collapsed(
+        hintText,
+        InputBorder.None,
+        hintStyle,
+        hint,
+        hintTextDirection,
+        hintMaxLines,
+        hintFadeDuration,
+        maintainHintSize,
+        filled,
+        fillColor,
+        focusColor,
+        hoverColor,
+        enabled,
+        constraints,
+        floatingLabelBehavior,
+        floatingLabelAlignment,
+        maintainHintHeight,
+        maintainLabelSize);
+
+    /// <summary>Collapsed decoration with an explicit border, including a null border.</summary>
+    /// <remarks>The floating-label arguments and maintainHintHeight are deprecated in Flutter.</remarks>
+    public static InputDecoration Collapsed(
+        string? hintText,
+        InputBorder? border,
+        TextStyle? hintStyle = null,
+        Widget? hint = null,
+        TextDirection? hintTextDirection = null,
+        int? hintMaxLines = null,
+        TimeSpan? hintFadeDuration = null,
+        bool maintainHintSize = true,
+        bool? filled = false,
+        Color? fillColor = null,
+        Color? focusColor = null,
+        Color? hoverColor = null,
+        bool enabled = true,
+        BoxConstraints? constraints = null,
+        FloatingLabelBehavior? floatingLabelBehavior = null,
+        FloatingLabelAlignment? floatingLabelAlignment = null,
+        bool maintainHintHeight = true,
+        bool maintainLabelSize = false) => new InputDecoration(
         hintStyle: hintStyle,
-        hint: hint,
         hintTextDirection: hintTextDirection,
         hintMaxLines: hintMaxLines,
         hintFadeDuration: hintFadeDuration,
         maintainHintSize: maintainHintSize,
+        maintainHintHeight: maintainHintHeight,
+        maintainLabelSize: maintainLabelSize,
+        floatingLabelBehavior: floatingLabelBehavior,
+        floatingLabelAlignment: floatingLabelAlignment,
         isCollapsed: true,
         isDense: false,
         contentPadding: EdgeInsetsGeometry.Zero,
-        filled: filled ?? false,
+        filled: filled,
         fillColor: fillColor,
         focusColor: focusColor,
         hoverColor: hoverColor,
-        border: InputBorder.None,
+        border: border,
         enabled: enabled,
         alignLabelWithHint: false,
-        constraints: constraints);
+        constraints: constraints) with { HintText = hintText, Hint = hint };
 
     /// Applies the ambient theme to every field Flutter's `applyDefaults` defaults, leaving the widget
     /// slots (icon/label/helper/error/prefix/suffix/counter content, `enabled`, `semanticCounterText`)
@@ -277,44 +330,42 @@ public sealed record InputDecoration
     public InputDecoration ApplyDefaults(InputDecorationThemeData theme)
     {
         ArgumentNullException.ThrowIfNull(theme);
-        return this with
-        {
-            LabelStyle = LabelStyle ?? theme.LabelStyle,
-            FloatingLabelStyle = FloatingLabelStyle ?? theme.FloatingLabelStyle,
-            HelperStyle = HelperStyle ?? theme.HelperStyle,
-            HelperMaxLines = HelperMaxLines ?? theme.HelperMaxLines,
-            HintStyle = HintStyle ?? theme.HintStyle,
-            HintFadeDuration = HintFadeDuration ?? theme.HintFadeDuration,
-            HintMaxLines = HintMaxLines ?? theme.HintMaxLines,
-            ErrorStyle = ErrorStyle ?? theme.ErrorStyle,
-            ErrorMaxLines = ErrorMaxLines ?? theme.ErrorMaxLines,
-            FloatingLabelBehavior = FloatingLabelBehavior ?? theme.FloatingLabelBehavior,
-            FloatingLabelAlignment = FloatingLabelAlignment ?? theme.FloatingLabelAlignment,
-            IsDense = IsDense ?? theme.IsDense,
-            ContentPadding = ContentPadding ?? theme.ContentPadding,
-            IsCollapsed = IsCollapsed ?? theme.IsCollapsed,
-            IconColor = IconColor ?? theme.IconColor,
-            PrefixStyle = PrefixStyle ?? theme.PrefixStyle,
-            PrefixIconColor = PrefixIconColor ?? theme.PrefixIconColor,
-            PrefixIconConstraints = PrefixIconConstraints ?? theme.PrefixIconConstraints,
-            SuffixStyle = SuffixStyle ?? theme.SuffixStyle,
-            SuffixIconColor = SuffixIconColor ?? theme.SuffixIconColor,
-            SuffixIconConstraints = SuffixIconConstraints ?? theme.SuffixIconConstraints,
-            CounterStyle = CounterStyle ?? theme.CounterStyle,
-            Filled = Filled ?? theme.Filled,
-            FillColor = FillColor ?? theme.FillColor,
-            FocusColor = FocusColor ?? theme.FocusColor,
-            HoverColor = HoverColor ?? theme.HoverColor,
-            ErrorBorder = ErrorBorder ?? theme.ErrorBorder,
-            FocusedBorder = FocusedBorder ?? theme.FocusedBorder,
-            FocusedErrorBorder = FocusedErrorBorder ?? theme.FocusedErrorBorder,
-            DisabledBorder = DisabledBorder ?? theme.DisabledBorder,
-            EnabledBorder = EnabledBorder ?? theme.EnabledBorder,
-            Border = Border ?? theme.Border,
-            AlignLabelWithHint = AlignLabelWithHint ?? theme.AlignLabelWithHint,
-            Constraints = Constraints ?? theme.Constraints,
-            VisualDensity = VisualDensity ?? theme.VisualDensity,
-        };
+        return CopyWith(
+            labelStyle: LabelStyle ?? theme.LabelStyle,
+            floatingLabelStyle: FloatingLabelStyle ?? theme.FloatingLabelStyle,
+            helperStyle: HelperStyle ?? theme.HelperStyle,
+            helperMaxLines: HelperMaxLines ?? theme.HelperMaxLines,
+            hintStyle: HintStyle ?? theme.HintStyle,
+            hintFadeDuration: HintFadeDuration ?? theme.HintFadeDuration,
+            hintMaxLines: HintMaxLines ?? theme.HintMaxLines,
+            errorStyle: ErrorStyle ?? theme.ErrorStyle,
+            errorMaxLines: ErrorMaxLines ?? theme.ErrorMaxLines,
+            floatingLabelBehavior: FloatingLabelBehavior ?? theme.FloatingLabelBehavior,
+            floatingLabelAlignment: FloatingLabelAlignment ?? theme.FloatingLabelAlignment,
+            isDense: IsDense ?? theme.IsDense,
+            contentPadding: ContentPadding ?? theme.ContentPadding,
+            isCollapsed: IsCollapsed ?? theme.IsCollapsed,
+            iconColor: IconColor ?? theme.IconColor,
+            prefixStyle: PrefixStyle ?? theme.PrefixStyle,
+            prefixIconColor: PrefixIconColor ?? theme.PrefixIconColor,
+            prefixIconConstraints: PrefixIconConstraints ?? theme.PrefixIconConstraints,
+            suffixStyle: SuffixStyle ?? theme.SuffixStyle,
+            suffixIconColor: SuffixIconColor ?? theme.SuffixIconColor,
+            suffixIconConstraints: SuffixIconConstraints ?? theme.SuffixIconConstraints,
+            counterStyle: CounterStyle ?? theme.CounterStyle,
+            filled: Filled ?? theme.Filled,
+            fillColor: FillColor ?? theme.FillColor,
+            focusColor: FocusColor ?? theme.FocusColor,
+            hoverColor: HoverColor ?? theme.HoverColor,
+            errorBorder: ErrorBorder ?? theme.ErrorBorder,
+            focusedBorder: FocusedBorder ?? theme.FocusedBorder,
+            focusedErrorBorder: FocusedErrorBorder ?? theme.FocusedErrorBorder,
+            disabledBorder: DisabledBorder ?? theme.DisabledBorder,
+            enabledBorder: EnabledBorder ?? theme.EnabledBorder,
+            border: Border ?? theme.Border,
+            alignLabelWithHint: AlignLabelWithHint ?? theme.AlignLabelWithHint,
+            constraints: Constraints ?? theme.Constraints,
+            visualDensity: VisualDensity ?? theme.VisualDensity);
     }
 
     internal InputDecoration WithRuntime(bool enabled, string? generatedCounterText) => this with
@@ -342,13 +393,6 @@ public sealed record InputDecoration
         HelperText = helperText ?? HelperText,
     };
 
-    private static void ValidateLines(int? value, string name)
-    {
-        if (value.HasValue && value.Value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(name);
-        }
-    }
 }
 
 public sealed class InputDecorator : StatefulWidget
@@ -386,6 +430,20 @@ public sealed class InputDecorator : StatefulWidget
     public bool IsEmpty { get; }
     public Widget? Child { get; }
 
+    public static RenderBox? ContainerOf(BuildContext context) =>
+        context.FindAncestorRenderObjectOfType<RenderDecoration>()?.ContainerBox;
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<InputDecoration>("decoration", Decoration));
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
+            "baseStyle", BaseStyle, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<bool>("isFocused", IsFocused));
+        properties.Add(new DiagnosticsProperty<bool>("expands", Expands, defaultValue: false));
+        properties.Add(new DiagnosticsProperty<bool>("isEmpty", IsEmpty));
+    }
+
     internal bool LabelShouldWithdraw => !IsEmpty || (IsFocused && Decoration.Enabled);
 
     internal static readonly SemanticsTag PrefixSemanticsTag = new("_InputDecoratorState.prefix");
@@ -408,6 +466,7 @@ public sealed class InputDecorator : StatefulWidget
     {
         private AnimationController _floatingLabelController = null!;
         private CurvedAnimation _floatingLabelAnimation = null!;
+        private CurvedAnimation? _curvedAnimation;
         private AnimationController _shakingLabelController = null!;
         private readonly InputBorderGap _borderGap = new();
         private InputDecoration? _effectiveDecoration;
@@ -489,6 +548,7 @@ public sealed class InputDecorator : StatefulWidget
             _floatingLabelController.RemoveListener(HandleChange);
             _floatingLabelController.Dispose();
             _floatingLabelAnimation.Dispose();
+            _curvedAnimation?.Dispose();
             _shakingLabelController.Dispose();
             _borderGap.Dispose();
 
@@ -617,7 +677,7 @@ public sealed class InputDecorator : StatefulWidget
                     cursor: SystemMouseCursors.Basic,
                     child: new Padding(
                         EdgeInsetsGeometry.DirectionalOnly(end: 16.0).Resolve(textDirection),
-                        new IconTheme(
+                        IconTheme.Merge(
                             new IconThemeData(
                                 Color: WidgetStateProperty<Color?>.ResolveAs(
                                     (decoration.IconColor ?? defaults.IconColor),
@@ -638,6 +698,7 @@ public sealed class InputDecorator : StatefulWidget
                 prefixIconColor,
                 iconSize,
                 visualDensity,
+                iconButtonTheme,
                 InputDecorator.PrefixIconSemanticsTag);
             Widget? suffixIcon = BuildIconSlot(
                 decoration.SuffixIcon,
@@ -645,6 +706,7 @@ public sealed class InputDecorator : StatefulWidget
                 suffixIconColor,
                 iconSize,
                 visualDensity,
+                iconButtonTheme,
                 InputDecorator.SuffixIconSemanticsTag);
 
             bool hasPrefix = decoration.Prefix is not null || decoration.PrefixText is not null;
@@ -694,10 +756,11 @@ public sealed class InputDecorator : StatefulWidget
                 counter = new Semantics(
                     container: true,
                     liveRegion: Current.IsFocused,
-                    label: decoration.SemanticCounterText,
-                    child: Styled(
-                        new Text(decoration.CounterText!, overflow: TextOverflow.Ellipsis, maxLines: 1),
-                        counterStyle));
+                    child: new Text(
+                        decoration.CounterText!,
+                        style: counterStyle,
+                        overflow: TextOverflow.Ellipsis,
+                        semanticsLabel: decoration.SemanticCounterText));
             }
 
             var spec = new DecorationSpec(
@@ -814,15 +877,15 @@ public sealed class InputDecorator : StatefulWidget
             }
 
             bool showHint = Current.IsEmpty && !HasInlineLabel;
-            Widget hintWidget = Styled(
-                decoration.Hint
+            Widget hintWidget = decoration.Hint
                 ?? new Text(
                     decoration.HintText!,
+                    style: hintStyle,
                     textDirection: decoration.HintTextDirection,
-                    overflow: decoration.HintMaxLines is null ? null : TextOverflow.Ellipsis,
+                    overflow: hintStyle.Overflow
+                              ?? (decoration.HintMaxLines is null ? null : TextOverflow.Ellipsis),
                     textAlign: Current.TextAlign,
-                    maxLines: decoration.HintMaxLines),
-                hintStyle);
+                    maxLines: decoration.HintMaxLines);
             TimeSpan fadeDuration = decoration.HintFadeDuration ?? InputDecoration.HintFadeTransitionDuration;
 
             if (decoration.MaintainHintSize)
@@ -836,7 +899,21 @@ public sealed class InputDecorator : StatefulWidget
 
             return new AnimatedSwitcher(
                 duration: fadeDuration,
+                transitionBuilder: BuildTransition,
+                layoutBuilder: (currentChild, previousChildren) => new Stack(
+                    children: [.. previousChildren, .. currentChild is null ? Array.Empty<Widget>() : [currentChild]]),
                 child: showHint ? hintWidget : new SizedBox());
+        }
+
+        private Widget BuildTransition(Widget child, Animation<double> animation)
+        {
+            if (!ReferenceEquals(_curvedAnimation?.Parent, animation))
+            {
+                _curvedAnimation?.Dispose();
+                _curvedAnimation = new CurvedAnimation(animation, Curves.FastOutSlowIn);
+            }
+
+            return new FadeTransition(opacity: _curvedAnimation, child: child);
         }
 
         private Widget? BuildAffix(
@@ -876,6 +953,7 @@ public sealed class InputDecorator : StatefulWidget
             Color? color,
             double iconSize,
             VisualDensity visualDensity,
+            IconButtonThemeData iconButtonTheme,
             SemanticsTag semanticsTag)
         {
             if (icon is null)
@@ -892,9 +970,13 @@ public sealed class InputDecorator : StatefulWidget
                     cursor: SystemMouseCursors.Basic,
                     child: new ConstrainedBox(
                         effective,
-                        new IconTheme(
+                        IconTheme.Merge(
                             new IconThemeData(Color: color, Size: iconSize),
-                            new Semantics(container: true, tagForChildren: semanticsTag, child: icon)))));
+                            new IconButtonTheme(
+                                new IconButtonThemeData(new ButtonStyle(
+                                    ForegroundColor: WidgetStateProperty<Color?>.All(color),
+                                    IconSize: WidgetStateProperty<double?>.All(iconSize)).Merge(iconButtonTheme.Style)),
+                                new Semantics(container: true, tagForChildren: semanticsTag, child: icon))))));
         }
 
         private InputBorder ResolveBorder(
@@ -983,7 +1065,7 @@ public sealed class InputDecorator : StatefulWidget
 
             if (Current.IsFocused)
             {
-                return themeData.PrimaryColor;
+                return themeData.ColorScheme.Primary;
             }
 
             if (decoration.Filled ?? false)

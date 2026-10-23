@@ -26,6 +26,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private bool _enabled = true;
         private bool _obscure = true;
         private bool _error;
+        private bool _maintainHintSize = true;
         private string _submitted = "none";
         private string _formStatus = "not validated";
         private string _systemMenuAction = "none";
@@ -96,6 +97,45 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         readOnly: true,
                         decoration: InputDecoration.Collapsed("Read only")),
                     new Text("Decorator geometry probes", style: new TextStyle(FontSize: 18)),
+                    Control(
+                        _maintainHintSize ? "Hint space: retained" : "Hint space: collapses",
+                        () => SetState(() => _maintainHintSize = !_maintainHintSize)),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            hint: new Text(
+                                "Custom multiline hint\nType to fade this hint away\nClear text to restore the hint"),
+                            maintainHintSize: _maintainHintSize,
+                            hintFadeDuration: TimeSpan.FromMilliseconds(120),
+                            helperText: "Toggle hint space, then enter and clear text",
+                            filled: true)),
+                    new TextField(
+                        enabled: _enabled,
+                        decoration: new InputDecoration(
+                            filled: true,
+                            labelText: "Affix icon buttons",
+                            prefixIconColor: Colors.Teal,
+                            suffixIconColor: Colors.Indigo,
+                            prefixIcon: new IconButton(
+                                new Icon(Icons.Email),
+                                () => SetState(() => _submitted = "prefix button"),
+                                tooltip: "Prefix action"),
+                            suffixIcon: new IconButton(
+                                new Icon(Icons.Visibility),
+                                () => SetState(() => _submitted = "suffix button"),
+                                tooltip: "Suffix action"),
+                            counterText: "3/10",
+                            semanticCounterText: "7 characters remaining")),
+                    new Align(
+                        alignment: Alignment.TopLeft,
+                        child: new SizedBox(
+                            width: 280,
+                            child: new TextField(
+                                enabled: _enabled,
+                                decoration: new InputDecoration(
+                                    labelText: "A long floating label can use the full outline width",
+                                    floatingLabelBehavior: FloatingLabelBehavior.Always,
+                                    border: new OutlineInputBorder())))),
                     new TextField(
                         enabled: _enabled,
                         decoration: new InputDecoration(

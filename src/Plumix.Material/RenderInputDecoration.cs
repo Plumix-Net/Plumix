@@ -699,7 +699,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             double invertedLabelScale = Lerp(1.0, 1.0 / FinalLabelScale, _decoration.FloatingLabelProgress);
             BoxConstraints labelConstraints = boxConstraints with
             {
-                MaxWidth = Math.Min(labelWidth * invertedLabelScale, boxConstraints.MaxWidth),
+                MaxWidth = labelWidth * invertedLabelScale,
             };
             layoutChild(_label, labelConstraints);
             double labelHeight = _decoration.FloatingLabelHeight;

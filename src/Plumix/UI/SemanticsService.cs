@@ -91,8 +91,13 @@ public sealed record TooltipSemanticEvent(string Message) : SemanticsEvent("tool
 /// possible, prefer using mechanisms like <see cref="Semantics"/> to implicitly trigger announcements over
 /// using this service.
 /// </remarks>
-public static class SemanticsService
+public sealed class SemanticsService
 {
+    // Dart's abstract final class is uninstantiable, but can appear in nullable legacy API slots.
+    private SemanticsService()
+    {
+    }
+
     private static Action<SemanticsEvent>? _semanticsEventRequested;
 
     public static event Action<SemanticsEvent>? SemanticsEventRequested
