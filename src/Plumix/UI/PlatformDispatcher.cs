@@ -803,13 +803,30 @@ public sealed class PlatformDispatcher
     /// <remarks>
     /// dart:async's <c>Timer.run</c>, which dart:ui's <c>scheduleWarmUpFrame</c> and Flutter's
     /// <c>SchedulerBinding._ensureEventLoopCallback</c> both use. Plumix has no Dart event loop, so
-    /// the default posts to Avalonia's dispatcher at background priority — below the
-    /// <c>DispatcherPriority.Send</c> that <c>EventLoop.ScheduleMicrotask</c> drains at, which is
-    /// what keeps the microtask-before-next-turn ordering. A test harness replaces this to drive the
-    /// turns itself.
+    /// the default posts to Avalonia's dispatcher at <see cref="EventLoopTaskPriority"/>. A test
+    /// harness replaces this to drive the turns itself.
     /// </remarks>
-    public Action<Action> TimerRun { get; set; } =
-        static callback => Dispatcher.UIThread.Post(callback, DispatcherPriority.Background);
+    public Action<Action> TimerRun { get; set; } = DefaultTimerRun;
+
+    /// <summary>
+    /// The dispatcher priority of an event-loop task (<see cref="TimerRun"/>): below the
+    /// <c>DispatcherPriority.Send</c> that <c>EventLoop.ScheduleMicrotask</c> drains at, which keeps
+    /// the microtask-before-next-turn ordering, and above <c>DispatcherPriority.Input</c>.
+    /// </summary>
+    /// <remarks>
+    /// A Dart timer is an ordinary event-loop task, never idle work. Avalonia runs jobs at or below
+    /// <c>Input</c> only when the platform reports no pending input; Android's dispatcher runs them
+    /// from the looper's idle handler, which never fires while an animation keeps the main thread
+    /// busy. At background priority the warm-up frame's draw half never ran behind an indeterminate
+    /// progress indicator, and every vsync frame was dropped while that warm-up frame was pending.
+    /// </remarks>
+    internal static readonly DispatcherPriority EventLoopTaskPriority = DispatcherPriority.Default;
+
+    /// <summary>Posts a job to Avalonia's UI-thread dispatcher; replaced by tests.</summary>
+    internal static Action<Action, DispatcherPriority> PostToDispatcher { get; set; } =
+        static (callback, priority) => Dispatcher.UIThread.Post(callback, priority);
+
+    internal static void DefaultTimerRun(Action callback) => PostToDispatcher(callback, EventLoopTaskPriority);
 
     /// <summary>Requests that the operating system schedule a new frame.</summary>
     /// <remarks>dart:ui's <c>PlatformDispatcher.scheduleFrame</c>.</remarks>

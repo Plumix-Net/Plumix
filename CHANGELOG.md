@@ -9,6 +9,15 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Avalonia 12.1.4 is the minimum; paragraphs read its slice-relative, visual-order RTL clusters (C#-only).
+- CI also runs the tests on the newest Avalonia over Plumix built on the minimum, binding every host member (C#-only).
+- Timer.run and timing reports post above Input, so Android's warm-up frame draws behind a spinner (C#-only).
+- Rasterization errors in PlumixHost.Render reach FlutterError.ReportError instead of a blank view (C#-only).
+- Plumix.Android: PlumixMainActivity over public AndroidActivityDelegate (FlutterActivityAndFragmentDelegate.java).
+- Breaking: On Android, Run sets MainViewFactory, not MainView; a recreated Activity reuses the host (C#-only).
+- Breaking: The Android sample is Plumix.Sample.Android; Plumix grants no internals to Plumix.Android (C#-only).
+- SystemNavigator.pop finishes the Activity; PlumixMainActivity follows setFrameworkHandlesBack (FlutterActivity.java).
+- Sample gallery wraps its nested Navigator in NavigatorPopHandler, so Android back pops the open demo page.
 - Breaking: Reorderable APIs, drag lifecycle and axis/drop geometry match Dart (reorderable_list.dart).
 - Explicit host keymaps select their own keyboard pipeline on Windows (C#-only).
 - Breaking: Host clicks get distinct gesture IDs while keeping device IDs (pointer_data_packet_converter.cc).

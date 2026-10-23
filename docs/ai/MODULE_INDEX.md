@@ -246,7 +246,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     the scene `FlutterView.Render` hands it; never lays out or paints), `src/Plumix/UI/FrameTimingsRecorder.cs`
     (engine-side `FrameTiming` recording and batching), `src/Plumix/HotReload.cs` (.NET deltas →
     `BindingBase.ReassembleApplication`)
-  - `src/Plumix/AndroidLifecycleChannel.cs`
+  - `src/Plumix/AndroidActivityDelegate.cs` (Activity lifecycle/restoration/back forwarding) over
+    `src/Plumix/AndroidLifecycleChannel.cs` and `src/Plumix/AndroidRestorationChannel.cs`;
+    `src/Plumix.Android/PlumixMainActivity.cs` is its Android Activity
   - `src/Plumix/WidgetHost.cs`
   - `src/Plumix/Widgets/AppLifecycleListener.cs`
   - `src/Plumix/UI/AppLifecycle.cs`

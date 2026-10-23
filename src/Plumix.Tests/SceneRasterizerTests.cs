@@ -377,6 +377,51 @@ public sealed class SceneRasterizerTests
         Assert.Equal((byte)0, g);
     }
 
+    [Fact]
+    public void DrawFrame_ReportsARasterizationErrorAndKeepsTheOutputsDrawnBeforeIt()
+    {
+        var reported = new List<Plumix.Foundation.FlutterErrorDetails>();
+        Plumix.Foundation.FlutterExceptionHandler? previous = Plumix.Foundation.FlutterError.OnError;
+        Plumix.Foundation.FlutterError.OnError = reported.Add;
+        var tracked = new TrackedResource();
+        var root = new ContainerFlowLayer();
+        root.Add(new ProbeFlowLayer(context => context.Track(tracked)));
+        root.Add(new ProbeFlowLayer(_ => throw new InvalidOperationException("raster failure")));
+        var image = new RenderTargetBitmap(new PixelSize(10, 10), new Vector(96, 96));
+        try
+        {
+            List<IDisposable> resources;
+            using (Avalonia.Media.DrawingContext context = image.CreateDrawingContext())
+            {
+                resources = SceneRasterizer.DrawFrame(
+                    context, root, new Size(10, 10), Matrix.Identity, new CompositorContext(), null);
+            }
+
+            Assert.Same(tracked, Assert.Single(resources));
+            Assert.False(tracked.Disposed);
+            Plumix.Foundation.FlutterErrorDetails details = Assert.Single(reported);
+            Assert.Equal("raster failure", Assert.IsType<InvalidOperationException>(details.Exception).Message);
+            Assert.Equal("Plumix rasterizer", details.Library);
+        }
+        finally
+        {
+            Plumix.Foundation.FlutterError.OnError = previous;
+            image.Dispose();
+        }
+    }
+
+    private sealed class ProbeFlowLayer(Action<FlowPaintContext> paint) : FlowLayer
+    {
+        public override void Paint(FlowPaintContext context) => paint(context);
+    }
+
+    private sealed class TrackedResource : IDisposable
+    {
+        public bool Disposed { get; private set; }
+
+        public void Dispose() => Disposed = true;
+    }
+
     private static Bitmap ToImage(ContainerLayer root, int width, int height)
     {
         using Scene scene = root.BuildScene(new SceneBuilder());

@@ -138,6 +138,47 @@ public sealed class AvaloniaParagraphDartParityTests
         Assert.Equal(70, paragraph.MaxIntrinsicWidth, 5);
     }
 
+    [Fact]
+    public void WordSpacing_ReadsTheSourceTextOfARunThatStartsMidParagraph()
+    {
+        // Avalonia 12.1 hands back slice-relative glyph clusters; spacing must still test the
+        // run's own characters, not the paragraph's first ones ("AAAA" has no space to widen).
+        var paragraphStyle = new ParagraphStyle(FontFamily: Ahem, FontSize: 10);
+        ResolvedTextStyle plain = ResolvedTextStyle.FromParagraphStyle(paragraphStyle);
+        ResolvedTextStyle spaced = plain.Merge(new ParagraphTextStyle(WordSpacing: 10));
+        using AvaloniaParagraph paragraph = Build("AAAA A A", paragraphStyle,
+            runs: [new StyledRange(0, 4, plain), new StyledRange(4, 8, spaced)]);
+        paragraph.Layout(new ParagraphConstraints(500));
+        Assert.Equal(100, paragraph.MaxIntrinsicWidth, 5);
+    }
+
+    [Fact]
+    public void WrappedRightToLeftRuns_SplitAtTheirOwnClusters()
+    {
+        const string word = "\u0645\u0631\u062D\u0628\u0627";
+        const string text = "Hello " + word + " " + word + " " + word;
+        using AvaloniaParagraph paragraph = Build(text);
+        paragraph.Layout(new ParagraphConstraints(paragraph.MaxIntrinsicWidth));
+        double width = paragraph.MaxIntrinsicWidth;
+        paragraph.Layout(new ParagraphConstraints(width * 0.45));
+        Assert.True(paragraph.NumberOfLines > 1);
+        for (int index = 6; index < text.Length; index++)
+        {
+            if (text[index] == ' ')
+            {
+                continue;
+            }
+
+            GlyphInfo glyph = paragraph.GetGlyphInfoAt(index)!;
+            Assert.Equal(TextDirection.Rtl, glyph.WritingDirection);
+            Assert.True(glyph.GraphemeClusterCodeUnitRange.Start <= index
+                        && index < glyph.GraphemeClusterCodeUnitRange.End);
+        }
+
+        double covered = paragraph.GetBoxesForRange(0, text.Length).Sum(box => box.Right - box.Left);
+        Assert.Equal(width, covered, 0);
+    }
+
     [Theory]
     [InlineData(BoxHeightStyle.IncludeLineSpacingTop)]
     [InlineData(BoxHeightStyle.IncludeLineSpacingMiddle)]

@@ -793,12 +793,15 @@ internal sealed class SampleGalleryScreen : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
+        // The system back pops the root navigator only; NavigatorPopHandler hands it to this nested one.
         return new Scaffold(
-            body: new Navigator(
-                restorationScopeId: "gallery",
-                onGenerateRoute: BuildRoute,
-                observers: [SampleNavigationObservers.PageRoutes],
-                initialRouteName: SampleRoutes.Menu));
+            body: new NavigatorPopHandler<object?>(
+                onPopWithResult: result => _ = SampleNavigationObservers.PageRoutes.Navigator?.MaybePop(result),
+                child: new Navigator(
+                    restorationScopeId: "gallery",
+                    onGenerateRoute: BuildRoute,
+                    observers: [SampleNavigationObservers.PageRoutes],
+                    initialRouteName: SampleRoutes.Menu)));
     }
 
     private static Route? BuildRoute(RouteSettings settings)

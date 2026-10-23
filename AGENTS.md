@@ -36,7 +36,8 @@ normative may live only there.
 - `dart_sample`: reference sample app on real Flutter (Dart), kept in lockstep with `src/Sample/Plumix.Sample`.
 - `src/Sample/Plumix.Desktop`: desktop entry point.
 - `src/Sample/Plumix.Browser`: WebAssembly host.
-- `src/Sample/Plumix.Android`: Android host.
+- `src/Plumix.Android`: Android host package (`PlumixMainActivity` over `AndroidActivityDelegate`).
+- `src/Sample/Plumix.Sample.Android`: Android sample host.
 - `src/Sample/Plumix.iOS`: iOS host.
 
 ## Progress Source of Truth
@@ -154,13 +155,18 @@ dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
 
-`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts (they need workloads CI does not have);
-build `src/Plumix.sln` locally when you touch those hosts.
+`src/Plumix.Ci.slnf` excludes the Browser/Android/iOS hosts and the `Plumix.Android` package (they need
+workloads CI's test job does not have); build `src/Plumix.sln` locally when you touch those hosts.
+
+Avalonia versions come from `AvaloniaVersion` in `src/Directory.Packages.props`: the minimum the packages
+support and compile against. CI also runs the suite with the newest stable Avalonia of that major
+substituted at run time (`-p:AvaloniaTestVersion=$(scripts/latest_avalonia_version.sh)`);
+`HostBinaryCompatibilityTests` binds every Avalonia/SkiaSharp member the shipped assemblies reference.
 
 Platform-specific builds:
 
 ```bash
-dotnet build src/Sample/Plumix.Android/Plumix.Android.csproj -c Debug
+dotnet build src/Sample/Plumix.Sample.Android/Plumix.Sample.Android.csproj -c Debug
 dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 ```
 

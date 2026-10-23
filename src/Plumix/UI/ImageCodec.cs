@@ -244,7 +244,7 @@ public static class ImageByteData
         if (format == ImageByteFormat.Png)
         {
             using var stream = new MemoryStream();
-            image.Save(stream);
+            image.Save(stream, PngBitmapEncoderOptions.Default);
             return Task.FromResult<ByteData?>(ByteData.SublistView(stream.ToArray()));
         }
 

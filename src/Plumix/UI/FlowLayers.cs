@@ -2,6 +2,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 
@@ -923,12 +924,13 @@ internal static class SceneRasterizer
         Size targetSize,
         Matrix rootTransform,
         CompositorContext compositor,
-        TextureRegistry? textures)
+        TextureRegistry? textures,
+        List<IDisposable>? resources = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(root);
         compositor.RasterTime.Start();
-        var state = new FlowRasterState(targetSize, compositor, textures);
+        var state = new FlowRasterState(targetSize, compositor, textures) { Resources = resources ?? [] };
         try
         {
             PrepareBackdropCaptures(root, state, filter => CaptureScene(root, state, rootTransform, filter, false));
@@ -954,6 +956,40 @@ internal static class SceneRasterizer
         }
 
         return state.Resources;
+    }
+
+    /// <summary>
+    /// <see cref="Draw"/> for a host's frame: an exception is reported through
+    /// <see cref="FlutterError.ReportError"/> instead of propagating, and the raster outputs created
+    /// before it are still returned, because the context may already draw from them.
+    /// </summary>
+    /// <remarks>
+    /// The engine logs a failed rasterization to the console. Avalonia swallows exceptions thrown from
+    /// <c>Control.Render</c>, so a host that let them propagate showed a blank view with nothing logged.
+    /// </remarks>
+    public static List<IDisposable> DrawFrame(
+        DrawingContext context,
+        ContainerFlowLayer root,
+        Size targetSize,
+        Matrix rootTransform,
+        CompositorContext compositor,
+        TextureRegistry? textures)
+    {
+        var resources = new List<IDisposable>();
+        try
+        {
+            Draw(context, root, targetSize, rootTransform, compositor, textures, resources);
+        }
+        catch (Exception exception)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                stack: exception.StackTrace,
+                library: "Plumix rasterizer",
+                context: new ErrorDescription("while rasterizing a frame")));
+        }
+
+        return resources;
     }
 
     /// <summary>

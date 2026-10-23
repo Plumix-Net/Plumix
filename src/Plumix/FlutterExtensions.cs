@@ -51,12 +51,30 @@ public static class PlumixExtensions
 
                 desktop.MainWindow = window;
                 break;
+            case IActivityApplicationLifetime activityLifetime:
+                // Android creates a view per Activity and asks the factory for its content each time.
+                // The host — and with it the widget tree and its state — belongs to the process, so a
+                // recreated Activity gets the same host instead of a new application.
+                activityLifetime.MainViewFactory = () => DetachFromPreviousTopLevel(host);
+                break;
             case ISingleViewApplicationLifetime singleViewPlatform:
                 singleViewPlatform.MainView = host;
                 break;
         }
 
         host.RunApplication(application);
+    }
+
+    // An Activity normally clears its content in onDestroy before its successor asks for the view; if
+    // the old one is still alive (a second instance), the host moves to the new Activity.
+    private static Control DetachFromPreviousTopLevel(WidgetHost host)
+    {
+        if (host.Parent is ContentControl previous && ReferenceEquals(previous.Content, host))
+        {
+            previous.Content = null;
+        }
+
+        return host;
     }
 
     private static void RunWidgetCore(Widget application, WidgetsBinding binding)

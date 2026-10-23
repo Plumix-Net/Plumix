@@ -77,12 +77,9 @@ internal sealed class VariableFont : IDisposable
 
         Feature[] features = style.FontFeatures?.Select(feature =>
             Feature.Parse($"{feature.Feature}={feature.Value}")).ToArray() ?? [];
+        // Same buffer form as Avalonia's HarfBuzzTextShaper: HarfBuzz's visual glyph order and
+        // clusters relative to the shaped slice.
         _font.Shape(buffer, features);
-        if ((bidiLevel & 1) != 0)
-        {
-            buffer.Reverse();
-        }
-
         var result = new ShapedBuffer(text.AsMemory(start, length), buffer.Length, typeface, style.FontSize, bidiLevel);
         ReadOnlySpan<HarfBuzzSharp.GlyphInfo> glyphs = buffer.GetGlyphInfoSpan();
         ReadOnlySpan<GlyphPosition> positions = buffer.GetGlyphPositionSpan();
@@ -90,7 +87,7 @@ internal sealed class VariableFont : IDisposable
         {
             result[index] = new RunGlyph(
                 (ushort)glyphs[index].Codepoint,
-                (int)glyphs[index].Cluster,
+                (int)glyphs[index].Cluster - start,
                 positions[index].XAdvance * _scale,
                 new Vector(positions[index].XOffset * _scale, -positions[index].YOffset * _scale));
         }

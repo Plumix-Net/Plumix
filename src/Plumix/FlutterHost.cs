@@ -17,6 +17,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using AvaloniaTextSelection = Avalonia.Input.TextInput.TextSelection;
+using FeedbackType = Plumix.UI.FeedbackType;
 
 // C#-only infrastructure: the engine embedder of one `FlutterView` on Avalonia. It owns no framework
 // behavior — frames are built, laid out, painted and composited by `WidgetsBinding.drawFrame` over
@@ -55,8 +56,37 @@ public class PlumixHost : Control
     // embedders do not treat as back (Alt+Left moves by word in macOS text fields).
     private static readonly bool s_listensToSystemBack = OperatingSystem.IsAndroid();
 
+    // What the framework last reported through `SystemNavigator.setFrameworkHandlesBack`; null until it
+    // reports, so an Activity created later can register the engine's back callback to match.
+    private static bool? s_reportedFrameworkHandlesBack;
+
     /// <summary>Resets the process-wide back callback state the Android framework reported. Test-only.</summary>
-    internal static void ResetFrameworkHandlesBackForTests() => s_frameworkHandlesBack = true;
+    internal static void ResetFrameworkHandlesBackForTests()
+    {
+        s_frameworkHandlesBack = true;
+        s_reportedFrameworkHandlesBack = null;
+        FrameworkHandlesBackChanged = null;
+        SystemNavigatorPopHandler = null;
+    }
+
+    /// <summary>
+    /// The last <c>SystemNavigator.setFrameworkHandlesBack</c> value, or null before the framework sent one.
+    /// </summary>
+    internal static bool? ReportedFrameworkHandlesBack => s_reportedFrameworkHandlesBack;
+
+    /// <summary>
+    /// Raised for every <c>SystemNavigator.setFrameworkHandlesBack</c>: the Android engine's
+    /// <c>PlatformPluginDelegate.setFrameworkHandlesBack</c>, which <c>FlutterActivity</c> answers by
+    /// registering or unregistering its back callback.
+    /// </summary>
+    internal static event Action<bool>? FrameworkHandlesBackChanged;
+
+    /// <summary>
+    /// The platform's answer to <c>SystemNavigator.pop</c> (the Android engine's
+    /// <c>PlatformPlugin.popSystemNavigator</c>, which finishes the Activity); null where the host has
+    /// none, and the call is then left unimplemented, as on Flutter's desktop embedders.
+    /// </summary>
+    internal static Action? SystemNavigatorPopHandler { get; set; }
 
     // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
     // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
@@ -532,7 +562,7 @@ public class PlumixHost : Control
         }
 
         List<IDisposable> previousResources = _rasterResources;
-        _rasterResources = SceneRasterizer.Draw(
+        _rasterResources = SceneRasterizer.DrawFrame(
             context,
             layerTree,
             _layerTreeTargetSize,
@@ -1388,6 +1418,11 @@ public class PlumixHost : Control
                 return Task.FromResult<object?>(null);
             case "SystemNavigator.setFrameworkHandlesBack":
                 s_frameworkHandlesBack = call.Arguments is true;
+                s_reportedFrameworkHandlesBack = s_frameworkHandlesBack;
+                FrameworkHandlesBackChanged?.Invoke(s_frameworkHandlesBack);
+                return Task.FromResult<object?>(null);
+            case "SystemNavigator.pop" when SystemNavigatorPopHandler is { } popSystemNavigator:
+                popSystemNavigator();
                 return Task.FromResult<object?>(null);
             case "SystemChrome.setSystemUIOverlayStyle":
                 _currentSystemUiOverlayStyle =

@@ -44,17 +44,13 @@ internal sealed class ParagraphShaping : ITextSource, IDisposable
                             face, style.FontSize, run.BidiLevel, run.Properties.CultureInfo,
                             fontFeatures: run.Properties.FontFeatures))
                         : variable.Shape(content.Text, start, run.Length, face, style, run.BidiLevel);
-                    glyphs = buffer.ToArray();
+                    glyphs = SourceOrder(buffer, start);
                 }
                 else
                 {
                     // Preserve ligatures/kerning across paint-only style boundaries. The formatter
                     // already shaped these together; another shaping pass would break their context.
-                    glyphs = run.ShapedBuffer.ToArray();
-                    if (run.IsReversed)
-                    {
-                        Array.Reverse(glyphs);
-                    }
+                    glyphs = SourceOrder(run.ShapedBuffer, start);
                 }
 
                 for (int index = 0; index < glyphs.Length; index++)
@@ -92,6 +88,31 @@ internal sealed class ParagraphShaping : ITextSource, IDisposable
         _runs.Sort((left, right) => left.Start.CompareTo(right.Start));
     }
 
+    // Avalonia's shaped buffers hold relative clusters: the logical first glyph's cluster stands for
+    // the run's first character (after a split it is not zero), and right-to-left buffers keep
+    // HarfBuzz's visual (descending-cluster) order; its formatter splits, measures and draws them in
+    // that form. Prepared runs instead keep text-source clusters in logical order, so that cluster
+    // boundaries, tabs and word spacing read the source text, and GetTextRun converts them back.
+    private static RunGlyph[] SourceOrder(ShapedBuffer buffer, int start)
+    {
+        if (buffer.Length == 0)
+        {
+            return [];
+        }
+
+        int origin = buffer.Min(glyph => glyph.GlyphCluster);
+        RunGlyph[] glyphs = buffer
+            .Select(glyph => new RunGlyph(glyph.GlyphIndex, glyph.GlyphCluster - origin + start,
+                glyph.GlyphAdvance, glyph.GlyphOffset))
+            .ToArray();
+        if (!buffer.IsLeftToRight)
+        {
+            Array.Reverse(glyphs);
+        }
+
+        return glyphs;
+    }
+
     internal static int SourceIndex(ReadOnlyMemory<char> text) =>
         MemoryMarshal.TryGetString(text, out _, out int start, out _) ? start : 0;
 
@@ -123,7 +144,16 @@ internal sealed class ParagraphShaping : ITextSource, IDisposable
                 continue;
             }
 
-            RunGlyph[] glyphs = run.Glyphs.Where(glyph => glyph.GlyphCluster >= textSourceIndex).ToArray();
+            RunGlyph[] glyphs = run.Glyphs
+                .Where(glyph => glyph.GlyphCluster >= textSourceIndex)
+                .Select(glyph => new RunGlyph(glyph.GlyphIndex, glyph.GlyphCluster - textSourceIndex,
+                    glyph.GlyphAdvance, glyph.GlyphOffset))
+                .ToArray();
+            if ((run.BidiLevel & 1) != 0)
+            {
+                Array.Reverse(glyphs);
+            }
+
             var buffer = new ShapedBuffer(
                 _content.Text.AsMemory(textSourceIndex, run.Start + run.Length - textSourceIndex),
                 glyphs.Length, run.Face, run.FontSize, run.BidiLevel);

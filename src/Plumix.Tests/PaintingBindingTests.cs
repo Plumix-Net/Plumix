@@ -282,7 +282,7 @@ public sealed class PaintingBindingTests : IDisposable
     {
         using Bitmap image = NewImage(width, height);
         using var bytes = new MemoryStream();
-        image.Save(bytes);
+        image.Save(bytes, PngBitmapEncoderOptions.Default);
         return bytes.ToArray();
     }
 

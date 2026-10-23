@@ -194,6 +194,8 @@ internal static class FrameTimingsReporter
 
     private static void DefaultPostDelayed(Action callback, TimeSpan delay)
     {
-        DispatcherTimer.RunOnce(callback, delay, DispatcherPriority.Background);
+        // The engine posts this report to the UI task runner, not to idle time: at background priority
+        // Android would hold the batch for as long as an animation keeps the main thread busy.
+        DispatcherTimer.RunOnce(callback, delay, PlatformDispatcher.EventLoopTaskPriority);
     }
 }

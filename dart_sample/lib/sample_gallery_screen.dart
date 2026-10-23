@@ -1236,12 +1236,18 @@ class SampleGalleryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The system back pops the root navigator only; NavigatorPopHandler hands it to this nested one.
     return Scaffold(
-      body: Navigator(
-        restorationScopeId: 'gallery',
-        onGenerateRoute: _buildRoute,
-        observers: <NavigatorObserver>[SampleNavigationObservers.pageRoutes],
-        initialRoute: SampleRoutes.menu,
+      body: NavigatorPopHandler<Object?>(
+        onPopWithResult: (Object? result) {
+          SampleNavigationObservers.pageRoutes.navigator?.maybePop<Object?>(result);
+        },
+        child: Navigator(
+          restorationScopeId: 'gallery',
+          onGenerateRoute: _buildRoute,
+          observers: <NavigatorObserver>[SampleNavigationObservers.pageRoutes],
+          initialRoute: SampleRoutes.menu,
+        ),
       ),
     );
   }

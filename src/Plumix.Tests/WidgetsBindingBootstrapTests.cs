@@ -1,4 +1,7 @@
+using System.Reflection;
 using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -209,6 +212,27 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
     }
 
     [Fact]
+    public void Run_OnAnActivityLifetime_GivesEveryActivityTheSameHostAndTree()
+    {
+        // Avalonia.Android's lifetime; Avalonia's reference assemblies forbid implementing it in code.
+        IActivityApplicationLifetime lifetime = DispatchProxy.Create<IActivityApplicationLifetime, PropertyBag>();
+        PlumixExtensions.Run(new StatefulProbe("android"), lifetime);
+        DrainTurns();
+        StatefulProbeState state = Assert.IsType<StatefulProbeState>(StatefulProbe.CurrentState);
+
+        WidgetHost host = Assert.IsType<WidgetHost>(lifetime.MainViewFactory!());
+
+        // A recreated Activity whose predecessor still holds the host gets the same host.
+        var previousActivityRoot = new ContentControl { Content = host };
+        Assert.Same(host, lifetime.MainViewFactory());
+        Assert.Null(previousActivityRoot.Content);
+
+        DrainTurns();
+        Assert.Same(state, StatefulProbe.CurrentState);
+        Assert.Equal(1, state.BuildCount);
+    }
+
+    [Fact]
     public void AttachRootWidget_EnablesFramesAndSchedulesTheBootstrapFrame()
     {
         Assert.False(_binding.FramesEnabled);
@@ -252,6 +276,23 @@ public sealed class WidgetsBindingBootstrapTests : IDisposable
         {
             onBuild(context);
             return new SizedBox();
+        }
+    }
+
+    public class PropertyBag : DispatchProxy
+    {
+        private readonly Dictionary<string, object?> _values = [];
+
+        protected override object? Invoke(MethodInfo? targetMethod, object?[]? args)
+        {
+            string name = targetMethod!.Name[4..];
+            if (targetMethod.Name.StartsWith("set_", StringComparison.Ordinal))
+            {
+                _values[name] = args![0];
+                return null;
+            }
+
+            return _values.GetValueOrDefault(name);
         }
     }
 

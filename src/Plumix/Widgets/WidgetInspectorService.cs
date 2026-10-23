@@ -631,7 +631,7 @@ public abstract partial class WidgetInspectorService
                 }
 
                 using var stream = new MemoryStream();
-                image.Save(stream);
+                image.Save(stream, PngBitmapEncoderOptions.Default);
                 image.Dispose();
 
                 return new Dictionary<string, object?> { ["result"] = Convert.ToBase64String(stream.ToArray()) };

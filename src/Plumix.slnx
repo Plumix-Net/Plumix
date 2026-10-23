@@ -5,7 +5,7 @@
     <Platform Name="x86" />
   </Configurations>
   <Folder Name="/Sample/">
-    <Project Path="Sample/Plumix.Android/Plumix.Android.csproj" />
+    <Project Path="Sample/Plumix.Sample.Android/Plumix.Sample.Android.csproj" />
     <Project Path="Sample/Plumix.Browser/Plumix.Browser.csproj" />
     <Project Path="Sample/Plumix.Desktop/Plumix.Desktop.csproj" />
     <Project Path="Sample/Plumix.FSharpSample/Plumix.FSharpSample.fsproj" />

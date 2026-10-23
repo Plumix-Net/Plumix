@@ -3,23 +3,34 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
+  <PropertyGroup>
+    <!--
+      The lowest Avalonia the packages support. Plumix compiles against it, so the packed nuspec
+      depends on Avalonia >= this version. Avalonia has removed members inside a minor line
+      (ShapedTextRun.IsReversed went away in 12.0.5), so CI also runs the tests with the newest
+      stable Avalonia of the same major substituted at run time: AvaloniaTestVersion, set by
+      scripts/latest_avalonia_version.sh, only moves Plumix.Tests' own Avalonia references.
+    -->
+    <AvaloniaVersion>12.1.4</AvaloniaVersion>
+    <AvaloniaTestVersion Condition="'$(AvaloniaTestVersion)' == ''">$(AvaloniaVersion)</AvaloniaTestVersion>
+  </PropertyGroup>
   <ItemGroup>
     <!-- Avalonia packages -->
     <!-- Important: keep version in sync! -->
-    <PackageVersion Include="Avalonia" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Themes.Fluent" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Fonts.Inter" Version="12.0.0" />
+    <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Diagnostics" Version="11.3.13" />
-    <PackageVersion Include="Avalonia.Desktop" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Skia" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.iOS" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Browser" Version="12.0.0" />
-    <PackageVersion Include="Avalonia.Android" Version="12.0.0" />
+    <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Skia" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.iOS" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Browser" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
     <!-- Match Avalonia.Skia's decoder ABI; no separate native renderer is introduced. -->
-    <PackageVersion Include="SkiaSharp" Version="3.119.3-preview.1.1" />
+    <PackageVersion Include="SkiaSharp" Version="3.119.4" />
     <!-- Match Avalonia.Skia's shaper ABI; needed for variable-font instances. -->
     <PackageVersion Include="HarfBuzzSharp" Version="8.3.1.3" />
-    <PackageVersion Include="Avalonia.HarfBuzz" Version="12.0.0" />
+    <PackageVersion Include="Avalonia.HarfBuzz" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Plumix.Bloc" Version="0.1.0-alpha.1" />
     <PackageVersion Include="MaterialTheming" Version="2.2.2" />
     <!-- F# projects: with CPM the F# SDK disables the implicit FSharp.Core reference -->

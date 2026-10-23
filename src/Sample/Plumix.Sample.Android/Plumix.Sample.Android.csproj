@@ -18,11 +18,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.Android" />
         <PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\Plumix.Sample\Plumix.Sample.csproj" />
+        <ProjectReference Include="..\..\Plumix.Android\Plumix.Android.csproj" />
     </ItemGroup>
 </Project>
