@@ -316,7 +316,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     `Framework.InactiveElements.cs`
   - `src/Plumix/Widgets/Notifications.cs` (notification tree, `NotifiableElementMixin`)
   - `src/Plumix/Foundation/Listenable.cs` (`IListenable`, `ChangeNotifier`, `ValueNotifier`)
-  - `src/Plumix/Foundation/MemoryAllocations.cs` (`FlutterMemoryAllocations`, dispatched from `Debug.cs`)
+  - `src/Plumix/Foundation/MemoryAllocations.cs` (`FlutterMemoryAllocations`, dispatched from `Debug.cs`;
+    `Picture.OnCreate`/`OnDispose` hooks)
   - `src/Plumix/Widgets/StatefulBuilder.cs`
   - `src/Plumix/Widgets/LookupBoundary.cs`
   - `src/Plumix/Widgets/InheritedTheme.cs`
@@ -534,6 +535,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   and focus semantics.
 - Read First:
   - `src/Plumix/Widgets/Focus.cs` (the `FocusNode` tree, `FocusAttachment`, `FocusManager`)
+  - `src/Plumix/Widgets/Focus.HighlightModeManager.cs` (highlight mode, key-message routing)
   - `src/Plumix/Widgets/FocusScope.cs` (the `Focus`/`FocusScope` widget pair, `ExcludeFocus`)
   - `src/Plumix/Widgets/FocusTraversal.cs` (policies, `FocusOrder`, `FocusTraversalGroup`, traversal intents)
   - `src/Plumix/Widgets/KeyboardListener.cs`

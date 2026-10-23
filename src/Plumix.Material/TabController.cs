@@ -39,6 +39,10 @@ public sealed class TabController : ChangeNotifier
         _animationController = Plumix.AnimationController.Unbounded(
             value: initialIndex,
             vsync: vsync);
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
     }
 
     private TabController(
@@ -53,6 +57,10 @@ public sealed class TabController : ChangeNotifier
         _animationController = animationController;
         _animationDuration = animationDuration;
         Length = length;
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
     }
 
     /// <summary>

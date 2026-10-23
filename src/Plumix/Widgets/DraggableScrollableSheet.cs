@@ -26,6 +26,16 @@ public class DraggableScrollableController : ChangeNotifier
     private readonly HashSet<AnimationController> _animationControllers = [];
     private DraggableScrollableSheetScrollController? _attachedController;
 
+    /// <summary>Creates a controller for <see cref="DraggableScrollableSheet"/>.</summary>
+    public DraggableScrollableController()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
+
     /// <summary>The current size of the attached sheet, as a fraction of the available height.</summary>
     public double Size
     {
@@ -417,6 +427,14 @@ public sealed class DraggableScrollableActuator : StatefulWidget
 /// <summary>A <see cref="ChangeNotifier"/> that carries a one-shot reset request.</summary>
 internal sealed class ResetNotifier : ChangeNotifier
 {
+    public ResetNotifier()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
     /// <summary>Whether someone called <see cref="SendReset"/>; must be cleared after being read.</summary>
     public bool WasCalled { get; set; }
 
@@ -671,6 +689,10 @@ internal sealed class DraggableSheetExtent
         AvailablePixels = double.PositiveInfinity;
         HasDragged = hasDragged ?? false;
         HasChanged = hasChanged ?? false;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "_DraggableSheetExtent", this);
+        }
     }
 
     public double MinSize { get; }
@@ -783,7 +805,14 @@ internal sealed class DraggableSheetExtent
             shouldCloseOnMinExtent: ShouldCloseOnMinExtent).Dispatch(target);
     }
 
-    public void Dispose() => _currentSize.Dispose();
+    public void Dispose()
+    {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
+        _currentSize.Dispose();
+    }
 
     public DraggableSheetExtent CopyWith(
         double minSize,

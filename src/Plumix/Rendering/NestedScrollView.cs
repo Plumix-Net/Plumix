@@ -22,6 +22,16 @@ public class SliverOverlapAbsorberHandle : ChangeNotifier
     private double? _layoutExtent;
     private double? _scrollExtent;
 
+    /// <summary>Creates a <see cref="SliverOverlapAbsorberHandle"/>.</summary>
+    public SliverOverlapAbsorberHandle()
+    {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+    }
+
+
     /// <summary>
     /// The amount of overlap the absorber's sliver applies to the slivers after it, or null until an
     /// absorber has laid out.

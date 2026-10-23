@@ -943,6 +943,10 @@ public sealed class AppLifecycleListener : WidgetsBindingObserver, IDisposable
         OnExitRequested = onExitRequested;
         OnStateChange = onStateChange;
         _lifecycleState = Binding.LifecycleState;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "AppLifecycleListener", this);
+        }
         Binding.AddObserver(this);
     }
 
@@ -1020,6 +1024,10 @@ public sealed class AppLifecycleListener : WidgetsBindingObserver, IDisposable
     public void Dispose()
     {
         ThrowIfDisposed();
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         Binding.RemoveObserver(this);
         _isDisposed = true;
     }

@@ -37,6 +37,11 @@ public class RestorationManager : ChangeNotifier
     {
         _channel = new OptionalMethodChannel(
             SystemChannels.Restoration.Name, SystemChannels.Restoration.Codec, binaryMessenger);
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         InitChannels();
     }
 
@@ -329,6 +334,10 @@ public class RestorationBucket
         _manager = manager;
         _parent = parent;
         _debugOwner = debugOwner;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("services", "RestorationBucket", this);
+        }
     }
 
     /// <summary>Creates an empty bucket that is not attached to any parent yet.</summary>
@@ -538,6 +547,10 @@ public class RestorationBucket
     public void Dispose()
     {
         AssertNotDisposed();
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         VisitChildren(DropChild, concurrentModification: true);
         _claimedChildren.Clear();
         _childrenToAdd.Clear();

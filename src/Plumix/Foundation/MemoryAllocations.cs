@@ -1,5 +1,8 @@
 // Dart parity source: flutter/packages/flutter/lib/src/foundation/memory_allocations.dart
 
+using Plumix.UI;
+using Plumix.Widgets;
+
 namespace Plumix.Foundation;
 
 /// <summary>A lifecycle event of an object tracked by <see cref="FlutterMemoryAllocations"/>.</summary>
@@ -87,9 +90,10 @@ internal static class FieldNames
 /// An interface for listening to object lifecycle events, used by memory tooling to detect leaks.
 /// </summary>
 /// <remarks>
-/// Dart's <c>FlutterMemoryAllocations</c>. The <c>dart:ui</c> <c>Image</c>/<c>Picture</c>
-/// subscription (<c>_subscribeToSdkObjects</c>) has no counterpart: the drawing backend exposes no
-/// creation or disposal hooks for its images and pictures.
+/// Dart's <c>FlutterMemoryAllocations</c>. The first listener subscribes to the <c>dart:ui</c>
+/// <see cref="Picture"/> lifecycle hooks and the last one unsubscribes, as in Dart. Dart also
+/// subscribes to <c>ui.Image.onCreate</c>/<c>onDispose</c>; Plumix's image type is Avalonia's
+/// <c>IImage</c>, which has no handle class to carry those hooks (see <c>docs/ai/DIVERGENCES.md</c>).
 /// </remarks>
 public sealed class FlutterMemoryAllocations
 {
@@ -99,6 +103,9 @@ public sealed class FlutterMemoryAllocations
     /// no .NET counterpart).
     /// </summary>
     public static bool KFlutterMemoryAllocationsEnabled => Constants.KDebugMode;
+
+    // Dart's _dartUiLibrary.
+    private const string DartUiLibrary = "dart:ui";
 
     private List<ObjectEventListener?>? _listeners;
     private int _activeDispatchLoops;
@@ -119,7 +126,12 @@ public sealed class FlutterMemoryAllocations
             return;
         }
 
-        _listeners ??= [];
+        if (_listeners is null)
+        {
+            _listeners = [];
+            SubscribeToSdkObjects();
+        }
+
         _listeners.Add(listener);
     }
 
@@ -175,6 +187,7 @@ public sealed class FlutterMemoryAllocations
         if (_listeners is { Count: 0 })
         {
             _listeners = null;
+            UnSubscribeFromSdkObjects();
         }
     }
 
@@ -264,5 +277,31 @@ public sealed class FlutterMemoryAllocations
         }
 
         DispatchObjectEvent(new ObjectDisposed(@object));
+    }
+
+    private void SubscribeToSdkObjects()
+    {
+        DebugAssertions.Assert(Picture.OnCreate is null);
+        DebugAssertions.Assert(Picture.OnDispose is null);
+        Picture.OnCreate = PictureOnCreate;
+        Picture.OnDispose = PictureOnDispose;
+    }
+
+    private void UnSubscribeFromSdkObjects()
+    {
+        DebugAssertions.Assert(Picture.OnCreate == PictureOnCreate);
+        DebugAssertions.Assert(Picture.OnDispose == PictureOnDispose);
+        Picture.OnCreate = null;
+        Picture.OnDispose = null;
+    }
+
+    private void PictureOnCreate(Picture picture)
+    {
+        DispatchObjectEvent(new ObjectCreated(DartUiLibrary, nameof(Picture), picture));
+    }
+
+    private void PictureOnDispose(Picture picture)
+    {
+        DispatchObjectEvent(new ObjectDisposed(picture));
     }
 }

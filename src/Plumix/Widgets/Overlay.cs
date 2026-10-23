@@ -611,6 +611,10 @@ public sealed class OverlayEntry : IListenable, IDisposable
         _opaque = opaque;
         _maintainState = maintainState;
         CanSizeOverlay = canSizeOverlay;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "OverlayEntry", this);
+        }
     }
 
     public OverlayWidgetBuilder Builder { get; }
@@ -710,6 +714,10 @@ public sealed class OverlayEntry : IListenable, IDisposable
             throw new InvalidOperationException("An OverlayEntry must be removed before it is disposed.");
         }
 
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _disposed = true;
         if (!Mounted)
         {

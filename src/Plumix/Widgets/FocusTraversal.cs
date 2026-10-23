@@ -1270,6 +1270,11 @@ internal sealed class FocusTraversalGroupNode : FocusNode
     internal FocusTraversalGroupNode(FocusTraversalPolicy policy, string? debugLabel = null)
         : base(debugLabel: debugLabel)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         Policy = policy;
     }
 

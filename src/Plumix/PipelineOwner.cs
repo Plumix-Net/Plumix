@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Widgets;
 using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
@@ -38,6 +39,7 @@ public partial class PipelineOwner : DiagnosticableTree
         OnSemanticsOwnerCreated = onSemanticsOwnerCreated;
         _onSemanticsUpdate = onSemanticsUpdate;
         OnSemanticsOwnerDisposed = onSemanticsOwnerDisposed;
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchCreated("rendering", "PipelineOwner", this));
     }
 
     /// <summary>Called when a render object of this pipeline wants to update its appearance.</summary>
@@ -205,20 +207,31 @@ public partial class PipelineOwner : DiagnosticableTree
     {
         _outstandingSemanticsHandles += 1;
         UpdateSemanticsOwner();
-        if (listener is not null)
-        {
-            _semanticsOwner!.AddListener(listener);
-        }
+        return new LocalSemanticsHandle(this, listener);
+    }
 
-        return new SemanticsHandle(() =>
+    /// <summary>The handle <see cref="EnsureSemantics"/> returns.</summary>
+    /// <remarks>Dart's private <c>_LocalSemanticsHandle</c>.</remarks>
+    private sealed class LocalSemanticsHandle : SemanticsHandle
+    {
+        public LocalSemanticsHandle(PipelineOwner owner, Action? listener)
+            : base(() => Release(owner, listener), "rendering", "_LocalSemanticsHandle")
         {
             if (listener is not null)
             {
-                _semanticsOwner!.RemoveListener(listener);
+                owner._semanticsOwner!.AddListener(listener);
+            }
+        }
+
+        private static void Release(PipelineOwner owner, Action? listener)
+        {
+            if (listener is not null)
+            {
+                owner._semanticsOwner!.RemoveListener(listener);
             }
 
-            DidDisposeSemanticsHandle();
-        });
+            owner.DidDisposeSemanticsHandle();
+        }
     }
 
     private void UpdateSemanticsOwner()
@@ -918,6 +931,7 @@ public partial class PipelineOwner : DiagnosticableTree
                 + "manifold before it is disposed.");
         }
 
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchDisposed(this));
         _semanticsOwner?.Dispose();
         _semanticsOwner = null;
         _nodesNeedingLayout.Clear();

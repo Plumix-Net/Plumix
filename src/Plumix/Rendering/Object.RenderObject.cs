@@ -174,6 +174,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     protected RenderObject()
     {
+        Widgets.DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchCreated("rendering", "RenderObject", this));
         _semantics = new RenderObjectSemantics(this);
     }
 
@@ -454,6 +455,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             throw new AssertionError("RenderObject.Dispose() called more than once.");
         }
 
+        Widgets.DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchDisposed(this));
         Owner?.ForgetPaintFor(this);
         _layerHandle.Layer = null;
         _debugDisposed = true;

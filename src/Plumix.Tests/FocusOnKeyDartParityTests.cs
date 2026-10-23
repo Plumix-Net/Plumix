@@ -788,6 +788,203 @@ public sealed class FocusOnKeyDartParityTests : IDisposable
         focusNode.Dispose();
     }
 
+    public static TheoryData<TargetPlatform> AllPlatforms =>
+    [
+        TargetPlatform.Android,
+        TargetPlatform.Fuchsia,
+        TargetPlatform.IOS,
+        TargetPlatform.Linux,
+        TargetPlatform.MacOS,
+        TargetPlatform.Windows,
+    ];
+
+    public static TheoryData<TargetPlatform> MobilePlatforms =>
+        [TargetPlatform.Android, TargetPlatform.Fuchsia, TargetPlatform.IOS];
+
+    public static TheoryData<TargetPlatform> DesktopPlatforms =>
+        [TargetPlatform.Linux, TargetPlatform.MacOS, TargetPlatform.Windows];
+
+    // flutter_test's TargetPlatformVariant: the platform override for one test run.
+    private static void WithTargetPlatform(TargetPlatform platform, Action body)
+    {
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
+        {
+            body();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
+    }
+
+    // "Initial highlight mode guesses correctly."
+    [Theory]
+    [MemberData(nameof(AllPlatforms))]
+    public void InitialHighlightModeGuessesCorrectly(TargetPlatform platform)
+    {
+        WithTargetPlatform(platform, () =>
+        {
+            using var tester = new FrameworkDartTester();
+            FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.Automatic;
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.Fuchsia:
+                case TargetPlatform.Android:
+                case TargetPlatform.IOS:
+                    Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+                    break;
+                case TargetPlatform.Linux:
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Windows:
+                    Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+                    break;
+            }
+        });
+    }
+
+    // "Mouse events change initial focus highlight mode on mobile."
+    [Theory]
+    [MemberData(nameof(MobilePlatforms))]
+    public void MouseEventsChangeInitialFocusHighlightModeOnMobile(TargetPlatform platform)
+    {
+        WithTargetPlatform(platform, () =>
+        {
+            using var tester = new FrameworkDartTester();
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            // Clear out the mouse state.
+            RendererBinding.Instance.InitMouseTracker();
+            TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
+            gesture.MoveTo(default);
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+            gesture.RemovePointer();
+        });
+    }
+
+    // "Mouse events change initial focus highlight mode on desktop."
+    [Theory]
+    [MemberData(nameof(DesktopPlatforms))]
+    public void MouseEventsChangeInitialFocusHighlightModeOnDesktop(TargetPlatform platform)
+    {
+        WithTargetPlatform(platform, () =>
+        {
+            using var tester = new FrameworkDartTester();
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+            // Clear out the mouse state.
+            RendererBinding.Instance.InitMouseTracker();
+            TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
+            gesture.MoveTo(default);
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+            gesture.RemovePointer();
+        });
+    }
+
+    // "Keyboard events change initial focus highlight mode."
+    [Theory]
+    [MemberData(nameof(AllPlatforms))]
+    public void KeyboardEventsChangeInitialFocusHighlightMode(TargetPlatform platform)
+    {
+        WithTargetPlatform(platform, () =>
+        {
+            using var tester = new FrameworkDartTester();
+            tester.SendKeyEvent(LogicalKeyboardKey.Enter);
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+        });
+    }
+
+    // "Soft keyboard key events do not change focus highlight mode on Android."
+    [Fact]
+    public void SoftKeyboardKeyEventsDoNotChangeFocusHighlightModeOnAndroid()
+    {
+        WithTargetPlatform(TargetPlatform.Android, () =>
+        {
+            using var tester = new FrameworkDartTester();
+            SetupWidget(tester);
+
+            FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.Automatic;
+            tester.Tap(Find.ByType<Container>());
+            tester.Pump();
+
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+
+            // Simulates a soft keyboard key event.
+            const int kAndroidSoftKeyboardFlag = 0x00000002;
+            const int kAndroidVirtualKeyboardDeviceId = -1;
+            Dictionary<string, object?> data = KeyEventSimulator.GetKeyData(
+                LogicalKeyboardKey.Backspace,
+                platform: "android");
+            data["flags"] = kAndroidSoftKeyboardFlag;
+            data["deviceId"] = kAndroidVirtualKeyboardDeviceId;
+            data["source"] = 0x00000101;
+            data["repeatCount"] = 0;
+
+            Task delivery = ServicesBinding.Instance.DefaultBinaryMessenger.HandlePlatformMessage(
+                SystemChannels.KeyEvent.Name,
+                SystemChannels.KeyEvent.Codec.EncodeMessage(data),
+                _ => { });
+            EventLoop.FlushMicrotasks();
+            Assert.True(delivery.IsCompleted);
+
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            HardwareKeyboard.Instance.ClearState();
+            RawKeyboard.Instance.ClearKeysPressed();
+        });
+    }
+
+    // "Events change focus highlight mode."
+    [Fact]
+    public void EventsChangeFocusHighlightMode()
+    {
+        using var tester = new FrameworkDartTester();
+        SetupWidget(tester);
+        int callCount = 0;
+        FocusHighlightMode? lastMode = null;
+        void HandleModeChange(FocusHighlightMode mode)
+        {
+            lastMode = mode;
+            callCount++;
+        }
+
+        FocusManager.Instance.AddHighlightModeListener(HandleModeChange);
+        try
+        {
+            Assert.Equal(0, callCount);
+            Assert.Null(lastMode);
+            FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.Automatic;
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            SendKeyEvent(LogicalKeyboardKey.MetaLeft, platform: "fuchsia");
+            Assert.Equal(1, callCount);
+            Assert.Equal(FocusHighlightMode.Traditional, lastMode);
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+            tester.Tap(Find.ByType<Container>());
+            Assert.Equal(2, callCount);
+            Assert.Equal(FocusHighlightMode.Touch, lastMode);
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            TestGesture gesture = tester.StartGesture(default, kind: PointerDeviceKind.Mouse);
+            gesture.Up();
+            Assert.Equal(2, callCount);
+            Assert.Equal(FocusHighlightMode.Touch, lastMode);
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            tester.Tap(Find.ByType<Container>());
+            Assert.Equal(2, callCount);
+            Assert.Equal(FocusHighlightMode.Touch, lastMode);
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+            FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
+            Assert.Equal(3, callCount);
+            Assert.Equal(FocusHighlightMode.Traditional, lastMode);
+            Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
+            FocusManager.Instance.HighlightStrategy = FocusHighlightStrategy.AlwaysTouch;
+            Assert.Equal(4, callCount);
+            Assert.Equal(FocusHighlightMode.Touch, lastMode);
+            Assert.Equal(FocusHighlightMode.Touch, FocusManager.Instance.HighlightMode);
+        }
+        finally
+        {
+            FocusManager.Instance.RemoveHighlightModeListener(HandleModeChange);
+        }
+    }
+
     // The part of `hasSemantics` these two tests use: the root node, with no flags/actions of its own,
     // has exactly the given children.
     private static void ExpectRootChildren(SemanticsTester semantics, params Action<SemanticsNode>[] children)

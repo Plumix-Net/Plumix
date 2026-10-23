@@ -173,6 +173,11 @@ public class FocusNode : ChangeNotifier
         OnKey = onKey;
 #pragma warning restore CS0618
         DebugLabel = debugLabel;
+
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
     }
 
     public string? DebugLabel { get; set; }
@@ -892,28 +897,26 @@ internal sealed class FocusAppLifecycleListener : WidgetsBindingObserver
     public void DidChangeAppLifecycleState(AppLifecycleState state) => _onLifecycleStateChanged(state);
 }
 
-/// <summary>Dart parity source: <c>FocusManager</c> (with <c>_HighlightModeManager</c> folded in).</summary>
+/// <summary>Dart parity source: <c>FocusManager</c>.</summary>
 public sealed class FocusManager : ChangeNotifier
 {
-    private readonly List<Action<FocusHighlightMode>> _highlightModeListeners = [];
-    private readonly List<OnKeyEventCallback> _earlyKeyEventHandlers = [];
-    private readonly List<OnKeyEventCallback> _lateKeyEventHandlers = [];
     private readonly HashSet<FocusNode> _dirtyNodes = [];
     private readonly List<PendingAutofocus> _pendingAutofocuses = [];
     private FocusScopeNode _rootScope = new(debugLabel: "Root Focus Scope");
-    private FocusHighlightMode? _highlightMode;
-    private FocusHighlightStrategy _highlightStrategy = FocusHighlightStrategy.Automatic;
-    private bool? _lastInteractionRequiresTraditionalHighlights;
+    private readonly HighlightModeManager _highlightManager;
     private bool _haveScheduledUpdate;
     private FocusAppLifecycleListener? _appLifecycleListener;
-#pragma warning disable CS0618
-    private KeyMessageHandler? _keyMessageHandler;
-#pragma warning restore CS0618
-    private bool _globalHandlersRegistered;
     private FocusNode? _suspendedNode;
 
     public FocusManager()
     {
+        // Dart's field initializer; it reads the primary focus of this manager (see HighlightModeManager).
+        _highlightManager = new HighlightModeManager(this);
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         _rootScope.UpdateManager(this);
         if (RespondToLifecycleChange)
         {
@@ -979,17 +982,7 @@ public sealed class FocusManager : ChangeNotifier
 
     /// <summary>Registers this manager as the receiver of process-global pointer and key input.</summary>
     /// <remarks>Flutter's <c>FocusManager.registerGlobalHandlers</c>.</remarks>
-    public void RegisterGlobalHandlers()
-    {
-        if (_globalHandlersRegistered)
-        {
-            return;
-        }
-
-        _globalHandlersRegistered = true;
-        GestureBinding.PointerEventReceived += HandlePointerEvent;
-        RegisterKeyMessageHandler();
-    }
+    public void RegisterGlobalHandlers() => _highlightManager.RegisterGlobalHandlers();
 
     public FocusNode? PrimaryFocus { get; private set; }
 
@@ -999,45 +992,40 @@ public sealed class FocusManager : ChangeNotifier
 
     internal FocusNode? MarkedForFocus { get; private set; }
 
-    public FocusHighlightMode HighlightMode => _highlightMode ?? DefaultModeForPlatform;
+    public FocusHighlightMode HighlightMode => _highlightManager.HighlightMode;
 
     public FocusHighlightStrategy HighlightStrategy
     {
-        get => _highlightStrategy;
+        get => _highlightManager.Strategy;
         set
         {
-            if (_highlightStrategy == value)
+            if (_highlightManager.Strategy == value)
             {
                 return;
             }
 
-            _highlightStrategy = value;
-            UpdateHighlightMode();
+            _highlightManager.Strategy = value;
         }
     }
 
-    public void AddHighlightModeListener(Action<FocusHighlightMode> listener)
-    {
-        ArgumentNullException.ThrowIfNull(listener);
-        if (!_highlightModeListeners.Contains(listener))
-        {
-            _highlightModeListeners.Add(listener);
-        }
-    }
+    public void AddHighlightModeListener(Action<FocusHighlightMode> listener) =>
+        _highlightManager.AddListener(listener);
 
-    public void RemoveHighlightModeListener(Action<FocusHighlightMode> listener)
-    {
-        _highlightModeListeners.Remove(listener);
-    }
+    public void RemoveHighlightModeListener(Action<FocusHighlightMode> listener) =>
+        _highlightManager.RemoveListener(listener);
 
     /// <summary>Dart parity source: <c>FocusManager.addEarlyKeyEventHandler</c>.</summary>
-    public void AddEarlyKeyEventHandler(OnKeyEventCallback handler) => _earlyKeyEventHandlers.Add(handler);
+    public void AddEarlyKeyEventHandler(OnKeyEventCallback handler) =>
+        _highlightManager.AddEarlyKeyEventHandler(handler);
 
-    public void RemoveEarlyKeyEventHandler(OnKeyEventCallback handler) => _earlyKeyEventHandlers.Remove(handler);
+    public void RemoveEarlyKeyEventHandler(OnKeyEventCallback handler) =>
+        _highlightManager.RemoveEarlyKeyEventHandler(handler);
 
-    public void AddLateKeyEventHandler(OnKeyEventCallback handler) => _lateKeyEventHandlers.Add(handler);
+    public void AddLateKeyEventHandler(OnKeyEventCallback handler) =>
+        _highlightManager.AddLateKeyEventHandler(handler);
 
-    public void RemoveLateKeyEventHandler(OnKeyEventCallback handler) => _lateKeyEventHandlers.Remove(handler);
+    public void RemoveLateKeyEventHandler(OnKeyEventCallback handler) =>
+        _highlightManager.RemoveLateKeyEventHandler(handler);
 
     /// <summary>
     /// C#-only: attaches <paramref name="node"/> under <paramref name="scope"/> without going through a
@@ -1242,7 +1230,7 @@ public sealed class FocusManager : ChangeNotifier
     {
         if (HardwareKeyboard.Instance.HandleKeyEvent(@event))
         {
-            UpdateHighlightModeForKeyEvent();
+            _highlightManager.UpdateModeForKeyEvent();
             return true;
         }
 
@@ -1254,144 +1242,8 @@ public sealed class FocusManager : ChangeNotifier
     /// form Dart's key event manager dispatches a solitary synthesized event in).
     /// </summary>
 #pragma warning disable CS0618
-    internal bool RouteKeyEvent(KeyEvent @event) => HandleKeyMessage(new KeyMessage([@event], null));
-
-    // KeyEvent.FLAG_SOFT_KEYBOARD
-    private const int KAndroidSoftKeyboardFlag = 0x00000002;
-
-    // KeyCharacterMap.VIRTUAL_KEYBOARD
-    private const int KAndroidVirtualKeyboardDeviceId = -1;
-
-    private static bool IsKeyMessageFromAndroidIme(KeyMessage message)
-    {
-        RawKeyEvent? rawEvent = message.RawEvent;
-        if (rawEvent == null)
-        {
-            return false;
-        }
-
-        RawKeyEventData data = rawEvent.Data;
-        if (data is not RawKeyEventDataAndroid android)
-        {
-            return false;
-        }
-
-        return (android.Flags & KAndroidSoftKeyboardFlag) != 0
-               || android.DeviceId == KAndroidVirtualKeyboardDeviceId;
-    }
-
-    /// <summary>Dart parity source: <c>_HighlightModeManager.handleKeyMessage</c>.</summary>
-    internal bool HandleKeyMessage(KeyMessage message)
-    {
-        // Update highlightMode first, since things responding to the keys might
-        // look at the highlight mode, and it should be accurate.
-        if (_lastInteractionRequiresTraditionalHighlights != false)
-        {
-            // Android sends raw key events for "Backspace" key events from virtual
-            // keyboards. These shouldn't switch the highlight mode to traditional.
-            // See: https://github.com/flutter/flutter/issues/180746
-            bool isFromVirtualKeyboard = IsKeyMessageFromAndroidIme(message);
-            if (!isFromVirtualKeyboard)
-            {
-                _lastInteractionRequiresTraditionalHighlights = false;
-                UpdateHighlightMode();
-            }
-        }
-
-        if (PrimaryFocus == null)
-        {
-            return false;
-        }
-
-        bool handled = false;
-        // Check to see if any of the early handlers handle the key. If so, then
-        // return early.
-        if (_earlyKeyEventHandlers.Count > 0)
-        {
-            var results = new List<KeyEventResult>();
-            // Make a copy to prevent problems if the list is modified during iteration.
-            foreach (OnKeyEventCallback callback in _earlyKeyEventHandlers.ToArray())
-            {
-                foreach (KeyEvent keyEvent in message.Events)
-                {
-                    results.Add(callback(keyEvent));
-                }
-            }
-
-            switch (KeyEventResults.Combine(results))
-            {
-                case KeyEventResult.Ignored:
-                    break;
-                case KeyEventResult.Handled:
-                    handled = true;
-                    break;
-                case KeyEventResult.SkipRemainingHandlers:
-                    handled = false;
-                    break;
-            }
-        }
-
-        if (handled)
-        {
-            return true;
-        }
-
-        // Walk the current focus from the leaf to the root, calling each node's
-        // onKeyEvent on the way up, and if one responds that they handled it or
-        // want to stop propagation, stop.
-        foreach (FocusNode node in Enumerable.Repeat(PrimaryFocus, 1).Concat(PrimaryFocus.Ancestors))
-        {
-            var results = new List<KeyEventResult>();
-            foreach (KeyEvent keyEvent in message.Events)
-            {
-                results.Add(node.HandleKeyEvent(keyEvent));
-            }
-
-            if (node.OnKey != null && message.RawEvent != null)
-            {
-                results.Add(node.OnKey(node, message.RawEvent));
-            }
-
-            KeyEventResult result = KeyEventResults.Combine(results);
-            if (result == KeyEventResult.Ignored)
-            {
-                continue;
-            }
-
-            handled = result == KeyEventResult.Handled;
-            // Only KeyEventResult.ignored will continue the for loop. All other
-            // options will stop the event propagation.
-            break;
-        }
-
-        // Check to see if any late key event handlers want to handle the event.
-        if (!handled && _lateKeyEventHandlers.Count > 0)
-        {
-            var results = new List<KeyEventResult>();
-            // Make a copy to prevent problems if the list is modified during iteration.
-            foreach (OnKeyEventCallback callback in _lateKeyEventHandlers.ToArray())
-            {
-                foreach (KeyEvent keyEvent in message.Events)
-                {
-                    results.Add(callback(keyEvent));
-                }
-            }
-
-            switch (KeyEventResults.Combine(results))
-            {
-                case KeyEventResult.Ignored:
-                    break;
-                case KeyEventResult.Handled:
-                    handled = true;
-                    break;
-                case KeyEventResult.SkipRemainingHandlers:
-                    handled = false;
-                    break;
-            }
-        }
-
-        return handled;
-    }
+    internal bool RouteKeyEvent(KeyEvent @event) =>
+        _highlightManager.HandleKeyMessage(new KeyMessage([@event], null));
 #pragma warning restore CS0618
 
     internal void ResetForTests()
@@ -1409,34 +1261,14 @@ public sealed class FocusManager : ChangeNotifier
 
         _rootScope = new FocusScopeNode(debugLabel: "Root Focus Scope");
         _rootScope.UpdateManager(this);
-        _highlightModeListeners.Clear();
-        _earlyKeyEventHandlers.Clear();
-        _lateKeyEventHandlers.Clear();
-        _highlightMode = null;
-        _highlightStrategy = FocusHighlightStrategy.Automatic;
-        _lastInteractionRequiresTraditionalHighlights = null;
+        _highlightManager.ResetForTests();
         HardwareKeyboard.Instance.ClearState();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
         RawKeyboard.Instance.ClearListeners();
         KeyEventManager.Instance.ClearState();
 #pragma warning restore CS0618
-        if (_globalHandlersRegistered)
-        {
-            RegisterKeyMessageHandler();
-        }
-    }
-
-    /// <summary>
-    /// Dart wires `ServicesBinding` to route assembled key messages into the focus tree; Plumix's
-    /// focus manager registers itself with <see cref="KeyEventManager"/> for the same effect.
-    /// </summary>
-    private void RegisterKeyMessageHandler()
-    {
-#pragma warning disable CS0618
-        _keyMessageHandler ??= HandleKeyMessage;
-        KeyEventManager.Instance.KeyMessageHandler = _keyMessageHandler;
-#pragma warning restore CS0618
+        _highlightManager.ReregisterKeyMessageHandler();
     }
 
     public override void Dispose()
@@ -1455,92 +1287,8 @@ public sealed class FocusManager : ChangeNotifier
             _appLifecycleListener = null;
         }
 
-        if (_globalHandlersRegistered)
-        {
-            GestureBinding.PointerEventReceived -= HandlePointerEvent;
-#pragma warning disable CS0618
-            if (ReferenceEquals(KeyEventManager.Instance.KeyMessageHandler, _keyMessageHandler))
-            {
-                KeyEventManager.Instance.KeyMessageHandler = null;
-            }
-#pragma warning restore CS0618
-            _globalHandlersRegistered = false;
-        }
-
+        _highlightManager.Dispose();
         _rootScope.Dispose();
         base.Dispose();
     }
-
-    /// <summary>Dart parity source: <c>_HighlightModeManager.handlePointerEvent</c>.</summary>
-    internal void HandlePointerEvent(PointerEvent @event)
-    {
-        if (@event.Kind is not (PointerDeviceKind.Touch
-            or PointerDeviceKind.Stylus
-            or PointerDeviceKind.InvertedStylus))
-        {
-            return;
-        }
-
-        if (_lastInteractionRequiresTraditionalHighlights == true)
-        {
-            return;
-        }
-
-        _lastInteractionRequiresTraditionalHighlights = true;
-        UpdateHighlightMode();
-    }
-
-    private void UpdateHighlightModeForKeyEvent()
-    {
-        if (_lastInteractionRequiresTraditionalHighlights == false)
-        {
-            return;
-        }
-
-        _lastInteractionRequiresTraditionalHighlights = false;
-        UpdateHighlightMode();
-    }
-
-    /// <summary>Dart parity source: <c>_HighlightModeManager.updateMode</c>.</summary>
-    private void UpdateHighlightMode()
-    {
-        FocusHighlightMode newMode;
-        switch (_highlightStrategy)
-        {
-            case FocusHighlightStrategy.Automatic:
-                if (_lastInteractionRequiresTraditionalHighlights == null)
-                {
-                    return;
-                }
-
-                newMode = _lastInteractionRequiresTraditionalHighlights.Value
-                    ? FocusHighlightMode.Touch
-                    : FocusHighlightMode.Traditional;
-                break;
-            case FocusHighlightStrategy.AlwaysTouch:
-                newMode = FocusHighlightMode.Touch;
-                break;
-            case FocusHighlightStrategy.AlwaysTraditional:
-            default:
-                newMode = FocusHighlightMode.Traditional;
-                break;
-        }
-
-        FocusHighlightMode oldMode = HighlightMode;
-        _highlightMode = newMode;
-        if (HighlightMode == oldMode)
-        {
-            return;
-        }
-
-        foreach (Action<FocusHighlightMode> listener in _highlightModeListeners.ToArray())
-        {
-            listener(HighlightMode);
-        }
-    }
-
-    private static FocusHighlightMode DefaultModeForPlatform =>
-        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()
-            ? FocusHighlightMode.Touch
-            : FocusHighlightMode.Traditional;
 }

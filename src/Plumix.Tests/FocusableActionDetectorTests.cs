@@ -87,6 +87,21 @@ public sealed class FocusableActionDetectorTests : IDisposable
     [Fact]
     public void FocusAndHoverHighlights_FollowTraditionalTouchAndKeyboardModes()
     {
+        // Automatic highlight mode starts from the platform default, which is traditional on desktop.
+        TargetPlatform? previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Windows;
+        try
+        {
+            FocusAndHoverHighlightsFollowModes();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previousPlatform;
+        }
+    }
+
+    private static void FocusAndHoverHighlightsFollowModes()
+    {
         var focusHighlights = new List<bool>();
         var hoverHighlights = new List<bool>();
         var focusChanges = new List<bool>();

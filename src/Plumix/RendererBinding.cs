@@ -242,6 +242,9 @@ public sealed class RendererBinding
     /// <remarks>Flutter's <c>RendererBinding.instance</c>.</remarks>
     public static RendererBinding Instance => _instance!;
 
+    /// <summary>C#-only: whether a renderer binding has been initialized.</summary>
+    internal static bool HasInstance => _instance is not null;
+
     private BindingPipelineManifold Manifold => _manifold ??= new BindingPipelineManifold(this);
 
     /// <summary>Tracks the mouse annotations and cursors in every registered view.</summary>
@@ -651,9 +654,14 @@ public sealed class RendererBinding
     /// Flutter's <c>_BindingPipelineManifold</c>: semantics follow <see cref="SemanticsBinding"/>,
     /// and visual updates ask the scheduler for a frame.
     /// </summary>
+    /// <remarks>
+    /// Dart's manifold extends <c>ChangeNotifier</c>; <see cref="PipelineManifold"/> is a C# class, so
+    /// the notifier is a field, and it reports the manifold's creation to
+    /// <see cref="FlutterMemoryAllocations"/> when it is constructed, as Dart's constructor does.
+    /// </remarks>
     private sealed class BindingPipelineManifold : PipelineManifold, IDisposable
     {
-        private readonly ChangeNotifier _notifier = new();
+        private readonly ManifoldNotifier _notifier = new();
 
         public BindingPipelineManifold(RendererBinding binding)
         {
@@ -673,6 +681,17 @@ public sealed class RendererBinding
         {
             SemanticsBinding.Instance.RemoveSemanticsEnabledListener(_notifier.NotifyListeners);
             _notifier.Dispose();
+        }
+
+        private sealed class ManifoldNotifier : ChangeNotifier
+        {
+            public ManifoldNotifier()
+            {
+                if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+                {
+                    MaybeDispatchObjectCreation(this);
+                }
+            }
         }
     }
 

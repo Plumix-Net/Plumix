@@ -380,6 +380,7 @@ public sealed class CupertinoRadioTests
     public void Focus_UsesHslFocusColorFormula_AndHonorsCustomFocusColor()
     {
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         try
         {
             var node = new FocusNode();
@@ -495,6 +496,7 @@ public sealed class CupertinoRadioTests
             Assert.Single(disabled.FindWidgets<FocusableActionDetector>()).MouseCursor);
 
         FocusManager.Instance.ResetForTests();
+        using var highlightStrategy = new HighlightStrategyScope();
         try
         {
             var node = new FocusNode();

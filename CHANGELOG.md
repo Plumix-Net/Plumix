@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Memory-allocation events cover every Dart publisher and Picture (foundation/memory_allocations.dart).
+- Breaking: _HighlightModeManager split out; default highlight mode uses target platform (focus_manager.dart).
 - Breaking: Native gradient shaders preserve focal circles, decal, sweep tiling and matrices (painting/gradient.dart).
 - Breaking: Cupertino toolbar hairlines and onstage debug traversal match Dart (text_selection_toolbar.dart).
 - Breaking: InputDecoration copy, legacy API, hint/icon layout and counter semantics match Dart (input_decorator.dart).

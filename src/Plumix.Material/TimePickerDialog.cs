@@ -1372,6 +1372,10 @@ internal sealed class TimeDialPainter : CustomPainter
         Radius = radius;
         TextDirection = textDirection;
         SelectedValue = selectedValue;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("material", "_DialPainter", this);
+        }
     }
 
     public List<TappableLabel> PrimaryLabels { get; }
@@ -1389,6 +1393,10 @@ internal sealed class TimeDialPainter : CustomPainter
 
     public override void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         foreach (TappableLabel label in PrimaryLabels)
         {
             label.Painter.Dispose();

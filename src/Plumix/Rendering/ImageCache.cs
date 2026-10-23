@@ -556,13 +556,25 @@ public class ImageCache
             SizeBytes = sizeBytes;
             Node = node;
             _handle = completer.KeepAlive();
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchCreated("painting", "_CachedImageBase", this);
+            }
         }
 
         public object Key { get; }
         public ImageStreamCompleter Completer { get; }
         public long SizeBytes { get; }
         public LinkedListNode<object> Node { get; }
-        public void Dispose() => Interlocked.Exchange(ref _handle, null)?.Dispose();
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _handle, null) is not { } handle) return;
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchDisposed(this);
+            }
+            handle.Dispose();
+        }
     }
 
     private sealed class LiveImage : IDisposable
@@ -575,6 +587,10 @@ public class ImageCache
             Completer = completer;
             _handleRemove = handleRemove;
             _handle = completer.KeepAlive();
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchCreated("painting", "_CachedImageBase", this);
+            }
             completer.AddOnLastListenerRemovedCallback(_handleRemove);
         }
 
@@ -584,6 +600,10 @@ public class ImageCache
         public void Dispose()
         {
             if (Interlocked.Exchange(ref _handle, null) is not { } handle) return;
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchDisposed(this);
+            }
             if (!Completer.IsDisposed)
             {
                 Completer.RemoveOnLastListenerRemovedCallback(_handleRemove);

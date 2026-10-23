@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/multidrag.dart
 
@@ -39,6 +40,10 @@ public abstract class MultiDragPointerState : IDisposable
         GestureSettings = gestureSettings;
         _velocityTracker = new VelocityTracker(kind);
         _lastPosition = initialPosition;
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("gestures", "MultiDragPointerState", this);
+        }
     }
 
     /// <summary>Device settings used to resolve hit slop for this pointer.</summary>
@@ -160,6 +165,10 @@ public abstract class MultiDragPointerState : IDisposable
 
     public virtual void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
+        }
         _arenaEntry?.Resolve(GestureDisposition.Rejected);
         _arenaEntry = null;
     }

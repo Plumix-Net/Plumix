@@ -88,6 +88,10 @@ public sealed class MergeableMaterial : StatefulWidget
         public AnimationTuple(AnimationController controller)
         {
             Controller = controller;
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchCreated("material", "_AnimationTuple", this);
+            }
         }
 
         public AnimationController Controller { get; }
@@ -96,6 +100,10 @@ public sealed class MergeableMaterial : StatefulWidget
 
         public void Dispose()
         {
+            if (Constants.KDebugMode)
+            {
+                FoundationDebug.DebugMaybeDispatchDisposed(this);
+            }
             Controller.Dispose();
         }
     }

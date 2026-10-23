@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/semantics/semantics.dart
 
@@ -17,6 +18,16 @@ public sealed partial class SemanticsOwner
     private readonly HashSet<SemanticsNode> _detachedNodes = [];
     private readonly Dictionary<object, SemanticsNode> _traversalParentNodes = [];
     private readonly Dictionary<object, List<SemanticsNode>> _traversalChildNodes = [];
+
+    /// <summary>Creates a <see cref="SemanticsOwner"/> that manages zero or more nodes.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsOwner</c> constructor; <c>onSemanticsUpdate</c> is the settable
+    /// <see cref="OnSemanticsUpdate"/>.
+    /// </remarks>
+    public SemanticsOwner()
+    {
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchCreated("semantics", "SemanticsOwner", this));
+    }
 
     /// <summary>Invoked with every batch of changed nodes, before listeners are notified.</summary>
     /// <remarks>Flutter's <c>SemanticsOwner.onSemanticsUpdate</c>.</remarks>
@@ -192,6 +203,7 @@ public sealed partial class SemanticsOwner
 
     public override void Dispose()
     {
+        DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchDisposed(this));
         _dirtyNodes.Clear();
         _nodes.Clear();
         _detachedNodes.Clear();

@@ -93,6 +93,13 @@ public abstract class Layer : DiagnosticableTree
     internal Layer? _nextSibling;
     internal Layer? _previousSibling;
 
+    /// <summary>Creates an instance of <see cref="Layer"/>.</summary>
+    /// <remarks>Flutter's <c>Layer</c> constructor.</remarks>
+    protected Layer()
+    {
+        Widgets.DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchCreated("rendering", "Layer", this));
+    }
+
     /// <summary>Whether this layer or any of its descendants have a composition callback.</summary>
     /// <remarks>Flutter's <c>Layer.subtreeHasCompositionCallbacks</c>.</remarks>
     public bool SubtreeHasCompositionCallbacks => _compositionCallbackCount > 0;
@@ -379,6 +386,7 @@ public abstract class Layer : DiagnosticableTree
         }
 
         _debugDisposed = true;
+        Widgets.DebugAssertions.Assert(FoundationDebug.DebugMaybeDispatchDisposed(this));
         _engineLayer?.Dispose();
         _engineLayer = null;
     }

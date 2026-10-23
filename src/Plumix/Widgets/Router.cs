@@ -954,6 +954,11 @@ public class PlatformRouteInformationProvider : RouteInformationProvider, Widget
 
     public PlatformRouteInformationProvider(RouteInformation initialRouteInformation)
     {
+        if (FlutterMemoryAllocations.KFlutterMemoryAllocationsEnabled)
+        {
+            MaybeDispatchObjectCreation(this);
+        }
+
         ArgumentNullException.ThrowIfNull(initialRouteInformation);
         _value = initialRouteInformation;
         _valueInEngine = new RouteInformation(
