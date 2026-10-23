@@ -21,12 +21,37 @@ namespace Plumix;
 public sealed class HostPointerPacketEncoder
 {
     private readonly Dictionary<int, Point> _lastPositions = [];
+    private readonly Dictionary<int, int> _pointerIdentifiers = [];
+    private static int _nextPointerIdentifier;
 
     /// <summary>Encodes <paramref name="event"/> for a view of the given id and device pixel ratio.</summary>
     public PointerData Encode(PointerEvent @event, int viewId, double devicePixelRatio)
     {
         ArgumentNullException.ThrowIfNull(@event);
         (PointerChange change, PointerSignalKind? signal) = Classify(@event);
+
+        // Flutter's engine starts a new gesture identity on every down/pan-zoom start. Avalonia's
+        // pointer id identifies the physical mouse for its entire lifetime, including later clicks.
+        // Reusing it here would join a second tap to the first tap's already-closed gesture arena.
+        int identifier = 0;
+        if (signal is null)
+        {
+            if (change is PointerChange.Down or PointerChange.PanZoomStart)
+            {
+                identifier = Interlocked.Increment(ref _nextPointerIdentifier);
+                _pointerIdentifiers[@event.Pointer] = identifier;
+            }
+            else if (change is PointerChange.Move or PointerChange.Up or PointerChange.Cancel
+                or PointerChange.PanZoomUpdate or PointerChange.PanZoomEnd)
+            {
+                _pointerIdentifiers.TryGetValue(@event.Pointer, out identifier);
+            }
+
+            if (change is PointerChange.Up or PointerChange.Cancel or PointerChange.Remove or PointerChange.PanZoomEnd)
+            {
+                _pointerIdentifiers.Remove(@event.Pointer);
+            }
+        }
 
         Point delta = default;
         if (change is PointerChange.Hover or PointerChange.Move)
@@ -58,7 +83,7 @@ public sealed class HostPointerPacketEncoder
             kind: @event.Kind,
             signalKind: signal,
             device: @event.Device,
-            pointerIdentifier: @event.Pointer,
+            pointerIdentifier: identifier,
             physicalX: @event.Position.X * ratio,
             physicalY: @event.Position.Y * ratio,
             physicalDeltaX: delta.X * ratio,

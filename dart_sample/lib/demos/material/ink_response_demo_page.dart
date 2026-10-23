@@ -1,4 +1,5 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:flutter/scheduler.dart' show timeDilation;
 
 class InkResponseDemoPage extends StatefulWidget {
   const InkResponseDemoPage({super.key});
@@ -10,6 +11,9 @@ class InkResponseDemoPage extends StatefulWidget {
 class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   bool _enabled = true;
   bool _customOverlay = true;
+  bool _constantSparkleSeed = true;
+  bool _slowMotion = false;
+  final double _previousTimeDilation = timeDilation;
   int _splashMode = 0;
   int _responseTaps = 0;
   int _wellTaps = 0;
@@ -17,9 +21,18 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   int _doubleTaps = 0;
   String _interaction = 'Ready';
 
+  @override
+  void dispose() {
+    timeDilation = _previousTimeDilation;
+    super.dispose();
+  }
+
   InteractiveInkFeatureFactory get _splashFactory => switch (_splashMode) {
     0 => InkRipple.splashFactory,
-    1 => InkSparkle.constantTurbulenceSeedSplashFactory,
+    1 =>
+      _constantSparkleSeed
+          ? InkSparkle.constantTurbulenceSeedSplashFactory
+          : InkSparkle.splashFactory,
     2 => InkSplash.splashFactory,
     _ => NoSplash.splashFactory,
   };
@@ -32,7 +45,10 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
   };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) =>
+      Material(type: MaterialType.transparency, child: _buildContent(context));
+
+  Widget _buildContent(BuildContext context) {
     final WidgetStateProperty<Color?>? overlay = _customOverlay
         ? WidgetStateProperty.resolveWith<Color?>((Set<WidgetState> states) {
             if (states.contains(WidgetState.pressed)) {
@@ -86,6 +102,31 @@ class _InkResponseDemoPageState extends State<InkResponseDemoPage> {
                 setState(() => _splashMode = (_splashMode + 1) % 4),
             child: Text('Splash factory: $_splashName'),
           ),
+          if (_splashMode == 1)
+            const Text(
+              'InkSparkle: tap near a corner to see the white sparkles and turbulence.',
+              style: TextStyle(fontSize: 14, color: Colors.black54),
+            ),
+          if (_splashMode == 1)
+            OutlinedButton(
+              onPressed: () =>
+                  setState(() => _constantSparkleSeed = !_constantSparkleSeed),
+              child: Text(
+                _constantSparkleSeed
+                    ? 'Sparkle seed: constant'
+                    : 'Sparkle seed: default',
+              ),
+            ),
+          if (_splashMode == 1)
+            OutlinedButton(
+              onPressed: () => setState(() {
+                _slowMotion = !_slowMotion;
+                timeDilation = _slowMotion
+                    ? _previousTimeDilation * 10.0
+                    : _previousTimeDilation;
+              }),
+              child: Text(_slowMotion ? 'Speed: 0.1x' : 'Speed: 1x'),
+            ),
           Row(
             spacing: 10,
             children: <Widget>[

@@ -77,7 +77,7 @@ public sealed class MaskFilter : IEquatable<MaskFilter>
 ///
 /// Dart packs the fields into a byte buffer shared with the engine; Plumix keeps them as plain
 /// properties with the same defaults. The published shader slot is an Avalonia <see cref="IBrush"/>;
-/// the framework canvas accepts both backend brushes and native gradient shader descriptions, as does
+/// the framework canvas accepts both backend brushes and native shader descriptions, as does
 /// <see cref="ShaderCallback"/>. Like Dart, `Paint` has identity equality.
 public sealed class Paint
 {

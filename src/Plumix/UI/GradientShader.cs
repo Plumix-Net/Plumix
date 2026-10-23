@@ -16,7 +16,7 @@ namespace Plumix.UI;
 /// A shader description consumed by the framework canvas and shader-mask layers. It implements the
 /// published IBrush shader contract; native resources belong to a draw, never to this description.
 /// </summary>
-internal sealed class GradientShader : ImmutableGradientBrush
+internal sealed class GradientShader : ImmutableGradientBrush, INativeShader
 {
     // Avalonia 12 prevents implementing IBrush directly. Its immutable base supplies that transport
     // contract; ShaderDrawing consumes this descriptor before a draw reaches Avalonia's brush switch.
@@ -113,7 +113,9 @@ internal sealed class GradientShader : ImmutableGradientBrush
             colors, stops, tileMode, matrix, startAngle, endAngle);
     }
 
-    internal SKShader? CreateNativeShader()
+    public IBrush Snapshot() => this;
+
+    public SKShader? CreateNativeShader()
     {
         SKShaderTileMode tileMode = TileMode switch
         {

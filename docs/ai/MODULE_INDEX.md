@@ -464,6 +464,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Gradient.cs`, `src/Plumix/UI/GradientShader.cs`, `ShaderDrawing.cs`
     (painting gradients, full shader matrices and native Skia gradient draws; covered by `GradientTests.cs`
     and `GradientShaderTests.cs`, including decoration, mask, blur, alpha and gallery rendering)
+  - `src/Plumix/UI/RuntimeFragmentShader.cs`, `NativeShader.cs` (internal float scalar/vector SkSL
+    adapter and per-draw uniform snapshots; `InkSparkle` uses the shared Skia drawing path;
+    regenerate its shader and independent Flutter pixel oracle with `scripts/generate_ink_sparkle_shader.py`)
   - `src/Plumix/Rendering/ImageProvider.cs`
   - `src/Plumix/Rendering/ImageStream.cs`
   - `src/Plumix/Rendering/ImageCache.cs`

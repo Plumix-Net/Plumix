@@ -28,10 +28,29 @@ public sealed class HostPointerPacketEncoderTests
 
         Assert.Equal(PointerChange.Down, data.Change);
         Assert.Equal(5, data.ViewId);
-        Assert.Equal(3, data.PointerIdentifier);
+        Assert.NotEqual(0, data.PointerIdentifier);
+        Assert.Equal(3, data.Device);
         Assert.Equal(20, data.PhysicalX);
         Assert.Equal(40, data.PhysicalY);
         Assert.Equal(PointerButtons.Primary, data.Buttons);
+    }
+
+    [Fact]
+    public void RepeatedMouseClicksHaveNewGestureIdsAndTheSameDevice()
+    {
+        var encoder = new HostPointerPacketEncoder();
+        List<PointerEvent> events = RoundTrip(encoder,
+            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)),
+            new PointerMoveEvent(7, PointerDeviceKind.Mouse, new Point(11, 10)),
+            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(11, 10)),
+            new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)),
+            new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(10, 10)));
+
+        Assert.All(events, @event => Assert.Equal(7, @event.Device));
+        Assert.Equal(events[0].Pointer, events[1].Pointer);
+        Assert.Equal(events[0].Pointer, events[2].Pointer);
+        Assert.NotEqual(events[0].Pointer, events[3].Pointer);
+        Assert.Equal(events[3].Pointer, events[4].Pointer);
     }
 
     [Fact]

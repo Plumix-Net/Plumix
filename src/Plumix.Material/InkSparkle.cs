@@ -14,10 +14,8 @@ namespace Plumix.Material;
 /// <see cref="InkFeature.ReferenceBox"/>.
 /// </summary>
 /// <remarks>
-/// Dart paints this feature through the bundled <c>ink_sparkle.frag</c> fragment shader. Avalonia's
-/// public drawing backend has no runtime shaders, so the paint carries a radial-gradient brush that
-/// reproduces the shader's wave term (<c>soft_circle(p, u_center, radius, u_blur) * u_alpha</c>) from
-/// the same uniforms; the turbulence/sparkle noise term is not drawn (see <c>docs/ai/DIVERGENCES.md</c>).
+/// Paints the pinned <c>ink_sparkle.frag</c> through the framework's Skia runtime-effect adapter,
+/// including the white sparkles and the turbulence-modulated ring.
 /// </remarks>
 public class InkSparkle : InteractiveInkFeature
 {
@@ -46,6 +44,7 @@ public class InkSparkle : InteractiveInkFeature
     private readonly RectCallback? _clipCallback;
     private readonly TextDirection _textDirection;
 
+    private RuntimeFragmentShader? _fragmentShader;
     private readonly double[] _uniforms = new double[28];
 
     /// <summary>
@@ -157,6 +156,7 @@ public class InkSparkle : InteractiveInkFeature
     {
         _animationController.Stop();
         _animationController.Dispose();
+        _fragmentShader?.Dispose();
         base.Dispose();
     }
 
@@ -164,6 +164,13 @@ public class InkSparkle : InteractiveInkFeature
     {
         DebugAssertions.Assert(_animationController.IsAnimating);
 
+        // The first paint may precede the program's asynchronous initialization.
+        if (InkSparkleFactory.Program is not { } program)
+        {
+            return;
+        }
+
+        _fragmentShader ??= program.FragmentShader();
         canvas.Save();
         TransformCanvas(canvas, transform);
         if (_clipCallback is not null)
@@ -177,7 +184,7 @@ public class InkSparkle : InteractiveInkFeature
         }
 
         UpdateFragmentShader();
-        var paint = new Paint { Shader = CreateShaderBrush() };
+        var paint = new Paint { Shader = _fragmentShader };
         if (_clipCallback is not null)
         {
             canvas.DrawRect(_clipCallback(), paint);
@@ -244,45 +251,10 @@ public class InkSparkle : InteractiveInkFeature
         // uRotation3
         u[26] = Math.Cos(rotation3);
         u[27] = Math.Sin(rotation3);
-    }
-
-    // C#-only: the shader's wave term over the uniforms above. `soft_circle` with `u_blur` 1.0 is
-    // `1 - smoothstep(0.5, 1.5, d / radius)`, sampled into the stops of a radial gradient whose
-    // absolute centre and radius live in the same (reference-box) space as `FlutterFragCoord`.
-    private RadialGradientBrush CreateShaderBrush()
-    {
-        double[] u = _uniforms;
-        double radius = u[10] * u[7];
-        double outerRadius = Math.Max(radius * 1.5, 1e-6);
-        double waveAlpha = u[4] * u[3];
-        var stops = new GradientStops();
-        const int samples = 12;
-        for (int index = 0; index <= samples; index++)
+        for (int index = 0; index < u.Length; index++)
         {
-            double d = 0.5 + (index / (double)samples); // d / radius, from 0.5 to 1.5
-            double t = Math.Clamp(d - 0.5, 0.0, 1.0);
-            double smooth = t * t * (3.0 - (2.0 * t));
-            double alpha = (1.0 - smooth) * waveAlpha;
-            stops.Add(new GradientStop(
-                Avalonia.Media.Color.FromArgb(
-                    (byte)Math.Clamp((int)Math.Round(alpha * 255.0), 0, 255),
-                    (byte)_color.Red,
-                    (byte)_color.Green,
-                    (byte)_color.Blue),
-                d / 1.5));
+            _fragmentShader!.SetFloat(index, u[index]);
         }
-
-        stops.Insert(0, new GradientStop(stops[0].Color, 0.0));
-        var center = new RelativePoint(u[8], u[9], RelativeUnit.Absolute);
-        return new RadialGradientBrush
-        {
-            Center = center,
-            GradientOrigin = center,
-            RadiusX = new RelativeScalar(outerRadius, RelativeUnit.Absolute),
-            RadiusY = new RelativeScalar(outerRadius, RelativeUnit.Absolute),
-            GradientStops = stops,
-            SpreadMethod = GradientSpreadMethod.Pad,
-        };
     }
 
     private static void TransformCanvas(Canvas canvas, Matrix4 transform)
@@ -335,6 +307,7 @@ internal sealed class InkSparkleFactory : InteractiveInkFeatureFactory
     public const double ConstantSeed = 1337.0;
 
     private static bool _initCalled;
+    internal static RuntimeFragmentProgram? Program { get; private set; }
 
     public InkSparkleFactory()
     {
@@ -348,13 +321,19 @@ internal sealed class InkSparkleFactory : InteractiveInkFeatureFactory
 
     public static InkSparkleFactory ConstantTurbulenceSeed() => new(ConstantSeed);
 
-    // Dart starts compiling `shaders/ink_sparkle.frag` here, and InkSparkle skips painting until the
-    // program has loaded. The C# brush needs no compilation, so the feature paints from the first frame.
     public static void InitializeShader()
     {
         if (!_initCalled)
         {
             _initCalled = true;
+            EventLoop.ScheduleMicrotask(() =>
+            {
+                using Stream stream = typeof(InkSparkle).Assembly.GetManifestResourceStream(
+                    "Plumix.Material.Assets.Shaders.ink_sparkle.sksl")
+                    ?? throw new InvalidOperationException("The bundled InkSparkle shader is missing.");
+                using var reader = new StreamReader(stream);
+                Program = RuntimeFragmentProgram.Compile(reader.ReadToEnd());
+            });
         }
     }
 

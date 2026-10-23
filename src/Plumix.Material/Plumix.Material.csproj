@@ -31,6 +31,8 @@
 
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
+        <EmbeddedResource Include="Assets\Shaders\ink_sparkle.sksl" />
+        <None Update="Assets\Shaders\LICENSE" Pack="true" PackagePath="licenses\Flutter-Shaders-LICENSE.txt" />
     </ItemGroup>
 
 </Project>

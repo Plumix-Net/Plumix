@@ -106,12 +106,14 @@ public partial class Canvas
     public virtual void DrawPaint(Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
-        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        IBrush brush = paint.Shader is INativeShader nativeShader
+            ? nativeShader.Snapshot() : paint.Shader ?? new SolidColorBrush(paint.Color);
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
-        if (brush is GradientShader shader)
+        if (brush is INativeShader shader)
         {
             var snapshot = new Paint(paint) { Style = PaintingStyle.Fill };
-            AddDrawCommand(context => ShaderDrawing.Fill(context, shader, DrawPaintBounds, snapshot));
+            AddDrawCommand(context => ShaderDrawing.Fill(
+                context, shader, DrawPaintBounds, snapshot, fillCanvas: true));
             return;
         }
 
@@ -235,7 +237,8 @@ public partial class Canvas
         Action<DrawingContext, IBrush?, IPen?> draw,
         Func<Path>? nativePathSource = null)
     {
-        IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
+        IBrush brush = paint.Shader is INativeShader nativeShader
+            ? nativeShader.Snapshot() : paint.Shader ?? new SolidColorBrush(paint.Color);
         bool stroke = paint.Style == PaintingStyle.Stroke;
         IPen? pen = stroke ? CreatePen(paint, brush) : null;
         IBrush? fill = stroke ? null : brush;
@@ -256,7 +259,7 @@ public partial class Canvas
 
         void DrawPlain(DrawingContext context)
         {
-            using DrawingContext.PushedState alpha = brush is GradientShader
+            using DrawingContext.PushedState alpha = brush is INativeShader
                 ? context.PushOpacity(color.A) : default;
             using DrawingContext.PushedState edge = context.PushRenderOptions(new RenderOptions
             {
@@ -267,7 +270,7 @@ public partial class Canvas
 
         if (maskFilter is null && blendMode == BlendMode.SourceOver)
         {
-            if (brush is GradientShader shader && nativePathSource?.Invoke() is { } path)
+            if (brush is INativeShader shader && nativePathSource?.Invoke() is { } path)
             {
                 var snapshot = new Paint(paint);
                 AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, snapshot));

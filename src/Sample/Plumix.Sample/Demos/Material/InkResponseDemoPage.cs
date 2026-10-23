@@ -17,6 +17,9 @@ public sealed class InkResponseDemoPage : StatefulWidget
     {
         private bool _enabled = true;
         private bool _customOverlay = true;
+        private bool _constantSparkleSeed = true;
+        private bool _slowMotion;
+        private readonly double _previousTimeDilation = Scheduler.TimeDilation;
         private int _splashMode;
         private int _responseTaps;
         private int _wellTaps;
@@ -24,10 +27,17 @@ public sealed class InkResponseDemoPage : StatefulWidget
         private int _doubleTaps;
         private string _interaction = "Ready";
 
+        public override void Dispose()
+        {
+            Scheduler.TimeDilation = _previousTimeDilation;
+            base.Dispose();
+        }
+
         private InteractiveInkFeatureFactory SplashFactory => _splashMode switch
         {
             0 => InkRipple.SplashFactory,
-            1 => InkSparkle.ConstantTurbulenceSeedSplashFactory,
+            1 => _constantSparkleSeed
+                ? InkSparkle.ConstantTurbulenceSeedSplashFactory : InkSparkle.SplashFactory,
             2 => Plumix.Material.InkSplash.SplashFactory,
             _ => NoSplash.SplashFactory,
         };
@@ -40,7 +50,11 @@ public sealed class InkResponseDemoPage : StatefulWidget
             _ => "NoSplash",
         };
 
-        public override Widget Build(BuildContext context)
+        public override Widget Build(BuildContext context) => new Plumix.Material.Material(
+            type: MaterialType.Transparency,
+            child: BuildContent(context));
+
+        private Widget BuildContent(BuildContext context)
         {
             var overlay = _customOverlay
                 ? WidgetStateProperty<Color?>.ResolveWith(states =>
@@ -83,6 +97,24 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         new OutlinedButton(
                             onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 4),
                             child: new Text($"Splash factory: {SplashName}")),
+                        .. (_splashMode == 1 ? new Widget[]
+                        {
+                            new Text(
+                                "InkSparkle: tap near a corner to see the white sparkles and turbulence.",
+                                style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            new OutlinedButton(
+                                onPressed: () => SetState(() => _constantSparkleSeed = !_constantSparkleSeed),
+                                child: new Text(_constantSparkleSeed
+                                    ? "Sparkle seed: constant" : "Sparkle seed: default")),
+                            new OutlinedButton(
+                                onPressed: () => SetState(() =>
+                                {
+                                    _slowMotion = !_slowMotion;
+                                    Scheduler.TimeDilation = _slowMotion
+                                        ? _previousTimeDilation * 10.0 : _previousTimeDilation;
+                                }),
+                                child: new Text(_slowMotion ? "Speed: 0.1x" : "Speed: 1x")),
+                        } : []),
                         new Row(
                             spacing: 10,
                             children:

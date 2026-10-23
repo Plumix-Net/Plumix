@@ -20,6 +20,7 @@
   <ItemGroup>
     <None Update="Fixtures/AnimatedImages/*" CopyToOutputDirectory="PreserveNewest" />
     <AvaloniaResource Include="Fixtures/Fonts/*.ttf" />
+    <EmbeddedResource Include="Fixtures/Shaders/*.sksl" />
     <ProjectReference Include="../Plumix/Plumix.csproj" />
     <ProjectReference Include="../Plumix.Cupertino/Plumix.Cupertino.csproj" />
     <ProjectReference Include="../Plumix.Material/Plumix.Material.csproj" />

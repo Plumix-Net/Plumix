@@ -202,6 +202,50 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public void GestureBinding_HostMouseClicksStartSeparateArenasForDoubleTap()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        using var timers = new FakeGestureTimers();
+        int doubleTaps = 0;
+        using var doubleTap = new DoubleTapGestureRecognizer { OnDoubleTap = () => doubleTaps++ };
+        var listener = new RenderPointerListener(
+            onPointerDown: doubleTap.AddPointer,
+            behavior: HitTestBehavior.Opaque,
+            child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
+        var pipeline = BuildPipeline(listener);
+        var encoder = new HostPointerPacketEncoder();
+        DateTime now = DateTime.UtcNow;
+        try
+        {
+            for (int click = 0; click < 2; click++)
+            {
+                foreach (PointerEvent @event in new PointerEvent[]
+                {
+                    new PointerDownEvent(7, PointerDeviceKind.Mouse, new Point(12, 12),
+                        PointerButtons.Primary, now),
+                    new PointerUpEvent(7, PointerDeviceKind.Mouse, new Point(12, 12),
+                        PointerButtons.None, now.AddMilliseconds(20)),
+                })
+                {
+                    PointerData packet = encoder.Encode(@event, 0, 1.0);
+                    PointerEvent converted = Assert.Single(PointerEventConverter.Expand([packet], _ => 1.0));
+                    binding.HandlePointerEvent(pipeline.Root, converted);
+                }
+
+                timers.Elapse(TimeSpan.FromMilliseconds(80));
+                now = now.AddMilliseconds(80);
+            }
+
+            Assert.Equal(1, doubleTaps);
+        }
+        finally
+        {
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void GestureBinding_DoubleTapRecognizer_TimeoutReleasesHeldArenaToTheTap()
     {
         var binding = GestureBinding.Instance;

@@ -6,7 +6,7 @@ using SkiaSharp;
 
 namespace Plumix.UI;
 
-// C#-only backend bridge: draw framework gradient shaders through Avalonia's supported Skia lease.
+// C#-only backend bridge: draw framework native shaders through Avalonia's supported Skia lease.
 // Geometry clips remain Avalonia-owned; the shader uses absolute canvas coordinates and local matrix.
 internal static class ShaderDrawing
 {
@@ -16,7 +16,7 @@ internal static class ShaderDrawing
     internal static void DrawRectangle(
         DrawingContext context, IBrush? brush, IPen? pen, RoundedRect rect, BoxShadows shadows = default)
     {
-        if (brush is not GradientShader && pen?.Brush is not GradientShader)
+        if (brush is not INativeShader && pen?.Brush is not INativeShader)
         {
             context.DrawRectangle(brush, pen, rect, shadows);
             return;
@@ -38,13 +38,13 @@ internal static class ShaderDrawing
 
     internal static void DrawGeometry(DrawingContext context, IBrush? brush, IPen? pen, Geometry geometry)
     {
-        if (brush is not GradientShader && pen?.Brush is not GradientShader)
+        if (brush is not INativeShader && pen?.Brush is not INativeShader)
         {
             context.DrawGeometry(brush, pen, geometry);
             return;
         }
 
-        if (brush is GradientShader shader)
+        if (brush is INativeShader shader)
         {
             using DrawingContext.PushedState clip = context.PushGeometryClip(geometry);
             Fill(context, shader, geometry.Bounds);
@@ -54,7 +54,7 @@ internal static class ShaderDrawing
             context.DrawGeometry(brush, null, geometry);
         }
 
-        if (pen?.Brush is GradientShader stroke)
+        if (pen?.Brush is INativeShader stroke)
         {
             Geometry outline = geometry.GetWidenedGeometry(pen);
             using DrawingContext.PushedState clip = context.PushGeometryClip(outline);
@@ -69,7 +69,7 @@ internal static class ShaderDrawing
     internal static void DrawEllipse(
         DrawingContext context, IBrush? brush, IPen? pen, Point center, double radiusX, double radiusY)
     {
-        if (brush is not GradientShader && pen?.Brush is not GradientShader)
+        if (brush is not INativeShader && pen?.Brush is not INativeShader)
         {
             context.DrawEllipse(brush, pen, center, radiusX, radiusY);
             return;
@@ -81,14 +81,14 @@ internal static class ShaderDrawing
 
     internal static void DrawLine(DrawingContext context, IPen pen, Point start, Point end)
     {
-        if (pen.Brush is GradientShader shader)
+        if (pen.Brush is INativeShader shader)
         {
             var path = new Path();
             path.MoveTo(start.X, start.Y);
             path.LineTo(end.X, end.Y);
             var paint = new Paint
             {
-                Shader = shader,
+                Shader = (IBrush)shader,
                 Style = PaintingStyle.Stroke,
                 StrokeWidth = pen.Thickness,
                 StrokeCap = pen.LineCap switch
@@ -106,16 +106,18 @@ internal static class ShaderDrawing
         }
     }
 
-    internal static void Fill(DrawingContext context, GradientShader shader, Rect bounds, Paint? source = null) =>
-        context.Custom(new NativeGradientDraw(shader, bounds, source: source));
+    internal static void Fill(
+        DrawingContext context, INativeShader shader, Rect bounds, Paint? source = null, bool fillCanvas = false) =>
+        context.Custom(new NativeShaderDraw(shader, bounds, source: source, fillCanvas: fillCanvas));
 
-    internal static void DrawPath(DrawingContext context, GradientShader shader, Path path, Paint paint) =>
-        context.Custom(new NativeGradientDraw(shader, path.GetBounds().Inflate(
+    internal static void DrawPath(DrawingContext context, INativeShader shader, Path path, Paint paint) =>
+        context.Custom(new NativeShaderDraw(shader, path.GetBounds().Inflate(
             paint.Style == PaintingStyle.Stroke ? Math.Max(1.0, paint.StrokeWidth * paint.StrokeMiterLimit) : 0.0),
             path, new Paint(paint)));
 
-    private sealed class NativeGradientDraw(
-        GradientShader shader, Rect bounds, Path? path = null, Paint? source = null) : ICustomDrawOperation
+    private sealed class NativeShaderDraw(
+        INativeShader shader, Rect bounds, Path? path = null, Paint? source = null, bool fillCanvas = false)
+        : ICustomDrawOperation
     {
         public Rect Bounds => bounds;
         public bool HitTest(Point point) => false;
@@ -125,10 +127,10 @@ internal static class ShaderDrawing
         public void Render(ImmediateDrawingContext context)
         {
             ISkiaSharpApiLeaseFeature feature = context.TryGetFeature<ISkiaSharpApiLeaseFeature>()
-                ?? throw new NotSupportedException("Framework gradient shaders require the Skia drawing backend.");
+                ?? throw new NotSupportedException("Framework native shaders require the Skia drawing backend.");
             using ISkiaSharpApiLease lease = feature.Lease();
             using SKShader? native = shader.CreateNativeShader();
-            // A rejected/empty native gradient must never become the paint's default black fill.
+            // A rejected/empty native shader must never become the paint's default black fill.
             if (native is null)
             {
                 return;
@@ -157,7 +159,11 @@ internal static class ShaderDrawing
                     _ => SKStrokeJoin.Miter,
                 },
             };
-            if (path is null)
+            if (fillCanvas)
+            {
+                lease.SkCanvas.DrawPaint(paint);
+            }
+            else if (path is null)
             {
                 lease.SkCanvas.DrawRect(new SKRect((float)bounds.Left, (float)bounds.Top,
                     (float)bounds.Right, (float)bounds.Bottom), paint);
