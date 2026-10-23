@@ -49,6 +49,22 @@ class CupertinoTextSelectionControlsDemoPage extends StatelessWidget {
             'handle controls on Apple platforms.',
             style: TextStyle(fontSize: 13, color: Colors.black54),
           ),
+          const Text(
+            'Toolbar dividers stay one device pixel wide at every display scale.',
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          SizedBox(
+            height: 150,
+            child: CupertinoTextSelectionToolbar(
+              anchorAbove: const Offset(130, 80),
+              anchorBelow: const Offset(130, 100),
+              children: <Widget>[
+                CupertinoTextSelectionToolbarButton.text(onPressed: () {}, text: 'Copy'),
+                CupertinoTextSelectionToolbarButton.text(onPressed: () {}, text: 'Paste'),
+                CupertinoTextSelectionToolbarButton.text(onPressed: () {}, text: 'Select all'),
+              ],
+            ),
+          ),
         ],
       ),
     );

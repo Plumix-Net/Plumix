@@ -502,6 +502,20 @@ public partial class Canvas
     public virtual void DrawLine(Point startPoint, Point endPoint, Paint paint)
     {
         ArgumentNullException.ThrowIfNull(paint);
+        if (paint.StrokeWidth == 0.0 && paint.Shader is null
+            && paint.MaskFilter is null && paint.BlendMode == BlendMode.SourceOver)
+        {
+            DebugRecordCall(new CanvasCall(
+                "drawLine",
+                Pen: CreatePen(paint, new SolidColorBrush(paint.Color)),
+                Offset: startPoint,
+                EndOffset: endPoint,
+                BlendMode: paint.BlendMode) { RecordedColor = paint.Color });
+            var hairline = new HairlineDraw(startPoint, endPoint, paint.Color, paint.IsAntiAlias, paint.StrokeCap);
+            AddDrawCommand(context => context.Custom(hairline));
+            return;
+        }
+
         var stroke = new Paint(paint) { Style = PaintingStyle.Stroke };
         DrawShape(
             "drawLine",

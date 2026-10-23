@@ -281,6 +281,76 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
         Assert.Contains(first, semanticsChildren);
     }
 
+    [Theory]
+    [InlineData(1.0)]
+    [InlineData(2.0)]
+    [InlineData(3.0)]
+    public void ToolbarItems_DividersPaintHairlinesWithDevicePixelSpacing(double pixelRatio)
+    {
+        var items = new RenderCupertinoTextSelectionToolbarItems(Colors.Red, 1.0 / pixelRatio, 0)
+        {
+            BackButton = FixedRenderBox(48.0, ChildHeight),
+            NextButton = FixedRenderBox(48.0, ChildHeight),
+        };
+        items.AddAll([FixedRenderBox(ChildWidth, ChildHeight), FixedRenderBox(ChildWidth, ChildHeight)]);
+        items.Layout(BoxConstraints.Loose(new Size(400.0, 300.0)));
+
+        CanvasCall divider = Assert.Single(PaintRecording.Record(items), call => call.Method == "drawLine");
+        Assert.Equal(0.0, divider.StrokeWidth);
+        Assert.Equal(Colors.Red, divider.Color);
+        Assert.Equal(new Point(ChildWidth, 0), divider.Offset);
+        Assert.Equal(new Point(ChildWidth, ChildHeight), divider.EndOffset);
+        Assert.Equal((ChildWidth * 2.0) + (1.0 / pixelRatio), items.Size.Width, 8);
+
+        var layer = new OffsetLayer();
+        var context = new PaintingContext(layer);
+        items.Paint(context, default);
+        context.DebugStopRecordingIfNeeded();
+        using var image = layer.ToImageSync(new Rect(items.Size), pixelRatio);
+        int y = (int)(ChildHeight * pixelRatio / 2.0);
+        double coverage = 0.0;
+        for (int x = (int)(ChildWidth * pixelRatio) - 2; x <= (ChildWidth * pixelRatio) + 2; x++)
+        {
+            coverage += RasterBackend.PixelAt(image, x, y).A / 255.0;
+        }
+
+        Assert.InRange(coverage, 0.98, 1.02);
+    }
+
+    [Fact]
+    public void ToolbarItems_DebugTraversalExposesOnlyTheVisiblePageAndNavigation()
+    {
+        var key = new LabeledGlobalKey<State>("items");
+        using var harness = CreateHarness(new Center(child: new SizedBox(
+            width: 150.0,
+            height: ChildHeight,
+            child: new CupertinoTextSelectionToolbarItems(
+                page: 0,
+                children: [Child(), Child(), Child()],
+                backButton: Child(48.0),
+                dividerColor: Colors.Gray,
+                dividerWidth: 1.0,
+                nextButton: Child(48.0),
+                key: key))));
+        harness.Pump(new Size(800, 600));
+        var element = (CupertinoTextSelectionToolbarItemsElement)key.CurrentContext!;
+        var onstage = new List<Element>();
+        element.DebugVisitOnstageChildren(onstage.Add);
+        Assert.Equal(2, onstage.Count);
+        Assert.All(onstage, child => Assert.True(ShouldPaint((RenderBox)child.FindRenderObject()!)));
+
+        RenderCupertinoTextSelectionToolbarItems items = Items(harness);
+        items.Page = 1;
+        harness.Pump(new Size(800, 600));
+        onstage.Clear();
+        element.DebugVisitOnstageChildren(onstage.Add);
+        Assert.Equal(3, onstage.Count);
+        Assert.All(onstage, child => Assert.True(ShouldPaint((RenderBox)child.FindRenderObject()!)));
+        List<CanvasCall> dividers = PaintRecording.Record(items).Where(call => call.Method == "drawLine").ToList();
+        Assert.Equal(2, dividers.Count);
+        Assert.All(dividers, divider => Assert.Equal(0.0, divider.StrokeWidth));
+    }
+
     [Fact]
     public void ToolbarShape_SizesToTheChildMinusOneArrowAndOffsetsWhenAbove()
     {

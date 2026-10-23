@@ -11,6 +11,64 @@ namespace Plumix.Tests;
 // `Paint.blendMode` (src/Plumix/UI/PaintRasterizer.cs) and the `Paint`-taking canvas draws over it.
 public sealed class PaintRasterizerTests
 {
+    [Theory]
+    [InlineData(1.0, 1.0)]
+    [InlineData(2.0, 1.0)]
+    [InlineData(3.0, 1.0)]
+    [InlineData(2.0, 3.0)]
+    [InlineData(0.5, 2.0)]
+    public void Canvas_HairlineRemainsOneDevicePixelUnderTransformAndDpi(double scale, double dpiScale)
+    {
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        canvas.Scale(scale, scale * 2.0);
+        canvas.DrawLine(new Point(4, 1), new Point(4, 8), new Paint { Color = Colors.Red });
+        Picture picture = recorder.EndRecording();
+        using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(
+            new PixelSize(80, 120), new Vector(96.0 * dpiScale, 96.0 * dpiScale));
+        using (DrawingContext context = bitmap.CreateDrawingContext())
+        {
+            picture.Playback(context, default);
+        }
+
+        int y = (int)(4.0 * scale * 2.0 * dpiScale);
+        double coverage = 0.0;
+        for (int x = 0; x < bitmap.PixelSize.Width; x++)
+        {
+            coverage += RasterBackend.PixelAt(bitmap, x, y).A / 255.0;
+        }
+
+        // An antialiased hairline can straddle two pixels; total coverage is still one pixel.
+        Assert.InRange(coverage, 0.98, 1.02);
+        CanvasCall call = Assert.Single(canvas.DebugCalls, call => call.Method == "drawLine");
+        Assert.Equal(0.0, call.StrokeWidth);
+        Assert.Equal(Colors.Red, call.Color);
+    }
+
+    [Fact]
+    public void Canvas_HairlineRetainsRecordedColorAndObeysClipAndOpacity()
+    {
+        var recorder = new PictureRecorder();
+        var canvas = new Canvas(recorder);
+        canvas.ClipRect(new Rect(0, 0, 10, 6));
+        var paint = new Paint { Color = Colors.Red };
+        canvas.DrawLine(new Point(4, 1), new Point(4, 10), paint);
+        paint.Color = Colors.Blue;
+        Picture picture = recorder.EndRecording();
+        using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize(12, 12));
+        using (DrawingContext context = bitmap.CreateDrawingContext())
+        {
+            using DrawingContext.PushedState opacity = context.PushOpacity(0.5);
+            picture.Playback(context, default);
+        }
+
+        var visible = RasterBackend.PixelAt(bitmap, 4, 3);
+        Assert.True(visible.R > 0);
+        Assert.Equal(0, visible.B);
+        Assert.InRange(visible.A, 126, 130);
+        Assert.Equal(0, RasterBackend.PixelAt(bitmap, 4, 8).A);
+    }
+
     [Fact]
     public void BlurAlpha_ZeroSigma_IsTheIdentity()
     {

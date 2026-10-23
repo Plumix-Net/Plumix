@@ -16,6 +16,7 @@
 
     <ItemGroup>
         <PackageReference Include="Avalonia" />
+        <PackageReference Include="Avalonia.Skia" />
         <PackageReference Include="SkiaSharp" />
         <PackageReference Include="HarfBuzzSharp" />
     </ItemGroup>

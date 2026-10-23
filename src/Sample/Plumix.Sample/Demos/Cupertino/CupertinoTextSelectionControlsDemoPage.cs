@@ -47,6 +47,20 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                     "Selection toolbars use the existing Cupertino mobile and desktop surfaces; "
                     + "Material TextField and SelectableText now choose these handle controls on Apple platforms.",
                     style: new TextStyle(FontSize: 13.0, Color: new Color(0x8A000000))),
+                new Text(
+                    "Toolbar dividers stay one device pixel wide at every display scale.",
+                    style: new TextStyle(FontSize: 13.0, Color: new Color(0x8A000000))),
+                new SizedBox(
+                    height: 150.0,
+                    child: new CupertinoTextSelectionToolbar(
+                        anchorAbove: new Point(130.0, 80.0),
+                        anchorBelow: new Point(130.0, 100.0),
+                        children:
+                        [
+                            CupertinoTextSelectionToolbarButton.TextButton(() => { }, "Copy"),
+                            CupertinoTextSelectionToolbarButton.TextButton(() => { }, "Paste"),
+                            CupertinoTextSelectionToolbarButton.TextButton(() => { }, "Select all"),
+                        ])),
             ]));
     }
 

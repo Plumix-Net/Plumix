@@ -689,6 +689,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/FrameStopwatch.cs`
 - `src/Plumix/UI/FrameTiming.cs`
 - `src/Plumix/UI/FrameTimingsRecorder.cs`
+- `src/Plumix/UI/HairlineDraw.cs`
 - `src/Plumix/UI/HeadlessParagraph.cs`
 - `src/Plumix/UI/HitTestRequest.cs`
 - `src/Plumix/UI/HostTextInputPlugin.cs`
@@ -733,7 +734,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - Flutter files mapped: 600
 - C# files carrying a marker: 802
-- C# files without a marker: 91
+- C# files without a marker: 92
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 1
 

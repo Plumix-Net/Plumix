@@ -821,6 +821,17 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         }
     }
 
+    public override void DebugVisitOnstageChildren(Action<Element> visitor)
+    {
+        VisitChildren(child =>
+        {
+            if (child.FindRenderObject()?.parentData is ToolbarItemsParentData { ShouldPaint: true })
+            {
+                visitor(child);
+            }
+        });
+    }
+
     public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
         switch (slot)
@@ -1201,12 +1212,10 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
                 return;
             }
 
-            // Dart paints a zero-width (device-pixel hairline) line; Avalonia has no hairline pen, so
-            // this is one logical pixel wide.
             context.Canvas.DrawLine(
-                new Pen(new SolidColorBrush(DividerColor)),
                 new Point(childOffset.X + child.Size.Width, childOffset.Y),
-                new Point(childOffset.X + child.Size.Width, childOffset.Y + child.Size.Height));
+                new Point(childOffset.X + child.Size.Width, childOffset.Y + child.Size.Height),
+                new Paint { Color = DividerColor });
         });
     }
 
