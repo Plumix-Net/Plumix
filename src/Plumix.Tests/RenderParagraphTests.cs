@@ -305,6 +305,34 @@ public sealed class RenderParagraphTests
         Assert.True(paragraph.DebugNeedsPaint);
     }
 
+    // C#-only regression: a paint-only change must reach the pixels, not just schedule a repaint
+    // that redraws the paragraph built for the old color.
+    [Fact]
+    public void ChangingColor_RepaintsWithTheNewColorWithoutRelayout()
+    {
+        var paragraph = new RenderParagraph(
+            new TextSpan("A", style: new TextStyle(FontSize: 20.0, Color: new Color(0xFFFF0000))));
+        LayOut(paragraph, new BoxConstraints(MaxWidth: 100.0));
+        Assert.Equal((255, 0, 0), PaintedPixel(paragraph));
+
+        paragraph.Text = new TextSpan("A", style: new TextStyle(FontSize: 20.0, Color: new Color(0xFF0000FF)));
+        Assert.False(paragraph.DebugNeedsLayout);
+        Assert.True(paragraph.DebugNeedsPaint);
+        Assert.Equal((0, 0, 255), PaintedPixel(paragraph));
+
+        static (int R, int G, int B) PaintedPixel(RenderParagraph paragraph)
+        {
+            var root = new ContainerLayer();
+            var context = new PaintingContext(root);
+            paragraph.Paint(context, default);
+            context.DebugStopRecordingIfNeeded();
+            Picture picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children)).Picture!;
+            using Avalonia.Media.Imaging.Bitmap image = picture.ToImageSync(40, 40);
+            (byte r, byte g, byte b, _) = RasterBackend.PixelAt(image, 10, 10);
+            return (r, g, b);
+        }
+    }
+
     [Fact]
     public void NestedTextSpans_HandleALinearTextScaler()
     {

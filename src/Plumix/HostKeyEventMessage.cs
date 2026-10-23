@@ -26,13 +26,21 @@ internal static class HostKeyEventMessage
     /// Encodes the host event as the running platform's raw key message (preceded by KeyData on Windows), sends it on
     /// <see cref="SystemChannels.KeyEvent"/> and returns the framework's <c>handled</c> reply.
     /// </summary>
-    public static bool Dispatch(KeyEventArgs e, bool isDown)
+    public static bool Dispatch(KeyEventArgs e, bool isDown) => Dispatch(e, isDown, CurrentKeymap());
+
+    internal static bool Dispatch(KeyEventArgs e, bool isDown, string keymap)
     {
         PhysicalKeyboardKey physicalKey = HostKeyboardMap.PhysicalKeyFor(e.PhysicalKey);
         LogicalKeyboardKey logicalKey = HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol);
         KeyEventDeviceType deviceType = HostKeyboardMap.DeviceTypeFor(e.KeyDeviceType);
+        if (keymap == "android" && isDown && e.PhysicalKey == PhysicalKey.None
+            && deviceType == KeyEventDeviceType.Keyboard)
+        {
+            ReleaseAndroidKeyWithoutScanCode(physicalKey, e.KeyModifiers, deviceType);
+        }
+
         Dictionary<string, object?> message = Encode(
-            CurrentKeymap(),
+            keymap,
             physicalKey,
             logicalKey,
             e.KeySymbol,
@@ -47,6 +55,37 @@ internal static class HostKeyEventMessage
             DispatchWindowsKeyData(physicalKey, logicalKey, e.KeySymbol, deviceType, isDown);
         }
 
+        return Send(message);
+    }
+
+    /// <summary>
+    /// Releases the key an earlier Android key event without a scan code left pressed.
+    /// </summary>
+    /// <remarks>
+    /// IMEs synthesize their key events (<c>InputConnection.sendKeyEvent</c>, and Avalonia's own
+    /// FORWARD_DEL for <c>deleteSurroundingText</c>) without a scan code, so every one of them decodes to
+    /// the same physical key, <c>androidPlane + 0</c>; and Avalonia never sends that FORWARD_DEL's key
+    /// up. The stuck key would turn the next IME key into a repeat of it. The Android embedder's
+    /// <c>KeyEmbedderResponder</c> synthesizes an up for a non-repeated down of a pressed physical key;
+    /// IME key events never repeat, so this does the same for them.
+    /// </remarks>
+    private static void ReleaseAndroidKeyWithoutScanCode(
+        PhysicalKeyboardKey physicalKey, KeyModifiers modifiers, KeyEventDeviceType deviceType)
+    {
+        LogicalKeyboardKey? recorded;
+        using (EventLoop.EnterFrameworkThread())
+        {
+            recorded = HardwareKeyboard.Instance.LookUpLayout(new PhysicalKeyboardKey(LogicalKeyboardKey.AndroidPlane));
+        }
+
+        if (recorded is not null)
+        {
+            Send(Encode("android", physicalKey, recorded, null, modifiers, deviceType, isDown: false));
+        }
+    }
+
+    private static bool Send(Dictionary<string, object?> message)
+    {
         bool handled = false;
         _ = ServicesBinding.Instance.DefaultBinaryMessenger.HandlePlatformMessage(
             SystemChannels.KeyEvent.Name,

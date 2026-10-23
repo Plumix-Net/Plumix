@@ -411,6 +411,14 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
             SchedulerBinding.PumpFrameForTests();
             Rect cursor = client.CursorRectangle;
             Assert.True(cursor.Height > 0, cursor.ToString());
+
+            // Without a focused field Avalonia gets no IME client, so focusing the host (any pointer
+            // down: a drag, a scroll, a route transition) does not raise the soft keyboard.
+            _focusNode.Unfocus();
+            EventLoop.FlushMicrotasks();
+            host.PumpFrameForTests(new Size(300, 200));
+            SchedulerBinding.PumpFrameForTests();
+            Assert.Null(RequestClient(host));
         }
         finally
         {
