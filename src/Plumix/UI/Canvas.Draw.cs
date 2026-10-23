@@ -32,7 +32,7 @@ public partial class Canvas
             {
                 EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
             });
-            context.DrawRectangle(brush, pen, new RoundedRect(rect, radiusX, radiusY), boxShadows);
+            ShaderDrawing.DrawRectangle(context, brush, pen, new RoundedRect(rect, radiusX, radiusY), boxShadows);
         });
     }
 
@@ -57,7 +57,7 @@ public partial class Canvas
                 new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
                 new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
                 new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
-            context.DrawRectangle(brush, pen, roundedRect, boxShadows);
+            ShaderDrawing.DrawRectangle(context, brush, pen, roundedRect, boxShadows);
         });
     }
 
@@ -74,7 +74,8 @@ public partial class Canvas
             paint,
             call => call with { Rect = rect },
             () => new RectangleGeometry(rect),
-            (context, fill, pen) => context.DrawRectangle(fill, pen, rect));
+            (context, fill, pen) => ShaderDrawing.DrawRectangle(context, fill, pen, rect),
+            () => CreateRectPath(rect));
     }
 
     private static PenLineCap ToPenLineCap(StrokeCap cap) => cap switch
@@ -97,7 +98,7 @@ public partial class Canvas
     public virtual void DrawPaint(IBrush brush)
     {
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
-        AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
+        AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
     }
 
     /// <summary>Fills the canvas's current clip with the given <see cref="Paint"/>.</summary>
@@ -107,7 +108,14 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(paint);
         IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
         DebugRecordCall(new CanvasCall("drawPaint", Brush: brush));
-        AddDrawCommand(context => context.DrawRectangle(brush, null, DrawPaintBounds));
+        if (brush is GradientShader shader)
+        {
+            var snapshot = new Paint(paint) { Style = PaintingStyle.Fill };
+            AddDrawCommand(context => ShaderDrawing.Fill(context, shader, DrawPaintBounds, snapshot));
+            return;
+        }
+
+        AddDrawCommand(context => ShaderDrawing.DrawRectangle(context, brush, null, DrawPaintBounds));
     }
 
     private static readonly Rect DrawPaintBounds = new(-1.0e9, -1.0e9, 2.0e9, 2.0e9);
@@ -119,7 +127,7 @@ public partial class Canvas
         var path = new Path();
         path.AddRRect(rrect);
         Geometry? geometry = null;
-        AddDrawCommand(context => context.DrawGeometry(brush, pen, geometry ??= path.ToGeometry()));
+        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
     }
 
     /// <summary>Draws a rounded rectangle with the given <see cref="Paint"/>.</summary>
@@ -134,7 +142,8 @@ public partial class Canvas
             paint,
             call => call with { RRect = rrect },
             Source,
-            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
+            rrect.ToPath);
     }
 
     /// <summary>Draws the ring between two rounded rectangles with the given <see cref="Paint"/>.</summary>
@@ -152,7 +161,8 @@ public partial class Canvas
             paint,
             call => call with { RRect = outer },
             Source,
-            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
+            () => Path.Combine(PathOperation.Difference, outer.ToPath(), inner.ToPath()));
     }
 
     /// <summary>Draws an axis-aligned oval with the given <see cref="Paint"/>.</summary>
@@ -165,7 +175,9 @@ public partial class Canvas
             paint,
             call => call with { Rect = oval },
             () => new EllipseGeometry(oval),
-            (context, fill, pen) => context.DrawEllipse(fill, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
+            (context, fill, pen) => ShaderDrawing.DrawEllipse(
+                context, fill, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0),
+            () => CreateOvalPath(oval));
     }
 
     /// <summary>Draws a path with the given <see cref="Paint"/>.</summary>
@@ -182,7 +194,8 @@ public partial class Canvas
             paint,
             call => call with { Path = snapshot },
             Source,
-            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
+            () => snapshot);
     }
 
     /// <summary>Draws a rounded superellipse with the given <see cref="Paint"/>.</summary>
@@ -198,7 +211,8 @@ public partial class Canvas
             paint,
             call => call with { Path = path },
             Source,
-            (context, fill, pen) => context.DrawGeometry(fill, pen, Source()));
+            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
+            () => path);
     }
 
     /// <summary>
@@ -218,7 +232,8 @@ public partial class Canvas
         Paint paint,
         Func<CanvasCall, CanvasCall> describe,
         Func<Geometry> geometrySource,
-        Action<DrawingContext, IBrush?, IPen?> draw)
+        Action<DrawingContext, IBrush?, IPen?> draw,
+        Func<Path>? nativePathSource = null)
     {
         IBrush brush = paint.Shader ?? new SolidColorBrush(paint.Color);
         bool stroke = paint.Style == PaintingStyle.Stroke;
@@ -228,7 +243,7 @@ public partial class Canvas
         BlendMode blendMode = paint.BlendMode;
         bool isAntiAlias = paint.IsAntiAlias;
         Color color = paint.Color;
-        DebugRecordCall(describe(new CanvasCall(
+        CanvasCall recorded = describe(new CanvasCall(
             method,
             Brush: fill,
             Pen: pen,
@@ -236,10 +251,13 @@ public partial class Canvas
             BlendMode: blendMode)
         {
             RecordedColor = color,
-        }));
+        });
+        DebugRecordCall(recorded);
 
         void DrawPlain(DrawingContext context)
         {
+            using DrawingContext.PushedState alpha = brush is GradientShader
+                ? context.PushOpacity(color.A) : default;
             using DrawingContext.PushedState edge = context.PushRenderOptions(new RenderOptions
             {
                 EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
@@ -249,6 +267,13 @@ public partial class Canvas
 
         if (maskFilter is null && blendMode == BlendMode.SourceOver)
         {
+            if (brush is GradientShader shader && nativePathSource?.Invoke() is { } path)
+            {
+                var snapshot = new Paint(paint);
+                AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, snapshot));
+                return;
+            }
+
             AddDrawCommand(DrawPlain);
             return;
         }
@@ -274,6 +299,28 @@ public partial class Canvas
         AddDrawCommand(rasterized.Draw);
     }
 
+    private static Path CreateRectPath(Rect rect)
+    {
+        var result = new Path();
+        result.AddRect(rect);
+        return result;
+    }
+
+    private static Path CreateOvalPath(Rect rect)
+    {
+        var result = new Path();
+        result.AddOval(rect);
+        return result;
+    }
+
+    private static Path CreateLinePath(Point start, Point end)
+    {
+        var result = new Path();
+        result.MoveTo(start.X, start.Y);
+        result.LineTo(end.X, end.Y);
+        return result;
+    }
+
     // Paragraph glyph outlines use the same Paint pipeline as framework-owned shapes.
     internal void DrawTextGeometry(Geometry geometry, Paint paint)
     {
@@ -296,7 +343,7 @@ public partial class Canvas
             effective,
             call => call,
             () => geometry,
-            (context, fill, pen) => context.DrawGeometry(fill, pen, geometry));
+            (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, geometry));
         if (filter)
         {
             Restore();
@@ -377,7 +424,8 @@ public partial class Canvas
                 if (layerAlpha > 0)
                 {
                     Color layerColor = Color.FromARGB(layerAlpha, color.Red, color.Green, color.Blue);
-                    context.DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
+                    ShaderDrawing.DrawGeometry(context, null,
+                        new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
                 }
             }
         }
@@ -396,7 +444,7 @@ public partial class Canvas
         var innerPath = new Path();
         innerPath.AddRRect(inner);
         Geometry? geometry = null;
-        AddDrawCommand(context => context.DrawGeometry(
+        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context,
             brush,
             null,
             geometry ??= new CombinedGeometry(
@@ -410,7 +458,7 @@ public partial class Canvas
     {
         DebugRecordCall(new CanvasCall("drawOval", Rect: oval, Brush: brush, Pen: pen));
         AddDrawCommand(context =>
-            context.DrawEllipse(brush, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
+            ShaderDrawing.DrawEllipse(context, brush, pen, oval.Center, oval.Width / 2.0, oval.Height / 2.0));
     }
 
     // Dart parity source: dart:ui Canvas.drawPath.
@@ -421,7 +469,7 @@ public partial class Canvas
 
         // The backend geometry is built on playback: recording must not need a render backend.
         Geometry? geometry = null;
-        AddDrawCommand(context => context.DrawGeometry(brush, pen, geometry ??= path.ToGeometry()));
+        AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
     }
 
     // Dart parity source: dart:ui Canvas.drawCircle.
@@ -429,7 +477,7 @@ public partial class Canvas
     {
         DebugRecordCall(new CanvasCall("drawCircle", Brush: brush, Pen: pen, Center: center, Radius: radius));
         double clampedRadius = Math.Max(0, radius);
-        AddDrawCommand(context => context.DrawEllipse(brush, pen, center, clampedRadius, clampedRadius));
+        AddDrawCommand(context => ShaderDrawing.DrawEllipse(context, brush, pen, center, clampedRadius, clampedRadius));
     }
 
     /// <summary>Draws a circle with the given <see cref="Paint"/>.</summary>
@@ -447,7 +495,9 @@ public partial class Canvas
                 center.Y - clampedRadius,
                 clampedRadius * 2.0,
                 clampedRadius * 2.0)),
-            (context, fill, pen) => context.DrawEllipse(fill, pen, center, clampedRadius, clampedRadius));
+            (context, fill, pen) => ShaderDrawing.DrawEllipse(context, fill, pen, center, clampedRadius, clampedRadius),
+            () => CreateOvalPath(new Rect(center.X - clampedRadius, center.Y - clampedRadius,
+                clampedRadius * 2.0, clampedRadius * 2.0)));
     }
 
     // Dart parity source: dart:ui Canvas.drawArc.
@@ -483,7 +533,7 @@ public partial class Canvas
                 geometryContext.EndFigure(isClosed: false);
             }
 
-            context.DrawGeometry(brush: null, pen: pen, geometry: geometry);
+            ShaderDrawing.DrawGeometry(context, brush: null, pen: pen, geometry: geometry);
         });
     }
 
@@ -491,7 +541,7 @@ public partial class Canvas
     public virtual void DrawLine(IPen pen, Point startPoint, Point endPoint)
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
-        AddDrawCommand(context => context.DrawLine(pen, startPoint, endPoint));
+        AddDrawCommand(context => ShaderDrawing.DrawLine(context, pen, startPoint, endPoint));
     }
 
     /// <summary>Draws a line between the given points with the given <see cref="Paint"/>.</summary>
@@ -522,7 +572,8 @@ public partial class Canvas
             stroke,
             call => call with { Offset = startPoint, EndOffset = endPoint },
             () => new LineGeometry(startPoint, endPoint),
-            (context, _, pen) => context.DrawLine(pen!, startPoint, endPoint));
+            (context, _, pen) => ShaderDrawing.DrawLine(context, pen!, startPoint, endPoint),
+            () => CreateLinePath(startPoint, endPoint));
     }
 
     // Dart parity source: dart:ui Canvas.drawPath over a closed polygon contour.
@@ -548,7 +599,7 @@ public partial class Canvas
                 geometryContext.EndFigure(isClosed: true);
             }
 
-            context.DrawGeometry(brush, pen, geometry);
+            ShaderDrawing.DrawGeometry(context, brush, pen, geometry);
         });
     }
 
@@ -562,7 +613,7 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(geometry);
         if (geometryOffset.X == 0.0 && geometryOffset.Y == 0.0)
         {
-            AddDrawCommand(context => context.DrawGeometry(brush, pen, geometry));
+            AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry));
             return;
         }
 
@@ -570,7 +621,7 @@ public partial class Canvas
         {
             using var transform = context.PushTransform(
                 Matrix.CreateTranslation(geometryOffset.X, geometryOffset.Y));
-            context.DrawGeometry(brush, pen, geometry);
+            ShaderDrawing.DrawGeometry(context, brush, pen, geometry);
         });
     }
 
@@ -633,7 +684,7 @@ public partial class Canvas
                     byte.MaxValue);
                 var shadowBrush = new SolidColorBrush(Color.FromARGB(alpha, color.Red, color.Green, color.Blue));
                 var shadowPen = new Pen(shadowBrush, step * 2.0);
-                context.DrawGeometry(transparentOccluder ? shadowBrush : null, shadowPen, geometry);
+                ShaderDrawing.DrawGeometry(context, transparentOccluder ? shadowBrush : null, shadowPen, geometry);
             }
         });
     }

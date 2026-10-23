@@ -131,7 +131,7 @@ internal sealed class RasterizedShapeDraw
             ? PaintRasterizer.ColorizeMask(mask, _color)
             : PaintRasterizer.ShadeMask(
                 mask,
-                PaintRasterizer.RasterizeBrush(width, height, bounds, scale, _brush));
+                PaintRasterizer.RasterizeBrush(width, height, bounds, scale, _brush, _color.A));
         return (PaintRasterizer.CreateBitmap(pixels, width, height), new Rect(bounds.Position, new Size(
             width / scale,
             height / scale)));
@@ -304,8 +304,13 @@ internal static class PaintRasterizer
     }
 
     /// <summary>Rasterizes <paramref name="brush"/> over <paramref name="bounds"/> (premultiplied BGRA).</summary>
-    internal static byte[] RasterizeBrush(int width, int height, Rect bounds, double scale, IBrush brush) =>
-        Rasterize(width, height, bounds.Position, scale, context => context.DrawRectangle(brush, null, bounds));
+    internal static byte[] RasterizeBrush(
+        int width, int height, Rect bounds, double scale, IBrush brush, double opacity = 1.0) =>
+        Rasterize(width, height, bounds.Position, scale, context =>
+        {
+            using DrawingContext.PushedState alpha = context.PushOpacity(opacity);
+            ShaderDrawing.DrawRectangle(context, brush, null, bounds);
+        });
 
     internal static WriteableBitmap CreateBitmap(byte[] pixels, int width, int height)
     {

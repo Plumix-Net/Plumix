@@ -22,6 +22,8 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
   double _rotation = 0;
   int _tileModeIndex = 0;
   bool _blended = false;
+  bool _focalRing = false;
+  bool _shortSweep = false;
 
   TileMode get _currentTileMode => _tileModes[_tileModeIndex];
 
@@ -77,6 +79,27 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: _focalRing ? 'Focal: Ring' : 'Focal: Point',
+              onTap: _toggleFocalRing,
+              width: 132,
+              background: const Color(0xFFE9F5EC),
+            ),
+            _buildButton(
+              label: _shortSweep ? 'Sweep: 1/4' : 'Sweep: 3/4',
+              onTap: _toggleSweep,
+              width: 132,
+              background: const Color(0xFFF3E8D8),
+            ),
+          ],
+        ),
+        const Text(
+          'Decal leaves transparent gaps; a focal ring starts on a circle instead of a point.',
+          style: TextStyle(fontSize: 12, color: Colors.black54),
+        ),
+        Row(
           spacing: 12,
           children: <Widget>[
             _buildSwatch('Linear', _buildLinearGradient()),
@@ -115,7 +138,10 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
           height: 96,
           child: DecoratedBox(decoration: BoxDecoration(gradient: gradient)),
         ),
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.blueGrey)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+        ),
       ],
     );
   }
@@ -146,7 +172,8 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
       radius: 0.35,
       stops: const <double>[0.0, 0.55, 1.0],
       tileMode: _currentTileMode,
-      focal: Alignment.topLeft,
+      focal: const Alignment(-0.35, -0.25),
+      focalRadius: _focalRing ? 0.12 : 0.0,
       transform: _currentTransform,
     );
   }
@@ -159,8 +186,8 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
         Color(0xFF264653),
       ],
       center: Alignment.center,
-      startAngle: 0.0,
-      endAngle: math.pi * 1.5,
+      startAngle: _shortSweep ? math.pi / 2 : 0.0,
+      endAngle: _shortSweep ? math.pi : math.pi * 1.5,
       tileMode: _currentTileMode,
       transform: _currentTransform,
     );
@@ -235,6 +262,18 @@ class _GradientsDemoPageState extends State<GradientsDemoPage> {
   void _toggleBlend() {
     setState(() {
       _blended = !_blended;
+    });
+  }
+
+  void _toggleFocalRing() {
+    setState(() {
+      _focalRing = !_focalRing;
+    });
+  }
+
+  void _toggleSweep() {
+    setState(() {
+      _shortSweep = !_shortSweep;
     });
   }
 }

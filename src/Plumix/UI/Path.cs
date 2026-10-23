@@ -239,6 +239,8 @@ public sealed class Path
     public PathMetrics ComputeMetrics(bool forceClosed = false) => new(_path, forceClosed);
     public override string ToString() => "Path";
 
+    internal SKPath CloneNativePath() => new(_path);
+
     internal Geometry ToGeometry()
     {
         if (_path.IsOval)

@@ -472,11 +472,11 @@ public sealed class GradientTests
         Assert.Throws<ArgumentException>(() => badRadial.CreateShader(rect));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Gradient_ImpliedStops_RequireTwoColors()
     {
         var single = new LinearGradient(colors: [Colors.Red]);
-        Assert.Throws<ArgumentException>(() => single.CreateShader(new Rect(0, 0, 10, 10)));
+        Assert.Throws<Plumix.Foundation.AssertionError>(() => single.CreateShader(new Rect(0, 0, 10, 10)));
     }
 
     [Fact]
@@ -488,11 +488,11 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             tileMode: TileMode.Repeated);
 
-        var brush = Assert.IsType<LinearGradientBrush>(gradient.CreateShader(new Rect(0, 0, 100, 50)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(new Rect(0, 0, 100, 50)));
 
-        Assert.Equal(new RelativePoint(0.0, 0.0, RelativeUnit.Relative), brush.StartPoint);
-        Assert.Equal(new RelativePoint(1.0, 1.0, RelativeUnit.Relative), brush.EndPoint);
-        Assert.Equal(GradientSpreadMethod.Repeat, brush.SpreadMethod);
+        Assert.Equal(new Point(0, 0), brush.Start);
+        Assert.Equal(new Point(100, 50), brush.End);
+        Assert.Equal(TileMode.Repeated, brush.TileMode);
         Assert.Equal(2, brush.GradientStops.Count);
         Assert.Equal(0.0, brush.GradientStops[0].Offset);
         Assert.Equal(1.0, brush.GradientStops[1].Offset);
@@ -507,44 +507,45 @@ public sealed class GradientTests
             colors: [Colors.Red, Colors.Blue],
             focal: Alignment.TopLeft);
 
-        var brush = Assert.IsType<RadialGradientBrush>(gradient.CreateShader(new Rect(0, 0, 100, 40)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(new Rect(0, 0, 100, 40)));
 
-        Assert.Equal(new RelativePoint(0.5, 0.5, RelativeUnit.Relative), brush.Center);
-        Assert.Equal(new RelativePoint(0.0, 0.0, RelativeUnit.Relative), brush.GradientOrigin);
-        Assert.Equal(new RelativeScalar(20.0, RelativeUnit.Absolute), brush.RadiusX);
-        Assert.Equal(new RelativeScalar(20.0, RelativeUnit.Absolute), brush.RadiusY);
+        Assert.Equal(new Point(50, 20), brush.End);
+        Assert.Equal(new Point(0, 0), brush.Start);
+        Assert.Equal(GradientKind.Conical, brush.Kind);
+        Assert.Equal(20.0, brush.Radius);
+        Assert.Equal(0.0, brush.FocalRadius);
     }
 
     [Fact]
-    public void SweepGradient_CreateShader_FoldsSectorIntoStopsAndAngle()
+    public void SweepGradient_CreateShader_PreservesSectorAndStops()
     {
         var gradient = new SweepGradient(
             colors: [Colors.Red, Colors.Blue],
             startAngle: Math.PI / 2,
             endAngle: Math.PI);
 
-        var brush = Assert.IsType<ConicGradientBrush>(gradient.CreateShader(new Rect(0, 0, 60, 60)));
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(new Rect(0, 0, 60, 60)));
 
-        Assert.Equal(180.0, brush.Angle, 6);
-        Assert.Equal(new RelativePoint(0.5, 0.5, RelativeUnit.Relative), brush.Center);
+        Assert.Equal(Math.PI / 2, brush.StartAngle);
+        Assert.Equal(Math.PI, brush.EndAngle);
+        Assert.Equal(new Point(30, 30), brush.End);
         Assert.Equal(0.0, brush.GradientStops[0].Offset, 6);
-        Assert.Equal(0.25, brush.GradientStops[1].Offset, 6);
+        Assert.Equal(1.0, brush.GradientStops[1].Offset, 6);
     }
 
     [Fact]
-    public void Gradient_CreateShader_RebasesTransformOntoTheRectangle()
+    public void Gradient_CreateShader_UsesAbsoluteBoundsForTheTransform()
     {
         var gradient = new LinearGradient(
             colors: [Colors.Red, Colors.Blue],
             transform: new GradientRotation(Math.PI / 2));
 
-        var brush = Assert.IsType<LinearGradientBrush>(gradient.CreateShader(new Rect(10, 20, 40, 40)));
-        var transform = Assert.IsType<MatrixTransform>(brush.Transform);
+        var brush = Assert.IsType<GradientShader>(gradient.CreateShader(new Rect(10, 20, 40, 40)));
 
-        // A quarter turn about the rectangle's own center maps its top-left corner onto the top-right.
-        Point rotated = new Point(0, 0) * transform.Value;
-        Assert.Equal(40.0, rotated.X, 6);
-        Assert.Equal(0.0, rotated.Y, 6);
+        // The local shader matrix maps the absolute top-left onto the absolute top-right.
+        SkiaSharp.SKPoint rotated = brush.LocalMatrix.MapPoint(new SkiaSharp.SKPoint(10, 20));
+        Assert.Equal(50.0, rotated.X, 6);
+        Assert.Equal(20.0, rotated.Y, 6);
     }
 
     [Fact]
@@ -618,4 +619,86 @@ public sealed class GradientTests
         var box = Assert.IsType<BoxDecoration>(decoration);
         return Assert.IsType<LinearGradient>(box.Gradient);
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void EveryKind_RetainsGeometryAcrossScaleAndOpacityAndPicksTheSecondTransform(int kind)
+    {
+        Gradient from = Create(kind, [Argb(0xFFFFFFFF), Argb(0x44777777)], [0.0, 0.5],
+            new GradientRotation(0.5));
+        Gradient to = Create(kind, [Argb(0xFF444444), Argb(0xFF888888)], [0.5, 1.0],
+            new GradientRotation(1.0));
+        Gradient scaled = from.Scale(0.5);
+        Gradient opaque = from.WithOpacity(0.5);
+        Assert.Equal(from.Transform, scaled.Transform);
+        Assert.Equal(from.Transform, opaque.Transform);
+        Assert.Equal(from.Stops, scaled.Stops);
+        Assert.Equal(from.Stops, opaque.Stops);
+        Assert.Equal([Argb(0x80FFFFFF), Argb(0x80777777)], opaque.Colors);
+        Assert.Equal(from.FromColor(Colors.Red), scaled.FromColor(Colors.Red));
+        Assert.Equal(from.FromColor(Colors.Red), opaque.FromColor(Colors.Red));
+        Gradient middle = Gradient.Lerp(from, to, 0.5)!;
+        Assert.Equal([0.0, 0.5, 1.0], middle.Stops);
+        Assert.Equal(to.Transform, middle.Transform);
+        Assert.Equal(from.Transform, Gradient.Lerp(from, to, 0.49)!.Transform);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    public void RadialAndSweep_ResampleUnequalColorListsAndExplicitStops(int kind)
+    {
+        Gradient from = Create(kind, [Argb(0x33333333), Argb(0x66666666)], [0.0, 0.5]);
+        Gradient to = Create(kind, [Argb(0x44444444), Argb(0x48484848), Argb(0x88888888)], [0.5, 0.7, 1.0]);
+        Gradient middle = Gradient.Lerp(from, to, 0.5)!;
+        Assert.Equal([0.0, 0.5, 0.7, 1.0], middle.Stops);
+        ColorMatchers.AssertSameColorsAs(
+            [Argb(0x3B3B3B3B), Argb(0x55555555), Argb(0x57575757), Argb(0x77777777)],
+            middle.Colors, 1.0 / 255);
+        Gradient uniform = Gradient.Lerp(
+            Create(kind, [Argb(0x22222222), Argb(0x66666666)]),
+            Create(kind, [Argb(0x44444444), Argb(0x66666666), Argb(0x88888888)]), 0.5)!;
+        Assert.Equal([0.0, 0.5, 1.0], uniform.Stops);
+        ColorMatchers.AssertSameColorsAs([Argb(0x33333333), Argb(0x55555555), Argb(0x77777777)],
+            uniform.Colors, 1.0 / 255);
+    }
+
+    [Fact]
+    public void DefaultsAndDirectionalSweepAndExtrapolationMatchDart()
+    {
+        var linear = new LinearGradient(colors: [Colors.Red, Colors.Blue]);
+        Assert.Equal((AlignmentGeometry)Alignment.CenterLeft, linear.Begin);
+        Assert.Equal((AlignmentGeometry)Alignment.CenterRight, linear.End);
+        Assert.Equal(TileMode.Clamp, linear.TileMode);
+        var radial = new RadialGradient(colors: [Colors.Red, Colors.Blue]);
+        Assert.Equal((AlignmentGeometry)Alignment.Center, radial.Center);
+        Assert.Equal(0.5, radial.Radius);
+        Assert.Equal(0.0, radial.FocalRadius);
+        Assert.Null(radial.Focal);
+        var sweep = new SweepGradient(colors: [Colors.Red, Colors.Blue], center: AlignmentDirectional.TopStart);
+        Assert.Equal(0.0, sweep.StartAngle);
+        Assert.Equal(Math.PI * 2.0, sweep.EndAngle);
+        Assert.Throws<ArgumentNullException>(() => sweep.CreateShader(new Rect(0, 0, 100, 100)));
+        var ltr = Assert.IsType<GradientShader>(sweep.CreateShader(new Rect(10, 20, 100, 50), TextDirection.Ltr));
+        var rtl = Assert.IsType<GradientShader>(sweep.CreateShader(new Rect(10, 20, 100, 50), TextDirection.Rtl));
+        Assert.Equal(new Point(10, 20), ltr.End);
+        Assert.Equal(new Point(110, 20), rtl.End);
+        var smaller = new RadialGradient(colors: [Colors.Red, Colors.Blue], radius: 0.1);
+        Assert.Equal(0.0, RadialGradient.Lerp(radial, smaller, 2.0)!.Radius);
+        Assert.Equal(0.0, SweepGradient.Lerp(
+            new SweepGradient(colors: [Colors.Red, Colors.Blue], startAngle: 1, endAngle: 2),
+            new SweepGradient(colors: [Colors.Red, Colors.Blue], startAngle: 0.1, endAngle: 0.2), 2.0)!.EndAngle);
+    }
+
+    private static Gradient Create(int kind, IReadOnlyList<Color> colors, IReadOnlyList<double>? stops = null,
+        GradientTransform? transform = null) => kind switch
+    {
+        0 => new LinearGradient(colors, stops: stops, tileMode: TileMode.Decal, transform: transform),
+        1 => new RadialGradient(colors, stops: stops, focal: Alignment.TopLeft, focalRadius: 0.1,
+            tileMode: TileMode.Decal, transform: transform),
+        _ => new SweepGradient(colors, stops: stops, startAngle: 0.5, endAngle: 3.0,
+            tileMode: TileMode.Decal, transform: transform),
+    };
 }

@@ -146,7 +146,7 @@ internal static partial class FilterLayerRasterizer
         {
             RasterFrame childFrame = Rasterize(drawChildren, bounds);
             RasterFrame shaderFrame = Rasterize(
-                drawingContext => drawingContext.DrawRectangle(shader, null, bounds),
+                drawingContext => UI.ShaderDrawing.DrawRectangle(drawingContext, shader, null, bounds),
                 bounds);
             ApplyShaderMask(childFrame.Pixels, shaderFrame.Pixels, blendMode);
             return DrawFrame(context, childFrame);

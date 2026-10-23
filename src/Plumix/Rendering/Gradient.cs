@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
+using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
@@ -14,7 +15,14 @@ public abstract record GradientTransform
     /// <summary>
     /// Returns the transform for the given bounds, or <see langword="null"/> for the identity transform.
     /// </summary>
-    public abstract Matrix? Transform(Rect bounds, TextDirection? textDirection = null);
+    public virtual Matrix? Transform(Rect bounds, TextDirection? textDirection = null) => null;
+
+    /// <summary>
+    /// The full shader matrix. Override this to supply perspective; the default preserves existing
+    /// affine transforms implemented through <see cref="Transform"/>.
+    /// </summary>
+    public virtual Matrix4? Transform4(Rect bounds, TextDirection? textDirection = null) =>
+        Transform(bounds, textDirection) is { } matrix ? Matrix4.FromAvaloniaMatrix(matrix) : null;
 }
 
 /// <summary>A clockwise rotation of a gradient around its center point, in radians.</summary>
@@ -69,10 +77,7 @@ public abstract record Gradient
             return Stops;
         }
 
-        if (Colors.Count < 2)
-        {
-            throw new ArgumentException("colors list must have at least two colors", nameof(Colors));
-        }
+        DebugAssertions.Assert(Colors.Count >= 2);
 
         double separation = 1.0 / (Colors.Count - 1);
         double[] stops = new double[Colors.Count];
@@ -84,7 +89,11 @@ public abstract record Gradient
         return stops;
     }
 
-    /// <summary>Creates the backend brush that paints this gradient over the given rectangle.</summary>
+    /// <summary>Creates a shader for the framework Canvas and ShaderMask, in absolute canvas coordinates.</summary>
+    /// <remarks>
+    /// The IBrush return type is retained for compatibility. Native shader descriptions are interpreted
+    /// by Plumix's drawing pipeline; they are not standalone Avalonia gradient brushes.
+    /// </remarks>
     public abstract IBrush CreateShader(Rect rect, TextDirection? textDirection = null);
 
     /// <summary>Returns a new gradient with its colors' alpha scaled by the given factor.</summary>
@@ -139,9 +148,9 @@ public abstract record Gradient
     }
 
     /// <summary>Resolves <see cref="Transform"/> against the bounds the gradient is painted into.</summary>
-    protected Matrix? ResolveTransform(Rect bounds, TextDirection? textDirection)
+    protected Matrix4? ResolveTransform(Rect bounds, TextDirection? textDirection)
     {
-        return Transform?.Transform(bounds, textDirection);
+        return Transform?.Transform4(bounds, textDirection);
     }
 
     /// dart:ui `Gradient._validateColorStops`, which the framework can only trip on unequal lengths.
@@ -158,74 +167,10 @@ public abstract record Gradient
         return stops;
     }
 
-    private protected TBrush ConfigureBrush<TBrush>(
-        TBrush brush,
-        Rect rect,
-        TextDirection? textDirection,
-        Func<double, double>? remapStop = null)
-        where TBrush : GradientBrush
-    {
-        IReadOnlyList<double> stops = ValidatedStops();
-        brush.SpreadMethod = ToSpreadMethod(TileModeOf(this));
-        brush.GradientStops = BuildStops(Colors, stops, remapStop);
-        Matrix? transform = ResolveTransform(rect, textDirection);
-        if (transform is { } matrix)
-        {
-            // The backend applies the brush transform in the painted rectangle's own space, so the
-            // rect-absolute matrix Dart builds is rebased onto the rectangle's origin.
-            brush.Transform = new MatrixTransform(
-                Matrix.CreateTranslation(rect.X, rect.Y) * matrix * Matrix.CreateTranslation(-rect.X, -rect.Y));
-        }
-
-        return brush;
-    }
-
-    private static TileMode TileModeOf(Gradient gradient) => gradient switch
-    {
-        LinearGradient linear => linear.TileMode,
-        RadialGradient radial => radial.TileMode,
-        SweepGradient sweep => sweep.TileMode,
-        _ => TileMode.Clamp,
-    };
-
-    /// <summary>Avalonia has no `decal` spread, so it falls back to the clamped `Pad` behavior.</summary>
-    private protected static GradientSpreadMethod ToSpreadMethod(TileMode tileMode) => tileMode switch
-    {
-        TileMode.Repeated => GradientSpreadMethod.Repeat,
-        TileMode.Mirror => GradientSpreadMethod.Reflect,
-        _ => GradientSpreadMethod.Pad,
-    };
-
-    /// <summary>
-    /// Builds the backend stop list, applying the engine's documented sanitization: every stop is
-    /// clamped into 0..1 and raised to its predecessor when the list is not ascending.
-    /// </summary>
-    private protected static GradientStops BuildStops(
-        IReadOnlyList<Color> colors,
-        IReadOnlyList<double> stops,
-        Func<double, double>? remap = null)
-    {
-        var gradientStops = new GradientStops();
-        double previous = 0.0;
-        for (int index = 0; index < colors.Count; index++)
-        {
-            double offset = Math.Clamp(stops[index], 0.0, 1.0);
-            offset = Math.Max(offset, previous);
-            previous = offset;
-            gradientStops.Add(new GradientStop(colors[index], remap is null ? offset : remap(offset)));
-        }
-
-        return gradientStops;
-    }
-
-    private protected static RelativePoint ToRelativePoint(Alignment alignment)
-    {
-        return new RelativePoint((alignment.X + 1.0) / 2.0, (alignment.Y + 1.0) / 2.0, RelativeUnit.Relative);
-    }
-
     /// dart:ui `Gradient._sample`.
     private protected static Color Sample(IReadOnlyList<Color> colors, IReadOnlyList<double> stops, double t)
     {
+        DebugAssertions.Assert(colors.Count > 0 && stops.Count > 0);
         if (t <= stops[0])
         {
             return colors[0];
@@ -260,6 +205,8 @@ public abstract record Gradient
         IReadOnlyList<double> bStops,
         double t)
     {
+        DebugAssertions.Assert(aColors.Count >= 2 && bColors.Count >= 2);
+        DebugAssertions.Assert(aStops.Count == aColors.Count && bStops.Count == bColors.Count);
         var sorted = new SortedSet<double>(aStops);
         sorted.UnionWith(bStops);
         double[] interpolatedStops = [.. sorted];
@@ -367,12 +314,13 @@ public sealed record LinearGradient : Gradient
 
     public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
     {
-        var brush = new LinearGradientBrush
-        {
-            StartPoint = ToRelativePoint(Begin.Resolve(textDirection)),
-            EndPoint = ToRelativePoint(End.Resolve(textDirection)),
-        };
-        return ConfigureBrush(brush, rect, textDirection);
+        return GradientShader.Linear(
+            Begin.Resolve(textDirection).WithinRect(rect),
+            End.Resolve(textDirection).WithinRect(rect),
+            Colors,
+            ValidatedStops(),
+            TileMode,
+            ResolveTransform(rect, textDirection));
     }
 
     public override LinearGradient Scale(double factor)
@@ -500,16 +448,15 @@ public sealed record RadialGradient : Gradient
     public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
     {
         double shortestSide = Math.Min(Math.Abs(rect.Width), Math.Abs(rect.Height));
-        double radius = Radius * shortestSide;
-        RelativePoint center = ToRelativePoint(Center.Resolve(textDirection));
-        var brush = new RadialGradientBrush
-        {
-            Center = center,
-            GradientOrigin = Focal is { } focal ? ToRelativePoint(focal.Resolve(textDirection)) : center,
-            RadiusX = new RelativeScalar(radius, RelativeUnit.Absolute),
-            RadiusY = new RelativeScalar(radius, RelativeUnit.Absolute),
-        };
-        return ConfigureBrush(brush, rect, textDirection);
+        return GradientShader.Radial(
+            Center.Resolve(textDirection).WithinRect(rect),
+            Radius * shortestSide,
+            Colors,
+            ValidatedStops(),
+            TileMode,
+            ResolveTransform(rect, textDirection),
+            Focal?.Resolve(textDirection).WithinRect(rect),
+            FocalRadius * shortestSide);
     }
 
     public override RadialGradient Scale(double factor)
@@ -655,16 +602,14 @@ public sealed record SweepGradient : Gradient
 
     public override IBrush CreateShader(Rect rect, TextDirection? textDirection = null)
     {
-        // Avalonia's conic brush always sweeps a full turn from 12 o'clock, so the sector Dart expresses
-        // as start/end angles is folded into the stop offsets and the brush's start angle.
-        double sweep = EndAngle - StartAngle;
-        double turn = Math.PI * 2;
-        var brush = new ConicGradientBrush
-        {
-            Center = ToRelativePoint(Center.Resolve(textDirection)),
-            Angle = 90.0 + (StartAngle * 180.0 / Math.PI),
-        };
-        return ConfigureBrush(brush, rect, textDirection, offset => offset * (sweep / turn));
+        return GradientShader.Sweep(
+            Center.Resolve(textDirection).WithinRect(rect),
+            Colors,
+            ValidatedStops(),
+            TileMode,
+            StartAngle,
+            EndAngle,
+            ResolveTransform(rect, textDirection));
     }
 
     public override SweepGradient Scale(double factor)

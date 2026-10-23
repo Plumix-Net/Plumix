@@ -461,6 +461,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 - Goal: Flutter-like image resolution, caching, stream lifetime, and decoration paint geometry.
 - Read First:
+  - `src/Plumix/Rendering/Gradient.cs`, `src/Plumix/UI/GradientShader.cs`, `ShaderDrawing.cs`
+    (painting gradients, full shader matrices and native Skia gradient draws; covered by `GradientTests.cs`
+    and `GradientShaderTests.cs`, including decoration, mask, blur, alpha and gallery rendering)
   - `src/Plumix/Rendering/ImageProvider.cs`
   - `src/Plumix/Rendering/ImageStream.cs`
   - `src/Plumix/Rendering/ImageCache.cs`

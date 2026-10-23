@@ -32,6 +32,8 @@ internal sealed class GradientsDemoPageState : State
     private double _rotation;
     private int _tileModeIndex;
     private bool _blended;
+    private bool _focalRing;
+    private bool _shortSweep;
 
     private TileMode CurrentTileMode => TileModes[_tileModeIndex];
 
@@ -60,6 +62,16 @@ internal sealed class GradientsDemoPageState : State
                 new Text(
                     $"rotation={_rotation:0.00} rad, tileMode={CurrentTileMode}, target={(_blended ? "B" : "A")}",
                     style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(_focalRing ? "Focal: Ring" : "Focal: Point", ToggleFocalRing, 132, "#FFE9F5EC"),
+                        BuildButton(_shortSweep ? "Sweep: 1/4" : "Sweep: 3/4", ToggleSweep, 132, "#FFF3E8D8"),
+                    ]),
+                new Text(
+                    "Decal leaves transparent gaps; a focal ring starts on a circle instead of a point.",
+                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
                 new Row(
                     spacing: 12,
                     children:
@@ -119,7 +131,8 @@ internal sealed class GradientsDemoPageState : State
             radius: 0.35,
             stops: [0.0, 0.55, 1.0],
             tileMode: CurrentTileMode,
-            focal: Alignment.TopLeft,
+            focal: new Alignment(-0.35, -0.25),
+            focalRadius: _focalRing ? 0.12 : 0.0,
             transform: CurrentTransform);
     }
 
@@ -128,8 +141,8 @@ internal sealed class GradientsDemoPageState : State
         return new SweepGradient(
             colors: [new Color(0xFF2A9D8F), new Color(0xFFE9C46A), new Color(0xFF264653)],
             center: Alignment.Center,
-            startAngle: 0.0,
-            endAngle: Math.PI * 1.5,
+            startAngle: _shortSweep ? Math.PI / 2 : 0.0,
+            endAngle: _shortSweep ? Math.PI : Math.PI * 1.5,
             tileMode: CurrentTileMode,
             transform: CurrentTransform);
     }
@@ -185,4 +198,8 @@ internal sealed class GradientsDemoPageState : State
     {
         SetState(() => _blended = !_blended);
     }
+
+    private void ToggleFocalRing() => SetState(() => _focalRing = !_focalRing);
+
+    private void ToggleSweep() => SetState(() => _shortSweep = !_shortSweep);
 }

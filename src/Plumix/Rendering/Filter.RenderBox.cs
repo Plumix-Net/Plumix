@@ -12,8 +12,8 @@ namespace Plumix.Rendering;
 
 /// <summary>Signature for a function that creates a shader for a given <see cref="Rect"/>.</summary>
 /// <remarks>
-/// Dart's <c>typedef ShaderCallback = Shader Function(Rect bounds)</c>. Plumix has no dart:ui
-/// <c>Shader</c>; an Avalonia <see cref="IBrush"/> (what <c>Gradient.CreateShader</c> returns) stands in.
+/// Dart's <c>typedef ShaderCallback = Shader Function(Rect bounds)</c>. The published return type
+/// carries backend brushes and the native shader descriptions returned by <c>Gradient.CreateShader</c>.
 /// </remarks>
 public delegate IBrush ShaderCallback(Rect bounds);
 
