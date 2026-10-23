@@ -239,7 +239,9 @@ internal static class HostKeyEventMessage
                 message["modifiers"] = WindowsModifiers();
                 break;
             case "linux":
-                int unicodeScalarValues = printable == null ? 0 : char.ConvertToUtf32(printable, 0);
+                // GTK reports the event's keyval (the shifted one: `question` for Shift+/) and its
+                // character, so the typed text wins over the unshifted key label.
+                int unicodeScalarValues = characters.Length == 0 ? 0 : char.ConvertToUtf32(characters, 0);
                 message["toolkit"] = "gtk";
                 message["keyCode"] = unicodeScalarValues != 0
                     ? GdkKeyvalForCodePoint(unicodeScalarValues)

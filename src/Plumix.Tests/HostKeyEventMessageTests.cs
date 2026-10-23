@@ -90,6 +90,26 @@ public sealed class HostKeyEventMessageTests : IDisposable
     }
 
     [Theory]
+    [InlineData("macos")]
+    [InlineData("ios")]
+    [InlineData("linux")]
+    [InlineData("android")]
+    public void AShiftedKeyCarriesItsTypedCharacterAndKeepsItsLogicalKey(string keymap)
+    {
+        // Windows carries the shifted character in its KeyData packet instead (`DispatchWindowsKeyData`);
+        // the web's logical key is the typed `key` itself.
+        RawKeyEvent down = Decode(
+            keymap,
+            PhysicalKeyboardKey.Slash,
+            LogicalKeyboardKey.Slash,
+            "?",
+            KeyModifiers.Shift);
+
+        Assert.Equal("?", down.Character);
+        Assert.Equal(LogicalKeyboardKey.Slash, down.LogicalKey);
+    }
+
+    [Theory]
     [MemberData(nameof(SidedKeymaps))]
     public void AHeldRightModifierIsReportedOnTheRight(string keymap)
     {
