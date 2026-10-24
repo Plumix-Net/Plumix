@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 2
-last_updated: 2026-10-23
+last_updated: 2026-10-24
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M6 Cupertino library port (docs/CUPERTINO_TODO.md); M5 cross-host stability continues in parallel."
 flutter_pin: "3.47.0 (4cf24164269); material_ui 1.0.0; cupertino_ui 1.0.0 — see AGENTS.md"
@@ -35,6 +35,7 @@ milestones:
   - { id: M4, title: "Material library rewrite", status: done }
   - { id: M5, title: "Cross-host sample parity and stability", status: in_progress }
   - { id: M6, title: "Cupertino library port", status: in_progress }
+  - { id: RC, title: "v1.0.0-rc.1 API freeze (criteria: Release Candidate section)", status: planned }
 ```
 
 ## Confirmed Done (Repository Baseline)
@@ -94,6 +95,45 @@ Exit criteria:
 - `CupertinoApp` runs the sample gallery's Cupertino tab through the framework host on desktop.
 - Focused tests per control (`src/Plumix.Tests/Cupertino<Control>Tests.cs`) and mirrored demos in
   both samples.
+
+### Release Candidate (`v1.0.0-rc.1`)
+
+Status: `planned`. The RC freezes the public API of the published packages: after it only fixes land
+until `1.0.0`, and any `Breaking:` entry means a new RC.
+
+Blockers (all must close):
+
+- M5 and M6 are `done`. M6 needs only an audit of its exit criteria (`.Adaptive` factories, the
+  `CupertinoApp` tab); M5 needs the Android and iOS hosts building and the iOS AOT
+  `ExecutionEngineException` (`docs/ai/BACKLOG.md` > Host-level gaps) fixed.
+- Every sample route in `SampleScreenCaptureTests` matches the Dart capture, or its residual
+  difference is a `docs/ai/DIVERGENCES.md` row.
+- No qualified marker in `docs/ai/PORT_MAP.md`.
+- Control-level gaps (`docs/ai/BACKLOG.md`) that change an existing signature, type or default are
+  closed: `overlayColor` typed as `WidgetStateProperty<Color?>`, `AnimationController`'s double-dispose
+  and missing-duration errors. Gaps that only add API may land in a later minor.
+
+Release gates (on the commit that gets the tag):
+
+- `dotnet build src/Plumix.Ci.slnf -c Debug`; the test suite green in Debug, Profile and Release, and
+  on the newest Avalonia of the major (`AvaloniaTestVersion`); `scripts/check_line_length.sh` clean.
+- `src/Plumix.sln` builds locally, Browser/Android/iOS hosts included.
+- Every gallery route opens without errors on desktop, browser, Android and iOS. Interactive
+  comparisons (`verify-runtime` in `docs/ai/PARITY_MATRIX.md`, *Pending runtime verification* in
+  `docs/ai/BACKLOG.md`) may stay open as known limitations.
+- `python3 scripts/generate_port_map.py` reports no unresolvable markers.
+- `CHANGELOG.md`: `[Unreleased]` and the uncollapsed alpha sections collapse under the RC heading,
+  every `Breaking:` item kept by name.
+
+Known limitations (listed in the RC release notes, not blockers):
+
+- `docs/ai/BACKLOG.md` > Host-level gaps, except the iOS AOT crash: platform views, `flutter/menu`,
+  the rest of `SystemChrome.*`, accessibility features and semantics focus on desktop/Android,
+  `GestureSettings`, text spacing overrides, windowing-owner gaps, the iOS system context menu.
+- The upstream re-port row (platform-view hit-test), blocked on platform views.
+- Additive control-level gaps (debug checks, service extensions, binding remainder, `SnapshotPainter`,
+  `ImageCache` structure, thumb shadows via Avalonia, `SystemNavigator.pop`, missing parameters).
+- Every row of `docs/ai/DIVERGENCES.md`.
 
 ## Backlog Candidates (After M5–M6)
 

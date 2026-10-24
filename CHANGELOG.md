@@ -7,7 +7,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 `[Unreleased]` into a few bullets under the version heading, keeping every `Breaking:` item by name.
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
-## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+## [Unreleased] (after v0.3.0-alpha.4, 2026-10-24)
 
 - PlumixHost hit-tests its whole bounds, so wheel and presses over native solid draws reach the framework (C#-only).
 - Variable-font paragraphs share one HarfBuzz face per typeface instead of copying its tables each time (C#-only).
@@ -41,6 +41,9 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 - Headless paragraphs paint the engine's FlutterTest glyphs through Skia (`p`/`É`/.notdef, quarter-pixel x) (C#-only).
 - Headless paragraphs paint at SkParagraph's rounded baseline and centre letter spacing on each glyph (C#-only).
 - Opt-in screen capture of every sample route in both samples for pixel and text comparison (C#-only).
+
+## v0.2.0-alpha.2 … v0.3.0-alpha.4 — 2026-08-20 … 2026-10-24 (not yet collapsed)
+
 - Breaking: Avalonia 12.1.4 is the minimum; paragraphs read its slice-relative, visual-order RTL clusters (C#-only).
 - CI also runs the tests on the newest Avalonia over Plumix built on the minimum, binding every host member (C#-only).
 - Timer.run and timing reports post above Input, so Android's warm-up frame draws behind a spinner (C#-only).
