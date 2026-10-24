@@ -267,6 +267,8 @@ public sealed class MaterialChipTests : IDisposable
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.MediumPurple, decoration.Color);
         Assert.Equal(MaterialColors.Transparent, ChipSide(decoration).Color);
+        // Dart's `BorderSide(color: Colors.transparent)` keeps the default 1px width, which sizes the chip.
+        Assert.Equal(1.0, ChipSide(decoration).Width);
         // The elevation shadow is painted by the chip's `Material`, not by its `Ink` decoration.
         Assert.Contains(
             MaterialSurfaceProbe.FindAll(harness.RenderView),

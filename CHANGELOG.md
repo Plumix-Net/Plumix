@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Elevated and selected flat chips keep the 1px transparent side of their M3 defaults (chip.dart).
+- Headless placeholders align against unscaled run metrics and hang from the rounded baseline (C#-only).
 - PaginatedDataTable builds like Dart: the table fills the card, themed header/footer (paginated_data_table.dart).
 - Headless paragraphs allow a line break after a slash before a letter, as ICU does (C#-only).
 - Opacity layers composite their children through a save-layer, as the engine does (C#-only).

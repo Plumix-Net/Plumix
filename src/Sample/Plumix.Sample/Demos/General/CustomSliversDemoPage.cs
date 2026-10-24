@@ -304,7 +304,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new Container(
             color: color,
             padding: new Thickness(6, 8),
-            child: new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)));
+            child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black)));
     }
 
     private static Widget BuildViewportPage(string label, Color color)

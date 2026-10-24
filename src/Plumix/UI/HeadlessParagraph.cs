@@ -612,14 +612,16 @@ internal sealed class HeadlessParagraph : Paragraph
                     continue;
                 }
 
+                // SkParagraph's `Run::updateMetrics` aligns a placeholder against its own run's font metrics,
+                // which carry no height multiplier.
+                double fontSize = cluster.Style.FontSize;
                 (double placeholderAscent, double placeholderDescent) =
-                    PlaceholderMetrics(placeholder, metrics.Ascent, metrics.Descent);
+                    PlaceholderMetrics(placeholder, fontSize * AscentRatio, fontSize * DescentRatio);
                 cluster.PlaceholderAscent = placeholderAscent;
                 ascent = Math.Max(ascent, placeholderAscent);
                 descent = Math.Max(descent, placeholderDescent);
-                (double runA, double runD) = PlaceholderMetrics(placeholder, reported.Ascent, reported.Descent);
-                reported.Ascent = Math.Max(reported.Ascent, runA);
-                reported.Descent = Math.Max(reported.Descent, runD);
+                reported.Ascent = Math.Max(reported.Ascent, placeholderAscent);
+                reported.Descent = Math.Max(reported.Descent, placeholderDescent);
             }
 
             if (_strutEnabled)
@@ -962,7 +964,7 @@ internal sealed class HeadlessParagraph : Paragraph
         {
             if (boxHeightStyle is BoxHeightStyle.Tight or BoxHeightStyle.Strut)
             {
-                double placeholderTop = line.Baseline - item.Cluster.PlaceholderAscent;
+                double placeholderTop = line.ReportedBaseline - item.Cluster.PlaceholderAscent;
                 return (placeholderTop, placeholderTop + placeholder.Height);
             }
 
@@ -998,7 +1000,7 @@ internal sealed class HeadlessParagraph : Paragraph
             {
                 if (item.Cluster is { Placeholder: { } placeholder } cluster)
                 {
-                    double top = line.Baseline - cluster.PlaceholderAscent;
+                    double top = line.ReportedBaseline - cluster.PlaceholderAscent;
                     TextDirection direction = item.Level % 2 == 1 ? TextDirection.Rtl : TextDirection.Ltr;
                     placed.Add((cluster.Start, new TextBox(
                         item.X,
@@ -1170,7 +1172,7 @@ internal sealed class HeadlessParagraph : Paragraph
         TextDirection direction = item.Level % 2 == 1 ? TextDirection.Rtl : TextDirection.Ltr;
         if (cluster.Placeholder is { } placeholder)
         {
-            double top = line.Baseline - cluster.PlaceholderAscent;
+            double top = line.ReportedBaseline - cluster.PlaceholderAscent;
             TextRange range = placeholder.Width == 0.0 && placeholder.Height == 0.0
                 ? new TextRange(0, 0)
                 : new TextRange(cluster.Start, cluster.End);

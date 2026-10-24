@@ -29,17 +29,18 @@ internal sealed class ChipsDemoPageState : State
     {
         Widget probes = new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
-            spacing: 14,
             children:
             [
                 new Text("Material chips", style: new TextStyle(FontSize: 20)),
+                new SizedBox(height: 14),
                 new Text(
                     "Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, "
                     + "with deletion and a copyWith-derived local ChipTheme override.",
                     style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                new SizedBox(height: 14),
                 new Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                    spacing: 10,
+                    runSpacing: 10,
                     children:
                     [
                         ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
@@ -50,7 +51,9 @@ internal sealed class ChipsDemoPageState : State
                             _inputVisible ? "Remove input" : "Restore input",
                             () => SetState(() => _inputVisible = !_inputVisible)),
                     ]),
+                new SizedBox(height: 14),
                 new Text("Action chips", style: new TextStyle(FontSize: 14)),
+                new SizedBox(height: 14),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -67,7 +70,9 @@ internal sealed class ChipsDemoPageState : State
                             label: new Text("Elevated"),
                             onPressed: _enabled ? HandleAction : null),
                     ]),
+                new SizedBox(height: 14),
                 new Text("Informational chips", style: new TextStyle(FontSize: 14)),
+                new SizedBox(height: 14),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -81,7 +86,9 @@ internal sealed class ChipsDemoPageState : State
                             avatar: new Icon(Icons.InfoOutline),
                             onDeleted: _enabled ? HandleDelete : null),
                     ]),
+                new SizedBox(height: 14),
                 new Text("Choice chips", style: new TextStyle(FontSize: 14)),
+                new SizedBox(height: 14),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -101,7 +108,9 @@ internal sealed class ChipsDemoPageState : State
                             selected: _selected,
                             onSelected: _enabled ? value => SetState(() => _selected = value) : null),
                     ]),
+                new SizedBox(height: 14),
                 new Text("Filter chips", style: new TextStyle(FontSize: 14)),
+                new SizedBox(height: 14),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -122,7 +131,9 @@ internal sealed class ChipsDemoPageState : State
                             onSelected: _enabled ? value => SetState(() => _filterSelected = value) : null,
                             onDeleted: _enabled ? HandleDelete : null),
                     ]),
+                new SizedBox(height: 14),
                 new Text("Input chips", style: new TextStyle(FontSize: 14)),
+                new SizedBox(height: 14),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -151,9 +162,12 @@ internal sealed class ChipsDemoPageState : State
                             isEnabled: _enabled,
                             onPressed: HandleAction),
                     ]),
+                new SizedBox(height: 14),
                 new Text(
-                    $"Actions: {_actionCount} · deletes: {_deleteCount} · choice: {_selected.ToString().ToLowerInvariant()} · "
-                    + $"filter: {_filterSelected.ToString().ToLowerInvariant()} · input: {_inputSelected.ToString().ToLowerInvariant()}",
+                    $"Actions: {_actionCount} · deletes: {_deleteCount} · "
+                    + $"choice: {_selected.ToString().ToLowerInvariant()} · "
+                    + $"filter: {_filterSelected.ToString().ToLowerInvariant()} · "
+                    + $"input: {_inputSelected.ToString().ToLowerInvariant()}",
                     style: new TextStyle(FontSize: 13, Color: new Color(0xFF49454F))),
             ]);
 

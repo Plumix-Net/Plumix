@@ -59,16 +59,20 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                         + "label-style colors under both color schemes, theme precedence, feedback, and "
                         + "per-state mouse cursors.",
                         style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(TypeLabel(), CycleType),
                             ControlButton($"Landscape: {_landscapeLayout.Name()}", CycleLandscapeLayout),
-                            ControlButton(_themed ? "Theme on" : "Theme off", () => SetState(() => _themed = !_themed)),
+                            ControlButton(
+                                _themed ? "Theme on" : "Theme off",
+                                () => SetState(() => _themed = !_themed)),
                         ]),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(
@@ -78,8 +82,9 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                                 _showUnselectedLabels ? "Unselected labels on" : "Unselected labels off",
                                 () => SetState(() => _showUnselectedLabels = !_showUnselectedLabels)),
                         ]),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(
@@ -92,8 +97,9 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                                 _legacyColorScheme ? "Legacy colors" : "Label-style colors",
                                 () => SetState(() => _legacyColorScheme = !_legacyColorScheme)),
                         ]),
-                    new Row(
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(
@@ -195,9 +201,7 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
 
         private static Widget ControlButton(string label, Action onPressed)
         {
-            return new OutlinedButton(
-                onPressed: onPressed,
-                child: new Text(label, style: new TextStyle(FontSize: 12)));
+            return new TextButton(onPressed: onPressed, child: new Text(label));
         }
     }
 }

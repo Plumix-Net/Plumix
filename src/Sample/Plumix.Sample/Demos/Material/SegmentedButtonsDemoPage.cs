@@ -70,21 +70,27 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                         new Text(
                             "Legacy bool-list toggles and Material 3 value-set segments with selection, orientation, themes, and widget styles.",
                             style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
-                        new Row(
+                        new Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children:
                             [
                                 ControlButton(_multiSelection ? "Multi" : "Single", ToggleMultiSelection),
-                                ControlButton(_emptySelection ? "Empty allowed" : "Selection required", ToggleEmptySelection),
-                                ControlButton(_vertical ? "Vertical" : "Horizontal", () => SetState(() => _vertical = !_vertical)),
-                                ControlButton(_showSelectedIcon ? "Check on" : "Check off", () => SetState(() => _showSelectedIcon = !_showSelectedIcon)),
-                            ]),
-                        new Row(
-                            spacing: 8,
-                            children:
-                            [
-                                ControlButton(_useThemeOverrides ? "Theme on" : "Theme off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
-                                ControlButton(_useWidgetStyle ? "Widget style on" : "Widget style off", () => SetState(() => _useWidgetStyle = !_useWidgetStyle)),
+                                ControlButton(
+                                    _emptySelection ? "Empty allowed" : "Selection required",
+                                    ToggleEmptySelection),
+                                ControlButton(
+                                    _vertical ? "Vertical" : "Horizontal",
+                                    () => SetState(() => _vertical = !_vertical)),
+                                ControlButton(
+                                    _showSelectedIcon ? "Check on" : "Check off",
+                                    () => SetState(() => _showSelectedIcon = !_showSelectedIcon)),
+                                ControlButton(
+                                    _useThemeOverrides ? "Theme on" : "Theme off",
+                                    () => SetState(() => _useThemeOverrides = !_useThemeOverrides)),
+                                ControlButton(
+                                    _useWidgetStyle ? "Widget style on" : "Widget style off",
+                                    () => SetState(() => _useWidgetStyle = !_useWidgetStyle)),
                                 ControlButton(
                                     _useStatefulFill ? "State fill on" : "State fill off",
                                     () => SetState(() => _useStatefulFill = !_useStatefulFill)),
@@ -160,9 +166,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
 
         private static Widget ControlButton(string label, Action onPressed)
         {
-            return new TextButton(
-                child: new Text(label, style: new TextStyle(FontSize: 12)),
-                onPressed: onPressed);
+            return new TextButton(onPressed: onPressed, child: new Text(label));
         }
     }
 }

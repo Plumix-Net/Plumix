@@ -56,34 +56,51 @@ internal sealed class BarControlsDemoPageState : State
             data: theme,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text("BottomAppBar + ButtonBar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
-                        "M2/M3 bottom-surface defaults, FAB notch geometry, SafeArea, theme precedence, and legacy ButtonBar row-to-column overflow.",
+                        "M2/M3 bottom-surface defaults, FAB notch geometry, SafeArea, theme precedence, "
+                        + "and legacy ButtonBar row-to-column overflow.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
-                        spacing: 8,
                         children:
                         [
                             BuildToggle(_useMaterial3 ? "M3" : "M2", () => _useMaterial3 = !_useMaterial3, 68),
-                            BuildToggle(_useThemeOverrides ? "theme=on" : "theme=off", () => _useThemeOverrides = !_useThemeOverrides, 104),
+                            new SizedBox(width: 8),
+                            BuildToggle(
+                                _useThemeOverrides ? "theme=on" : "theme=off",
+                                () => _useThemeOverrides = !_useThemeOverrides,
+                                104),
+                            new SizedBox(width: 8),
                             BuildToggle(_showNotch ? "notch=on" : "notch=off", () => _showNotch = !_showNotch, 104),
-                            BuildToggle(_narrowButtonBar ? "bar=narrow" : "bar=wide", () => _narrowButtonBar = !_narrowButtonBar, 106),
-                            BuildToggle(_overflowUp ? "overflow=up" : "overflow=down", () => _overflowUp = !_overflowUp, 118),
+                            new SizedBox(width: 8),
+                            BuildToggle(
+                                _narrowButtonBar ? "bar=narrow" : "bar=wide",
+                                () => _narrowButtonBar = !_narrowButtonBar,
+                                106),
+                            new SizedBox(width: 8),
+                            BuildToggle(
+                                _overflowUp ? "overflow=up" : "overflow=down",
+                                () => _overflowUp = !_overflowUp,
+                                118),
+                            new SizedBox(width: 8),
                             BuildToggle(_useRtl ? "RTL" : "LTR", () => _useRtl = !_useRtl, 68),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
                         $"actionCount={_actionCount}",
                         style: new TextStyle(
                             FontSize: 12,
                             Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new SizedBox(
                             width: _narrowButtonBar ? 190 : 520,
-                            child: new Container(
+                            child: new ColoredBox(
                                 color: new Color(0xFFF7F9FC),
                                 child: new Directionality(
                                     _useRtl ? TextDirection.Rtl : TextDirection.Ltr,
@@ -95,6 +112,7 @@ internal sealed class BarControlsDemoPageState : State
                                             BuildAction("LATER"),
                                             BuildAction("CONFIRM"),
                                         ]))))),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new Scaffold(
                             backgroundColor: new Color(0xFFF4F6FA),
@@ -112,9 +130,13 @@ internal sealed class BarControlsDemoPageState : State
                                 child: new Row(
                                     children:
                                     [
-                                        new IconButton(new Icon(Icons.Menu), () => SetState(() => _actionCount += 1)),
+                                        new IconButton(
+                                            new Icon(Icons.Menu),
+                                            () => SetState(() => _actionCount += 1)),
                                         new Spacer(),
-                                        new IconButton(new Icon(Icons.InfoOutline), () => SetState(() => _actionCount += 1)),
+                                        new IconButton(
+                                            new Icon(Icons.InfoOutline),
+                                            () => SetState(() => _actionCount += 1)),
                                     ])))),
                 ]));
     }

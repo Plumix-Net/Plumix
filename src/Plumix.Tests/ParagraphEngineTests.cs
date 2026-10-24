@@ -414,6 +414,33 @@ public sealed class ParagraphEngineTests
             style.StrutStyle);
     }
 
+    // C#-only: flutter_tester's SkParagraph placeholder boxes under a 1.43 line height (FlutterTest, 16 px,
+    // 40x20 placeholder with baseline offset 15). Top/bottom/middle align against the run's unscaled font
+    // metrics, and every box hangs from the line's rounded baseline.
+    [Theory]
+    [InlineData(PlaceholderAlignment.Baseline, 23.0, 2.28)]
+    [InlineData(PlaceholderAlignment.AboveBaseline, 26.0, 0.28)]
+    [InlineData(PlaceholderAlignment.BelowBaseline, 37.0, 17.0)]
+    [InlineData(PlaceholderAlignment.Top, 25.0, 5.0)]
+    [InlineData(PlaceholderAlignment.Bottom, 23.0, 1.28)]
+    [InlineData(PlaceholderAlignment.Middle, 23.0, 3.0)]
+    public void Placeholder_WithLineHeight_AlignsLikeSkParagraph(
+        PlaceholderAlignment alignment,
+        double height,
+        double top)
+    {
+        var builder = new ParagraphBuilder(new ParagraphStyle());
+        builder.PushStyle(new ParagraphTextStyle(FontSize: 16, Height: 1.43));
+        builder.AddText("Inline ");
+        builder.AddPlaceholder(40, 20, alignment, baselineOffset: 15, baseline: TextBaseline.Alphabetic);
+        builder.AddText(" widgets");
+        using Paragraph paragraph = builder.Build();
+        paragraph.Layout(new ParagraphConstraints(720));
+
+        Assert.Equal(height, paragraph.Height, 6);
+        Assert.Equal(top, paragraph.GetBoxesForPlaceholders()[0].Top, 6);
+    }
+
     private static Paragraph Build(string text, ParagraphStyle style)
     {
         var builder = new ParagraphBuilder(style);

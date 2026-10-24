@@ -1115,7 +1115,7 @@ public sealed class RawChip : StatefulWidget
                         ? new BorderSide(enabled
                             ? theme.ColorScheme.OutlineVariant
                             : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
-                        : new BorderSide(Colors.Transparent, 0),
+                        : new BorderSide(Colors.Transparent),
                     IconTheme = new IconThemeData(
                         Color: enabled
                             ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.PrimaryColor
@@ -1155,7 +1155,7 @@ public sealed class RawChip : StatefulWidget
                         ? new BorderSide(enabled
                             ? theme.ColorScheme.OutlineVariant
                             : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
-                        : new BorderSide(Colors.Transparent, 0),
+                        : new BorderSide(Colors.Transparent),
                     IconTheme = new IconThemeData(
                         Color: enabled
                             ? selected ? theme.PrimaryColor : theme.ColorScheme.OnSurfaceVariant
@@ -1179,7 +1179,7 @@ public sealed class RawChip : StatefulWidget
                         ? new BorderSide(enabled
                             ? theme.ColorScheme.OutlineVariant
                             : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
-                        : new BorderSide(Colors.Transparent, 0),
+                        : new BorderSide(Colors.Transparent),
                     IconTheme = new IconThemeData(
                         Color: enabled ? theme.PrimaryColor : theme.ColorScheme.OnSurface,
                         Size: 18),
@@ -1295,7 +1295,7 @@ public sealed class RawChip : StatefulWidget
                 && widget.Variant == ChipVariant.Flat
                 && states.Contains(WidgetState.Selected))
             {
-                return new BorderSide(Colors.Transparent, 0);
+                return new BorderSide(Colors.Transparent);
             }
             return defaults.Side ?? ShapeBorderGeometry.SideOrNull(shape);
         }

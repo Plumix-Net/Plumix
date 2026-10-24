@@ -104,18 +104,18 @@ public sealed class DropdownDemoPage : StatefulWidget
                             "Controlled selection with nullable/disabled entries, logical end alignment, "
                             + "route geometry, keyboard focus, and underline policy.",
                             style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
-                        new Row(
+                        new Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children:
                             [
-                                ControlButton(_enabled ? "Enabled" : "Disabled", () => SetState(() => _enabled = !_enabled)),
+                                ControlButton(
+                                    _enabled ? "Enabled" : "Disabled",
+                                    () => SetState(() => _enabled = !_enabled)),
                                 ControlButton(_dense ? "Dense" : "Regular", () => SetState(() => _dense = !_dense)),
-                                ControlButton(_expanded ? "Expanded" : "Compact", () => SetState(() => _expanded = !_expanded)),
-                            ]),
-                        new Row(
-                            spacing: 8,
-                            children:
-                            [
+                                ControlButton(
+                                    _expanded ? "Expanded" : "Compact",
+                                    () => SetState(() => _expanded = !_expanded)),
                                 ControlButton(
                                     _hideUnderline ? "Underline off" : "Underline on",
                                     () => SetState(() => _hideUnderline = !_hideUnderline)),
@@ -126,7 +126,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     _rightToLeft ? "Direction: RTL" : "Direction: LTR",
                                     () => SetState(() => _rightToLeft = !_rightToLeft)),
                             ]),
-                        new Row(
+                        new Wrap(
                             spacing: 8,
                             children:
                             [
@@ -439,8 +439,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                             _modernFormStatus = $"changed: {value ?? "none"}";
                                         }),
                                         validator: value => value is null ? "Select a destination" : null),
-                                    new Row(
+                                    new Wrap(
                                         spacing: 8,
+                                        runSpacing: 8,
                                         children:
                                         [
                                             ControlButton("Validate", ValidateModernForm),
@@ -482,8 +483,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                             hintText: "Pick one item",
                                             border: new OutlineInputBorder()),
                                         validator: value => value is null ? "Select an item" : null),
-                                    new Row(
+                                    new Wrap(
                                         spacing: 8,
+                                        runSpacing: 8,
                                         children:
                                         [
                                             ControlButton("Validate", ValidateForm),

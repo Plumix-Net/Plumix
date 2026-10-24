@@ -45,12 +45,16 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                     spacing: 10,
                     children:
                     [
-                        new Text("NavigationDrawer + NavigationDrawerDestination", style: new TextStyle(FontSize: 20)),
                         new Text(
-                            "Header/footer slots, custom children, destination indexing, selection, disabled state, and theme precedence.",
+                            "NavigationDrawer + NavigationDrawerDestination",
+                            style: new TextStyle(FontSize: 20)),
+                        new Text(
+                            "Header/footer slots, custom children, destination indexing, selection, disabled state, "
+                            + "and theme precedence.",
                             style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
-                        new Row(
+                        new Wrap(
                             spacing: 8,
+                            runSpacing: 8,
                             children:
                             [
                                 ControlButton(
@@ -69,8 +73,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                         new Text(
                             _selectedIndex.HasValue
                                 ? $"Selected destination: {_selectedIndex.Value + 1}"
-                                : "Selected destination: none",
-                            style: new TextStyle(FontSize: 13)),
+                                : "Selected destination: none"),
                         new Expanded(
                             child: new Row(
                                 crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -82,7 +85,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                         onDestinationSelected: index => SetState(() => _selectedIndex = index),
                                         backgroundColor: _useWidgetOverrides ? new Color(0xFFFFF8E1) : null,
                                         indicatorColor: _useWidgetOverrides ? new Color(0xFFFFCC80) : null,
-                                        tilePadding: _useWidgetOverrides ? new Thickness(18, 0) : null,
+                                        tilePadding: new Thickness(_useWidgetOverrides ? 18 : 12, 0),
                                         header: new Padding(
                                             new Thickness(28, 20, 16, 12),
                                             new Text("Destinations", style: new TextStyle(FontSize: 16))),
@@ -116,24 +119,23 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                                 enabled: _thirdEnabled),
                                         ]),
                                     new Expanded(
-                                        child: new Container(
-                                            alignment: Alignment.Center,
+                                        child: new DecoratedBox(
                                             decoration: new BoxDecoration(
                                                 Color: new Color(0xFFF7F2FA),
                                                 BorderRadius: BorderRadius.Circular(12)),
-                                            child: new Text(
-                                                "The drawer keeps destination indices independent from custom children.",
-                                                style: new TextStyle(Color: MaterialColors.Black54),
-                                                textAlign: TextAlign.Center)))
+                                            child: new Center(
+                                                child: new Text(
+                                                    "The drawer keeps destination indices independent from "
+                                                    + "custom children.",
+                                                    textAlign: TextAlign.Center,
+                                                    style: new TextStyle(Color: MaterialColors.Black54)))))
                                 ]))
                     ]));
         }
 
         private static Widget ControlButton(string label, Action onPressed)
         {
-            return new TextButton(
-                child: new Text(label, style: new TextStyle(FontSize: 12)),
-                onPressed: onPressed);
+            return new TextButton(onPressed: onPressed, child: new Text(label));
         }
     }
 }

@@ -163,7 +163,7 @@ internal sealed class HeroDemoPageState : State
                     Color: (Color)Avalonia.Media.Color.Parse(colorHex),
                     BorderRadius: BorderRadius.Circular(14)),
                 child: new Center(
-                    child: new Text(label, style: new TextStyle(FontSize: fontSize, Color: MaterialColors.Black)))));
+                    child: new Text(label, style: new TextStyle(FontSize: fontSize, Color: MaterialColors.White)))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)
@@ -174,7 +174,7 @@ internal sealed class HeroDemoPageState : State
                 label: label,
                 onTap: onTap,
                 background: (Color)Avalonia.Media.Color.Parse(colorHex),
-                foreground: MaterialColors.White,
+                foreground: MaterialColors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
     }

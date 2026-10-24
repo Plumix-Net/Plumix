@@ -71,7 +71,7 @@ internal sealed class FlowDemoPageState : State
         return new Container(
             color: color,
             alignment: Alignment.Center,
-            child: new Text(label, style: new TextStyle(FontSize: 18, Color: MaterialColors.Black)));
+            child: new Text(label, style: new TextStyle(FontSize: 18, Color: MaterialColors.White)));
     }
 
     private static Widget BuildButton(string label, Action onTap)
@@ -82,7 +82,7 @@ internal sealed class FlowDemoPageState : State
                 label: label,
                 onTap: onTap,
                 background: new Color(0xFFDCE3ED),
-                foreground: MaterialColors.White,
+                foreground: MaterialColors.Black,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
     }

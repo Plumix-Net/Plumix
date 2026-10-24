@@ -75,6 +75,8 @@ public sealed class SampleScreenCaptureTests : IDisposable
             tester.Pump();
             tester.Pump(TimeSpan.FromSeconds(1));
             tester.Pump(TimeSpan.FromSeconds(1));
+            // Dart waits on the real event loop here for image decoding, then pumps once more.
+            tester.Pump();
 
             File.WriteAllLines(
                 System.IO.Path.Combine(OutputDir!, name + ".texts.txt"),

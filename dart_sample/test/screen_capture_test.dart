@@ -39,6 +39,9 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
       await tester.pump(const Duration(seconds: 1));
+      // Image decoding only completes on the real event loop (C# decodes synchronously).
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 200)));
+      await tester.pump();
 
       final String name = route == '/'
           ? 'menu'
