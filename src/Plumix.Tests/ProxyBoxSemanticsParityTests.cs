@@ -124,7 +124,7 @@ public sealed class ProxyBoxSemanticsParityTests
         Assert.False(offstage.PaintsChild(box));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LayerLink_ToString_DescribesWhetherItIsLinked()
     {
         var link = new LayerLink();

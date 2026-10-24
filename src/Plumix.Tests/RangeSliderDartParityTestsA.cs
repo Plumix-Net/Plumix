@@ -911,7 +911,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
     // Flutter: "Range Slider uses the right theme colors for the right shapes when the value indicators are
     // showing"
-    [Fact]
+    [DebugOnlyFact]
     public void ThemeColorsWhenValueIndicatorsAreShowing()
     {
         using var shadows = DisableShadows();
@@ -960,7 +960,7 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
 
     // Flutter: "Range Slider removes value indicator from overlay if Slider gets disposed without value
     // indicator animation completing."
-    [Fact]
+    [DebugOnlyFact]
     public void RemovesValueIndicatorFromOverlayWhenDisposedMidAnimation()
     {
         using var shadows = DisableShadows();
@@ -1094,14 +1094,14 @@ public sealed class RangeSliderDartParityTestsA : IDisposable
     }
 
     // Flutter: "Range Slider top value indicator gets stroked when overlapping"
-    [Fact]
+    [DebugOnlyFact]
     public void TopValueIndicatorGetsStrokedWhenOverlapping()
     {
         TopValueIndicatorGetsStroked(textScale: null);
     }
 
     // Flutter: "Range Slider top value indicator gets stroked when overlapping with large text scale"
-    [Fact]
+    [DebugOnlyFact]
     public void TopValueIndicatorGetsStrokedWhenOverlappingWithLargeTextScale()
     {
         TopValueIndicatorGetsStroked(textScale: 2);

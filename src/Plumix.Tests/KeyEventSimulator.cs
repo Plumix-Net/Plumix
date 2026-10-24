@@ -1011,7 +1011,7 @@ internal static class KeySimulatorTransitModeVariant
         {
             RawKeyboard.Instance.ClearKeysPressed();
             HardwareKeyboard.Instance.ClearState();
-            ServicesBinding.Instance.KeyEventManager.ClearState();
+            ServicesBinding.Instance.KeyEventManager.ResetForTests();
             KeyboardDebug.DebugKeyEventSimulatorTransitModeOverride = previous;
         }
     }

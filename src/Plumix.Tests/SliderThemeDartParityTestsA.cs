@@ -68,7 +68,7 @@ public sealed class SliderThemeDartParityTestsA : IDisposable
     }
 
     // Flutter: "SliderThemeData implements debugFillProperties"
-    [Fact]
+    [DebugOnlyFact]
     public void SliderThemeDataImplementsDebugFillProperties()
     {
         var builder = new DiagnosticPropertiesBuilder();

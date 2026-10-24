@@ -236,12 +236,15 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), opacity.Curve.Transform(0.3));
         Assert.Null(opacity.OnEnd);
         Assert.False(opacity.AlwaysIncludeSemantics);
-        Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
-            opacity: -0.1,
-            duration: TimeSpan.Zero));
-        Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
-            opacity: 1.1,
-            duration: TimeSpan.Zero));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
+                opacity: -0.1,
+                duration: TimeSpan.Zero));
+            Assert.Throws<AssertionError>(() => new SliverAnimatedOpacity(
+                opacity: 1.1,
+                duration: TimeSpan.Zero));
+        }
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)

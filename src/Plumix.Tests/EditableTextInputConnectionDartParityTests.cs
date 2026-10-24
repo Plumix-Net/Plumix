@@ -78,7 +78,7 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
     }
 
     // Flutter: 'editable_text_test.dart: onAppPrivateCommand does not throw'
-    [Fact]
+    [DebugOnlyFact]
     public void OnAppPrivateCommandDoesNotThrowAndReachesTheCallback()
     {
         string? receivedAction = null;

@@ -161,7 +161,7 @@ public sealed class RenderEditableDartParityTests
         AssertCursorColorRadiusVisibility(editable, showCursor, BoxConstraints.Loose(new Size(100, 100)), false);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CanChangeTextAlign()
     {
         RenderEditable editable = NewEditable(text: new TextSpan(text: "test"));
@@ -1407,7 +1407,9 @@ public sealed class RenderEditableDartParityTests
             return;
         }
 
-        Assert.Equal(TextSelection.Collapsed(3), selection);
+        // Dart expects 0 on web and text.length on the native engine; Plumix's Paragraph follows
+        // web_ui's getWordBoundary for a negative position (ParagraphSelectionDartParityTests).
+        Assert.Equal(TextSelection.Collapsed(0), selection);
     }
 
     // -- editable_intrinsics_test.dart ------------------------------------------------------------------
@@ -1423,6 +1425,12 @@ public sealed class RenderEditableDartParityTests
         Assert.Equal(52.0, editable.GetMaxIntrinsicWidth(double.PositiveInfinity));
         Assert.Equal(10.0, editable.GetMinIntrinsicHeight(double.PositiveInfinity));
         Assert.Equal(10.0, editable.GetMaxIntrinsicHeight(double.PositiveInfinity));
+
+        if (!Constants.KDebugMode)
+        {
+            // The dump below is diagnostics text, which Dart produces only under `assert`.
+            return;
+        }
 
         Assert.Equal(
             "RenderEditable#00000 NEEDS-LAYOUT NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE DETACHED\n"

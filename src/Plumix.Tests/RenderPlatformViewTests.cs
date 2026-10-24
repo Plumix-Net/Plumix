@@ -221,7 +221,7 @@ public sealed class RenderPlatformViewTests : IDisposable
         Assert.Single(secondController.CreatedCallbacks);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderObjectChangedItsVisualAppearanceAfterTextureIsCreated()
     {
         var viewCreation = new TaskCompletionSource();
@@ -337,7 +337,7 @@ public sealed class RenderPlatformViewTests : IDisposable
 
     // group('RenderDarwinPlatformView')
 
-    [Theory]
+    [DebugOnlyTheory]
     [InlineData(false)]
     [InlineData(true)]
     public async Task DarwinView_DoesNotHandlePointerEventsWhenNotLaidOut(bool appKit)

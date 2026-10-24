@@ -101,11 +101,11 @@ public sealed class InkSparkleDartParityTests
         var material = (RenderInkFeatures)MaterialWidget.Of(button);
         Assert.Equal(1, PaintRecording.Record(material).CountCalls("drawRect"));
 
-        Assert.Single(material.DebugInkFeatures!);
+        Assert.Single(material.InkFeaturesForTests!);
 
         tester.PumpAndSettle();
         // ink feature is disposed.
-        Assert.Empty(material.DebugInkFeatures!);
+        Assert.Empty(material.InkFeaturesForTests!);
     }
 
     // Flutter: "InkSparkle default splashFactory paints with drawPaint when unbounded"
@@ -226,7 +226,7 @@ public sealed class InkSparkleDartParityTests
             Assert.True(sawWhiteSparkles, "White sparkle pixels must be present over the red wave.");
             gesture.Up();
             tester.PumpAndSettle();
-            Assert.Empty(controller.DebugInkFeatures!);
+            Assert.Empty(controller.InkFeaturesForTests!);
             using RenderTargetBitmap replayed = ReplayInk(retained!);
             Assert.Equal(retainedPixels, RasterBackend.ReadPixels(replayed));
         }

@@ -74,11 +74,16 @@ public sealed class ViewTests
             }))));
 
         Assert.Null(optional);
-        Assert.Contains(
-            "The context provided to View.of() does have a View widget ancestor, but it is hidden by a "
-            + "LookupBoundary.",
-            error!.Message,
-            StringComparison.Ordinal);
+        Assert.NotNull(error);
+        if (Constants.KDebugMode)
+        {
+            // Dart builds this message inside an assert; a release build also renders only part of it.
+            Assert.Contains(
+                "The context provided to View.of() does have a View widget ancestor, but it is hidden by a "
+                + "LookupBoundary.",
+                error.Message,
+                StringComparison.Ordinal);
+        }
     }
 
     [Fact]
@@ -129,7 +134,7 @@ public sealed class ViewTests
         Assert.Same(inside, children[0]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void View_TwoViewsForOneFlutterView_ReportTheDuplicateGlobalKey()
     {
         FlutterView view = NewView(7);
@@ -578,7 +583,7 @@ public sealed class ViewTests
         }
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void View_InstallsAViewScopeUnderTheRootScope()
     {
         var node = new FocusNode(debugLabel: "node");
@@ -594,7 +599,7 @@ public sealed class ViewTests
         Assert.Same(FocusManager.Instance.RootScope, traversalGroup!.Parent);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderTreeRootElement_RejectsARenderObjectAncestor()
     {
         var reported = new List<FlutterErrorDetails>();
@@ -618,7 +623,7 @@ public sealed class ViewTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ViewCollection_UnderARenderObjectAncestor_ReportsTheSlotError()
     {
         var reported = new List<FlutterErrorDetails>();

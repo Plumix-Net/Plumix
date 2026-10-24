@@ -340,7 +340,7 @@ public sealed class MaterialDataTableTests : IDisposable
         Assert.Equal(58, explicitTable.ResolvedRowHeights[1], 3);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TableRowInkWell_ResolvesTheEntireNearestTableRowInLocalCoordinates()
     {
         var rowInkWell = new TableRowInkWell(
@@ -369,7 +369,7 @@ public sealed class MaterialDataTableTests : IDisposable
         Assert.Equal(new Rect(-100.0, 0.0, 200.0, 48.0), paint.ResolvedInkRect);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DataTable_UsesRowInkUnlessTheCellOwnsItsGesture()
     {
         using var harness = new WidgetRenderHarness(Wrap(new DataTable(

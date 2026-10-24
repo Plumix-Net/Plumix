@@ -181,7 +181,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         return new WeakReference(someObject);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_SmokeTest()
     {
         FrameworkDartTester tester = CreateTester();
@@ -210,7 +210,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
             child: new SizedBox(width: 48.0, height: 48.0));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_InteractionTest()
     {
         FrameworkDartTester tester = CreateTester();
@@ -290,7 +290,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Null(selection.Current);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_NonInvertibleTransformRegressionTest()
     {
         FrameworkDartTester tester = CreateTester();
@@ -309,7 +309,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.True(true); // Expect that we don't crash.
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_ScrollTest()
     {
         FrameworkDartTester tester = CreateTester();
@@ -365,7 +365,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Equal(0.0, tester.GetTopLeft(Find.ByKey(childKey)).Y);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_LongPress()
     {
         FrameworkDartTester tester = CreateTester();
@@ -389,7 +389,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.False(didLongPress);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_Offstage()
     {
         FrameworkDartTester tester = CreateTester();
@@ -441,7 +441,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_WithTransformAbove_PaintsTheOverlayInTheInspectorSpace()
     {
         // Dart compares a golden of the overlay (inspector.overlay_positioning_with_transform.png);
@@ -501,7 +501,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         layer.Dispose();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void MultipleWidgetInspectors()
     {
         FrameworkDartTester tester = CreateTester();
@@ -549,7 +549,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Equal("Child 2", ParagraphText(WidgetInspectorService.Instance.Selection.Current!));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_IsNotInsertedWhenDebugExcludeRootWidgetInspectorIsSet()
     {
         FrameworkDartTester tester = CreateTester();
@@ -569,7 +569,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Empty(tester.ElementList(Find.ByType(typeof(WidgetInspector))));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetsApp_InsertsAWidgetInspectorWhileTheOverrideIsSet()
     {
         FrameworkDartTester tester = CreateTester();
@@ -587,7 +587,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Empty(tester.ElementList(Find.ByType(typeof(WidgetInspector))));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorButtons_RespectBottomViewPadding()
     {
         FrameworkDartTester tester = CreateTester();
@@ -612,7 +612,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         WidgetInspectorService.Instance.IsSelectMode = false;
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorButtons_MoveAndTapBehaviorButtonsUpdateTheGroup()
     {
         // The untracked half of Dart's on-device button tests: the move button flips the group
@@ -671,7 +671,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Null(Service.Selection.Current);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorButtons_RtlMoveButtonMovesTheGroupLeft()
     {
         FrameworkDartTester tester = CreateTester();
@@ -698,7 +698,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Equal(initialX, tester.GetCenter(Find.Text("EXIT SELECT MODE")).X);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TransformDebugCreator_WillReorderIfAfterStackTrace()
     {
         FrameworkDartTester tester = CreateTester();
@@ -728,7 +728,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.IsType<DiagnosticsStackTrace>(nodes[4]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TransformDebugCreator_WillNotReorderIfBeforeStackTrace()
     {
         FrameworkDartTester tester = CreateTester();
@@ -754,7 +754,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.IsType<DiagnosticsStackTrace>(nodes[4]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TransformDebugCreator_IsAnErrorDetailsPropertiesTransformer()
     {
         Assert.Contains(
@@ -929,7 +929,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Service.DisposeGroup(group3);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceApi_MaybeSetSelection()
     {
         FrameworkDartTester tester = CreateTester();
@@ -970,7 +970,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Same(elementA, Service.Selection.CurrentElement);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceApi_DefunctSelectionRegressionTest()
     {
         FrameworkDartTester tester = CreateTester();
@@ -1007,7 +1007,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Null(Service.Selection.Current);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceApi_GetParentChain()
     {
         FrameworkDartTester tester = CreateTester();
@@ -1058,7 +1058,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceApi_GetProperties()
     {
         IDiagnosticable diagnosticable = LtrText("a");
@@ -1090,7 +1090,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceApi_GetChildren()
     {
         FrameworkDartTester tester = CreateTester();
@@ -1166,7 +1166,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         selection.Dispose();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorSelectionCandidates_AreScopedToTheActiveModalRoute()
     {
         FrameworkDartTester tester = CreateTester();
@@ -1204,7 +1204,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Contains(tester.FirstElement(Find.ByKey(sheetTextKey)).FindRenderObject(), candidates);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorSelection_ScopesToNestedNavigatorInsideOverlayRoute()
     {
         FrameworkDartTester tester = CreateTester();
@@ -1261,7 +1261,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         Assert.Same(elementA, WidgetInspectorService.Instance.Selection.CurrentElement);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetInspector_DoesNotCrashAtZeroArea()
     {
         FrameworkDartTester tester = CreateTester(logicalSize: new Size(0, 0));
@@ -1313,7 +1313,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DevToolsDeepLinkPropertyTest()
     {
         var node = new DevToolsDeepLinkProperty("description of the deep link", "http://the-deeplink/");
@@ -1336,7 +1336,7 @@ public sealed class WidgetInspectorDartParityTests : IDisposable
             node.ToJsonMap(DiagnosticsSerializationDelegate.Create()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InspectorSerializationDelegate_AddAdditionalPropertiesCallback()
     {
         FrameworkDartTester tester = CreateTester();

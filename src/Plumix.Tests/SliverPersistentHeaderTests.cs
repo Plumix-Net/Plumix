@@ -38,8 +38,11 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         var showOnScreen = new PersistentHeaderShowOnScreenConfiguration();
         Assert.Equal(double.NegativeInfinity, showOnScreen.MinShowOnScreenExtent);
         Assert.Equal(double.PositiveInfinity, showOnScreen.MaxShowOnScreenExtent);
-        Assert.Throws<AssertionError>(
-            () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(
+                () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
+        }
     }
 
     [Fact]
@@ -405,7 +408,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         Assert.Equal(2000, pinnedHeader.ShowOnScreenConfiguration!.MaxShowOnScreenExtent);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SliverPersistentHeader_LayoutAssertsMinExtentIsNotAboveMaxExtent()
     {
         // Dart validates the delegate only in `layoutChild`'s debug assert, never in a constructor.

@@ -292,7 +292,7 @@ public sealed class ParagraphEngineTests
         Assert.Throws<ArgumentException>(() => builder.AddText("Hello\uD83DWorld"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Dispose_TwiceThrowsInDebug()
     {
         Paragraph paragraph = Build("A", new ParagraphStyle());

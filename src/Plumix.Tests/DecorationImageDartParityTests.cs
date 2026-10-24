@@ -79,7 +79,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Assert.Equal(new Rect(50.0, 75.0, 200.0, 100.0), command.Rect);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintImage_DebugInvertOversizedImages()
     {
         using IDisposable view = TestView();
@@ -164,7 +164,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Assert.Equal(LTRB(20.0, 40.0, 860.0, 840.0), command.Rect);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void PaintImage_ReportsImagePainting()
     {
         using var tester = new FrameworkDartTester();
@@ -190,7 +190,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Assert.Single(imageSizeInfos);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void PaintImage_ReportsImagePainting_ChangePerFrame()
     {
         using var tester = new FrameworkDartTester();
@@ -224,7 +224,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Assert.Equal(new Size(200 * ratio, 150 * ratio), info.DisplaySize);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void PaintImage_ReportsImagePainting_NoDebugLabel()
     {
         using IDisposable view = TestView();
@@ -356,7 +356,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
             backgroundImage.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DecorationImage_WithNullTextDirectionConfiguration_ShouldThrowError()
     {
         var backgroundImage = new DecorationImage(
@@ -838,7 +838,7 @@ public sealed class DecorationImageDartParityTests : IDisposable
         Assert.Equal("ImageSizeInfo(a.png, imageSize: Size(300.0, 300.0), displaySize: Size(100.0, 50.0))", info.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertAllPaintingVarsUnset_ThrowsWhenAVarIsSet()
     {
         Assert.True(PaintingDebug.DebugAssertAllPaintingVarsUnset("ok"));

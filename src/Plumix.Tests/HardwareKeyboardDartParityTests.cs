@@ -504,9 +504,13 @@ public sealed class HardwareKeyboardDartParityTests : IDisposable
             // ... the error should be caught.
             Assert.NotNull(record);
             Assert.Same(thrown, record.Exception);
-            Dictionary<string, DiagnosticsNode> infos =
-                RawKeyboardDartParityTests.GroupDiagnosticsByName(record.InformationCollector!());
-            Assert.IsType<DiagnosticsProperty<KeyMessage>>(infos["KeyMessage"]);
+            if (Constants.KDebugMode)
+            {
+                // Dart builds the informationCollector inside an `assert`.
+                Dictionary<string, DiagnosticsNode> infos =
+                    RawKeyboardDartParityTests.GroupDiagnosticsByName(record.InformationCollector!());
+                Assert.IsType<DiagnosticsProperty<KeyMessage>>(infos["KeyMessage"]);
+            }
 
             // But the exception should not interrupt recording the state.
             // Now the keyMessageHandler no longer throws an error.

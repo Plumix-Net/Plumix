@@ -1426,7 +1426,7 @@ public sealed class MaterialButtonsTests
             iconFirst: false);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_TapTargetPadding_RedirectsHitTestInPaddedAreaToChildCenter()
     {
         using var harness = new WidgetRenderHarness(
@@ -3751,7 +3751,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_StyleFrom_ForegroundColor_DerivesOverlayAndSplash()
     {
         Color styleColor = Colors.DarkCyan;
@@ -3774,7 +3774,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_StyleFrom_TransparentOverlay_DisablesVisualHighlights()
     {
         using WidgetRenderHarness harness = PumpButton(
@@ -3795,7 +3795,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_StyleFrom_OverlayColor_UsesStateOpacitiesAndSplashFallback()
     {
         Color styleColor = Colors.DarkCyan;
@@ -3818,7 +3818,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_ButtonStyleOverlayAll_DoesNotTintAtRest_ButAppliesOnHover()
     {
         var owner = TestBuildOwner.Create();
@@ -3857,7 +3857,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(overlayColor, hoveredDecorated!.HighlightColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_SplashKeepsOverlayTint_AfterPointerUp()
     {
         Color overlayColor = Colors.Crimson;
@@ -4225,7 +4225,7 @@ public sealed class MaterialButtonsTests
             decorated!.Border);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
         Color pressedOverlay = Colors.YellowGreen;
@@ -4251,7 +4251,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OutlinedButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
         Color pressedOverlay = Colors.YellowGreen;
@@ -4277,7 +4277,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_ThemeStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
         Color pressedOverlay = Colors.YellowGreen;
@@ -4304,7 +4304,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
         Color pressedOverlay = Colors.YellowGreen;
@@ -4330,7 +4330,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FilledButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
         Color pressedOverlay = Colors.YellowGreen;
@@ -4356,7 +4356,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
         Color overlayColor = Colors.Teal;
@@ -4375,7 +4375,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
         Color overlayColor = Colors.Teal;
@@ -4394,7 +4394,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OutlinedButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
         Color overlayColor = Colors.Teal;
@@ -4452,7 +4452,7 @@ public sealed class MaterialButtonsTests
             Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_PressedStateKeepsBackground_AndPaintsPressedOverlay()
     {
         Color background = Colors.SteelBlue;
@@ -4478,7 +4478,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(background, MaterialSurfaceProbe.Find(harness.RenderView)!.Color);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_HoverStateAppliesOverlayUntilExit()
     {
         var owner = TestBuildOwner.Create();
@@ -4536,7 +4536,7 @@ public sealed class MaterialButtonsTests
         Assert.Null(exitedDecorated!.HighlightColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_PressedOverlayTakesPriorityOverHoverOverlay()
     {
         Color otherOverlay = Colors.CornflowerBlue;
@@ -4562,7 +4562,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_HoverOverlayTakesPriorityOverFocusOverlay()
     {
         using var highlightStrategy = new HighlightStrategyScope();
@@ -4625,7 +4625,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusOnlyDecorated!.HighlightColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_KeyboardActivation_UsesPressedOverlay_AndInvokesOnPressedOnKeyDownOnly()
     {
         using var tester = new FrameworkDartTester();
@@ -4705,7 +4705,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(1, pressedCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_KeyboardActivation_IgnoresModifiedSpaceChord()
     {
         using var tester = new FrameworkDartTester();
@@ -4756,7 +4756,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(0, pressedCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_PressedOverlayTakesPriorityOverFocusOverlay()
     {
         using var highlightStrategy = new HighlightStrategyScope();
@@ -4784,7 +4784,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_M2DefaultOverlay_UsesPressedAndFocusedOpacity010()
     {
         FocusManager.Instance.ResetForTests();
@@ -4811,7 +4811,7 @@ public sealed class MaterialButtonsTests
         FocusManager.Instance.ResetForTests();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
@@ -4838,7 +4838,7 @@ public sealed class MaterialButtonsTests
         FocusManager.Instance.ResetForTests();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OutlinedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
@@ -4877,7 +4877,7 @@ public sealed class MaterialButtonsTests
         FocusManager.Instance.ResetForTests();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ElevatedButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
         Color styleColor = Colors.DarkCyan;
@@ -4900,7 +4900,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FilledButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
         Color styleColor = Colors.DarkCyan;
@@ -4923,7 +4923,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FilledButton_StyleFrom_TransparentOverlay_KeepsBaseBackground_AndNoSplash()
     {
         using WidgetRenderHarness harness = PumpButton(
@@ -4944,7 +4944,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OutlinedButton_StyleFrom_TransparentOverlay_HasNoIdleTint_AndNoSplash()
     {
         using WidgetRenderHarness harness = PumpButton(
@@ -4965,7 +4965,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_PointerDownStartsInkSplashRender()
     {
         using WidgetRenderHarness harness = PumpButton(
@@ -4982,7 +4982,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(activeSplash!.SplashColor);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_HasNoClipByDefault_ButInkRemainsContained()
     {
         var owner = TestBuildOwner.Create();
@@ -5063,7 +5063,7 @@ public sealed class MaterialButtonsTests
         Assert.Null(clip);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_PressedOverlay_ClearsAfterPointerUp()
     {
         Color pressedOverlay = Colors.Gold;
@@ -5082,7 +5082,7 @@ public sealed class MaterialButtonsTests
         Assert.NotEqual(pressedOverlay, InkHighlight(harness));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_ExternalFocusNode_RequestFocus_AppliesFocusedOverlay()
     {
         FocusManager.Instance.ResetForTests();
@@ -5190,7 +5190,7 @@ public sealed class MaterialButtonsTests
         FocusManager.Instance.ResetForTests();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextButton_TightWidth_ExpandsInkSplashToFullButtonBounds()
     {
         using var harness = new WidgetRenderHarness(

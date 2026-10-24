@@ -257,7 +257,7 @@ public sealed class SliverGridTests
             new SliverGridParentData { CrossAxisOffset = 12.5, Index = 2, LayoutOffset = 100.0 }.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSliverGrid_GridDelegate_RelayoutsOnlyWhenTheDelegateAsksTo()
     {
         var manager = new TestRenderSliverBoxChildManager(SizedChildren(4));

@@ -34,15 +34,18 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), opacity.Curve.Transform(0.3));
         Assert.Null(opacity.OnEnd);
         Assert.False(opacity.AlwaysIncludeSemantics);
-        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
-            opacity: -0.1,
-            duration: TimeSpan.Zero));
-        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
-            opacity: 1.1,
-            duration: TimeSpan.Zero));
-        Assert.Throws<AssertionError>(() => new AnimatedOpacity(
-            opacity: double.NaN,
-            duration: TimeSpan.Zero));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedOpacity(
+                opacity: -0.1,
+                duration: TimeSpan.Zero));
+            Assert.Throws<AssertionError>(() => new AnimatedOpacity(
+                opacity: 1.1,
+                duration: TimeSpan.Zero));
+            Assert.Throws<AssertionError>(() => new AnimatedOpacity(
+                opacity: double.NaN,
+                duration: TimeSpan.Zero));
+        }
     }
 
     [Fact]
@@ -384,12 +387,15 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(padding.Child);
         Assert.Equal(Curves.Linear.Transform(0.3), padding.Curve.Transform(0.3));
         Assert.Null(padding.OnEnd);
-        Assert.Throws<AssertionError>(() => new AnimatedPadding(
-            padding: new Thickness(-1),
-            duration: TimeSpan.Zero));
-        Assert.Throws<AssertionError>(() => new AnimatedPadding(
-            padding: new Thickness(double.NaN),
-            duration: TimeSpan.Zero));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedPadding(
+                padding: new Thickness(-1),
+                duration: TimeSpan.Zero));
+            Assert.Throws<AssertionError>(() => new AnimatedPadding(
+                padding: new Thickness(double.NaN),
+                duration: TimeSpan.Zero));
+        }
     }
 
     [Fact]
@@ -406,18 +412,21 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(align.HeightFactor);
         Assert.Equal(Curves.Linear.Transform(0.3), align.Curve.Transform(0.3));
         Assert.Null(align.OnEnd);
-        Assert.Throws<AssertionError>(() => new AnimatedAlign(
-            alignment: Alignment.Center,
-            duration: TimeSpan.Zero,
-            widthFactor: -1));
-        Assert.Throws<AssertionError>(() => new AnimatedAlign(
-            alignment: Alignment.Center,
-            duration: TimeSpan.Zero,
-            heightFactor: -1));
-        Assert.Throws<AssertionError>(() => new AnimatedAlign(
-            alignment: Alignment.Center,
-            duration: TimeSpan.Zero,
-            widthFactor: double.NaN));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedAlign(
+                alignment: Alignment.Center,
+                duration: TimeSpan.Zero,
+                widthFactor: -1));
+            Assert.Throws<AssertionError>(() => new AnimatedAlign(
+                alignment: Alignment.Center,
+                duration: TimeSpan.Zero,
+                heightFactor: -1));
+            Assert.Throws<AssertionError>(() => new AnimatedAlign(
+                alignment: Alignment.Center,
+                duration: TimeSpan.Zero,
+                widthFactor: double.NaN));
+        }
     }
 
     [Fact]
@@ -586,18 +595,21 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(fromRect.Right);
         Assert.Null(fromRect.Bottom);
 
-        Assert.Throws<AssertionError>(() => new AnimatedPositioned(
-            child: child,
-            duration: TimeSpan.Zero,
-            left: 0,
-            right: 0,
-            width: 10));
-        Assert.Throws<AssertionError>(() => new AnimatedPositioned(
-            child: child,
-            duration: TimeSpan.Zero,
-            top: 0,
-            bottom: 0,
-            height: 10));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedPositioned(
+                child: child,
+                duration: TimeSpan.Zero,
+                left: 0,
+                right: 0,
+                width: 10));
+            Assert.Throws<AssertionError>(() => new AnimatedPositioned(
+                child: child,
+                duration: TimeSpan.Zero,
+                top: 0,
+                bottom: 0,
+                height: 10));
+        }
     }
 
     [Fact]
@@ -620,18 +632,21 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(Curves.Linear.Transform(0.3), positioned.Curve.Transform(0.3));
         Assert.Null(positioned.OnEnd);
 
-        Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
-            child: child,
-            duration: TimeSpan.Zero,
-            start: 0,
-            end: 0,
-            width: 10));
-        Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
-            child: child,
-            duration: TimeSpan.Zero,
-            top: 0,
-            bottom: 0,
-            height: 10));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
+                child: child,
+                duration: TimeSpan.Zero,
+                start: 0,
+                end: 0,
+                width: 10));
+            Assert.Throws<AssertionError>(() => new AnimatedPositionedDirectional(
+                child: child,
+                duration: TimeSpan.Zero,
+                top: 0,
+                bottom: 0,
+                height: 10));
+        }
     }
 
     [Fact]
@@ -789,11 +804,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(animated.TextHeightBehavior);
         Assert.Equal(Curves.Linear.Transform(0.3), animated.Curve.Transform(0.3));
         Assert.Null(animated.OnEnd);
-        Assert.Throws<AssertionError>(() => new AnimatedDefaultTextStyle(
-            child,
-            style,
-            TimeSpan.Zero,
-            maxLines: 0));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedDefaultTextStyle(
+                child,
+                style,
+                TimeSpan.Zero,
+                maxLines: 0));
+        }
     }
 
     [Fact]
@@ -1022,12 +1040,15 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(200), fraction.Duration);
         Assert.Equal(Curves.Linear.Transform(0.3), fraction.Curve.Transform(0.3));
         Assert.Null(fraction.OnEnd);
-        Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
-            duration: TimeSpan.Zero,
-            widthFactor: -0.1));
-        Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
-            duration: TimeSpan.Zero,
-            heightFactor: double.NaN));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
+                duration: TimeSpan.Zero,
+                widthFactor: -0.1));
+            Assert.Throws<AssertionError>(() => new AnimatedFractionallySizedBox(
+                duration: TimeSpan.Zero,
+                heightFactor: double.NaN));
+        }
     }
 
     [Fact]

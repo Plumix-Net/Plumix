@@ -299,7 +299,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Equal(36, ScaledFontSize(FindParagraph(harness.RenderView, "Scaled option")!));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SimpleDialogOption_UsesInkWellTapSemanticsAndSupportsDisabledState()
     {
         int taps = 0;

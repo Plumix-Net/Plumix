@@ -57,7 +57,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
         Assert.Contains("ext.flutter.brightnessOverride", methods);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task Exit_TerminatesTheProcessWithCodeZero()
     {
         Action<int> previousExit = BindingBase.ExitProcess;
@@ -76,7 +76,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
         }
     }
 
-    [Theory]
+    [NonReleaseTheory]
     [InlineData(FoundationServiceExtensions.ConnectedVmServiceUri, "http://127.0.0.1:8181/abc=/")]
     [InlineData(FoundationServiceExtensions.ActiveDevToolsServerAddress, "http://127.0.0.1:9100")]
     public async Task StringExtensions_ReadAndWriteTheirValue(FoundationServiceExtensions extension, string value)
@@ -142,7 +142,7 @@ public sealed class FoundationBindingDartParityTests : IDisposable
         Assert.Equal(platform, result["value"]);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void DebugBrightnessOverride_ReplacesThePlatformBrightnessOfMediaQueryFromView()
     {
         // media_query.dart, _MediaQueryFromViewState.build.

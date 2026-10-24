@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -50,6 +51,13 @@ internal sealed class TestRecordingPaintingContext() : PaintingContext(new Offse
 /// <summary>Records what a render object paints, the way flutter_test's <c>paints</c> matcher does.</summary>
 internal static class PaintRecording
 {
+    /// <summary>
+    /// Keeps the canvas call log on in profile and release builds, as flutter_test's recording canvas
+    /// is, so paint assertions do not depend on the build mode.
+    /// </summary>
+    [ModuleInitializer]
+    internal static void RecordCanvasCallsInEveryBuildMode() => Canvas.DebugRecordCallsInEveryBuildMode = true;
+
     /// <summary>Paints <paramref name="renderObject"/> at the origin into a recording context.</summary>
     public static IReadOnlyList<CanvasCall> Record(RenderObject renderObject)
     {

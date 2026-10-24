@@ -35,7 +35,7 @@ internal static class InkFeatureProbe
 
     /// <summary>Every ink feature on the Materials below <paramref name="root"/>, in paint order.</summary>
     public static IReadOnlyList<InkFeature> Features(RenderObject? root) =>
-        Controllers(root).SelectMany(controller => controller.DebugInkFeatures ?? []).ToList();
+        Controllers(root).SelectMany(controller => controller.InkFeaturesForTests ?? []).ToList();
 
     /// <summary>The ink decorations (<see cref="Ink"/>) below <paramref name="root"/>.</summary>
     public static IReadOnlyList<InkDecoration> Decorations(RenderObject? root) =>

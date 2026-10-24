@@ -223,11 +223,15 @@ public sealed class WidgetStateTests
         Assert.Throws<FlutterError>(() => style.CompareTo(style));
         Assert.Throws<FlutterError>(() => style.GetTextStyle());
         Assert.Throws<FlutterError>(() => style.GetParagraphStyle());
-        var diagnostics = new DiagnosticPropertiesBuilder();
-        style.DebugFillProperties(diagnostics);
-        Assert.Equal("map", Assert.Single(diagnostics.Properties).Name);
-        Assert.Equal("WidgetStateMapper<TextStyle>({WidgetState.any: " + new TextStyle() + "})",
-            style.ToString());
+        if (Constants.KDebugMode)
+        {
+            // DiagnosticPropertiesBuilder.add and `objectRuntimeType` only work in a debug build.
+            var diagnostics = new DiagnosticPropertiesBuilder();
+            style.DebugFillProperties(diagnostics);
+            Assert.Equal("map", Assert.Single(diagnostics.Properties).Name);
+            Assert.Equal("WidgetStateMapper<TextStyle>({WidgetState.any: " + new TextStyle() + "})",
+                style.ToString());
+        }
     }
 
     [Theory]

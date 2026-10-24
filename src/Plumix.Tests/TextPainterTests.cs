@@ -696,7 +696,7 @@ public sealed class TextPainterTests
         Assert.Single(painter.ComputeLineMetrics());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextLayoutAccess_ThrowsWithTheInvalidatingStack()
     {
         using var painter = new TextPainter(text: new TextSpan("TEXT"), textDirection: TextDirection.Ltr);
@@ -748,7 +748,7 @@ public sealed class TextPainterTests
         Assert.Contains("TextPainter.paint called when text geometry was not yet calculated", exception.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Dispose_TracksDisposalAndAssertsOnSecondDispose()
     {
         var painter = new TextPainter();
@@ -988,7 +988,7 @@ public sealed class TextPainterTests
         Assert.Equal(10.0, painter.Height);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugPaintTextLayoutBoxes_DrawsOneRectPerRunBeforeTheParagraph()
     {
         using var painter = new TextPainter(
@@ -1038,7 +1038,7 @@ public sealed class TextPainterTests
         Assert.Null(boundary.GetLeadingTextBoundaryAt(-1));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Dispose_DispatchesMemoryEvents()
     {
         var events = new List<ObjectEvent>();

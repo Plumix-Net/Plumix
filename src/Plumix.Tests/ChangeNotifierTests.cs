@@ -281,7 +281,12 @@ public sealed class ChangeNotifierTests
         notifier.Value = 3.0;
 
         Assert.Equal([3.0], values);
-        Assert.StartsWith("ValueNotifier<double>#", notifier.ToString(), StringComparison.Ordinal);
+        if (Constants.KDebugMode)
+        {
+            // `describeIdentity` falls back to "<optimized out>" for the type name outside a debug build.
+            Assert.StartsWith("ValueNotifier<double>#", notifier.ToString(), StringComparison.Ordinal);
+        }
+
         Assert.EndsWith("(3)", notifier.ToString(), StringComparison.Ordinal);
     }
 

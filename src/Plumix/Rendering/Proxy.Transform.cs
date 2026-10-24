@@ -115,6 +115,9 @@ public class RenderTransform : RenderProxyBox
         }
     }
 
+    /// <summary>Plumix-only: a copy of the matrix last assigned through <see cref="Transform"/>, for tests.</summary>
+    internal Matrix4? TransformForTests => _transform is null ? null : Matrix4.Copy(_transform);
+
     /// <summary>
     /// The filter quality with which to apply the transform as a bitmap operation.
     /// </summary>

@@ -18,7 +18,7 @@ public sealed class SemanticsNodeDiagnosticsTests
         SemanticsNode.DebugResetSemanticsIdCounter();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_DoesNotThrowWithoutATransform()
     {
         var child1 = new SemanticsNode { Rect = FromLtrb(0.0, 0.0, 5.0, 5.0) };
@@ -47,7 +47,7 @@ public sealed class SemanticsNodeDiagnosticsTests
             root.ToStringDeep());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_RespectsTheChildOrderParameter()
     {
         var child1 = new SemanticsNode { Rect = FromLtrb(15.0, 0.0, 20.0, 5.0) };
@@ -120,7 +120,7 @@ public sealed class SemanticsNodeDiagnosticsTests
             rootComplex.ToStringDeep(childOrder: DebugSemanticsDumpOrder.InverseHitTest));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugProperties()
     {
         var minimalProperties = new SemanticsNode();
@@ -184,7 +184,7 @@ public sealed class SemanticsNodeDiagnosticsTests
             scaled.ToStringDeep());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BlockedActionsDebugProperties()
     {
         var config = new SemanticsConfiguration
@@ -212,7 +212,7 @@ public sealed class SemanticsNodeDiagnosticsTests
             blocked.ToStringDeep());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ValidationResultDebugProperties()
     {
         var nodeWithValidationResult = new SemanticsNode();
@@ -229,7 +229,7 @@ public sealed class SemanticsNodeDiagnosticsTests
             nodeWithValidationResult.ToStringDeep());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CustomActionsDebugProperties()
     {
         var configuration = new SemanticsConfiguration();

@@ -316,7 +316,7 @@ public sealed class SceneRasterizerTests
         Assert.Null(rendered!.RootLayer);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderViewCompositeFrame_AdvancesTheRepaintRainbow()
     {
         using var tester = new FrameworkDartTester();

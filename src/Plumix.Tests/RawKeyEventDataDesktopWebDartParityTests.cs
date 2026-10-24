@@ -283,7 +283,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         });
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Windows_DataToString()
     {
         Assert.Equal(
@@ -379,7 +379,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         LinuxCodePointsWithTwoUnicodeScalarValuesAreAllowed("glfw");
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LinuxGlfw_CodePointsWithMoreThanThreeUnicodeScalarValuesAreNotAllowed()
     {
         LinuxCodePointsWithMoreThanThreeUnicodeScalarValuesAreNotAllowed("glfw");
@@ -422,7 +422,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         Assert.Empty(data.KeyLabel);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LinuxGlfw_DataToString()
     {
         Assert.Equal(
@@ -524,7 +524,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         LinuxCodePointsWithTwoUnicodeScalarValuesAreAllowed("gtk");
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LinuxGtk_CodePointsWithMoreThanThreeUnicodeScalarValuesAreNotAllowed()
     {
         LinuxCodePointsWithMoreThanThreeUnicodeScalarValuesAreNotAllowed("gtk");
@@ -585,7 +585,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         Assert.Equal(LogicalKeyboardKey.KeyA, data.LogicalKey);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LinuxGtk_DataToString()
     {
         Assert.Equal(
@@ -1052,7 +1052,7 @@ public sealed class RawKeyEventDataDesktopWebDartParityTests : IDisposable
         Assert.Equal(0, data.KeyCode);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Web_DataToString()
     {
         Assert.Equal(

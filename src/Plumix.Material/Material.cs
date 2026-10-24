@@ -376,6 +376,12 @@ internal sealed class RenderInkFeatures : RenderProxyBox, MaterialInkController
     /// <summary>Dart's <c>@visibleForTesting debugInkFeatures</c>.</summary>
     public List<InkFeature>? DebugInkFeatures => Constants.KDebugMode ? _inkFeatures : null;
 
+    /// <summary>
+    /// Plumix-only: the ink features in every build mode, for test probes that check paint behavior
+    /// rather than the debug getter.
+    /// </summary>
+    internal List<InkFeature>? InkFeaturesForTests => _inkFeatures;
+
     public void AddInkFeature(InkFeature feature)
     {
         DebugAssertions.Assert(!feature.DebugDisposed);

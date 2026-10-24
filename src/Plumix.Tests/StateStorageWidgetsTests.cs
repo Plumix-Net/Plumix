@@ -137,7 +137,7 @@ public sealed class StateStorageWidgetsTests
         Assert.Same(inner, resolved);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PageStorage_OfWithoutAncestorThrowsDartsFlutterError()
     {
         FlutterError? error = null;
@@ -270,7 +270,7 @@ public sealed class StateStorageWidgetsTests
         Assert.Equal((2, 20), (observedA, observedB));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SharedAppData_GetValueWithoutAncestor_Throws()
     {
         Exception? exception = null;
@@ -287,7 +287,7 @@ public sealed class StateStorageWidgetsTests
         Assert.Contains("The ownership chain for the affected widget is", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SharedAppData_SetValueWithoutAncestor_ReportsFlutterDiagnostics()
     {
         Exception? exception = null;

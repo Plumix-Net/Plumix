@@ -302,7 +302,7 @@ public sealed class CupertinoColorsTests
         ColorMatchers.AssertSameColorAs(palette[expectedIndex], resolved);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ResolveFrom_KeepsEveryVariantAndOnlySwapsTheEffectiveValue()
     {
         CupertinoDynamicColor? resolved = null;

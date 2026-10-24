@@ -136,7 +136,7 @@ public sealed class TextSelectionOverlayDartParityTests : IDisposable
 
     // --------------------------------------------------------------- memory events
 
-    [Fact]
+    [DebugOnlyFact]
     public void OverlaysDispatchMemoryEvents()
     {
         var events = new List<ObjectEvent>();

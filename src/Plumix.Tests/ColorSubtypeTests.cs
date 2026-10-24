@@ -41,7 +41,7 @@ public sealed class ColorSubtypeTests
         Assert.NotEqual<Color>(new Color(0xFF000000), a);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ColorSwatch_ToStringNamesTheRuntimeTypeAndThePrimaryColor()
     {
         Assert.Equal(

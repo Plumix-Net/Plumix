@@ -10,7 +10,7 @@ namespace Plumix.Tests;
 
 public sealed class StrutStyleTests
 {
-    [Fact]
+    [DebugOnlyFact]
     public void Diagnostics_MatchDartToString()
     {
         Assert.Equal(

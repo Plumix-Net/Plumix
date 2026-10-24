@@ -389,7 +389,7 @@ public sealed class MaterialDatePickerThemeDartParityTests : IDisposable
     }
 
     // Flutter: "DatePickerThemeData implements debugFillProperties"
-    [Fact]
+    [DebugOnlyFact]
     public void DatePickerThemeDataImplementsDebugFillProperties()
     {
         var builder = new DiagnosticPropertiesBuilder();

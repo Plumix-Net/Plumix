@@ -30,7 +30,7 @@ public sealed class PointerEventsTests
         PointerDeviceKind.Trackpad,
     ];
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToString_IsOneLineAndDescribesThePosition()
     {
         var @event = new PointerDownEvent();
@@ -42,7 +42,7 @@ public sealed class PointerEventsTests
         Assert.EndsWith("(position: Offset(0.0, 0.0))", description, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringFull_IsOneLineAndListsEveryFineProperty()
     {
         var @event = new PointerDownEvent(pointer: 3, kind: PointerDeviceKind.Mouse);
@@ -61,7 +61,7 @@ public sealed class PointerEventsTests
         Assert.DoesNotContain("synthesized", description, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_FollowsThePointerEventDescriptionOrderAndLevels()
     {
         var @event = new PointerMoveEvent(
@@ -90,7 +90,7 @@ public sealed class PointerEventsTests
         Assert.Equal("synthesized", builder.Properties[25].ToDescription());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScrollEvent_AddsScrollDeltaAtTheInfoLevel()
     {
         var @event = new PointerScrollEvent(scrollDelta: new Point(0, 20));
@@ -101,7 +101,7 @@ public sealed class PointerEventsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TransformedEvent_ReportsTheDartWrapperType()
     {
         PointerEvent transformed = new PointerDownEvent().Transformed(Matrix4.TranslationValues(1, 2, 0));

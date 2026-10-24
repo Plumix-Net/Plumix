@@ -108,7 +108,7 @@ public sealed class TextEditingServicesDartParityTests : IDisposable
 
     // ----------------------------------------------------------- BrowserContextMenu
 
-    [Fact]
+    [DebugOnlyFact]
     public void BrowserContextMenuAssertsOnNonWebPlatforms()
     {
         PlatformDefaults.DebugIsWebOverride = false;

@@ -557,7 +557,7 @@ public sealed class RawKeyboardDartParityTests : IDisposable
         ]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RawKeyboardAssertsIfNoKeysAreInKeysPressedAfterReceivingAKeyDownEvent()
     {
         Dictionary<string, object?> keyEventMessage;
@@ -741,8 +741,12 @@ public sealed class RawKeyboardDartParityTests : IDisposable
         // ... the error should be caught.
         Assert.NotNull(record);
         Assert.Same(thrown, record.Exception);
-        Dictionary<string, DiagnosticsNode> infos = GroupDiagnosticsByName(record.InformationCollector!());
-        Assert.IsType<DiagnosticsProperty<RawKeyEvent>>(infos["Event"]);
+        if (Constants.KDebugMode)
+        {
+            // Dart builds the informationCollector inside an `assert`.
+            Dictionary<string, DiagnosticsNode> infos = GroupDiagnosticsByName(record.InformationCollector!());
+            Assert.IsType<DiagnosticsProperty<RawKeyEvent>>(infos["Event"]);
+        }
 
         // But the exception should not interrupt recording the state.
         // Now the key handler no longer throws an error.

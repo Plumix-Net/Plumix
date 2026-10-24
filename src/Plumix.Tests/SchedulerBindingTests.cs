@@ -370,7 +370,7 @@ public sealed class SchedulerBindingTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertNoTimeDilation_ThrowsWithTheGivenReasonOnlyWhileDilated()
     {
         SchedulerBinding.ResetForTests();
@@ -392,7 +392,7 @@ public sealed class SchedulerBindingTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertAllSchedulerVarsUnset_ChecksOnlyTheTwoBannerFlags()
     {
         try
@@ -422,7 +422,7 @@ public sealed class SchedulerBindingTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertNoTransientCallbacks_ReportsTheLeakInsteadOfThrowing()
     {
         SchedulerBinding.ResetForTests();
@@ -448,7 +448,7 @@ public sealed class SchedulerBindingTests
         }
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void PerformanceMode_RefCountsSameModeRequestsAndRejectsConflictingOnes()
     {
         SchedulerBinding.ResetForTests();
@@ -487,7 +487,7 @@ public sealed class SchedulerBindingTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertNoPendingPerformanceModeRequests_ThrowsWhileARequestIsOutstanding()
     {
         SchedulerBinding.ResetForTests();
@@ -843,7 +843,7 @@ public sealed class SchedulerBindingTests
     }
 
     // binding_test.dart: "Flutter.Frame event fired".
-    [Fact]
+    [NonReleaseFact]
     public void ReportedTimings_PostAFlutterFrameEventPerTiming()
     {
         SchedulerBinding.ResetForTests();

@@ -530,10 +530,23 @@ public partial class Canvas
     /// <summary>Plumix-only: the debug descriptions of the calls recorded so far, in order.</summary>
     internal IReadOnlyList<CanvasCall> DebugCalls => _debugCalls;
 
-    /// <summary>Plumix-only: appends a debug description of a call; a no-op outside debug builds.</summary>
+    /// <summary>
+    /// Plumix-only: whether <see cref="DebugRecordCall"/> records outside debug builds too.
+    /// </summary>
+    /// <remarks>
+    /// The test assembly turns it on: flutter_test's <c>TestRecordingCanvas</c>, which the
+    /// <c>paints</c> matcher reads, records in every build mode, so the ported paint tests keep their
+    /// subject under <c>-c Profile</c> and <c>-c Release</c>. Apps never set it.
+    /// </remarks>
+    internal static bool DebugRecordCallsInEveryBuildMode { get; set; }
+
+    /// <summary>
+    /// Plumix-only: appends a debug description of a call; a no-op outside debug builds unless
+    /// <see cref="DebugRecordCallsInEveryBuildMode"/> is set.
+    /// </summary>
     internal void DebugRecordCall(CanvasCall call)
     {
-        if (Constants.KDebugMode)
+        if (Constants.KDebugMode || DebugRecordCallsInEveryBuildMode)
         {
             // Avalonia brushes are thread-affine: read the paint colour while recording, on the
             // painting thread, so tests can inspect it from any thread.

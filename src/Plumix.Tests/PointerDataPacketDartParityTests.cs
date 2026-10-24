@@ -484,7 +484,7 @@ public sealed class PointerDataPacketDartParityTests : IDisposable
         Assert.Equal(0.5, @event.Rotation);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ErrorHandling()
     {
         var reports = new List<string>();

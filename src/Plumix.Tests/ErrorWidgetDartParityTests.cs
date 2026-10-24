@@ -35,7 +35,11 @@ public sealed class ErrorWidgetDartParityTests
         Assert.Contains(errorText, error.Message);
 
         var errorWidget = (ErrorWidget)tester.ElementOfType<ErrorWidget>().Widget;
-        Assert.Contains(errorText, errorWidget.Message);
+        if (Constants.KDebugMode)
+        {
+            // The default ErrorWidget.builder only shows the exception's message in debug mode.
+            Assert.Contains(errorText, errorWidget.Message);
+        }
 
         // Failure in one widget shouldn't ripple through the entire tree and effect
         // ancestors. Those should still be in the tree.
