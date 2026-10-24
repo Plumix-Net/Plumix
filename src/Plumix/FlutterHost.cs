@@ -11,6 +11,7 @@ using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Plumix.Accessibility;
 using Plumix.Gestures;
@@ -392,7 +393,7 @@ public class PlumixHost : Control, ICustomHitTest
     {
         base.OnTextInput(e);
 
-        if (e.Handled || string.IsNullOrEmpty(e.Text))
+        if (e.Handled || IsControlText(e.Text))
         {
             return;
         }
@@ -404,6 +405,28 @@ public class PlumixHost : Control, ICustomHitTest
             TextInputPlugin.InsertText(e.Text);
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    /// Avalonia raises the characters of an unhandled key press as text input (iOS's Delete key as
+    /// U+007F, Backspace as U+0008); no engine commits control characters as text.
+    /// </summary>
+    internal static bool IsControlText([NotNullWhen(false)] string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return true;
+        }
+
+        foreach (char character in text)
+        {
+            if (!char.IsControl(character))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     protected override void OnPointerEntered(PointerEventArgs e)
@@ -934,7 +957,9 @@ public class PlumixHost : Control, ICustomHitTest
         // Avalonia assigns Bounds after ArrangeOverride returns; metrics published during that
         // callback must use its finalSize, including the first layout and subsequent resizes.
         var size = _lastArrangedSize;
-        var viewInsets = ResolveViewInsets(_inputPane?.OccludedRect ?? default, size);
+        Point origin = _attachedTopLevel is null ? default : this.TranslatePoint(default, _attachedTopLevel) ?? default;
+        var viewInsets = ResolveViewInsets(
+            _inputPane?.State ?? InputPaneState.Closed, _inputPane?.OccludedRect ?? default, new Rect(origin, size));
         double scale = _attachedTopLevel?.RenderScaling ?? 1.0;
         if (!double.IsFinite(scale) || scale <= 0)
         {
@@ -1489,10 +1514,18 @@ public class PlumixHost : Control, ICustomHitTest
             return new Dictionary<string, object?> { ["value"] = false };
         }
 
-        var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
-        string? text = clipboard is null ? null : await clipboard.TryGetTextAsync();
-        return new Dictionary<string, object?> { ["value"] = text is not null };
+        IClipboard? clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
+        using IAsyncDataTransfer? data = clipboard is null ? null : await clipboard.TryGetDataAsync();
+        return new Dictionary<string, object?> { ["value"] = OffersStrings(data) };
     }
+
+    /// <summary>
+    /// Whether the clipboard offers text, answered from its formats alone, as the engine answers
+    /// from <c>UIPasteboard.hasStrings</c> and <c>ClipboardManager.hasPrimaryClip</c>. Reading the
+    /// text instead shows iOS's paste-permission alert, and every <c>EditableText</c> asks on mount.
+    /// </summary>
+    internal static bool OffersStrings(IAsyncDataTransfer? data) =>
+        data is not null && data.Formats.Any(format => format is DataFormat<string>);
 
     private static SystemSoundType ParseSystemSoundType(string? type) => type switch
     {
@@ -1685,15 +1718,26 @@ public class PlumixHost : Control, ICustomHitTest
         return color.ToARGB32();
     }
 
-    private static Thickness ResolveViewInsets(Rect occludedRect, Size hostSize)
+    /// <summary>
+    /// The keyboard inset is the part of the view the input pane covers, measured from the view's
+    /// bottom, as the engine computes <c>viewInsets.bottom</c> from the keyboard's frame. The pane's
+    /// rect alone is not it: on iOS a hidden keyboard keeps its full-height frame below the screen, and
+    /// with a hardware keyboard only the shortcut bar of an "open" one is on screen.
+    /// </summary>
+    /// <param name="state">The input pane's state; a closed pane covers nothing.</param>
+    /// <param name="occludedRect">The pane's rect in top-level coordinates.</param>
+    /// <param name="hostRect">The view's rect in top-level coordinates.</param>
+    internal static Thickness ResolveViewInsets(InputPaneState state, Rect occludedRect, Rect hostRect)
     {
-        if (occludedRect.Height <= 0 || hostSize.Height <= 0)
+        if (state != InputPaneState.Open || occludedRect.Height <= 0 || hostRect.Height <= 0)
         {
             return default;
         }
 
-        double bottomInset = Math.Clamp(occludedRect.Height, 0.0, hostSize.Height);
-        return new Thickness(0, 0, 0, bottomInset);
+        Rect covered = hostRect.Intersect(occludedRect);
+        return covered.Height <= 0
+            ? default
+            : new Thickness(0, 0, 0, Math.Clamp(hostRect.Bottom - covered.Top, 0.0, hostRect.Height));
     }
 
     /// <summary>

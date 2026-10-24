@@ -6,6 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
+using RunGlyph = Avalonia.Media.TextFormatting.GlyphInfo;
 using TextStyle = Plumix.Widgets.TextStyle;
 
 namespace Plumix.Tests;
@@ -261,6 +262,35 @@ public sealed class AvaloniaParagraphDartParityTests
             using AvaloniaParagraph paragraph = VariableParagraph(900);
             paragraph.Layout(new ParagraphConstraints(500));
             return paragraph.MaxIntrinsicWidth;
+        }
+    }
+
+    [Fact]
+    public void VariableOutlines_FillOverlappingContours_WithTheNonZeroRule()
+    {
+        // Variable fonts keep overlapping contours (Android's system Roboto is one), and Skia fills
+        // glyph paths with the non-zero rule. Under the even-odd rule every overlap at a stroke joint
+        // was punched out of the glyph. Two copies of a glyph at one origin overlap completely: the
+        // non-zero rule paints them like one glyph, the even-odd rule cancels them out.
+        GlyphTypeface typeface = new Typeface(Variable).GlyphTypeface;
+        ushort glyph = typeface.CharacterToGlyphMap['H'];
+        using var variable = new VariableFont(typeface, ResolvedTextStyle.FromParagraphStyle(
+            new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: FontWeight.Normal)));
+
+        int single = OpaquePixels([new RunGlyph(glyph, 0, 40)]);
+        int stacked = OpaquePixels([new RunGlyph(glyph, 0, 0), new RunGlyph(glyph, 1, 40)]);
+
+        Assert.True(single > 100);
+        Assert.Equal(single, stacked);
+
+        int OpaquePixels(RunGlyph[] glyphs)
+        {
+            var run = new GlyphRun(typeface, 40, new string('H', glyphs.Length).AsMemory(), glyphs, new Point(0, 40));
+            var recorder = new PictureRecorder();
+            new Canvas(recorder).DrawTextGeometry(
+                variable.Outline(run), new Paint { Color = new Plumix.UI.Color(0xFF000000) });
+            using Bitmap image = recorder.EndRecording().ToImageSync(60, 60);
+            return RasterBackend.ReadPixels(image).Where((value, index) => index % 4 == 3 && value > 200).Count();
         }
     }
 

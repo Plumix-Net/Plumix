@@ -208,6 +208,79 @@ public sealed class HostTextInputPluginTests : IDisposable
         Assert.Empty(_log);
     }
 
+    [Theory]
+    [InlineData("abc", 3, 3, "ab", 2)]
+    [InlineData("abc", 1, 3, "a", 1)]
+    [InlineData("abc", 0, 0, "abc", 0)]
+    // A whole emoji: a surrogate pair, a ZWJ sequence, a flag and a keycap.
+    [InlineData("a\U0001F44D", 3, 3, "a", 1)]
+    [InlineData("a\U0001F468\u200D\U0001F469\u200D\U0001F467", 9, 9, "a", 1)]
+    [InlineData("a\U0001F1FA\U0001F1E6", 5, 5, "a", 1)]
+    [InlineData("a1\uFE0F\u20E3", 4, 4, "a", 1)]
+    // One unit of a Thai consonant with its vowel, as the plugin deletes it; a surrogate pair stays whole.
+    [InlineData("\u0E01\u0E35", 2, 2, "\u0E01", 1)]
+    [InlineData("a\U00020000", 3, 3, "a", 1)]
+    public void IosBackspaceRunsDeleteBackward(string text, int @base, int extent, string expected, int caret)
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        SetClient(123);
+        SetEditingState(text, @base, extent);
+        _log.Clear();
+
+        Assert.True(_plugin.HandleKeyEvent(LogicalKeyboardKey.Backspace));
+
+        Assert.Equal(expected, _plugin.ActiveModel!.GetText());
+        Assert.Equal(new TextInputModel.Range(caret), _plugin.ActiveModel.Selection);
+        if (expected == text)
+        {
+            Assert.Empty(_log);
+        }
+        else
+        {
+            AssertState(Assert.Single(_log), client: 123, text: expected, caret, caret);
+        }
+    }
+
+    [Fact]
+    public void IosDeleteBackwardEndsComposingAndReportsADelta()
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        SetClient(123, Config(enableDeltaModel: true));
+        SetEditingState("ab", 2, 2);
+        _plugin.SetMarkedText("c", 1);
+        _log.Clear();
+
+        _plugin.DeleteBackward();
+
+        Assert.Equal("ab", _plugin.ActiveModel!.GetText());
+        Assert.False(_plugin.ActiveModel.Composing);
+        var delta = (IDictionary)((IList)((IDictionary)((IList)Assert.Single(_log).Arguments!)[1]!)["deltas"]!)[0]!;
+        Assert.Equal("abc", delta["oldText"]);
+        Assert.Equal(string.Empty, delta["deltaText"]);
+        Assert.Equal(2, Convert.ToInt32(delta["deltaStart"]));
+        Assert.Equal(3, Convert.ToInt32(delta["deltaEnd"]));
+        Assert.Equal("TextAffinity.downstream", delta["selectionAffinity"]);
+    }
+
+    [Theory]
+    [InlineData(TargetPlatform.Android, false, false, false)]
+    [InlineData(TargetPlatform.Windows, false, false, false)]
+    [InlineData(TargetPlatform.IOS, true, false, false)]
+    [InlineData(TargetPlatform.IOS, false, true, false)]
+    [InlineData(TargetPlatform.IOS, false, false, true)]
+    public void BackspaceElsewhereIsLeftToTheFramework(TargetPlatform platform, bool control, bool alt, bool meta)
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        SetClient(123);
+        SetEditingState("abc", 3, 3);
+        _log.Clear();
+
+        Assert.False(_plugin.HandleKeyEvent(LogicalKeyboardKey.Backspace, control: control, alt: alt, meta: meta));
+
+        Assert.Equal("abc", _plugin.ActiveModel!.GetText());
+        Assert.Empty(_log);
+    }
+
     [Fact]
     public void SetClientWithoutAViewIdTargetsTheImplicitView()
     {

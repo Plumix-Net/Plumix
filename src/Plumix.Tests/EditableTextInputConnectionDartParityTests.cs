@@ -427,6 +427,68 @@ public sealed class EditableTextInputConnectionDartParityTests : IDisposable
         }
     }
 
+    [Fact]
+    public void IosBackspaceDeletesThroughThePlugin_AndDeleteKeyCharactersAreNotTyped()
+    {
+        // iOS's text-editing shortcuts hand Backspace back to the platform, where the engine's plugin
+        // runs `deleteBackward`. Avalonia reports UIKit's `deleteBackward` as a Backspace key press,
+        // and raises an unhandled hardware key's characters (U+007F for Delete) as text input.
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        var host = new WidgetHost();
+        try
+        {
+            host.RootWidget = new TestWidgetsApp(
+                home: new Align(
+                    alignment: Alignment.TopLeft,
+                    child: new SizedBox(
+                        width: 200,
+                        child: new EditableText(controller: _controller, focusNode: _focusNode))));
+            host.PumpFrameForTests(new Size(300, 200));
+            _focusNode.RequestFocus();
+            EventLoop.FlushMicrotasks();
+            host.PumpFrameForTests(new Size(300, 200));
+            SchedulerBinding.PumpFrameForTests();
+            Assert.NotNull(RequestClient(host));
+            host.RaiseEvent(new AvaloniaTextInputEventArgs
+            {
+                RoutedEvent = AvaloniaInputElement.TextInputEvent,
+                Text = "abc",
+            });
+
+            PressBackspace();
+            Assert.Equal("ab", _controller.Text);
+            Assert.Equal(TextSelection.Collapsed(2), _controller.Selection);
+
+            host.RaiseEvent(new AvaloniaTextInputEventArgs
+            {
+                RoutedEvent = AvaloniaInputElement.TextInputEvent,
+                Text = "\u007f",
+            });
+            Assert.Equal("ab", _controller.Text);
+        }
+        finally
+        {
+            host.RootWidget = null;
+            SchedulerBinding.PumpFrameForTests();
+        }
+
+        void PressBackspace()
+        {
+            Avalonia.Interactivity.RoutedEvent[] events =
+                [AvaloniaInputElement.KeyDownEvent, AvaloniaInputElement.KeyUpEvent];
+            foreach (Avalonia.Interactivity.RoutedEvent routedEvent in events)
+            {
+                host.RaiseEvent(new Avalonia.Input.KeyEventArgs
+                {
+                    RoutedEvent = routedEvent,
+                    Key = Avalonia.Input.Key.Back,
+                    PhysicalKey = Avalonia.Input.PhysicalKey.Backspace,
+                    KeySymbol = "\b",
+                });
+            }
+        }
+    }
+
     private static TextInputMethodClient? RequestClient(PlumixHost host)
     {
         var request = new TextInputMethodClientRequestedEventArgs

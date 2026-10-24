@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.4.0-beta.1, 2026-10-24)
+- Variable-font outlines fill with the non-zero rule, as Skia fills glyphs; overlaps were punched out (C#-only).
+- Hosts answer `Clipboard.hasStrings` from the clipboard's formats; reading it showed iOS's paste alert (C#-only).
+- Hosts take `viewInsets.bottom` from the view area the input pane covers; hidden iOS keyboards left it (C#-only).
+- iOS Backspace runs the plugin's `deleteBackward`; hosts no longer type a key's control characters (C#-only).
 
 ## v0.4.0-beta.1 — 2026-10-24 (collapses v0.2.0-alpha.2 … v0.3.0-alpha.4, 2026-08-20 … 2026-10-24)
 - Cupertino (M6): every `cupertino_ui/lib/src/` file is a strict port — theme/colours/text theme, localizations

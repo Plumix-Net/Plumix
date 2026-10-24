@@ -111,6 +111,9 @@ internal sealed class VariableFont : IDisposable
     {
         var geometry = new StreamGeometry();
         using StreamGeometryContext context = geometry.Open();
+        // Variable fonts keep overlapping contours; Skia fills glyph paths with the non-zero rule,
+        // while a stream geometry defaults to even-odd and would punch every overlap out.
+        context.SetFillRule(FillRule.NonZero);
         var target = new OutlineTarget(context, _scale);
         var handle = GCHandle.Alloc(target);
         try

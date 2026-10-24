@@ -1,4 +1,7 @@
+using System.Buffers;
 using System.Collections;
+using System.Globalization;
+using System.Text;
 using Avalonia;
 using Plumix.Widgets;
 
@@ -13,7 +16,9 @@ using Plumix.Widgets;
 // - the editing state lives in a `TextInputModel`, the engine's shared
 //   `shell/platform/common/text_input_model.cc`;
 // - on platforms other than macOS, Enter follows the Windows embedder's `TextInputPlugin::EnterPressed`,
-//   and the composing-rect method `TextInput.setMarkedTextRect` is kept as the Windows plugin keeps it.
+//   and the composing-rect method `TextInput.setMarkedTextRect` is kept as the Windows plugin keeps it;
+// - on iOS, the Backspace the framework hands back to the platform runs the iOS plugin's
+//   `deleteBackward` (Avalonia reports UIKit's `deleteBackward` as a Backspace key press).
 // AppKit's `interpretKeyEvents:` is not available to an Avalonia host, so `MacOSStandardKeyBindings`
 // stands in for it with the table flutter_test's `MacOSTestTextInputKeyHandler` uses.
 
@@ -548,6 +553,15 @@ public sealed class HostTextInputPlugin
             return false;
         }
 
+        if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS
+            && key.Equals(LogicalKeyboardKey.Backspace) && !control && !alt && !meta)
+        {
+            // iOS's text-editing shortcuts hand Backspace back to the platform, where UIKit calls the
+            // plugin's `deleteBackward`; with no UIKit text view behind the host, the plugin answers.
+            DeleteBackward();
+            return true;
+        }
+
         if (PlatformDefaults.TargetPlatform != TargetPlatform.MacOS)
         {
             bool isEnter = key.Equals(LogicalKeyboardKey.Enter) || key.Equals(LogicalKeyboardKey.NumpadEnter);
@@ -586,6 +600,91 @@ public sealed class HostTextInputPlugin
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Deletes the selection, or the character before a collapsed one: the iOS plugin's
+    /// <c>deleteBackward</c>. A collapsed selection deletes one UTF-16 unit, as the plugin does for
+    /// Thai vowels, but a whole composed character when it is an emoji.
+    /// </summary>
+    /// <remarks>
+    /// ICU's <c>UCHAR_EMOJI</c> has no .NET counterpart; a composed character counts as an emoji when
+    /// it is a symbol or a pictograph sequence. A surrogate pair is never split.
+    /// </remarks>
+    public void DeleteBackward()
+    {
+        TextInputModel? model = _activeModel;
+        if (model is null)
+        {
+            return;
+        }
+
+        _textAffinity = TextAffinity.Downstream;
+        string text = model.GetText();
+        TextInputModel.Range range = model.Selection;
+        if (range.Collapsed && range.Position > 0 && range.Position <= text.Length)
+        {
+            int location = range.Position;
+            int start = ComposedCharacterStart(text, location - 1);
+            int unit = char.IsLowSurrogate(text[location - 1]) && location >= 2 ? 2 : 1;
+            int deleteFrom = IsEmoji(text, start, location) ? start : location - unit;
+            range = new TextInputModel.Range(deleteFrom, location);
+        }
+
+        if (range.Collapsed)
+        {
+            return;
+        }
+
+        // `replaceRange:withText:` with empty text: the marked text ends and the selection collapses.
+        if (model.Composing)
+        {
+            model.EndComposing();
+        }
+
+        model.SetSelection(range);
+        model.Backspace();
+        if (_enableDeltaModel)
+        {
+            UpdateEditStateWithDelta(text, new TextInputModel.Range(range.Start, range.End), string.Empty);
+        }
+        else
+        {
+            UpdateEditState();
+        }
+    }
+
+    /// <summary>
+    /// The start of the composed character (grapheme cluster) holding <paramref name="index"/>:
+    /// <c>rangeOfComposedCharacterSequenceAtIndex:</c>.
+    /// </summary>
+    private static int ComposedCharacterStart(string text, int index)
+    {
+        int start = 0;
+        foreach (int boundary in StringInfo.ParseCombiningCharacters(text))
+        {
+            if (boundary > index)
+            {
+                break;
+            }
+
+            start = boundary;
+        }
+
+        return start;
+    }
+
+    private static bool IsEmoji(string text, int start, int end)
+    {
+        ReadOnlySpan<char> character = text.AsSpan(start, end - start);
+        if (Rune.DecodeFromUtf16(character, out Rune first, out int length) != OperationStatus.Done)
+        {
+            return false;
+        }
+
+        // Pictographs and flags are symbols; keycaps and ZWJ/presentation sequences start with others.
+        return Rune.GetUnicodeCategory(first) == UnicodeCategory.OtherSymbol
+               || (character.Length > length && character.IndexOfAny('\u200D', '\uFE0F', '\u20E3') >= 0);
     }
 
     /// <summary>
