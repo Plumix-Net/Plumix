@@ -41,11 +41,11 @@ public sealed class CounterApp : StatefulWidget
                 restorationScopeId: "sample",
                 title: "Flutter.Net Sample",
                 theme: new ThemeData(
-                    textTheme: new MaterialTextTheme(
-                        bodyMedium: MaterialTextTheme.DefaultBodyMedium.CopyWith(
-                            fontSize: 14,
-                            height: 1.43,
-                            letterSpacing: 0.25))),
+                    textTheme: new TextTheme(
+                        bodyMedium: new TextStyle(
+                            FontSize: 14,
+                            Height: 1.43,
+                            LetterSpacing: 0.25))),
                 home: new CounterScope(
                     _model,
                     new SampleGalleryScreen()));
