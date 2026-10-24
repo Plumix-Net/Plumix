@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using Android.OS;
+using Android.Views;
 using Android.Window;
 using Avalonia;
 using Avalonia.Android;
@@ -27,6 +28,7 @@ public class PlumixMainActivity : AvaloniaMainActivity
 
     private AndroidActivityDelegate? _delegate;
     private Java.Lang.Object? _backCallback;
+    private ImeVisibilityListener? _imeListener;
 
     /// <summary>The delegate the Activity callbacks are forwarded to.</summary>
     protected AndroidActivityDelegate Delegate => _delegate ??= new AndroidActivityDelegate();
@@ -39,11 +41,17 @@ public class PlumixMainActivity : AvaloniaMainActivity
         Delegate.PopSystemNavigator = Finish;
         if (OperatingSystem.IsAndroidVersionAtLeast(34))
         {
-            Delegate.FrameworkHandlesBackChanged = SetFrameworkHandlesBack;
+            Delegate.BackCallbackNeededChanged = SetBackCallbackRegistered;
         }
 
         Delegate.OnCreate(savedInstanceState?.GetByteArray(FrameworkRestorationBundleKey));
         base.OnCreate(savedInstanceState);
+
+        if (OperatingSystem.IsAndroidVersionAtLeast(34) && Window?.DecorView is { } decorView)
+        {
+            _imeListener = new ImeVisibilityListener(this, decorView);
+            decorView.ViewTreeObserver?.AddOnGlobalLayoutListener(_imeListener);
+        }
     }
 
     protected override void OnSaveInstanceState(Bundle outState)
@@ -77,6 +85,13 @@ public class PlumixMainActivity : AvaloniaMainActivity
             UnregisterBackCallback();
         }
 
+        if (_imeListener is not null)
+        {
+            Window?.DecorView.ViewTreeObserver?.RemoveOnGlobalLayoutListener(_imeListener);
+            _imeListener.Dispose();
+            _imeListener = null;
+        }
+
         Delegate.OnDestroy();
         base.OnDestroy();
     }
@@ -88,12 +103,13 @@ public class PlumixMainActivity : AvaloniaMainActivity
     }
 
     // FlutterActivity.setFrameworkHandlesBack: the callback is registered only while the framework has
-    // a route to pop, so the system's own back (and its back-to-home animation) applies at the root.
+    // a route to pop, so the system's own back (and its back-to-home animation) applies at the root, and
+    // (C#-only, see AndroidActivityDelegate.BackCallbackNeededChanged) while the soft keyboard is hidden.
     // Below Android 14 the press reaches the framework through Avalonia's TopLevel.BackRequested.
     [SupportedOSPlatform("android34.0")]
-    private void SetFrameworkHandlesBack(bool frameworkHandlesBack)
+    private void SetBackCallbackRegistered(bool registered)
     {
-        if (frameworkHandlesBack)
+        if (registered)
         {
             RegisterBackCallback();
         }
@@ -113,7 +129,8 @@ public class PlumixMainActivity : AvaloniaMainActivity
 
         // FlutterActivity uses PRIORITY_DEFAULT, but AvaloniaActivity also registers an androidx
         // OnBackPressedDispatcher callback (in onStart, re-registered whenever it toggles), which would
-        // take the press first and skip the predictive-back gesture events.
+        // take the press first and skip the predictive-back gesture events. An overlay callback also
+        // outranks the soft keyboard's, so it is unregistered while the keyboard is shown.
         var callback = new BackAnimationCallback(this);
         OnBackInvokedDispatcher.RegisterOnBackInvokedCallback(IOnBackInvokedDispatcher.PriorityOverlay, callback);
         _backCallback = callback;
@@ -130,6 +147,16 @@ public class PlumixMainActivity : AvaloniaMainActivity
         OnBackInvokedDispatcher.UnregisterOnBackInvokedCallback(callback);
         callback.Dispose();
         _backCallback = null;
+    }
+
+    /// <summary>Reports the soft keyboard's visibility (the window's IME insets) on every layout.</summary>
+    [SupportedOSPlatform("android34.0")]
+    private sealed class ImeVisibilityListener(PlumixMainActivity activity, View decorView)
+        : Java.Lang.Object, ViewTreeObserver.IOnGlobalLayoutListener
+    {
+        public void OnGlobalLayout() =>
+            activity.Delegate.OnImeVisibilityChanged(
+                decorView.RootWindowInsets?.IsVisible(WindowInsets.Type.Ime()) == true);
     }
 
     [SupportedOSPlatform("android34.0")]

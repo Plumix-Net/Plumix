@@ -162,6 +162,52 @@ public sealed class AndroidActivityDelegateTests : IDisposable
         }
     }
 
+    [Fact]
+    public void BackCallback_StepsAsideWhileTheSoftKeyboardIsShown()
+    {
+        // The Activity's overlay-priority callback outranks the keyboard's default-priority one: kept
+        // registered over a shown keyboard, back popped the route instead of hiding the keyboard.
+        var host = new TestHost();
+        host.AttachPlatformChannelHandler();
+        try
+        {
+            var needed = new List<bool>();
+            AndroidActivityDelegate activity = CreateActivity();
+            activity.BackCallbackNeededChanged = needed.Add;
+            activity.OnCreate(null);
+
+            activity.OnImeVisibilityChanged(true);
+            SetFrameworkHandlesBack(true);
+            Assert.Empty(needed);
+
+            activity.OnImeVisibilityChanged(false);
+            activity.OnImeVisibilityChanged(false);
+            Assert.Equal([true], needed);
+
+            activity.OnImeVisibilityChanged(true);
+            Assert.Equal([true, false], needed);
+
+            activity.OnImeVisibilityChanged(false);
+            SetFrameworkHandlesBack(false);
+            activity.OnImeVisibilityChanged(true);
+            activity.OnImeVisibilityChanged(false);
+            Assert.Equal([true, false, true, false], needed);
+
+            // A recreated Activity gets the replayed state with its own keyboard visibility.
+            SetFrameworkHandlesBack(true);
+            activity.OnDestroy();
+            var recreated = new List<bool>();
+            AndroidActivityDelegate next = CreateActivity();
+            next.BackCallbackNeededChanged = recreated.Add;
+            next.OnCreate(null);
+            Assert.Equal([true], recreated);
+        }
+        finally
+        {
+            host.DetachPlatformChannelHandler();
+        }
+    }
+
     private AndroidActivityDelegate CreateActivity() =>
         new(new AndroidRestorationChannel(true, _messenger), static _ => { });
 

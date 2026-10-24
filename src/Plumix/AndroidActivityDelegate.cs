@@ -27,6 +27,9 @@ public sealed class AndroidActivityDelegate
 
     private readonly AndroidRestorationChannel _restorationChannel;
     private readonly AndroidLifecycleChannel _lifecycleChannel;
+    private bool _frameworkHandlesBack;
+    private bool _imeVisible;
+    private bool _backCallbackNeeded;
 
     /// <summary>Creates a delegate over the process-wide binding and restoration channel.</summary>
     public AndroidActivityDelegate()
@@ -55,6 +58,19 @@ public sealed class AndroidActivityDelegate
     public Action<bool>? FrameworkHandlesBackChanged { get; set; }
 
     /// <summary>
+    /// Called with whether the Activity's back callback must be registered: while the framework handles
+    /// back (<see cref="FrameworkHandlesBackChanged"/>) and the soft keyboard is hidden.
+    /// </summary>
+    /// <remarks>
+    /// C#-only: <c>PlumixMainActivity</c> registers its callback above the default priority, so that it
+    /// wins over Avalonia's own <c>OnBackPressedDispatcher</c> callback, and an overlay-priority callback
+    /// also wins over the keyboard's default-priority one. Stepping aside while the keyboard is shown
+    /// lets back hide the keyboard first, as it does over <c>FlutterActivity</c>'s default-priority
+    /// callback. See <see cref="OnImeVisibilityChanged"/>.
+    /// </remarks>
+    public Action<bool>? BackCallbackNeededChanged { get; set; }
+
+    /// <summary>
     /// The Activity's answer to <c>SystemNavigator.pop</c>, which the framework sends when a back press
     /// popped no route; <c>FlutterActivity</c> finishes itself (<c>PlatformPlugin.popSystemNavigator</c>).
     /// </summary>
@@ -76,7 +92,7 @@ public sealed class AndroidActivityDelegate
         PlumixHost.SystemNavigatorPopHandler = HandleSystemNavigatorPop;
         if (PlumixHost.ReportedFrameworkHandlesBack is { } frameworkHandlesBack)
         {
-            FrameworkHandlesBackChanged?.Invoke(frameworkHandlesBack);
+            HandleFrameworkHandlesBackChanged(frameworkHandlesBack);
         }
 
         _restorationChannel.SetRestorationData(savedRestorationData);
@@ -137,8 +153,32 @@ public sealed class AndroidActivityDelegate
     /// </summary>
     public void OnBackInvoked() => EventLoop.RunAsync(() => WidgetsBinding.Instance.HandleCommitBackGesture());
 
-    private void HandleFrameworkHandlesBackChanged(bool frameworkHandlesBack) =>
+    /// <summary>
+    /// The soft keyboard was shown or hidden (the window's IME insets). Updates
+    /// <see cref="BackCallbackNeededChanged"/>; repeated calls with the same value change nothing.
+    /// </summary>
+    public void OnImeVisibilityChanged(bool imeVisible)
+    {
+        _imeVisible = imeVisible;
+        UpdateBackCallbackNeeded();
+    }
+
+    private void HandleFrameworkHandlesBackChanged(bool frameworkHandlesBack)
+    {
+        _frameworkHandlesBack = frameworkHandlesBack;
         FrameworkHandlesBackChanged?.Invoke(frameworkHandlesBack);
+        UpdateBackCallbackNeeded();
+    }
+
+    private void UpdateBackCallbackNeeded()
+    {
+        bool needed = _frameworkHandlesBack && !_imeVisible;
+        if (needed != _backCallbackNeeded)
+        {
+            _backCallbackNeeded = needed;
+            BackCallbackNeededChanged?.Invoke(needed);
+        }
+    }
 
     private void HandleSystemNavigatorPop() => PopSystemNavigator?.Invoke();
 
