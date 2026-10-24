@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Stepper composition, index text style, controls and ControlsDetails match Dart 1:1 (stepper.dart).
 - Breaking: Avalonia 12.1.4 is the minimum; paragraphs read its slice-relative, visual-order RTL clusters (C#-only).
 - CI also runs the tests on the newest Avalonia over Plumix built on the minimum, binding every host member (C#-only).
 - Timer.run and timing reports post above Input, so Android's warm-up frame draws behind a spinner (C#-only).
