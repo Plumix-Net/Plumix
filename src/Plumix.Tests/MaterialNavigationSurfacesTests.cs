@@ -285,7 +285,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains("Tab 2 of 2", tabs[1].Label, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void NavigationBar_IndicatorInkRectTracksTheKeyedIconLayout()
     {
         Rect[] alwaysShow = NavigationBarInkRects(NavigationDestinationLabelBehavior.AlwaysShow);

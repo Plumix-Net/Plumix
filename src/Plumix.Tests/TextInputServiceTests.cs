@@ -644,7 +644,7 @@ public sealed class TextInputServiceTests : IDisposable
         Assert.Equal("abcdefg", client.LatestPrivateCommandData!["input_context"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextInput_FloatingCursorCoordinatesAreTypeCast()
     {
         var client = new FakeTextInputClient(new TextEditingValue());
@@ -872,7 +872,7 @@ public sealed class TextInputServiceTests : IDisposable
         Assert.Equal(new TextRange(6, 11), applied.Composing);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextEditingDelta_OutOfBoundsDeltasFailToApply()
     {
         Assert.Throws<ArgumentOutOfRangeException>(

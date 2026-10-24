@@ -38,7 +38,7 @@ public sealed class RendererBindingTests
         Assert.DoesNotContain(renderView, binding.RenderViews);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void AddAndRemoveRenderView_RejectIllegalRegistrations()
     {
         var renderView = new RenderView(new FlutterView(new Size(1, 1), viewId: 1002));
@@ -148,7 +148,7 @@ public sealed class RendererBindingTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RootPipelineOwner_RejectsARootNode()
     {
         var node = new RenderView(new FlutterView(new Size(1, 1), viewId: 1005));

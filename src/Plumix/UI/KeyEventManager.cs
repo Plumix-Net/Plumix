@@ -414,11 +414,18 @@ public sealed class KeyEventManager
     /// </remarks>
     public void ClearState()
     {
-        if (!Constants.KDebugMode)
+        if (Constants.KDebugMode)
         {
-            return;
+            ResetForTests();
         }
+    }
 
+    /// <summary>
+    /// Plumix-only: <see cref="ClearState"/> in every build mode, so the test harness keeps tests
+    /// hermetic under <c>-c Profile</c> and <c>-c Release</c> too.
+    /// </summary>
+    internal void ResetForTests()
+    {
         _transitMode = null;
         _rawKeyboard.RemoveListener(ConvertRawEventAndStore);
         _keyEventsSinceLastMessage.Clear();

@@ -1266,7 +1266,7 @@ public sealed class FocusManager : ChangeNotifier
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
         RawKeyboard.Instance.ClearListeners();
-        KeyEventManager.Instance.ClearState();
+        KeyEventManager.Instance.ResetForTests();
 #pragma warning restore CS0618
         _highlightManager.ReregisterKeyMessageHandler();
     }

@@ -187,7 +187,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
     }
 
     // Flutter: "Default paddle range slider value indicator shape draws correctly with debugDisableShadows"
-    [Fact]
+    [DebugOnlyFact]
     public void DefaultPaddleRangeSliderValueIndicatorShapeDrawsCorrectlyWithDebugDisableShadows()
     {
         using FrameworkDartTester tester = NewTester();
@@ -327,7 +327,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
     }
 
     // Flutter: "The mouse cursor is themeable"
-    [Fact]
+    [DebugOnlyFact]
     public void TheMouseCursorIsThemeable()
     {
         using FrameworkDartTester tester = NewTester();
@@ -493,28 +493,28 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
     }
 
     // Flutter: "RectangularSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor"
-    [Fact]
+    [DebugOnlyFact]
     public void RectangularSliderValueIndicatorShapeSupportsValueIndicatorStrokeColor()
     {
         ExpectSliderValueIndicatorStrokeColor(new RectangularSliderValueIndicatorShape());
     }
 
     // Flutter: "PaddleSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor"
-    [Fact]
+    [DebugOnlyFact]
     public void PaddleSliderValueIndicatorShapeSupportsValueIndicatorStrokeColor()
     {
         ExpectSliderValueIndicatorStrokeColor(new PaddleSliderValueIndicatorShape());
     }
 
     // Flutter: "DropSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor"
-    [Fact]
+    [DebugOnlyFact]
     public void DropSliderValueIndicatorShapeSupportsValueIndicatorStrokeColor()
     {
         ExpectSliderValueIndicatorStrokeColor(new DropSliderValueIndicatorShape());
     }
 
     // Flutter: "RectangularRangeSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor"
-    [Fact]
+    [DebugOnlyFact]
     public void RectangularRangeSliderValueIndicatorShapeSupportsValueIndicatorStrokeColor()
     {
         ExpectRangeValueIndicatorStrokeColor(
@@ -525,7 +525,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
     // Flutter: "RectangularRangeSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor on
     // overlapping indicator"
-    [Fact]
+    [DebugOnlyFact]
     public void RectangularRangeSliderValueIndicatorShapeSupportsValueIndicatorStrokeColorOnOverlappingIndicator()
     {
         ExpectRangeValueIndicatorStrokeColor(
@@ -535,7 +535,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
     }
 
     // Flutter: "PaddleRangeSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor"
-    [Fact]
+    [DebugOnlyFact]
     public void PaddleRangeSliderValueIndicatorShapeSupportsValueIndicatorStrokeColor()
     {
         ExpectRangeValueIndicatorStrokeColor(
@@ -546,7 +546,7 @@ public sealed class SliderThemeDartParityTestsB : IDisposable
 
     // Flutter: "PaddleRangeSliderValueIndicatorShape supports SliderTheme.valueIndicatorStrokeColor on
     // overlapping indicator"
-    [Fact]
+    [DebugOnlyFact]
     public void PaddleRangeSliderValueIndicatorShapeSupportsValueIndicatorStrokeColorOnOverlappingIndicator()
     {
         ExpectRangeValueIndicatorStrokeColor(

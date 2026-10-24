@@ -164,7 +164,7 @@ public sealed class ViewConfigurationTests
         Assert.Same(view.DebugLayer, pipeline.RootLayer);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderView_InvokesDebugPaintCallbacksUntilTheyAreRemoved()
     {
         var view = new RenderView(new FlutterView(new Size(40, 20)));

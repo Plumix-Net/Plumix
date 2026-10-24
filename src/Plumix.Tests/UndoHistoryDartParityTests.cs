@@ -476,7 +476,7 @@ public sealed class UndoHistoryDartParityTests : IDisposable
         Assert.Equal(0, value.Value);
     }
 
-    [Theory]
+    [DebugOnlyTheory]
     [MemberData(nameof(AllPlatforms))]
     public void IgnoresValueChangesPushedDuringOnTriggered(TargetPlatform platform)
     {

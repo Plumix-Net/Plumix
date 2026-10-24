@@ -76,7 +76,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
 
     private static List<object?> List(object? value) => Assert.IsType<List<object?>>(value);
 
-    [Fact]
+    [DebugOnlyFact]
     public void RegistersEveryInspectorExtensionWithoutCreationTracking()
     {
         // Dart registers the three creation-tracking extensions only when widget creation is tracked.
@@ -100,7 +100,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RegistersTheWidgetsBindingExtensions()
     {
         foreach (string name in new[]
@@ -173,7 +173,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Throws<FlutterError>(() => Service.ToObject(aId));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetSelectionExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -233,7 +233,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Empty(Service.DispatchedEvents("navigate", stream: "ToolEvent"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetParentChainExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -247,7 +247,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         WidgetInspectorDartParityTests.VerifyParentChain(tester, elementB, jsonList);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetPropertiesExtension()
     {
         IDiagnosticable diagnosticable = LtrText("a");
@@ -259,7 +259,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         WidgetInspectorDartParityTests.VerifyProperties(diagnosticable, propertiesJson);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetChildrenExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -273,7 +273,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         WidgetInspectorDartParityTests.VerifyChildren(diagnostic, childrenJson);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetChildrenDetailsSubtreeExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -342,7 +342,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         return node;
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetDetailsSubtree()
     {
         FrameworkDartTester tester = CreateTester();
@@ -367,7 +367,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         VerifyDetailsChildren(children, deepChildrenJson, expectNestedChildren: true);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CyclicDiagnosticsRegressionTest()
     {
         const string group = "test-group";
@@ -403,7 +403,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.False(nestedRelatedProperty.ContainsKey("children"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RootWidgetSummaryTree_IncludesEveryNodeWithoutCreationTracking()
     {
         // With creation untracked, `_shouldShowInSummaryTree` keeps every element, and the scopes
@@ -476,7 +476,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.False(withoutDetails.ContainsKey("type"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetSelectedSummaryWidget_IsTheSelectedWidgetWithoutCreationTracking()
     {
         FrameworkDartTester tester = CreateTester();
@@ -495,7 +495,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.False(regular.ContainsKey("createdByLocalProject"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShowExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -505,7 +505,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
             value => WidgetsBinding.Instance.DebugShowWidgetInspectorOverride = value);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShowExtension_ViaWidgetsAppDebugShowWidgetInspectorOverride()
     {
         FrameworkDartTester tester = CreateTester();
@@ -598,7 +598,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         return Service.ToId(element, group)!;
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_ForRenderBoxWithBoxParentData()
     {
         FrameworkDartTester tester = CreateTester();
@@ -634,7 +634,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Equal("293.0", parentData["offsetY"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_DoesNotThrowForUnmountedWidget()
     {
         FrameworkDartTester tester = CreateTester();
@@ -645,7 +645,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.False(result.ContainsKey("renderObject"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_OmitsFlexFactorWhenFlexIsNull()
     {
         FrameworkDartTester tester = CreateTester();
@@ -666,7 +666,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Null(tester.TakeException());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_ForRenderBoxWithFlexParentData()
     {
         FrameworkDartTester tester = CreateTester();
@@ -698,7 +698,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Equal("loose", result["flexFit"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_ForRenderView()
     {
         FrameworkDartTester tester = CreateTester();
@@ -735,7 +735,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.False(result.ContainsKey("parentData"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetFlexFitExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -757,7 +757,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Equal("tight", result["flexFit"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetFlexFactorExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -777,7 +777,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Equal(3, result["flexFactor"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetFlexPropertiesExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -825,7 +825,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Empty(LayoutExplorerNode(id));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void GetLayoutExplorerNode_OnADeeplyNestedWidget_DoesNotThrowStackOverflowError()
     {
         FrameworkDartTester tester = CreateTester();
@@ -843,7 +843,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         Assert.Equal("Padding", result["description"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void StructuredErrorsExtension()
     {
         FrameworkDartTester tester = CreateTester();
@@ -927,7 +927,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void StructuredErrors_CustomFlutterErrorOnError()
     {
         // widget_inspector_structure_error_test.dart: structured errors are presented only through
@@ -1013,7 +1013,7 @@ public sealed class WidgetInspectorServiceExtensionsDartParityTests : IDisposabl
         return count;
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScreenshotExtension()
     {
         FrameworkDartTester tester = CreateTester();

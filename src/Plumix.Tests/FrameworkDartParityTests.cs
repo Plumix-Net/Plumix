@@ -1039,7 +1039,7 @@ public sealed class FrameworkDartParityTests
     }
 
     // Flutter: framework_test.dart: "Element diagnostics"
-    [Fact]
+    [DebugOnlyFact]
     public void ElementDiagnostics()
     {
         using var tester = new FrameworkDartTester();

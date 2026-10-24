@@ -155,7 +155,7 @@ public sealed class MaterialThemeDataTests
         Assert.Equal(density, density.CopyWith());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void VisualDensity_ToString_StartsWithTheIdentityLikeDart()
     {
         Assert.Equal(

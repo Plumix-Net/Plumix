@@ -396,7 +396,7 @@ public sealed class NavigatorLifecycleDartParityTests
         controller.Dispose();
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void TransitionRequestsLatencyOnlyWhileItIsAnimating()
     {
         using var harness = new Harness();

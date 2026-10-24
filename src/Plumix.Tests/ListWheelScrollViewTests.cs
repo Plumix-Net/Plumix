@@ -492,7 +492,7 @@ public sealed class ListWheelScrollViewTests
         controller.Dispose();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ListWheelScrollView_CreatesAndRemovesChildrenInsideTheElementBuildScope()
     {
         var builtInScope = new List<bool>();

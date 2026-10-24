@@ -88,13 +88,13 @@ public sealed class MaterialInkResponseTests : IDisposable
         RenderInkFeatures controller = Controller(well);
         // The Ink decoration first, then the ripple, then the pressed highlight that follows it.
         Assert.Collection(
-            controller.DebugInkFeatures!,
+            controller.InkFeaturesForTests!,
             feature => Assert.IsType<InkDecoration>(feature),
             feature => Assert.IsType<InkRipple>(feature),
             feature => Assert.IsType<InkHighlight>(feature));
         gesture.Up();
         tester.PumpAndSettle();
-        Assert.IsType<InkDecoration>(Assert.Single(controller.DebugInkFeatures!));
+        Assert.IsType<InkDecoration>(Assert.Single(controller.InkFeaturesForTests!));
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class MaterialInkResponseTests : IDisposable
         Assert.Equal(0, PaintRecording.Record(Controller(well)).CountCalls("drawCircle"));
         gesture.Up();
         tester.PumpAndSettle();
-        Assert.Empty(Controller(well).DebugInkFeatures!);
+        Assert.Empty(Controller(well).InkFeaturesForTests!);
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public sealed class MaterialInkResponseTests : IDisposable
         // An interpolation is done only once its time is strictly past the duration.
         tester.Pump(TimeSpan.FromMilliseconds(1));
         Assert.True(removed);
-        Assert.Empty(controller.DebugInkFeatures!);
+        Assert.Empty(controller.InkFeaturesForTests!);
     }
 
     [Fact]

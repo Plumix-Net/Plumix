@@ -361,7 +361,7 @@ public sealed class SemanticsDataTests
         Assert.NotEqual(first, reordered);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SemanticsData_ToStringShowsOnlyTheAnnotatedProperties()
     {
         var node = new SemanticsNode

@@ -42,7 +42,7 @@ public sealed class RootWidgetTests
         Assert.NotSame(first.BuildScope, second.BuildScope);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RootWidget_Attach_MountsInsideALockedBuildScope()
     {
         var owner = TestBuildOwner.Create();
@@ -119,7 +119,11 @@ public sealed class RootWidgetTests
     public void RootWidget_ToStringShort_UsesTheDebugShortDescription()
     {
         Assert.Equal("[root]", new RootWidget(debugShortDescription: "[root]").ToStringShort());
-        Assert.Equal("RootWidget", new RootWidget().ToStringShort());
+        if (Constants.KDebugMode)
+        {
+            // Widget.toStringShort uses `objectRuntimeType`, which only knows the type in a debug build.
+            Assert.Equal("RootWidget", new RootWidget().ToStringShort());
+        }
     }
 
     [Fact]
@@ -131,7 +135,7 @@ public sealed class RootWidgetTests
         Assert.False(root.DebugExpectsRenderObjectForSlot(null));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RootElement_ReportsARenderObjectChildThatHasNoViewToAttachTo()
     {
         var reported = new List<FlutterErrorDetails>();
@@ -213,7 +217,7 @@ public sealed class RootWidgetTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScheduleBuildFor_RejectsAnElementThatIsNotDirty()
     {
         var owner = TestBuildOwner.Create();
@@ -225,7 +229,7 @@ public sealed class RootWidgetTests
             error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScheduleBuildFor_RejectsAnElementThatIsAlreadyInTheDirtyList()
     {
         var owner = TestBuildOwner.Create();

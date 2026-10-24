@@ -25,3 +25,16 @@ public sealed class NonReleaseFactAttribute : FactAttribute
         }
     }
 }
+
+/// <summary>The <see cref="TheoryAttribute"/> counterpart of <see cref="NonReleaseFactAttribute"/>.</summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class NonReleaseTheoryAttribute : TheoryAttribute
+{
+    public NonReleaseTheoryAttribute()
+    {
+        if (Constants.KReleaseMode)
+        {
+            Skip = "Not in release: Dart guards this behavior with !kReleaseMode.";
+        }
+    }
+}

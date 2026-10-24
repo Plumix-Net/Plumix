@@ -286,8 +286,11 @@ public sealed class FrameworkElementApiTests
         // Dart asserts `_lifecycleState != initial` and returns early for anything but `active`.
         var log = new ProbeLog();
         var element = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
-        Assert.Throws<AssertionError>(() => element.Rebuild());
-        Assert.Throws<AssertionError>(() => element.Rebuild(force: true));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => element.Rebuild());
+            Assert.Throws<AssertionError>(() => element.Rebuild(force: true));
+        }
 
         var owner = TestBuildOwner.Create();
         element.Attach(owner);
@@ -324,7 +327,7 @@ public sealed class FrameworkElementApiTests
         Assert.Equal(1, builds);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDoingBuild_IsSetOnlyWhileTheElementIsBuilding()
     {
         bool insideBuild = false;
@@ -345,7 +348,7 @@ public sealed class FrameworkElementApiTests
         Assert.False(captured!.DebugDoingBuild);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDoingBuild_IsSetWhileARenderObjectIsCreatedAndUpdated()
     {
         var log = new List<(string Phase, bool DoingBuild)>();

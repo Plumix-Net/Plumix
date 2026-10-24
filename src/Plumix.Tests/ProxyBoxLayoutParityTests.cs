@@ -308,7 +308,7 @@ public sealed class ProxyBoxLayoutParityTests
         Assert.Equal(new Size(expectedWidth, expectedHeight), child.Size);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void LimitedBox_DumpShowsLimits()
     {
         var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 300.0, height: 400.0));
@@ -466,7 +466,7 @@ public sealed class ProxyBoxLayoutParityTests
         Assert.Equal(expected, opacity.NeedsCompositing);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderOpacity_ReusesItsLayer()
     {
         TestLayerReuse(new RenderOpacity(
@@ -498,7 +498,7 @@ public sealed class ProxyBoxLayoutParityTests
         Assert.Equal(expected, opacity.NeedsCompositing);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderAnimatedOpacity_ReusesItsLayer()
     {
         using var animation = new AnimationController(value: 0.5);

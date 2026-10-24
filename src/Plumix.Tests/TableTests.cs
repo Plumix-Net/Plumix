@@ -408,8 +408,15 @@ public sealed class TableTests
 
         table.DefaultVerticalAlignment = TableCellVerticalAlignment.Baseline;
         table.TextBaseline = TextBaseline.Alphabetic;
-        FlutterError error = Assert.Throws<FlutterError>(() => table.GetDryLayout(constraints));
-        Assert.Contains("The RenderTable class does not support dry layout.", error.Message, StringComparison.Ordinal);
+        if (Constants.KDebugMode)
+        {
+            // `debugCannotComputeDryLayout` throws from an assert; a release build returns Size.zero.
+            FlutterError error = Assert.Throws<FlutterError>(() => table.GetDryLayout(constraints));
+            Assert.Contains(
+                "The RenderTable class does not support dry layout.",
+                error.Message,
+                StringComparison.Ordinal);
+        }
     }
 
     // ---------------------------------------------------------------- child mutation

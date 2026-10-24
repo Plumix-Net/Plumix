@@ -210,7 +210,7 @@ public sealed class EditableTextEditingDartParityTests : IDisposable
         Assert.Equal("new change 3", sent.Text);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BatchEditsNeedToBeNestedProperly()
     {
         using FrameworkDartTester tester = Pump(Field());

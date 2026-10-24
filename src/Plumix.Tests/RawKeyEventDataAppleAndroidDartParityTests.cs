@@ -29,7 +29,7 @@ public sealed class RawKeyEventDataAppleAndroidDartParityTests : IDisposable
         FocusManager.Instance.ResetForTests();
         RawKeyboard.Instance.ClearKeysPressed();
         HardwareKeyboard.Instance.ClearState();
-        ServicesBinding.Instance.KeyEventManager.ClearState();
+        ServicesBinding.Instance.KeyEventManager.ResetForTests();
     }
 
     private readonly record struct ModifierCheck(ModifierKey Key, KeyboardSide Side);
@@ -390,7 +390,7 @@ public sealed class RawKeyEventDataAppleAndroidDartParityTests : IDisposable
     }
 
     // 'data.toString'
-    [Fact]
+    [DebugOnlyFact]
     public void Android_DataToString()
     {
         Assert.Equal(
@@ -590,7 +590,7 @@ public sealed class RawKeyEventDataAppleAndroidDartParityTests : IDisposable
     }
 
     // 'data.toString'
-    [Fact]
+    [DebugOnlyFact]
     public void Fuchsia_DataToString()
     {
         Assert.Equal(
@@ -873,7 +873,7 @@ public sealed class RawKeyEventDataAppleAndroidDartParityTests : IDisposable
     }
 
     // 'data.toString'
-    [Fact]
+    [DebugOnlyFact]
     public void MacOs_DataToString()
     {
         Assert.Equal(
@@ -1105,7 +1105,7 @@ public sealed class RawKeyEventDataAppleAndroidDartParityTests : IDisposable
     }
 
     // 'data.toString'
-    [Fact]
+    [DebugOnlyFact]
     public void Ios_DataToString()
     {
         Assert.Equal(

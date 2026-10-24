@@ -52,7 +52,11 @@ public sealed class FrameworkParityTests
         Assert.Equal(
             $"[GlobalObjectKey {Diagnostics.DescribeIdentity(value)}]",
             new GlobalObjectKey<State>(value).ToString());
-        Assert.Contains("GlobalObjectKey<ProbeState>", new GlobalObjectKey<ProbeState>(value).ToString());
+        if (Constants.KDebugMode)
+        {
+            // `objectRuntimeType` only knows the runtime type in a debug build.
+            Assert.Contains("GlobalObjectKey<ProbeState>", new GlobalObjectKey<ProbeState>(value).ToString());
+        }
     }
 
     [Fact]
@@ -129,10 +133,14 @@ public sealed class FrameworkParityTests
 
         // The subtree is replaced by an ErrorWidget rather than torn down.
         Element errorElement = FindDescendant(root, element => element.Widget is ErrorWidget)!;
-        Assert.Contains("boom", ((ErrorWidget)errorElement.Widget).Message);
+        if (Constants.KDebugMode)
+        {
+            // The default ErrorWidget.builder only shows the exception's message in debug mode.
+            Assert.Contains("boom", ((ErrorWidget)errorElement.Widget).Message);
+        }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BuildReturningTheContextWidget_IsRejected()
     {
         Exception failure = BuildErrors.TakeException(() =>
@@ -149,7 +157,7 @@ public sealed class FrameworkParityTests
 
     // ------------------------------------------------------------- State lifecycle
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetState_AfterDispose_ExplainsTheAsynchronousCauses()
     {
         var widget = new ProbeWidget();
@@ -170,7 +178,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("await", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetState_InTheConstructor_IsRejected()
     {
         var state = new ProbeState();
@@ -178,7 +186,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("setState() called in constructor", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SetState_WithAnAsynchronousCallback_IsRejected()
     {
         var widget = new ProbeWidget();
@@ -192,7 +200,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("setState() callback argument returned a Future.", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void State_ThatNeverMounted_ReportsNoWidget()
     {
         var properties = new DiagnosticPropertiesBuilder();
@@ -203,7 +211,7 @@ public sealed class FrameworkParityTests
             properties.Properties.Select(property => property.ToString()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Dispose_ThatForgetsToCallBase_IsReported()
     {
         var owner = TestBuildOwner.Create();
@@ -222,7 +230,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("dispose failed to call super.dispose.", failure.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ThrowingDeactivate_LeavesTheElementNeitherActiveNorDefunct()
     {
         var widget = new ProbeWidget(throwOnDeactivate: true);
@@ -265,10 +273,14 @@ public sealed class FrameworkParityTests
         });
 
         Assert.NotNull(failure);
-        Assert.True(probe.DebugIsDefunct);
+        if (Constants.KDebugMode)
+        {
+            // `debugIsDefunct` is always false outside a debug build.
+            Assert.True(probe.DebugIsDefunct);
+        }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Depth_IsUnavailableBeforeTheElementIsMounted()
     {
         Element element = new ProbeWidget().CreateElement();
@@ -278,7 +290,7 @@ public sealed class FrameworkParityTests
 
     // ------------------------------------------------------------- ParentData
 
-    [Fact]
+    [DebugOnlyFact]
     public void ParentDataWidget_UnderTheWrongAncestor_IsReportedAndItsDataIsNotApplied()
     {
         Exception failure = BuildErrors.TakeException(() =>
@@ -297,7 +309,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("The ownership chain for the RenderObject", message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CompetingParentDataWidgets_AreReportedWithBothCulprits()
     {
         Exception failure = BuildErrors.TakeException(() =>
@@ -318,7 +330,7 @@ public sealed class FrameworkParityTests
 
     // ------------------------------------------------------------- GlobalKey duplication
 
-    [Fact]
+    [DebugOnlyFact]
     public void OneGlobalKeyInTwoChildrenOfOneParent_NamesBothChildren()
     {
         var key = new LabeledGlobalKey<State>("problematic");
@@ -343,7 +355,7 @@ public sealed class FrameworkParityTests
         Assert.Contains("has multiple children with key [GlobalKey#", failure.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OneGlobalKeyUnderTwoParents_IsReportedByFinalizeTree()
     {
         var key = new LabeledGlobalKey<State>("problematic");
@@ -381,7 +393,7 @@ public sealed class FrameworkParityTests
             message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugPrintGlobalKeyedWidgetLifecycle_LogsDiscardingFromTheInactiveList()
     {
         var log = new List<string>();
@@ -412,7 +424,7 @@ public sealed class FrameworkParityTests
         Assert.Contains(log, line => line.Contains("from inactive elements list."));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertAllWidgetVarsUnset_CatchesALeakedFlag()
     {
         Assert.True(WidgetsDebug.DebugAssertAllWidgetVarsUnset("clean"));

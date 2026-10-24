@@ -55,7 +55,12 @@ public sealed class CurvesDartParityTests
             new Interval(0.25, 0.75, curve: Curves.Ease).ToString());
         Assert.Equal("ElasticInCurve(0.4)", Curves.ElasticIn.ToString());
         Assert.Equal("FlippedCurve(Cubic(0.25, 0.10, 0.25, 1.00))", Curves.Ease.Flipped.ToString());
-        Assert.StartsWith("Split#", new Split(0.25).ToString());
+        if (Constants.KDebugMode)
+        {
+            // `describeIdentity` falls back to "<optimized out>" for the type name outside a debug build.
+            Assert.StartsWith("Split#", new Split(0.25).ToString());
+        }
+
         Assert.Equal("[(0.25, 0.50), 0.13]", new Curve2DSample(0.125, new Point(0.25, 0.5)).ToString());
     }
 

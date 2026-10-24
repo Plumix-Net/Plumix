@@ -186,9 +186,16 @@ public sealed class BuildScopeTests
             Assert.Same(failing, Assert.IsType<DebugCreator>(creator.Value).Element);
         }
 
-        Assert.Contains(
-            information,
-            node => node.ToString().Contains("The element being rebuilt at the time was", StringComparison.Ordinal));
+        if (Constants.KDebugMode)
+        {
+            // DiagnosticsNode.toString renders its text inside an assert.
+            Assert.Contains(
+                information,
+                node => node.ToString().Contains(
+                    "The element being rebuilt at the time was",
+                    StringComparison.Ordinal));
+        }
+
         Assert.Equal(2, later.Builds);
         Assert.False(later.Element.Dirty);
         Assert.Empty(root.BuildScope.DirtyElements);
@@ -221,7 +228,7 @@ public sealed class BuildScopeTests
             () => owner.BuildScope(root, () => owner.BuildScope(root, () => { })));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ScheduleBuild_OnAnElementThatIsNotDirty_ReportsTheDartError()
     {
         var owner = TestBuildOwner.Create();
@@ -236,7 +243,7 @@ public sealed class BuildScopeTests
         Assert.Contains("Make sure to set the dirty flag before calling scheduleBuildFor().", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BuildScope_DirtyElementOutsideTheScopeRoot_ReportsTheDartError()
     {
         var owner = TestBuildOwner.Create();
@@ -257,7 +264,7 @@ public sealed class BuildScopeTests
         Assert.Contains("does not appear to be a descendant of the root of the build scope", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void MarkNeedsBuild_DuringBuild_RejectsAnElementOutsideTheSubtreeBeingBuilt()
     {
         var owner = TestBuildOwner.Create();
@@ -446,7 +453,12 @@ public sealed class BuildScopeTests
         owner.PumpFrame(() =>
         {
             owner.BuildScope(root, inner.Bump);
-            Assert.True(renderObject.DebugNeedsLayout);
+            if (Constants.KDebugMode)
+            {
+                // `debugNeedsLayout` is always false outside a debug build.
+                Assert.True(renderObject.DebugNeedsLayout);
+            }
+
             LayoutOnce(renderObject, constraints);
         });
 

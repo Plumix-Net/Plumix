@@ -291,7 +291,7 @@ public sealed class LayerTreeTests
         Assert.Equal(4, ((ContainerLayer)deepest.FirstChild!).Depth);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ClipLayers_PrintClipBehaviorInDebugInfo()
     {
         Assert.Contains("clipBehavior: Clip.hardEdge", GetDebugInfo(new ClipRectLayer()));
@@ -303,7 +303,7 @@ public sealed class LayerTreeTests
         Assert.Contains("clipBehavior: Clip.antiAlias", GetDebugInfo(new ClipPathLayer()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PictureLayer_PrintsPictureAndRasterCacheHintsInDebugInfo()
     {
         Picture picture = new PictureRecorder().EndRecording();
@@ -318,7 +318,7 @@ public sealed class LayerTreeTests
         Assert.Contains("raster cache hints: isComplex = true, willChange = false", info);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Layer_PrintsEngineLayerOnlyWhenItIsNotNull()
     {
         var layer = new ContainerLayer();
@@ -856,7 +856,7 @@ public sealed class LayerTreeTests
         Assert.Null(tester.TakeException());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FollowerLayer_DebugCreatorIsNotNull()
     {
         using var tester = new FrameworkDartTester();

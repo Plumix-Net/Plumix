@@ -105,8 +105,11 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(1.0, threshold.Transform(0.25));
         Assert.Equal(1.0, threshold.Transform(1.0));
         // Dart asserts the threshold range when the curve is evaluated, not when it is built.
-        Assert.Throws<AssertionError>(() => new Threshold(-0.01).Transform(0.5));
-        Assert.Throws<AssertionError>(() => new Threshold(1.01).Transform(0.5));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => new Threshold(-0.01).Transform(0.5));
+            Assert.Throws<AssertionError>(() => new Threshold(1.01).Transform(0.5));
+        }
 
         var tween = new VectorTween(
             begin: new Vector(2.0, -4.0),

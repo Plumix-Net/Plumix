@@ -23,17 +23,9 @@ namespace Plumix.Tests;
 /// </summary>
 internal static class RenderTransformTestExtensions
 {
-    /// <summary>The matrix last assigned through <see cref="RenderTransform.Transform"/>, read from the
-    /// `transform matrix` diagnostics property.</summary>
-    public static Matrix4 DebugTransformMatrix(this RenderTransform renderTransform)
-    {
-        var builder = new DiagnosticPropertiesBuilder();
-        renderTransform.DebugFillProperties(builder);
-        TransformProperty property = builder.Properties
-            .OfType<TransformProperty>()
-            .Single(node => node.Name == "transform matrix");
-        return property.TypedValue!;
-    }
+    /// <summary>The matrix last assigned through <see cref="RenderTransform.Transform"/>.</summary>
+    public static Matrix4 DebugTransformMatrix(this RenderTransform renderTransform) =>
+        renderTransform.TransformForTests!;
 
     /// <summary>Dart's `_effectiveTransform`, as `applyPaintTransform` applies it to an identity matrix.</summary>
     public static Matrix4 DebugEffectiveTransform(this RenderTransform renderTransform)
@@ -104,7 +96,7 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
         Assert.Equal(0, unpaintedChild.PaintCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderTransform_ReusesItsLayer()
     {
         TestLayerReuse<TransformLayer>(
@@ -114,19 +106,19 @@ public sealed class ProxyBoxTransformParityTests : IDisposable
                 child: new RenderRepaintBoundary(child: SizedLeaf(new Size(1.0, 1.0)))));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFittedBox_ReusesClipRectLayer()
     {
         TestFittedBoxWithClipRectLayer();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFittedBox_ReusesTransformLayer()
     {
         TestFittedBoxWithTransformLayer();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFittedBox_SwitchesBetweenClipRectLayerAndTransformLayer_AndReusesThem()
     {
         TestFittedBoxWithClipRectLayer();

@@ -345,7 +345,12 @@ public sealed class PipelineOwnerTreeTests
 
         handle.Dispose();
         Assert.Null(owner.SemanticsOwner);
-        Assert.Throws<FlutterError>(semanticsOwner.NotifyListeners);
+        if (Constants.KDebugMode)
+        {
+            // ChangeNotifier asserts it has not been disposed only in a debug build.
+            Assert.Throws<FlutterError>(semanticsOwner.NotifyListeners);
+        }
+
         Assert.Equal(1, notifications);
     }
 

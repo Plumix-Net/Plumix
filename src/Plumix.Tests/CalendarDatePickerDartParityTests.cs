@@ -1317,8 +1317,8 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
         MaterialInkController innerMaterial = MaterialWidget.Of(tester.Element(Find.ByType<PageView>()));
 
         // Only the inner Material should have ink features.
-        Assert.Null(((RenderInkFeatures)outerMaterial).DebugInkFeatures);
-        Assert.Equal(31, ((RenderInkFeatures)innerMaterial).DebugInkFeatures!.Count);
+        Assert.Null(((RenderInkFeatures)outerMaterial).InkFeaturesForTests);
+        Assert.Equal(31, ((RenderInkFeatures)innerMaterial).InkFeaturesForTests!.Count);
     }
 
     // ---- group('when supportsAnnounce is true, check announcement') ----
@@ -1683,8 +1683,8 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
         MaterialInkController innerMaterial = MaterialWidget.Of(tester.Element(Find.ByType<GridView>()));
 
         Assert.NotSame(outerMaterial, innerMaterial);
-        Assert.Null(((RenderInkFeatures)outerMaterial).DebugInkFeatures);
-        Assert.Null(((RenderInkFeatures)innerMaterial).DebugInkFeatures);
+        Assert.Null(((RenderInkFeatures)outerMaterial).InkFeaturesForTests);
+        Assert.Null(((RenderInkFeatures)innerMaterial).InkFeaturesForTests);
 
         // Hover over the 2022 year item to trigger the ink highlight.
         TestGesture gesture = tester.CreateGesture(kind: PointerDeviceKind.Mouse);
@@ -1694,8 +1694,8 @@ public sealed class CalendarDatePickerDartParityTests : IDisposable
             tester.Pump();
 
             // Only the inner Material should have ink features.
-            Assert.Null(((RenderInkFeatures)outerMaterial).DebugInkFeatures);
-            Assert.Single(((RenderInkFeatures)innerMaterial).DebugInkFeatures!);
+            Assert.Null(((RenderInkFeatures)outerMaterial).InkFeaturesForTests);
+            Assert.Single(((RenderInkFeatures)innerMaterial).InkFeaturesForTests!);
         }
         finally
         {

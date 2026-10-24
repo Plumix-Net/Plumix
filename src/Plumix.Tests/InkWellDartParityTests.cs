@@ -915,7 +915,7 @@ public sealed class InkWellDartParityTests : IDisposable
     }
 
     // Flutter: "InkWell.mouseCursor changes cursor on hover"
-    [Fact]
+    [DebugOnlyFact]
     public void InkWellMouseCursorChangesCursorOnHover()
     {
         using FrameworkDartTester tester = CreateTester();
@@ -977,7 +977,7 @@ public sealed class InkWellDartParityTests : IDisposable
     }
 
     // Flutter: "InkResponse containing selectable text changes mouse cursor when hovered"
-    [Fact]
+    [DebugOnlyFact]
     public void InkResponseContainingSelectableTextChangesMouseCursorWhenHovered()
     {
         // Regression test for https://github.com/flutter/flutter/issues/104595.

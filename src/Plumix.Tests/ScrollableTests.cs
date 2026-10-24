@@ -166,7 +166,7 @@ public sealed class ScrollableTests
         Assert.Equal(1.75, Scrollable.Of(itemContext!).DevicePixelRatio);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_ReportsAxisDirectionPhysicsAndRestorationId()
     {
         var properties = new DiagnosticPropertiesBuilder();

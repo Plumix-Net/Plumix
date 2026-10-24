@@ -586,7 +586,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
 
     // ------------------------------------------------------------- first frame rasterized
 
-    [Fact]
+    [NonReleaseFact]
     public void DeferredFrames_TriggerTheFirstFrameCallbackOnlyOnceAFrameWasSent()
     {
         // binding_first_frame_rasterized_test.dart: 'Deferred frames will trigger the first frame
@@ -626,7 +626,7 @@ public sealed class WidgetsBindingDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task DidSendFirstFrameRasterizedEvent_ReportsTheRasterizedStateAsAString()
     {
         _binding.ResetFirstFrameForTests();

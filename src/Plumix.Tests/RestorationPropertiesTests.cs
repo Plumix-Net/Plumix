@@ -216,7 +216,12 @@ public sealed class RestorationPropertiesTests : IDisposable
 
         original.AddListener(() => { });
         EventLoop.FlushMicrotasks();
-        Assert.Throws<FlutterError>(() => original.AddListener(() => { }));
+        if (Constants.KDebugMode)
+        {
+            // ChangeNotifier asserts it has not been disposed only in a debug build.
+            Assert.Throws<FlutterError>(() => original.AddListener(() => { }));
+        }
+
         Assert.Equal("replacement", bag.Controller.Value.Text);
     }
 

@@ -499,7 +499,7 @@ public sealed class LocalizationsDartParityTests : IDisposable
         {
             host.RunApplication(Localized(new Locale("fo"), [pending], new SizedBox()));
             DrainTurns();
-            PlatformDispatcher.Instance.OnReportTimings!([]);
+            PlatformDispatcher.Instance.OnReportTimings?.Invoke([]);
             Assert.False(binding.FirstFrameRasterized);
             Assert.False(binding.WaitUntilFirstFrameRasterized.IsCompleted);
             pending.Completion.SetResult("ready");

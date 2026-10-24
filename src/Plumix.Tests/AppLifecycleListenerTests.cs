@@ -149,7 +149,11 @@ public sealed class AppLifecycleListenerTests
 
         Assert.False(state.Mounted);
         Assert.Null(state.Handle.Context);
-        BuildErrors.Throws<FlutterError>(() => _ = state.Context);
+        if (Constants.KDebugMode)
+        {
+            // Dart's `State.context` throws from an assert, so a release build returns the stale context.
+            BuildErrors.Throws<FlutterError>(() => _ = state.Context);
+        }
     }
 
     [Fact]

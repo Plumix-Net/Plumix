@@ -241,8 +241,12 @@ public sealed class RenderParagraphTests
         Assert.Equal(new Rect(0, 0, 10, 10), RectForA());
 
         paragraph.TextAlign = TextAlign.Right;
-        Assert.False(paragraph.DebugNeedsLayout);
-        Assert.True(paragraph.DebugNeedsPaint);
+        if (Plumix.Foundation.Constants.KDebugMode)
+        {
+            // debugNeedsLayout / debugNeedsPaint read their flags under an `assert` in Dart.
+            Assert.False(paragraph.DebugNeedsLayout);
+            Assert.True(paragraph.DebugNeedsPaint);
+        }
 
         paragraph.Paint(new PaintingContext(new ContainerLayer()), default);
         Assert.Equal(new Rect(90, 0, 10, 10), RectForA());
@@ -288,7 +292,7 @@ public sealed class RenderParagraphTests
         Assert.True(ellipsis.DidExceedMaxLines);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ChangingColor_DoesNotRequireLayout()
     {
         var paragraph = new RenderParagraph(
@@ -316,8 +320,13 @@ public sealed class RenderParagraphTests
         Assert.Equal((255, 0, 0), PaintedPixel(paragraph));
 
         paragraph.Text = new TextSpan("A", style: new TextStyle(FontSize: 20.0, Color: new Color(0xFF0000FF)));
-        Assert.False(paragraph.DebugNeedsLayout);
-        Assert.True(paragraph.DebugNeedsPaint);
+        if (Plumix.Foundation.Constants.KDebugMode)
+        {
+            // debugNeedsLayout / debugNeedsPaint read their flags under an `assert` in Dart.
+            Assert.False(paragraph.DebugNeedsLayout);
+            Assert.True(paragraph.DebugNeedsPaint);
+        }
+
         Assert.Equal((0, 0, 255), PaintedPixel(paragraph));
 
         static (int R, int G, int B) PaintedPixel(RenderParagraph paragraph)

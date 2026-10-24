@@ -384,7 +384,7 @@ public sealed class SliverPersistentHeaderDartParityTests
     }
 
     // Flutter: 'SliverPersistentHeader - toStringDeep of maxExtent that throws'
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeepOfMaxExtentThatThrows()
     {
         using var tester = new FrameworkDartTester();

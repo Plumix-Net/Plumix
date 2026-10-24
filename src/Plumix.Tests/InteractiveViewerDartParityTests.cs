@@ -121,7 +121,7 @@ public sealed class InteractiveViewerDartParityTests
     }
 
     // Flutter: "child has no dimensions"
-    [Fact]
+    [DebugOnlyFact]
     public void ChildHasNoDimensions()
     {
         using var controller = new TransformationController();
@@ -1314,7 +1314,7 @@ public sealed class InteractiveViewerDartParityTests
         Assert.NotNull(built.Builder_);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ConstructorAssertsInvalidScales()
     {
         Assert.Throws<AssertionError>(() => new InteractiveViewer(child: new SizedBox(), minScale: 0.0));

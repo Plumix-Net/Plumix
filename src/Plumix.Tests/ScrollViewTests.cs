@@ -255,7 +255,7 @@ public sealed class ScrollViewTests
     // Diagnostics
     // -------------------------------------------------------------------------------------------
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_ReportsTheScrollViewConfiguration()
     {
         var properties = new DiagnosticPropertiesBuilder();

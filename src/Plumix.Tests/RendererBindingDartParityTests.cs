@@ -113,7 +113,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
             message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDumpSemanticsTree_PrintsTheTreeOfAViewWithSemantics()
     {
         using var handle = new SemanticsScope();
@@ -366,7 +366,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         Assert.True(RendererBinding.Instance.SendFramesToEngine);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task PerformReassemble_ReassemblesTheViewsAndCompletesAfterTheWarmUpFrame()
     {
         // reassemble_test.dart and service_extensions_test.dart's `hasReassemble`.
@@ -384,7 +384,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         Assert.False(box.DebugNeedsLayout);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task ServiceExtension_InvertOversizedImages_ReadsAndWritesTheFlag()
     {
         // service_extensions_test.dart 'Service extensions - invertOversizedImages'.
@@ -405,7 +405,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task ServiceExtension_DebugPaint_ReadsWritesAndPostsStateChanges()
     {
         List<IReadOnlyDictionary<string, object?>> events = [];
@@ -444,7 +444,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Theory]
+    [DebugOnlyTheory]
     [InlineData("debugPaintBaselinesEnabled")]
     [InlineData("debugDisableClipLayers")]
     [InlineData("debugDisablePhysicalShapeLayers")]
@@ -478,7 +478,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task ServiceExtension_RepaintRainbow_RepaintsOnlyWhenTurnedOff()
     {
         AddView(8162, new RenderLimitedBox());
@@ -500,7 +500,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Theory]
+    [NonReleaseTheory]
     [InlineData("profileRenderObjectPaints")]
     [InlineData("profileRenderObjectLayouts")]
     public async Task ServiceExtension_ProfileFlags_NeverScheduleAFrame(string name)
@@ -522,7 +522,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ServiceExtension_TimeDilation_ReadsAndWritesTheSchedulerValue()
     {
         List<IReadOnlyDictionary<string, object?>> events = [];
@@ -561,7 +561,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task ServiceExtension_Dumps_ReturnTheCollectedTrees()
     {
         (RenderView view, _) = AddView(8171);
@@ -575,7 +575,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
         Assert.Equal(traversal, inverse);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ServiceExtensions_RegisterTheRenderingAndSchedulerExtensions()
     {
         string[] expected =
@@ -606,7 +606,7 @@ public sealed class RendererBindingDartParityTests : IDisposable
             static () => Task.CompletedTask));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public async Task InvokeServiceExtension_WrapsTheResultAndReportsErrors()
     {
         PlatformDispatcher.Instance.TimerRun = static callback => callback();

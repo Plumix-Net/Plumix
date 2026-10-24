@@ -214,7 +214,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     }
 
     // Flutter: "Value indicator remains when Slider is in focus on desktop"
-    [Theory]
+    [DebugOnlyTheory]
     [MemberData(nameof(DesktopPlatforms))]
     public void ValueIndicatorRemainsWhenSliderIsInFocusOnDesktop(TargetPlatform targetPlatform)
     {
@@ -828,7 +828,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     }
 
     // Flutter: "Skip drawing ValueIndicator shape when label painter text is null"
-    [Fact]
+    [DebugOnlyFact]
     public void SkipDrawingValueIndicatorShapeWhenLabelPainterTextIsNull()
     {
         using IDisposable platform = TargetPlatformVariant.Override(TargetPlatform.Android);
@@ -943,7 +943,7 @@ public sealed class SliderDartParityTestsC : IDisposable
     }
 
     // Flutter: "Value indicator label is shown when focused"
-    [Theory]
+    [DebugOnlyTheory]
     [MemberData(nameof(DesktopPlatforms))]
     public void ValueIndicatorLabelIsShownWhenFocused(TargetPlatform targetPlatform)
     {

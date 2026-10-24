@@ -688,7 +688,7 @@ public sealed class ViewportRevealTests
         controller.Dispose();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSliverBase_ChildMainAxisPositionThrowsWhenUnimplemented()
     {
         var sliver = new BareSliver();
@@ -700,8 +700,11 @@ public sealed class ViewportRevealTests
     [Fact]
     public void PersistentHeaderShowOnScreenConfiguration_AssertsItsRangeAndDefaultsToUnbounded()
     {
-        Assert.Throws<AssertionError>(
-            () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(
+                () => new PersistentHeaderShowOnScreenConfiguration(200.0, 100.0));
+        }
 
         var defaults = new PersistentHeaderShowOnScreenConfiguration();
         Assert.True(double.IsNegativeInfinity(defaults.MinShowOnScreenExtent));

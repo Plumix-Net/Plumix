@@ -537,7 +537,7 @@ public sealed class SliderDartParityTestsB : IDisposable
 
     // Flutter: "Slider removes value indicator from overlay if Slider gets disposed without value
     // indicator animation completing."
-    [Fact]
+    [DebugOnlyFact]
     public void SliderRemovesValueIndicatorFromOverlayIfDisposedWithoutAnimationCompleting()
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -707,7 +707,7 @@ public sealed class SliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "Slider changes mouse cursor when hovered"
-    [Fact]
+    [DebugOnlyFact]
     public void SliderChangesMouseCursorWhenHovered()
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -762,7 +762,7 @@ public sealed class SliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "Slider WidgetStateMouseCursor resolves correctly"
-    [Fact]
+    [DebugOnlyFact]
     public void SliderWidgetStateMouseCursorResolvesCorrectly()
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -847,7 +847,7 @@ public sealed class SliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "Slider implements debugFillProperties"
-    [Fact]
+    [DebugOnlyFact]
     public void SliderImplementsDebugFillProperties()
     {
         var builder = new DiagnosticPropertiesBuilder();
@@ -908,7 +908,7 @@ public sealed class SliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "SliderTheme change should trigger re-layout"
-    [Fact]
+    [DebugOnlyFact]
     public void SliderThemeChangeShouldTriggerReLayout()
     {
         // Regression test for https://github.com/flutter/flutter/issues/118955

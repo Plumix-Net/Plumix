@@ -611,7 +611,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
         Assert.Throws<ObjectDisposedException>(() => controller.Dispose());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void AnimationController_ToString_ReportsTheStatusGlyphValueAndLabel()
     {
         var controller = new AnimationController(duration: TimeSpan.FromSeconds(1), debugLabel: "probe");

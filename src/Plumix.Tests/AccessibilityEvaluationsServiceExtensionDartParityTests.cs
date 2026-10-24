@@ -53,13 +53,13 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
 
     private void PumpTestWidget() => PumpButton(48.0, "button");
 
-    [Fact]
+    [NonReleaseFact]
     public void IsRegisteredWithTheWidgetsBinding()
     {
         Assert.Contains("ext.flutter.accessibilityEvaluations", BindingBase.ServiceExtensionMethods);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsViolationsForMinimumTapTargetEvaluation()
     {
         PumpButton(40.0, "small button");
@@ -77,7 +77,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.All(violations, violation => Assert.True(int.TryParse(violation["nodeId"], out _)));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsViolationsForLabeledTapTargetEvaluation()
     {
         PumpButton(48.0, label: null);
@@ -95,7 +95,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
             violation => violation["message"].Contains("expected tappable node to have semantic label"));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsViolationsForMinimumTextContrastEvaluation()
     {
         Pump(new TestWidgetsApp(home: new ColoredBox(
@@ -120,7 +120,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains(violations, violation => violation["message"].Contains("Expected contrast ratio"));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsEmptyListsWhenNoViolations()
     {
         PumpButton(48.0, "valid button");
@@ -147,7 +147,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Empty(Violations(contrast));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task HonorsTargetSizeParameter()
     {
         PumpTestWidget();
@@ -169,7 +169,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains("expected tap target size of at least Size(50.0, 50.0)", violations[0]["message"]);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenTypeIsMissing()
     {
         PumpTestWidget();
@@ -179,7 +179,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains("type parameter is required", error.Message);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenTypeIsUnknown()
     {
         PumpTestWidget();
@@ -190,7 +190,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains("unknown type: UnknownType", error.Message);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenMinimumTextContrastEvaluationParamsAreMissing()
     {
         PumpTestWidget();
@@ -201,7 +201,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains("Invalid arguments", error.Message);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenMinimumTextContrastEvaluationParamsAreMalformed()
     {
         PumpTestWidget();
@@ -214,7 +214,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         }));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenMinimumTapTargetEvaluationTargetSizeIsMissing()
     {
         PumpTestWidget();
@@ -225,7 +225,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         Assert.Contains("Invalid arguments", error.Message);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task ReturnsErrorWhenMinimumTapTargetEvaluationTargetSizeIsMalformed()
     {
         PumpTestWidget();
@@ -237,7 +237,7 @@ public sealed class AccessibilityEvaluationsServiceExtensionDartParityTests : ID
         }));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public async Task WrapsTheFeatureFlagErrorIntoAnExtensionErrorResponse()
     {
         PumpTestWidget();

@@ -57,9 +57,12 @@ public sealed class ElementWidgetLifetimeTests
         Assert.True(element.Mounted);
         Assert.Same(widget, element.Widget);
 
-        // Dart's unmount asserts the inactive state, so a failed element is never unmounted.
-        Assert.Throws<AssertionError>(element.Unmount);
-        Assert.True(element.Mounted);
+        if (Constants.KDebugMode)
+        {
+            // Dart's unmount asserts the inactive state, so a failed element is never unmounted.
+            Assert.Throws<AssertionError>(element.Unmount);
+            Assert.True(element.Mounted);
+        }
     }
 
     [Theory]

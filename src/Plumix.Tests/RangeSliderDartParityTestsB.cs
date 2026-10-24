@@ -290,7 +290,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "RangeSlider changes mouse cursor when hovered"
-    [Fact]
+    [DebugOnlyFact]
     public void ChangesMouseCursorWhenHovered()
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -330,7 +330,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "RangeSlider WidgetStateMouseCursor resolves correctly"
-    [Fact]
+    [DebugOnlyFact]
     public void WidgetStateMouseCursorResolvesCorrectly()
     {
         using var tester = new FrameworkDartTester(fakeGestureTimers: true);
@@ -915,7 +915,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "RangeSlider overlay appears correctly for specific thumb interactions"
-    [Fact]
+    [DebugOnlyFact]
     public void OverlayAppearsCorrectlyForSpecificThumbInteractions()
     {
         bool previousDisableShadows = RenderingDebug.DisableShadows;
@@ -1424,7 +1424,7 @@ public sealed class RangeSliderDartParityTestsB : IDisposable
     }
 
     // Flutter: "Value indicator appears on tap"
-    [Fact]
+    [DebugOnlyFact]
     public void ValueIndicatorAppearsOnTap()
     {
         bool previousDisableShadows = RenderingDebug.DisableShadows;

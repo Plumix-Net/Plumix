@@ -278,7 +278,7 @@ public sealed class WindowingTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Enabled_WindowScopeOf_WithoutAScope_ThrowsAndMaybeOfReturnsNull()
     {
         Features.IsWindowingEnabled = true;
@@ -453,12 +453,16 @@ public sealed class WindowingTests : IDisposable
         Assert.Same(regular, dialog.Parent);
         Assert.True(owner.LastResizable);
 
-        Assert.Throws<AssertionError>(() => RegularWindowController.Create(
-            new Size(300, 200),
-            constraints: new BoxConstraints(MaxWidth: 100)));
-        Assert.Throws<AssertionError>(() => DialogWindowController.Create(
-            new Size(300, 200),
-            constraints: new BoxConstraints(MinHeight: 300)));
+        if (Constants.KDebugMode)
+        {
+            // The size-versus-constraints checks are Dart `assert`s.
+            Assert.Throws<AssertionError>(() => RegularWindowController.Create(
+                new Size(300, 200),
+                constraints: new BoxConstraints(MaxWidth: 100)));
+            Assert.Throws<AssertionError>(() => DialogWindowController.Create(
+                new Size(300, 200),
+                constraints: new BoxConstraints(MinHeight: 300)));
+        }
     }
 
     [Fact]
@@ -536,7 +540,7 @@ public sealed class WindowingTests : IDisposable
         Assert.IsType<NotSupportedException>(tester.TakeException());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void WindowRegistryOf_WithoutAManager_Throws()
     {
         Features.IsWindowingEnabled = true;
@@ -669,7 +673,7 @@ public sealed class WindowingTests : IDisposable
         Assert.Single(tester.ElementsWithText("Built dialog"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShowRawDialog_WithoutWidgetsLocalizations_Throws()
     {
         using var tester = new FrameworkDartTester();

@@ -573,7 +573,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
             Convert.ToInt32(LastSetPlatformViewClient(textInput)!["platformViewId"]));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FocusNodeIsDisposedOnUIViewDispose()
     {
         using FakeIosPlatformViewsController viewsController = Ios("webview");
@@ -588,7 +588,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         Assert.ThrowsAny<Exception>(() => ChangeNotifier.DebugAssertNotDisposed(node));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void UiKitViewHasCorrectSemantics()
     {
         using SemanticsScope semantics = SemanticsScope.Ensure(_tester);
@@ -776,7 +776,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
             Convert.ToInt32(LastSetPlatformViewClient(textInput)!["platformViewId"]));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FocusNodeIsDisposedOnAppKitViewDispose()
     {
         // Flutter reuses the UiKitView test's name: 'FocusNode is disposed on UIView dispose'.
@@ -792,7 +792,7 @@ public sealed class PlatformViewDarwinTests : IDisposable
         Assert.ThrowsAny<Exception>(() => ChangeNotifier.DebugAssertNotDisposed(node));
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void AppKitViewHasCorrectSemantics()
     {
         using SemanticsScope semantics = SemanticsScope.Ensure(_tester);

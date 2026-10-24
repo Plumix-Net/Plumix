@@ -78,12 +78,15 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         // Dart then compares `box.toStringDeep()` with a dump whose `configuration:` line is
         // flutter_test's (`PlatformAssetBundle`, devicePixelRatio 3.0, android); the tree shape is
         // what this port pins.
-        string deep = FrameworkDartTester.IgnoringHashCodes(box.ToStringDeep(minLevel: DiagnosticLevel.Info));
-        Assert.StartsWith("RenderDecoratedBox#00000\n", deep, StringComparison.Ordinal);
-        Assert.Contains(" └─child: RenderPadding#00000\n", deep, StringComparison.Ordinal);
-        Assert.Contains("   └─child: RenderLimitedBox#00000\n", deep, StringComparison.Ordinal);
-        Assert.Contains("     └─child: RenderConstrainedBox#00000\n", deep, StringComparison.Ordinal);
-        Assert.Contains("additionalConstraints: BoxConstraints(biggest)", deep, StringComparison.Ordinal);
+        if (Constants.KDebugMode)
+        {
+            string deep = FrameworkDartTester.IgnoringHashCodes(box.ToStringDeep(minLevel: DiagnosticLevel.Info));
+            Assert.StartsWith("RenderDecoratedBox#00000\n", deep, StringComparison.Ordinal);
+            Assert.Contains(" └─child: RenderPadding#00000\n", deep, StringComparison.Ordinal);
+            Assert.Contains("   └─child: RenderLimitedBox#00000\n", deep, StringComparison.Ordinal);
+            Assert.Contains("     └─child: RenderConstrainedBox#00000\n", deep, StringComparison.Ordinal);
+            Assert.Contains("additionalConstraints: BoxConstraints(biggest)", deep, StringComparison.Ordinal);
+        }
     }
 
     // Flutter: "AnimatedContainer overanimate test"
@@ -1046,22 +1049,25 @@ public sealed class ImplicitAnimationsWidgetsDartParityTests
         tester.Pump(TimeSpan.FromSeconds(1));
         Assert.Equal(last, GetCenter(Box()));
 
-        string deep = FrameworkDartTester.IgnoringHashCodes(Box().ToStringDeep(minLevel: DiagnosticLevel.Info));
-        Assert.Equal(
-            "RenderLimitedBox#00000\n"
-            + $" │ parentData: top=31.0; {horizontalParentData}; width=59.0; height=71.0;\n"
-            + $" │   offset={offset} (can use size)\n"
-            + " │ constraints: BoxConstraints(w=59.0, h=71.0)\n"
-            + " │ size: Size(59.0, 71.0)\n"
-            + " │ maxWidth: 0.0\n"
-            + " │ maxHeight: 0.0\n"
-            + " │\n"
-            + " └─child: RenderConstrainedBox#00000\n"
-            + "     parentData: <none> (can use size)\n"
-            + "     constraints: BoxConstraints(w=59.0, h=71.0)\n"
-            + "     size: Size(59.0, 71.0)\n"
-            + "     additionalConstraints: BoxConstraints(biggest)\n",
-            deep);
+        if (Constants.KDebugMode)
+        {
+            string deep = FrameworkDartTester.IgnoringHashCodes(Box().ToStringDeep(minLevel: DiagnosticLevel.Info));
+            Assert.Equal(
+                "RenderLimitedBox#00000\n"
+                + $" │ parentData: top=31.0; {horizontalParentData}; width=59.0; height=71.0;\n"
+                + $" │   offset={offset} (can use size)\n"
+                + " │ constraints: BoxConstraints(w=59.0, h=71.0)\n"
+                + " │ size: Size(59.0, 71.0)\n"
+                + " │ maxWidth: 0.0\n"
+                + " │ maxHeight: 0.0\n"
+                + " │\n"
+                + " └─child: RenderConstrainedBox#00000\n"
+                + "     parentData: <none> (can use size)\n"
+                + "     constraints: BoxConstraints(w=59.0, h=71.0)\n"
+                + "     size: Size(59.0, 71.0)\n"
+                + "     additionalConstraints: BoxConstraints(biggest)\n",
+                deep);
+        }
     }
 
     private static void RunInterrupted(

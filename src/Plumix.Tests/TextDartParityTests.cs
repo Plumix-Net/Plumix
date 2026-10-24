@@ -75,7 +75,7 @@ public sealed class TextDartParityTests : IDisposable
     }
 
     // Flutter: 'text_test.dart: Mouse hovering over selectable Text uses SystemMouseCursor.text'
-    [Fact]
+    [DebugOnlyFact]
     public void MouseHoveringOverSelectableTextUsesSystemMouseCursorText()
     {
         using var tester = new FrameworkDartTester();
@@ -95,7 +95,7 @@ public sealed class TextDartParityTests : IDisposable
 
     // Flutter: 'text_test.dart: Mouse hovering over selectable Text uses default selection style mouse
     // cursor'
-    [Fact]
+    [DebugOnlyFact]
     public void MouseHoveringOverSelectableTextUsesDefaultSelectionStyleMouseCursor()
     {
         using var tester = new FrameworkDartTester();

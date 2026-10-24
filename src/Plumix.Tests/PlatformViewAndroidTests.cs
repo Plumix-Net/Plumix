@@ -501,7 +501,7 @@ public sealed class PlatformViewAndroidTests : IDisposable
         Assert.Equal(1, factory.Invocations);
     }
 
-    [Fact]
+    [NonReleaseFact]
     public void AndroidViewHasCorrectSemantics()
     {
         using SemanticsScope semantics = SemanticsScope.Ensure(_tester);
