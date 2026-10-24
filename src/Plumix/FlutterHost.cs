@@ -7,6 +7,7 @@ using Avalonia.Input.Platform;
 using Avalonia.Input.TextInput;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.Rendering;
 using Avalonia.Styling;
 using Avalonia.Threading;
 using System.Collections;
@@ -28,7 +29,7 @@ using FeedbackType = Plumix.UI.FeedbackType;
 
 namespace Plumix;
 
-public class PlumixHost : Control
+public class PlumixHost : Control, ICustomHitTest
 {
     static PlumixHost()
     {
@@ -521,6 +522,16 @@ public class PlumixHost : Control
             kind: ToPointerKind(e.Pointer.Type),
             timestampUtc: FrameClock.UtcNow));
     }
+
+    /// <summary>
+    /// The whole view receives pointer input, as the engine hands every event inside a FlutterView to
+    /// the framework, whatever the scene draws there.
+    /// </summary>
+    /// <remarks>
+    /// Avalonia otherwise hit-tests the drawn content, and native draws (exact solid paths, shadows,
+    /// hairlines) are not hit-testable, so the pointer over them would fall through to the controls behind.
+    /// </remarks>
+    public bool HitTest(Point point) => new Rect(Bounds.Size).Contains(point);
 
     /// <summary>
     /// The engine's rasterizer: draws the layer tree <see cref="FlutterView.Render"/> last handed to this

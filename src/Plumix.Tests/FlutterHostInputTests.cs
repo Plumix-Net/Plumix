@@ -1,6 +1,7 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
@@ -23,6 +24,22 @@ public sealed class PlumixHostInputTests : IDisposable
     {
         FrameworkFocusManager.Instance.ResetForTests();
         PlumixHost.ResetFrameworkHandlesBackForTests();
+    }
+
+    [Fact]
+    public void PlumixHost_HitTestsItsWholeBounds_WhateverTheSceneDraws()
+    {
+        // The engine hands every pointer event inside a FlutterView to the framework. Avalonia would
+        // otherwise hit-test the drawn content, which misses native draws such as exact solid paths,
+        // so wheel and press events over them fell through to the controls behind the host.
+        var host = new PlumixHost();
+        host.Measure(new Avalonia.Size(100, 50));
+        host.Arrange(new Avalonia.Rect(0, 0, 100, 50));
+        ICustomHitTest hitTest = Assert.IsAssignableFrom<ICustomHitTest>(host);
+        Assert.True(hitTest.HitTest(new Avalonia.Point(0, 0)));
+        Assert.True(hitTest.HitTest(new Avalonia.Point(50, 25)));
+        Assert.False(hitTest.HitTest(new Avalonia.Point(101, 25)));
+        Assert.False(hitTest.HitTest(new Avalonia.Point(50, -1)));
     }
 
     [Fact]
