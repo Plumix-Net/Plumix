@@ -176,6 +176,20 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public FlutterView? ImplicitView { get; private set; }
 
+    /// <summary>
+    /// The device pixel ratio the engine reports for view 0, which <c>Canvas.drawShadow</c> scales the
+    /// elevation by: the implicit view's ratio, or 1.0 without one.
+    /// </summary>
+    /// <remarks>
+    /// The engine's <c>platform_configuration()->GetMetrics(0)</c>. A test host pins it with
+    /// <see cref="EngineDevicePixelRatioOverride"/>: flutter_tester's engine reports 3.0 whatever a
+    /// test sets on <c>tester.view</c>, which only fakes the metrics on the Dart side.
+    /// </remarks>
+    internal double EngineDevicePixelRatio =>
+        EngineDevicePixelRatioOverride ?? ImplicitView?.DevicePixelRatio ?? 1.0;
+
+    internal double? EngineDevicePixelRatioOverride { get; set; }
+
     private readonly OrderedDictionary<int, FlutterView> _views = [];
 
     /// <summary>The current list of views, including top level platform windows used by the application.</summary>

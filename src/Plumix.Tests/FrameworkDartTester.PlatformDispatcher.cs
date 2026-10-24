@@ -22,6 +22,7 @@ internal sealed partial class FrameworkDartTester
             TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
         }
 
+        UI.PlatformDispatcher.Instance.EngineDevicePixelRatioOverride = null;
         TestPlatformDispatcher.Instance.ResetSupportsShowingSystemContextMenu();
         if (UI.PlatformDispatcher.Instance.HasTextSpacingOverrideTestValues)
         {

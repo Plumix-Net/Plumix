@@ -87,6 +87,9 @@ internal sealed partial class FrameworkDartTester : IDisposable
             onSemanticsOwnerDisposed: () => (_pipelineOwner!.RootNode as RenderView)?.ClearSemantics());
         _owner.OnBuildScheduled = SchedulerBinding.Instance.EnsureVisualUpdate;
         View = new TestFlutterView(_flutterView);
+        // flutter_tester's engine reports its 2400x1800 view at 3x (tester_main.cc), so dart:ui's
+        // Canvas.drawShadow scales elevations by 3 whatever the test sets on tester.view.
+        UI.PlatformDispatcher.Instance.EngineDevicePixelRatioOverride = 3.0;
         Binding = new FrameworkDartTestBinding(this);
         _previousCurrent = Current;
         Current = this;

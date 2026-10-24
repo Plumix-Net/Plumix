@@ -727,7 +727,14 @@ public partial class Canvas
         });
     }
 
-    // Dart parity source: dart:ui Canvas.drawShadow.
+    /// <summary>
+    /// Draws a shadow for a <see cref="RectangleGeometry"/> or <see cref="EllipseGeometry"/> occluder, as
+    /// <see cref="DrawShadow(Path, Color, double, bool, Point)"/> over the matching path.
+    /// </summary>
+    /// <remarks>
+    /// Plumix-only: Avalonia does not expose a geometry's native path, so any other geometry gets an
+    /// offset, stroked approximation (see <c>docs/ai/DIVERGENCES.md</c>); pass a <see cref="Path"/> instead.
+    /// </remarks>
     public virtual void DrawShadow(
         Geometry geometry,
         Color color,
@@ -736,14 +743,25 @@ public partial class Canvas
         Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
+        if (ShadowPathOf(geometry) is { } path)
+        {
+            DrawShadow(path, color, elevation, transparentOccluder, geometryOffset);
+            return;
+        }
+
         DebugRecordCall(new CanvasCall("drawShadow", ShadowColor: color, Elevation: elevation));
-        DrawShadowCore(() => geometry, color, elevation, transparentOccluder, geometryOffset);
+        DrawApproximateShadow(geometry, color, elevation, transparentOccluder, geometryOffset);
     }
 
     /// <summary>
-    /// <see cref="DrawShadow(Geometry, Color, double, bool, Point)"/> over a <see cref="Path"/>, whose
-    /// backend geometry is built on playback so recording needs no render backend.
+    /// Draws a shadow for a rectangle, rounded rectangle, or arbitrary path, as if it were the outline of a
+    /// physical object at <paramref name="elevation"/> above the canvas.
     /// </summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawShadow(path, color, elevation, transparentOccluder)</c>, rendered as the Flutter
+    /// engine's Skia backend does (see <see cref="ShadowDraw"/>): the elevation is scaled by the implicit
+    /// view's device pixel ratio, and the shadow combines an ambient and a directional spot shadow.
+    /// </remarks>
     public virtual void DrawShadow(
         Path path,
         Color color,
@@ -753,12 +771,57 @@ public partial class Canvas
     {
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("drawShadow", Path: path, ShadowColor: color, Elevation: elevation));
-        Geometry? geometry = null;
-        DrawShadowCore(() => geometry ??= path.ToGeometry(), color, elevation, transparentOccluder, geometryOffset);
+        if (color.Alpha == 0)
+        {
+            return;
+        }
+
+        Path occluder = geometryOffset.X == 0.0 && geometryOffset.Y == 0.0 ? path : path.Shift(geometryOffset);
+        double devicePixelRatio = PlatformDispatcher.Instance.EngineDevicePixelRatio;
+        var shadow = new ShadowDraw(occluder, color, elevation, transparentOccluder, devicePixelRatio);
+        AddDrawCommand(context => context.Custom(shadow));
     }
 
-    private void DrawShadowCore(
-        Func<Geometry> geometrySource,
+    private static Path? ShadowPathOf(Geometry geometry)
+    {
+        switch (geometry)
+        {
+            case RectangleGeometry { Transform: null or { Value.IsIdentity: true } } rectangle:
+            {
+                var path = new Path();
+                if (rectangle.RadiusX > 0.0 && rectangle.RadiusY > 0.0)
+                {
+                    path.AddRRect(RRect.FromRectXY(rectangle.Rect, rectangle.RadiusX, rectangle.RadiusY));
+                }
+                else
+                {
+                    path.AddRect(rectangle.Rect);
+                }
+
+                return path;
+            }
+
+            case EllipseGeometry { Transform: null or { Value.IsIdentity: true } } ellipse:
+            {
+                var path = new Path();
+                // An unset Rect means the ellipse is given by its centre and radii (Avalonia's two modes).
+                path.AddOval(ellipse.Rect != default
+                    ? ellipse.Rect
+                    : new Rect(
+                        ellipse.Center.X - ellipse.RadiusX,
+                        ellipse.Center.Y - ellipse.RadiusY,
+                        ellipse.RadiusX * 2.0,
+                        ellipse.RadiusY * 2.0));
+                return path;
+            }
+
+            default:
+                return null;
+        }
+    }
+
+    private void DrawApproximateShadow(
+        Geometry geometry,
         Color color,
         double elevation,
         bool transparentOccluder,
@@ -771,7 +834,6 @@ public partial class Canvas
 
         AddDrawCommand(context =>
         {
-            Geometry geometry = geometrySource();
             Point effectiveOffset = geometryOffset + new Vector(0.0, elevation * 0.5);
             using var transform = context.PushTransform(Matrix.CreateTranslation(
                 effectiveOffset.X,

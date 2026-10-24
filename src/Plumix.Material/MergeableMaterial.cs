@@ -695,11 +695,13 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
             var rect = new Rect(parentData.offset + offset, child.Size);
             if (index % 2 == 0 && Elevation != 0.0)
             {
-                double radius = (MaterialEdges.KMaterialEdges[MaterialType.Card] ?? BorderRadius.Zero).Radius;
+                var shadowPath = new Plumix.UI.Path();
+                shadowPath.AddRRect(MaterialEdges.KMaterialEdges[MaterialType.Card]!.Value.ToRRect(rect));
                 context.Canvas.DrawShadow(
-                    new RectangleGeometry(rect, radius, radius),
+                    shadowPath,
                     Colors.Black,
                     Elevation,
+                    // The occluding object is not (necessarily) opaque.
                     transparentOccluder: true);
             }
 
