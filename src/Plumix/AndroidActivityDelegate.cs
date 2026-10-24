@@ -135,6 +135,18 @@ public sealed class AndroidActivityDelegate
         }
     }
 
+    /// <summary>
+    /// <c>Activity.onCreate</c> and <c>Activity.onConfigurationChanged</c>: reports the user's font size
+    /// (<c>Configuration.fontScale</c>) as the platform text scale factor, as
+    /// <c>FlutterView.sendUserSettingsToFlutter</c> does.
+    /// </summary>
+    /// <remarks>
+    /// An Activity that does not list <c>fontScale</c> in its <c>configChanges</c> is recreated when the
+    /// setting changes, and its <c>onCreate</c> reports the new value.
+    /// </remarks>
+    public void OnConfigurationChanged(float fontScale) =>
+        PlatformDispatcher.Instance.UpdateTextScaleFactor(fontScale);
+
     /// <summary><c>OnBackAnimationCallback.onBackStarted</c> (Android 14+ predictive back).</summary>
     public void OnBackStarted(PredictiveBackEvent backEvent) =>
         _ = WidgetsBinding.Instance.HandleStartBackGesture(backEvent);

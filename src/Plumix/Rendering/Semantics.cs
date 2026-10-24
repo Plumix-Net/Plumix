@@ -2123,13 +2123,6 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
-        if (InputType != SemanticsInputType.None
-            && other.InputType != SemanticsInputType.None
-            && InputType != other.InputType)
-        {
-            return false;
-        }
-
         if (HitTestBehavior != SemanticsHitTestBehavior.Defer
             || other.HitTestBehavior != SemanticsHitTestBehavior.Defer)
         {

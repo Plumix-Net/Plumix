@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia;
+using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
@@ -21,6 +22,34 @@ public sealed class AndroidActivityDelegateTests : IDisposable
         PlumixHost.ResetFrameworkHandlesBackForTests();
         AndroidActivityDelegate.ResetForTests();
         new MethodChannel(SystemChannels.Restoration.Name).SetPlatformMethodCallHandler(null);
+    }
+
+    // FlutterView.sendUserSettingsToFlutter: Configuration.fontScale becomes the dispatcher's text scale
+    // factor, and only a change notifies (the engine's _updateUserSettingsData).
+    [Fact]
+    public void ConfigurationChanged_ReportsFontScaleAsTextScaleFactor()
+    {
+        PlatformDispatcher dispatcher = PlatformDispatcher.Instance;
+        Action? previous = dispatcher.OnTextScaleFactorChanged;
+        int changes = 0;
+        dispatcher.OnTextScaleFactorChanged = () => changes++;
+        try
+        {
+            var activity = new AndroidActivityDelegate(new AndroidRestorationChannel(true, _messenger), _ => { });
+
+            activity.OnConfigurationChanged(2f);
+            activity.OnConfigurationChanged(2f);
+
+            Assert.Equal(2.0, dispatcher.TextScaleFactor);
+            Assert.Equal(1, changes);
+            using var tester = new FrameworkDartTester();
+            Assert.Equal(TextScaler.Linear(2.0), MediaQueryData.FromView(tester.View).TextScaler);
+        }
+        finally
+        {
+            dispatcher.UpdateTextScaleFactor(1.0);
+            dispatcher.OnTextScaleFactorChanged = previous;
+        }
     }
 
     [Fact]

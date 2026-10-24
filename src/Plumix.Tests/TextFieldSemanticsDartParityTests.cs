@@ -150,6 +150,29 @@ public sealed class TextFieldSemanticsDartParityTests : IDisposable
         semantics.Dispose();
     }
 
+    // C#-only regression: EditableText's `inputType: url` Semantics wraps a RenderEditable that reports
+    // `text`; Dart's isCompatibleWith has no input-type check, so the field stays one labelled node.
+    [Fact]
+    public void UrlKeyboardTypeKeepsTextFieldSemanticsMerged()
+    {
+        FrameworkDartTester tester = _tester;
+        var semantics = new SemanticsTester(tester);
+        Key key = new UniqueKey();
+
+        tester.PumpWidget(Overlay(new TextField(
+            key: key,
+            keyboardType: TextInputType.Url,
+            decoration: new InputDecoration(labelText: "Target URL"))));
+
+        SemanticsData data = tester.GetSemantics(Find.ByKey(key)).GetSemanticsData();
+
+        Assert.Equal("Target URL", data.Label);
+        Assert.True(data.HasFlag(SemanticsFlags.IsTextField));
+        Assert.True(data.HasAction(SemanticsActions.Tap));
+        Assert.Equal(SemanticsInputType.Url, data.InputType);
+        semantics.Dispose();
+    }
+
     // Flutter: 'text_field_test.dart: TextField semantics always include label when no hint is given'
     [Fact]
     public void TextFieldSemanticsAlwaysIncludeLabelWhenNoHintIsGiven()

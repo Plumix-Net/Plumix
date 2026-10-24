@@ -195,6 +195,27 @@ public sealed class SemanticsAutomationPeerTests : IDisposable
     }
 
     [Fact]
+    public void SelectedStateIsReportedWithoutATapAction()
+    {
+        int taps = 0;
+        PlumixHostAutomationPeer host = Show(new Column(children:
+        [
+            new Semantics(container: true, label: "Current", selected: true, child: Leaf()),
+            new Semantics(container: true, label: "Other", selected: false, onTap: () => taps++, child: Leaf()),
+        ]));
+
+        SemanticsNodeAutomationPeer current = Find(host, "Current");
+        Assert.True(current.GetProvider<ISelectionItemProvider>()!.IsSelected);
+        Assert.Null(current.GetProvider<IInvokeProvider>());
+
+        // A tappable selectable item stays invocable, which is what makes it clickable on Android.
+        SemanticsNodeAutomationPeer other = Find(host, "Other");
+        Assert.False(other.GetProvider<ISelectionItemProvider>()!.IsSelected);
+        other.GetProvider<IInvokeProvider>()!.Invoke();
+        Assert.Equal(1, taps);
+    }
+
+    [Fact]
     public void SliderMovesOneStepTowardTheRequestedValue()
     {
         var log = new List<string>();

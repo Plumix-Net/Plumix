@@ -241,6 +241,7 @@ internal static class SemanticsPeerShapes
         SemanticsPeerShape.Invoke,
         SemanticsPeerShape.Toggle,
         SemanticsPeerShape.SelectionItem,
+        SemanticsPeerShape.Invoke | SemanticsPeerShape.SelectionItem,
         SemanticsPeerShape.ExpandCollapse,
         SemanticsPeerShape.Invoke | SemanticsPeerShape.ExpandCollapse,
         SemanticsPeerShape.RangeValue,
@@ -268,12 +269,14 @@ internal static class SemanticsPeerShapes
         {
             shape |= SemanticsPeerShape.Toggle;
         }
-        else if (role is AccessibilityRole.RadioButton
-                 || (node.HasFlag(SemanticsFlags.HasSelectedState) && node.HasAction(SemanticsActions.Tap)))
+        else if (role is AccessibilityRole.RadioButton || node.HasFlag(SemanticsFlags.HasSelectedState))
         {
+            // The engine reports isSelected whatever the node's actions, and a tappable item stays
+            // clickable (Android's SelectionItem provider only adds ACTION_SELECT).
             shape |= SemanticsPeerShape.SelectionItem;
         }
-        else if (node.HasAction(SemanticsActions.Tap))
+
+        if ((shape & SemanticsPeerShape.Toggle) == 0 && node.HasAction(SemanticsActions.Tap))
         {
             shape |= SemanticsPeerShape.Invoke;
         }
@@ -345,6 +348,8 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         SemanticsPeerShape.Invoke => new InvokePeer(host, node, shape),
         SemanticsPeerShape.Toggle => new TogglePeer(host, node, shape),
         SemanticsPeerShape.SelectionItem => new SelectionItemPeer(host, node, shape),
+        SemanticsPeerShape.Invoke | SemanticsPeerShape.SelectionItem =>
+            new InvokeSelectionItemPeer(host, node, shape),
         SemanticsPeerShape.ExpandCollapse => new ExpandCollapsePeer(host, node, shape),
         SemanticsPeerShape.Invoke | SemanticsPeerShape.ExpandCollapse =>
             new InvokeExpandCollapsePeer(host, node, shape),
@@ -888,6 +893,12 @@ internal abstract class SemanticsNodeAutomationPeer : AutomationPeer
         AccessibilityNode node,
         SemanticsPeerShape shape)
         : SemanticsNodeAutomationPeer(host, node, shape), ISelectionItemProvider;
+
+    private sealed class InvokeSelectionItemPeer(
+        PlumixHostAutomationPeer host,
+        AccessibilityNode node,
+        SemanticsPeerShape shape)
+        : SemanticsNodeAutomationPeer(host, node, shape), IInvokeProvider, ISelectionItemProvider;
 
     private sealed class ExpandCollapsePeer(
         PlumixHostAutomationPeer host,

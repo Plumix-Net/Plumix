@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using Android.Content.Res;
 using Android.OS;
 using Android.Views;
 using Android.Window;
@@ -14,7 +15,8 @@ namespace Plumix.Android;
 
 /// <summary>
 /// The Activity of a Plumix application on Android: an <see cref="AvaloniaMainActivity"/> that hands the
-/// framework its lifecycle, saved restoration data and (on Android 14+) predictive back gestures.
+/// framework its lifecycle, saved restoration data, the user's font size and (on Android 14+) predictive
+/// back gestures.
 /// </summary>
 /// <remarks>
 /// Flutter's <c>FlutterActivity</c>. Derive the application's launcher Activity from it; overrides must
@@ -44,6 +46,7 @@ public class PlumixMainActivity : AvaloniaMainActivity
             Delegate.BackCallbackNeededChanged = SetBackCallbackRegistered;
         }
 
+        Delegate.OnConfigurationChanged(Resources?.Configuration?.FontScale ?? 1f);
         Delegate.OnCreate(savedInstanceState?.GetByteArray(FrameworkRestorationBundleKey));
         base.OnCreate(savedInstanceState);
 
@@ -94,6 +97,12 @@ public class PlumixMainActivity : AvaloniaMainActivity
 
         Delegate.OnDestroy();
         base.OnDestroy();
+    }
+
+    public override void OnConfigurationChanged(Configuration newConfig)
+    {
+        base.OnConfigurationChanged(newConfig);
+        Delegate.OnConfigurationChanged(newConfig.FontScale);
     }
 
     public override void OnWindowFocusChanged(bool hasFocus)

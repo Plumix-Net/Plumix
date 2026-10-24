@@ -52,7 +52,11 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
             center.AddObserver(
                 UIApplication.WillTerminateNotification,
                 _ => DispatchLifecycleState(AppLifecycleState.Detached)),
+            center.AddObserver(
+                UIApplication.ContentSizeCategoryChangedNotification,
+                _ => ReportTextScaleFactor()),
         ];
+        ReportTextScaleFactor();
     }
 
     [Export("application:shouldSaveSecureApplicationState:")]
@@ -92,6 +96,29 @@ public partial class AppDelegate : AvaloniaAppDelegate<App>
         {
             IOSAccessibilityBridge.Attach(host);
         }
+    }
+
+    // FlutterViewController's textScaleFactor: the Dynamic Type size's body text point size relative to
+    // the default Large (17pt), after Apple's typography guidelines.
+    private static void ReportTextScaleFactor()
+    {
+        const double large = 17;
+        double bodySize = UIApplication.SharedApplication.PreferredContentSizeCategory switch
+        {
+            var c when c == UIContentSizeCategory.ExtraSmall.GetConstant() => 14,
+            var c when c == UIContentSizeCategory.Small.GetConstant() => 15,
+            var c when c == UIContentSizeCategory.Medium.GetConstant() => 16,
+            var c when c == UIContentSizeCategory.ExtraLarge.GetConstant() => 19,
+            var c when c == UIContentSizeCategory.ExtraExtraLarge.GetConstant() => 21,
+            var c when c == UIContentSizeCategory.ExtraExtraExtraLarge.GetConstant() => 23,
+            var c when c == UIContentSizeCategory.AccessibilityMedium.GetConstant() => 28,
+            var c when c == UIContentSizeCategory.AccessibilityLarge.GetConstant() => 33,
+            var c when c == UIContentSizeCategory.AccessibilityExtraLarge.GetConstant() => 40,
+            var c when c == UIContentSizeCategory.AccessibilityExtraExtraLarge.GetConstant() => 47,
+            var c when c == UIContentSizeCategory.AccessibilityExtraExtraExtraLarge.GetConstant() => 53,
+            _ => large,
+        };
+        PlatformDispatcher.Instance.UpdateTextScaleFactor(bodySize / large);
     }
 
     private static void DispatchLifecycleState(AppLifecycleState state)

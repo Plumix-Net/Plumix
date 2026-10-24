@@ -258,13 +258,14 @@ public sealed class AccessibilityFeaturesDartParityTests
     }
 
     // Flutter: 'media_query_test.dart: MediaQueryData.fromView uses data from platformDispatcher if no
-    // platformData is provided'. Plumix's dispatcher carries no text scale factor, brightness or
-    // 24-hour setting to fake (docs/ai/DIVERGENCES.md, MediaQueryData.FromView), so those three
-    // expectations read the defaults a non-implicit view gets.
+    // platformData is provided'. Plumix's dispatcher carries no brightness or 24-hour setting to fake
+    // (docs/ai/DIVERGENCES.md, MediaQueryData.FromView), so those two expectations read the defaults a
+    // non-implicit view gets.
     [Fact]
     public void MediaQueryDataFromViewUsesDataFromPlatformDispatcherIfNoPlatformDataIsProvided()
     {
         using var tester = new FrameworkDartTester();
+        tester.PlatformDispatcher.TextScaleFactorTestValue = 123;
         tester.PlatformDispatcher.AccessibilityFeaturesTestValue = FakeAccessibilityFeatures.AllOn;
 
         MediaQueryData data = MediaQueryData.FromView(tester.View);
@@ -272,7 +273,7 @@ public sealed class AccessibilityFeaturesDartParityTests
         Assert.Equal(data.CopyWith().GetHashCode(), data.GetHashCode());
         AssertViewData(tester, data);
         AssertDispatcherFeatures(tester, data);
-        Assert.Equal(TextScaler.NoScaling, data.TextScaler);
+        Assert.Equal(TextScaler.Linear(tester.PlatformDispatcher.TextScaleFactor), data.TextScaler);
         Assert.Equal(PlatformBrightness.Light, data.PlatformBrightness);
         Assert.False(data.AlwaysUse24HourFormat);
         Assert.Equal(NavigationMode.Traditional, data.NavigationMode);
@@ -329,7 +330,7 @@ public sealed class AccessibilityFeaturesDartParityTests
     }
 
     // Flutter: 'media_query_test.dart: MediaQuery.fromView updates on notifications (no parent data)'.
-    // The text scale factor and brightness steps are not fakeable (see above); the accessibility and
+    // The brightness step is not fakeable (see above); the text scale, accessibility and
     // device-pixel-ratio steps run as in Dart.
     [Fact]
     public void MediaQueryFromViewUpdatesOnNotificationsNoParentData()
@@ -337,6 +338,7 @@ public sealed class AccessibilityFeaturesDartParityTests
         using var tester = new FrameworkDartTester();
         try
         {
+            tester.PlatformDispatcher.TextScaleFactorTestValue = 123;
             tester.PlatformDispatcher.AccessibilityFeaturesTestValue = FakeAccessibilityFeatures.AllOn;
             tester.View.DevicePixelRatio = 44;
 
@@ -353,17 +355,23 @@ public sealed class AccessibilityFeaturesDartParityTests
 
             Assert.Equal(1, rebuildCount);
 
+            Assert.Equal(10 * 123, data!.TextScaler.Scale(10));
+            tester.PlatformDispatcher.TextScaleFactorTestValue = 456;
+            tester.Pump();
+            Assert.Equal(10 * 456, data!.TextScaler.Scale(10));
+            Assert.Equal(2, rebuildCount);
+
             Assert.True(data!.AccessibleNavigation);
             tester.PlatformDispatcher.AccessibilityFeaturesTestValue = new FakeAccessibilityFeatures();
             tester.PumpAndSettle();
             Assert.False(data!.AccessibleNavigation);
-            Assert.Equal(2, rebuildCount);
+            Assert.Equal(3, rebuildCount);
 
             Assert.Equal(44, data!.DevicePixelRatio);
             tester.View.DevicePixelRatio = 55;
             tester.Pump();
             Assert.Equal(55, data!.DevicePixelRatio);
-            Assert.Equal(3, rebuildCount);
+            Assert.Equal(4, rebuildCount);
         }
         finally
         {
@@ -371,14 +379,27 @@ public sealed class AccessibilityFeaturesDartParityTests
         }
     }
 
+    // Flutter: 'media_query_test.dart: MediaQuery.fromView creates a SystemTextScaler'. Plumix has no
+    // SystemTextScaler type: the dispatcher's factor scales linearly, which is what Dart's scaler does
+    // outside Android 14's nonlinear font scaling.
+    [Fact]
+    public void MediaQueryFromViewCreatesASystemTextScaler()
+    {
+        using var tester = new FrameworkDartTester();
+        tester.PlatformDispatcher.TextScaleFactorTestValue = 123.0;
+        Assert.Equal(123.0, MediaQueryData.FromView(tester.View).TextScaler.TextScaleFactor);
+        Assert.Equal(10 * 123.0, MediaQueryData.FromView(tester.View).TextScaler.Scale(10));
+    }
+
     // Flutter: 'media_query_test.dart: MediaQuery.fromView updates on notifications (with parent data)'.
-    // The text scale factor and brightness steps are not fakeable (see above).
+    // The brightness step is not fakeable (see above).
     [Fact]
     public void MediaQueryFromViewUpdatesOnNotificationsWithParentData()
     {
         using var tester = new FrameworkDartTester();
         try
         {
+            tester.PlatformDispatcher.TextScaleFactorTestValue = 123;
             tester.PlatformDispatcher.AccessibilityFeaturesTestValue = FakeAccessibilityFeatures.AllOn;
             tester.View.DevicePixelRatio = 44;
 
@@ -400,6 +421,10 @@ public sealed class AccessibilityFeaturesDartParityTests
 
             Assert.Equal(1, rebuildCount);
             Assert.Equal(10 * 44, data!.TextScaler.Scale(10));
+            tester.PlatformDispatcher.TextScaleFactorTestValue = 456;
+            tester.Pump();
+            Assert.Equal(10 * 44, data!.TextScaler.Scale(10));
+            Assert.Equal(1, rebuildCount);
             Assert.Equal(PlatformBrightness.Dark, data!.PlatformBrightness);
 
             Assert.True(data!.AccessibleNavigation);

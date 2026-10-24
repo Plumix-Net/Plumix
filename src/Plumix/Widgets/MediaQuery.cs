@@ -485,10 +485,10 @@ public sealed record MediaQueryData
     /// <paramref name="platformData"/> when given and from the view's platform dispatcher otherwise.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>MediaQueryData.fromView</c>. The accessibility flags come from
-    /// <c>view.platformDispatcher.accessibilityFeatures</c> exactly as in Dart. Plumix's dispatcher
-    /// does not carry the text scale factor, the platform brightness or the 24-hour setting itself:
-    /// they come from the platform data the implicit view's host installed
+    /// Flutter's <c>MediaQueryData.fromView</c>. The accessibility flags and the text scale factor come
+    /// from <c>view.platformDispatcher</c> exactly as in Dart. Plumix's dispatcher does not carry the
+    /// platform brightness or the 24-hour setting itself: they come from the platform data the implicit
+    /// view's host installed
     /// (<see cref="PlatformDispatcher.ImplicitViewPlatformData"/>) for every view, as Dart reads them from
     /// the one process-wide dispatcher, and fall back to the defaults before a host reported any.
     /// </remarks>
@@ -507,7 +507,9 @@ public sealed record MediaQueryData
             ViewInsets: FromViewPadding(view.ViewInsets, devicePixelRatio),
             SystemGestureInsets: FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
             ViewPadding: FromViewPadding(view.ViewPadding, devicePixelRatio),
-            TextScaler: platformData?.TextScaler ?? dispatcherData?.TextScaler,
+            // Dart's SystemTextScaler, linear here (docs/ai/DIVERGENCES.md: no scaleFontSize).
+            TextScaler: platformData?.TextScaler
+                        ?? Painting.TextScaler.Linear(platformDispatcher.TextScaleFactor),
             AccessibleNavigation: platformData?.AccessibleNavigation ?? accessibilityFeatures.AccessibleNavigation,
             AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat
                                    ?? dispatcherData?.AlwaysUse24HourFormat

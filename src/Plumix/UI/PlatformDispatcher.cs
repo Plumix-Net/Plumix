@@ -292,12 +292,61 @@ public sealed class PlatformDispatcher
     /// </remarks>
     public Action? OnMetricsChanged { get; set; }
 
-    /// <summary>A callback invoked whenever the platform's text scale factor changes.</summary>
+    private double _textScaleFactor = 1.0;
+    private double? _textScaleFactorTestValue;
+
+    /// <summary>The system-reported text scale: the user's font size preference, 1.0 by default.</summary>
+    /// <remarks>
+    /// dart:ui's <c>PlatformDispatcher.textScaleFactor</c>. The engine owns the value; a Plumix host
+    /// reports it through <see cref="UpdateTextScaleFactor"/>, and stays at 1.0 where the platform has
+    /// no such setting (desktop).
+    /// </remarks>
+    public double TextScaleFactor => _textScaleFactorTestValue ?? _textScaleFactor;
+
+    /// <summary>A callback invoked whenever <see cref="TextScaleFactor"/> changes.</summary>
     /// <remarks>
     /// dart:ui's <c>PlatformDispatcher.onTextScaleFactorChanged</c>; <c>RendererBinding</c> installs the
     /// composed binding's <c>handleTextScaleFactorChanged</c> here.
     /// </remarks>
     public Action? OnTextScaleFactorChanged { get; set; }
+
+    /// <summary>
+    /// Records the platform's text scale factor, as the engine does, and invokes
+    /// <see cref="OnTextScaleFactorChanged"/> when it changed.
+    /// </summary>
+    /// <remarks>
+    /// The engine-side <c>_updateUserSettingsData</c> for its <c>textScaleFactor</c> key; hosts call it
+    /// (Android's <c>Configuration.fontScale</c>, iOS's Dynamic Type size).
+    /// </remarks>
+    public void UpdateTextScaleFactor(double textScaleFactor)
+    {
+        if (!double.IsFinite(textScaleFactor) || textScaleFactor <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(textScaleFactor));
+        }
+
+        if (textScaleFactor == _textScaleFactor)
+        {
+            return;
+        }
+
+        _textScaleFactor = textScaleFactor;
+        OnTextScaleFactorChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// flutter_test's <c>TestPlatformDispatcher.textScaleFactorTestValue</c> setter (a value) and
+    /// <c>clearTextScaleFactorTestValue</c> (<see langword="null"/>): both invoke
+    /// <see cref="OnTextScaleFactorChanged"/>.
+    /// </summary>
+    internal void SetTextScaleFactorTestValue(double? value)
+    {
+        _textScaleFactorTestValue = value;
+        OnTextScaleFactorChanged?.Invoke();
+    }
+
+    /// <summary>Whether <see cref="TextScaleFactor"/> currently carries a test value.</summary>
+    internal bool HasTextScaleFactorTestValue => _textScaleFactorTestValue is not null;
 
     /// <summary>A callback invoked whenever <see cref="PlatformBrightness"/> changes.</summary>
     /// <remarks>

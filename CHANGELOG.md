@@ -7,6 +7,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 `[Unreleased]` into a few bullets under the version heading, keeping every `Breaking:` item by name.
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
+## [Unreleased]
+- `MediaQuery.textScaler` follows the system font size (`PlatformDispatcher.TextScaleFactor`, platform_dispatcher.dart).
+- Automation peers report a selected node without a tap action; tappable selectable nodes stay invocable (C#-only).
+- A `TextField` with a URL/email/phone keyboard is one semantics node again: no input-type conflict (semantics.dart).
+
 ## v0.4.0-beta.3 — 2026-10-24
 - Android: the Activity's back callback steps aside while the soft keyboard is shown, so back hides it first (C#-only).
 

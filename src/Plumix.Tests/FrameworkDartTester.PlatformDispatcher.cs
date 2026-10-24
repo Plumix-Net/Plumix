@@ -1,8 +1,8 @@
 using Plumix.UI;
 
 // C#-only test infrastructure: flutter_test's `TestPlatformDispatcher` and `FakeAccessibilityFeatures`
-// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features,
-// `supportsShowingSystemContextMenu` and the text spacing overrides.
+// (flutter/packages/flutter_test/lib/src/window.dart), reduced to the accessibility features, the text
+// scale factor, `supportsShowingSystemContextMenu` and the text spacing overrides.
 
 namespace Plumix.Tests;
 
@@ -20,6 +20,11 @@ internal sealed partial class FrameworkDartTester
         if (UI.PlatformDispatcher.Instance.HasAccessibilityFeaturesTestValue)
         {
             TestPlatformDispatcher.Instance.ClearAccessibilityFeaturesTestValue();
+        }
+
+        if (UI.PlatformDispatcher.Instance.HasTextScaleFactorTestValue)
+        {
+            TestPlatformDispatcher.Instance.ClearTextScaleFactorTestValue();
         }
 
         UI.PlatformDispatcher.Instance.EngineDevicePixelRatioOverride = null;
@@ -82,6 +87,24 @@ internal sealed class TestPlatformDispatcher
         get => Dispatcher.OnAccessibilityFeaturesChanged;
         set => Dispatcher.OnAccessibilityFeaturesChanged = value;
     }
+
+    /// <summary>Dart's <c>textScaleFactor</c>: the test value if one is set, otherwise the real one.</summary>
+    public double TextScaleFactor => Dispatcher.TextScaleFactor;
+
+    /// <summary>
+    /// Dart's <c>textScaleFactorTestValue</c> setter: hides the real <see cref="TextScaleFactor"/> and
+    /// invokes <c>onTextScaleFactorChanged</c>.
+    /// </summary>
+    public double TextScaleFactorTestValue
+    {
+        set => Dispatcher.SetTextScaleFactorTestValue(value);
+    }
+
+    /// <summary>
+    /// Dart's <c>clearTextScaleFactorTestValue</c>: the real value shows again and
+    /// <c>onTextScaleFactorChanged</c> is invoked.
+    /// </summary>
+    public void ClearTextScaleFactorTestValue() => Dispatcher.SetTextScaleFactorTestValue(null);
 
     /// <summary>
     /// Dart's <c>supportsShowingSystemContextMenu</c>: the test value if one is set, otherwise the real
@@ -168,6 +191,7 @@ internal sealed class TestPlatformDispatcher
     /// <summary>Dart's <c>clearAllTestValues</c>, for the values this harness can fake.</summary>
     public void ClearAllTestValues()
     {
+        ClearTextScaleFactorTestValue();
         ClearAccessibilityFeaturesTestValue();
         ClearTextSpacingOverrideTestValues();
     }
