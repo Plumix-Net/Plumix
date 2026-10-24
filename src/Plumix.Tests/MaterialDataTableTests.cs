@@ -532,6 +532,31 @@ public sealed class MaterialDataTableTests : IDisposable
         Assert.True(source.GetRowCalls >= firstCalls + 3);
     }
 
+    // paginated_data_table_test.dart: "PaginatedDataTable table fills Card width".
+    [Theory]
+    [InlineData(800.0)]
+    [InlineData(1600.0)]
+    public void PaginatedDataTable_TableFillsCardWidth(double width)
+    {
+        // MaterialApp's home is laid out with tight constraints.
+        using var harness = new WidgetRenderHarness(Wrap(new SizedBox(
+            width: width,
+            height: 400,
+            child: new PaginatedDataTable(
+                columns: [new DataColumn(new Text("Name"))],
+                source: new TestSource(4),
+                header: new Text("Test table"),
+                rowsPerPage: 2,
+                availableRowsPerPage: [2, 4, 8, 16],
+                onRowsPerPageChanged: _ => { },
+                onPageChanged: _ => { }))));
+        harness.Pump(new Size(width, 400));
+
+        // A Card's default margin is 4 on each side.
+        RenderTable table = FindDescendants<RenderTable>(harness.RenderView).First();
+        Assert.Equal(width - 8.0, table.Size.Width, 6);
+    }
+
     [Fact]
     public void DataTableDemoPage_PumpsFrameworkWidgetHostComposition()
     {

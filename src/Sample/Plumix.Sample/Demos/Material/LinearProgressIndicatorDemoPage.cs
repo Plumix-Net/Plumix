@@ -54,7 +54,6 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
             data: themedData,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text(
@@ -62,9 +61,11 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                         style: new TextStyle(
                             FontSize: 20,
                             Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
                         "Determinate/indeterminate behavior, M2/M3 defaults, year2023 toggle, theme/widget precedence, valueColor priority, track-gap/stop-dot styling, and RTL paint direction.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -90,6 +91,7 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
                         spacing: 8,
                         children:
@@ -119,17 +121,18 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
                                     $"value={_progress:0.00}",
                                     style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
                         $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, valueColor={(_useValueColorOverride ? "true" : "false")}",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
-                                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                spacing: 14,
                                 children:
                                 [
                                     BuildLtrPreview(),
+                                    new SizedBox(height: 14),
                                     BuildRtlPreview(),
                                 ]))),
                 ]));
@@ -163,11 +166,12 @@ internal sealed class LinearProgressIndicatorDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new SizedBox(height: 4),
                     new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 8),
                     new SizedBox(
                         height: 28,
                         child: new Align(

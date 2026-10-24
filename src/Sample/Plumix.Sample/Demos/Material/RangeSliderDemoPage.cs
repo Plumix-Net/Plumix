@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
@@ -53,14 +54,15 @@ internal sealed class RangeSliderDemoPageState : State
             data: themedData,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text("RangeSlider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
                         "Two-thumb range mapping, continuous/discrete updates, drag/tap plus Tab focus "
                         + "between the two thumbs, and M2/M3 theme/widget color precedence.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -86,6 +88,7 @@ internal sealed class RangeSliderDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
                         spacing: 8,
                         children:
@@ -117,11 +120,11 @@ internal sealed class RangeSliderDemoPageState : State
                                 background: new Color(0xFFFFF3E0)),
                             new Expanded(
                                 child: new Text(
-                                    $"start={_values.Start:0.00}, end={_values.End:0.00}, status={_status}",
+                                    $"start={Fixed(_values.Start)}, end={Fixed(_values.End)}, status={_status}",
                                     style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
+                    new SizedBox(height: 10),
                     new Row(
-                        spacing: 8,
                         children:
                         [
                             BuildControlButton(
@@ -130,22 +133,23 @@ internal sealed class RangeSliderDemoPageState : State
                                 width: 96,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 10),
                     BuildControlButton(
                         label: _largeText ? "Text 2x" : "Text 1x",
                         onTap: () => SetState(() => _largeText = !_largeText),
                         width: 96,
                         background: new Color(0xFFFFF8E1)),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
-                                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                spacing: 14,
                                 children:
                                 [
                                     BuildPreviewCard(
                                         title: "LTR",
                                         subtitle: "Left-to-right mapping and thumb order",
                                         textDirection: TextDirection.Ltr),
+                                    new SizedBox(height: 14),
                                     BuildPreviewCard(
                                         title: "RTL",
                                         subtitle: "Right-to-left mapping and thumb order",
@@ -161,11 +165,12 @@ internal sealed class RangeSliderDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new SizedBox(height: 4),
                     new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 8),
                     new Directionality(
                         textDirection: textDirection,
                         child: new Builder(context => new MediaQuery(
@@ -183,15 +188,17 @@ internal sealed class RangeSliderDemoPageState : State
             max: 1,
             divisions: _discrete ? 5 : null,
             labels: new RangeLabels(
-                $"{Math.Round(_values.Start * 100)}",
-                $"{Math.Round(_values.End * 100)}"),
+                $"{RoundAway(_values.Start * 100)}",
+                $"{RoundAway(_values.End * 100)}"),
             activeColor: _useWidgetColorOverride ? new Color(0xFFB71C1C) : null,
             inactiveColor: _useWidgetColorOverride ? new Color(0xFFFFCDD2) : null,
             year2023: _year2023,
             onChanged: _enabled ? HandleValuesChanged : null,
-            onChangeStart: values => SetState(() => _status = $"start {values.Start:0.00}-{values.End:0.00}"),
-            onChangeEnd: values => SetState(() => _status = $"end {values.Start:0.00}-{values.End:0.00}"),
-            semanticFormatterCallback: value => $"{Math.Round(value * 100):0}%");
+            onChangeStart: values => SetState(
+                () => _status = $"start {Fixed(values.Start)}-{Fixed(values.End)}"),
+            onChangeEnd: values => SetState(
+                () => _status = $"end {Fixed(values.Start)}-{Fixed(values.End)}"),
+            semanticFormatterCallback: value => $"{RoundAway(value * 100)}%");
     }
 
     private void HandleValuesChanged(RangeValues values)
@@ -199,7 +206,7 @@ internal sealed class RangeSliderDemoPageState : State
         SetState(() =>
         {
             _values = values;
-            _status = $"change {values.Start:0.00}-{values.End:0.00}";
+            _status = $"change {Fixed(values.Start)}-{Fixed(values.End)}";
         });
     }
 
@@ -207,9 +214,9 @@ internal sealed class RangeSliderDemoPageState : State
     {
         SetState(() =>
         {
-            double nextStart = Math.Clamp(_values.Start + delta, 0, _values.End);
+            double nextStart = Math.Min(_values.End, Math.Max(0, _values.Start + delta));
             _values = new RangeValues(nextStart, _values.End);
-            _status = $"manual {nextStart:0.00}-{_values.End:0.00}";
+            _status = $"manual {Fixed(_values.Start)}-{Fixed(_values.End)}";
         });
     }
 
@@ -217,10 +224,20 @@ internal sealed class RangeSliderDemoPageState : State
     {
         SetState(() =>
         {
-            double nextEnd = Math.Clamp(_values.End + delta, _values.Start, 1);
+            double nextEnd = Math.Max(_values.Start, Math.Min(1, _values.End + delta));
             _values = new RangeValues(_values.Start, nextEnd);
-            _status = $"manual {_values.Start:0.00}-{nextEnd:0.00}";
+            _status = $"manual {Fixed(_values.Start)}-{Fixed(_values.End)}";
         });
+    }
+
+    private static string Fixed(double value)
+    {
+        return value.ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    private static long RoundAway(double value)
+    {
+        return (long)Math.Round(value, MidpointRounding.AwayFromZero);
     }
 
     private Widget BuildControlButton(

@@ -240,7 +240,7 @@ internal sealed class HeadlessParagraph : Paragraph
                 || previous.Placeholder is not null
                 || current.Placeholder is not null
                 || previous.FirstCodePoint == 0x200B
-                || (previous.FirstCodePoint is '-' or 0x2010 && current.Category == BidiCategory.Left)
+                || (previous.FirstCodePoint is '-' or 0x2010 or '/' && current.Category == BidiCategory.Left)
                 || UnicodeText.IsIdeographicBreakClass(previous.FirstCodePoint)
                 || UnicodeText.IsIdeographicBreakClass(current.FirstCodePoint));
         }

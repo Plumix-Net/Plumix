@@ -54,16 +54,18 @@ internal sealed class NavigationSurfacesDemoPageState : State
             data: pageTheme,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 14,
                 children:
                 [
                     new Text("NavigationBar + NavigationRail", style: new TextStyle(FontSize: 20)),
+                    new SizedBox(height: 14),
                     new Text(
                         "Seed-generated ColorScheme, Material 2021 typography, navigation defaults, "
                         + "theme precedence, and icon-scoped hover/press ripples.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
-                    new Row(
+                    new SizedBox(height: 14),
+                    new Wrap(
                         spacing: 8,
+                        runSpacing: 8,
                         children:
                         [
                             ControlButton(
@@ -78,15 +80,12 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             ControlButton(
                                 _extended ? "Rail extended" : "Rail compact",
                                 () => SetState(() => _extended = !_extended)),
-                        ]),
-                    new Row(
-                        spacing: 8,
-                        children:
-                        [
                             ControlButton($"Bar: {Format(_barLabelBehavior)}", CycleBarLabels),
                             ControlButton($"Rail: {Format(_railLabelType)}", CycleRailLabels),
                         ]),
-                    new Text($"Selected destination: {_selectedIndex + 1}", style: new TextStyle(FontSize: 13)),
+                    new SizedBox(height: 14),
+                    new Text($"Selected destination: {_selectedIndex + 1}"),
+                    new SizedBox(height: 14),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -96,11 +95,12 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             PaletteChip("secondary", colorScheme.Secondary, colorScheme.OnSecondary),
                             PaletteChip("tertiary", colorScheme.Tertiary, colorScheme.OnTertiary),
                         ]),
-                    new DefaultTextStyle(
-                        style: pageTheme.TextTheme.TitleMedium,
-                        child: new Text(
-                            $"titleMedium · {pageTheme.TextTheme.TitleMedium?.FontSize?.ToString("0") ?? "null"}px")),
-                    new Container(
+                    new SizedBox(height: 8),
+                    new Text(
+                        $"titleMedium · {pageTheme.TextTheme.TitleMedium?.FontSize?.ToString("0") ?? "null"}px",
+                        style: pageTheme.TextTheme.TitleMedium),
+                    new SizedBox(height: 14),
+                    new DecoratedBox(
                         decoration: new BoxDecoration(
                             Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0x33000000))),
                             BorderRadius: BorderRadius.Circular(12)),
@@ -110,10 +110,14 @@ internal sealed class NavigationSurfacesDemoPageState : State
                             labelBehavior: _barLabelBehavior,
                             destinations:
                             [
-                                new NavigationDestination(new Icon(Icons.StarOutline), "Favorites", selectedIcon: new Icon(Icons.Star)),
+                                new NavigationDestination(
+                                    new Icon(Icons.StarOutline),
+                                    "Favorites",
+                                    selectedIcon: new Icon(Icons.Star)),
                                 new NavigationDestination(new Icon(Icons.InfoOutline), "Explore"),
                                 new NavigationDestination(new Icon(Icons.Menu), "Disabled", enabled: false),
                             ])),
+                    new SizedBox(height: 14),
                     new SizedBox(
                         height: 280,
                         child: new Row(
@@ -127,19 +131,24 @@ internal sealed class NavigationSurfacesDemoPageState : State
                                     labelType: _extended ? NavigationRailLabelType.None : _railLabelType,
                                     destinations:
                                     [
-                                        new NavigationRailDestination(new Icon(Icons.StarOutline), new Text("Favorites"), new Icon(Icons.Star)),
+                                        new NavigationRailDestination(
+                                            new Icon(Icons.StarOutline),
+                                            new Text("Favorites"),
+                                            new Icon(Icons.Star)),
                                         new NavigationRailDestination(new Icon(Icons.InfoOutline), new Text("Explore")),
-                                        new NavigationRailDestination(new Icon(Icons.Menu), new Text("Disabled"), disabled: true),
+                                        new NavigationRailDestination(
+                                            new Icon(Icons.Menu),
+                                            new Text("Disabled"),
+                                            disabled: true),
                                     ]),
                                 new Expanded(
-                                    child: new Container(
+                                    child: new ColoredBox(
                                         color: new Color(0xFFF7F2FA),
-                                        alignment: Alignment.Center,
-                                        child: new Text(
-                                            "Rail content area",
-                                            style: new TextStyle(
-                                                Color: new Color(0x8A000000)))))
-                            ]))
+                                        child: new Center(
+                                            child: new Text(
+                                                "Rail content area",
+                                                style: new TextStyle(Color: new Color(0x8A000000)))))),
+                            ])),
                 ]));
     }
 

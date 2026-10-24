@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Painting;
@@ -57,13 +58,15 @@ internal sealed class SliderDemoPageState : State
             data: themedData,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text("Slider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
-                        "Continuous/discrete value mapping, drag/tap/keyboard updates, M2/M3 defaults, and theme/widget color precedence.",
+                        "Continuous/discrete value mapping, drag/tap/keyboard updates, M2/M3 defaults, " +
+                        "and theme/widget color precedence.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -89,6 +92,7 @@ internal sealed class SliderDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
                         spacing: 8,
                         children:
@@ -115,29 +119,34 @@ internal sealed class SliderDemoPageState : State
                                 background: new Color(0xFFFFF3E0)),
                             new Expanded(
                                 child: new Text(
-                                    $"value={_value:0.00}, secondary={ResolveSecondaryLabel()}, status={_status}",
+                                    $"value={Fixed(_value)}, secondary={ResolveSecondaryLabel()}, status={_status}",
                                     style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
                         spacing: 8,
                         children:
                         [
                             BuildControlButton(
                                 label: _useSecondaryColorOverride ? "Secondary color on" : "Secondary color off",
-                                onTap: () => SetState(() => _useSecondaryColorOverride = !_useSecondaryColorOverride),
+                                onTap: () => SetState(
+                                    () => _useSecondaryColorOverride = !_useSecondaryColorOverride),
                                 width: 164,
                                 background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
                                 label: "Sec -",
-                                onTap: () => SetState(() => _secondaryTrackValue = Math.Max(0, _secondaryTrackValue - 0.1)),
+                                onTap: () => SetState(
+                                    () => _secondaryTrackValue = Math.Max(0, _secondaryTrackValue - 0.1)),
                                 width: 56,
                                 background: new Color(0xFFFFF3E0)),
                             BuildControlButton(
                                 label: "Sec +",
-                                onTap: () => SetState(() => _secondaryTrackValue = Math.Min(1, _secondaryTrackValue + 0.1)),
+                                onTap: () => SetState(
+                                    () => _secondaryTrackValue = Math.Min(1, _secondaryTrackValue + 0.1)),
                                 width: 56,
                                 background: new Color(0xFFFFF3E0)),
                         ]),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -158,22 +167,23 @@ internal sealed class SliderDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFE8F6EE)),
                         ]),
+                    new SizedBox(height: 10),
                     BuildControlButton(
                         label: _largeText ? "Text 2x" : "Text 1x",
                         onTap: () => SetState(() => _largeText = !_largeText),
                         width: 96,
                         background: new Color(0xFFFFF8E1)),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
-                                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                spacing: 14,
                                 children:
                                 [
                                     BuildPreviewCard(
                                         title: "LTR",
                                         subtitle: "Left-to-right mapping and keyboard direction",
                                         textDirection: TextDirection.Ltr),
+                                    new SizedBox(height: 14),
                                     BuildPreviewCard(
                                         title: "RTL",
                                         subtitle: "Right-to-left mapping and keyboard direction",
@@ -189,11 +199,12 @@ internal sealed class SliderDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new SizedBox(height: 4),
                     new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 8),
                     new Directionality(
                         textDirection: textDirection,
                         child: new Builder(context => new MediaQuery(
@@ -203,6 +214,16 @@ internal sealed class SliderDemoPageState : State
                 ]));
     }
 
+    private static string Fixed(double value)
+    {
+        return value.ToString("0.00", CultureInfo.InvariantCulture);
+    }
+
+    private static long RoundAway(double value)
+    {
+        return (long)Math.Round(value, MidpointRounding.AwayFromZero);
+    }
+
     private Widget BuildSlider()
     {
         return new Slider(
@@ -210,7 +231,7 @@ internal sealed class SliderDemoPageState : State
             min: 0,
             max: 1,
             divisions: _discrete ? 5 : null,
-            label: $"{Math.Round(_value * 100)}",
+            label: $"{RoundAway(_value * 100)}",
             secondaryTrackValue: _showSecondaryTrack ? _secondaryTrackValue : null,
             activeColor: _useWidgetColorOverride ? new Color(0xFFB71C1C) : null,
             inactiveColor: _useWidgetColorOverride ? new Color(0xFFFFCDD2) : null,
@@ -220,9 +241,9 @@ internal sealed class SliderDemoPageState : State
             showValueIndicator: ShowValueIndicator.OnlyForDiscrete,
             year2023: _year2023,
             onChanged: _enabled ? HandleValueChanged : null,
-            onChangeStart: value => SetState(() => _status = $"start {value:0.00}"),
-            onChangeEnd: value => SetState(() => _status = $"end {value:0.00}"),
-            semanticFormatterCallback: value => $"{Math.Round(value * 100)} percent");
+            onChangeStart: value => SetState(() => _status = $"start {Fixed(value)}"),
+            onChangeEnd: value => SetState(() => _status = $"end {Fixed(value)}"),
+            semanticFormatterCallback: value => $"{RoundAway(value * 100)} percent");
     }
 
     private void HandleValueChanged(double value)
@@ -230,13 +251,13 @@ internal sealed class SliderDemoPageState : State
         SetState(() =>
         {
             _value = value;
-            _status = $"change {value:0.00}";
+            _status = $"change {Fixed(value)}";
         });
     }
 
     private string ResolveSecondaryLabel()
     {
-        return _showSecondaryTrack ? _secondaryTrackValue.ToString("0.00") : "off";
+        return _showSecondaryTrack ? Fixed(_secondaryTrackValue) : "off";
     }
 
     private Widget BuildControlButton(

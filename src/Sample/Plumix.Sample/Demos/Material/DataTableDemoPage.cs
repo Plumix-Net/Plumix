@@ -57,7 +57,6 @@ internal sealed class DataTableDemoPageState : State
             new SingleChildScrollView(
                 child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.Stretch,
-                    spacing: 12,
                     children:
                     [
                         new Text(
@@ -65,43 +64,58 @@ internal sealed class DataTableDemoPageState : State
                             style: new TextStyle(
                                 FontSize: 20,
                                 Color: Colors.Black)),
+                        new SizedBox(height: 8),
                         new Text(
                             "Intrinsic columns, numeric alignment, row-wide TableRowInkWell selection, theme "
                             + "precedence, direct ColorScheme row roles, animated sort arrows, source caching, "
                             + "and page controls.",
                             style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                        new SizedBox(height: 12),
                         new Row(
                             spacing: 8,
                             children:
                             [
-                                BuildToggle(_useThemeOverrides ? "theme=on" : "theme=off", () => _useThemeOverrides = !_useThemeOverrides),
-                                BuildToggle(_showCheckboxes ? "checks=on" : "checks=off", () => _showCheckboxes = !_showCheckboxes),
+                                BuildToggle(
+                                    _useThemeOverrides ? "theme=on" : "theme=off",
+                                    () => _useThemeOverrides = !_useThemeOverrides),
+                                BuildToggle(
+                                    _showCheckboxes ? "checks=on" : "checks=off",
+                                    () => _showCheckboxes = !_showCheckboxes),
                             ]),
+                        new SizedBox(height: 12),
                         new Text("Static DataTable", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
+                        new SizedBox(height: 8),
                         new SingleChildScrollView(
                             scrollDirection: Axis.Horizontal,
                             child: BuildTable(_source.Items.Take(4).ToArray())),
+                        new SizedBox(height: 12),
                         new Text(
                             "Core TableCell vertical alignment",
                             style: new TextStyle(
                                 FontSize: 16,
                                 Color: Colors.Black)),
+                        new SizedBox(height: 8),
                         new SingleChildScrollView(
                             scrollDirection: Axis.Horizontal,
                             child: BuildTableCellProbe()),
+                        new SizedBox(height: 12),
                         new Text(
                             "Core TableColumnWidth algebra",
                             style: new TextStyle(
                                 FontSize: 16,
                                 Color: Colors.Black)),
+                        new SizedBox(height: 8),
                         BuildColumnWidthProbe(),
+                        new SizedBox(height: 12),
                         new Text(
                             "Core TableBorder corners and stroke alignment",
                             style: new TextStyle(
                                 FontSize: 16,
                                 Color: Colors.Black)),
                         new Padding(new Thickness(8), BuildBorderProbe()),
+                        new SizedBox(height: 12),
                         new Text("PaginatedDataTable", style: new TextStyle(FontSize: 16, Color: Colors.Black)),
+                        new SizedBox(height: 8),
                         new PaginatedDataTable(
                             header: new Text("People"),
                             actions:
@@ -137,9 +151,9 @@ internal sealed class DataTableDemoPageState : State
         [
             new TableRow(
             [
-                BuildProbeCell("top", 28, TableCellVerticalAlignment.Top, "#FFE0F2FE"),
-                BuildProbeCell("middle", 52, TableCellVerticalAlignment.Middle, "#FFDCFCE7"),
-                BuildProbeCell("bottom", 32, TableCellVerticalAlignment.Bottom, "#FFFFEDD5"),
+                BuildProbeCell("top", 28, TableCellVerticalAlignment.Top, new Color(0xFFE0F2FE)),
+                BuildProbeCell("middle", 52, TableCellVerticalAlignment.Middle, new Color(0xFFDCFCE7)),
+                BuildProbeCell("bottom", 32, TableCellVerticalAlignment.Bottom, new Color(0xFFFFEDD5)),
             ]),
         ]);
 
@@ -191,19 +205,19 @@ internal sealed class DataTableDemoPageState : State
 
     private static Widget BuildWidthCell(string label) => new Padding(
         new Thickness(8, 6),
-        new Text(label, style: new TextStyle(FontSize: 11, Color: Colors.Black)));
+        new Text(label, style: new TextStyle(FontSize: 11)));
 
     private static TableCell BuildProbeCell(
         string label,
         double height,
         TableCellVerticalAlignment alignment,
-        string colorHex) => new(
+        Color color) => new(
         verticalAlignment: alignment,
         child: new Container(
             height: height,
-            color: (Color)Avalonia.Media.Color.Parse(colorHex),
-            child: new Center(
-                child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black)))));
+            color: color,
+            alignment: Alignment.Center,
+            child: new Text(label, style: new TextStyle(FontSize: 12))));
 
     private IReadOnlyList<DataColumn> BuildColumns() =>
     [

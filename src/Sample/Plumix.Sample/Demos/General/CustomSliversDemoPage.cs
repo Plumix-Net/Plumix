@@ -331,6 +331,6 @@ public sealed class CustomSliversDemoPage : StatelessWidget
             color: color,
             padding: new Thickness(10, 8),
             alignment: Alignment.CenterLeft,
-            child: new Text(label, style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)));
+            child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)));
     }
 }

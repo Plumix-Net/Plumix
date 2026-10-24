@@ -128,11 +128,7 @@ internal sealed class AsyncBuilderDemoPageState : State
 
     private static Widget BuildButton(string label, Action onPressed)
     {
-        return new TextButton(
-            onPressed: onPressed,
-            child: new Text(label),
-            style: TextButton.StyleFrom(
-                backgroundColor: new Color(0xFFDCE3ED)));
+        return new TextButton(onPressed: onPressed, child: new Text(label));
     }
 
     private void RestartFuture()

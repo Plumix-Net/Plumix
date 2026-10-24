@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -58,7 +59,6 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
             data: themedData,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text(
@@ -66,10 +66,12 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                         style: new TextStyle(
                             FontSize: 20,
                             Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
-                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, valueColor " +
-                        "priority, and circular gap/cap/alignment/constraints/padding.",
+                        "Determinate/indeterminate behavior, M2/M3 defaults, theme/widget precedence, " +
+                        "valueColor priority, and circular gap/cap/alignment/constraints/padding.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -95,6 +97,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
                         spacing: 8,
                         children:
@@ -110,7 +113,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 width: 126,
                                 background: new Color(0xFFE4F7E8)),
                             BuildControlButton(
-                                label: $"gap={GetWidgetTrackGap():0.#}",
+                                label: $"gap={Fixed(GetWidgetTrackGap(), "0")}",
                                 onTap: () => SetState(CycleWidgetTrackGap),
                                 width: 76,
                                 background: new Color(0xFFEFF4FF)),
@@ -126,23 +129,30 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                                 background: new Color(0xFFFFF3E0)),
                             new Expanded(
                                 child: new Text(
-                                    $"value={_progress:0.00}",
+                                    $"value={Fixed(_progress, "0.00")}",
                                     style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B)))),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, year2023={(_useYear2023 ? "true" : "false")}, determinate={(_determinate ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}, valueColor={(_useValueColorOverride ? "true" : "false")}, gap={GetWidgetTrackGap():0.#}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, " +
+                        $"year2023={(_useYear2023 ? "true" : "false")}, " +
+                        $"determinate={(_determinate ? "true" : "false")}, " +
+                        $"theme={(_useThemeOverrides ? "true" : "false")}, " +
+                        $"widget={(_useWidgetOverrides ? "true" : "false")}, " +
+                        $"valueColor={(_useValueColorOverride ? "true" : "false")}, " +
+                        $"gap={Fixed(GetWidgetTrackGap(), "0")}",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
-                                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                spacing: 14,
                                 children:
                                 [
                                     BuildPreviewCard(
                                         title: "Indicator",
                                         subtitle: "Default-size indicator preview",
                                         indicator: BuildIndicator()),
+                                    new SizedBox(height: 14),
                                     BuildPreviewCard(
                                         title: "Larger parent",
                                         subtitle: "Indicator centered in a larger host box",
@@ -156,6 +166,11 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                 ]));
     }
 
+    private static string Fixed(double value, string format)
+    {
+        return value.ToString(format, CultureInfo.InvariantCulture);
+    }
+
     private Widget BuildPreviewCard(string title, string subtitle, Widget indicator)
     {
         return new Container(
@@ -163,11 +178,12 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new SizedBox(height: 4),
                     new Text(subtitle, style: new TextStyle(FontSize: 12, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 8),
                     new SizedBox(
                         height: 92,
                         child: new Align(

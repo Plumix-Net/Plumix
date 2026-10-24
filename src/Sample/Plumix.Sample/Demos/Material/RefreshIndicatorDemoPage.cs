@@ -46,7 +46,6 @@ internal sealed class RefreshIndicatorDemoPageState : State
             data: theme,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
                     new Text(
@@ -54,18 +53,29 @@ internal sealed class RefreshIndicatorDemoPageState : State
                         style: new TextStyle(
                             FontSize: 20,
                             Color: Colors.Black)),
+                    new SizedBox(height: 8),
                     new Text(
-                        "Pull the list down from its top edge. Cycle Material/adaptive/no-spinner paths and theme the refresh surface.",
+                        "Pull the list down from its top edge. Cycle Material/adaptive/no-spinner paths and " +
+                        "theme the refresh surface.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
                         [
                             BuildButton(VariantLabel(), () => SetState(() => _variant = (_variant + 1) % 3), 126),
-                            BuildButton(_useCupertinoPlatform ? "platform=iOS" : "platform=Android", () => SetState(() => _useCupertinoPlatform = !_useCupertinoPlatform), 132),
-                            BuildButton(_useThemeOverrides ? "theme=on" : "theme=off", () => SetState(() => _useThemeOverrides = !_useThemeOverrides), 104),
+                            BuildButton(
+                                _useCupertinoPlatform ? "platform=iOS" : "platform=Android",
+                                () => SetState(() => _useCupertinoPlatform = !_useCupertinoPlatform),
+                                132),
+                            BuildButton(
+                                _useThemeOverrides ? "theme=on" : "theme=off",
+                                () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
+                                104),
                         ]),
+                    new SizedBox(height: 8),
                     new Row(
+                        spacing: 8,
                         children:
                         [
                             BuildButton(
@@ -76,9 +86,12 @@ internal sealed class RefreshIndicatorDemoPageState : State
                                 "scheme teal; legacy primary orange",
                                 style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
-                        $"status={_status}, refreshCount={_refreshCount}; drag past the armed threshold, then release",
+                        $"status={_status}, refreshCount={_refreshCount}; " +
+                        "drag past the armed threshold, then release",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Expanded(child: BuildRefreshWrapper(BuildList())),
                 ]));
     }
@@ -112,7 +125,6 @@ internal sealed class RefreshIndicatorDemoPageState : State
             itemCount: 24,
             itemExtent: 54,
             padding: new Thickness(8),
-            addAutomaticKeepAlives: false,
             itemBuilder: (_, index) => new Container(
                 color: index % 2 == 0 ? Colors.White : new Color(0xFFF5F7FA),
                 padding: new Thickness(12, 10),

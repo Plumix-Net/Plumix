@@ -9,6 +9,8 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- PaginatedDataTable builds like Dart: the table fills the card, themed header/footer (paginated_data_table.dart).
+- Headless paragraphs allow a line break after a slash before a letter, as ICU does (C#-only).
 - Opacity layers composite their children through a save-layer, as the engine does (C#-only).
 - PaginatedDataTable uses skip_previous/skip_next for its first/last page buttons (paginated_data_table.dart).
 - Zero-width box borders and lines paint as Skia one-device-pixel hairlines (borders.dart).

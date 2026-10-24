@@ -20,7 +20,8 @@ public sealed class TextPainterTests
 
     // C#-only: the FlutterTest line breaks flutter_tester's SkParagraph produces for words wider than the line.
     // A too-long word stays where it starts once two of its clusters fit there; the word's last cluster
-    // (before the end of the text) does not count towards "too long".
+    // (before the end of the text) does not count towards "too long". A slash allows a break before a letter
+    // but not before a digit (UAX #14 SY).
     [Theory]
     [InlineData("layout notifications: 0", 14.0, 190.0, new[] { 182.0, 140.0 })]
     [InlineData("ab abcdefghijklmnopqrstuvwxyz c", 14.0, 190.0, new[] { 182.0, 182.0, 70.0 })]
@@ -29,6 +30,8 @@ public sealed class TextPainterTests
     [InlineData("abcd abcdefghij", 12.0, 112.0, new[] { 48.0, 108.0, 12.0 })]
     [InlineData("abc abcdefghijklmnopqrst", 12.0, 112.0, new[] { 108.0, 108.0, 72.0 })]
     [InlineData("abcdefg abcdefghijklmnopqrst", 12.0, 112.0, new[] { 84.0, 108.0, 108.0, 24.0 })]
+    [InlineData("ab labels/themes", 10.0, 100.0, new[] { 100.0, 60.0 })]
+    [InlineData("ab 12/34", 10.0, 50.0, new[] { 20.0, 50.0 })]
     public void LongWord_BreaksLikeSkParagraph(string text, double fontSize, double maxWidth, double[] lineWidths)
     {
         using var painter = new TextPainter(textDirection: TextDirection.Ltr);

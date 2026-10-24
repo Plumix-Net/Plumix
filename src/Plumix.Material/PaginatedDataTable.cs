@@ -153,6 +153,7 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
     private int _rowCount;
     private bool _rowCountApproximate;
     private int _selectedRowCount;
+    private readonly GlobalKey _tableKey = new LabeledGlobalKey<State>(null);
     private readonly Dictionary<int, DataRow?> _rows = [];
 
     private PaginatedDataTable CurrentWidget => (PaginatedDataTable)StateWidget;
@@ -200,7 +201,6 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
         var widget = CurrentWidget;
         var theme = Theme.Of(context);
         var localizations = MaterialLocalizations.Of(context);
-        var children = new List<Widget>();
 
         var headerWidgets = new List<Widget>();
         if (widget.Header is not null)
@@ -211,63 +211,96 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
         }
         if (widget.Actions is not null)
         {
-            headerWidgets.AddRange(widget.Actions.Select(action => new Padding(new Thickness(8, 0, 0, 0), action)));
+            // 8.0 is the default padding of an icon button.
+            headerWidgets.AddRange(widget.Actions.Select(action => new Padding(
+                EdgeInsetsDirectional.Only(start: 24.0 - (8.0 * 2.0)),
+                action)));
         }
-        if (headerWidgets.Count > 0)
-        {
-            var headerStyle = (_selectedRowCount > 0 ? theme.TextTheme.TitleMedium : theme.TextTheme.TitleLarge)
-                .CopyWith(color: _selectedRowCount > 0 ? theme.ColorScheme.Secondary : null);
-            Widget header = new Container(
-                height: 64,
-                color: _selectedRowCount > 0 ? WithOpacity(theme.ColorScheme.Secondary, 0.12) : null,
-                padding: new Thickness(24, 0, 14, 0),
-                child: new DefaultTextStyle(
-                    headerStyle,
-                    new Row(mainAxisAlignment: MainAxisAlignment.End, children: headerWidgets)));
-            children.Add(new Semantics(container: true, child: header));
-        }
-
-        children.Add(new SingleChildScrollView(
-            scrollDirection: Axis.Horizontal,
-            controller: widget.Controller,
-            child: new DataTable(
-                columns: widget.Columns,
-                rows: GetRows(_firstRowIndex, widget.RowsPerPage),
-                sortColumnIndex: widget.SortColumnIndex,
-                sortAscending: widget.SortAscending,
-                onSelectAll: widget.OnSelectAll,
-                dataRowMinHeight: widget.DataRowMinHeight,
-                dataRowMaxHeight: widget.DataRowMaxHeight,
-                headingRowHeight: widget.HeadingRowHeight,
-                horizontalMargin: widget.HorizontalMargin,
-                checkboxHorizontalMargin: widget.CheckboxHorizontalMargin,
-                columnSpacing: widget.ColumnSpacing,
-                showCheckboxColumn: widget.ShowCheckboxColumn,
-                showBottomBorder: true,
-                dividerThickness: widget.DividerThickness,
-                headingRowColor: widget.HeadingRowColor)));
-
-        if (!widget.ShowEmptyRows)
-        {
-            int missingRows = Math.Clamp(widget.RowsPerPage - _rowCount + _firstRowIndex, 0, widget.RowsPerPage);
-            if (missingRows > 0) children.Add(new SizedBox(height: (widget.DataRowMaxHeight ?? 48) * missingRows));
-        }
-
-        children.Add(new DefaultTextStyle(
-            theme.TextTheme.BodySmall,
-            new SizedBox(
-                height: 56,
-                child: new SingleChildScrollView(
-                    scrollDirection: Axis.Horizontal,
-                    reverse: true,
-                    child: new Row(mainAxisSize: MainAxisSize.Min, children: BuildFooter(localizations))))));
+        TextStyle footerTextStyle = theme.TextTheme.BodySmall;
+        IReadOnlyList<Widget> footerWidgets = BuildFooter(localizations, footerTextStyle);
 
         return new Card(
             semanticContainer: false,
-            child: new Column(crossAxisAlignment: CrossAxisAlignment.Stretch, children: children));
+            child: new LayoutBuilder((_, constraints) =>
+            {
+                var children = new List<Widget>();
+                if (headerWidgets.Count > 0)
+                {
+                    // These typographic styles aren't quite the regular ones: the closest regular ones, tweaked
+                    // for tables within cards.
+                    children.Add(new Semantics(
+                        container: true,
+                        child: new DefaultTextStyle(
+                            _selectedRowCount > 0
+                                ? theme.TextTheme.TitleMedium.CopyWith(color: theme.ColorScheme.Secondary)
+                                : theme.TextTheme.TitleLarge.CopyWith(fontWeight: FontWeight.Normal),
+                            IconTheme.Merge(
+                                new IconThemeData(Opacity: 0.54),
+                                new Ink(
+                                    height: 64.0,
+                                    color: _selectedRowCount > 0 ? theme.SecondaryHeaderColor : null,
+                                    child: new Padding(
+                                        EdgeInsetsDirectional.Only(start: 24, end: 14.0),
+                                        new Row(
+                                            mainAxisAlignment: MainAxisAlignment.End,
+                                            children: headerWidgets)))))));
+                }
+
+                children.Add(new SingleChildScrollView(
+                    scrollDirection: Axis.Horizontal,
+                    primary: widget.Primary,
+                    controller: widget.Controller,
+                    dragStartBehavior: widget.DragStartBehavior,
+                    child: new ConstrainedBox(
+                        new BoxConstraints(MinWidth: constraints.MinWidth),
+                        new DataTable(
+                            key: _tableKey,
+                            columns: widget.Columns,
+                            sortColumnIndex: widget.SortColumnIndex,
+                            sortAscending: widget.SortAscending,
+                            onSelectAll: widget.OnSelectAll,
+                            dividerThickness: widget.DividerThickness,
+                            // Make sure no decoration is set on the DataTable from the theme, as it's already
+                            // wrapped in a Card.
+                            decoration: new BoxDecoration(),
+                            dataRowMinHeight: widget.DataRowMinHeight,
+                            dataRowMaxHeight: widget.DataRowMaxHeight,
+                            headingRowHeight: widget.HeadingRowHeight,
+                            horizontalMargin: widget.HorizontalMargin,
+                            checkboxHorizontalMargin: widget.CheckboxHorizontalMargin,
+                            columnSpacing: widget.ColumnSpacing,
+                            showCheckboxColumn: widget.ShowCheckboxColumn,
+                            showBottomBorder: true,
+                            rows: GetRows(_firstRowIndex, widget.RowsPerPage),
+                            headingRowColor: widget.HeadingRowColor))));
+
+                if (!widget.ShowEmptyRows)
+                {
+                    children.Add(new SizedBox(
+                        height: (widget.DataRowMaxHeight ?? WidgetConstants.MinInteractiveDimension)
+                                * Math.Clamp(
+                                    widget.RowsPerPage - _rowCount + _firstRowIndex,
+                                    0,
+                                    widget.RowsPerPage)));
+                }
+
+                children.Add(new DefaultTextStyle(
+                    footerTextStyle,
+                    IconTheme.Merge(
+                        new IconThemeData(Opacity: 0.54),
+                        new SizedBox(
+                            height: 56.0,
+                            child: new SingleChildScrollView(
+                                dragStartBehavior: widget.DragStartBehavior,
+                                scrollDirection: Axis.Horizontal,
+                                reverse: true,
+                                child: new Row(children: footerWidgets))))));
+
+                return new Column(crossAxisAlignment: CrossAxisAlignment.Stretch, children: children);
+            }));
     }
 
-    private IReadOnlyList<Widget> BuildFooter(MaterialLocalizations localizations)
+    private IReadOnlyList<Widget> BuildFooter(MaterialLocalizations localizations, TextStyle footerTextStyle)
     {
         var widget = CurrentWidget;
         var footer = new List<Widget>();
@@ -280,18 +313,19 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
             footer.Add(new SizedBox(width: 14));
             footer.Add(new Text(localizations.RowsPerPageTitle));
             footer.Add(new ConstrainedBox(
-                new BoxConstraints(MinWidth: 64),
+                new BoxConstraints(MinWidth: 64), // 40.0 for the text, 24.0 for the icon
                 new Align(
-                    alignment: Alignment.CenterRight,
+                    alignment: AlignmentDirectional.CenterEnd,
                     child: new DropdownButtonHideUnderline(new DropdownButton<int>(
                         items,
                         value => widget.OnRowsPerPageChanged?.Invoke(value),
-                        value: widget.RowsPerPage)))));
+                        value: widget.RowsPerPage,
+                        style: footerTextStyle)))));
         }
         int lastRow = Math.Min(_firstRowIndex + widget.RowsPerPage, _rowCount);
         footer.Add(new SizedBox(width: 32));
         footer.Add(new Text(localizations.PageRowsInfoTitle(
-            Math.Min(_firstRowIndex + 1, Math.Max(_rowCount, 1)),
+            _firstRowIndex + 1,
             lastRow,
             _rowCount,
             _rowCountApproximate)));
@@ -319,13 +353,12 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
         return footer;
     }
 
-    private Widget PageButton(IconData icon, string tooltip, Action? onPressed) => new Tooltip(
-        tooltip,
-        child: new IconButton(
-            new Icon(icon),
-            onPressed,
-            color: CurrentWidget.ArrowHeadColor,
-            padding: new Thickness(0)));
+    private Widget PageButton(IconData icon, string tooltip, Action? onPressed) => new IconButton(
+        new Icon(icon),
+        onPressed,
+        padding: EdgeInsets.Zero,
+        color: CurrentWidget.ArrowHeadColor,
+        tooltip: tooltip);
 
     private IReadOnlyList<DataRow> GetRows(int firstRowIndex, int rowsPerPage)
     {
