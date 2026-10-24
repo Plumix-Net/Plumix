@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased]
+- Hosts point Avalonia's dispatcher at its platform clock; Android timers busy-spun and stalled rendering (C#-only).
 - `MediaQuery.textScaler` follows the system font size (`PlatformDispatcher.TextScaleFactor`, platform_dispatcher.dart).
 - Automation peers report a selected node without a tap action; tappable selectable nodes stay invocable (C#-only).
 - A `TextField` with a URL/email/phone keyboard is one semantics node again: no input-type conflict (semantics.dart).

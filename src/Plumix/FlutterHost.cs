@@ -619,6 +619,7 @@ public class PlumixHost : Control, ICustomHitTest
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
+        AvaloniaDispatcherClock.EnsureSynchronized();
         if (!s_attachedHosts.Contains(this))
         {
             s_attachedHosts.Add(this);
