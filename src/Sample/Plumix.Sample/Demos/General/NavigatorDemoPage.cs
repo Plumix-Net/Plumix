@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/navigator_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/navigator_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -20,7 +20,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
                 new Text("Navigator API demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Uses static Navigator methods and RouteData query parsing.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new NavigatorRouteAwareProbe(),
                 new NavigatorOverlayProbe(),
                 new NavigatorLifecycleProbe(),
@@ -79,9 +79,9 @@ internal sealed class NavigatorOverlayProbe : StatelessWidget
     {
         var route = ModalRoute.MaybeOf(context);
         string entries = route is null ? "-" : route.OverlayEntries.Count.ToString();
-        string maintainState = route?.MaintainState.ToString() ?? "-";
-        string opaque = route?.Opaque.ToString() ?? "-";
-        string canPop = route?.CanPop.ToString() ?? "-";
+        string maintainState = route is null ? "-" : route.MaintainState ? "true" : "false";
+        string opaque = route is null ? "-" : route.Opaque ? "true" : "false";
+        string canPop = route is null ? "-" : route.CanPop ? "true" : "false";
         return new Container(
             color: new Color(0xFFE8F0FE),
             padding: new Thickness(10, 8),
@@ -287,7 +287,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                 new CounterTapButton(
                     label: "Back (MaybePop)",
                     onTap: () => Navigator.MaybePop(context),
-                    background: Colors.SteelBlue,
+                    background: MaterialColors.Blue,
                     foreground: Colors.White,
                     fontSize: 12,
                     padding: new Thickness(10, 8)),

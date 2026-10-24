@@ -59,7 +59,7 @@ internal sealed class ScrollbarDemoPageState : State
                 new Text("Scrollbar + RawScrollbar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material state theming/fade beside an always-visible raw track; both thumbs are draggable.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 4,
                     children:

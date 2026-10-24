@@ -133,7 +133,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                                 label,
                                 style: theme.TextTheme.NavTitleTextStyle.CopyWith(fontSize: 14)),
                             new Text(
-                                $"brightness: {CupertinoTheme.BrightnessOf(context)}",
+                                $"brightness: {CupertinoTheme.BrightnessOf(context).Name()}",
                                 style: theme.TextTheme.TextStyle.CopyWith(fontSize: 12)),
                             new Text(
                                 "actionTextStyle follows primaryColor",
@@ -232,7 +232,7 @@ internal sealed class CupertinoThemeDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }

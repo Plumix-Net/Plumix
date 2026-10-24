@@ -58,7 +58,7 @@ internal sealed class BlocCounterDemoPageState : State
                                     $"count={count}",
                                     style: new TextStyle(
                                         FontSize: 18,
-                                        Color: Colors.DarkSlateBlue))),
+                                        Color: MaterialColors.BlueGrey))),
                         new BlocBuilder<BlocCounterBloc, BlocCounterState>(
                             buildWhen: static (previous, next) => previous.IsLoading != next.IsLoading,
                             builder: static (_, state) => new Text(
@@ -129,10 +129,15 @@ internal sealed class BlocCounterActionButtons : StatelessWidget
                             background: new Color(0xFFF3E5F5),
                             onPressed: () => bloc.Add(new RefreshCounterEvent(10, 80))),
                     ]),
-                BlocCounterDemoPageState.BuildActionButton(
-                    label: "Reset",
-                    background: new Color(0xFFFFEBEE),
-                    onPressed: () => bloc.Add(new ResetCounterEvent())),
+                // A Row gives the Expanded button a bounded main axis inside this Column.
+                new Row(
+                    children:
+                    [
+                        BlocCounterDemoPageState.BuildActionButton(
+                            label: "Reset",
+                            background: new Color(0xFFFFEBEE),
+                            onPressed: () => bloc.Add(new ResetCounterEvent())),
+                    ]),
             ]);
     }
 }

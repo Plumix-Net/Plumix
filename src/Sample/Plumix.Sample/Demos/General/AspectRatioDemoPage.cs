@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/aspect_ratio_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/aspect_ratio_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -31,7 +31,7 @@ internal sealed class AspectRatioDemoPageState : State
                 new Text("AspectRatio + Spacer", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "AspectRatio enforces a tight ratio box; Spacer reserves remaining Row space by flex.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -50,7 +50,7 @@ internal sealed class AspectRatioDemoPageState : State
                     ]),
                 new Text(
                     $"ratio={FormatRatio(_aspectRatio)}, spacerFlex={_spacerFlex} (second spacer fixed=1)",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 260,
                     height: 190,

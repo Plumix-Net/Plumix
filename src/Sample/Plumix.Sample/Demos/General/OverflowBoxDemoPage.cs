@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/overflow_box_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/overflow_box_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -34,7 +34,7 @@ internal sealed class OverflowBoxDemoPageState : State
                 new Text("OverflowBox + SizedOverflowBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "OverflowBox overrides child constraints and can stay parent-sized; SizedOverflowBox keeps fixed own size while child may overflow.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -68,7 +68,7 @@ internal sealed class OverflowBoxDemoPageState : State
                     ]),
                 new Text(
                     $"fit={FitLabel(_fit)}, alignment={AlignmentLabel(_alignment)}, max={MaxLabel(_maxWidth, _maxHeight)}, requested={_requestedSize.Width:0}x{_requestedSize.Height:0}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 260,
                     height: 230,
@@ -79,7 +79,8 @@ internal sealed class OverflowBoxDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("OverflowBox preview", style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                            new Text("OverflowBox preview",
+                                style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                             new Container(
                                 height: 72,
                                 color: Colors.White,
@@ -95,7 +96,7 @@ internal sealed class OverflowBoxDemoPageState : State
                                 "SizedOverflowBox preview",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             new Container(
                                 height: 86,
                                 color: Colors.White,

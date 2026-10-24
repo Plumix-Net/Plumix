@@ -37,7 +37,7 @@ public sealed class CompositedTransformDemoPage : StatefulWidget
                     new Text(
                         "The blue follower is painted in a separate composited layer. Its top-center stays 12 px " +
                         "below the orange target's bottom-center. Both labels also expose typed layer annotations.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     BuildPreview(),
                     new Wrap(
                         spacing: 8,

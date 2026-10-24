@@ -92,8 +92,8 @@ internal sealed class MaterialLocalizationsDemoPageState : State
                 spacing: 6.0,
                 children:
                 [
-                    BuildRow("textDirection", widgets.TextDirection.ToString()),
-                    BuildRow("scriptCategory", localizations.ScriptCategory.ToString()),
+                    BuildRow("textDirection", widgets.TextDirection.Name()),
+                    BuildRow("scriptCategory", localizations.ScriptCategory.Name()),
                     BuildRow("alertDialogLabel", localizations.AlertDialogLabel),
                     BuildRow(
                         "toolbar",
@@ -112,7 +112,7 @@ internal sealed class MaterialLocalizationsDemoPageState : State
                         "narrowWeekdays / firstDayOfWeekIndex",
                         $"{string.Join(' ', localizations.NarrowWeekdays)} · "
                         + $"{localizations.FirstDayOfWeekIndex}"),
-                    BuildRow("timeOfDayFormat", localizations.TimeOfDayFormat().ToString()),
+                    BuildRow("timeOfDayFormat", TimeOfDayFormatName(localizations.TimeOfDayFormat())),
                     BuildRow(
                         "formatTimeOfDay",
                         $"{localizations.FormatTimeOfDay(midMorning)} · "
@@ -127,6 +127,17 @@ internal sealed class MaterialLocalizationsDemoPageState : State
                     BuildRow("reorderItemUp", widgets.ReorderItemUp),
                 ]));
     }
+
+    // Dart's TimeOfDayFormat member names keep their ICU-style underscores.
+    private static string TimeOfDayFormatName(TimeOfDayFormat format) => format switch
+    {
+        TimeOfDayFormat.HHColonMm => "HH_colon_mm",
+        TimeOfDayFormat.HHDotMm => "HH_dot_mm",
+        TimeOfDayFormat.FrenchCanadian => "frenchCanadian",
+        TimeOfDayFormat.HColonMm => "H_colon_mm",
+        TimeOfDayFormat.HColonMmSpaceA => "h_colon_mm_space_a",
+        _ => "a_space_h_colon_mm",
+    };
 
     private static Widget BuildRow(string label, string value)
     {

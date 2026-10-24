@@ -30,7 +30,7 @@ internal sealed class CupertinoRouteDemoPageState : State
                 new Text("Cupertino routes", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
                     "Page transitions, modal popups, and a CupertinoTabView with independent history.",
-                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14.0, Color: MaterialColors.Black54)),
                 new Text(
                     $"last result: {_lastResult}",
                     style: new TextStyle(

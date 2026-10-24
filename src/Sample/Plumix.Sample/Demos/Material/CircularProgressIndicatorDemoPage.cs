@@ -218,7 +218,7 @@ internal sealed class CircularProgressIndicatorDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }

@@ -4,7 +4,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/custom_slivers_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/custom_slivers_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -35,7 +35,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                             style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                                         new Text(
                                             "140px → 64px prototype extents",
-                                            style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                                            style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                                     ]))),
                         SliverFixedExtentList.Builder(
                             itemCount: 5,
@@ -65,7 +65,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                         Color: Colors.Black)),
                                 new Text(
                                     "Reverse the scroll direction to reveal and snap it.",
-                                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                                    style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
                             ]))),
                 new SliverMainAxisGroup(
                     slivers:
@@ -104,8 +104,8 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                             "SliverLayoutBuilder + SliverSafeArea",
                                             style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                                         new Text(
-                                            $"{width}px safe cross-axis — {(compact ? "compact" : "wide")} header",
-                                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                                            $"{width} px safe cross-axis — {(compact ? "compact" : "wide")} header",
+                                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                                     ])));
                     })),
                 new SliverFillRemaining(
@@ -126,7 +126,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                         Color: Colors.Black)),
                                 new Text(
                                     "Non-scrollable child fills the first viewport below the pinned header.",
-                                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray),
+                                    style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54),
                                     textAlign: TextAlign.Center),
                             ]))),
                 new SliverFillViewport(
@@ -179,7 +179,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                                 Color: Colors.Black)),
                                         new Text(
                                             "This header stops pinning at the end of its group.",
-                                            style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                                            style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
                                     ]))),
                         new SliverCrossAxisGroup(
                             slivers:
@@ -226,7 +226,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     padding: new Thickness(12, 4, 12, 8),
                     sliver: SliverVariedExtentList.Builder(
                         itemCount: 6,
-                        itemExtentBuilder: (index, _) => index % 3 switch
+                        itemExtentBuilder: (index, _) => (index % 3) switch
                         {
                             0 => 38,
                             1 => 54,
@@ -292,7 +292,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             new Text(
                                 $"shrinkOffset {shrinkOffset:0} px · "
                                 + $"overlapsContent {(overlapsContent ? "true" : "false")}",
-                                style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 12, Color: MaterialColors.Black)),
                         ])));
         }
 
@@ -304,7 +304,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
         return new Container(
             color: color,
             padding: new Thickness(6, 8),
-            child: new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black)));
+            child: new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)));
     }
 
     private static Widget BuildViewportPage(string label, Color color)
@@ -321,7 +321,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     new Text(label, style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "55% of the viewport · padded ends",
-                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black)),
                 ]));
     }
 
@@ -331,6 +331,6 @@ public sealed class CustomSliversDemoPage : StatelessWidget
             color: color,
             padding: new Thickness(10, 8),
             alignment: Alignment.CenterLeft,
-            child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)));
+            child: new Text(label, style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)));
     }
 }

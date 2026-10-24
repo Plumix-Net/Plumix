@@ -21,6 +21,11 @@ public sealed class TextField : StatefulWidget
 {
     public const int NoMaxLength = -1;
 
+    /// <summary>
+    /// Dart's `iOSHorizontalOffset` (selectable_text.dart): the Apple caret's shift, in device pixels.
+    /// </summary>
+    public const int IOSHorizontalOffset = -2;
+
     public TextField(
         TextEditingController? controller = null,
         FocusNode? focusNode = null,
@@ -61,9 +66,13 @@ public sealed class TextField : StatefulWidget
         FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         IReadOnlyList<string>? autofillHints = null,
+        double cursorWidth = 2.0,
         double? cursorHeight = null,
+        Radius? cursorRadius = null,
+        bool? cursorOpacityAnimates = null,
         Color? cursorColor = null,
         Color? cursorErrorColor = null,
+        UndoHistoryController? undoController = null,
         string? restorationId = null,
         bool? enableInteractiveSelection = null,
         TextSelectionControls? selectionControls = null,
@@ -126,7 +135,11 @@ public sealed class TextField : StatefulWidget
         OnKeyEvent = onKeyEvent;
         InputFormatters = inputFormatters;
         AutofillHints = autofillHints;
+        CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
+        CursorRadius = cursorRadius;
+        CursorOpacityAnimates = cursorOpacityAnimates;
+        UndoController = undoController;
         CursorColor = cursorColor;
         CursorErrorColor = cursorErrorColor;
         RestorationId = restorationId;
@@ -192,7 +205,11 @@ public sealed class TextField : StatefulWidget
     /// passes <c>null</c>.</remarks>
     public IReadOnlyList<string>? AutofillHints { get; }
 
+    public double CursorWidth { get; }
     public double? CursorHeight { get; }
+    public Radius? CursorRadius { get; }
+    public bool? CursorOpacityAnimates { get; }
+    public UndoHistoryController? UndoController { get; }
     public Color? CursorColor { get; }
     public Color? CursorErrorColor { get; }
     public string? RestorationId { get; }
@@ -387,6 +404,14 @@ public sealed class TextField : StatefulWidget
                 ? ErrorColor(theme)
                 : Current.CursorColor ?? selectionStyle.CursorColor ?? primaryColor;
             Color selectionColor = selectionStyle.SelectionColor ?? ApplyOpacity(primaryColor, 0.40);
+            // Dart's platform switch: Apple platforms paint a rounded caret above the text, shifted by
+            // iOSHorizontalOffset device pixels; only iOS fades it.
+            bool applePlatform = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
+            bool cursorOpacityAnimates = Current.CursorOpacityAnimates ?? theme.Platform == TargetPlatform.IOS;
+            Radius? cursorRadius = Current.CursorRadius ?? (applePlatform ? Radius.Circular(2.0) : null);
+            Point? cursorOffset = applePlatform
+                ? new Point(IOSHorizontalOffset / MediaQuery.DevicePixelRatioOf(context), 0)
+                : null;
             // Dart resolves the input style with the field's interaction states.
             var states = new HashSet<WidgetState>();
             if (!enabled) states.Add(WidgetState.Disabled);
@@ -423,6 +448,9 @@ public sealed class TextField : StatefulWidget
                 autofocus: Current.Autofocus,
                 enabled: enabled,
                 multiline: multiline,
+                minLines: Current.MinLines,
+                maxLines: Current.MaxLines,
+                expands: Current.Expands,
                 fontSize: baseStyle.FontSize ?? 16,
                 textColor: baseStyle.Color ?? theme.ColorScheme.OnSurface,
                 backgroundColor: Colors.Transparent,
@@ -452,7 +480,13 @@ public sealed class TextField : StatefulWidget
                 onKeyEvent: Current.OnKeyEvent,
                 inputFormatters: formatters,
                 autofillHints: Current.AutofillHints,
+                cursorWidth: Current.CursorWidth,
                 cursorHeight: Current.CursorHeight,
+                cursorRadius: cursorRadius,
+                cursorOpacityAnimates: cursorOpacityAnimates,
+                cursorOffset: cursorOffset,
+                paintCursorAboveText: applePlatform,
+                undoController: Current.UndoController,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
                 contextMenuBuilder: Current.ContextMenuBuilder,
                 selectionControls: Current.EnableInteractiveSelection ? selectionControls : null,
@@ -469,12 +503,6 @@ public sealed class TextField : StatefulWidget
 
             editable = new RepaintBoundary(new UnmanagedRestorationScope(bucket: Bucket, child: editable));
 
-            if (multiline && !Current.Expands)
-            {
-                int lineCount = Current.MinLines ?? Math.Min(Current.MaxLines ?? 3, 3);
-                editable = new SizedBox(height: Math.Max(24, lineCount * (baseStyle.FontSize ?? 16) * 1.35), child: editable);
-            }
-
             Widget result;
             if (Current.Decoration is null)
             {
@@ -485,7 +513,16 @@ public sealed class TextField : StatefulWidget
                 string? generatedCounter = Current.MaxLength.HasValue
                     ? Current.MaxLength == NoMaxLength ? TextLength(_controller!.Text).ToString() : $"{TextLength(_controller!.Text)}/{Current.MaxLength}"
                     : null;
-                var decoration = Current.Decoration.WithRuntime(enabled, Current.BuildCounter is null ? generatedCounter : null);
+                var decoration = Current.Decoration.WithRuntime(
+                        enabled,
+                        Current.BuildCounter is null ? generatedCounter : null)
+                    with
+                    {
+                        // Dart's `_getEffectiveDecoration`: the hint wraps like the field itself.
+                        HintMaxLines = Current.Decoration.HintMaxLines
+                                       ?? InputDecorationTheme.Of(context).HintMaxLines
+                                       ?? Current.MaxLines,
+                    };
                 if (Current.BuildCounter is not null)
                 {
                     decoration = decoration.WithCounter(

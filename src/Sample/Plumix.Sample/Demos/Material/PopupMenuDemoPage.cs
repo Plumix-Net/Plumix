@@ -61,7 +61,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                     new Text("Popup menu entries", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "PopupMenuItem, CheckedPopupMenuItem, and PopupMenuDivider with selection, keyboard navigation, and theme precedence.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -107,7 +107,8 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                                 tooltip: "Show commands"),
                         ]),
                     new Text($"Selected: {_selected}", style: new TextStyle(FontSize: 13)),
-                    new Text($"Keep favorite: {_keepFavorite}", style: new TextStyle(FontSize: 13)),
+                    new Text($"Keep favorite: {(_keepFavorite ? "true" : "false")}",
+                        style: new TextStyle(FontSize: 13)),
                     new Text($"Status: {_status}", style: new TextStyle(FontSize: 13)),
                 ]);
         }
@@ -126,6 +127,6 @@ public sealed class PopupMenuDemoPage : StatefulWidget
         ];
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
+            new TextButton(new Text(label), onPressed);
     }
 }

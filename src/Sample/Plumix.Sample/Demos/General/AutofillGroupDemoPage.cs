@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -49,18 +52,18 @@ internal sealed class AutofillGroupDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("AutofillGroup", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("AutofillGroup", style: new TextStyle(FontSize: 20, Color: MaterialColors.Black)),
                 new Text(
                     "Fields sharing the closest AutofillGroup are cross-referenced by the platform. "
                     + "Disposing the topmost group finishes the autofill context.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
                     [
                         new SizedBox(
                             width: 160,
-                            child: new CounterTapButton(
+                            child: new MenuButton(
                                 label: _onDisposeAction == AutofillContextAction.Commit
                                     ? "onDispose: commit"
                                     : "onDispose: cancel",
@@ -68,39 +71,28 @@ internal sealed class AutofillGroupDemoPageState : State
                                     _onDisposeAction == AutofillContextAction.Commit
                                         ? AutofillContextAction.Cancel
                                         : AutofillContextAction.Commit),
-                                background: new Color(0xFFDCE3ED),
-                                foreground: Colors.Black,
-                                fontSize: 12,
-                                padding: new Thickness(10, 8))),
+                                background: new Color(0xFFDCE3ED))),
                         new SizedBox(
                             width: 160,
-                            child: new CounterTapButton(
+                            child: new MenuButton(
                                 label: _emailAutofillEnabled ? "Email: autofill on" : "Email: autofill off",
                                 onTap: () => SetState(() =>
                                     _emailAutofillEnabled = !_emailAutofillEnabled),
-                                background: new Color(0xFFE9F5EC),
-                                foreground: Colors.Black,
-                                fontSize: 12,
-                                padding: new Thickness(10, 8))),
+                                background: new Color(0xFFE9F5EC))),
                     ]),
                 new SizedBox(
                     width: 200,
-                    child: new CounterTapButton(
+                    child: new MenuButton(
                         label: "finishAutofillContext",
                         onTap: () => SetState(() =>
                         {
                             TextInput.FinishAutofillContext();
                             _lastAction = "finishAutofillContext(shouldSave: true)";
                         }),
-                        background: new Color(0xFFF3E8D8),
-                        foreground: Colors.Black,
-                        fontSize: 12,
-                        padding: new Thickness(10, 8))),
+                        background: new Color(0xFFF3E8D8))),
                 new Text(
                     $"last action: {_lastAction}",
-                    style: new TextStyle(
-                        FontSize: 12,
-                        Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new AutofillGroup(
                     onDisposeAction: _onDisposeAction,
                     child: new Column(
@@ -108,32 +100,58 @@ internal sealed class AutofillGroupDemoPageState : State
                         spacing: 8,
                         children:
                         [
-                            new Text("Username", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
-                            new EditableText(
-                                controller: _usernameController,
-                                placeholder: "username",
-                                autofillHints: [AutofillHints.Username]),
-                            new Text("Password", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
-                            new EditableText(
-                                controller: _passwordController,
-                                placeholder: "password",
-                                obscureText: true,
-                                autofillHints: [AutofillHints.Password]),
-                            new Text("Email", style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
-                            new EditableText(
-                                controller: _emailController,
-                                placeholder: "email",
-                                autofillHints: _emailAutofillEnabled
-                                    ? [AutofillHints.Email]
-                                    : EditableText.AutofillDisabled),
+                            new Text("Username", style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
+                            BuildTextField(_usernameController, "username", [AutofillHints.Username]),
+                            new Text("Password", style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
+                            BuildTextField(
+                                _passwordController,
+                                "password",
+                                [AutofillHints.Password],
+                                obscureText: true),
+                            new Text("Email", style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
+                            BuildTextField(
+                                _emailController,
+                                "email",
+                                _emailAutofillEnabled ? [AutofillHints.Email] : EditableText.AutofillDisabled),
                             new Builder(inner => new Text(
                                 $"clients in group: {AutofillGroup.Of(inner).AutofillClients.Count()}",
-                                style: new TextStyle(FontSize: 12, Color: Colors.Black))),
+                                style: new TextStyle(FontSize: 12, Color: MaterialColors.Black))),
                         ])),
                 new Text(
                     "Keyboard type and autocorrect are inferred from the first hint when they are "
                     + "not given explicitly.",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
             ]);
+    }
+
+    private static Widget BuildTextField(
+        TextEditingController controller,
+        string placeholder,
+        IReadOnlyList<string>? autofillHints,
+        bool obscureText = false)
+    {
+        return new TextField(
+            controller: controller,
+            obscureText: obscureText,
+            autofillHints: autofillHints,
+            decoration: new InputDecoration(
+                hintText: placeholder,
+                isDense: true,
+                filled: true,
+                fillColor: new Color(0xFFE8F0FE),
+                border: new OutlineInputBorder()));
+    }
+
+    private sealed class MenuButton(string label, Action onTap, Color background) : StatelessWidget
+    {
+        public override Widget Build(BuildContext context)
+        {
+            return new GestureDetector(
+                onTap: onTap,
+                child: new Container(
+                    color: background,
+                    padding: new Thickness(10, 8),
+                    child: new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.Black))));
+        }
     }
 }

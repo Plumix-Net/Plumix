@@ -60,7 +60,7 @@ internal sealed class FlexDemoPageState : State
                 new Text(
                     "RenderFlex distributes free space by mainAxisAlignment, inserts `spacing` between "
                     + "children, and flips both axes from textDirection/verticalDirection.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -79,13 +79,14 @@ internal sealed class FlexDemoPageState : State
                         BuildButton("Clip", CycleClip, width: 78, colorHex: "#FFF6E7E7"),
                     ]),
                 new Text(
-                    $"main={alignment}, cross={crossAlignment}, spacing={_spacing:0}, "
+                    $"main=MainAxisAlignment.{alignment.Name()}, "
+                        + $"cross=CrossAxisAlignment.{crossAlignment.Name()}, spacing={_spacing:0}, "
                     + $"textDirection={(_rightToLeft ? "Rtl" : "Ltr")}, "
                     + $"verticalDirection={(_bottomToTop ? "Up" : "Down")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Text(
-                    $"overflow={(_overflow ? "on" : "off")}, clipBehavior={_clipBehavior}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    $"overflow={(_overflow ? "on" : "off")}, clipBehavior=Clip.{_clipBehavior.Name()}",
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     height: 120,
                     color: new Color(0xFFE7EDF6),

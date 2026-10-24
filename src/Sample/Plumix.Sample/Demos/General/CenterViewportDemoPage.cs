@@ -43,7 +43,7 @@ internal sealed class CenterViewportDemoPageState : State
                 new Text(
                     "Slivers before the center key grow in the reverse direction and live at "
                     + "negative scroll offsets.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -52,21 +52,21 @@ internal sealed class CenterViewportDemoPageState : State
                             child: new CounterTapButton(
                                 label: "Prepend",
                                 onTap: () => SetState(() => _before++),
-                                background: Colors.SteelBlue,
+                                background: MaterialColors.Blue,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Append",
                                 onTap: () => SetState(() => _after++),
-                                background: Colors.SeaGreen,
+                                background: MaterialColors.Green,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Back to center",
                                 onTap: () => _controller.JumpTo(0),
-                                background: Colors.DarkSlateGray,
+                                background: MaterialColors.BlueGrey,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                     ]),

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Plumix.Material;
 using Plumix.Widgets;
 
@@ -7,6 +8,14 @@ namespace Plumix;
 
 public sealed class CounterApp : StatefulWidget
 {
+    // Dart formats numbers the same way in every locale (`toStringAsFixed`, string interpolation), so
+    // the sample's readouts use the invariant culture whatever the host machine's culture is.
+    static CounterApp()
+    {
+        CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+        CultureInfo.CurrentCulture = CultureInfo.InvariantCulture;
+    }
+
     public override State CreateState() => new CounterAppState();
 
     private sealed class CounterAppState : State

@@ -49,7 +49,7 @@ internal sealed class CustomElementDemoPageState : State
                     "ElementLifecycleProbe is a widget declared in the sample assembly that returns its own "
                     + "Element from CreateElement. The element drives the child through UpdateChild and counts "
                     + "every lifecycle call the framework makes on it.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
@@ -84,7 +84,7 @@ internal sealed class CustomElementDemoPageState : State
             return new Container(
                 color: new Color(0xFFF1F1F1),
                 padding: new Thickness(12),
-                child: new Text("probe detached", style: new TextStyle(FontSize: 14, Color: Colors.DimGray)));
+                child: new Text("probe detached", style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)));
         }
 
         return new ElementLifecycleProbe(
@@ -111,7 +111,7 @@ internal sealed class CustomElementDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: onTap,
-                background: Colors.SteelBlue,
+                background: MaterialColors.BlueGrey,
                 foreground: Colors.White,
                 fontSize: 13));
     }

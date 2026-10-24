@@ -58,7 +58,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                 new Text("Catalog samples", style: new TextStyle(FontSize: 14.0, Color: Colors.Black)),
                 BuildRow(Samples),
                 new Text(
-                    $"Icons.adaptive on {PlatformDefaults.TargetPlatform}",
+                    $"Icons.adaptive on TargetPlatform.{PlatformDefaults.TargetPlatform.Name()}",
                     style: new TextStyle(
                         FontSize: 14.0,
                         Color: Colors.Black)),

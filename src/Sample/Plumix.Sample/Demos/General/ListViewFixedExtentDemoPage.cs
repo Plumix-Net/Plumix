@@ -3,7 +3,8 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/list_view_fixed_extent_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -19,7 +20,7 @@ public sealed class ListViewFixedExtentDemoPage : StatelessWidget
                 new Text("ListView with itemExtent", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Each row has fixed paint/layout extent and list has sliver padding.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Expanded(
                     child: ListView.Builder(
                         itemCount: 50,

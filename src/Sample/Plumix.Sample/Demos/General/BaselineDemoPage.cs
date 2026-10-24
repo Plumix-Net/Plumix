@@ -21,11 +21,11 @@ public sealed class BaselineDemoPage : StatelessWidget
                 new Text(
                     "The guide is 48 px from the top. Text uses its real alphabetic baseline; the box falls back " +
                     "to its bottom edge.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 BuildBaselinePreview(),
                 new Text(
                     "IgnoreBaseline keeps the tall middle child out of Row baseline calculations.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12),

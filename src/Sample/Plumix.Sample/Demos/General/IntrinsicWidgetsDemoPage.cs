@@ -27,7 +27,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                 new Text(
                     "IntrinsicWidth snaps the content width to an optional step. IntrinsicHeight gives the Row " +
                     "the tallest child's height before stretch layout.",
-                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14.0, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8.0,
                     children:
@@ -52,7 +52,7 @@ internal sealed class IntrinsicWidgetsDemoPageState : State
                                     style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF1D3557))))))),
                 new Text(
                     "All three tiles below receive the tallest tile's 64 px height.",
-                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14.0, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF1F5F9),
                     padding: new Thickness(12.0),

@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/overflow_indicator_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/overflow_indicator_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -31,8 +31,9 @@ internal sealed class OverflowIndicatorDemoPageState : State
             [
                 new Text("RenderFlex overflow indicator", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
-                    "Intentionally overflows a Flex container to show Plumix.Sample-like yellow/black debug stripes and overflow labels.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    "Intentionally overflows a Flex container to show Flutter-like yellow/black debug stripes "
+                    + "and overflow labels.",
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -44,7 +45,7 @@ internal sealed class OverflowIndicatorDemoPageState : State
                     ]),
                 new Text(
                     $"axis={(_horizontal ? "horizontal" : "vertical")}, itemCount={_itemCount} (overflow expected)",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 280,
                     height: 220,

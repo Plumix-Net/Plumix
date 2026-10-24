@@ -5,7 +5,8 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/app_bar_icon_theme_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -43,7 +44,7 @@ internal sealed class AppBarIconThemeDemoPageState : State
                 new Text("AppBar iconTheme/actionsIconTheme", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for icon-theme precedence: widget override > appBarTheme > iconTheme fallback > foreground fallback.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -81,7 +82,7 @@ internal sealed class AppBarIconThemeDemoPageState : State
                     ]),
                 new Text(
                     $"fg={ColorLabel(_foregroundColor)}, themeIcon={OnOff(_themeIconEnabled)}, themeActions={OnOff(_themeActionsIconEnabled)}, widgetIcon={OnOff(_widgetIconOverrideEnabled)}, widgetActions={OnOff(_widgetActionsIconOverrideEnabled)}, expectedLeading={ColorLabel(ResolveExpectedLeadingColor())}, expectedActions={ColorLabel(ResolveExpectedActionsColor())}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 320,
                     color: new Color(0xFFE7EDF6),
@@ -95,13 +96,13 @@ internal sealed class AppBarIconThemeDemoPageState : State
                                 "Themed app bar preview",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildThemedPreview(),
                             new Text(
                                 "Default app bar reference (no icon theme overrides)",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);

@@ -48,7 +48,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
                 new Text(
                     "One viewport scrolled by two positions at once. The diagonal drag behavior "
                     + "decides whether a drag locks to one axis or moves both.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Row(
                     spacing: 8,
                     children:

@@ -36,19 +36,15 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                                 new Text("SliverAppBar + FlexibleSpaceBar", style: new TextStyle(FontSize: 20)),
                                 new Text(
                                     "Collapse, parallax, floating reveal, pinned extent, snap contract, and Material 3 medium/large variants.",
-                                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
-                                new Row(
+                                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
+                                new Wrap(
                                     spacing: 6,
+                                    runSpacing: 6,
                                     children:
                                     [
                                         ToggleButton(VariantLabel(), () => SetState(() => _variant = (_variant + 1) % 3)),
                                         ToggleButton(_pinned ? "Pinned on" : "Pinned off", () => SetState(() => _pinned = !_pinned)),
                                         ToggleButton(_floating ? "Floating on" : "Floating off", ToggleFloating),
-                                    ]),
-                                new Row(
-                                    spacing: 6,
-                                    children:
-                                    [
                                         ToggleButton(_snap ? "Snap on" : "Snap off", ToggleSnap),
                                         ToggleButton(_stretch ? "Stretch on" : "Stretch off", () => SetState(() => _stretch = !_stretch)),
                                     ]),
@@ -126,6 +122,6 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
         });
 
         private static Widget ToggleButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
+            new TextButton(new Text(label), onPressed);
     }
 }

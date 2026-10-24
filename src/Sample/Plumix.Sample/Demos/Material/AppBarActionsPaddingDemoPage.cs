@@ -5,7 +5,8 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/app_bar_actions_padding_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/material/app_bar_actions_padding_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -33,7 +34,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                 new Text("AppBar theme actionsPadding", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for actions row padding resolution: widget override beats appBarTheme, appBarTheme beats default zero padding.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -59,7 +60,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     ]),
                 new Text(
                     $"theme={FormatInsets(_themeActionsPadding)}, override={(_useWidgetOverride ? "on" : "off")}, widget={FormatInsets(_widgetActionsPadding)}, effective={FormatInsets(EffectiveActionsPadding())}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 300,
                     color: new Color(0xFFE7EDF6),
@@ -73,17 +74,17 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                                 "Themed app bar preview",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildThemedPreview(),
                             new Text(
                                 "Default app bar reference (actionsPadding = 0)",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildDefaultReferencePreview(),
                             new Text(
                                 "Scroll to resolve WidgetState.scrolledUnder",
-                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                             BuildScrolledUnderPreview(),
                         ])),
             ]);
@@ -159,7 +160,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
             height: 36,
             child: new Padding(
                 new Thickness(12, 8),
-                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray))));
+                new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey))));
     }
 
     private static Widget BuildActionBadge(IconData icon)

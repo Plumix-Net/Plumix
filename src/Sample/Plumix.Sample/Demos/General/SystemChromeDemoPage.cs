@@ -48,7 +48,7 @@ internal sealed class SystemChromeDemoPageState : State
                     new Text(
                         "Requests go to the platform over flutter/platform; a platform that does not " +
                         "implement one ignores it. The window title follows the Title widget.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     BuildTitleSection(),
                     BuildRegionSection(),
                     BuildOrientationSection(),

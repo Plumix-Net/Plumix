@@ -5,7 +5,7 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/material_buttons_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/material/material_buttons_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -173,7 +173,7 @@ internal sealed class MaterialButtonsDemoPageState : State
             onSurface: new Color(0xFF4D2A6A));
         ThemeData probeTheme = inherited with
         {
-            PrimaryColor = Colors.OrangeRed,
+            PrimaryColor = MaterialColors.DeepOrange,
             ColorScheme = scheme
         };
 
@@ -205,7 +205,7 @@ internal sealed class MaterialButtonsDemoPageState : State
             shadow: new Color(0xFF2F3B26));
         ThemeData probeTheme = inherited with
         {
-            PrimaryColor = Colors.OrangeRed,
+            PrimaryColor = MaterialColors.DeepOrange,
             ColorScheme = scheme
         };
 
@@ -235,7 +235,7 @@ internal sealed class MaterialButtonsDemoPageState : State
             outline: new Color(0xFF766F64));
         ThemeData probeTheme = inherited with
         {
-            PrimaryColor = Colors.OrangeRed,
+            PrimaryColor = MaterialColors.DeepOrange,
             ColorScheme = scheme
         };
 
@@ -268,7 +268,7 @@ internal sealed class MaterialButtonsDemoPageState : State
             shadow: new Color(0xFF16233A));
         ThemeData probeTheme = inherited with
         {
-            PrimaryColor = Colors.OrangeRed,
+            PrimaryColor = MaterialColors.DeepOrange,
             ColorScheme = scheme
         };
 

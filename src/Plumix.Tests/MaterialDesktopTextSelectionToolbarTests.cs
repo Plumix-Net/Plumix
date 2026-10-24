@@ -120,8 +120,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.Equal(-0.15, paragraph.LetterSpacing);
         Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
-        Assert.Equal(Color.FromARGB(0xDE, 0x00, 0x00, 0x00),
-            Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        // Colors.black87 (0xDD000000) on a light color scheme, whatever its onSurface.
+        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
 
         SemanticsNode actionNode = Assert.IsType<SemanticsNode>(FindSemantics(
             semantics,
@@ -153,12 +153,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     }
 
     [Fact]
-    public void DesktopToolbarButton_CustomOnSurfaceColorOverridesPlatformFallback()
+    public void DesktopToolbarButton_IgnoresCustomOnSurfaceLikeDart()
     {
         using var harness = CreateHarness(
             ThemeData.Light with
             {
-                ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOrange),
+                ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Plumix.Material.Colors.DeepOrange),
             },
             new Builder(context => DesktopTextSelectionToolbarButton.Text(context, () => { }, "Custom")));
 
@@ -166,7 +166,8 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>
             value.PlainText == "Custom");
 
-        Assert.Equal(Colors.DarkOrange, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        // TODO(hansmuller) in Dart: the color follows the brightness only, not onSurface.
+        Assert.Equal(Plumix.Material.Colors.Black87, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
     }
 
     [Fact]

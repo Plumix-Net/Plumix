@@ -60,7 +60,7 @@ internal sealed class WidgetInspectorDemoPageState : State
                     "Select mode wraps the app in the root inspector: tap a widget to outline it, drag to "
                     + "browse candidates, and use the buttons at the bottom to exit, move them or let taps "
                     + "reach the app.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,

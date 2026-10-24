@@ -29,7 +29,7 @@ internal sealed class FlowDemoPageState : State
                 new Text("Flow + RepaintBoundary", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Flow positions children during paint; its default constructor isolates every child repaint.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -62,7 +62,7 @@ internal sealed class FlowDemoPageState : State
                         padding: new Thickness(12),
                         child: new Text(
                             "Explicit RepaintBoundary keeps this footer in its own composited display list.",
-                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)))),
+                            style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)))),
             ]);
     }
 
@@ -71,7 +71,7 @@ internal sealed class FlowDemoPageState : State
         return new Container(
             color: color,
             alignment: Alignment.Center,
-            child: new Text(label, style: new TextStyle(FontSize: 18, Color: Colors.White)));
+            child: new Text(label, style: new TextStyle(FontSize: 18, Color: MaterialColors.Black)));
     }
 
     private static Widget BuildButton(string label, Action onTap)
@@ -82,7 +82,7 @@ internal sealed class FlowDemoPageState : State
                 label: label,
                 onTap: onTap,
                 background: new Color(0xFFDCE3ED),
-                foreground: Colors.Black,
+                foreground: MaterialColors.White,
                 fontSize: 12,
                 padding: new Thickness(10, 8)));
     }

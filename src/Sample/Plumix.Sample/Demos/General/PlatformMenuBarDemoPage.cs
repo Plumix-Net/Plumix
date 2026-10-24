@@ -67,7 +67,7 @@ internal sealed class PlatformMenuBarDemoPageState : State<PlatformMenuBarDemoPa
                     new Text(
                         "Open the system menu to try grouped actions, a Messages submenu and Ctrl+H. "
                         + "Native menus require a host with system-menu support.",
-                        style: new TextStyle(Color: Colors.DimGray)),
+                        style: new TextStyle(Color: MaterialColors.Black54)),
                     new Container(
                         padding: new Thickness(12),
                         color: new Color(0xFFF4F7FA),

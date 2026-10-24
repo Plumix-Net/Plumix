@@ -33,7 +33,7 @@ internal sealed class CupertinoActionSheetDemoPageState : State
                     "Blurred bottom sheet with a title/message section, hairline-separated actions, "
                     + "a detached cancel button, and slide-to-select. Use the mouse wheel to scroll "
                     + "the long list; touch scrolling does not select a folder.",
-                    style: new TextStyle(FontSize: 14.0, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14.0, Color: MaterialColors.Black54)),
                 new Text(
                     $"last result: {_lastResult}",
                     style: new TextStyle(

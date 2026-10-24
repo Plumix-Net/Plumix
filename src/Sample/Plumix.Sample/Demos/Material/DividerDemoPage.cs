@@ -48,15 +48,15 @@ internal sealed class DividerDemoPageState : State
             data: pageTheme,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
-                    new Text("Divider baseline", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new Text("Divider baseline", style: new TextStyle(FontSize: 20)),
+                    new SizedBox(height: 8),
                     new Text(
                         "M2/M3 tokens, directional indents, asymmetric theme radii, and widget overrides.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
-                        spacing: 8,
                         children:
                         [
                             BuildControlButton(
@@ -64,28 +64,33 @@ internal sealed class DividerDemoPageState : State
                                 onTap: () => SetState(() => _useMaterial3 = !_useMaterial3),
                                 width: 80,
                                 background: new Color(0xFFE9F0FF)),
+                            new SizedBox(width: 8),
                             BuildControlButton(
                                 label: _useThemeOverrides ? "Theme on" : "Theme off",
                                 onTap: () => SetState(() => _useThemeOverrides = !_useThemeOverrides),
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
+                            new SizedBox(width: 8),
                             BuildControlButton(
                                 label: _useWidgetOverrides ? "Widget on" : "Widget off",
                                 onTap: () => SetState(() => _useWidgetOverrides = !_useWidgetOverrides),
                                 width: 118,
                                 background: new Color(0xFFF0E8FF)),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, theme={(_useThemeOverrides ? "true" : "false")}, widget={(_useWidgetOverrides ? "true" : "false")}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, "
+                        + $"theme={(_useThemeOverrides ? "true" : "false")}, "
+                        + $"widget={(_useWidgetOverrides ? "true" : "false")}",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
-                                crossAxisAlignment: CrossAxisAlignment.Stretch,
-                                spacing: 14,
                                 children:
                                 [
                                     BuildHorizontalPreview(),
+                                    new SizedBox(height: 14),
                                     BuildVerticalPreview(),
                                 ]))),
                 ]));
@@ -114,10 +119,10 @@ internal sealed class DividerDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
-                    new Text("Horizontal Divider", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new Text("Horizontal Divider", style: new TextStyle(FontSize: 14, Color: MaterialColors.Black)),
+                    new SizedBox(height: 8),
                     new Container(
                         color: new Color(0xFFE3F2FD),
                         padding: new Thickness(10, 6),
@@ -161,10 +166,10 @@ internal sealed class DividerDemoPageState : State
             padding: new Thickness(12),
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 8,
                 children:
                 [
-                    new Text("Vertical Divider", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                    new Text("Vertical Divider", style: new TextStyle(FontSize: 14, Color: MaterialColors.Black)),
+                    new SizedBox(height: 8),
                     new SizedBox(
                         height: 96,
                         child: new Row(
@@ -204,13 +209,12 @@ internal sealed class DividerDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
-                    foregroundColor: Colors.Black,
                     backgroundColor: background,
+                    foregroundColor: MaterialColors.Black,
+                    minimumSize: new Size(0, 36),
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
-                    shape: new RoundedRectangleBorder(
-                        borderRadius: BorderRadius.Circular(8)))));
+                    shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(8))),
+                child: new Text(label, style: new TextStyle(FontSize: 12))));
     }
 }

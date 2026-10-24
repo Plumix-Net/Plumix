@@ -128,6 +128,11 @@ public partial class Canvas
         DebugRecordCall(new CanvasCall("drawRRect", RRect: rrect, Brush: brush, Pen: pen));
         var path = new Path();
         path.AddRRect(rrect);
+        if (TryAddNativeSolidDraw(path, brush, pen))
+        {
+            return;
+        }
+
         Geometry? geometry = null;
         AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
     }
@@ -145,7 +150,8 @@ public partial class Canvas
             call => call with { RRect = rrect },
             Source,
             (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            rrect.ToPath);
+            rrect.ToPath,
+            nativeSolid: true);
     }
 
     /// <summary>Draws the ring between two rounded rectangles with the given <see cref="Paint"/>.</summary>
@@ -164,7 +170,8 @@ public partial class Canvas
             call => call with { RRect = outer },
             Source,
             (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => Path.Combine(PathOperation.Difference, outer.ToPath(), inner.ToPath()));
+            () => CreateDRRectPath(outer, inner),
+            nativeSolid: true);
     }
 
     /// <summary>Draws an axis-aligned oval with the given <see cref="Paint"/>.</summary>
@@ -197,7 +204,8 @@ public partial class Canvas
             call => call with { Path = snapshot },
             Source,
             (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => snapshot);
+            () => snapshot,
+            nativeSolid: true);
     }
 
     /// <summary>Draws a rounded superellipse with the given <see cref="Paint"/>.</summary>
@@ -214,7 +222,8 @@ public partial class Canvas
             call => call with { Path = path },
             Source,
             (context, fill, pen) => ShaderDrawing.DrawGeometry(context, fill, pen, Source()),
-            () => path);
+            () => path,
+            nativeSolid: true);
     }
 
     /// <summary>
@@ -235,7 +244,8 @@ public partial class Canvas
         Func<CanvasCall, CanvasCall> describe,
         Func<Geometry> geometrySource,
         Action<DrawingContext, IBrush?, IPen?> draw,
-        Func<Path>? nativePathSource = null)
+        Func<Path>? nativePathSource = null,
+        bool nativeSolid = false)
     {
         IBrush brush = paint.Shader is INativeShader nativeShader
             ? nativeShader.Snapshot() : paint.Shader ?? new SolidColorBrush(paint.Color);
@@ -270,7 +280,9 @@ public partial class Canvas
 
         if (maskFilter is null && blendMode == BlendMode.SourceOver)
         {
-            if (brush is INativeShader shader && nativePathSource?.Invoke() is { } path)
+            INativeShader? native = brush as INativeShader
+                ?? (nativeSolid && paint.Shader is null ? new SolidColorNativeShader(color) : null);
+            if (native is { } shader && nativePathSource?.Invoke() is { } path)
             {
                 var snapshot = new Paint(paint);
                 AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, snapshot));
@@ -300,6 +312,15 @@ public partial class Canvas
                 DrawBlurApproximation(context, geometrySource(), color, maskFilter, DrawPlain);
             });
         AddDrawCommand(rasterized.Draw);
+    }
+
+    // SkCanvas::onDrawDRRect: both outlines in one even-odd path.
+    private static Path CreateDRRectPath(RRect outer, RRect inner)
+    {
+        var result = new Path { FillType = PathFillType.EvenOdd };
+        result.AddRRect(outer);
+        result.AddRRect(inner);
+        return result;
     }
 
     private static Path CreateRectPath(Rect rect)
@@ -442,6 +463,11 @@ public partial class Canvas
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
     public virtual void DrawDRRect(RRect outer, RRect inner, IBrush brush)
     {
+        if (TryAddNativeSolidDraw(CreateDRRectPath(outer, inner), brush, null))
+        {
+            return;
+        }
+
         var outerPath = new Path();
         outerPath.AddRRect(outer);
         var innerPath = new Path();
@@ -470,9 +496,64 @@ public partial class Canvas
         ArgumentNullException.ThrowIfNull(path);
         DebugRecordCall(new CanvasCall("drawPath", Brush: brush, Pen: pen, Path: path));
 
+        if (TryAddNativeSolidDraw(new Path(path), brush, pen))
+        {
+            return;
+        }
+
         // The backend geometry is built on playback: recording must not need a render backend.
         Geometry? geometry = null;
         AddDrawCommand(context => ShaderDrawing.DrawGeometry(context, brush, pen, geometry ??= path.ToGeometry()));
+    }
+
+    // A solid fill or an undashed solid stroke of a path whose curves Avalonia's geometry would
+    // approximate goes to Skia as the exact path, the way Dart's canvas draws it with a color paint.
+    private bool TryAddNativeSolidDraw(Path path, IBrush? brush, IPen? pen)
+    {
+        Paint paint;
+        if (pen is null && brush is ISolidColorBrush fill)
+        {
+            paint = new Paint { Color = SolidColor(fill) };
+        }
+        else if (IsTransparentOrNull(brush) && pen is { Brush: ISolidColorBrush stroke, DashStyle: null })
+        {
+            paint = new Paint
+            {
+                Color = SolidColor(stroke),
+                Style = PaintingStyle.Stroke,
+                StrokeWidth = pen.Thickness,
+                StrokeMiterLimit = pen.MiterLimit,
+                StrokeCap = pen.LineCap switch
+                {
+                    PenLineCap.Round => StrokeCap.Round,
+                    PenLineCap.Square => StrokeCap.Square,
+                    _ => StrokeCap.Butt,
+                },
+                StrokeJoin = pen.LineJoin switch
+                {
+                    PenLineJoin.Round => StrokeJoin.Round,
+                    PenLineJoin.Bevel => StrokeJoin.Bevel,
+                    _ => StrokeJoin.Miter,
+                },
+            };
+        }
+        else
+        {
+            return false;
+        }
+
+        var shader = new SolidColorNativeShader(paint.Color);
+        AddDrawCommand(context => ShaderDrawing.DrawPath(context, shader, path, paint));
+        return true;
+
+        static bool IsTransparentOrNull(IBrush? value) =>
+            value is null || (value is ISolidColorBrush solid && (solid.Color.A == 0 || solid.Opacity == 0.0));
+
+        static Color SolidColor(ISolidColorBrush value)
+        {
+            var color = (Color)value.Color;
+            return value.Opacity >= 1.0 ? color : color.WithAlpha((int)Math.Round(color.Alpha * value.Opacity));
+        }
     }
 
     // Dart parity source: dart:ui Canvas.drawCircle.

@@ -36,8 +36,8 @@ internal sealed class TransformDemoPageState : State
                 new Text("Transform + Matrix4", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Transform carries a full 4x4 matrix, so rotations about the X/Y axes and a "
-                    + "perspective row render and hit-test like Flutter's.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    + "perspective row render and hit-test alike.",
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -57,7 +57,7 @@ internal sealed class TransformDemoPageState : State
                     ]),
                 new Text(
                     $"turns={_turns:0.000}, scale={_scale:0.00}, perspective={_perspectiveTurns:0.00}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Row(
                     spacing: 16,
                     children:
@@ -107,7 +107,7 @@ internal sealed class TransformDemoPageState : State
             spacing: 6,
             children:
             [
-                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 150,
                     height: 120,

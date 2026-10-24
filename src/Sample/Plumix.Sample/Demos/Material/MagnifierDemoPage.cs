@@ -135,6 +135,6 @@ internal sealed class MagnifierDemoPageState : State
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),
-                minimumSize: new Size(64, 36)));
+                minimumSize: new Size(0, 36)));
     }
 }

@@ -28,7 +28,7 @@ public sealed class AboutDemoPage : StatelessWidget
                 new Text(
                     "Dialog metadata, adaptive actions, AboutListTile entry, lazy license registry, and the "
                     + "master-detail license page: nested routes below 840px, side-by-side above it.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

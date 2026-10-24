@@ -27,6 +27,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="UI\Assets\FlutterTest.ttf" LogicalName="Plumix.UI.Assets.FlutterTest.ttf" />
+    </ItemGroup>
+
+    <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Tests" />
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />

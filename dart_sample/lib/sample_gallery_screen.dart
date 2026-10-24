@@ -1323,7 +1323,7 @@ class _SampleMenuPageState extends State<SampleMenuPage> {
     final List<SampleRouteDefinition> pages = selectedTab.pages;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Flutter.Net widget pages')),
+      appBar: AppBar(title: const Text('Plumix.Sample widget pages')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(

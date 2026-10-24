@@ -254,7 +254,7 @@ internal sealed class SliderDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }
@@ -279,8 +279,8 @@ internal sealed class DemoSliderThumbShape : SliderComponentShape
         Size sizeWithOverflow)
     {
         Color color = enableAnimation.Value >= 0.5
-            ? sliderTheme.ThumbColor ?? Colors.Blue
-            : sliderTheme.DisabledThumbColor ?? Colors.Gray;
+            ? sliderTheme.ThumbColor ?? MaterialColors.Blue
+            : sliderTheme.DisabledThumbColor ?? MaterialColors.Grey;
         context.Canvas.DrawRectangle(
             brush: new SolidColorBrush(color),
             pen: null,

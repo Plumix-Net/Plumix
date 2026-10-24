@@ -6,7 +6,7 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/checkbox_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/cupertino/checkbox_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -242,7 +242,7 @@ internal sealed class CheckboxDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }

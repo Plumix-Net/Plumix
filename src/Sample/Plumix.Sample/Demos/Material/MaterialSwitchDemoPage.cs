@@ -49,13 +49,14 @@ internal sealed class MaterialSwitchDemoPageState : State
             data: pageTheme,
             child: new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
-                spacing: 10,
                 children:
                 [
-                    new Text("Switch", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new Text("Switch", style: new TextStyle(FontSize: 20)),
+                    new SizedBox(height: 8),
                     new Text(
                         "M2/M3 tokens, thumb icons, track outlines and Switch.adaptive per platform.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
+                    new SizedBox(height: 10),
                     new Row(
                         spacing: 8,
                         children:
@@ -66,15 +67,17 @@ internal sealed class MaterialSwitchDemoPageState : State
                                 width: 80,
                                 background: new Color(0xFFE9F0FF)),
                             BuildControlButton(
-                                label: platform.ToString(),
+                                label: platform.Name(),
                                 onTap: () => SetState(() =>
                                     _platformIndex = (_platformIndex + 1) % Platforms.Length),
                                 width: 112,
                                 background: new Color(0xFFEAF6F7)),
                         ]),
+                    new SizedBox(height: 8),
                     new Text(
-                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, platform={platform}",
+                        $"useMaterial3={(_useMaterial3 ? "true" : "false")}, platform={platform.Name()}",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF607D8B))),
+                    new SizedBox(height: 10),
                     new Expanded(
                         child: new SingleChildScrollView(
                             child: new Column(
@@ -141,7 +144,7 @@ internal sealed class MaterialSwitchDemoPageState : State
                 [
                     new SizedBox(
                         width: 140,
-                        child: new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black))),
+                        child: new Text(label, style: new TextStyle(FontSize: 13, Color: MaterialColors.Black))),
                     control,
                 ]));
     }
@@ -156,13 +159,12 @@ internal sealed class MaterialSwitchDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                child: new Text(label, style: new TextStyle(FontSize: 12)),
                 style: TextButton.StyleFrom(
-                    foregroundColor: Colors.Black,
                     backgroundColor: background,
+                    foregroundColor: MaterialColors.Black,
+                    minimumSize: new Size(0, 36),
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
-                    shape: new RoundedRectangleBorder(
-                        borderRadius: BorderRadius.Circular(8)))));
+                    shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(8))),
+                child: new Text(label, style: new TextStyle(FontSize: 12))));
     }
 }

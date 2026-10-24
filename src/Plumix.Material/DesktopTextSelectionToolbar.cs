@@ -91,53 +91,41 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
         Key? key = null)
     {
         ArgumentNullException.ThrowIfNull(text);
-        Color color = ResolveForegroundColor(Theme.Of(context));
         return new DesktopTextSelectionToolbarButton(
             onPressed: onPressed,
             child: new Text(
                 text,
-                style: new TextStyle(
-                    FontSize: 14.0,
-                    Color: color,
-                    FontWeight: FontWeight.Normal,
-                    LetterSpacing: -0.15),
-                overflow: TextOverflow.Ellipsis),
+                overflow: TextOverflow.Ellipsis,
+                style: ToolbarButtonFontStyle.CopyWith(color: ForegroundColor(Theme.Of(context)))),
             key: key);
     }
 
     public override Widget Build(BuildContext context)
     {
-        Color foregroundColor = ResolveForegroundColor(Theme.Of(context));
-        ButtonStyle style = TextButton.StyleFrom(
-            alignment: Alignment.CenterLeft,
-            foregroundColor: foregroundColor,
-            shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Zero),
-            minimumSize: new Size(48.0, 36.0),
-            padding: ToolbarButtonPadding) with
-        {
-            MouseCursor = WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
-        };
+        // TODO(hansmuller): Should be colorScheme.onSurface
+        Color foregroundColor = ForegroundColor(Theme.Of(context));
 
         return new SizedBox(
             width: double.PositiveInfinity,
             child: new TextButton(
-                child: Child,
+                style: TextButton.StyleFrom(
+                    alignment: Alignment.CenterLeft,
+                    enabledMouseCursor: SystemMouseCursors.Basic,
+                    disabledMouseCursor: SystemMouseCursors.Basic,
+                    foregroundColor: foregroundColor,
+                    shape: new RoundedRectangleBorder(),
+                    minimumSize: new Size(WidgetConstants.MinInteractiveDimension, 36.0),
+                    padding: ToolbarButtonPadding),
                 onPressed: OnPressed,
-                style: style));
+                child: Child));
     }
 
-    private static Color ResolveForegroundColor(ThemeData theme)
-    {
-        Color defaultOnSurface = theme.Brightness == Brightness.Dark
-            ? ThemeData.Dark.ColorScheme.OnSurface
-            : ThemeData.Light.ColorScheme.OnSurface;
-        if (theme.ColorScheme.OnSurface != defaultOnSurface)
-        {
-            return theme.ColorScheme.OnSurface;
-        }
+    private static readonly TextStyle ToolbarButtonFontStyle = new(
+        Inherit: false,
+        FontSize: 14.0,
+        LetterSpacing: -0.15,
+        FontWeight: FontWeight.Normal);
 
-        return theme.Brightness == Brightness.Dark
-            ? Colors.White
-            : Color.FromARGB(0xDE, 0x00, 0x00, 0x00);
-    }
+    private static Color ForegroundColor(ThemeData theme) =>
+        theme.ColorScheme.Brightness == Brightness.Dark ? Colors.White : Colors.Black87;
 }

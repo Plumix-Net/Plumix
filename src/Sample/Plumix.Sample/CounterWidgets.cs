@@ -118,7 +118,7 @@ internal sealed class MovableBadgeState : State
         return new CounterTapButton(
             label: $"global taps={_taps}",
             onTap: () => SetState(() => _taps++),
-            background: Colors.DarkOrange,
+            background: MaterialColors.DeepOrange,
             foreground: Colors.White,
             fontSize: 14,
             padding: new Thickness(10, 8));

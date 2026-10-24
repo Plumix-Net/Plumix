@@ -84,13 +84,14 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                         new Text(
                             "Change window focus or minimize/restore the app to exercise AppLifecycleListener. "
                             + "The animation probe rebuilds only when AnimationStatus changes.",
-                            style: new TextStyle(Color: Colors.DimGray)),
+                            style: new TextStyle(Color: MaterialColors.Black54)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
                             padding: new Thickness(12),
                             child: new Text(
-                                $"Last app state: {_lastLifecycleState?.ToString() ?? "waiting"}\n"
-                                + $"Disposable context available: {_disposableContext.Context is not null}")),
+                                $"Last app state: {(_lastLifecycleState is { } state ? state.Name() : "waiting")}\n"
+                                + "Disposable context available: "
+                                + (_disposableContext.Context is not null ? "true" : "false"))),
                         new DemoStatusTransition(
                             animation: _controller,
                             builder: BuildStatusReadout),
@@ -110,16 +111,17 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
                         new Text(
                             "Resize the window or switch the system theme: WidgetsBindingObserver hears "
                             + "didChangeMetrics and didChangePlatformBrightness from the platform.",
-                            style: new TextStyle(Color: Colors.DimGray)),
+                            style: new TextStyle(Color: MaterialColors.Black54)),
                         new Container(
                             color: new Color(0xFFF4F7FA),
                             padding: new Thickness(12),
                             child: new Text(
                                 $"Metrics changes: {_metricsChanges}\n"
                                 + $"Platform brightness changes: {_brightnessChanges} "
-                                + $"(now {MediaQuery.PlatformBrightnessOf(context)})\n"
+                                + $"(now {MediaQuery.PlatformBrightnessOf(context).Name()})\n"
                                 + $"Memory pressure events: {_memoryPressureEvents}\n"
-                                + $"First frame rasterized: {WidgetsBinding.Instance.FirstFrameRasterized}")),
+                                + "First frame rasterized: "
+                                + (WidgetsBinding.Instance.FirstFrameRasterized ? "true" : "false"))),
                         new Wrap(
                             spacing: 8,
                             runSpacing: 8,
@@ -161,7 +163,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State, WidgetsBindingObs
             color: new Color(0xFFE7F0FA),
             padding: new Thickness(12),
             child: new Text(
-                $"Animation status: {_controller.Status}\nStatusTransitionWidget builds: {_statusBuildCount}"));
+                $"Animation status: {_controller.Status.Name()}\nStatusTransitionWidget builds: {_statusBuildCount}"));
     }
 
     private void QueueMessage()

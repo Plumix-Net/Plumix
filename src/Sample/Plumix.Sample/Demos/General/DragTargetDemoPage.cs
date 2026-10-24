@@ -62,7 +62,7 @@ internal sealed class DragTargetDemoContentState : State
                         style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Long-press the plum to drag it; the immediate stone exercises rejectedData and onLeave.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Wrap(
                         spacing: 16,
                         runSpacing: 16,
@@ -88,7 +88,7 @@ internal sealed class DragTargetDemoContentState : State
                         style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Open the portal, interact with it as one grouped region, then tap elsewhere to dismiss.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     BuildPortalProbe(),
                 ]));
     }

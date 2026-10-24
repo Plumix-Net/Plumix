@@ -62,7 +62,7 @@ public sealed class DialogDemoPage : StatefulWidget
                     new Text("Dialog family", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "Dialog, AlertDialog, SimpleDialog, typed results, intrinsic width, actions overflow, and scrollable choices.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Wrap(
                         spacing: 8,
                         runSpacing: 8,
@@ -188,6 +188,6 @@ public sealed class DialogDemoPage : StatefulWidget
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
+            new TextButton(new Text(label), onPressed);
     }
 }

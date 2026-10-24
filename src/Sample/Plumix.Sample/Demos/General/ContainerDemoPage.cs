@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.Widgets;
 using Plumix.UI;
 
-// Dart parity source (reference): dart_sample/lib/container_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/container_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -48,7 +48,7 @@ internal sealed class ContainerDemoPageState : State
                 new Text("Container alignment + margin", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch alignment and margin to verify Container composition behavior.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -92,7 +92,7 @@ internal sealed class ContainerDemoPageState : State
                     + $"clamp={(_clampConstraints ? "on" : "off")}, shiftX={_shiftX:0}, "
                     + $"clip={(_clipContent ? "antiAlias" : "none")}, "
                     + $"transformAlignment={(_rotateAroundTopLeft ? "topLeft" : "none")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 240,
                     height: 160,

@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -47,9 +48,9 @@ internal sealed class StateStorageDemoPageState : State
                     "Drag past an edge to compare Flutter glow and stretch indicators; the observer readout " +
                     "receives scroll and dimension notifications across sibling subtrees. The readout is also " +
                     "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout; " +
-                    "its status node merges the readout label while optional text stays empty. " +
+                    "its identified status node merges the readout label while optional text stays empty. " +
                     "The list and its rows expose list/listItem roles with an explicit list boundary.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -77,13 +78,9 @@ internal sealed class StateStorageDemoPageState : State
     {
         return new SizedBox(
             width: 160,
-            child: new CounterTapButton(
-                label: label,
-                onTap: onTap,
-                background: new Color(0xFFDCE3ED),
-                foreground: Colors.Black,
-                fontSize: 12,
-                padding: new Thickness(8, 7)));
+            child: new OutlinedButton(
+                onPressed: onTap,
+                child: new Text(label)));
     }
 }
 
@@ -188,20 +185,16 @@ internal sealed class RestorableStorageListState : State
                 color: index % 2 == 0 ? new Color(0xFFF4F7FA) : new Color(0xFFE6EDF5),
                 padding: new Thickness(12, 0),
                 alignment: Alignment.CenterLeft,
-                child: new Text($"Stored row {index + 1}", style: new TextStyle(Color: Colors.Black))));
+                child: new Text($"Stored row {index + 1}")));
     }
 
     private static Widget BuildButton(string label, Action onTap)
     {
         return new SizedBox(
             width: 180,
-            child: new CounterTapButton(
-                label: label,
-                onTap: onTap,
-                background: new Color(0xFF31506F),
-                foreground: Colors.White,
-                fontSize: 12,
-                padding: new Thickness(8, 7)));
+            child: new FilledButton(
+                onPressed: onTap,
+                child: new Text(label)));
     }
 }
 

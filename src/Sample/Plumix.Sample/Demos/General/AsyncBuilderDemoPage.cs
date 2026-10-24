@@ -35,7 +35,7 @@ internal sealed class AsyncBuilderDemoPageState : State
                     new Text(
                         "Restart either source, then complete it with data or an error. Snapshots retain the " +
                         "previous value while a replacement source enters waiting.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     BuildFutureSection(),
                     BuildStreamSection(),
                 ]));
@@ -108,7 +108,7 @@ internal sealed class AsyncBuilderDemoPageState : State
             ? $"error: {snapshot.Error!.Message}"
             : $"data: {snapshot.Data ?? "null"}";
         return new Text(
-            $"state: {snapshot.ConnectionState} · {value}",
+            $"state: {snapshot.ConnectionState.Name()} · {value}",
             style: new TextStyle(
                 Color: new Color(0xFF31506F)));
     }
@@ -121,7 +121,7 @@ internal sealed class AsyncBuilderDemoPageState : State
                 ? $"data: {snapshot.Data}"
                 : "data: null";
         return new Text(
-            $"state: {snapshot.ConnectionState} · {value}",
+            $"state: {snapshot.ConnectionState.Name()} · {value}",
             style: new TextStyle(
                 Color: new Color(0xFF31506F)));
     }

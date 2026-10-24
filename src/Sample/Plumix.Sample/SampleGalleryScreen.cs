@@ -209,11 +209,15 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "AnimatedIcon + AnimatedIcons",
             "complete generated vector catalog + progress/RTL/theme probes",
             () => new AnimatedIconDemoPage()),
+        new(
+            SampleRoutes.ActionButtons,
+            "Material action buttons",
+            "back/close/drawer/end-drawer + ActionIconTheme",
+            () => new ActionButtonsDemoPage()),
         new(SampleRoutes.MaterialButtons, "Material buttons", "TextButton + ElevatedButton + OutlinedButton + FilledButton", () => new MaterialButtonsDemoPage()),
         new(SampleRoutes.Tabs, "TabBar + TabBarView", "controller + indicator + scrollable tabs + swipe pages", () => new TabsDemoPage()),
         new(SampleRoutes.InkResponse, "InkResponse + InkWell", "circle/rectangle ink + gestures + overlay states", () => new InkResponseDemoPage()),
         new(SampleRoutes.DatePicker, "Date/time picker family", "day/year/time/range selection + input modes + M2/M3 themes", () => new DatePickerDemoPage()),
-        new(SampleRoutes.ActionButtons, "Material action buttons", "back/close/drawer/end-drawer + ActionIconTheme", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
         new(
             SampleRoutes.ScaffoldSlots,
@@ -520,6 +524,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Custom element",
             "hand-written Widget + Element pair",
             () => new CustomElementDemoPage()),
+        new(
+            SampleRoutes.EnsureVisible,
+            "Ensure visible",
+            "nested reveal + alignment policies",
+            () => new EnsureVisibleDemoPage()),
         new(SampleRoutes.PageView, "PageView.Builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
         new(
             SampleRoutes.ListWheelScrollView,
@@ -531,11 +540,6 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Scroll physics",
             "bouncing overscroll + spring back vs clamping",
             () => new ScrollPhysicsDemoPage()),
-        new(
-            SampleRoutes.EnsureVisible,
-            "Ensure visible",
-            "nested reveal + alignment policies",
-            () => new EnsureVisibleDemoPage()),
         new(
             SampleRoutes.AnimatedList,
             "AnimatedList + SliverAnimatedList",
@@ -804,20 +808,20 @@ internal sealed class SampleGalleryScreen : StatelessWidget
                     initialRouteName: SampleRoutes.Menu)));
     }
 
-    private static Route? BuildRoute(RouteSettings settings)
+    private static Route BuildRoute(RouteSettings settings)
     {
-        if (settings.Name == SampleRoutes.Menu)
+        RouteData routeData = RouteDataFromSettings(settings);
+
+        if (routeData.Name == SampleRoutes.Menu)
         {
-            return new BuilderPageRoute(
+            return new MaterialPageRoute(
                 builder: _ => new SampleMenuPage(DemoTabs),
                 settings: settings);
         }
 
-        if (settings.Name == SampleRoutes.NavigatorDetails)
+        if (routeData.Name == SampleRoutes.NavigatorDetails)
         {
-            var routeData = settings.Arguments as RouteData
-                ?? new RouteData(SampleRoutes.NavigatorDetails, arguments: settings.Arguments);
-            return new BuilderPageRoute(
+            return new MaterialPageRoute(
                 builder: _ => new SampleDemoPage(
                     title: "Navigator details",
                     subtitle: "RouteData query/arguments + push/pop operations",
@@ -825,14 +829,26 @@ internal sealed class SampleGalleryScreen : StatelessWidget
                 settings: settings);
         }
 
-        if (settings.Name != null && DemoPageByRoute.TryGetValue(settings.Name, out var page))
+        if (DemoPageByRoute.TryGetValue(routeData.Name, out var page))
         {
-            return new BuilderPageRoute(
+            return new MaterialPageRoute(
                 builder: _ => new SampleDemoPage(page, page.Builder()),
                 settings: settings);
         }
 
-        return null;
+        return new MaterialPageRoute(
+            builder: _ => new SampleUnknownRoutePage(settings.Name ?? "(null)"),
+            settings: settings);
+    }
+
+    private static RouteData RouteDataFromSettings(RouteSettings settings)
+    {
+        if (settings.Arguments is RouteData routeData)
+        {
+            return RouteData.FromLocation(settings.Name ?? routeData.Name, arguments: routeData.Arguments);
+        }
+
+        return RouteData.FromLocation(settings.Name ?? SampleRoutes.Menu, arguments: settings.Arguments);
     }
 }
 
@@ -963,5 +979,25 @@ internal sealed class SampleDemoPage : StatelessWidget
                                 padding: new Thickness(12),
                                 child: _child)),
                     ])));
+    }
+}
+
+internal sealed class SampleUnknownRoutePage : StatelessWidget
+{
+    private readonly string _routeName;
+
+    public SampleUnknownRoutePage(string routeName)
+    {
+        _routeName = routeName;
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new Container(
+            color: Colors.White,
+            alignment: Alignment.Center,
+            child: new Text(
+                $"Unknown route: {_routeName}",
+                style: new TextStyle(FontSize: 16, Color: Colors.Black)));
     }
 }

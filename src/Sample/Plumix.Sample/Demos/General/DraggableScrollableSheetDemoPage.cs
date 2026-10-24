@@ -44,7 +44,7 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
                     new Text(
                         "Drag the sheet to resize it, keep dragging to scroll its list, and release to snap. "
                         + "The controller reports and drives the extent; the actuator resets it.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:

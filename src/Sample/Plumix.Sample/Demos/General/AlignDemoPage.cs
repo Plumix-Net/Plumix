@@ -132,7 +132,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("AnimationStyle", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch styles, then swap the card to compare forward and reverse timing and curves.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -177,7 +177,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("AnimatedAlign + AnimatedPadding", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move the card and change its inset; both values transition implicitly with easeInOut.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -236,7 +236,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("AnimatedOpacity + AnimatedSlide", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Fade and move the same child by a size-relative offset; hit testing follows the slide.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -280,7 +280,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("AnimatedScale + AnimatedRotation", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Scale and rotate around a bottom-right pivot; transform filtering follows the animated child.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -332,7 +332,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Drive explicit scale and turn animations from one controller; filtering is active only in motion.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 BuildButton(
                     _explicitTransitionsForward ? "Reverse transitions" : "Forward transitions",
                     ToggleExplicitTransitions,
@@ -364,7 +364,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("DecoratedBoxTransition", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Interpolate fill, border width/color, and radius through DecorationTween.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     width: 220,
                     height: 100,
@@ -383,7 +383,7 @@ internal sealed class AlignDemoPageState : State
                 new Text("SlideTransition + SizeTransition", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move in reading direction and reveal clipped size from the bottom-right alignment.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -447,7 +447,7 @@ internal sealed class AlignDemoPageState : State
                     style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The same explicit controller drives Stack insets and a Rect relative to a declared box size.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     width: 240,
                     height: 130,
@@ -484,7 +484,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Animate alignment geometry and inherited text style from the same explicit controller.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 12,
                     children:
@@ -519,7 +519,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Animate physical and logical Stack insets; switching direction resolves start/end immediately.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -586,7 +586,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Animate inherited typography and physical surface radius, elevation, fill, and shadow.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -728,7 +728,7 @@ internal sealed class AlignDemoPageState : State
                     style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Animate fractional layout and a sliver paint layer while preserving their child geometry.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -791,7 +791,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "The notifier rebuilds only its builder; the tween owns and retargets its animation.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -859,7 +859,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "The generic listenable and animation aliases share listener lifecycle and stable-child reuse.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -922,7 +922,7 @@ internal sealed class AlignDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Enter/exit builders stay nested while a reusable animatable loops, reverses, and pauses.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

@@ -4,7 +4,8 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/list_view_separated_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/list_view_separated_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -20,7 +21,7 @@ public sealed class ListViewSeparatedDemoPage : StatelessWidget
                 new Text("ListView.Separated", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Uses separate builders for rows and separators.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Expanded(
                     child: ListView.Separated(
                         itemCount: 30,

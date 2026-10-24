@@ -218,7 +218,7 @@ internal sealed class SearchDemoPageState : State
         {
             suggestions.Add(new Padding(
                 new Thickness(16),
-                new Text($"No results for {query}", style: new TextStyle(FontSize: 13, Color: Colors.DimGray))));
+                new Text($"No results for {query}", style: new TextStyle(FontSize: 13, Color: MaterialColors.Grey))));
         }
 
         return suggestions;
@@ -226,7 +226,7 @@ internal sealed class SearchDemoPageState : State
 
     private static Widget ControlButton(string label, Action action)
     {
-        return new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), action);
+        return new TextButton(new Text(label), action);
     }
 
     private static string FormatEmpty(string value)

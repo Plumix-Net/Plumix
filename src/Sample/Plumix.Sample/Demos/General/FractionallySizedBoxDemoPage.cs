@@ -4,7 +4,8 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/fractionally_sized_box_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/fractionally_sized_box_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -32,7 +33,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                 new Text("FractionallySizedBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Configure width/height factors and alignment; null factor means pass-through on that axis.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -59,7 +60,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"widthFactor={FormatFactor(_widthFactor)}, heightFactor={FormatFactor(_heightFactor)}, alignment={AlignmentLabel(_alignment)}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -114,7 +115,7 @@ internal sealed class FractionallySizedBoxDemoPageState : State
 
     private static string FormatFactor(double? value)
     {
-        return value.HasValue ? value.Value.ToString("0.##") : "pass";
+        return value.HasValue ? value.Value.ToString("0.00") : "pass";
     }
 
     private static string AlignmentLabel(Alignment alignment)

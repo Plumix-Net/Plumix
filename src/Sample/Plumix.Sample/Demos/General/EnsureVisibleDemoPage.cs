@@ -46,7 +46,7 @@ internal sealed class EnsureVisibleDemoPageState : State
                 new Text("Scrollable.EnsureVisible", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The inner list is nested in an outer scroller, so a reveal walks both viewports.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Row(
                     spacing: 8,
                     children:
@@ -62,7 +62,7 @@ internal sealed class EnsureVisibleDemoPageState : State
                             child: new CounterTapButton(
                                 label: PolicyLabel,
                                 onTap: CyclePolicy,
-                                background: Colors.SlateGray,
+                                background: MaterialColors.BlueGrey,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                     ]),
@@ -74,14 +74,14 @@ internal sealed class EnsureVisibleDemoPageState : State
                             child: new CounterTapButton(
                                 label: "Reveal row 8",
                                 onTap: () => Reveal(8),
-                                background: Colors.SeaGreen,
+                                background: MaterialColors.Green,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Reveal row 30",
                                 onTap: () => Reveal(30),
-                                background: Colors.DarkOrange,
+                                background: MaterialColors.Orange,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                     ]),

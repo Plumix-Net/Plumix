@@ -147,10 +147,15 @@ class _BlocCounterActionButtons extends StatelessWidget {
             ),
           ],
         ),
-        BlocCounterDemoPage.buildActionButton(
-          label: 'Reset',
-          background: const Color(0xFFFFEBEE),
-          onPressed: () => bloc.add(const ResetCounterEvent()),
+        // A Row gives the Expanded button a bounded main axis inside this Column.
+        Row(
+          children: <Widget>[
+            BlocCounterDemoPage.buildActionButton(
+              label: 'Reset',
+              background: const Color(0xFFFFEBEE),
+              onPressed: () => bloc.add(const ResetCounterEvent()),
+            ),
+          ],
         ),
       ],
     );

@@ -156,10 +156,14 @@ public sealed class MaterialThemeDataTests
     }
 
     [Fact]
-    public void VisualDensity_ToString_UsesDartsShortForm()
+    public void VisualDensity_ToString_StartsWithTheIdentityLikeDart()
     {
-        Assert.Equal("VisualDensity(h: 0.0, v: 0.0)", VisualDensity.Standard.ToString());
-        Assert.Equal("VisualDensity(h: -1.0, v: -1.0)", VisualDensity.Comfortable.ToString());
+        Assert.Equal(
+            "VisualDensity#00000(h: 0.0, v: 0.0)",
+            FrameworkDartTester.IgnoringHashCodes(VisualDensity.Standard.ToString()));
+        Assert.Equal(
+            "VisualDensity#00000(h: -1.0, v: -1.0)",
+            FrameworkDartTester.IgnoringHashCodes(VisualDensity.Comfortable.ToString()));
     }
 
     // ---- Platform-derived ThemeData defaults --------------------------------------------

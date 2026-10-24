@@ -101,7 +101,7 @@ internal sealed class BarControlsDemoPageState : State
                             body: new Center(
                                 child: new Text(
                                     "The FAB and notch share Scaffold geometry",
-                                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray))),
+                                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey))),
                             floatingActionButton: new FloatingActionButton(
                                 child: new Icon(Icons.Add),
                                 onPressed: () => SetState(() => _actionCount += 1)),
@@ -132,7 +132,7 @@ internal sealed class BarControlsDemoPageState : State
                 foregroundColor: Colors.Black,
                 backgroundColor: new Color(0xFFE9F0FF),
                 padding: new Thickness(8, 6),
-                minimumSize: new Size(64, 36),
+                minimumSize: new Size(0, 36),
                 shape: new RoundedRectangleBorder(
                     borderRadius: BorderRadius.Circular(8)))));
 }

@@ -40,7 +40,7 @@ internal sealed class DismissibleSizeChangedLayoutDemoPageState : State
                 new Text(
                     "Swipe rows in either direction. The resize probe reports notifications only after its " +
                     "established layout size changes.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

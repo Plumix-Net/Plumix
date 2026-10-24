@@ -143,9 +143,9 @@ public readonly record struct VisualDensity
         };
     }
 
-    /// <summary>Dart's `toStringShort`.</summary>
+    /// <summary>Dart's `toString`: `toStringShort()` (the identity) followed by the densities.</summary>
     public override string ToString() =>
-        $"VisualDensity(h: {DoubleProperty.FormatDouble(Horizontal)}, " +
+        $"{Diagnostics.DescribeIdentity(this)}(h: {DoubleProperty.FormatDouble(Horizontal)}, " +
         $"v: {DoubleProperty.FormatDouble(Vertical)})";
 }
 

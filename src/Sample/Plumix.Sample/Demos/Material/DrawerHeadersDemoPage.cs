@@ -40,7 +40,7 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                             new TextButton(
                                 child: new Text(_alternateDecoration ? "Decoration B" : "Decoration A"),
                                 onPressed: () => SetState(() => _alternateDecoration = !_alternateDecoration)),
-                            new Text("details=$_detailsPressed", style: new TextStyle(Color: Colors.Black)),
+                            new Text($"details={_detailsPressed}", style: new TextStyle(Color: Colors.Black)),
                         ]),
                     new Expanded(
                         child: new Row(

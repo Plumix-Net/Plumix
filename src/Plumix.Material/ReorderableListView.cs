@@ -474,14 +474,17 @@ public sealed class ReorderableListView : StatefulWidget
             }
             else if (widget.ScrollDirection == Axis.Horizontal)
             {
-                startPadding = new Thickness(padding.Left, padding.Top, 0, padding.Bottom);
-                endPadding = new Thickness(0, padding.Top, padding.Right, padding.Bottom);
+                // Dart: padding.copyWith(left: 0) / padding.copyWith(right: 0).
+                startPadding = new Thickness(0, padding.Top, padding.Right, padding.Bottom);
+                endPadding = new Thickness(padding.Left, padding.Top, 0, padding.Bottom);
                 listPadding = new Thickness(start ?? padding.Left, padding.Top, end ?? padding.Right, padding.Bottom);
             }
             else
             {
-                startPadding = new Thickness(padding.Left, padding.Top, padding.Right, 0);
-                endPadding = new Thickness(padding.Left, 0, padding.Right, padding.Bottom);
+                // Dart: padding.copyWith(top: 0) / padding.copyWith(bottom: 0); the header takes the
+                // "end" padding below, which keeps the top inset.
+                startPadding = new Thickness(padding.Left, 0, padding.Right, padding.Bottom);
+                endPadding = new Thickness(padding.Left, padding.Top, padding.Right, 0);
                 listPadding = new Thickness(padding.Left, start ?? padding.Top, padding.Right, end ?? padding.Bottom);
             }
 

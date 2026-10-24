@@ -75,7 +75,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             "Circle/uncontained versus rectangle/contained ink, selectable ripple/sparkle/splash/"
                             + "no-splash factories, overlapping rapid-tap fades, timed hover/focus, and overlay "
                             + "states.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Row(
                             mainAxisAlignment: MainAxisAlignment.SpaceAround,
                             crossAxisAlignment: CrossAxisAlignment.Center,
@@ -93,7 +93,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                             $"Interaction: {_interaction}",
                             style: new TextStyle(
                                 FontSize: 13,
-                                Color: Colors.DimGray)),
+                                Color: MaterialColors.Black54)),
                         new OutlinedButton(
                             onPressed: () => SetState(() => _splashMode = (_splashMode + 1) % 4),
                             child: new Text($"Splash factory: {SplashName}")),
@@ -101,7 +101,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                         {
                             new Text(
                                 "InkSparkle: tap near a corner to see the white sparkles and turbulence.",
-                                style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                             new OutlinedButton(
                                 onPressed: () => SetState(() => _constantSparkleSeed = !_constantSparkleSeed),
                                 child: new Text(_constantSparkleSeed

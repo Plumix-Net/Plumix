@@ -23,7 +23,7 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                 new Text(
                     "Drag past either end: bouncing physics rubber-band and spring back, "
                     + "clamping physics show a glow at the edge; hold, move sideways, then release.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Text("Single child: horizontal strip with directional padding", style: new TextStyle(FontSize: 14)),
                 new SizedBox(
                     height: 64,

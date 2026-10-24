@@ -27,7 +27,7 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
             {
                 Platform = _applePlatform ? TargetPlatform.IOS : TargetPlatform.Windows,
                 UseMaterial3 = _useMaterial3,
-                ColorScheme = Theme.Of(context).ColorScheme.CopyWith(onSurfaceVariant: Colors.Teal),
+                ColorScheme = Theme.Of(context).ColorScheme.CopyWith(onSurfaceVariant: MaterialColors.Teal),
             };
             var actionIconTheme = _customIcons
                 ? new ActionIconThemeData(
@@ -45,7 +45,7 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                     new Text("Material action buttons", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Back/close/drawer/end-drawer icons, themes, callbacks, tooltips, and style precedence.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -79,15 +79,15 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                                     new EndDrawerButtonIcon(),
                                 ]))),
                     new Text(
-                        "back=$_backCount, close=$_closeCount, drawer=$_drawerCount, end=$_endDrawerCount",
+                        $"back={_backCount}, close={_closeCount}, drawer={_drawerCount}, end={_endDrawerCount}",
                         style: new TextStyle(Color: Colors.Black)),
-                    new Text("style.iconColor overrides color", style: new TextStyle(Color: Colors.DimGray)),
+                    new Text("style.iconColor overrides color", style: new TextStyle(Color: MaterialColors.Black54)),
                     new Theme(
                         data: localTheme,
                         child: new BackButton(
-                            color: Colors.Red,
+                            color: MaterialColors.Red,
                             style: new ButtonStyle(
-                                IconColor: WidgetStateProperty<Color?>.All(Colors.Purple)),
+                                IconColor: WidgetStateProperty<Color?>.All(MaterialColors.Purple)),
                             onPressed: () => SetState(() => _backCount++))),
                 ]);
         }

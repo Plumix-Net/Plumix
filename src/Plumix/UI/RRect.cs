@@ -166,21 +166,12 @@ public readonly record struct RRect
 
     internal RRect NormalizeForPaint() => new(_geometry.NormalizeForPaint());
 
-    /// Builds the closed outline of this rounded rectangle, corner arcs included.
+    /// Builds the closed outline of this rounded rectangle, the way Dart code writes
+    /// `Path()..addRRect(rrect)`.
     public Path ToPath()
     {
-        RRect scaled = new(_geometry.NormalizeForPaint());
         var path = new Path();
-        path.MoveTo(scaled.Left + scaled.TopLeft.X, scaled.Top);
-        path.LineTo(scaled.Right - scaled.TopRight.X, scaled.Top);
-        AddCorner(path, scaled.TopRightCorner(), -Math.PI / 2.0);
-        path.LineTo(scaled.Right, scaled.Bottom - scaled.BottomRight.Y);
-        AddCorner(path, scaled.BottomRightCorner(), 0.0);
-        path.LineTo(scaled.Left + scaled.BottomLeft.X, scaled.Bottom);
-        AddCorner(path, scaled.BottomLeftCorner(), Math.PI / 2.0);
-        path.LineTo(scaled.Left, scaled.Top + scaled.TopLeft.Y);
-        AddCorner(path, scaled.TopLeftCorner(), Math.PI);
-        path.Close();
+        path.AddRRect(this);
         return path;
     }
 
@@ -198,14 +189,5 @@ public readonly record struct RRect
     internal Rect BottomLeftCorner() =>
         new(Left, Bottom - (BottomLeft.Y * 2.0), BottomLeft.X * 2.0, BottomLeft.Y * 2.0);
 
-    private static void AddCorner(Path path, Rect corner, double startAngle)
-    {
-        if (corner.Width <= 0.0 || corner.Height <= 0.0)
-        {
-            return;
-        }
-
-        path.ArcTo(corner, startAngle, Math.PI / 2.0, forceMoveTo: false);
-    }
 
 }

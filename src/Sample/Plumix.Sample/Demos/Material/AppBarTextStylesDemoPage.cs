@@ -5,7 +5,8 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/app_bar_text_styles_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -55,7 +56,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                 new Text("AppBar title/toolbar text styles", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for titleTextStyle and toolbarTextStyle precedence: widget override > appBarTheme > foreground fallback.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -93,7 +94,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                     ]),
                 new Text(
                     $"fg={ColorLabel(_foregroundColor)}, themeTitle={OnOff(_themeTitleStyleEnabled)}, themeToolbar={OnOff(_themeToolbarStyleEnabled)}, widgetTitle={OnOff(_widgetTitleOverrideEnabled)}, widgetToolbar={OnOff(_widgetToolbarOverrideEnabled)}, expectedTitle={DescribeStyle(ResolveExpectedTitleStyle(), _foregroundColor)}, expectedActions={DescribeStyle(ResolveExpectedToolbarStyle(), _foregroundColor)}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 320,
                     color: new Color(0xFFE7EDF6),
@@ -107,13 +108,13 @@ internal sealed class AppBarTextStylesDemoPageState : State
                                 "Themed app bar preview",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildThemedPreview(),
                             new Text(
                                 "Default app bar reference (no text style overrides)",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);

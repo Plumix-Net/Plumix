@@ -70,7 +70,7 @@ internal sealed class VisualDensityDemoPageState : State
                             width: 180,
                             background: new Color(0xFFE9F0FF)),
                         BuildControlButton(
-                            label: $"platform: {platform}",
+                            label: $"platform: {platform.Name()}",
                             onTap: () => SetState(() =>
                                 _platformIndex = (_platformIndex + 1) % Platforms.Count),
                             width: 180,
@@ -93,10 +93,10 @@ internal sealed class VisualDensityDemoPageState : State
     private Widget BuildPlatformDefaults(TargetPlatform platform, ThemeData theme)
     {
         return BuildCard(
-            "ThemeData(platform: " + platform + ") defaults",
+            "ThemeData(platform: " + platform.Name() + ") defaults",
             [
                 BuildFactRow("visualDensity", theme.VisualDensity.ToString()),
-                BuildFactRow("materialTapTargetSize", theme.MaterialTapTargetSize.ToString()),
+                BuildFactRow("materialTapTargetSize", theme.MaterialTapTargetSize.Name()),
                 BuildFactRow(
                     "VisualDensity.DefaultDensityForPlatform",
                     VisualDensity.DefaultDensityForPlatform(platform).ToString()),
@@ -192,7 +192,7 @@ internal sealed class VisualDensityDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }

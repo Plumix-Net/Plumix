@@ -6,7 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/grid_view_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/grid_view_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -23,7 +23,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                 new Text(
                     "GridView uses SliverGrid with fixed-cross-axis delegate. "
                     + "The sliver strip below is right-to-left, so its tiles start at the right edge.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 60,

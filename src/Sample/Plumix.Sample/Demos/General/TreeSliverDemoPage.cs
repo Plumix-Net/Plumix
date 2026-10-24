@@ -66,7 +66,7 @@ internal sealed class TreeSliverDemoPageState : State
                 new Text(
                     "Tap an arrow to expand or collapse a node. Children slide out from under their "
                     + "parent while rows below it move with them.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -98,7 +98,7 @@ internal sealed class TreeSliverDemoPageState : State
                     ]),
                 new Text(
                     $"last toggled={_lastToggled}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Center(child: new Container(
                     width: 360,
                     height: 280,

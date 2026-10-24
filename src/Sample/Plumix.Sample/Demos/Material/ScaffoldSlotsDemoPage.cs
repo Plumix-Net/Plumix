@@ -198,7 +198,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                         "The body reports the padding _BodyBuilder restores for the slots it extends behind.",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF30404D))),
                     new Text(
-                        $"body MediaQuery padding: top={padding.Top:0.#}, bottom={padding.Bottom:0.#}",
+                        $"body MediaQuery padding: top={padding.Top:0.0}, bottom={padding.Bottom:0.0}",
                         style: new TextStyle(FontSize: 12, Color: new Color(0xFF0D47A1))),
                     new Row(
                         spacing: 8,
@@ -255,7 +255,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF0D47A1),
                 padding: new Thickness(12, 8),
-                minimumSize: new Size(64, 36),
+                minimumSize: new Size(0, 36),
                 shape: new RoundedRectangleBorder(
                     borderRadius: BorderRadius.Circular(8))));
     }
@@ -275,7 +275,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                     foregroundColor: Colors.Black,
                     backgroundColor: background,
                     padding: new Thickness(10, 8),
-                    minimumSize: new Size(64, 36),
+                    minimumSize: new Size(0, 36),
                     shape: new RoundedRectangleBorder(
                         borderRadius: BorderRadius.Circular(8)))));
     }

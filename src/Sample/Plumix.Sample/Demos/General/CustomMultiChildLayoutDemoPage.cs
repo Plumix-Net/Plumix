@@ -35,7 +35,7 @@ internal sealed class CustomMultiChildLayoutDemoPageState : State
                 new Text(
                     "LayoutId slots drive dependent child constraints; NavigationToolbar applies the same " +
                     "delegate pipeline to leading, middle, and trailing content.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

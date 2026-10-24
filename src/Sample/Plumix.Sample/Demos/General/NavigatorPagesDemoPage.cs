@@ -31,7 +31,7 @@ internal sealed class NavigatorPagesDemoPageState : State
                 new Text(
                     "The page list owns the history: pushing appends a page, popping asks OnDidRemovePage "
                     + "to drop it.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Text(
                     $"pages: {string.Join(", ", _pages.Select(page => page.Name))}",
                     style: new TextStyle(
@@ -128,10 +128,10 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                                 FontSize: 18,
                                 Color: Colors.Black)),
                         new Text(
-                            $"canPop: {ModalRoute.CanPopOf(context)}",
+                            $"canPop: {(ModalRoute.CanPopOf(context) == true ? "true" : "false")}",
                             style: new TextStyle(
                                 FontSize: 12,
-                                Color: Colors.DimGray)),
+                                Color: MaterialColors.Grey)),
                         new CounterTapButton(
                             label: "Pop this page",
                             // Qualified: `Route.Navigator` shadows the widget type inside a Route.

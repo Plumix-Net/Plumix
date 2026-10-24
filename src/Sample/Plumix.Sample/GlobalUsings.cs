@@ -7,3 +7,4 @@
 global using Color = Plumix.UI.Color;
 global using Colors = Plumix.Sample.CssColors;
 global using MaterialColors = Plumix.Material.Colors;
+global using Plumix.Sample;

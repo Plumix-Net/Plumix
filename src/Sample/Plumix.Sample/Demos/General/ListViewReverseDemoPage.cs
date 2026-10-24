@@ -5,7 +5,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/list_view_reverse_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/list_view_reverse_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -31,8 +31,8 @@ internal sealed class ListViewReverseDemoPageState : State
             [
                 new Text("ListView reverse=true", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
-                    "Direction is inverted; drag/pointer behavior follows Plumix.Sample axisDirection mapping.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    "Direction is inverted; drag/pointer behavior follows Flutter axisDirection mapping.",
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -41,7 +41,7 @@ internal sealed class ListViewReverseDemoPageState : State
                             child: new CounterTapButton(
                                 label: "Push message",
                                 onTap: () => SetState(() => _messages.Add(_nextMessageId++)),
-                                background: Colors.SteelBlue,
+                                background: MaterialColors.Blue,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                         new Expanded(
@@ -50,7 +50,7 @@ internal sealed class ListViewReverseDemoPageState : State
                                 onTap: _messages.Count == 0
                                     ? null
                                     : () => SetState(() => _messages.RemoveAt(_messages.Count - 1)),
-                                background: Colors.IndianRed,
+                                background: MaterialColors.Red,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                     ]),

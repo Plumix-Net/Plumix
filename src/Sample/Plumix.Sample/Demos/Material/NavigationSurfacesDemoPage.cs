@@ -99,7 +99,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                     new DefaultTextStyle(
                         style: pageTheme.TextTheme.TitleMedium,
                         child: new Text(
-                            $"titleMedium · {pageTheme.TextTheme.TitleMedium.FontSize:0}px")),
+                            $"titleMedium · {pageTheme.TextTheme.TitleMedium?.FontSize?.ToString("0") ?? "null"}px")),
                     new Container(
                         decoration: new BoxDecoration(
                             Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(new Color(0x33000000))),
@@ -163,7 +163,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
         });
     }
 
-    private static string Format(object value) => value.ToString()!.ToLowerInvariant();
+    private static string Format(Enum value) => value.Name();
 
     private static Widget PaletteChip(string label, Color color, Color onColor)
     {
@@ -183,6 +183,6 @@ internal sealed class NavigationSurfacesDemoPageState : State
             style: TextButton.StyleFrom(
                 foregroundColor: new Color(0xFF21005D),
                 backgroundColor: new Color(0xFFEADDFF),
-                minimumSize: new Size(64, 36)));
+                minimumSize: new Size(0, 36)));
     }
 }

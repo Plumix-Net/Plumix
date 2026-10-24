@@ -2,6 +2,7 @@ using System;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
+using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -111,13 +112,14 @@ internal sealed class CupertinoPageScaffoldDemoPageState : State
 
     private static Widget BuildAction(string label, Action onTap, Color background)
     {
-        return new CounterTapButton(
-            label: label,
-            onTap: onTap,
-            background: background,
-            foreground: Colors.Black,
-            fontSize: 12.0,
-            padding: new Thickness(10.0, 8.0));
+        return new TextButton(
+            onPressed: onTap,
+            style: TextButton.StyleFrom(
+                backgroundColor: background,
+                foregroundColor: MaterialColors.Black,
+                minimumSize: new Size(0, 36),
+                padding: new Thickness(10, 8)),
+            child: new Text(label, style: new TextStyle(FontSize: 12)));
     }
 
     private sealed class DemoNavigationBar : StatelessWidget, IObstructingPreferredSizeWidget

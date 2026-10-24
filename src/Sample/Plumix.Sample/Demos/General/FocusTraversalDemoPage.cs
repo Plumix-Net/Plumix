@@ -62,11 +62,12 @@ internal sealed class FocusTraversalDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("FocusTraversalGroup + policies", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("FocusTraversalGroup + policies",
+                    style: new TextStyle(FontSize: 20, Color: MaterialColors.Black)),
                 new Text(
                     "Tab and Shift+Tab walk the sorted order; the arrow keys use the geometric "
                     + "directional policy. Tile E is excluded from traversal but stays focusable.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Row(
                     spacing: 8,
                     children:
@@ -75,22 +76,22 @@ internal sealed class FocusTraversalDemoPageState : State
                             child: new CounterTapButton(
                                 label: PolicyLabel,
                                 onTap: CyclePolicy,
-                                background: Colors.SteelBlue,
-                                foreground: Colors.White,
+                                background: MaterialColors.Blue,
+                                foreground: MaterialColors.White,
                                 fontSize: 13)),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Next",
                                 onTap: () => _ = FocusManager.Instance.PrimaryFocus?.NextFocus(),
-                                background: Colors.SeaGreen,
-                                foreground: Colors.White,
+                                background: MaterialColors.Green,
+                                foreground: MaterialColors.White,
                                 fontSize: 13)),
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Previous",
                                 onTap: () => _ = FocusManager.Instance.PrimaryFocus?.PreviousFocus(),
-                                background: Colors.SlateGray,
-                                foreground: Colors.White,
+                                background: MaterialColors.BlueGrey,
+                                foreground: MaterialColors.White,
                                 fontSize: 13)),
                     ]),
                 new FocusTraversalGroup(
@@ -103,7 +104,7 @@ internal sealed class FocusTraversalDemoPageState : State
                             new Row(spacing: 8, children: [Tile(0), Tile(1), Tile(2)]),
                             new Row(spacing: 8, children: [Tile(3), Tile(4), Tile(5)]),
                         ])),
-                new Text($"Focused tile: {_focused}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text($"Focused tile: {_focused}", style: new TextStyle(FontSize: 14, Color: MaterialColors.Black)),
             ]);
     }
 
@@ -146,13 +147,13 @@ internal sealed class FocusTraversalDemoPageState : State
                 child: new GestureDetector(
                     onTap: () => node.RequestFocus(),
                     child: new Container(
-                        color: node.HasPrimaryFocus ? Colors.SteelBlue : Colors.Gainsboro,
+                        color: node.HasPrimaryFocus ? MaterialColors.Blue : MaterialColors.Grey.Shade300,
                         padding: new Thickness(14, 18),
                         child: new Text(
                             label,
                             style: new TextStyle(
                                 FontSize: 16,
-                                Color: node.HasPrimaryFocus ? Colors.White : Colors.Black),
+                                Color: node.HasPrimaryFocus ? MaterialColors.White : MaterialColors.Black),
                             textAlign: TextAlign.Center)))));
 
         // Tile E stays focusable by tap or by the arrow keys, but Tab skips it.

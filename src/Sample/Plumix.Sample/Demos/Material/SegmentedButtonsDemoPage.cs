@@ -42,17 +42,17 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                     ? new ToggleButtonsThemeData(
                         Color: Colors.DarkSlateBlue,
                         SelectedColor: Colors.White,
-                        FillColor: Colors.Teal,
-                        BorderColor: Colors.Teal,
-                        SelectedBorderColor: Colors.Teal,
+                        FillColor: MaterialColors.Teal,
+                        BorderColor: MaterialColors.Teal,
+                        SelectedBorderColor: MaterialColors.Teal,
                         BorderRadius: BorderRadius.Circular(12))
                     : new ToggleButtonsThemeData(),
                 SegmentedButtonTheme = _useThemeOverrides
                     ? new SegmentedButtonThemeData(
                         Style: SegmentedButton<int>.StyleFrom(
-                            foregroundColor: Colors.DarkSlateBlue,
+                            foregroundColor: MaterialColors.BlueGrey,
                             selectedForegroundColor: Colors.White,
-                            selectedBackgroundColor: Colors.Teal,
+                            selectedBackgroundColor: MaterialColors.Teal,
                             side: new BorderSide(Colors.Teal),
                             shape: new StadiumBorder()),
                         SelectedIcon: new Icon(Icons.Star))
@@ -69,7 +69,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                         new Text("ToggleButtons + SegmentedButton", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "Legacy bool-list toggles and Material 3 value-set segments with selection, orientation, themes, and widget styles.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Row(
                             spacing: 8,
                             children:

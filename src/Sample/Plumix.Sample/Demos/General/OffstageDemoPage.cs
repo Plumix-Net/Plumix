@@ -5,7 +5,7 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/offstage_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/offstage_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -37,7 +37,7 @@ internal sealed class OffstageDemoPageState : State
                             Color: Colors.Black)),
                     new Text(
                         "Compare replacement, maintained layout space, and layout-without-paint behavior.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -51,11 +51,11 @@ internal sealed class OffstageDemoPageState : State
                         ]),
                     new Text(
                         $"state: visible={(_visible ? "true" : "false")}",
-                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                        style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                     new Text(
                         "maintainState=true keeps the indicator mounted; TickerMode pauses its frame callbacks "
                         + "while hidden.",
-                        style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                     new Visibility(
                         visible: _visible,
                         maintainState: true,
@@ -153,7 +153,7 @@ internal sealed class OffstageDemoPageState : State
                 new Text(
                     "When offstage=true, child is laid out but not painted/hit-tested and takes no room in parent "
                     + "layout.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -163,7 +163,7 @@ internal sealed class OffstageDemoPageState : State
                     ]),
                 new Text(
                     $"state: offstage={(_offstage ? "true" : "false")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 260,
                     height: 190,
@@ -176,7 +176,7 @@ internal sealed class OffstageDemoPageState : State
                         [
                             new Text(
                                 "Row layout (middle child disappears from layout when offstage=true)",
-                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                             new Container(
                                 height: 72,
                                 color: Colors.White,
@@ -205,7 +205,7 @@ internal sealed class OffstageDemoPageState : State
                                     ])),
                             new Text(
                                 "Tip: switch state and watch L/R gap change.",
-                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                         ])),
                 ]));
     }

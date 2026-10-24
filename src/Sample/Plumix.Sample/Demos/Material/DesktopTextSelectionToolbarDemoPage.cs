@@ -44,7 +44,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
                 new Text("Material text selection toolbars", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Material and Cupertino mobile, desktop, adaptive, and spell-check toolbars.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

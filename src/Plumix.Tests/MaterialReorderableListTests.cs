@@ -590,10 +590,10 @@ public sealed class MaterialReorderableListTests
         harness.Pump(new Size(200, 120));
 
         List<RenderSliverPadding> paddings = FindDescendants<RenderSliverPadding>(harness.RenderView);
-        Assert.Equal(3, paddings.Count);
-        Assert.Contains(paddings, value => value.Padding == new Thickness(10, 0, 10, 10));
-        Assert.Contains(paddings, value => value.Padding == new Thickness(10, 0, 10, 0));
-        Assert.Contains(paddings, value => value.Padding == new Thickness(10, 10, 10, 0));
+        // Header, list, footer: the header keeps the top inset and the footer the bottom one.
+        Assert.Equal(
+            [new Thickness(10, 10, 10, 0), new Thickness(10, 0, 10, 0), new Thickness(10, 0, 10, 10)],
+            paddings.Select(value => value.Padding));
     }
 
     [Fact]

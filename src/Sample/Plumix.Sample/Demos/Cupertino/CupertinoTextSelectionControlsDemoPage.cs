@@ -45,7 +45,7 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                         ])),
                 new Text(
                     "Selection toolbars use the existing Cupertino mobile and desktop surfaces; "
-                    + "Material TextField and SelectableText now choose these handle controls on Apple platforms.",
+                    + "Material TextField and SelectableText choose these handle controls on Apple platforms.",
                     style: new TextStyle(FontSize: 13.0, Color: new Color(0x8A000000))),
                 new Text(
                     "Toolbar dividers stay one device pixel wide at every display scale.",

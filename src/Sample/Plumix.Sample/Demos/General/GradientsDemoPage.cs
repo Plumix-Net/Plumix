@@ -49,19 +49,20 @@ internal sealed class GradientsDemoPageState : State
                 new Text("Gradients + BoxShadow lerp", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Linear, radial and sweep gradients share stops, tile modes and a rotation transform.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
                     [
                         BuildButton("Rotate -", () => ChangeRotation(-Math.PI / 8), 96, "#FFDCE3ED"),
                         BuildButton("Rotate +", () => ChangeRotation(Math.PI / 8), 96, "#FFDCE3ED"),
-                        BuildButton($"Tile: {CurrentTileMode}", CycleTileMode, 132, "#FFE9F5EC"),
+                        BuildButton($"Tile: {CurrentTileMode.Name()}", CycleTileMode, 132, "#FFE9F5EC"),
                         BuildButton(_blended ? "Blend: B" : "Blend: A", ToggleBlend, 108, "#FFF3E8D8"),
                     ]),
                 new Text(
-                    $"rotation={_rotation:0.00} rad, tileMode={CurrentTileMode}, target={(_blended ? "B" : "A")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    $"rotation={_rotation:0.00} rad, tileMode={CurrentTileMode.Name()}, "
+                        + $"target={(_blended ? "B" : "A")}",
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Row(
                     spacing: 8,
                     children:
@@ -71,7 +72,7 @@ internal sealed class GradientsDemoPageState : State
                     ]),
                 new Text(
                     "Decal leaves transparent gaps; a focal ring starts on a circle instead of a point.",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 12,
                     children:
@@ -82,7 +83,7 @@ internal sealed class GradientsDemoPageState : State
                     ]),
                 new Text(
                     "The card below animates its gradient colors and its shadow list at the same time.",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.Black54)),
                 new Center(
                     child: new AnimatedContainer(
                         duration: TimeSpan.FromMilliseconds(450),
@@ -108,7 +109,7 @@ internal sealed class GradientsDemoPageState : State
                     width: 96,
                     height: 96,
                     child: new DecoratedBox(decoration: new BoxDecoration(Gradient: gradient))),
-                new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                new Text(label, style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
             ]);
     }
 

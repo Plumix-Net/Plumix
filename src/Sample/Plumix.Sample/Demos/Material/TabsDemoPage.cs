@@ -154,9 +154,10 @@ internal sealed class TabsDemoPageState : State
 
     private static Widget ControlButton(string label, Action onPressed) => new TextButton(
         onPressed: onPressed,
-        child: new Text(label, style: new TextStyle(FontSize: 12)),
         style: TextButton.StyleFrom(
-            foregroundColor: new Color(0xFF21005D),
             backgroundColor: new Color(0xFFEADDFF),
-            minimumSize: new Size(64, 36)));
+            foregroundColor: new Color(0xFF21005D),
+            minimumSize: new Size(0, 36),
+            textStyle: new TextStyle(FontSize: 12)),
+        child: new Text(label));
 }

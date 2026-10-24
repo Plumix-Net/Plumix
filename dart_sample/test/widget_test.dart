@@ -5,7 +5,7 @@ void main() {
   testWidgets('smoke test: menu is rendered', (WidgetTester tester) async {
     await tester.pumpWidget(const CounterApp());
 
-    expect(find.text('Flutter.Net widget pages'), findsOneWidget);
+    expect(find.text('Plumix.Sample widget pages'), findsOneWidget);
     expect(find.textContaining('Counter'), findsWidgets);
   });
 }

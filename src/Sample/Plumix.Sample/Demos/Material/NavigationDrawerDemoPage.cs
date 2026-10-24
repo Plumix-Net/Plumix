@@ -48,7 +48,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                         new Text("NavigationDrawer + NavigationDrawerDestination", style: new TextStyle(FontSize: 20)),
                         new Text(
                             "Header/footer slots, custom children, destination indexing, selection, disabled state, and theme precedence.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Row(
                             spacing: 8,
                             children:
@@ -92,7 +92,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                                 "Navigation footer",
                                                 style: new TextStyle(
                                                     FontSize: 12,
-                                                    Color: Colors.DimGray))),
+                                                    Color: MaterialColors.Black54))),
                                         children:
                                         [
                                             new Padding(
@@ -101,7 +101,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                                     "Primary",
                                                     style: new TextStyle(
                                                         FontSize: 12,
-                                                        Color: Colors.DimGray))),
+                                                        Color: MaterialColors.Black54))),
                                             new NavigationDrawerDestination(
                                                 icon: new Icon(Icons.StarOutline),
                                                 selectedIcon: new Icon(Icons.Star),
@@ -123,7 +123,7 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                                                 BorderRadius: BorderRadius.Circular(12)),
                                             child: new Text(
                                                 "The drawer keeps destination indices independent from custom children.",
-                                                style: new TextStyle(Color: Colors.DimGray),
+                                                style: new TextStyle(Color: MaterialColors.Black54),
                                                 textAlign: TextAlign.Center)))
                                 ]))
                     ]));

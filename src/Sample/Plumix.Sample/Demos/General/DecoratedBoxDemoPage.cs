@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/decorated_box_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/decorated_box_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -41,7 +41,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                 new Text("DecoratedBox + Border + Radius", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Adjust border width and corner radius; toggle fill theme, shadow blur style and blend mode.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -74,7 +74,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                     $"radius={_radius:0}, border={_borderWidth:0}, "
                     + $"fill={(_accentFill ? "accent" : "neutral")}, shadow={BlurStyleName(_blurStyle)}, "
                     + $"blend={(_multiply ? "multiply" : "none")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -131,7 +131,7 @@ internal sealed class DecoratedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"fade={_fade:0.00}, invert={(_invert ? "on" : "off")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 220,
                     height: 140,

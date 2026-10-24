@@ -23,7 +23,7 @@ public sealed class CounterScreen : StatelessWidget
                 onTap: model.Increment));
 
         return new Container(
-            color: Colors.Red,
+            color: MaterialColors.White,
             padding: new Thickness(20),
             child: new SingleChildScrollView(
                 child: new Column(
@@ -32,7 +32,8 @@ public sealed class CounterScreen : StatelessWidget
                     children:
                     [
                         new Text("Plumix.Sample Counter", style: new TextStyle(FontSize: 24, Color: Colors.Black)),
-                        new Text($"Count: {model.Count}", style: new TextStyle(FontSize: 18, Color: Colors.Red)),
+                        new Text($"Count: {model.Count}",
+                            style: new TextStyle(FontSize: 18, Color: MaterialColors.Indigo)),
                         new Row(
                             spacing: 12,
                             children:
@@ -41,14 +42,14 @@ public sealed class CounterScreen : StatelessWidget
                                     child: new CounterTapButton(
                                         label: "-",
                                         onTap: model.Decrement,
-                                        background: Colors.LightGray,
+                                        background: MaterialColors.Grey,
                                         foreground: Colors.Black,
                                         fontSize: 20)),
                                 new Expanded(
                                     child: new CounterTapButton(
                                         label: "+",
                                         onTap: model.Increment,
-                                        background: Colors.SkyBlue,
+                                        background: MaterialColors.LightBlue,
                                         foreground: Colors.Black,
                                         fontSize: 20)),
                             ]),
@@ -62,21 +63,21 @@ public sealed class CounterScreen : StatelessWidget
                                     child: new CounterTapButton(
                                         label: "Reverse",
                                         onTap: model.ReverseItems,
-                                        background: Colors.MediumSeaGreen,
+                                        background: MaterialColors.Green,
                                         foreground: Colors.White,
                                         fontSize: 13)),
                                 new Expanded(
                                     child: new CounterTapButton(
                                         label: "Insert Head",
                                         onTap: model.InsertHead,
-                                        background: Colors.SteelBlue,
+                                        background: MaterialColors.Blue,
                                         foreground: Colors.White,
                                         fontSize: 13)),
                                 new Expanded(
                                     child: new CounterTapButton(
                                         label: "Remove Tail",
                                         onTap: model.Items.Count == 0 ? null : model.RemoveTail,
-                                        background: Colors.IndianRed,
+                                        background: MaterialColors.Red,
                                         foreground: Colors.White,
                                         fontSize: 13)),
                             ]),
@@ -95,19 +96,20 @@ public sealed class CounterScreen : StatelessWidget
                                         padding: new Thickness(8),
                                         child: model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
-                                            : new Text("left slot", style: new TextStyle(Color: Colors.Gray)))),
+                                            : new Text("left slot", style: new TextStyle(Color: MaterialColors.Grey)))),
                                 new Expanded(
                                     child: new Container(
                                         color: new Color(0xFFE3F2FD),
                                         padding: new Thickness(8),
                                         child: !model.PlaceGlobalOnLeft
                                             ? new MovableBadge(key: new GlobalObjectKey<MovableBadgeState>(model.GlobalBadgeIdentity))
-                                            : new Text("right slot", style: new TextStyle(Color: Colors.Gray)))),
+                                            : new Text("right slot",
+                                                style: new TextStyle(Color: MaterialColors.Grey)))),
                             ]),
                         new CounterTapButton(
                             label: "Move Global Widget",
                             onTap: model.ToggleGlobalPlacement,
-                            background: Colors.SlateGray,
+                            background: MaterialColors.BlueGrey,
                             foreground: Colors.White,
                             fontSize: 14),
                         new SizedBox(height: 12),

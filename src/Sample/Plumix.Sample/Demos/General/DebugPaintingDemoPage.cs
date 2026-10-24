@@ -33,7 +33,7 @@ internal sealed class DebugPaintingDemoPageState : State
                         Color: Colors.Black)),
                 new Text(
                     "Placeholder uses fallback dimensions only in unbounded space; GridPaper paints over its child.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -97,7 +97,7 @@ internal sealed class DebugPaintingDemoPageState : State
                         "Unbounded fallback: 160 × 120",
                         style: new TextStyle(
                             FontSize: 12,
-                            Color: Colors.DarkSlateGray)),
+                            Color: MaterialColors.BlueGrey)),
                     new Expanded(
                         child: new Align(
                             alignment: Alignment.TopLeft,
@@ -135,7 +135,7 @@ internal sealed class DebugPaintingDemoPageState : State
                 [
                     new Text(
                         _customGrid ? "interval=60, divisions=3, subdivisions=2" : "Flutter defaults",
-                        style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                        style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                     new Expanded(
                         child: new GridPaper(
                             color: _customGrid ? new Color(0x7FFF8A65) : null,

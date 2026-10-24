@@ -36,7 +36,7 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                                         Color: Colors.Black)),
                                 new Text(
                                     "This scrolls away completely before the body starts scrolling.",
-                                    style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                                    style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                             ]))),
             ],
             body: new Builder(bodyContext => new CustomScrollView(
@@ -81,7 +81,7 @@ internal sealed class NestedScrollViewHeaderDelegate(bool innerBoxIsScrolled) : 
                     new Text("NestedScrollView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         innerBoxIsScrolled ? "innerBoxIsScrolled: true" : "innerBoxIsScrolled: false",
-                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                 ]));
     }
 

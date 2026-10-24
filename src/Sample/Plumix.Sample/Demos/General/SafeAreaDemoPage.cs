@@ -21,11 +21,11 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                 new Text(
                     "The rose surface is the simulated system intrusion. The blue child keeps a minimum " +
                     "8 px inset and preserves the 28 px bottom view padding consumed by a keyboard.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 BuildBoxPreview(),
                 new Text(
                     "SliverSafeArea applies the same edge policy in sliver geometry.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Expanded(child: BuildSliverPreview()),
             ]);
     }

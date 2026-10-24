@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// C# parity source: src/Sample/Plumix.Sample/Demos/General/NavigatorPagesDemoPage.cs
 class NavigatorPagesDemoPage extends StatefulWidget {

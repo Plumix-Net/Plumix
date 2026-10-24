@@ -114,7 +114,7 @@ internal sealed class SelectionDemoPageState : State
                     new Align(
                         alignment: Alignment.CenterLeft,
                         child: new TextButton(
-                            new Text($"Interactive: {_interactive}"),
+                            new Text($"Interactive: {(_interactive ? "true" : "false")}"),
                             () => SetState(() => _interactive = !_interactive))),
                     new Text("ContextMenuController", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new Text("Show a menu, update its value, and click the page while it stays open."),
@@ -154,7 +154,7 @@ internal sealed class SelectionDemoPageState : State
                     new Text("SelectionArea subtree", style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                     new TextSelectionTheme(
                         data: new TextSelectionThemeData(
-                            CursorColor: Colors.DarkGreen,
+                            CursorColor: MaterialColors.Green,
                             SelectionColor: Color.FromARGB(0x66, 0x00, 0x80, 0x80)),
                         child: new SelectionArea(
                             onSelectionChanged: content => SetState(() =>
@@ -238,7 +238,7 @@ internal sealed class SelectionDemoPageState : State
                         + "to check that it keeps its own keyboard actions."),
                     new Wrap(spacing: 8, children:
                     [
-                        new TextButton(new Text($"Platform: {_selectionPlatform}"), () => SetState(() =>
+                        new TextButton(new Text($"Platform: {_selectionPlatform.Name()}"), () => SetState(() =>
                             _selectionPlatform = (TargetPlatform)(((int)_selectionPlatform + 1) % 6))),
                         .. PlatformDefaults.IsWeb ? new Widget[]
                         {

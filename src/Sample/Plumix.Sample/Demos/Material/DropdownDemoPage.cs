@@ -47,7 +47,7 @@ public sealed class DropdownDemoPage : StatefulWidget
         private AlignmentGeometry _menuAlignment = AlignmentDirectional.BottomStart;
         private string _alignedMenuStatus = "idle";
         private bool _outlinedMenuSized;
-        private string _animatedMenuStatus = "Dismissed";
+        private string _animatedMenuStatus = "dismissed";
         private string _animatedMenuPick = "none";
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
         private readonly LabeledGlobalKey<FormState> _modernFormKey = new("dropdown-menu-form");
@@ -144,7 +144,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text("DropdownMenu + DropdownMenuEntry", style: new TextStyle(FontSize: 18)),
                         new Text(
                             "Editable Material 3 menu with filtering, search highlighting, disabled-entry traversal, leading/trailing icons, and controller-backed route state.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new DropdownMenu<string>(
@@ -237,7 +237,9 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     }))),
                         new Text($"Anchor menu: {_anchorStatus}", style: new TextStyle(FontSize: 13)),
                         new Text(
-                            $"Menu choices: pinned={_menuCheckbox}, layout={_menuRadio}",
+                            "Menu choices: pinned="
+                            + (_menuCheckbox switch { true => "true", false => "false", null => "null" })
+                            + $", layout={_menuRadio}",
                             style: new TextStyle(FontSize: 13)),
                         new Divider(),
                         new Text("MenuStyle alignment", style: new TextStyle(FontSize: 18)),
@@ -391,7 +393,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 controller: _animatedMenuController,
                                 animated: true,
                                 onAnimationStatusChanged: status =>
-                                    SetState(() => _animatedMenuStatus = status.ToString()),
+                                    SetState(() => _animatedMenuStatus = status.Name()),
                                 menuChildren:
                                 [
                                     AnimatedMenuItem("First"),

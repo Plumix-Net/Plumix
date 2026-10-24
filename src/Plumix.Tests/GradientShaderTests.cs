@@ -360,7 +360,7 @@ public sealed class GradientShaderTests
         tester.Pump();
         tester.Tap(Find.Text("Sweep: 3/4"));
         tester.Pump();
-        foreach (string tileLabel in new[] { "Tile: Clamp", "Tile: Repeated", "Tile: Mirror" })
+        foreach (string tileLabel in new[] { "Tile: clamp", "Tile: repeated", "Tile: mirror" })
         {
             tester.Tap(Find.Text(tileLabel));
             tester.Pump();

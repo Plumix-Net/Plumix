@@ -124,7 +124,7 @@ internal sealed class HeadlessParagraph : Paragraph
                     cursor += UnicodeText.CodePointLength(text, cursor);
                 }
 
-                width += style.LetterSpacing;
+                width += LetterSpacingOf(firstCodePoint, style);
                 if (firstCodePoint == ' ')
                 {
                     width += style.WordSpacing;
@@ -428,7 +428,10 @@ internal sealed class HeadlessParagraph : Paragraph
             double candidate = lineWidth + pendingSpaces + cluster.Width;
             if (hasContent && candidate - _width > Epsilon)
             {
-                return lastBreak > start ? lastBreak : index;
+                // SkParagraph's TextWrapper::lookAhead: a word too long for a whole line stays where it
+                // starts, broken between clusters, once more than one of its clusters fits here.
+                bool tooLong = lastBreak > start && LookAheadWordWidth(lastBreak) - _width > Epsilon;
+                return lastBreak > start && !(tooLong && index - lastBreak > 1) ? lastBreak : index;
             }
 
             lineWidth = candidate;
@@ -437,6 +440,48 @@ internal sealed class HeadlessParagraph : Paragraph
         }
 
         return segmentEnd;
+    }
+
+    /// SkParagraph leaves cursive scripts (Arabic, Syriac, N'Ko, Mongolian, ...) unspaced, since
+    /// spacing would tear their joined letters apart.
+    private static double LetterSpacingOf(int codePoint, ResolvedTextStyle style) =>
+        IsCursiveScript(codePoint) ? 0.0 : style.LetterSpacing;
+
+    private static bool IsCursiveScript(int codePoint) => codePoint switch
+    {
+        >= 0x0600 and <= 0x077F => true, // Arabic, Syriac, Arabic Supplement
+        >= 0x07C0 and <= 0x07FF => true, // N'Ko
+        >= 0x0840 and <= 0x08FF => true, // Mandaic, Syriac Supplement, Arabic Extended-B/-A
+        >= 0x1800 and <= 0x18AF => true, // Mongolian
+        >= 0xFB50 and <= 0xFDFF => true, // Arabic Presentation Forms-A
+        >= 0xFE70 and <= 0xFEFF => true, // Arabic Presentation Forms-B
+        >= 0x10D00 and <= 0x10D3F => true, // Hanifi Rohingya
+        >= 0x1E900 and <= 0x1E95F => true, // Adlam
+        _ => false,
+    };
+
+    /// The word length TextWrapper::lookAhead measures from `start`: it stops at whitespace and
+    /// leaves out the cluster a soft break follows, such as the last cluster of the text.
+    private double LookAheadWordWidth(int start)
+    {
+        double width = 0.0;
+        for (int index = start; index < _clusters.Count; index++)
+        {
+            Cluster cluster = _clusters[index];
+            if (cluster.HangingSpace || cluster.HardBreak)
+            {
+                break;
+            }
+
+            if (index + 1 == _clusters.Count || _clusters[index + 1].BreakBefore)
+            {
+                break;
+            }
+
+            width += cluster.Width;
+        }
+
+        return width;
     }
 
     private Line CreateLine(int start, int end)
@@ -1202,9 +1247,11 @@ internal sealed class HeadlessParagraph : Paragraph
     }
 
     /// <remarks>
-    /// The `FlutterTest` font draws every visible glyph as a solid box one em wide, from 0.75 em above
-    /// the baseline to 0.25 em below it, and whitespace as nothing; the boxes are painted with the
-    /// run's foreground paint, or its color.
+    /// Paints the glyph outlines of the `FlutterTest` font (`kFlutterTestFont` in the engine's
+    /// `runtime/test_font_data.cc`): a covered code point is a solid box one em wide from the ascent
+    /// to the descent, `p` only its descent part, `É` only its ascent part, whitespace nothing, and any
+    /// code point the font does not cover its `.notdef` frame. The shapes are painted with the run's
+    /// foreground paint, or its color.
     /// </remarks>
     internal override Action<DrawingContext>? CreateDrawAction(Point offset)
     {
@@ -1213,43 +1260,168 @@ internal sealed class HeadlessParagraph : Paragraph
             return null;
         }
 
-        var glyphs = new List<(Rect Box, ResolvedTextStyle Style)>();
-        foreach (Line line in _lines)
+        var shapes = new List<(Geometry Shape, IBrush Brush)>();
+        var glyphs = new List<FlutterTestGlyphDraw.Glyph>();
+        double left = double.PositiveInfinity;
+        double top = double.PositiveInfinity;
+        double right = double.NegativeInfinity;
+        double bottom = double.NegativeInfinity;
+        void Add(int codePoint, double x, double baseline, ResolvedTextStyle style)
         {
-            foreach (Placed item in line.Visual)
+            double fontSize = style.FontSize;
+            left = Math.Min(left, x);
+            right = Math.Max(right, x + fontSize);
+            top = Math.Min(top, baseline - (fontSize * AscentRatio));
+            bottom = Math.Max(bottom, baseline + (fontSize * DescentRatio));
+            if (style.Foreground is { Shader: { } shader })
             {
-                if (item.Cluster is { } cluster
-                    && (cluster.Placeholder is not null
-                        || cluster.HardBreak
-                        || System.Text.Rune.IsWhiteSpace(new System.Text.Rune(cluster.FirstCodePoint))))
+                shapes.Add((FlutterTestGlyph(ShapeOf(codePoint), x, fontSize, baseline, fontSize), shader));
+                return;
+            }
+
+            glyphs.Add(new FlutterTestGlyphDraw.Glyph(codePoint, x, baseline, fontSize,
+                style.Foreground?.Color ?? style.Color));
+        }
+
+        void AddText(string text, int start, int end, double x, double baseline, ResolvedTextStyle style)
+        {
+            // SkParagraph spreads letter spacing half before and half after each glyph.
+            x += LetterSpacingOf(UnicodeText.CodePointAt(text, start), style) / 2.0;
+            int cursor = start;
+            while (cursor < end)
+            {
+                int codePoint = UnicodeText.CodePointAt(text, cursor);
+                cursor += UnicodeText.CodePointLength(text, cursor);
+                if (Rune.IsValid(codePoint) && UnicodeText.IsZeroWidth(new Rune(codePoint)))
                 {
                     continue;
                 }
 
-                double fontSize = item.Style.FontSize;
-                double top = line.Baseline - (fontSize * AscentRatio);
-                double bottom = line.Baseline + (fontSize * DescentRatio);
-                glyphs.Add((
-                    new Rect(offset.X + item.X, offset.Y + top, Math.Max(item.Width, 0.0), bottom - top),
-                    item.Style));
+                if (!Rune.IsValid(codePoint) || !Rune.IsWhiteSpace(new Rune(codePoint)))
+                {
+                    Add(codePoint, x, baseline, style);
+                }
+
+                x += style.FontSize;
             }
         }
 
-        if (glyphs.Count == 0)
+        foreach (Line line in _lines)
+        {
+            // SkParagraph's TextLine paints its blob at floor(baseline + 0.5).
+            double baseline = offset.Y + Math.Floor(line.Baseline + 0.5);
+            foreach (Placed item in line.Visual)
+            {
+                double x = offset.X + item.X;
+                if (item.Cluster is not { } cluster)
+                {
+                    string ellipsis = _content.Style.Ellipsis ?? string.Empty;
+                    AddText(ellipsis, 0, ellipsis.Length, x, baseline, item.Style);
+                    continue;
+                }
+
+                if (cluster.Placeholder is not null || cluster.HardBreak)
+                {
+                    continue;
+                }
+
+                AddText(_content.Text, cluster.Start, cluster.End, x, baseline, item.Style);
+            }
+        }
+
+        if (glyphs.Count == 0 && shapes.Count == 0)
         {
             return null;
         }
 
+        var bounds = new Rect(left, top, right - left, bottom - top).Inflate(1.0);
+        var draw = glyphs.Count == 0 ? null : new FlutterTestGlyphDraw(glyphs, bounds);
         return context =>
         {
-            foreach ((Rect box, ResolvedTextStyle style) in glyphs)
+            foreach ((Geometry shape, IBrush brush) in shapes)
             {
-                IBrush brush = style.Foreground is { } foreground
-                    ? foreground.Shader ?? new SolidColorBrush(foreground.Color)
-                    : new SolidColorBrush(style.Color);
-                context.FillRectangle(brush, box);
+                context.DrawGeometry(brush, null, shape);
+            }
+
+            if (draw is not null)
+            {
+                context.Custom(draw);
             }
         };
+    }
+
+    private enum GlyphShape
+    {
+        Box,
+        DescentOnly,
+        AscentOnly,
+        NotDef,
+    }
+
+    // The code points `kFlutterTestFont` maps to its full `Square` glyph; `p` and `É` have their own
+    // half glyphs, and the space-like code points paint nothing.
+    private static readonly (int First, int Last)[] FlutterTestSquareRanges =
+    [
+        (0x0021, 0x0026), (0x0028, 0x006F), (0x0071, 0x007E), (0x00A1, 0x00C8), (0x00CA, 0x00FF),
+        (0x0131, 0x0131), (0x0152, 0x0153), (0x0178, 0x0178), (0x0192, 0x0192), (0x02C6, 0x02C7),
+        (0x02C9, 0x02C9), (0x02D8, 0x02DD), (0x0394, 0x0394), (0x03A5, 0x03A5), (0x03A7, 0x03A7),
+        (0x03A9, 0x03A9), (0x03BC, 0x03BC), (0x03C0, 0x03C0), (0x2013, 0x2014), (0x2018, 0x201A),
+        (0x201C, 0x201E), (0x2020, 0x2022), (0x2026, 0x2026), (0x2030, 0x2030), (0x2039, 0x203A),
+        (0x2044, 0x2044), (0x2122, 0x2122), (0x2126, 0x2126), (0x2202, 0x2202), (0x2206, 0x2206),
+        (0x220F, 0x220F), (0x2211, 0x2212), (0x2219, 0x221A), (0x221E, 0x221E), (0x222B, 0x222B),
+        (0x2248, 0x2248), (0x2260, 0x2260), (0x2264, 0x2265), (0x22F2, 0x22F2), (0x25CA, 0x25CA),
+        (0x3007, 0x3007), (0x4E00, 0x4E00), (0x4E03, 0x4E03), (0x4E09, 0x4E09), (0x4E2D, 0x4E2D),
+        (0x4E5D, 0x4E5D), (0x4E8C, 0x4E8C), (0x4E94, 0x4E94), (0x516B, 0x516B), (0x516D, 0x516D),
+        (0x5341, 0x5341), (0x5426, 0x5426), (0x56D7, 0x56D7), (0x56DB, 0x56DB), (0x571F, 0x571F),
+        (0x6587, 0x6587), (0x662F, 0x662F), (0x6728, 0x6728), (0x672C, 0x672C), (0x6B63, 0x6B63),
+        (0x6C34, 0x6C34), (0x6D4B, 0x6D4B), (0x706B, 0x706B), (0x786E, 0x786E), (0x8BD5, 0x8BD5),
+        (0x91D1, 0x91D1), (0xF000, 0xF002),
+    ];
+
+    private static GlyphShape ShapeOf(int codePoint)
+    {
+        if (codePoint == 'p')
+        {
+            return GlyphShape.DescentOnly;
+        }
+
+        if (codePoint == 0x00C9)
+        {
+            return GlyphShape.AscentOnly;
+        }
+
+        foreach ((int first, int last) in FlutterTestSquareRanges)
+        {
+            if (codePoint >= first && codePoint <= last)
+            {
+                return GlyphShape.Box;
+            }
+        }
+
+        return GlyphShape.NotDef;
+    }
+
+    // The outlines in font units (1024 per em, ascent 768, descent 256) scaled to `fontSize`.
+    private static Geometry FlutterTestGlyph(GlyphShape shape, double x, double width, double baseline,
+        double fontSize)
+    {
+        double ascent = fontSize * AscentRatio;
+        double descent = fontSize * DescentRatio;
+        switch (shape)
+        {
+            case GlyphShape.DescentOnly:
+                return new RectangleGeometry(new Rect(x, baseline, Math.Max(width, 0.0), descent));
+            case GlyphShape.AscentOnly:
+                return new RectangleGeometry(new Rect(x, baseline - ascent, Math.Max(width, 0.0), ascent));
+            case GlyphShape.NotDef:
+                double unit = fontSize / 1024.0;
+                var outer = new Rect(x + (128 * unit), baseline - (768 * unit), 768 * unit, 768 * unit);
+                var inner = new Rect(x + (256 * unit), baseline - (640 * unit), 512 * unit, 512 * unit);
+                return new CombinedGeometry(GeometryCombineMode.Exclude,
+                    new RectangleGeometry(outer), new RectangleGeometry(inner));
+            default:
+                return new RectangleGeometry(new Rect(x, baseline - ascent, Math.Max(width, 0.0), ascent + descent));
+        }
     }
 
     // -- Model -----------------------------------------------------------------------

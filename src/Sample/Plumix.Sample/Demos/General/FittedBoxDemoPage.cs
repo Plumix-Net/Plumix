@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/fitted_box_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/fitted_box_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -31,7 +31,7 @@ internal sealed class FittedBoxDemoPageState : State
                 new Text("FittedBox", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Change fit/alignment to inspect scaling behavior inside a fixed preview box.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -52,7 +52,7 @@ internal sealed class FittedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"fit={FitLabel(_fit)}, alignment={AlignmentLabel(_alignment)}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 260,
                     height: 190,

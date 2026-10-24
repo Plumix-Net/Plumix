@@ -49,7 +49,7 @@ internal sealed class RouterDemoPageState : State
                 new Text(
                     "The provider publishes a location, the parser turns it into a configuration and the "
                     + "delegate builds the page. Popping goes through the back-button dispatcher.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Row(
                     spacing: 8,
                     children:
@@ -148,7 +148,7 @@ internal sealed class DemoRouterDelegate : RouterDelegate<DemoRouteConfiguration
                         new Text(_configuration.Path, style: new TextStyle(FontSize: 18, Color: Colors.Black)),
                         new Text(
                             _configuration.ShowDetail ? "detail page" : "top level page",
-                            style: new TextStyle(FontSize: 12, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 12, Color: MaterialColors.Grey)),
                     ])));
     }
 }

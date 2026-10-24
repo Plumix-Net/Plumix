@@ -42,7 +42,7 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                     new Text("ListWheelScrollView", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Children are laid out lazily on a cylinder; FixedExtentScrollPhysics snaps to whole items.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Expanded(
                         child: new Row(
                             children:
@@ -75,7 +75,9 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
                                                 .Select(index => (Widget)new Center(
                                                     child: new Text(
                                                         $"loop {index}",
-                                                        style: new TextStyle(FontSize: 16, Color: Colors.DimGray))))
+                                                        style: new TextStyle(
+                                                            FontSize: 16,
+                                                            Color: MaterialColors.Black54))))
                                                 .ToArray()))),
                             ])),
                     new Row(

@@ -9,6 +9,20 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Solid-paint RRect/DRRect/path draws reach Skia as the exact SkPath Dart's canvas uses, conics included (C#-only).
+- Path geometry writes circular and axis-aligned elliptical conics as arcs, keeping Skia's analytic AA (C#-only).
+- Headless paragraphs break too-long words and skip cursive-script letter spacing like SkParagraph (C#-only).
+- Breaking: TextField adds cursorWidth/cursorRadius/cursorOpacityAnimates/undoController and real min/maxLines (text_field.dart).
+- Breaking: TextField limits the hint to its own maxLines unless the decoration sets hintMaxLines (text_field.dart).
+- Breaking: DesktopTextSelectionToolbarButton uses Dart's non-inheriting 14px style and black87/white (desktop_text_selection_toolbar_button.dart).
+- Breaking: VisualDensity.ToString starts with its identity, as Dart's toStringShort does (theme_data.dart).
+- ReorderableListView gives the header the top inset and the footer the bottom one (reorderable_list.dart).
+- The sample uses Plumix.Bloc 0.3.0-alpha.3; 0.1.0-alpha.1 failed at runtime against the current Plumix API.
+- Sample gallery opens pages with MaterialPageRoute and an unknown-route page, as the Dart sample does.
+- Samples: C# colors, strings, button styles and spacing aligned with the Dart sample; Dart pages import material_ui.
+- Headless paragraphs paint the engine's FlutterTest glyphs through Skia (`p`/`É`/.notdef, quarter-pixel x) (C#-only).
+- Headless paragraphs paint at SkParagraph's rounded baseline and centre letter spacing on each glyph (C#-only).
+- Opt-in screen capture of every sample route in both samples for pixel and text comparison (C#-only).
 - Breaking: Avalonia 12.1.4 is the minimum; paragraphs read its slice-relative, visual-order RTL clusters (C#-only).
 - CI also runs the tests on the newest Avalonia over Plumix built on the minimum, binding every host member (C#-only).
 - Timer.run and timing reports post above Input, so Android's warm-up frame draws behind a spinner (C#-only).

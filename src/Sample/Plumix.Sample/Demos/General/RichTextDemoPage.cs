@@ -52,13 +52,13 @@ public sealed class RichTextDemoPageState : State
                 new Text(
                     "One paragraph, many styles. Spans share a single line layout, carry their own gesture "
                     + "recognizers, and can embed inline widgets.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 BuildStyledParagraph(),
                 new Text(
                     "Tapped the link span " + _taps + " times",
                     style: new TextStyle(
                         FontSize: 14,
-                        Color: Colors.DimGray)),
+                        Color: MaterialColors.Grey)),
                 BuildPaintedParagraph(),
                 BuildInlineWidgetParagraph(),
                 BuildAccessibleInlineParagraph(),

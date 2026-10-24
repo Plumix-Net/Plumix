@@ -5,7 +5,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/stack_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/stack_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -47,7 +47,7 @@ internal sealed class StackDemoPageState : State
                 new Text("Stack + PositionedDirectional", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Move with logical start/end insets, toggle pinned mode, and flip LTR/RTL direction.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -72,7 +72,7 @@ internal sealed class StackDemoPageState : State
                 new Text(
                     $"start={_left:0}, top={_top:0}, direction={(_rtl ? "RTL" : "LTR")}, "
                     + $"mode={(_pinBottomRight ? "bottomEnd" : "custom")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -99,7 +99,7 @@ internal sealed class StackDemoPageState : State
                 new Text("IndexedStack + Positioned", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Switch between retained children; the second child uses StackParentData offsets.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 BuildButton(
                     _showPositionedIndexedChild ? "Show base child" : "Show positioned child",
                     () => SetState(() => _showPositionedIndexedChild = !_showPositionedIndexedChild),

@@ -45,7 +45,7 @@ internal sealed class NavigationPopDemoPageState : State
                         "navigator. Nested routes use PageTransitionsTheme, including Android predictive-back " +
                         "peek/commit/cancel and iOS/macOS leading-edge swipe. Disable route pop to probe PopScope " +
                         "veto behavior.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:

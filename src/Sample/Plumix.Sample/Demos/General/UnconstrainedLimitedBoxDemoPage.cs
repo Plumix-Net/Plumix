@@ -5,7 +5,8 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/unconstrained_limited_box_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/unconstrained_limited_box_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -37,7 +38,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                 new Text(
                     "UnconstrainedBox delegates axis removal to ConstraintsTransformBox; "
                     + "the direct probe removes maxWidth and toggles clipping.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -64,8 +65,8 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                     ]),
                 new Text(
                     $"axis={AxisLabel(_constrainedAxis)}, maxWidth={_maxWidth:0}, "
-                    + $"maxHeight={_maxHeight:0}, transformClip={_clipTransformOverflow}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    + $"maxHeight={_maxHeight:0}, transformClip={(_clipTransformOverflow ? "true" : "false")}",
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 BuildButton(
                     _clipTransformOverflow ? "Transform clip: antiAlias" : "Transform clip: none",
                     () => SetState(() => _clipTransformOverflow = !_clipTransformOverflow),
@@ -85,7 +86,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                 "Bounded parent: LimitedBox ignores maxWidth/maxHeight.",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             new Container(
                                 height: 60,
                                 color: Colors.White,
@@ -99,7 +100,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                 "Inside UnconstrainedBox: unbounded axes use LimitedBox max values.",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             new Container(
                                 height: 92,
                                 color: Colors.White,
@@ -114,7 +115,7 @@ internal sealed class UnconstrainedLimitedBoxDemoPageState : State
                                             child: BuildProbeCard())))),
                             new Text(
                                 "Direct ConstraintsTransformBox: maxWidth removed.",
-                                style: new TextStyle(FontSize: 11, Color: Colors.DimGray)),
+                                style: new TextStyle(FontSize: 11, Color: MaterialColors.Black54)),
                             new Container(
                                 height: 58,
                                 color: Colors.White,

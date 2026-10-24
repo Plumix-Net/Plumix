@@ -21,7 +21,7 @@ public sealed class GridTileDemoPage : StatelessWidget
                 new Text("GridTile + GridTileBar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Header/footer overlays, one/two-line bars, slots, transparent background, and RTL.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Expanded(
                     child: GridView.Builder(
                         itemCount: 4,

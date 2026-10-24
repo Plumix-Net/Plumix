@@ -20,7 +20,7 @@ public sealed class LayoutBuilderDemoPage : StatelessWidget
                 new Text(
                     "LayoutBuilder receives its parent's live constraints. OrientationBuilder reduces those " +
                     "constraints to landscape or portrait.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     height: 96,
                     color: new Color(0xFFE7EDF6),

@@ -18,6 +18,41 @@ public sealed class TextPainterTests
 {
     private const double SizeOfA = 14.0;
 
+    // C#-only: the FlutterTest line breaks flutter_tester's SkParagraph produces for words wider than the line.
+    // A too-long word stays where it starts once two of its clusters fit there; the word's last cluster
+    // (before the end of the text) does not count towards "too long".
+    [Theory]
+    [InlineData("layout notifications: 0", 14.0, 190.0, new[] { 182.0, 140.0 })]
+    [InlineData("ab abcdefghijklmnopqrstuvwxyz c", 14.0, 190.0, new[] { 182.0, 182.0, 70.0 })]
+    [InlineData("notifications: 0", 14.0, 190.0, new[] { 182.0, 42.0 })]
+    [InlineData("Notify listenable", 12.0, 112.0, new[] { 72.0, 108.0, 12.0 })]
+    [InlineData("abcd abcdefghij", 12.0, 112.0, new[] { 48.0, 108.0, 12.0 })]
+    [InlineData("abc abcdefghijklmnopqrst", 12.0, 112.0, new[] { 108.0, 108.0, 72.0 })]
+    [InlineData("abcdefg abcdefghijklmnopqrst", 12.0, 112.0, new[] { 84.0, 108.0, 108.0, 24.0 })]
+    public void LongWord_BreaksLikeSkParagraph(string text, double fontSize, double maxWidth, double[] lineWidths)
+    {
+        using var painter = new TextPainter(textDirection: TextDirection.Ltr);
+        painter.Text = new TextSpan(text, style: new TextStyle(FontSize: fontSize, Height: 1.43));
+        painter.Layout(maxWidth: maxWidth);
+        Assert.Equal(lineWidths, painter.ComputeLineMetrics().Select(line => line.Width).ToArray());
+    }
+
+    // C#-only: SkParagraph's FlutterTest widths with letter spacing; cursive scripts stay unspaced.
+    [Theory]
+    [InlineData("\u0627\u0644\u0639\u0631\u0628\u064A\u0629", 98.0)]
+    [InlineData("a \u0627\u0644\u0639\u0631\u0628\u064A\u0629 b", 155.0)]
+    [InlineData("\u05E2\u05D1\u05E8\u05D9\u05EA", 71.25)]
+    [InlineData("\u0780\u0781", 28.5)]
+    [InlineData("\u07CA\u07CB", 28.0)]
+    [InlineData("\u1820\u1821", 28.0)]
+    public void LetterSpacing_SkipsCursiveScripts(string text, double width)
+    {
+        using var painter = new TextPainter(textDirection: TextDirection.Ltr);
+        painter.Text = new TextSpan(text, style: new TextStyle(FontSize: 14, LetterSpacing: 0.25));
+        painter.Layout();
+        Assert.Equal(width, painter.Width);
+    }
+
     // -- group('caret') ---------------------------------------------------------------
 
     [Fact]

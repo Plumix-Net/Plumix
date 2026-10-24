@@ -142,7 +142,7 @@ internal sealed class CupertinoLocalizationsDemoPageState : State
                 children:
                 [
                     BuildRow("loadedLocale", Localizations.Of<DemoStrings>(context).Locale.ToString()),
-                    BuildRow("textDirection", widgets.TextDirection.ToString()),
+                    BuildRow("textDirection", widgets.TextDirection.Name()),
                     BuildRow("alertDialogLabel", localizations.AlertDialogLabel),
                     BuildRow(
                         "toolbar",

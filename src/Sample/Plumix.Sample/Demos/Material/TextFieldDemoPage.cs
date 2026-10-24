@@ -114,8 +114,8 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         decoration: new InputDecoration(
                             filled: true,
                             labelText: "Affix icon buttons",
-                            prefixIconColor: Colors.Teal,
-                            suffixIconColor: Colors.Indigo,
+                            prefixIconColor: MaterialColors.Teal,
+                            suffixIconColor: MaterialColors.Indigo,
                             prefixIcon: new IconButton(
                                 new Icon(Icons.Email),
                                 () => SetState(() => _submitted = "prefix button"),
@@ -204,17 +204,17 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             helperText: "Subclass input style + mapped helper style",
                             helperStyle: WidgetStateTextStyle.FromMap(
                             [
-                                new(WidgetState.Disabled, new TextStyle(Color: Colors.Gray)),
-                                new(WidgetState.Focused, new TextStyle(Color: Colors.DodgerBlue)),
+                                new(WidgetState.Disabled, new TextStyle(Color: MaterialColors.Grey)),
+                                new(WidgetState.Focused, new TextStyle(Color: MaterialColors.Blue)),
                                 new(WidgetStatesConstraint.Any, new TextStyle(Color: Colors.SlateGray)),
                             ]))),
                     new Text($"Last submitted email: {_submitted}", style: new TextStyle(FontSize: 13)),
                     new Divider(),
                     new Text("System context menu", style: new TextStyle(FontSize: 18)),
                     new Text(
-                        $"System menu supported here: {SystemContextMenu.IsSupported(context)} "
+                        $"System menu supported here: {(SystemContextMenu.IsSupported(context) ? "true" : "false")} "
                         + "(iOS 16+ only; elsewhere the Flutter-drawn toolbar shows)",
-                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                     new TextField(
                         controller: _systemMenu,
                         enabled: _enabled,
@@ -352,10 +352,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private static Color? ResolveAffixColor(IReadOnlySet<WidgetState> states) =>
             states.Contains(WidgetState.Error) ? Colors.Crimson : Colors.Indigo;
 
-        private static Widget Control(string label, Action action) => new TextButton(new Text(
-            label,
-            style: new TextStyle(
-                FontSize: 12)), action);
+        private static Widget Control(string label, Action action) => new TextButton(new Text(label), action);
     }
     private sealed class DemoInputTextStyle : WidgetStateTextStyle
     {

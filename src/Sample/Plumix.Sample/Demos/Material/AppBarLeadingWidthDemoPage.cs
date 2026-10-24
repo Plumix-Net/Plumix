@@ -5,7 +5,8 @@ using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
-// Dart parity source (reference): dart_sample/lib/app_bar_leading_width_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/material/app_bar_leading_width_demo_page.dart
+// (exact sample parity)
 
 namespace Plumix;
 
@@ -33,7 +34,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                 new Text("AppBar theme leadingWidth", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Runtime probe for AppBar leading slot width resolution: widget override beats appBarTheme, appBarTheme beats default 56.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -59,7 +60,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                     ]),
                 new Text(
                     $"themeLeadingWidth={_themeLeadingWidth:0}, override={(_useWidgetOverride ? "on" : "off")}, widgetLeadingWidth={_widgetLeadingWidth:0}, effective={EffectiveLeadingWidthLabel()}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 300,
                     color: new Color(0xFFE7EDF6),
@@ -73,13 +74,13 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                                 "Themed app bar preview",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildThemedPreview(),
                             new Text(
                                 "Default app bar reference (leadingWidth = 56)",
                                 style: new TextStyle(
                                     FontSize: 11,
-                                    Color: Colors.DimGray)),
+                                    Color: MaterialColors.Black54)),
                             BuildDefaultReferencePreview(),
                         ])),
             ]);

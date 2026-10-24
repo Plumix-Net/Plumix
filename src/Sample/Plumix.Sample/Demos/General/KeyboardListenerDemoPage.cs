@@ -66,7 +66,7 @@ internal sealed class KeyboardListenerDemoPageState : State
                 new Text("Keyboard + focus action detectors", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Click a panel or use its button, then press and release keyboard keys.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 BuildKeyboardListenerProbe(),
                 BuildRawKeyboardListenerProbe(),
                 BuildActionsShortcutsProbe(),
@@ -186,7 +186,8 @@ internal sealed class KeyboardListenerDemoPageState : State
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 15, Color: Colors.Black)),
-                    new Text($"Last event: {detail}", style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                    new Text($"Last event: {detail}",
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                 ]));
     }
 
@@ -214,8 +215,8 @@ internal sealed class KeyboardListenerDemoPageState : State
         var parts = new List<string>();
         foreach (KeyValuePair<ModifierKey, KeyboardSide> entry in modifiers)
         {
-            parts.Add($"{Plumix.Foundation.Diagnostics.EnumName(entry.Key)}: "
-                      + Plumix.Foundation.Diagnostics.EnumName(entry.Value));
+            parts.Add($"{entry.Key.Name()}: "
+                      + entry.Value.Name());
         }
 
         return string.Join(", ", parts);

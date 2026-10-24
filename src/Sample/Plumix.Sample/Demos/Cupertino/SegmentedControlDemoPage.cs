@@ -75,7 +75,8 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
                         BuildAction("Clear", () => SetState(() => _selected = null)),
                     ]),
                 new Text(
-                    $"selected={_selected ?? "none"}, changes={_changes}, weekDisabled={_disableWeek}",
+                    $"selected={_selected ?? "none"}, changes={_changes}, "
+                        + $"weekDisabled={(_disableWeek ? "true" : "false")}",
                     style: new TextStyle(FontSize: 13.0, Color: new Color(0xFF455A64))),
             ]);
     }

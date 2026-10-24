@@ -7,7 +7,7 @@ using Plumix.UI;
 using Plumix.Widgets;
 using Path = Plumix.UI.Path;
 
-// Dart parity source (reference): dart_sample/lib/proxy_widgets_demo_page.dart (exact sample parity)
+// Dart parity source (reference): dart_sample/lib/demos/general/proxy_widgets_demo_page.dart (exact sample parity)
 
 namespace Plumix;
 
@@ -45,7 +45,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Use controls to fade a high-contrast black card over white canvas.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -71,7 +71,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     ]),
                 new Text(
                     $"opacity={_opacity:0.00}, shiftX={_shiftX:0}, clip={(_tightClip ? "tight" : "wide")}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Container(
                     width: 220,
                     height: 140,
@@ -102,7 +102,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                         BuildButton("Rotate", RotateQuarterTurn, width: 88, colorHex: "#FFF3E8D8"),
                         new Text(
                             $"fraction={_fractionalShift:0.0}, turns={_quarterTurns}",
-                            style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                            style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                     ]),
                 new Row(
                     spacing: 16,

@@ -312,8 +312,16 @@ public sealed class Path
 
     private static void WriteConic(StreamGeometryContext context, SKPoint[] points, float weight)
     {
-        // Avalonia has no rational quadratic command. Only this bridge approximates conics; native
-        // geometry, containment, boolean operations, transforms and metrics retain exact conics.
+        // Avalonia has no rational quadratic command, but its Skia backend turns ArcTo back into
+        // conics, so circular and axis-aligned elliptical arcs keep their exact shape and the few
+        // points Skia's analytic anti-aliasing needs. Other conics fall back to quads below.
+        if (TryWriteArc(context, points, weight))
+        {
+            return;
+        }
+
+        // Only this bridge approximates conics; native geometry, containment, boolean operations,
+        // transforms and metrics retain exact conics.
         double factor = (weight - 1.0) / (4.0 * (2.0 + weight));
         double errorX = factor * (points[0].X - 2.0 * points[1].X + points[2].X);
         double errorY = factor * (points[0].Y - 2.0 * points[1].Y + points[2].Y);
@@ -330,6 +338,52 @@ public sealed class Path
         {
             context.QuadraticBezierTo(FromNative(quads[index]), FromNative(quads[index + 1]));
         }
+    }
+
+    private static bool TryWriteArc(StreamGeometryContext context, SKPoint[] points, float weight)
+    {
+        if (!(weight > 0.0f && weight < 1.0f))
+        {
+            return false;
+        }
+
+        double d0X = points[1].X - points[0].X;
+        double d0Y = points[1].Y - points[0].Y;
+        double d1X = points[2].X - points[1].X;
+        double d1Y = points[2].Y - points[1].Y;
+        double cross = (d0X * d1Y) - (d0Y * d1X);
+        if (cross == 0.0)
+        {
+            return false;
+        }
+
+        Size size;
+        double length0 = Math.Sqrt((d0X * d0X) + (d0Y * d0Y));
+        double length1 = Math.Sqrt((d1X * d1X) + (d1Y * d1Y));
+        bool axisAligned = (d0X == 0.0 && d1Y == 0.0) || (d0Y == 0.0 && d1X == 0.0);
+        if (axisAligned && Math.Abs(weight - (Math.Sqrt(2.0) / 2.0)) < 1e-6)
+        {
+            // A quarter of an axis-aligned ellipse, as SkPath::addRRect and addOval write corners.
+            size = new Size(Math.Abs(points[2].X - points[0].X), Math.Abs(points[2].Y - points[0].Y));
+        }
+        else if (Math.Abs(length0 - length1) <= 1e-5 * Math.Max(length0, length1))
+        {
+            // A circular arc whose sweep is 2 * acos(weight).
+            double radius = length0 / Math.Tan(Math.Acos(weight));
+            size = new Size(radius, radius);
+        }
+        else
+        {
+            return false;
+        }
+
+        context.ArcTo(
+            FromNative(points[2]),
+            size,
+            0.0,
+            false,
+            cross > 0.0 ? SweepDirection.Clockwise : SweepDirection.CounterClockwise);
+        return true;
     }
 
     internal static float Narrow(double value) => double.IsFinite(value)

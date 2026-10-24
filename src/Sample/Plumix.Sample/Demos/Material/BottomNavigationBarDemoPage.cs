@@ -58,13 +58,13 @@ public sealed class BottomNavigationBarDemoPage : StatefulWidget
                         + "spread/centered/linear layouts, selected and unselected label visibility, item and "
                         + "label-style colors under both color schemes, theme precedence, feedback, and "
                         + "per-state mouse cursors.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
                         [
                             ControlButton(TypeLabel(), CycleType),
-                            ControlButton($"Landscape: {_landscapeLayout}", CycleLandscapeLayout),
+                            ControlButton($"Landscape: {_landscapeLayout.Name()}", CycleLandscapeLayout),
                             ControlButton(_themed ? "Theme on" : "Theme off", () => SetState(() => _themed = !_themed)),
                         ]),
                     new Row(

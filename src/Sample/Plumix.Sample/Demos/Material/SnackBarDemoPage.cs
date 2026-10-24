@@ -32,7 +32,7 @@ public sealed class SnackBarDemoPage : StatefulWidget
                     new Text("SnackBar + SnackBarAction", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "ScaffoldMessenger queue, fixed/floating placement, one-shot action, close icon, overflow, and theme/widget precedence.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -66,7 +66,7 @@ public sealed class SnackBarDemoPage : StatefulWidget
                         "Narrow the window to move a wide action below the message; repeated SHOW calls "
                         + "show queue order. Drag the bar in the swipe direction to dismiss it; the width "
                         + "probe needs floating behavior.",
-                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                 ]);
         }
 
@@ -90,6 +90,6 @@ public sealed class SnackBarDemoPage : StatefulWidget
         }
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
+            new TextButton(new Text(label), onPressed);
     }
 }

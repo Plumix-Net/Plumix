@@ -34,7 +34,7 @@ class CounterScreen extends StatelessWidget {
           spacing: 12,
           children: <Widget>[
             const Text(
-              'Flutter Counter',
+              'Plumix.Sample Counter',
               style: TextStyle(fontSize: 24, color: Colors.black),
             ),
             Text(

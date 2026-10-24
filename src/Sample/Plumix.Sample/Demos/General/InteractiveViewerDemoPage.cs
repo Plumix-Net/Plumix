@@ -69,7 +69,7 @@ internal sealed class InteractiveViewerDemoPageState : State
                 new Text(
                     "Drag to pan, pinch, scroll the mouse wheel or use a trackpad to zoom. Flings keep "
                     + "moving with inertia and slide along the boundary.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:
@@ -92,7 +92,7 @@ internal sealed class InteractiveViewerDemoPageState : State
                 new Text(
                     $"scale={matrix.GetMaxScaleOnAxis():0.00}, "
                     + $"translation=({translation.X:0.0}, {translation.Y:0.0}), last={_lastEvent}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
                 new Center(child: new Container(
                     width: 360,
                     height: 240,

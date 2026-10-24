@@ -80,7 +80,7 @@ internal sealed class ImageDemoPageState : State
                 new Text("Image controls", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Wrap(
                     spacing: 8,
                     runSpacing: 8,

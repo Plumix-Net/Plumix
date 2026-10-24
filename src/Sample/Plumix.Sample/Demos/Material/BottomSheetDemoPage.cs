@@ -33,7 +33,7 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                         "Persistent LocalHistory/controller flow, modal scrim/result, drag handle, 9/16 height cap, "
                         + "SafeArea, display-feature anchoring, theme precedence, and a draggable-scrollable child "
                         + "that closes the sheet at its minimum extent.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -128,11 +128,12 @@ public sealed class BottomSheetDemoPage : StatefulWidget
                 children:
                 [
                     new Text(title, style: new TextStyle(FontSize: 18)),
-                    new Text("Drag downward or use the action below.", style: new TextStyle(Color: Colors.DimGray)),
+                    new Text("Drag downward or use the action below.",
+                        style: new TextStyle(Color: MaterialColors.Black54)),
                     new TextButton(new Text("CLOSE"), close),
                 ]));
 
         private static Widget ControlButton(string label, Action onPressed) =>
-            new TextButton(new Text(label, style: new TextStyle(FontSize: 12)), onPressed);
+            new TextButton(new Text(label), onPressed);
     }
 }
