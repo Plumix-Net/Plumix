@@ -7,7 +7,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 `[Unreleased]` into a few bullets under the version heading, keeping every `Breaking:` item by name.
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
-## [Unreleased] (after v0.4.0-beta.2, 2026-10-24)
+## v0.4.0-beta.3 — 2026-10-24
 - Android: the Activity's back callback steps aside while the soft keyboard is shown, so back hides it first (C#-only).
 
 ## v0.4.0-beta.2 — 2026-10-24
