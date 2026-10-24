@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Breaking: Stepper composition, index text style, controls and ControlsDetails match Dart 1:1 (stepper.dart).
 - Elevated and selected flat chips keep the 1px transparent side of their M3 defaults (chip.dart).
 - Headless placeholders align against unscaled run metrics and hang from the rounded baseline (C#-only).
 - PaginatedDataTable builds like Dart: the table fills the card, themed header/footer (paginated_data_table.dart).
