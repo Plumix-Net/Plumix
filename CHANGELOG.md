@@ -9,6 +9,12 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Headless paragraphs place letter-spaced lines like SkParagraph: half a spacing in unaligned, at the shift aligned (C#-only).
+- ListTile reports a colored box that hides its background and ink, as Dart's debug check does (list_tile.dart).
+- CupertinoSliverRefreshControl and CarouselView lay out empty/inactive slivers as SliverGeometry.Zero (refresh.dart, carousel.dart).
+- Checkbox paints its box through the shape and its check as one stroked path (checkbox.dart).
+- Router rebuilds synchronously after a synchronous route setter, so the first route is reported once (router.dart).
+- Magnifier lens radii scale together and the border is painted inside the lens (C#-only).
 - Solid-paint RRect/DRRect/path draws reach Skia as the exact SkPath Dart's canvas uses, conics included (C#-only).
 - Path geometry writes circular and axis-aligned elliptical conics as arcs, keeping Skia's analytic AA (C#-only).
 - Headless paragraphs break too-long words and skip cursive-script letter spacing like SkParagraph (C#-only).

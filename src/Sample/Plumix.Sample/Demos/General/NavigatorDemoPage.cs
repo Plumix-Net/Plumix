@@ -36,7 +36,7 @@ public sealed class NavigatorDemoPage : StatelessWidget
                         arguments: "payload:string"),
                     new Color(0xFFE8F5E9)),
                 BuildAction(
-                    "PushNamed(RouteData.FromLocation(...))",
+                    "PushNamed(RouteData.fromLocation(...))",
                     () => Navigator.PushNamed(
                         context,
                         RouteData.FromLocation(
@@ -192,20 +192,29 @@ internal sealed class NavigatorRouteAwareProbeState : State, RouteAware
     }
 }
 
-internal sealed class NavigatorDetailsPage : StatelessWidget
+internal sealed class NavigatorDetailsPage : StatefulWidget
 {
-    private readonly RouteData _routeData;
-
     public NavigatorDetailsPage(RouteData routeData)
     {
-        _routeData = routeData;
+        RouteData = routeData;
     }
+
+    public RouteData RouteData { get; }
+
+    public override State CreateState() => new NavigatorDetailsPageState();
+}
+
+internal sealed class NavigatorDetailsPageState : State<NavigatorDetailsPage>
+{
+    private bool _userGestureInProgress;
+
+    private RouteData Data => ((NavigatorDetailsPage)StateWidget).RouteData;
 
     public override Widget Build(BuildContext context)
     {
         string id = GetQuery("id");
         string mode = GetQuery("mode");
-        string payload = _routeData.Arguments?.ToString() ?? "null";
+        string payload = Data.Arguments?.ToString() ?? "null";
 
         int nextId = 1;
         if (int.TryParse(id, out int parsedId))
@@ -218,7 +227,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
             spacing: 8,
             children:
             [
-                new Text($"route: {_routeData.Name}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text($"route: {Data.Name}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Text($"query.id: {id}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Text($"query.mode: {mode}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
                 new Text($"arguments: {payload}", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
@@ -263,7 +272,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Start gesture",
-                                onTap: () => Navigator.StartUserGesture(context),
+                                onTap: () => SetState(() => _userGestureInProgress = true),
                                 background: new Color(0xFFE0F7FA),
                                 foreground: Colors.Black,
                                 fontSize: 12,
@@ -271,15 +280,17 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
                         new Expanded(
                             child: new CounterTapButton(
                                 label: "Stop gesture",
-                                onTap: () => Navigator.StopUserGesture(context),
+                                onTap: () => SetState(() => _userGestureInProgress = false),
                                 background: new Color(0xFFFFF9C4),
                                 foreground: Colors.Black,
                                 fontSize: 12,
                                 padding: new Thickness(10, 8))),
                     ]),
                 new CounterTapButton(
-                    label: "MaybePopFromUserGesture",
-                    onTap: () => Navigator.MaybePopFromUserGesture(context),
+                    label: _userGestureInProgress
+                        ? "MaybePopFromUserGesture"
+                        : "MaybePopFromUserGesture (disabled)",
+                    onTap: _userGestureInProgress ? () => _ = Navigator.MaybePop(context) : null,
                     background: new Color(0xFFD7CCC8),
                     foreground: Colors.Black,
                     fontSize: 12,
@@ -296,7 +307,7 @@ internal sealed class NavigatorDetailsPage : StatelessWidget
 
     private string GetQuery(string key)
     {
-        return _routeData.QueryParameters.TryGetValue(key, out string? value)
+        return Data.QueryParameters.TryGetValue(key, out string? value)
             ? value
             : "-";
     }

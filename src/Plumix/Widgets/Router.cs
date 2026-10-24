@@ -460,9 +460,9 @@ internal sealed class RouterState<T> : RouterStateBase<T>
         Task applied = delegateRouteSetter()(data);
         if (applied.IsCompletedSuccessfully)
         {
-            // Dart awaits the setter even when it returns a SynchronousFuture, so the rebuild is always
-            // at least one microtask away; keeping that keeps SetState out of the ongoing build.
-            EventLoop.ScheduleMicrotask(() => RebuildAfterRouteSet(transaction));
+            // Awaiting a SynchronousFuture resumes synchronously in Dart, so a setter that completes at
+            // once rebuilds and schedules its report inside the same frame.
+            RebuildAfterRouteSet(transaction);
             return;
         }
 

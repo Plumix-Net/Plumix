@@ -168,6 +168,65 @@ public sealed class ListTile : StatelessWidget
         return result;
     }
 
+    // Dart's `_debugCheckBackgroundIsHidden`.
+    private void DebugCheckBackgroundIsHidden(BuildContext context)
+    {
+        Widget? intermediateWidget = FindIntermediateWidget(context);
+        if (intermediateWidget is null)
+        {
+            return;
+        }
+
+        string typeName = intermediateWidget.GetType().Name;
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: new FlutterError(
+            [
+                new ErrorSummary("ListTile background color or ink splashes may be invisible."),
+                new ErrorDescription(
+                    $"The ListTile is wrapped in a {typeName} that has a background color. "
+                    + "Because ListTile paints its background and ink splashes on the nearest Material ancestor, "
+                    + $"this {typeName} will hide those effects."),
+                new ErrorHint(
+                    "To fix this, wrap the ListTile in its own Material widget, "
+                    + $"or remove the background color from the intermediate {typeName}."),
+            ]),
+            informationCollector: () =>
+            [
+                new DiagnosticsProperty<ListTile>("ListTile", this, expandableValue: true),
+                new DiagnosticsProperty<Widget>(typeName, intermediateWidget, expandableValue: true),
+            ]));
+    }
+
+    // Dart's `_findIntermediateWidget`: the nearest colored box between the tile and its Material.
+    private static Widget? FindIntermediateWidget(BuildContext context)
+    {
+        Widget? intermediateWidget = null;
+        ((Element)context).VisitAncestorElements(ancestor =>
+        {
+            if (ancestor.Widget is Material)
+            {
+                return false;
+            }
+
+            Widget widget = ancestor.Widget;
+            Color? color = widget switch
+            {
+                ColoredBox coloredBox => coloredBox.Color,
+                DecoratedBox { Decoration: BoxDecoration boxDecoration } => boxDecoration.Color,
+                DecoratedBox { Decoration: ShapeDecoration shapeDecoration } => shapeDecoration.Color,
+                _ => null,
+            };
+            if (color is not null && color.A > 0)
+            {
+                intermediateWidget = widget;
+                return false;
+            }
+
+            return true;
+        });
+        return intermediateWidget;
+    }
+
     public override Widget Build(BuildContext context)
     {
         ThemeData theme = Theme.Of(context);
@@ -188,6 +247,12 @@ public sealed class ListTile : StatelessWidget
                                         ?? theme.ListTileTheme.SelectedTileColor
                                         ?? defaults.TileColor!;
         Color effectiveTileColor = Selected ? selectedBackgroundColor : backgroundColor;
+        bool hasOpaqueBackground = backgroundColor.Alpha > 0 || selectedBackgroundColor.Alpha > 0;
+        if (Constants.KDebugMode && (OnTap is not null || OnLongPress is not null || hasOpaqueBackground))
+        {
+            DebugCheckBackgroundIsHidden(context);
+        }
+
         var states = new HashSet<WidgetState>();
         if (!Enabled)
         {

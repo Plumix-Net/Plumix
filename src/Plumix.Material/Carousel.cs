@@ -1033,7 +1033,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
         IRenderSliverBoxChildManager? childManager = ChildManager;
         if (childManager is null || _weights.Count == 0)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 

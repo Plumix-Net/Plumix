@@ -109,6 +109,22 @@ public sealed class CupertinoRefreshTests
     }
 
     [Fact]
+    public void RenderCupertinoSliverRefresh_InactiveOrChildlessLayoutIsSliverGeometryZero()
+    {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
+        var inactive = new RenderCupertinoSliverRefresh(
+            refreshIndicatorExtent: 60.0,
+            hasLayoutExtent: false,
+            child: new ExpandingRenderBox());
+        inactive.Layout(Constraints(), parentUsesSize: true);
+        Assert.Same(SliverGeometry.Zero, inactive.Geometry);
+
+        var childless = new RenderCupertinoSliverRefresh(refreshIndicatorExtent: 60.0, hasLayoutExtent: false);
+        childless.Layout(Constraints(overlap: -40.0), parentUsesSize: true);
+        Assert.Same(SliverGeometry.Zero, childless.Geometry);
+    }
+
+    [Fact]
     public async Task StateMachine_ArmsRefreshesAndEntersDoneAsSoonAsTheTaskCompletes()
     {
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);

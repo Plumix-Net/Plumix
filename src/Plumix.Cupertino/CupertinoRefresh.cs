@@ -142,7 +142,7 @@ internal sealed class RenderCupertinoSliverRefresh : RenderSliverSingleBoxAdapte
         double overscrolledExtent = constraints.Overlap < 0.0 ? Math.Abs(constraints.Overlap) : 0.0;
         if (Child == null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 
@@ -151,7 +151,7 @@ internal sealed class RenderCupertinoSliverRefresh : RenderSliverSingleBoxAdapte
             parentUsesSize: true);
         if (!active)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 

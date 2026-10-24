@@ -45,7 +45,7 @@ public sealed class PageViewDemoPage : StatefulWidget
                 spacing: 10,
                 children:
                 [
-                    new Text("PageView.Builder", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new Text("PageView.builder", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "Pages are built lazily by a sliver fill viewport; viewportFraction 0.85 pads both ends.",
                         style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),

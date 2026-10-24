@@ -846,20 +846,22 @@ internal sealed class CheckboxPainter : ToggleablePainter
         double t,
         BorderSide? side)
     {
-        Rect rect = OuterRectAt(origin, t);
-        Color color = ColorAt(t);
-        var brush = new SolidColorBrush(color);
-        Pen? pen = side is { Width: > 0.0 }
-            ? new Pen(new SolidColorBrush(side.Value.Color), side.Value.Width)
-            : null;
-        if (_shape is CircleBorder)
+        // Dart's `_drawBox`: the interior through the shape, then the side through `shape.copyWith`.
+        Rect outer = OuterRectAt(origin, t);
+        var paint = new Paint { Color = ColorAt(t) };
+        if (_shape.PreferPaintInterior)
         {
-            double radius = Math.Min(rect.Width, rect.Height) / 2.0;
-            context.Canvas.DrawCircle(brush, pen, rect.Center, radius);
-            return;
+            _shape.PaintInterior(context, outer, paint);
+        }
+        else
+        {
+            context.Canvas.DrawPath(_shape.GetOuterPath(outer), paint);
         }
 
-        context.Canvas.DrawRectangle(brush, pen, rect, ShapeBorderGeometry.ResolveRadius(_shape));
+        if (side is { } borderSide && _shape is OutlinedBorder outlined)
+        {
+            outlined.CopyWith(side: borderSide).Paint(context, outer);
+        }
     }
 
     private Rect OuterRectAt(Point origin, double t)
@@ -880,32 +882,50 @@ internal sealed class CheckboxPainter : ToggleablePainter
             : LerpColor(InactiveColor, ActiveColor, t * 4.0);
     }
 
+    // Dart's `_createStrokePaint`.
+    private Paint CreateStrokePaint() => new()
+    {
+        Color = _checkColor,
+        Style = PaintingStyle.Stroke,
+        StrokeWidth = StrokeWidth,
+    };
+
+    // Dart's `_drawCheck`: both strokes are one path, so they meet in a miter join.
     private void DrawCheck(PaintingContext context, Point origin, double t)
     {
-        Point start = origin + new Vector(EdgeSize * 0.15, EdgeSize * 0.45);
-        Point middle = origin + new Vector(EdgeSize * 0.40, EdgeSize * 0.70);
-        Point end = origin + new Vector(EdgeSize * 0.85, EdgeSize * 0.25);
-        var pen = new Pen(new SolidColorBrush(_checkColor), StrokeWidth);
-        if (t <= 0.5)
+        var start = new Point(EdgeSize * 0.15, EdgeSize * 0.45);
+        var middle = new Point(EdgeSize * 0.40, EdgeSize * 0.70);
+        var end = new Point(EdgeSize * 0.85, EdgeSize * 0.25);
+        var path = new Plumix.UI.Path();
+        if (t < 0.5)
         {
-            context.Canvas.DrawLine(pen, start, LerpPoint(start, middle, t * 2.0));
-            return;
+            Point drawMiddle = LerpPoint(start, middle, t * 2.0);
+            path.MoveTo(origin.X + start.X, origin.Y + start.Y);
+            path.LineTo(origin.X + drawMiddle.X, origin.Y + drawMiddle.Y);
+        }
+        else
+        {
+            Point drawEnd = LerpPoint(middle, end, (t - 0.5) * 2.0);
+            path.MoveTo(origin.X + start.X, origin.Y + start.Y);
+            path.LineTo(origin.X + middle.X, origin.Y + middle.Y);
+            path.LineTo(origin.X + drawEnd.X, origin.Y + drawEnd.Y);
         }
 
-        context.Canvas.DrawLine(pen, start, middle);
-        context.Canvas.DrawLine(pen, middle, LerpPoint(middle, end, (t - 0.5) * 2.0));
+        context.Canvas.DrawPath(path, CreateStrokePaint());
     }
 
+    // Dart's `_drawDash`.
     private void DrawDash(PaintingContext context, Point origin, double t)
     {
-        Point start = origin + new Vector(EdgeSize * 0.20, EdgeSize * 0.50);
-        Point middle = origin + new Vector(EdgeSize * 0.50, EdgeSize * 0.50);
-        Point end = origin + new Vector(EdgeSize * 0.80, EdgeSize * 0.50);
-        var pen = new Pen(new SolidColorBrush(_checkColor), StrokeWidth);
+        var start = new Point(EdgeSize * 0.20, EdgeSize * 0.50);
+        var middle = new Point(EdgeSize * 0.50, EdgeSize * 0.50);
+        var end = new Point(EdgeSize * 0.80, EdgeSize * 0.50);
+        Point drawStart = LerpPoint(start, middle, 1.0 - t);
+        Point drawEnd = LerpPoint(middle, end, t);
         context.Canvas.DrawLine(
-            pen,
-            LerpPoint(middle, start, t),
-            LerpPoint(middle, end, t));
+            origin + (Vector)drawStart,
+            origin + (Vector)drawEnd,
+            CreateStrokePaint());
     }
 
     private static Point LerpPoint(Point from, Point to, double t)

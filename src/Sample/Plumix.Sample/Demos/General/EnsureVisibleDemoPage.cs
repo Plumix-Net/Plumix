@@ -43,7 +43,7 @@ internal sealed class EnsureVisibleDemoPageState : State
             spacing: 10,
             children:
             [
-                new Text("Scrollable.EnsureVisible", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("Scrollable.ensureVisible", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The inner list is nested in an outer scroller, so a reveal walks both viewports.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),

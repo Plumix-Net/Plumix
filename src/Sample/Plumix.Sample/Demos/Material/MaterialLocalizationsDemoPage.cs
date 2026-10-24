@@ -40,7 +40,7 @@ internal sealed class MaterialLocalizationsDemoPageState : State
             [
                 new Text("Material localizations", style: new TextStyle(FontSize: 20.0, Color: Colors.Black)),
                 new Text(
-                    "GlobalMaterialLocalizations.Delegates translates every Material string and "
+                    "GlobalMaterialLocalizations.delegates translates every Material string and "
                     + "formats dates, times and numbers with the locale's own CLDR data.",
                     style: new TextStyle(FontSize: 14.0, Color: new Color(0x8A000000))),
                 new Wrap(spacing: 8.0, runSpacing: 8.0, children: BuildLocaleButtons()),

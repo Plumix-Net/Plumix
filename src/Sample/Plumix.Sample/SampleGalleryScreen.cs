@@ -529,7 +529,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Ensure visible",
             "nested reveal + alignment policies",
             () => new EnsureVisibleDemoPage()),
-        new(SampleRoutes.PageView, "PageView.Builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
+        new(SampleRoutes.PageView, "PageView.builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
         new(
             SampleRoutes.ListWheelScrollView,
             "ListWheelScrollView",

@@ -62,12 +62,12 @@ public sealed class GestureRecognizerDemoPageState : State
                     + "reported from the down position or from where the gesture won the arena.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 BuildSwitchRow(
-                    "DragStartBehavior.Down (replay the pending offset)",
+                    "DragStartBehavior.down (replay the pending offset)",
                     _dragStartBehavior == DragStartBehavior.Down,
                     value => SetState(() =>
                         _dragStartBehavior = value ? DragStartBehavior.Down : DragStartBehavior.Start)),
                 BuildSwitchRow(
-                    "OnlyAcceptDragOnThreshold (hold the drag back after winning)",
+                    "onlyAcceptDragOnThreshold (hold the drag back after winning)",
                     _onlyAcceptDragOnThreshold,
                     value => SetState(() => _onlyAcceptDragOnThreshold = value)),
                 new Text(
@@ -101,7 +101,7 @@ public sealed class GestureRecognizerDemoPageState : State
                     + "pan/zoom scale differs by more than 5%.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 BuildSwitchRow(
-                    "TrackpadScrollCausesScale (a trackpad scroll zooms instead of panning)",
+                    "trackpadScrollCausesScale (a trackpad scroll zooms instead of panning)",
                     _trackpadScrollCausesScale,
                     value => SetState(() => _trackpadScrollCausesScale = value)),
                 BuildScaleSurface(),

@@ -53,6 +53,25 @@ public sealed class TextPainterTests
         Assert.Equal(width, painter.Width);
     }
 
+    // C#-only: SkParagraph's FlutterTest boxes for letter-spaced lines: an unaligned line starts half a
+    // spacing in, an aligned one exactly at its shift.
+    [Theory]
+    [InlineData(TextAlign.Left, 0.5, 0.25, 54.25)]
+    [InlineData(TextAlign.Left, -0.41, -0.205, 50.155)]
+    [InlineData(TextAlign.Center, 0.5, 63.0, 117.0)]
+    [InlineData(TextAlign.Center, -0.41, 64.82, 115.18)]
+    [InlineData(TextAlign.Right, 0.5, 126.0, 180.0)]
+    [InlineData(TextAlign.Right, -0.41, 129.64, 180.0)]
+    public void LetterSpacedLine_BoxesLikeSkParagraph(TextAlign align, double letterSpacing, double left, double right)
+    {
+        using var painter = new TextPainter(textDirection: TextDirection.Ltr, textAlign: align);
+        painter.Text = new TextSpan("Next", style: new TextStyle(FontSize: 13, LetterSpacing: letterSpacing));
+        painter.Layout(minWidth: 180, maxWidth: 180);
+        var boxes = painter.GetBoxesForSelection(new TextSelection(0, 4));
+        Assert.Equal(left, boxes[0].Left, 6);
+        Assert.Equal(right, boxes[^1].Right, 6);
+    }
+
     // -- group('caret') ---------------------------------------------------------------
 
     [Fact]

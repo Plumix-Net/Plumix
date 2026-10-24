@@ -757,7 +757,12 @@ internal sealed class HeadlessParagraph : Paragraph
         List<Placed> visual = Reorder(sequence);
         bool ltr = _baseLevel == 0;
         TextAlign align = _content.Style.TextAlign ?? TextAlign.Start;
-        double x0 = 0.0;
+        // SkParagraph starts an unaligned letter-spaced line half a spacing in; a line it shifts for
+        // alignment starts exactly at the shift.
+        double halfSpacing = visual.Count > 0 && visual[0].Cluster is { } first
+            ? LetterSpacingOf(first.FirstCodePoint, first.Style) / 2.0
+            : 0.0;
+        double x0 = halfSpacing;
         double extraPerSpace = 0.0;
         if (double.IsFinite(_width))
         {
@@ -773,14 +778,15 @@ internal sealed class HeadlessParagraph : Paragraph
             }
             else
             {
-                x0 = align switch
+                double fraction = align switch
                 {
                     TextAlign.Left => 0.0,
-                    TextAlign.Right => _width - contentWidth,
-                    TextAlign.Center => (_width - contentWidth) / 2.0,
-                    TextAlign.End => ltr ? _width - contentWidth : 0.0,
-                    _ => ltr ? 0.0 : _width - contentWidth,
+                    TextAlign.Right => 1.0,
+                    TextAlign.Center => 0.5,
+                    TextAlign.End => ltr ? 1.0 : 0.0,
+                    _ => ltr ? 0.0 : 1.0,
                 };
+                x0 = fraction == 0.0 ? halfSpacing : fraction * (_width - contentWidth);
             }
         }
 
@@ -1285,8 +1291,6 @@ internal sealed class HeadlessParagraph : Paragraph
 
         void AddText(string text, int start, int end, double x, double baseline, ResolvedTextStyle style)
         {
-            // SkParagraph spreads letter spacing half before and half after each glyph.
-            x += LetterSpacingOf(UnicodeText.CodePointAt(text, start), style) / 2.0;
             int cursor = start;
             while (cursor < end)
             {

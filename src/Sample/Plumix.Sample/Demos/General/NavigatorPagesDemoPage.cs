@@ -27,7 +27,7 @@ internal sealed class NavigatorPagesDemoPageState : State
             spacing: 8,
             children:
             [
-                new Text("Navigator.Pages demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("Navigator.pages demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
                     "The page list owns the history: pushing appends a page, popping asks OnDidRemovePage "
                     + "to drop it.",

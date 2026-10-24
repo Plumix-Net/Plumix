@@ -451,8 +451,8 @@ internal sealed class MagnifierFlowLayer(
 
     /// <summary>
     /// Resolves the decoration shape to the per-corner radii the lens is clipped and stroked with.
-    /// Each corner keeps its own (possibly elliptical) radius, clamped to half the lens so that
-    /// neighbouring corners cannot overlap.
+    /// Radii too large for the lens shrink together by one factor, the way Dart's RRect does when
+    /// it is drawn, so an oversized elliptical radius gives a stadium rather than an ellipse.
     /// </summary>
     private BorderRadius ResolveBorderRadius(Rect lensRect)
     {
@@ -463,12 +463,8 @@ internal sealed class MagnifierFlowLayer(
             case CircleBorder or StadiumBorder:
                 return BorderRadius.Circular(Math.Min(maxX, maxY));
             case RoundedRectangleBorder rounded:
-                BorderRadius resolved = rounded.BorderRadius.Resolve(TextDirection.Ltr);
-                return new BorderRadius(
-                    Layer.ClampRadius(resolved.TopLeftRadius, maxX, maxY),
-                    Layer.ClampRadius(resolved.TopRightRadius, maxX, maxY),
-                    Layer.ClampRadius(resolved.BottomRightRadius, maxX, maxY),
-                    Layer.ClampRadius(resolved.BottomLeftRadius, maxX, maxY));
+                RRect scaled = rounded.BorderRadius.Resolve(TextDirection.Ltr).ToRRect(lensRect).NormalizeForPaint();
+                return new BorderRadius(scaled.TopLeft, scaled.TopRight, scaled.BottomRight, scaled.BottomLeft);
             default:
                 return BorderRadius.Zero;
         }
@@ -548,13 +544,40 @@ internal sealed class MagnifierFlowLayer(
                 clip = context.PushGeometryClip(geometry);
             }
 
-            context.DrawRectangle(Brushes.Transparent, pen, ToRoundedRect(lensRect, borderRadius), shadows);
+            if (shadows.Count > 0)
+            {
+                context.DrawRectangle(Brushes.Transparent, null, ToRoundedRect(lensRect, borderRadius), shadows);
+            }
+
+            if (pen != null)
+            {
+                // RoundedRectangleBorder.paint: the side is the ring between the lens and its
+                // deflation by the stroke width (BorderSide.strokeAlignInside).
+                var outerPath = new Path();
+                outerPath.AddRRect(ToRRect(lensRect, borderRadius));
+                var innerPath = new Path();
+                innerPath.AddRRect(ToRRect(lensRect, borderRadius).Deflate(side.Width));
+                context.DrawGeometry(
+                    pen.Brush,
+                    null,
+                    new CombinedGeometry(
+                        GeometryCombineMode.Exclude,
+                        outerPath.ToGeometry(),
+                        innerPath.ToGeometry()));
+            }
         }
         finally
         {
             clip?.Dispose();
         }
     }
+
+    private static RRect ToRRect(Rect rect, BorderRadius borderRadius) => RRect.FromRectAndCorners(
+        rect,
+        topLeft: borderRadius.TopLeftRadius,
+        topRight: borderRadius.TopRightRadius,
+        bottomRight: borderRadius.BottomRightRadius,
+        bottomLeft: borderRadius.BottomLeftRadius);
 
     private static RoundedRect ToRoundedRect(Rect rect, BorderRadius borderRadius)
     {

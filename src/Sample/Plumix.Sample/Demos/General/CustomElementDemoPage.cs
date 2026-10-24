@@ -46,8 +46,8 @@ internal sealed class CustomElementDemoPageState : State
             [
                 new Text("Custom Element", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
-                    "ElementLifecycleProbe is a widget declared in the sample assembly that returns its own "
-                    + "Element from CreateElement. The element drives the child through UpdateChild and counts "
+                    "ElementLifecycleProbe is a widget declared in the sample package that returns its own "
+                    + "Element from createElement. The element drives the child through updateChild and counts "
                     + "every lifecycle call the framework makes on it.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Container(

@@ -105,6 +105,28 @@ public sealed class RouterTests : IDisposable
     }
 
     [Fact]
+    public void Router_WithSynchronousDelegate_ReportsTheInitialRouteOnce()
+    {
+        // A delegate that completes at once rebuilds inside the frame (Dart awaits a SynchronousFuture
+        // synchronously), so the initial report and the post-rebuild report are one task.
+        var reports = new List<string>();
+        var provider = new SimpleRouteInformationProvider(
+            Info("home"),
+            onReport: (information, _) => reports.Add(information.Uri.ToString()));
+        var routerDelegate = new SimpleRouterDelegate((_, _) => new SizedBox(), reportConfiguration: true);
+
+        using var tester = new FrameworkDartTester();
+        tester.PumpWidget(new Router<RouteInformation>(
+            routerDelegate: routerDelegate,
+            routeInformationProvider: provider,
+            routeInformationParser: new SimpleRouteInformationParser()));
+        tester.Pump();
+        tester.Pump();
+
+        Assert.Equal(["home"], reports);
+    }
+
+    [Fact]
     public async Task Router_WaitsForAnAsynchronousParseBeforeRebuilding()
     {
         var parseCompleter = new TaskCompletionSource<RouteInformation>();

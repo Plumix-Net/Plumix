@@ -157,7 +157,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         enabled: _enabled,
                         decoration: new InputDecoration(
                             labelText: "Dense + compact density",
-                            helperText: "isDense with VisualDensity.Compact",
+                            helperText: "isDense with VisualDensity.compact",
                             isDense: true,
                             visualDensity: VisualDensity.Compact,
                             filled: true)),

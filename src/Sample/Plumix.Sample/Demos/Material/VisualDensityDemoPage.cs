@@ -98,7 +98,7 @@ internal sealed class VisualDensityDemoPageState : State
                 BuildFactRow("visualDensity", theme.VisualDensity.ToString()),
                 BuildFactRow("materialTapTargetSize", theme.MaterialTapTargetSize.Name()),
                 BuildFactRow(
-                    "VisualDensity.DefaultDensityForPlatform",
+                    "VisualDensity.defaultDensityForPlatform",
                     VisualDensity.DefaultDensityForPlatform(platform).ToString()),
             ]);
     }
