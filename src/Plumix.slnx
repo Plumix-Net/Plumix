@@ -27,6 +27,7 @@
     <File Path="../docs/ai/rendering-2026-03-10-layout-exception-surfacing.md" />
     <File Path="../docs/ai/TEST_MATRIX.md" />
   </Folder>
+  <Project Path="Plumix.Android/Plumix.Android.csproj" />
   <Project Path="Plumix.Cupertino/Plumix.Cupertino.csproj" />
   <Project Path="Plumix.Elmish/Plumix.Elmish.fsproj" />
   <Project Path="Plumix.FSharp/Plumix.FSharp.fsproj" />
