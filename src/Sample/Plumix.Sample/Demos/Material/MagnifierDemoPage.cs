@@ -30,7 +30,7 @@ internal sealed class MagnifierDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("RawMagnifier + Material Magnifier", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("RawMagnifier + Material Magnifier", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Move both lenses across high-contrast text and stripes to compare source geometry and styling.",
                     style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
@@ -81,14 +81,14 @@ internal sealed class MagnifierDemoPageState : State
                                         child: new ColoredBox(
                                             _showFilm
                                                 ? Color.FromARGB(10, 0, 105, 105)
-                                                : Colors.Transparent))),
+                                                : MaterialColors.Transparent))),
                                 new Positioned(
                                     left: _focusX - (MaterialMagnifier.DefaultMagnifierSize.Width / 2.0),
                                     top: 116,
                                     child: new MaterialMagnifier(
                                         filmColor: _showFilm
                                             ? Color.FromARGB(8, 158, 158, 158)
-                                            : Colors.Transparent)),
+                                            : MaterialColors.Transparent)),
                                 new Positioned(
                                     left: 24,
                                     bottom: 18,

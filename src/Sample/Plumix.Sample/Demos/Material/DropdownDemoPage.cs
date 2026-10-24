@@ -103,7 +103,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             "Controlled selection with nullable/disabled entries, logical end alignment, "
                             + "route geometry, keyboard focus, and underline policy.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Row(
                             spacing: 8,
                             children:
@@ -166,7 +166,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             "Select-only variant: read-only field, no trailing icon, and a selection"
                             + " that keeps the menu open.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new DropdownMenu<string>(
@@ -187,7 +187,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             "Animated overlay menu with consumed outside taps, close-on-activate"
                             + " policy and display-only shortcut labels.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuAnchor(
@@ -246,7 +246,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             "MenuStyle.alignment places the panel within the anchor rect; menu items"
                             + " space their leading and trailing icons by visual density.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Row(
                             spacing: 8,
                             children:
@@ -289,7 +289,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                             + "fill, shadow role, elevation 3, 4px corners). A MenuStyle.side is folded "
                             + "into the resolved shape, and a fixedSize is clamped by minimumSize and "
                             + "maximumSize before it tightens the panel.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                         new Row(
                             spacing: 8,
                             children:
@@ -304,7 +304,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 controller: _outlinedMenuController,
                                 style: new MenuStyle(
                                     side: WidgetStateProperty<BorderSide?>.All(
-                                        new BorderSide(Colors.MediumVioletRed, 2)),
+                                        new BorderSide(MaterialColors.Pink, 2)),
                                     fixedSize: _outlinedMenuSized
                                         ? WidgetStateProperty<Size?>.All(new Size(420, 200))
                                         : null,
@@ -325,7 +325,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                         new Text(
                             "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
                             + "local menu themes, Alt-key accelerators, and a focus-local Alt+N override.",
-                            style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                            style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                         new Align(
                             alignment: Alignment.CenterLeft,
                             child: new MenuTheme(
@@ -341,7 +341,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                             new Color(0xFFF3E5F5)))),
                                     new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
-                                        ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkSlateBlue))),
+                                        ForegroundColor: WidgetStateProperty<Color?>.All(MaterialColors.DeepPurple))),
                                     new CallbackShortcuts(
                                         bindings: new Dictionary<ShortcutActivator, Action>
                                         {
@@ -369,7 +369,8 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         new MenuAcceleratorLabel("&File"),
                                         controller: _fileMenuController,
                                         style: new ButtonStyle(
-                                            ForegroundColor: WidgetStateProperty<Color?>.All(Colors.OrangeRed)),
+                                            ForegroundColor:
+                                                WidgetStateProperty<Color?>.All(MaterialColors.DeepOrange)),
                                         onOpen: () => SetState(() => _menuBarStatus = "file opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "file closed")),
                                     new SubmenuButton(

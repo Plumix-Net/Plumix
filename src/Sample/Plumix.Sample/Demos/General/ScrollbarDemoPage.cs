@@ -125,7 +125,7 @@ internal sealed class ScrollbarDemoPageState : State
         spacing: 6,
         children:
         [
-            new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+            new Text(label, style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
             new Expanded(child: child),
         ]);
 

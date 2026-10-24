@@ -297,12 +297,24 @@ public sealed class PaginatedDataTableState : State<PaginatedDataTable>
             _rowCountApproximate)));
         footer.Add(new SizedBox(width: 32));
         if (widget.ShowFirstLastButtons)
-            footer.Add(PageButton(Icons.FirstPage, localizations.FirstPageTooltip, _firstRowIndex <= 0 ? null : () => PageTo(0)));
+        {
+            footer.Add(PageButton(
+                Icons.SkipPrevious,
+                localizations.FirstPageTooltip,
+                _firstRowIndex <= 0 ? null : () => PageTo(0)));
+        }
+
         footer.Add(PageButton(Icons.ChevronLeft, localizations.PreviousPageTooltip, _firstRowIndex <= 0 ? null : HandlePrevious));
         footer.Add(new SizedBox(width: 24));
         footer.Add(PageButton(Icons.ChevronRight, localizations.NextPageTooltip, IsNextUnavailable() ? null : HandleNext));
         if (widget.ShowFirstLastButtons)
-            footer.Add(PageButton(Icons.LastPage, localizations.LastPageTooltip, IsNextUnavailable() ? null : HandleLast));
+        {
+            footer.Add(PageButton(
+                Icons.SkipNext,
+                localizations.LastPageTooltip,
+                IsNextUnavailable() ? null : HandleLast));
+        }
+
         footer.Add(new SizedBox(width: 14));
         return footer;
     }

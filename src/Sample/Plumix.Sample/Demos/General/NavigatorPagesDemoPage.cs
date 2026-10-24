@@ -29,7 +29,7 @@ internal sealed class NavigatorPagesDemoPageState : State
             [
                 new Text("Navigator.pages demo", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                 new Text(
-                    "The page list owns the history: pushing appends a page, popping asks OnDidRemovePage "
+                    "The page list owns the history: pushing appends a page, popping asks onDidRemovePage "
                     + "to drop it.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Grey)),
                 new Text(

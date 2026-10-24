@@ -625,6 +625,24 @@ public partial class Canvas
     public virtual void DrawLine(IPen pen, Point startPoint, Point endPoint)
     {
         DebugRecordCall(new CanvasCall("drawLine", Pen: pen, Offset: startPoint, EndOffset: endPoint));
+        if (pen is { Thickness: 0.0, DashStyle: null, Brush: ISolidColorBrush solid })
+        {
+            // A zero-width stroke is Skia's one-device-pixel hairline, as with Dart's strokeWidth 0.
+            var hairline = new HairlineDraw(
+                startPoint,
+                endPoint,
+                (Color)solid.Color,
+                isAntiAlias: true,
+                pen.LineCap switch
+                {
+                    PenLineCap.Round => StrokeCap.Round,
+                    PenLineCap.Square => StrokeCap.Square,
+                    _ => StrokeCap.Butt,
+                });
+            AddDrawCommand(context => context.Custom(hairline));
+            return;
+        }
+
         AddDrawCommand(context => ShaderDrawing.DrawLine(context, pen, startPoint, endPoint));
     }
 

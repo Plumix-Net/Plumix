@@ -488,7 +488,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new HeroDemoPage()),
         new(
             SampleRoutes.NavigatorPages,
-            "Navigator.Pages",
+            "Navigator.pages",
             "declarative pages + transition delegate",
             () => new NavigatorPagesDemoPage()),
         new(

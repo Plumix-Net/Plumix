@@ -321,7 +321,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     new Text(label, style: new TextStyle(FontSize: 20, Color: Colors.Black)),
                     new Text(
                         "55% of the viewport · padded ends",
-                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                 ]));
     }
 

@@ -32,7 +32,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
         {
             Color? toggleFill = _useStatefulFill
                 ? WidgetStateColor.ResolveWith(states =>
-                    states.Contains(WidgetState.Selected) ? Colors.Teal : Colors.LightBlue)
+                    states.Contains(WidgetState.Selected) ? MaterialColors.Teal : MaterialColors.LightBlue)
                 : _useWidgetStyle
                     ? new Color(0xFF673AB7)
                     : null;
@@ -40,7 +40,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
             {
                 ToggleButtonsTheme = _useThemeOverrides
                     ? new ToggleButtonsThemeData(
-                        Color: Colors.DarkSlateBlue,
+                        Color: MaterialColors.BlueGrey,
                         SelectedColor: Colors.White,
                         FillColor: MaterialColors.Teal,
                         BorderColor: MaterialColors.Teal,
@@ -53,7 +53,7 @@ public sealed class SegmentedButtonsDemoPage : StatefulWidget
                             foregroundColor: MaterialColors.BlueGrey,
                             selectedForegroundColor: Colors.White,
                             selectedBackgroundColor: MaterialColors.Teal,
-                            side: new BorderSide(Colors.Teal),
+                            side: new BorderSide(MaterialColors.Teal),
                             shape: new StadiumBorder()),
                         SelectedIcon: new Icon(Icons.Star))
                     : new SegmentedButtonThemeData(),

@@ -119,7 +119,7 @@ internal sealed class CheckboxDemoPageState : State
                                             return new Color(0xFF00695C);
                                         }
 
-                                        return Colors.Transparent;
+                                        return MaterialColors.Transparent;
                                     }),
                                     side: new BorderSide(new Color(0xFF00695C), 2)),
                                 title: "Custom colors",
@@ -130,14 +130,14 @@ internal sealed class CheckboxDemoPageState : State
                                         FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                             states.Contains(WidgetState.Selected)
                                                 ? new Color(0xFF7B1FA2)
-                                                : Colors.Transparent),
+                                                : MaterialColors.Transparent),
                                         CheckColor: WidgetStateProperty<Color?>.All(Colors.White),
                                         Shape: new RoundedRectangleBorder(borderRadius:
                                             Plumix.Rendering.BorderRadius.Circular(6)),
                                         Side: WidgetStateBorderSide.ResolveWith(states =>
                                             new BorderSide(
                                                 states.Contains(WidgetState.Error)
-                                                    ? Colors.Red
+                                                    ? MaterialColors.Red
                                                     : new Color(0xFF7B1FA2),
                                                 2))),
                                     child: new Checkbox(

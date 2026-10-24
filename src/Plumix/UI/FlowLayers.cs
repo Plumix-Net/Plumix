@@ -142,6 +142,9 @@ internal sealed class OpacityFlowLayer(int alpha, Point offset) : ContainerFlowL
                     return;
                 }
 
+                // The engine's opacity layer is a save-layer: overlapping children blend with each other
+                // first and the alpha applies once. Avalonia folds opacity into every draw unless asked.
+                using (context.Canvas.PushRenderOptions(new RenderOptions { RequiresFullOpacityHandling = true }))
                 using (context.Canvas.PushOpacity(Math.Clamp(Alpha, 0, 255) / 255.0))
                 {
                     PaintChildren(context);

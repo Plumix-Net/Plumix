@@ -77,7 +77,7 @@ internal sealed class ImageDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text("Image controls", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("Image controls", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Provider streams, decoded handles, placeholder cross-fades, and image-backed icons.",
                     style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
@@ -235,7 +235,7 @@ internal sealed class ImageDemoPageState : State
                                                         RelativeUnit.Relative),
                                                     GradientStops =
                                                     [
-                                                        new GradientStop(Colors.Yellow, 0.0),
+                                                        new GradientStop(MaterialColors.Yellow, 0.0),
                                                         new GradientStop(Colors.Purple, 1.0),
                                                     ],
                                                 },
@@ -298,7 +298,7 @@ internal sealed class ImageDemoPageState : State
                         ? "Raw image: decoding..."
                         : $"Raw image: {_rawInfo.Image.Size.Width:0} × {_rawInfo.Image.Size.Height:0} px; "
                           + $"cache: {ImageCache.Shared.CurrentSize}; live: {ImageCache.Shared.LiveImageCount}",
-                    style: new TextStyle(FontSize: 12, Color: Colors.DarkSlateGray)),
+                    style: new TextStyle(FontSize: 12, Color: MaterialColors.BlueGrey)),
             ]);
         return new Directionality(_rtl ? Plumix.UI.TextDirection.Rtl : Plumix.UI.TextDirection.Ltr, content);
     }
@@ -358,7 +358,7 @@ internal sealed class ImageDemoPageState : State
             spacing: 8,
             children:
             [
-                new Text(label, style: new TextStyle(FontSize: 13, Color: Colors.Black)),
+                new Text(label, style: new TextStyle(FontSize: 13)),
                 new Container(
                     width: 132,
                     height: 112,

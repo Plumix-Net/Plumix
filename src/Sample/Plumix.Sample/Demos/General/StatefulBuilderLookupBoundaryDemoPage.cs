@@ -19,11 +19,13 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
             spacing: 16,
             children:
             [
-                new Text("StatefulBuilder + LookupBoundary", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text(
+                    "StatefulBuilder + LookupBoundary",
+                    style: new TextStyle(FontSize: 20, Color: MaterialColors.Black)),
                 new Text(
                     "StatefulBuilder owns a local rebuild. LookupBoundary hides ancestors only from its bounded " +
                     "static lookup helpers.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Container(
                     color: new Color(0xFFF4F7FA),
                     padding: new Thickness(12),
@@ -57,14 +59,8 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                                     spacing: 6,
                                     children:
                                     [
-                                        new Text(
-                                            $"bounded lookup: {bounded}",
-                                            style: new TextStyle(
-                                                Color: Colors.Black)),
-                                        new Text(
-                                            $"regular context lookup: {regular}",
-                                            style: new TextStyle(
-                                                Color: Colors.Black)),
+                                        new Text($"bounded lookup: {bounded}"),
+                                        new Text($"regular context lookup: {regular}"),
                                     ]));
                         }))),
             ]);

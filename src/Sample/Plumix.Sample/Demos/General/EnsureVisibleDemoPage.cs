@@ -55,7 +55,7 @@ internal sealed class EnsureVisibleDemoPageState : State
                             child: new CounterTapButton(
                                 label: $"Alignment {_alignment:0.0}",
                                 onTap: CycleAlignment,
-                                background: Colors.SteelBlue,
+                                background: MaterialColors.Blue,
                                 foreground: Colors.White,
                                 fontSize: 13)),
                         new Expanded(
@@ -149,11 +149,11 @@ internal sealed class EnsureVisibleDemoPageState : State
         {
             return new Container(
                 height: 160,
-                color: index == 0 ? Colors.WhiteSmoke : Colors.Gainsboro,
+                color: index == 0 ? MaterialColors.White70 : Colors.Gainsboro,
                 alignment: Alignment.Center,
                 child: new Text(
                     index == 0 ? "Outer header" : "Outer footer",
-                    style: new TextStyle(FontSize: 15, Color: Colors.DimGray)));
+                    style: new TextStyle(FontSize: 15, Color: MaterialColors.Grey)));
         }
 
         return new Container(

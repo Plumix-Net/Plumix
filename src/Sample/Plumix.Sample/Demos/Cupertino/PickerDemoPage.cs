@@ -95,7 +95,6 @@ internal sealed class CupertinoPickerDemoPageState : State
             child: new Text(label, textAlign: TextAlign.Center),
             onPressed: () => SetState(() => _demoIndex = index),
             color: _demoIndex == index ? CupertinoColors.ActiveBlue : CupertinoColors.SystemGrey5,
-            minSize: 36.0,
             padding: new Thickness(8.0, 6.0));
     }
 

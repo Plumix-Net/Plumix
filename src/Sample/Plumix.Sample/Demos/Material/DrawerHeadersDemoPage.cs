@@ -18,7 +18,7 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
-            var plainColor = _alternateDecoration ? Colors.DarkSlateBlue : Colors.Indigo;
+            var plainColor = _alternateDecoration ? MaterialColors.BlueGrey : MaterialColors.Indigo;
             return new Column(
                 crossAxisAlignment: CrossAxisAlignment.Stretch,
                 spacing: 10,
@@ -32,7 +32,7 @@ public sealed class DrawerHeadersDemoPage : StatefulWidget
                     new Text(
                         "Status-bar padding, animated decoration, ColorScheme primary, pictures, "
                         + "details, and semantics.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:

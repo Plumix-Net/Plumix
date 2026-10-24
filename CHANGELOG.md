@@ -9,6 +9,9 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Opacity layers composite their children through a save-layer, as the engine does (C#-only).
+- PaginatedDataTable uses skip_previous/skip_next for its first/last page buttons (paginated_data_table.dart).
+- Zero-width box borders and lines paint as Skia one-device-pixel hairlines (borders.dart).
 - Headless paragraphs place letter-spaced unaligned and aligned lines like SkParagraph (C#-only).
 - ListTile reports a colored box that hides its background and ink, as Dart's debug check does (list_tile.dart).
 - Inactive CupertinoSliverRefreshControl and empty CarouselView slivers are SliverGeometry.Zero (refresh.dart).

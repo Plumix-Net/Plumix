@@ -44,7 +44,7 @@ internal sealed class CircleAvatarDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("CircleAvatar", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("CircleAvatar", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Initials, theme colors, animated radius, foreground/background images, and error fallback.",
                     style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
@@ -119,7 +119,7 @@ internal sealed class CircleAvatarDemoPageState : State
         return new Column(
             mainAxisSize: MainAxisSize.Min,
             spacing: 8,
-            children: [avatar, new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))]);
+            children: [avatar, new Text(label, style: new TextStyle(FontSize: 12))]);
     }
 
     private static Widget ControlButton(string label, Action onPressed)

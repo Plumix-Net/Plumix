@@ -157,7 +157,6 @@ internal static class CssColors
 
     public static Color Teal { get; } = (Color)Avalonia.Media.Colors.Teal;
 
-    public static Color Transparent { get; } = (Color)Avalonia.Media.Colors.Transparent;
 
     public static Color Wheat { get; } = (Color)Avalonia.Media.Colors.Wheat;
 

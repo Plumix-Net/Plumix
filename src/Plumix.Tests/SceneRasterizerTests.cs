@@ -62,6 +62,25 @@ public sealed class SceneRasterizerTests
     }
 
     [Fact]
+    public void OpacityLayer_BlendsOverlappingChildrenBeforeApplyingItsAlpha()
+    {
+        // The engine's opacity layer is a save-layer: white painted over black inside it shows as white at
+        // half alpha, not as two half-transparent paints stacked on each other.
+        var root = new OffsetLayer();
+        var opacity = new OpacityLayer(alpha: 128);
+        opacity.Append(new PictureLayer(default) { Picture = SceneBuilderTests.DrawPaintPicture(0xFF000000) });
+        opacity.Append(new PictureLayer(default) { Picture = SceneBuilderTests.DrawPaintPicture(0xFFFFFFFF) });
+        root.Append(opacity);
+
+        Bitmap image = ToImage(root, 4, 4);
+
+        // Premultiplied: stacked half-transparent paints would leave alpha near 191.
+        (byte r, byte _, byte _, byte a) = RasterBackend.PixelAt(image, 1, 1);
+        Assert.InRange(a, 126, 130);
+        Assert.InRange(r, 126, 130);
+    }
+
+    [Fact]
     public void BackdropFilterLayer_FiltersThePaintedPrefixInTargetCoordinates()
     {
         // The left half is red; a backdrop filter under an offset layer on the right half shifts the

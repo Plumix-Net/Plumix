@@ -315,54 +315,8 @@ public static class BorderPainting
         BorderSide? bottom = null,
         BorderSide? left = null)
     {
-        BorderSide topSide = top ?? BorderSide.None;
-        BorderSide rightSide = right ?? BorderSide.None;
-        BorderSide bottomSide = bottom ?? BorderSide.None;
-        BorderSide leftSide = left ?? BorderSide.None;
-
-        if (topSide.Style == BorderStyle.Solid)
-        {
-            PaintSide(
-                context,
-                topSide,
-                new Point(rect.Left, rect.Top),
-                new Point(rect.Right, rect.Top),
-                new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width),
-                new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width));
-        }
-
-        if (rightSide.Style == BorderStyle.Solid)
-        {
-            PaintSide(
-                context,
-                rightSide,
-                new Point(rect.Right, rect.Top),
-                new Point(rect.Right, rect.Bottom),
-                new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width),
-                new Point(rect.Right - rightSide.Width, rect.Top + topSide.Width));
-        }
-
-        if (bottomSide.Style == BorderStyle.Solid)
-        {
-            PaintSide(
-                context,
-                bottomSide,
-                new Point(rect.Right, rect.Bottom),
-                new Point(rect.Left, rect.Bottom),
-                new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width),
-                new Point(rect.Right - rightSide.Width, rect.Bottom - bottomSide.Width));
-        }
-
-        if (leftSide.Style == BorderStyle.Solid)
-        {
-            PaintSide(
-                context,
-                leftSide,
-                new Point(rect.Left, rect.Bottom),
-                new Point(rect.Left, rect.Top),
-                new Point(rect.Left + leftSide.Width, rect.Top + topSide.Width),
-                new Point(rect.Left + leftSide.Width, rect.Bottom - bottomSide.Width));
-        }
+        // Dart's paintBorder: a zero-width side is a stroked hairline path, not a zero-width pen.
+        PaintBorder(context.Canvas, rect, top, right, bottom, left);
     }
 
     /// <summary>Dart's <c>paintBorder</c>, drawing filled sides or hairline paths on a canvas.</summary>
@@ -414,23 +368,5 @@ public static class BorderPainting
 
             canvas.DrawPath(path, paint);
         }
-    }
-
-    private static void PaintSide(
-        PaintingContext context,
-        BorderSide side,
-        Point start,
-        Point end,
-        Point innerEnd,
-        Point innerStart)
-    {
-        var brush = new SolidColorBrush(side.Color);
-        if (side.Width == 0.0)
-        {
-            context.Canvas.DrawLine(new Pen(brush, 0.0), start, end);
-            return;
-        }
-
-        context.Canvas.DrawPolygon(brush, null, [start, end, innerEnd, innerStart]);
     }
 }

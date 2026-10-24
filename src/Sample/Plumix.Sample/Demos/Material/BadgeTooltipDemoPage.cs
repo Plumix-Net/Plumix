@@ -31,7 +31,7 @@ internal sealed class BadgeTooltipDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("Badge + Tooltip", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("Badge + Tooltip", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Badge geometry plus plain/rich tooltips with hover, directional theming, and custom positioning.",
                     style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),
@@ -108,8 +108,7 @@ internal sealed class BadgeTooltipDemoPageState : State
                 new Text(
                     "Hover or long-press these controls:",
                     style: new TextStyle(
-                        FontSize: 14,
-                        Color: Colors.Black)),
+                        FontSize: 14)),
                 new TooltipVisibility(
                     visible: _tooltipsVisible,
                     child: new Directionality(
@@ -192,7 +191,7 @@ internal sealed class BadgeTooltipDemoPageState : State
         return new Column(
             mainAxisSize: MainAxisSize.Min,
             spacing: 8,
-            children: [child, new Text(label, style: new TextStyle(FontSize: 12, Color: Colors.Black))]);
+            children: [child, new Text(label, style: new TextStyle(FontSize: 12))]);
     }
 
     private static Widget ControlButton(string label, Action onPressed)

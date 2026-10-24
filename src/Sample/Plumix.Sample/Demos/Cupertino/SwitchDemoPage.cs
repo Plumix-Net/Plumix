@@ -151,7 +151,7 @@ internal sealed class SwitchDemoPageState : State
                                     trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
                                         return states.Contains(WidgetState.Selected)
-                                            ? Colors.Transparent
+                                            ? MaterialColors.Transparent
                                             : new Color(0xFF455A64);
                                     }),
                                     trackOutlineWidth: WidgetStateProperty<double?>.All(2)),
@@ -175,7 +175,7 @@ internal sealed class SwitchDemoPageState : State
                         inactiveThumbColor: new Color(0xFFB2DFDB),
                         trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                             states.Contains(WidgetState.Selected)
-                                ? Colors.Transparent
+                                ? MaterialColors.Transparent
                                 : new Color(0xFF455A64)),
                         trackOutlineWidth: WidgetStateProperty<double?>.All(2.0),
                         thumbIcon: _showThumbIcons

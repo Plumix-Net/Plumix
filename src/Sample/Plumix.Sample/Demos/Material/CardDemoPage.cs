@@ -172,7 +172,7 @@ internal sealed class CardDemoPageState : State
                 type: MaterialType.Card,
                 color: new Color(0xFFFFF8E1),
                 elevation: _useThemeOverrides ? 5 : 2,
-                surfaceTintColor: _useMaterial3 ? new Color(0xFF6750A4) : Colors.Transparent,
+                surfaceTintColor: _useMaterial3 ? new Color(0xFF6750A4) : MaterialColors.Transparent,
                 clipBehavior: _clip ? Clip.AntiAlias : Clip.None,
                 child: BuildCardBody(
                     title: "Material surface",

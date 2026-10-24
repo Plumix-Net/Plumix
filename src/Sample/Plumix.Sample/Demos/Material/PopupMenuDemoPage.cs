@@ -40,7 +40,7 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                     LabelTextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
                         Theme.Of(context).TextTheme.LabelLarge.CopyWith(
                             color: states.Contains(WidgetState.Disabled)
-                                ? new Color(0x619E9E9E)
+                                ? MaterialColors.Grey.Shade600.WithValues(alpha: 0.38)
                                 : new Color(0xFFE65100))))
                 : new PopupMenuThemeData();
             return new Theme(

@@ -47,7 +47,7 @@ internal sealed class ColorPaletteDemoPageState : State
                 spacing: 10,
                 children:
                 [
-                    new Text("Colors + primarySwatch", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                    new Text("Colors + primarySwatch", style: new TextStyle(FontSize: 20)),
                     new Text(
                         "MaterialColor shades, ColorScheme.fromSwatch and the primarySwatch-derived theme colors.",
                         style: new TextStyle(FontSize: 14, Color: new Color(0x8A000000))),

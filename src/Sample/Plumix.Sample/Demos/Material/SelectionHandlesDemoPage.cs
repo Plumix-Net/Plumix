@@ -49,11 +49,7 @@ internal sealed class SelectionHandlesDemoPageState : State
             spacing: 12,
             children:
             [
-                new Text(
-                    "SelectionOverlay + Material handles",
-                    style: new TextStyle(
-                        FontSize: 20,
-                        Color: Colors.Black)),
+                new Text("SelectionOverlay + Material handles", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Long-press the field and drag through the touch lens: handles stay above it. "
                     + "The direct probe below also covers ranged and collapsed handles.",

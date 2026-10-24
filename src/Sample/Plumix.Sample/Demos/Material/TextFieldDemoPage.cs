@@ -43,7 +43,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                         "Filled/outlined/state-aware borders, floating labels, hint/helper/error/counter slots, "
                         + "prefix/suffix icons, pointer selection, adaptive context menus, read-only and "
                         + "multiline input.",
-                        style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                     new Row(
                         spacing: 8,
                         children:
@@ -175,7 +175,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                     new Text(
                         "The theme's fill, floating label and active indicator resolve per state, and "
                         + "an ambient IconButtonTheme colors the affix icons.",
-                        style: new TextStyle(FontSize: 13, Color: Colors.DimGray)),
+                        style: new TextStyle(FontSize: 13, Color: MaterialColors.Black54)),
                     new InputDecorationTheme(
                         data: new InputDecorationThemeData(
                             filled: true,
@@ -316,7 +316,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
         private static InputBorder ResolveStateBorder(IReadOnlySet<WidgetState> states)
         {
             Color color = states.Contains(WidgetState.Disabled)
-                ? Colors.Gray
+                ? MaterialColors.Grey
                 : states.Contains(WidgetState.Error)
                     ? Colors.Crimson
                     : states.Contains(WidgetState.Focused)
@@ -357,7 +357,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
     private sealed class DemoInputTextStyle : WidgetStateTextStyle
     {
         public override TextStyle Resolve(IReadOnlySet<WidgetState> states) => new(
-            Color: states.Contains(WidgetState.Disabled) ? Colors.Gray
+            Color: states.Contains(WidgetState.Disabled) ? MaterialColors.Grey
                 : states.Contains(WidgetState.Error) ? Colors.Crimson
                 : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue : Colors.SlateGray,
             FontWeight: states.Contains(WidgetState.Focused)

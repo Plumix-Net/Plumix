@@ -37,7 +37,7 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
                                 spacing: 6.0,
                                 children:
                                 [
-                                    new Text("macOS", style: new TextStyle(FontSize: 13.0, Color: Colors.Black)),
+                                    new Text("macOS", style: new TextStyle(FontSize: 13.0)),
                                     new Text(
                                         "no handles",
                                         style: new TextStyle(FontSize: 12.0, Color: new Color(0x8A000000))),
@@ -70,7 +70,7 @@ public sealed class CupertinoTextSelectionControlsDemoPage : StatelessWidget
             spacing: 6.0,
             children:
             [
-                new Text(label, style: new TextStyle(FontSize: 13.0, Color: Colors.Black)),
+                new Text(label, style: new TextStyle(FontSize: 13.0)),
                 new Row(
                     spacing: 12.0,
                     children:

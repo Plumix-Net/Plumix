@@ -651,7 +651,7 @@ internal sealed class AlignDemoPageState : State
                 new Text(
                     "Rapid keyed replacements keep outgoing switcher children while cross-fade animates height "
                     + "from the logical bottom-end edge.",
-                    style: new TextStyle(FontSize: 14, Color: Colors.DimGray)),
+                    style: new TextStyle(FontSize: 14, Color: MaterialColors.Black54)),
                 new Row(
                     spacing: 8,
                     children:

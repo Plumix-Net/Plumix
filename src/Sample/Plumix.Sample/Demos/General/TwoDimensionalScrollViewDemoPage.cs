@@ -87,7 +87,7 @@ internal sealed class TwoDimensionalScrollViewDemoPageState : State
             child: new CounterTapButton(
                 label: label,
                 onTap: () => SetState(() => _behavior = behavior),
-                background: _behavior == behavior ? Colors.SteelBlue : new Color(0xFFB0BEC5),
+                background: _behavior == behavior ? MaterialColors.BlueGrey : new Color(0xFFB0BEC5),
                 foreground: _behavior == behavior ? Colors.White : Colors.Black,
                 fontSize: 13));
     }

@@ -74,7 +74,7 @@ public sealed class MaterialIconsDemoPage : StatelessWidget
                             children:
                             [
                                 new Icon(Icons.Favorite, semanticLabel: "Scaled favorite"),
-                                new Icon(Icons.Favorite, color: Colors.Teal, applyTextScaling: false,
+                                new Icon(Icons.Favorite, color: MaterialColors.Teal, applyTextScaling: false,
                                     semanticLabel: "Unscaled favorite"),
                                 new Icon(null, semanticLabel: "Empty icon slot"),
                                 new Icon(Icons.Favorite, blendMode: BlendMode.SourceOver,

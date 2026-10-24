@@ -32,7 +32,7 @@ internal sealed class ChipsDemoPageState : State
             spacing: 14,
             children:
             [
-                new Text("Material chips", style: new TextStyle(FontSize: 20, Color: Colors.Black)),
+                new Text("Material chips", style: new TextStyle(FontSize: 20)),
                 new Text(
                     "Informational, action, choice, filter, and input chips use Wrap for multi-run layouts, "
                     + "with deletion and a copyWith-derived local ChipTheme override.",
@@ -50,7 +50,7 @@ internal sealed class ChipsDemoPageState : State
                             _inputVisible ? "Remove input" : "Restore input",
                             () => SetState(() => _inputVisible = !_inputVisible)),
                     ]),
-                new Text("Action chips", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text("Action chips", style: new TextStyle(FontSize: 14)),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -67,7 +67,7 @@ internal sealed class ChipsDemoPageState : State
                             label: new Text("Elevated"),
                             onPressed: _enabled ? HandleAction : null),
                     ]),
-                new Text("Informational chips", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text("Informational chips", style: new TextStyle(FontSize: 14)),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -81,7 +81,7 @@ internal sealed class ChipsDemoPageState : State
                             avatar: new Icon(Icons.InfoOutline),
                             onDeleted: _enabled ? HandleDelete : null),
                     ]),
-                new Text("Choice chips", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text("Choice chips", style: new TextStyle(FontSize: 14)),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -101,7 +101,7 @@ internal sealed class ChipsDemoPageState : State
                             selected: _selected,
                             onSelected: _enabled ? value => SetState(() => _selected = value) : null),
                     ]),
-                new Text("Filter chips", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text("Filter chips", style: new TextStyle(FontSize: 14)),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,
@@ -122,7 +122,7 @@ internal sealed class ChipsDemoPageState : State
                             onSelected: _enabled ? value => SetState(() => _filterSelected = value) : null,
                             onDeleted: _enabled ? HandleDelete : null),
                     ]),
-                new Text("Input chips", style: new TextStyle(FontSize: 14, Color: Colors.Black)),
+                new Text("Input chips", style: new TextStyle(FontSize: 14)),
                 new Wrap(
                     spacing: 10,
                     runSpacing: 10,

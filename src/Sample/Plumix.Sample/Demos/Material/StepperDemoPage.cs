@@ -44,7 +44,7 @@ internal sealed class StepperDemoPageState : State
                             expandedColor: new Color(0xFF6750A4)),
                         new Text(_expanded ? "Expanded" : "Collapsed", style: new TextStyle(FontSize: 14)),
                         new ExpandIcon(onPressed: null),
-                        new Text("Disabled", style: new TextStyle(FontSize: 14)),
+                        new Text("Disabled"),
                         new TextButton(
                             child: new Text(_horizontal ? "Use vertical" : "Use horizontal"),
                             onPressed: () => SetState(() => _horizontal = !_horizontal)),
