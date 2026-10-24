@@ -15,16 +15,18 @@ namespace Plumix.UI;
 // exposes shaping but not hb_font_set_variations/hb_font_draw_glyph; hosts already ship this ABI.
 internal sealed class VariableFont : IDisposable
 {
+    // One HarfBuzz face per typeface, shared by every instance: a face copies the tables it reads and
+    // keeps them, and a variable system font's tables run to megabytes (macOS's SF gvar alone is about
+    // 6.7 MB), so a face per paragraph copied them again for every paragraph laid out.
+    private static readonly ConditionalWeakTable<GlyphTypeface, SharedFace> Faces = new();
+
     private readonly Face _face;
     private readonly HBFont _font;
     private readonly double _scale;
 
     internal VariableFont(GlyphTypeface typeface, ResolvedTextStyle style)
     {
-        _face = new Face((_, tag) => ReadTable(typeface, (uint)tag))
-        {
-            UnitsPerEm = typeface.Metrics.DesignEmHeight,
-        };
+        _face = Shared(typeface).Face;
         _font = new HBFont(_face);
         _font.SetFunctionsOpenType();
         _font.SetScale((int)_face.UnitsPerEm, (int)_face.UnitsPerEm);
@@ -42,8 +44,13 @@ internal sealed class VariableFont : IDisposable
         SetVariations(_font.Handle, values, (uint)values.Length);
     }
 
-    internal static bool IsVariable(GlyphTypeface typeface) =>
-        typeface.PlatformTypeface.TryGetTable(Tag("fvar"), out _);
+    internal static bool IsVariable(GlyphTypeface typeface) => Shared(typeface).IsVariable;
+
+    /// <summary>Plumix-only: the HarfBuzz face this instance shapes with, for tests.</summary>
+    internal Face FaceForTests => _face;
+
+    private static SharedFace Shared(GlyphTypeface typeface) =>
+        Faces.GetValue(typeface, static key => new SharedFace(key));
 
     private static Blob? ReadTable(GlyphTypeface typeface, uint tag)
     {
@@ -125,14 +132,22 @@ internal sealed class VariableFont : IDisposable
         return geometry;
     }
 
-    public void Dispose()
-    {
-        _font.Dispose();
-        _face.Dispose();
-    }
+    public void Dispose() => _font.Dispose();
 
     private static uint Tag(string tag) =>
         ((uint)tag[0] << 24) | ((uint)tag[1] << 16) | ((uint)tag[2] << 8) | tag[3];
+
+    private sealed class SharedFace(GlyphTypeface typeface)
+    {
+        private readonly Lazy<Face> _face = new(() => new Face((_, tag) => ReadTable(typeface, (uint)tag))
+        {
+            UnitsPerEm = typeface.Metrics.DesignEmHeight,
+        });
+
+        internal bool IsVariable { get; } = typeface.PlatformTypeface.TryGetTable(Tag("fvar"), out _);
+
+        internal Face Face => _face.Value;
+    }
 
     private sealed class OutlineTarget(StreamGeometryContext context, double scale)
     {

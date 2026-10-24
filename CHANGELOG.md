@@ -9,6 +9,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 
+- Variable-font paragraphs share one HarfBuzz face per typeface instead of copying its tables each time (C#-only).
 - Tests are green under `-c Profile`/`-c Release` again: key-event state resets in every mode (C#-only).
 - Canvas.drawShadow tessellates Skia's ambient and spot shadow meshes at the engine's pixel ratio (painting.dart).
 - Breaking: Stepper composition, index text style, controls and ControlsDetails match Dart 1:1 (stepper.dart).

@@ -239,6 +239,31 @@ public sealed class AvaloniaParagraphDartParityTests
         Assert.Equal(RasterBackend.ReadPixels(heavyImage), RasterBackend.ReadPixels(explicitImage));
     }
 
+    [Fact]
+    public void VariableInstances_ShareOneFacePerTypeface_AndOutliveEachOther()
+    {
+        // A face copies every table it reads; macOS's variable system font carries megabytes of them,
+        // so a face per paragraph turned each laid-out paragraph into a multi-megabyte copy.
+        GlyphTypeface typeface = new Typeface(Variable).GlyphTypeface;
+        ResolvedTextStyle style = ResolvedTextStyle.FromParagraphStyle(
+            new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: (FontWeight)900));
+        Assert.True(VariableFont.IsVariable(typeface));
+        var first = new VariableFont(typeface, style);
+        using var second = new VariableFont(typeface, style);
+        Assert.Same(first.FaceForTests, second.FaceForTests);
+
+        double before = VariableParagraphWidth();
+        first.Dispose();
+        Assert.Equal(before, VariableParagraphWidth(), 5);
+
+        static double VariableParagraphWidth()
+        {
+            using AvaloniaParagraph paragraph = VariableParagraph(900);
+            paragraph.Layout(new ParagraphConstraints(500));
+            return paragraph.MaxIntrinsicWidth;
+        }
+    }
+
     private static AvaloniaParagraph VariableParagraph(int weight, double? axis = null) =>
         Build("Hello", new ParagraphStyle(FontFamily: Variable, FontSize: 40, FontWeight: (FontWeight)weight),
             new ParagraphTextStyle(FontVariations: axis is double value ? [new FontVariation("wght", value)] : null));
