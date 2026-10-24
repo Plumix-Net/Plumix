@@ -20,7 +20,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 - Headless paragraphs break too-long words and skip cursive-script letter spacing like SkParagraph (C#-only).
 - Breaking: TextField adds cursor width/radius/opacity, undoController and real min/maxLines (text_field.dart).
 - Breaking: TextField limits the hint to its own maxLines unless the decoration sets hintMaxLines (text_field.dart).
-- Breaking: DesktopTextSelectionToolbarButton uses Dart's non-inheriting 14px style and black87/white (desktop_text_selection_toolbar_button.dart).
+- Breaking: DesktopTextSelectionToolbarButton text uses Dart's own style and color (desktop_text_selection_toolbar_button.dart).
 - Breaking: VisualDensity.ToString starts with its identity, as Dart's toStringShort does (theme_data.dart).
 - ReorderableListView gives the header the top inset and the footer the bottom one (reorderable_list.dart).
 - The sample uses Plumix.Bloc 0.3.0-alpha.3; 0.1.0-alpha.1 failed at runtime against the current Plumix API.
